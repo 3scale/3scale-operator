@@ -1,0 +1,39 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.11
+    working_directory: /go/src/github.com/3scale/3scale-operator
+    steps:
+
+      - setup_remote_docker:
+          reusable: true
+          exclusive: false
+
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-gopkg-cache-{{ arch }}-{{ checksum "Gopkg.lock" }}
+            - v1-gopkg-cache-{{ arch }}-{{ .Branch }}
+
+      - run:
+          name: Install dependencies
+          command: |
+            make vendor
+
+      - save_cache:
+          key: v1-gopkg-cache-{{ arch }}-{{ checksum "Gopkg.lock" }}
+          paths:
+            - "/go/pkg"
+
+      - run:
+          name: Build
+          command: |
+              make build NAMESPACE=172.30.1.1:5000/openshift VERSION=test
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build

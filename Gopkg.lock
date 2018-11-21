@@ -101,6 +101,14 @@
   version = "v0.17.2"
 
 [[projects]]
+  digest = "1:8a2045aab206dde28171e023e0d1ef83f38adf8bc86de0b2d1dfec1bb2fd994a"
+  name = "github.com/gobuffalo/envy"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "b29bf6b8134f3398b9333ba1893c58620152edb0"
+  version = "v1.6.9"
+
+[[projects]]
   digest = "1:2a9d5e367df8c95e780975ca1dd4010bef8e39a3777066d3880ce274b39d4b5a"
   name = "github.com/gogo/protobuf"
   packages = [
@@ -208,12 +216,36 @@
   version = "v0.3.6"
 
 [[projects]]
+  digest = "1:406338ad39ab2e37b7f4452906442a3dbf0eb3379dd1f06aafb5c07e769a5fbb"
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
+  digest = "1:f5b9328966ccea0970b1d15075698eff0ddb3e75889560aad2e9f76b289b536a"
+  name = "github.com/joho/godotenv"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "23d116af351c84513e1946b527c88823e476be13"
+  version = "v1.3.0"
+
+[[projects]]
   digest = "1:1d39c063244ad17c4b18e8da1551163b6ffb52bd1640a49a8ec5c3b7bf4dbd5d"
   name = "github.com/json-iterator/go"
   packages = ["."]
   pruneopts = "NT"
   revision = "1624edc4454b8682399def8740d46db5e4362ba4"
   version = "v1.1.5"
+
+[[projects]]
+  digest = "1:4059c14e87a2de3a434430340521b5feece186c1469eff0834c29a63870de3ed"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
@@ -226,6 +258,14 @@
   ]
   pruneopts = "NT"
   revision = "60711f1a8329503b04e1c88535f419d0bb440bff"
+
+[[projects]]
+  digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
+  name = "github.com/markbates/inflect"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "24b83195037b3bc61fcda2d28b7b0518bce293b6"
+  version = "v1.0.4"
 
 [[projects]]
   branch = "master"
@@ -252,10 +292,40 @@
   version = "1.0.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:a6156889b651cc0bf3d9bef82b6ba8fbb9eb19aefd7bc5718357c38b67297cbc"
+  name = "github.com/mxk/go-flowrate"
+  packages = ["flowrate"]
+  pruneopts = "NT"
+  revision = "cca7078d478f8520f85629ad7c68962d31ed7682"
+
+[[projects]]
   digest = "1:666dc2656c38279fc6f75c1e85b699dcea119202937173acf86ae129b4c751aa"
   name = "github.com/operator-framework/operator-sdk"
   packages = [
+    "commands/operator-sdk",
+    "commands/operator-sdk/cmd",
+    "commands/operator-sdk/cmd/add",
+    "commands/operator-sdk/cmd/completion",
+    "commands/operator-sdk/cmd/generate",
+    "commands/operator-sdk/cmd/test",
+    "commands/operator-sdk/cmd/up",
+    "internal/util/fileutil",
+    "internal/util/projutil",
+    "pkg/ansible/controller",
+    "pkg/ansible/events",
+    "pkg/ansible/operator",
+    "pkg/ansible/paramconv",
+    "pkg/ansible/proxy",
+    "pkg/ansible/proxy/kubeconfig",
+    "pkg/ansible/runner",
+    "pkg/ansible/runner/eventapi",
+    "pkg/ansible/runner/internal/inputdir",
     "pkg/k8sutil",
+    "pkg/scaffold",
+    "pkg/scaffold/ansible",
+    "pkg/scaffold/input",
+    "pkg/test",
     "version",
   ]
   pruneopts = "NT"
@@ -285,6 +355,41 @@
   pruneopts = "NT"
   revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
   version = "v2.0.1"
+
+[[projects]]
+  digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
+  name = "github.com/sergi/go-diff"
+  packages = ["diffmatchpatch"]
+  pruneopts = "NT"
+  revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:cd2f2cba5b7ffafd0412fb647ff4bcff170292de57270f05fbbf391e3eb9566b"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:2a7c79c506479dc73c0100982a40bacc89e06d96dc458eb41c9b6aa44d9e0b6d"
+  name = "github.com/spf13/afero"
+  packages = [
+    ".",
+    "mem",
+  ]
+  pruneopts = "NT"
+  revision = "d40851caa0d747393da1ffb28f7f9d8b4eeffebd"
+  version = "v1.1.2"
+
+[[projects]]
+  digest = "1:234b95cdbb31612ff4f97e0ac69abdede0c60f5f84e5d3f40123859f77d8bc2c"
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
 
 [[projects]]
   digest = "1:9d8420bbf131d1618bde6530af37c3799340d3762cc47210c1d9532a4c3a2779"
@@ -340,6 +445,8 @@
   packages = [
     "context",
     "context/ctxhttp",
+    "html",
+    "html/atom",
     "http/httpguts",
     "http2",
     "http2/hpack",
@@ -492,6 +599,17 @@
   revision = "2d6f90ab1293a1fb871cf149423ebb72aa7423aa"
 
 [[projects]]
+  digest = "1:117a407949aaaad9f7fbe3da8d6c2055f2c223ac0cbebd39f47ff71899622a91"
+  name = "k8s.io/apiextensions-apiserver"
+  packages = [
+    "pkg/apis/apiextensions",
+    "pkg/apis/apiextensions/v1beta1",
+    "pkg/client/clientset/clientset/scheme",
+  ]
+  pruneopts = "NT"
+  revision = "408db4a50408e2149acbd657bceb2480c13cb0a4"
+
+[[projects]]
   digest = "1:b07bf863262aae765494d60f0d524483f211b29f9bb27d445a79c13af8676bf2"
   name = "k8s.io/apimachinery"
   packages = [
@@ -521,10 +639,12 @@
     "pkg/util/diff",
     "pkg/util/errors",
     "pkg/util/framer",
+    "pkg/util/httpstream",
     "pkg/util/intstr",
     "pkg/util/json",
     "pkg/util/mergepatch",
     "pkg/util/net",
+    "pkg/util/proxy",
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
@@ -536,6 +656,7 @@
     "pkg/version",
     "pkg/watch",
     "third_party/forked/golang/json",
+    "third_party/forked/golang/netutil",
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "NT"
@@ -546,6 +667,7 @@
   name = "k8s.io/client-go"
   packages = [
     "discovery",
+    "discovery/cached",
     "dynamic",
     "kubernetes",
     "kubernetes/scheme",
@@ -609,6 +731,7 @@
     "util/integer",
     "util/jsonpath",
     "util/retry",
+    "util/workqueue",
   ]
   pruneopts = "NT"
   revision = "1f13a808da65775f22cbf47862c4e5898d8f4ca1"
@@ -694,14 +817,22 @@
     "pkg/client",
     "pkg/client/apiutil",
     "pkg/client/config",
+    "pkg/controller",
+    "pkg/event",
+    "pkg/handler",
+    "pkg/internal/controller",
     "pkg/internal/recorder",
     "pkg/leaderelection",
     "pkg/manager",
     "pkg/patch",
+    "pkg/predicate",
+    "pkg/reconcile",
     "pkg/recorder",
     "pkg/runtime/inject",
     "pkg/runtime/log",
     "pkg/runtime/signals",
+    "pkg/source",
+    "pkg/source/internal",
     "pkg/webhook/admission",
     "pkg/webhook/admission/types",
     "pkg/webhook/types",
@@ -714,6 +845,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/operator-framework/operator-sdk/commands/operator-sdk",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/version",
     "k8s.io/apimachinery/pkg/runtime",
