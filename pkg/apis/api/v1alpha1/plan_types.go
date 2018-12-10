@@ -11,13 +11,13 @@ import (
 type PlanSpec struct {
 	TrialPeriod     int64         `json:"trialPeriod"`
 	AprovalRequired bool          `json:"aprovalRequired"`
-	Costs           []PlanCost    `json:"costs"`
+	Costs           PlanCost    `json:"costs"`
 	LimitSelector   metav1.LabelSelector `json:"limitSelector"`
 }
 
 type PlanCost struct {
-	SetupFee  *int64 `json:"setupFee,omitempty"`
-	CostMonth *int64 `json:"costMonth,omitempty"`
+	SetupFee  int64 `json:"setupFee,omitempty"`
+	CostMonth int64 `json:"costMonth,omitempty"`
 }
 
 // PlanStatus defines the observed state of Plan
