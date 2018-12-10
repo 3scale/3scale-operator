@@ -37,3 +37,14 @@ rules:
   - '*'
   verbs:
   - '*'
+  - "get"
+  - "create"
+- apiGroups:
+  - api.3scale.net
+  resources:
+  - '*'
+  - consolidateds
+  - bindings
+  - metrics
+  verbs:
+  - '*'
