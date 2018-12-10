@@ -39,5 +39,6 @@ rules:
   - consolidateds
   - bindings
   - metrics
+  - plans
   verbs:
   - '*'
