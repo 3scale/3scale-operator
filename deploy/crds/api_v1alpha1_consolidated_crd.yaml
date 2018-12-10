@@ -1,0 +1,13 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: consolidateds.api.3scale.net
+spec:
+  group: api.3scale.net
+  names:
+    kind: Consolidated
+    listKind: ConsolidatedList
+    plural: consolidateds
+    singular: consolidated
+  scope: Namespaced
+  version: v1alpha1

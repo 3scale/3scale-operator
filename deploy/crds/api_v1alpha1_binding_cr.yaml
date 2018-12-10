@@ -1,0 +1,7 @@
+apiVersion: api.3scale.net/v1alpha1
+kind: Binding
+metadata:
+  name: example-binding
+spec:
+  # Add fields here
+  size: 3
