@@ -113,13 +113,8 @@ type InternalPlan struct {
 	Name             string          `json:"name"`
 	TrialPeriodDays  int64           `json:"trialPeriodDays"`
 	ApprovalRequired bool            `json:"approvalRequired"`
-	Costs            InternalCosts   `json:"costs"`
+	Costs            PlanCost       `json:"costs"`
 	Limits           []InternalLimit `json:"limits"`
-}
-
-type InternalCosts struct {
-	SetupFee  int64 `json:"setupFee"`
-	CostMonth int64 `json:"costMonth"`
 }
 
 type InternalLimit struct {
