@@ -47,5 +47,6 @@ rules:
   - bindings
   - metrics
   - plans
+  - limits
   verbs:
   - '*'
