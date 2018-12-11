@@ -9,7 +9,7 @@ targets = $(foreach template,$(templates),../amp/$(template) ../productized_temp
 
 .DELETE_ON_ERROR: $(targets)
 
-DEPS = ../vendor $(shell find . -name '*.go')
+DEPS = ../../../vendor $(shell find . -name '*.go')
 
 all: $(targets) ## Generate all templates
 
