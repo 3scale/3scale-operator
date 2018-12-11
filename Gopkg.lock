@@ -10,6 +10,14 @@
   version = "v0.33.1"
 
 [[projects]]
+  digest = "1:75d2b55b13298745ec068057251d05d65bbae0a668201fe45ad6986551a55601"
+  name = "github.com/BurntSushi/toml"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005"
+  version = "v0.3.1"
+
+[[projects]]
   digest = "1:d8ebbd207f3d3266d4423ce4860c9f3794956306ded6c7ba312ecc69cdfbf04c"
   name = "github.com/PuerkitoBio/purell"
   packages = ["."]
@@ -412,7 +420,7 @@
   revision = "83b2fe56301417028bd52e56edd75768e2ea051c"
 
 [[projects]]
-  digest = "1:666dc2656c38279fc6f75c1e85b699dcea119202937173acf86ae129b4c751aa"
+  digest = "1:b186c2fcf87d05c5129ad0d89ea062853b0bdf6d6bca1ed4a22157962f2ad8dd"
   name = "github.com/operator-framework/operator-sdk"
   packages = [
     "commands/operator-sdk",
@@ -423,8 +431,10 @@
     "commands/operator-sdk/cmd/test",
     "commands/operator-sdk/cmd/up",
     "internal/util/fileutil",
+    "internal/util/k8sutil",
     "internal/util/projutil",
     "pkg/ansible/controller",
+    "pkg/ansible/controller/status",
     "pkg/ansible/events",
     "pkg/ansible/operator",
     "pkg/ansible/paramconv",
@@ -441,8 +451,8 @@
     "version",
   ]
   pruneopts = "NT"
-  revision = "273df3f64337d9e6cb56cb12833fa036c962402d"
-  version = "v0.1.1"
+  revision = "d6541603f2219f33966078a087732ecfc7a1dde5"
+  version = "v0.2.1"
 
 [[projects]]
   digest = "1:93b1d84c5fa6d1ea52f4114c37714cddd84d5b78f151b62bb101128dd51399bf"
@@ -475,14 +485,6 @@
   pruneopts = "NT"
   revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
   version = "v2.0.1"
-
-[[projects]]
-  digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
-  name = "github.com/sergi/go-diff"
-  packages = ["diffmatchpatch"]
-  pruneopts = "NT"
-  revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
-  version = "v1.0.0"
 
 [[projects]]
   digest = "1:cd2f2cba5b7ffafd0412fb647ff4bcff170292de57270f05fbbf391e3eb9566b"
