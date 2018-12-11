@@ -5,7 +5,7 @@ MAKEFLAGS := -j $(shell nproc)
 
 templates = amp.yml amp-s3.yml amp-eval.yml amp-eval-s3.yml amp-ha.yml
 
-targets = $(foreach template,$(templates),../amp/$(template) ../productized_templates/amp/$(template))
+targets = $(foreach template,$(templates),./auto-generated-templates/amp/$(template) ./auto-generated-templates/productized_templates/amp/$(template))
 
 .DELETE_ON_ERROR: $(targets)
 
@@ -18,10 +18,10 @@ clean: # Remove all generated templates
 
 component-name = $(notdir $(basename $(1)))-template
 
-$(foreach t,$(templates),../amp/$(t)): $(DEPS)
+$(foreach t,$(templates),./auto-generated-templates/amp/$(t)): $(DEPS)
 	go run main.go template $(call component-name,$@) >$@
 
-$(foreach t,$(templates),../productized_templates/amp/$(t)): $(DEPS)
+$(foreach t,$(templates),./auto-generated-templates/productized_templates/amp/$(t)): $(DEPS)
 	go run main.go template $(call component-name,$@)+productized >$@
 
 # Check http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -30,5 +30,5 @@ help: ## Print this help
 
 test:
 	$(MAKE) all
-	git diff --exit-code ..
-	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ..)" ]
+	git diff --exit-code ./auto-generated-templates
+	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./auto-generated-templates)" ]
