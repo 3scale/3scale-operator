@@ -16,12 +16,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/3scale/openshift-templates/generator/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	templatev1 "github.com/openshift/api/template/v1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 

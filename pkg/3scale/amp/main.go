@@ -12,7 +12,7 @@
 
 package main
 
-import "github.com/3scale/openshift-templates/generator/cmd"
+import "github.com/3scale/3scale-operator/pkg/3scale/amp/cmd"
 
 func main() {
 	cmd.Execute()
