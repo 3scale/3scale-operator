@@ -47,16 +47,26 @@ func init() {
 }
 
 type InternalAPI struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
 	Credentials InternalCredential `json:"credentials"`
-	Integration Integration      `json:"integration,omitempty"`
-	Metrics     []InternalMetric `json:"metrics,omitempty"`
-	Plans       []InternalPlan   `json:"Plans,omitempty"`
+	Integration Integration        `json:"integration,omitempty"`
+	Metrics     []InternalMetric   `json:"metrics,omitempty"`
+	Plans       []InternalPlan     `json:"Plans,omitempty"`
 }
 
 type Integration struct {
-	ApicastOnPrem InternalApicastOnPrem `json:"apicastOnPrem"`
+	ApicastOnPrem *InternalApicastOnPrem `json:"apicastOnPrem"`
+	CodePlugin    *InternalCodePlugin            `json:"codePlugin"`
+	ApicastHosted *InternalApicastHosted `json:"apicastHosted"`
+}
+
+type InternalApicastHosted struct {
+	PrivateBaseURL         string                        `json:"privateBaseURL"`
+	APITestGetRequest      string                        `json:"apiTestGetRequest"`
+	AuthenticationSettings ApicastAuthenticationSettings `json:"authenticationSettings"`
+	MappingRules           []InternalMappingRule         `json:"mappingRules"`
+	Policies               []InternalPolicy              `json:"policies"`
 }
 
 type InternalApicastOnPrem struct {
@@ -64,23 +74,44 @@ type InternalApicastOnPrem struct {
 	StagingPublicBaseURL    string                         `json:"stagingPublicBaseURL"`
 	ProductionPublicBaseURL string                         `json:"productionPublicBaseURL"`
 	APITestGetRequest       string                         `json:"apiTestGetRequest"`
-	AuthenticationSettings  InternalAuthenticationSettings `json:"authenticationSettings"`
-	Errors                  InternalErrors                 `json:"errors"`
+	AuthenticationSettings  ApicastAuthenticationSettings `json:"authenticationSettings"`
 	MappingRules            []InternalMappingRule          `json:"mappingRules"`
+	Policies                []InternalPolicy               `json:"policies"`
+}
+
+type InternalCodePlugin struct {
+	AuthenticationSettings CodePluginAuthenticationSettings `json:"authenticationSettings"`
+}
+
+type InternalPolicy struct {
+	Enabled bool `json:"enabled"`
 }
 
 type InternalAuthenticationSettings struct {
 	HostHeader  string                         `json:"hostHeader"`
 	SecretToken string                         `json:"secretToken"`
-	Credentials InternalIntegrationCredentials `json:"credentials"`
+	Credentials IntegrationCredentials `json:"credentials"`
 }
 
 type InternalIntegrationCredentials struct {
-	APIKey InternalAPIKey `json:"apiKey"`
+	APIKey          *InternalAPIKey          `json:"apiKey"`
+	AppID           *InternalAppID           `json:"appID"`
+	OpenIDConnector *InternalOpenIDConnector `json:"openIDConnector"`
 }
 
 type InternalAPIKey struct {
 	AuthParameterName   string `json:"authParameterName"`
+	CredentialsLocation string `json:"credentialsLocation"`
+}
+
+type InternalAppID struct {
+	AppIDParameterName  string `json:"appIDParameterName"`
+	AppKeyParameterName string `json:"appKeyParameterName"`
+	CredentialsLocation string `json:"credentialsLocation"`
+}
+
+type InternalOpenIDConnector struct {
+	Issuer              string `json:"issuer"`
 	CredentialsLocation string `json:"credentialsLocation"`
 }
 
@@ -113,7 +144,7 @@ type InternalPlan struct {
 	Name             string          `json:"name"`
 	TrialPeriodDays  int64           `json:"trialPeriodDays"`
 	ApprovalRequired bool            `json:"approvalRequired"`
-	Costs            PlanCost       `json:"costs"`
+	Costs            PlanCost        `json:"costs"`
 	Limits           []InternalLimit `json:"limits"`
 }
 

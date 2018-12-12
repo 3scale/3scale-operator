@@ -48,5 +48,6 @@ rules:
   - metrics
   - plans
   - limits
+  - mappingrules
   verbs:
   - '*'

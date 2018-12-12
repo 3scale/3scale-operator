@@ -5,7 +5,7 @@ import (
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"log"
@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"time"
 )
 
 /**
@@ -91,6 +92,7 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		log.Printf("Error: %s", err)
 		return reconcile.Result{}, err
 	}
 
@@ -100,7 +102,7 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 	// GET THE Consolidated OBJECT.
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: consolidated.Name, Namespace: consolidated.Namespace}, found)
 
-	// IF Consolidated doesn't exists:
+	// IF Consolidated doesn't exists, let's create it.
 	if err != nil && errors.IsNotFound(err) {
 		log.Printf("Creating new Consolidated object %s/%s\n", consolidated.Namespace, consolidated.Name)
 
@@ -111,11 +113,13 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 		err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.CredentialsRef.Name, Namespace: instance.Namespace}, secret)
 		InternalCredential := apiv1alpha1.InternalCredential{}
 
-		if err != nil {
+		if err != nil && errors.IsNotFound(err) {
 
 			log.Printf("secret: %s for binding: %s NOT found", instance.Spec.CredentialsRef.Name, instance.Name)
+			//return reconcile.Result{}, err
+		} else if err != nil {
+			log.Printf("Error: %s", err)
 			return reconcile.Result{}, err
-
 		} else {
 
 			log.Printf("secret: %s found for %s", instance.Spec.CredentialsRef.Name, instance.Name)
@@ -124,9 +128,6 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 				AccessToken: string(secret.Data["access_token"]),
 				AdminURL:    string(secret.Data["admin_portal_url"]),
 			}
-
-			log.Printf("%#v", InternalCredential)
-
 		}
 
 		// GET APIS
@@ -137,67 +138,365 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 
 		err = r.client.List(context.TODO(), opts, apis)
 
-		if err != nil {
-			// Something is broken
-			return reconcile.Result{}, err
-		}
-
-		if len(apis.Items) != 0 {
-
-			// Add each API info to the consolidated object
-			for _, api := range apis.Items {
-
-				internalAPI := apiv1alpha1.InternalAPI{
-					Name:        api.Name,
-					Description: api.Spec.Description,
-					Credentials: InternalCredential,
-				}
-
-				//Get Metrics for each API
-				metrics := &apiv1alpha1.MetricList{}
-				opts := &client.ListOptions{}
-				opts.InNamespace(api.Namespace)
-				opts.MatchingLabels(api.Spec.MetricSelector.MatchLabels)
-				err = r.client.List(context.TODO(), opts, metrics)
-
-				if err != nil && errors.IsNotFound(err) {
-					// Nothing has been found
-					log.Printf("No metrics found for: %s\n", api.Name)
-				} else if err != nil {
-					// Something is broken
-					return reconcile.Result{}, err
-				} else {
-					// Let's do our job.
-					for _, metric := range metrics.Items {
-
-						internalMetric := apiv1alpha1.InternalMetric{
-							Name:        metric.Name,
-							Unit:        metric.Spec.Unit,
-							Description: metric.Spec.Description,
-						}
-
-						internalAPI.Metrics = append(internalAPI.Metrics, internalMetric)
-					}
-				}
-
-				consolidated.Spec.APIs = append(consolidated.Spec.APIs, internalAPI)
-
-				log.Printf("api: %#v\n", internalAPI)
-			}
-
-			// Create the consolidated object.
-			err := r.client.Create(context.TODO(), consolidated)
-
-			// Check if something went wrong
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-
-		} else {
+		if err != nil && errors.IsNotFound(err) {
 
 			// No API objects
 			log.Printf("Binding: %s in namespace: %s doesn't match any API object", instance.Name, instance.Namespace)
+			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
 
+		} else if err != nil {
+			// Something is broken
+			log.Printf("Error: %s", err)
+			return reconcile.Result{}, err
+		}
+
+		// Add each API info to the consolidated object
+		for _, api := range apis.Items {
+
+			internalAPI := apiv1alpha1.InternalAPI{
+				Name:        api.Name,
+				Description: api.Spec.Description,
+				Credentials: InternalCredential,
+				Integration: apiv1alpha1.Integration{},
+				Metrics:     nil,
+				Plans:       nil,
+			}
+
+			var opts client.ListOptions
+
+			//Get Metrics for each API
+			metrics := &apiv1alpha1.MetricList{}
+			opts = client.ListOptions{}
+			opts.InNamespace(api.Namespace)
+			opts.MatchingLabels(api.Spec.MetricSelector.MatchLabels)
+			err = r.client.List(context.TODO(), &opts, metrics)
+
+			if err != nil && errors.IsNotFound(err) {
+				// Nothing has been found
+				log.Printf("No metrics found for: %s\n", api.Name)
+			} else if err != nil {
+				// Something is broken
+				log.Printf("Error: %s", err)
+				return reconcile.Result{}, err
+			} else {
+				// Let's do our job.
+				for _, metric := range metrics.Items {
+
+					internalMetric := apiv1alpha1.InternalMetric{
+						Name:        metric.Name,
+						Unit:        metric.Spec.Unit,
+						Description: metric.Spec.Description,
+					}
+
+					internalAPI.Metrics = append(internalAPI.Metrics, internalMetric)
+				}
+			}
+
+			//Get Plans for each API
+			plans := &apiv1alpha1.PlanList{}
+			opts = client.ListOptions{}
+			opts.InNamespace(api.Namespace)
+			opts.MatchingLabels(api.Spec.PlanSelector.MatchLabels)
+			err = r.client.List(context.TODO(), &opts, plans)
+
+			if err != nil && errors.IsNotFound(err) {
+				// Nothing has been found
+				log.Printf("No plans found for: %s\n", api.Name)
+			} else if err != nil {
+				// Something is broken
+				log.Printf("Error: %s", err)
+				return reconcile.Result{}, err
+			} else {
+				// Let's do our job.
+				internalPlan := apiv1alpha1.InternalPlan{}
+				for _, plan := range plans.Items {
+
+					// Fill the internal Plan with Plan and Limits.
+					internalPlan = apiv1alpha1.InternalPlan{
+						Name:             plan.Name,
+						TrialPeriodDays:  plan.Spec.TrialPeriod,
+						ApprovalRequired: plan.Spec.AprovalRequired,
+						Costs:            plan.Spec.Costs,
+					}
+
+					// Get the Limits now
+					limits := &apiv1alpha1.LimitList{}
+					opts = client.ListOptions{}
+					opts.InNamespace(api.Namespace)
+					opts.MatchingLabels(plan.Spec.LimitSelector.MatchLabels)
+					err = r.client.List(context.TODO(), &opts, limits)
+
+					if err != nil && errors.IsNotFound(err) {
+						// Nothing has been found
+						log.Printf("No limits found for: %s\n", plan.Name)
+					} else if err != nil {
+						// Something is broken
+						log.Printf("Error: %s", err)
+						return reconcile.Result{}, err
+
+					} else {
+
+						// Let's do our job.
+						for _, limit := range limits.Items {
+
+							metric := &apiv1alpha1.Metric{}
+							var namespace string
+
+							if limit.Spec.Metric.Namespace == "" {
+								namespace = limit.Namespace
+							} else {
+								namespace = limit.Spec.Metric.Namespace
+							}
+
+							reference := types.NamespacedName{
+								Namespace: namespace,
+								Name:      limit.Spec.Metric.Name,
+							}
+							err = r.client.Get(context.TODO(), reference, metric)
+
+							if err != nil && errors.IsNotFound(err) {
+								// Nothing has been found
+								log.Printf("Invalid Metric for limit: %s\n", limit.Name)
+
+								return reconcile.Result{
+									Requeue:      true,
+									RequeueAfter: 5 * time.Second,
+								}, nil
+
+							} else if err != nil {
+								// Something is broken
+								log.Printf("Error: %s", err)
+								return reconcile.Result{}, err
+							} else {
+								internalLimit := apiv1alpha1.InternalLimit{
+									Name:        limit.Name,
+									Description: limit.Spec.Description,
+									Period:      limit.Spec.Period,
+									MaxValue:    limit.Spec.MaxValue,
+									Metric:      metric.Name,
+								}
+
+								internalPlan.Limits = append(internalPlan.Limits, internalLimit)
+							}
+						}
+					}
+
+					// Add the Plan to the internal API object
+					internalAPI.Plans = append(internalAPI.Plans, internalPlan)
+				}
+			}
+
+			// Get integration Method info.
+			if api.Spec.IntegrationMethod.ApicastHosted != nil {
+				// ApicastHosted
+				log.Println("Integration method: ApicastHosted")
+
+				internalApicastHosted := apiv1alpha1.InternalApicastHosted{
+					PrivateBaseURL:         api.Spec.IntegrationMethod.ApicastOnPrem.PrivateBaseURL,
+					APITestGetRequest:      api.Spec.IntegrationMethod.ApicastOnPrem.APITestGetRequest,
+					AuthenticationSettings: api.Spec.IntegrationMethod.ApicastOnPrem.AuthenticationSettings,
+					MappingRules:           nil,
+					Policies:               nil,
+				}
+
+				// Get Mapping Rules
+				mappingRules := &apiv1alpha1.MappingRuleList{}
+				opts = client.ListOptions{}
+				opts.InNamespace(api.Namespace)
+				opts.MatchingLabels(api.Spec.IntegrationMethod.ApicastHosted.MappingRulesSelector.MatchLabels)
+				err = r.client.List(context.TODO(), &opts, mappingRules)
+
+				if err != nil && errors.IsNotFound(err) {
+					// Nothing has been found
+					log.Printf("No mappingRules found for: %s\n", api.Name)
+				} else if err != nil {
+					// Something is broken
+					log.Printf("Error: %s", err)
+					return reconcile.Result{}, err
+				} else {
+
+					for _, mappingRule := range mappingRules.Items {
+						// GET metric for mapping rule.
+						metric := &apiv1alpha1.Metric{}
+						var namespace string
+
+						if mappingRule.Spec.MetricRef.Namespace == "" {
+							namespace = api.Namespace
+						} else {
+							namespace = mappingRule.Spec.MetricRef.Namespace
+						}
+
+						reference := types.NamespacedName{
+							Namespace: namespace,
+							Name:      mappingRule.Spec.MetricRef.Name,
+						}
+						err = r.client.Get(context.TODO(), reference, metric)
+
+						// TODO: How to handle metric HITS.
+
+						if err != nil && errors.IsNotFound(err) {
+							// Nothing has been found
+							log.Printf("Invalid Metric for MappingRule: %s\n", mappingRule.Name)
+
+							return reconcile.Result{
+								Requeue:      true,
+								RequeueAfter: 5 * time.Second,
+							}, nil
+
+						} else if err != nil {
+
+							// Something is broken
+							log.Printf("Error: %s", err)
+							return reconcile.Result{}, err
+
+						} else {
+
+							internalMappingRule := apiv1alpha1.InternalMappingRule{
+								Name:      mappingRule.Name,
+								Path:      mappingRule.Spec.Path,
+								Method:    mappingRule.Spec.Method,
+								Increment: mappingRule.Spec.Increment,
+								Metric:    metric.Name,
+							}
+
+							internalApicastHosted.MappingRules = append(
+								internalApicastHosted.MappingRules,
+								internalMappingRule,
+							)
+
+						}
+
+					}
+
+				}
+				internalAPI.Integration.ApicastHosted = &internalApicastHosted
+
+				// Get Policies
+				// api.Spec.IntegrationMethod.ApicastOnPrem.PoliciesSelector
+
+				log.Println("Integration method: ApicastHosted")
+
+			} else if api.Spec.IntegrationMethod.ApicastOnPrem != nil {
+
+				internalApicastOnPrem := apiv1alpha1.InternalApicastOnPrem{
+					PrivateBaseURL:          api.Spec.IntegrationMethod.ApicastOnPrem.PrivateBaseURL,
+					StagingPublicBaseURL:    api.Spec.IntegrationMethod.ApicastOnPrem.StagingPublicBaseURL,
+					ProductionPublicBaseURL: api.Spec.IntegrationMethod.ApicastOnPrem.PrivateBaseURL,
+					APITestGetRequest:       api.Spec.IntegrationMethod.ApicastOnPrem.APITestGetRequest,
+					AuthenticationSettings:  api.Spec.IntegrationMethod.ApicastOnPrem.AuthenticationSettings,
+					MappingRules:            nil,
+					Policies:                nil,
+				}
+				// Get Mapping Rules
+				// api.Spec.IntegrationMethod.ApicastOnPrem.MappingRulesSelector
+
+				mappingRules := &apiv1alpha1.MappingRuleList{}
+				opts = client.ListOptions{}
+				opts.InNamespace(api.Namespace)
+				opts.MatchingLabels(api.Spec.IntegrationMethod.ApicastOnPrem.MappingRulesSelector.MatchLabels)
+				err = r.client.List(context.TODO(), &opts, mappingRules)
+
+				if err != nil && errors.IsNotFound(err) {
+					// Nothing has been found
+					log.Printf("No mappingRules found for: %s\n", api.Name)
+				} else if err != nil {
+					// Something is broken
+					log.Printf("Error: %s", err)
+					return reconcile.Result{}, err
+				} else {
+
+					for _, mappingRule := range mappingRules.Items {
+						// GET metric for mapping rule.
+						metric := &apiv1alpha1.Metric{}
+						var namespace string
+
+						if mappingRule.Spec.MetricRef.Namespace == "" {
+							namespace = api.Namespace
+						} else {
+							namespace = mappingRule.Spec.MetricRef.Namespace
+						}
+
+						reference := types.NamespacedName{
+							Namespace: namespace,
+							Name:      mappingRule.Spec.MetricRef.Name,
+						}
+						err = r.client.Get(context.TODO(), reference, metric)
+
+						// TODO: How to handle metric HITS.
+
+						if err != nil && errors.IsNotFound(err) {
+							// Nothing has been found
+							log.Printf("Invalid Metric for MappingRule: %s\n", mappingRule.Name)
+
+							return reconcile.Result{
+								Requeue:      true,
+								RequeueAfter: 5 * time.Second,
+							}, nil
+
+						} else if err != nil {
+
+							// Something is broken
+							log.Printf("Error: %s", err)
+							return reconcile.Result{}, err
+
+						} else {
+
+							internalMappingRule := apiv1alpha1.InternalMappingRule{
+								Name:      mappingRule.Name,
+								Path:      mappingRule.Spec.Path,
+								Method:    mappingRule.Spec.Method,
+								Increment: mappingRule.Spec.Increment,
+								Metric:    metric.Name,
+							}
+
+							internalApicastOnPrem.MappingRules = append(
+								internalApicastOnPrem.MappingRules,
+								internalMappingRule,
+							)
+
+						}
+
+					}
+
+				}
+				internalAPI.Integration.ApicastOnPrem = &internalApicastOnPrem
+
+				// Get Policies
+				// api.Spec.IntegrationMethod.ApicastOnPrem.PoliciesSelector
+
+				log.Println("Integration method: ApicastOnPrem")
+
+			} else if api.Spec.IntegrationMethod.CodePlugin != nil {
+				// Assume Code plugin.
+
+				internalCodePlugin := apiv1alpha1.InternalCodePlugin{
+					AuthenticationSettings: apiv1alpha1.CodePluginAuthenticationSettings{
+						Credentials: api.Spec.IntegrationMethod.CodePlugin.AuthenticationSettings.Credentials,
+					},
+				}
+
+				internalAPI.Integration.CodePlugin = &internalCodePlugin
+
+				log.Println("Integration method: CodePlugin")
+			} else {
+				log.Println("invalid integration method of api: %s", api.Name)
+
+				return reconcile.Result{
+					Requeue:      true,
+					RequeueAfter: 5 * time.Second,
+				}, nil
+			}
+
+			consolidated.Spec.APIs = append(consolidated.Spec.APIs, internalAPI)
+		}
+
+		// Create the consolidated object.
+		err = r.client.Create(context.TODO(), consolidated)
+
+		// Check if something went wrong
+		if err != nil {
+			log.Printf("Error: %s", err)
+			return reconcile.Result{}, err
 		}
 
 		//IF getting the consolidated object failed somehow.
@@ -211,7 +510,6 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 
 		// Object Already exists
 		log.Printf("Skip reconcile: Consolidated config %s/%s already exists", found.Namespace, found.Name)
-
 	}
 
 	return reconcile.Result{}, nil
@@ -220,10 +518,10 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 func newConsolidated(binding *apiv1alpha1.Binding) *apiv1alpha1.Consolidated {
 
 	return &apiv1alpha1.Consolidated{
-		TypeMeta: metav1.TypeMeta{
+		TypeMeta: v1.TypeMeta{
 			Kind: "Consolidated",
 		},
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name:      binding.Name + "-consolidated",
 			Namespace: binding.Namespace,
 		},
@@ -233,28 +531,4 @@ func newConsolidated(binding *apiv1alpha1.Binding) *apiv1alpha1.Consolidated {
 		},
 		Status: apiv1alpha1.ConsolidatedStatus{},
 	}
-
 }
-
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-//func newPodForCR(cr *apiv1alpha1.Binding) *corev1.Pod {
-//	labels := map[string]string{
-//		"app": cr.Name,
-//	}
-//	return &corev1.Pod{
-//		ObjectMeta: metav1.ObjectMeta{
-//			Name:      cr.Name + "-pod",
-//			Namespace: cr.Namespace,
-//			Labels:    labels,
-//		},
-//		Spec: corev1.PodSpec{
-//			Containers: []corev1.Container{
-//				{
-//					Name:    "busybox",
-//					Image:   "busybox",
-//					Command: []string{"sleep", "3600"},
-//				},
-//			},
-//		},
-//	}
-//}
