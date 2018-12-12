@@ -1,0 +1,7 @@
+apiVersion: api.3scale.net/v1alpha1
+kind: MappingRule
+metadata:
+  name: example-mappingrule
+spec:
+  # Add fields here
+  size: 3
