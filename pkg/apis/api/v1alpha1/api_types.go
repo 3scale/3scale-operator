@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -12,10 +11,10 @@ import (
 type APISpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Description string `json:"description"`
-	IntegrationRef v1.ObjectReference `json:"integrationRef"`
-	PlanSelector metav1.LabelSelector `json:"planSelector"`
-	MetricSelector metav1.LabelSelector `json:"metricSelector"`
+	Description       string               `json:"description"`
+	IntegrationMethod IntegrationMethod    `json:"integrationMethod"`
+	PlanSelector      metav1.LabelSelector `json:"planSelector"`
+	MetricSelector    metav1.LabelSelector `json:"metricSelector"`
 }
 
 // APIStatus defines the observed state of API
@@ -47,4 +46,80 @@ type APIList struct {
 
 func init() {
 	SchemeBuilder.Register(&API{}, &APIList{})
+}
+
+type IntegrationMethod struct {
+	ApicastOnPrem *ApicastOnPrem `json:"apicastOnPrem"`
+	CodePlugin    *CodePlugin    `json:"codePlugin"`
+	ApicastHosted *ApicastHosted `json:"apicastHosted"`
+}
+
+type ApicastHosted struct {
+	PrivateBaseURL         string                        `json:"privateBaseURL"`
+	APITestGetRequest      string                        `json:"apiTestGetRequest"`
+	AuthenticationSettings ApicastAuthenticationSettings `json:"authenticationSettings"`
+	MappingRulesSelector   metav1.LabelSelector          `json:"mappingRulesSelector"`
+	PoliciesSelector       metav1.LabelSelector          `json:"policiesSelector"`
+}
+
+type ApicastAuthenticationSettings struct {
+	HostHeader  string                 `json:"hostHeader"`
+	SecretToken string                 `json:"secretToken"`
+	Credentials IntegrationCredentials `json:"credentials"`
+	Errors      Errors                 `json:"errors"`
+}
+
+type APIKey struct {
+	AuthParameterName   string `json:"authParameterName"`
+	CredentialsLocation string `json:"credentialsLocation"`
+}
+
+type AppID struct {
+	AppIDParameterName  string `json:"appIDParameterName"`
+	AppKeyParameterName string `json:"appKeyParameterName"`
+	CredentialsLocation string `json:"credentialsLocation"`
+}
+
+type Errors struct {
+	AuthenticationFailed  Authentication `json:"authenticationFailed"`
+	AuthenticationMissing Authentication `json:"authenticationMissing"`
+}
+
+type Authentication struct {
+	ResponseCode int64  `json:"responseCode"`
+	ContentType  string `json:"contentType"`
+	ResponseBody string `json:"responseBody"`
+}
+
+type MatchLabels struct {
+	API string `json:"api"`
+}
+
+type ApicastOnPrem struct {
+	PrivateBaseURL          string                        `json:"privateBaseURL"`
+	StagingPublicBaseURL    string                        `json:"stagingPublicBaseURL"`
+	ProductionPublicBaseURL string                        `json:"productionPublicBaseURL"`
+	APITestGetRequest       string                        `json:"apiTestGetRequest"`
+	AuthenticationSettings  ApicastAuthenticationSettings `json:"authenticationSettings"`
+	MappingRulesSelector    metav1.LabelSelector          `json:"mappingRulesSelector"`
+	PoliciesSelector        metav1.LabelSelector          `json:"policiesSelector"`
+}
+
+type IntegrationCredentials struct {
+	APIKey          *APIKey          `json:"apiKey"`
+	AppID           *AppID           `json:"appID"`
+	OpenIDConnector *OpenIDConnector `json:"openIDConnector"`
+}
+
+type OpenIDConnector struct {
+	Issuer              string `json:"issuer"`
+	CredentialsLocation string `json:"credentialsLocation"`
+}
+
+type CodePlugin struct {
+	AuthenticationSettings CodePluginAuthenticationSettings `json:"authenticationSettings"`
+}
+
+type CodePluginAuthenticationSettings struct {
+	Credentials IntegrationCredentials `json:"credentials"`
 }
