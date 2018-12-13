@@ -3,7 +3,7 @@ package component
 import (
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -320,26 +320,26 @@ func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:     "AMP_BACKEND_IMAGE",
 			Required: true,
-			Value:    "quay.io/3scale/amp:backend-master",
+			Value:    "quay.io/3scale/apisonator:nightly",
 		},
 		templatev1.Parameter{
 			Name:     "AMP_ZYNC_IMAGE",
-			Value:    "quay.io/3scale/amp:zync-master",
+			Value:    "quay.io/3scale/zync:nightly",
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_APICAST_IMAGE",
-			Value:    "quay.io/3scale/amp:apicast-master",
+			Value:    "quay.io/3scale/apicast:nightly",
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_ROUTER_IMAGE",
-			Value:    "quay.io/3scale/amp:wildcard-router-master",
+			Value:    "quay.io/3scale/wildcard-router:nightly",
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_SYSTEM_IMAGE",
-			Value:    "quay.io/3scale/amp:system-master",
+			Value:    "quay.io/3scale/porta:nightly",
 			Required: true,
 		},
 		templatev1.Parameter{
