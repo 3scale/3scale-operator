@@ -1,0 +1,25 @@
+apiVersion: api.3scale.net/v1alpha1
+kind: MappingRule
+metadata:
+  name: listapps
+  labels:
+    api: myapi
+spec:
+  path: /apps1/
+  method: GET
+  increment: 1
+  metricRef:
+    name: listapps
+---
+apiVersion: api.3scale.net/v1alpha1
+kind: MappingRule
+metadata:
+  name: getapps
+  labels:
+    api: myapi
+spec:
+  path: /apps2/
+  method: GET
+  increment: 1
+  metricRef:
+    name: getapps

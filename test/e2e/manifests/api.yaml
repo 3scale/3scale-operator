@@ -1,0 +1,60 @@
+apiVersion: api.3scale.net/v1alpha1
+kind: API
+metadata:
+  name: myapi
+  labels:
+     environment: production
+spec:
+  description: "3scale service for my awesome api"
+  integrationMethod:
+    apicastOnPrem:
+      privateBaseURL: https://echo-api.3scale.net:443
+      stagingPublicBaseURL: https://api.testing.com
+      productionPublicBaseURL: https://api.testing.com
+      apiTestGetRequest: /
+      authenticationSettings:
+        hostHeader: testing.com
+        secretToken: Shared_secret_sent_from_proxy_to_API_backend_9603f637ca51ccfe
+        credentials:
+          apiKey:
+            authParameterName: user_key
+            credentialsLocation: header / query
+        errors:
+          authenticationFailed:
+            responseCode: 403
+            contentType: "text/plain; charset=us-ascii"
+            responseBody: "Authentication failed"
+          authenticationMissing:
+            responseCode: 404
+            contentType: "text/plain; charset=us-ascii"
+            responseBody: "No Mapping Rule matched"          
+      mappingRulesSelector:
+        matchLabels:
+          api: myapi
+  PlanSelector:
+    matchLabel: 
+      api: myapi
+  metricSelector:
+    matchLabel: 
+      api: myapi
+---
+apiVersion: api.3scale.net/v1alpha1
+kind: API
+metadata:
+  name: myapi2
+  labels:
+     environment: production
+spec:
+  description: "3scale service for my awesome api"
+  integrationMethod:
+    codePlugin:
+      apiKey: null
+  PlanSelector:
+    matchLabel:
+      environment: production
+      api: myapi2
+  metricSelector:
+    matchLabel:
+      api: myapi
+
+
