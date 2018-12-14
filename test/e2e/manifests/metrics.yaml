@@ -1,0 +1,22 @@
+apiVersion: api.3scale.net/v1alpha1
+kind: Metric
+metadata:
+  name: listapps
+  labels:
+    environment: production
+spec:
+  description: "Example method" 
+  unit: hit
+  incrementHits: true
+---
+apiVersion: api.3scale.net/v1alpha1
+kind: Metric
+metadata:
+  name: getapps
+  labels:
+    environment: production
+spec:
+  description: "Example metric" 
+  unit: hit
+  incrementHits: false
+
