@@ -112,6 +112,11 @@ func (r *ReconcileAMP) Reconcile(request reconcile.Request) (reconcile.Result, e
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
+		instance.SetDefaults()
+		r.client.Update(context.TODO(), instance)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 		err = r.client.Create(context.TODO(), pod)
 		if err != nil {
 			return reconcile.Result{}, err
