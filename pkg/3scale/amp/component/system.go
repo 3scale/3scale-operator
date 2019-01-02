@@ -51,15 +51,16 @@ const (
 )
 
 const (
-	SystemSecretSystemSeedSecretName                 = "system-seed"
-	SystemSecretSystemSeedMasterDomainFieldName      = "MASTER_DOMAIN"
+	SystemSecretSystemSeedSecretName                = "system-seed"
+	SystemSecretSystemSeedMasterDomainFieldName     = "MASTER_DOMAIN"
 	SystemSecretSystemSeedMasterAccessTokenFieldName = "MASTER_ACCESS_TOKEN"
-	SystemSecretSystemSeedMasterUserFieldName        = "MASTER_USER"
-	SystemSecretSystemSeedMasterPasswordFieldName    = "MASTER_PASSWORD"
-	SystemSecretSystemSeedAdminAccessTokenFieldName  = "ADMIN_ACCESS_TOKEN"
-	SystemSecretSystemSeedAdminUserFieldName         = "ADMIN_USER"
-	SystemSecretSystemSeedAdminPasswordFieldName     = "ADMIN_PASSWORD"
-	SystemSecretSystemSeedTenantNameFieldName        = "TENANT_NAME"
+	SystemSecretSystemSeedMasterUserFieldName       = "MASTER_USER"
+	SystemSecretSystemSeedMasterPasswordFieldName   = "MASTER_PASSWORD"
+	SystemSecretSystemSeedAdminAccessTokenFieldName = "ADMIN_ACCESS_TOKEN"
+	SystemSecretSystemSeedAdminUserFieldName        = "ADMIN_USER"
+	SystemSecretSystemSeedAdminPasswordFieldName    = "ADMIN_PASSWORD"
+	SystemSecretSystemSeedAdminEmailFieldName       = "ADMIN_EMAIL"
+	SystemSecretSystemSeedTenantNameFieldName       = "TENANT_NAME"
 )
 
 const (
@@ -106,6 +107,7 @@ type systemNonRequiredOptions struct {
 	redisURL                               *string
 	apicastSystemMasterProxyConfigEndpoint *string
 	apicastSystemMasterBaseURL             *string
+	adminEmail                             *string
 }
 
 func NewSystem(options []string) *System {
@@ -129,6 +131,10 @@ func (s *SystemOptionsBuilder) AdminPassword(adminPassword string) {
 
 func (s *SystemOptionsBuilder) AdminUsername(adminUsername string) {
 	s.options.adminUsername = adminUsername
+}
+
+func (s *SystemOptionsBuilder) AdminEmail(adminEmail string) {
+	s.options.adminEmail = &adminEmail
 }
 
 func (s *SystemOptionsBuilder) AmpRelease(ampRelease string) {
@@ -278,6 +284,7 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 	defaultRedisURL := "redis://system-redis:6379/1"
 	defaultApicastSystemMasterProxyConfigEndpoint := "http://" + s.options.apicastAccessToken + "@system-master:3000/master/api/proxy/configs"
 	defaultApicastSystemMasterBaseURL := "http://" + s.options.apicastAccessToken + "@system-master:3000"
+	defaultAdminEmail := ""
 
 	if s.options.memcachedServers == nil {
 		s.options.memcachedServers = &defaultMemcachedServers
@@ -298,6 +305,10 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 	if s.options.apicastSystemMasterBaseURL == nil {
 		s.options.apicastSystemMasterBaseURL = &defaultApicastSystemMasterBaseURL
 	}
+
+	if s.options.adminEmail == nil {
+		s.options.adminEmail = &defaultAdminEmail
+	}
 }
 
 type SystemOptionsProvider interface {
@@ -311,6 +322,7 @@ func (o *CLISystemOptionsProvider) GetSystemOptions() (*SystemOptions, error) {
 	sob.AdminAccessToken("${ADMIN_ACCESS_TOKEN}")
 	sob.AdminPassword("${ADMIN_PASSWORD}")
 	sob.AdminUsername("${ADMIN_USERNAME}")
+	sob.AdminEmail("${ADMIN_EMAIL}")
 	sob.AmpRelease("${AMP_RELEASE}")
 	sob.ApicastAccessToken("${APICAST_ACCESS_TOKEN}")
 	sob.ApicastRegistryURL("${APICAST_REGISTRY_URL}")
@@ -396,6 +408,10 @@ func (system *System) buildParameters(template *templatev1.Template) {
 			Name:     "ADMIN_USERNAME",
 			Value:    "admin",
 			Required: true,
+		},
+		templatev1.Parameter{
+			Name:     "ADMIN_EMAIL",
+			Required: false,
 		},
 		templatev1.Parameter{
 			Name:        "ADMIN_ACCESS_TOKEN",
@@ -577,6 +593,7 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 		createEnvvarFromSecret("ADMIN_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminAccessTokenFieldName),
 		createEnvvarFromSecret("USER_LOGIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminUserFieldName),
 		createEnvvarFromSecret("USER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminPasswordFieldName),
+		createEnvvarFromSecret("USER_EMAIL", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminEmailFieldName),
 		createEnvvarFromSecret("TENANT_NAME", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedTenantNameFieldName),
 
 		createEnvVarFromValue("THINKING_SPHINX_ADDRESS", "system-sphinx"),
@@ -764,14 +781,15 @@ func (system *System) buildSystemSeedSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemSeedMasterDomainFieldName:      system.Options.masterName,
+			SystemSecretSystemSeedMasterDomainFieldName:     system.Options.masterName,
 			SystemSecretSystemSeedMasterAccessTokenFieldName: system.Options.masterAccessToken,
-			SystemSecretSystemSeedMasterUserFieldName:        system.Options.masterUsername,
-			SystemSecretSystemSeedMasterPasswordFieldName:    system.Options.masterPassword,
-			SystemSecretSystemSeedAdminAccessTokenFieldName:  system.Options.adminAccessToken,
-			SystemSecretSystemSeedAdminUserFieldName:         system.Options.adminUsername,
-			SystemSecretSystemSeedAdminPasswordFieldName:     system.Options.adminPassword,
-			SystemSecretSystemSeedTenantNameFieldName:        system.Options.tenantName,
+			SystemSecretSystemSeedMasterUserFieldName:       system.Options.masterUsername,
+			SystemSecretSystemSeedMasterPasswordFieldName:   system.Options.masterPassword,
+			SystemSecretSystemSeedAdminAccessTokenFieldName: system.Options.adminAccessToken,
+			SystemSecretSystemSeedAdminUserFieldName:        system.Options.adminUsername,
+			SystemSecretSystemSeedAdminPasswordFieldName:    system.Options.adminPassword,
+			SystemSecretSystemSeedAdminEmailFieldName:       *system.Options.adminEmail,
+			SystemSecretSystemSeedTenantNameFieldName:       system.Options.tenantName,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
