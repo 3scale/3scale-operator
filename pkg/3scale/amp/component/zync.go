@@ -14,6 +14,7 @@ import (
 
 type Zync struct {
 	options []string
+	Options *ZyncOptions
 }
 
 type ZyncOptions struct {
@@ -58,6 +59,25 @@ func (z *ZyncOptionsBuilder) Build() (*ZyncOptions, error) {
 	}
 
 	return &z.options, nil
+}
+
+type ZyncOptionsProvider interface {
+	GetZyncOptions() *ZyncOptions
+}
+type CLIZyncOptionsProvider struct {
+}
+
+func (o *CLIZyncOptionsProvider) GetZyncOptions() (*ZyncOptions, error) {
+	zob := ZyncOptionsBuilder{}
+	zob.AppLabel("${APP_LABEL}")
+	zob.AuthenticationToken("${ZYNC_AUTHENTICATION_TOKEN}")
+	zob.DatabasePassword("${ZYNC_DATABASE_PASSWORD}")
+	zob.SecretKeyBase("${ZYNC_SECRET_KEY_BASE}")
+	res, err := zob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Zync Options - %s", err)
+	}
+	return res, nil
 }
 
 func NewZync(options []string) *Zync {
