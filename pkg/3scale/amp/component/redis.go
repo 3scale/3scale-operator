@@ -31,8 +31,26 @@ func NewRedis(options []string) *Redis {
 
 func (redis *Redis) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
 	redis.buildParameters(template)
-	redis.buildBackendRedisObjects(template)
-	redis.buildSystemRedisObjects(template)
+	redis.addObjectsIntoTemplate(template)
+}
+
+func (redis *Redis) GetObjects() ([]runtime.RawExtension, error) {
+	objects := redis.buildObjects()
+	return objects, nil
+}
+
+func (redis *Redis) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := redis.buildObjects()
+	template.Objects = append(template.Objects, objects...)
+}
+
+func (redis *Redis) buildObjects() []runtime.RawExtension {
+	backendRedisObjects := redis.buildBackendRedisObjects()
+	systemRedisObjects := redis.buildSystemRedisObjects()
+
+	objects := backendRedisObjects
+	objects = append(objects, systemRedisObjects...)
+	return objects
 }
 
 func (redis *Redis) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -51,7 +69,7 @@ func (redis *Redis) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (redis *Redis) buildBackendRedisObjects(template *templatev1.Template) {
+func (redis *Redis) buildBackendRedisObjects() []runtime.RawExtension {
 	dc := redis.buildBackendDeploymentConfig()
 	bs := redis.buildBackendService()
 	cm := redis.buildBackendConfigMap()
@@ -62,7 +80,7 @@ func (redis *Redis) buildBackendRedisObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: cm},
 		runtime.RawExtension{Object: bpvc},
 	}
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 func (redis *Redis) buildBackendDeploymentConfig() *appsv1.DeploymentConfig {
@@ -466,7 +484,7 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 
 ////// Begin System Redis
 
-func (redis *Redis) buildSystemRedisObjects(template *templatev1.Template) {
+func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 
 	systemRedisDC := &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
@@ -591,7 +609,7 @@ func (redis *Redis) buildSystemRedisObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: systemRedisPVC},
 	}
 
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 ////// End System Redis
