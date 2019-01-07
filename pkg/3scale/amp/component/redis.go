@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
@@ -15,6 +17,7 @@ type Redis struct {
 	// TemplateObjects
 	// CLI Flags??? should be in this object???
 	options []string
+	Options *RedisOptions
 }
 
 type RedisOptions struct {
@@ -29,6 +32,46 @@ func NewRedis(options []string) *Redis {
 	return redis
 }
 
+type RedisOptionsBuilder struct {
+	options RedisOptions
+}
+
+func (r *RedisOptionsBuilder) AppLabel(appLabel string) {
+	r.options.appLabel = appLabel
+}
+
+func (r *RedisOptionsBuilder) Image(image string) {
+	r.options.image = image
+}
+
+func (r *RedisOptionsBuilder) Build() (*RedisOptions, error) {
+	if r.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if r.options.image == "" {
+		return nil, fmt.Errorf("no Redis Image has been provided")
+	}
+
+	return &r.options, nil
+}
+
+type RedisOptionsProvider interface {
+	GetRedisOptions() *RedisOptions
+}
+type CLIRedisOptionsProvider struct {
+}
+
+func (o *CLIRedisOptionsProvider) GetRedisOptions() (*RedisOptions, error) {
+	rob := RedisOptionsBuilder{}
+	rob.AppLabel("${APP_LABEL}")
+	rob.Image("${REDIS_IMAGE}")
+	res, err := rob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Redis Options - %s", err)
+	}
+	return res, nil
+}
+
 func (redis *Redis) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
 	redis.buildParameters(template)
 	redis.addObjectsIntoTemplate(template)
@@ -40,6 +83,11 @@ func (redis *Redis) GetObjects() ([]runtime.RawExtension, error) {
 }
 
 func (redis *Redis) addObjectsIntoTemplate(template *templatev1.Template) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIRedisOptionsProvider{}
+	redisOpts, err := optionsProvider.GetRedisOptions()
+	_ = err
+	redis.Options = redisOpts
 	objects := redis.buildObjects()
 	template.Objects = append(template.Objects, objects...)
 }
@@ -108,22 +156,20 @@ func (redis *Redis) buildDeploymentConfigObjectMeta() metav1.ObjectMeta {
 }
 
 const (
-	backendRedisObjectMetaName     = "backend-redis"
-	backendRedisDCSelectorName     = backendRedisObjectMetaName
-	backendComponentNameLabel      = "backend"
-	backendComponentElementLabel   = "redis"
-	backendRedisStorageVolumeName  = "backend-redis-storage"
-	backendRedisConfigVolumeName   = "redis-config"
-	backendRedisConfigMapKey       = "redis.conf"
-	backendRedisContainerName      = "backend-redis"
-	backendRedisContainerImageName = "${REDIS_IMAGE}"
-	backendRedisContainerCommand   = "/opt/rh/rh-redis32/root/usr/bin/redis-server"
-	appNameLabel                   = "${APP_LABEL}"
+	backendRedisObjectMetaName    = "backend-redis"
+	backendRedisDCSelectorName    = backendRedisObjectMetaName
+	backendComponentNameLabel     = "backend"
+	backendComponentElementLabel  = "redis"
+	backendRedisStorageVolumeName = "backend-redis-storage"
+	backendRedisConfigVolumeName  = "redis-config"
+	backendRedisConfigMapKey      = "redis.conf"
+	backendRedisContainerName     = "backend-redis"
+	backendRedisContainerCommand  = "/opt/rh/rh-redis32/root/usr/bin/redis-server"
 )
 
 func (redis *Redis) buildLabelsForDeploymentConfigObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                      appNameLabel,
+		"app":                      redis.Options.appLabel,
 		"3scale.component":         backendComponentNameLabel,
 		"3scale.component-element": backendComponentElementLabel,
 	}
@@ -178,7 +224,7 @@ func (redis *Redis) buildPodObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Labels: map[string]string{
 			"deploymentConfig":         backendRedisDCSelectorName,
-			"app":                      appNameLabel,
+			"app":                      redis.Options.appLabel,
 			"3scale.component":         backendComponentNameLabel,
 			"3scale.component-element": backendComponentElementLabel,
 		},
@@ -217,7 +263,7 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 func (redis *Redis) buildPodContainers() []v1.Container {
 	return []v1.Container{
 		v1.Container{
-			Image:           backendRedisContainerImageName,
+			Image:           redis.Options.image,
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Name:            backendRedisContainerName,
 			Command:         redis.buildPodContainerCommand(),
@@ -317,7 +363,7 @@ func (redis *Redis) buildServiceObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForServiceObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                      "${APP_LABEL}",
+		"app":                      redis.Options.appLabel,
 		"3scale.component":         "backend",
 		"3scale.component-element": "redis",
 	}
@@ -370,7 +416,7 @@ func (redis *Redis) buildConfigMapObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForConfigMapObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                      "${APP_LABEL}",
+		"app":                      redis.Options.appLabel,
 		"3scale.component":         "system", // TODO should also be redis???
 		"3scale.component-element": "redis",
 	}
@@ -456,7 +502,7 @@ func (redis *Redis) buildPVCObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForPVCObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                      "${APP_LABEL}",
+		"app":                      redis.Options.appLabel,
 		"3scale.component":         "backend",
 		"3scale.component-element": "redis",
 	}
@@ -493,7 +539,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-redis",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "redis", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "redis", "app": redis.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -508,7 +554,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 			Selector: map[string]string{"deploymentConfig": "system-redis"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "redis", "app": "${APP_LABEL}", "deploymentConfig": "system-redis"},
+					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "redis", "app": redis.Options.appLabel, "deploymentConfig": "system-redis"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
@@ -531,7 +577,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 					Containers: []v1.Container{
 						v1.Container{
 							Name:    "system-redis",
-							Image:   "${REDIS_IMAGE}",
+							Image:   redis.Options.image,
 							Command: []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
 							Args:    []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
 							Resources: v1.ResourceRequirements{
@@ -595,7 +641,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 			Labels: map[string]string{
 				"3scale.component":         "system",
 				"3scale.component-element": "redis",
-				"app":                      "${APP_LABEL}",
+				"app":                      redis.Options.appLabel,
 			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
