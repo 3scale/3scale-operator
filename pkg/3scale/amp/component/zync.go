@@ -89,7 +89,24 @@ func NewZync(options []string) *Zync {
 
 func (zync *Zync) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
 	zync.buildParameters(template)
-	zync.buildObjects(template)
+	zync.addObjectsIntoTemplate(template)
+}
+
+func (zync *Zync) buildObjects() []runtime.RawExtension {
+	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
+	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
+	zyncService := zync.buildZyncService()
+	zyncDatabaseService := zync.buildZyncDatabaseService()
+	zyncSecret := zync.buildZyncSecret()
+
+	objects := []runtime.RawExtension{
+		runtime.RawExtension{Object: zyncDeploymentConfig},
+		runtime.RawExtension{Object: zyncDatabaseDeploymentConfig},
+		runtime.RawExtension{Object: zyncService},
+		runtime.RawExtension{Object: zyncDatabaseService},
+		runtime.RawExtension{Object: zyncSecret},
+	}
+	return objects
 }
 
 func (zync *Zync) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -122,20 +139,13 @@ func (zync *Zync) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (zync *Zync) buildObjects(template *templatev1.Template) {
-	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
-	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
-	zyncService := zync.buildZyncService()
-	zyncDatabaseService := zync.buildZyncDatabaseService()
-	zyncSecret := zync.buildZyncSecret()
+func (zync *Zync) GetObjects() ([]runtime.RawExtension, error) {
+	objects := zync.buildObjects()
+	return objects, nil
+}
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: zyncDeploymentConfig},
-		runtime.RawExtension{Object: zyncDatabaseDeploymentConfig},
-		runtime.RawExtension{Object: zyncService},
-		runtime.RawExtension{Object: zyncDatabaseService},
-		runtime.RawExtension{Object: zyncSecret},
-	}
+func (zync *Zync) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := zync.buildObjects()
 	template.Objects = append(template.Objects, objects...)
 }
 
