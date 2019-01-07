@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
@@ -13,12 +15,61 @@ import (
 
 type WildcardRouter struct {
 	options []string
+	Options *WildcardRouterOptions
 }
 
 type WildcardRouterOptions struct {
 	appLabel       string
 	wildcardDomain string
 	wildcardPolicy string
+}
+
+type WildcardRouterOptionsBuilder struct {
+	options WildcardRouterOptions
+}
+
+func (wr *WildcardRouterOptionsBuilder) AppLabel(appLabel string) {
+	wr.options.appLabel = appLabel
+}
+
+func (wr *WildcardRouterOptionsBuilder) WildcardDomain(wildcardDomain string) {
+	wr.options.wildcardDomain = wildcardDomain
+}
+
+func (wr *WildcardRouterOptionsBuilder) WildcardPolicy(wildcardPolicy string) {
+	wr.options.wildcardPolicy = wildcardPolicy
+}
+
+func (wr *WildcardRouterOptionsBuilder) Build() (*WildcardRouterOptions, error) {
+	if wr.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if wr.options.wildcardDomain == "" {
+		return nil, fmt.Errorf("no Wildcard Domain has been provided")
+	}
+	if wr.options.wildcardPolicy == "" {
+		return nil, fmt.Errorf("no Wildcard Policy has been provided")
+	}
+
+	return &wr.options, nil
+}
+
+type WildcardRouterOptionsProvider interface {
+	GetWildcardRouterOptions() *WildcardRouterOptions
+}
+type CLIWildcardRouterOptionsProvider struct {
+}
+
+func (o *CLIWildcardRouterOptionsProvider) GetWildcardRouterOptions() (*WildcardRouterOptions, error) {
+	wrob := WildcardRouterOptionsBuilder{}
+	wrob.AppLabel("${APP_LABEL}")
+	wrob.WildcardDomain("${WILDCARD_DOMAIN}")
+	wrob.WildcardPolicy("${WILDCARD_POLICY}")
+	res, err := wrob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Wildcard Router Options - %s", err)
+	}
+	return res, nil
 }
 
 func NewWildcardRouter(options []string) *WildcardRouter {
@@ -29,8 +80,24 @@ func NewWildcardRouter(options []string) *WildcardRouter {
 }
 
 func (wr *WildcardRouter) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIWildcardRouterOptionsProvider{}
+	wrOpts, err := optionsProvider.GetWildcardRouterOptions()
+	_ = err
+	wr.Options = wrOpts
+
 	wr.buildParameters(template)
-	wr.buildObjects(template)
+	wr.addObjectsIntoTemplate(template)
+}
+
+func (wr *WildcardRouter) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := wr.buildObjects()
+	template.Objects = append(template.Objects, objects...)
+}
+
+func (wr *WildcardRouter) GetObjects() ([]runtime.RawExtension, error) {
+	objects := wr.buildObjects()
+	return objects, nil
 }
 
 func (wr *WildcardRouter) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -54,7 +121,7 @@ func (wr *WildcardRouter) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (wr *WildcardRouter) buildObjects(template *templatev1.Template) {
+func (wr *WildcardRouter) buildObjects() []runtime.RawExtension {
 	wildcardRouterDeploymentConfig := wr.buildWildcardRouterDeploymentConfig()
 	wildcardRouterService := wr.buildWildcardRouterService()
 	wildcardRouterRoute := wr.buildWildcardRouterRoute()
@@ -64,7 +131,8 @@ func (wr *WildcardRouter) buildObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: wildcardRouterService},
 		runtime.RawExtension{Object: wildcardRouterRoute},
 	}
-	template.Objects = append(template.Objects, objects...)
+
+	return objects
 }
 
 func (wr *WildcardRouter) buildWildcardRouterRoute() *routev1.Route {
@@ -75,10 +143,10 @@ func (wr *WildcardRouter) buildWildcardRouterRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-wildcard-router",
-			Labels: map[string]string{"app": "${APP_LABEL}", "3scale.component": "apicast", "3scale.component-element": "wildcard-router"},
+			Labels: map[string]string{"app": wr.Options.appLabel, "3scale.component": "apicast", "3scale.component-element": "wildcard-router"},
 		},
 		Spec: routev1.RouteSpec{
-			Host: "apicast-wildcard.${WILDCARD_DOMAIN}",
+			Host: "apicast-wildcard." + wr.Options.wildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: "apicast-wildcard-router",
@@ -86,7 +154,7 @@ func (wr *WildcardRouter) buildWildcardRouterRoute() *routev1.Route {
 			Port: &routev1.RoutePort{
 				TargetPort: intstr.FromString("http"),
 			},
-			WildcardPolicy: routev1.WildcardPolicyType("${WILDCARD_POLICY}"),
+			WildcardPolicy: routev1.WildcardPolicyType(wr.Options.wildcardPolicy),
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationType("edge"),
 				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
@@ -103,7 +171,7 @@ func (wr *WildcardRouter) buildWildcardRouterService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast-wildcard-router",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      wr.Options.appLabel,
 				"3scale.component":         "apicast",
 				"3scale.component-element": "wildcard-router",
 			},
@@ -128,7 +196,7 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast-wildcard-router",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      wr.Options.appLabel,
 				"3scale.component":         "apicast",
 				"3scale.component-element": "wildcard-router",
 			},
@@ -176,7 +244,7 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"deploymentConfig":         "apicast-wildcard-router",
-						"app":                      "${APP_LABEL}",
+						"app":                      wr.Options.appLabel,
 						"3scale.component":         "apicast",
 						"3scale.component-element": "wildcard-router",
 					},
