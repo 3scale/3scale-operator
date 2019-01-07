@@ -88,6 +88,11 @@ func NewZync(options []string) *Zync {
 }
 
 func (zync *Zync) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIZyncOptionsProvider{}
+	zyncOpts, err := optionsProvider.GetZyncOptions()
+	_ = err
+	zync.Options = zyncOpts
 	zync.buildParameters(template)
 	zync.addObjectsIntoTemplate(template)
 }
