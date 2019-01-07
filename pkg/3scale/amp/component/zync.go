@@ -148,15 +148,15 @@ func (zync *Zync) buildZyncSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              zync.Options.appLabel,
 				"3scale.component": "zync",
 			},
 		},
 		StringData: map[string]string{
-			"SECRET_KEY_BASE":           "${ZYNC_SECRET_KEY_BASE}",
-			"DATABASE_URL":              "postgresql://zync:${ZYNC_DATABASE_PASSWORD}@zync-database:5432/zync_production",
-			"ZYNC_DATABASE_PASSWORD":    "${ZYNC_DATABASE_PASSWORD}",
-			"ZYNC_AUTHENTICATION_TOKEN": "${ZYNC_AUTHENTICATION_TOKEN}",
+			"SECRET_KEY_BASE":           zync.Options.secretKeyBase,
+			"DATABASE_URL":              "postgresql://zync:" + zync.Options.databasePassword + "@zync-database:5432/zync_production",
+			"ZYNC_DATABASE_PASSWORD":    zync.Options.databasePassword,
+			"ZYNC_AUTHENTICATION_TOKEN": zync.Options.authenticationToken,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -256,7 +256,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              zync.Options.appLabel,
 				"3scale.component": "zync",
 			},
 		},
@@ -285,7 +285,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app":              "${APP_LABEL}",
+						"app":              zync.Options.appLabel,
 						"deploymentConfig": "zync",
 						"3scale.component": "zync",
 					},
@@ -422,7 +422,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync-database",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      zync.Options.appLabel,
 				"3scale.component":         "zync",
 				"3scale.component-element": "database",
 			},
@@ -455,7 +455,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"deploymentConfig":         "zync-database",
-						"app":                      "${APP_LABEL}",
+						"app":                      zync.Options.appLabel,
 						"3scale.component":         "zync",
 						"3scale.component-element": "database",
 					},
@@ -552,7 +552,7 @@ func (zync *Zync) buildZyncService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              zync.Options.appLabel,
 				"3scale.component": "zync",
 			},
 		},
@@ -579,7 +579,7 @@ func (zync *Zync) buildZyncDatabaseService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync-database",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      zync.Options.appLabel,
 				"3scale.component":         "zync",
 				"3scale.component-element": "database",
 			},
