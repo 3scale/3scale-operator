@@ -2,13 +2,17 @@ package amp
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 
 	ampv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/amp/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -61,6 +65,16 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	/*
+		err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &ampv1alpha1.AMP{},
+		})
+		if err != nil {
+			return err
+		}
+	*/
+
 	return nil
 }
 
@@ -87,49 +101,73 @@ func (r *ReconcileAMP) Reconcile(request reconcile.Request) (reconcile.Result, e
 
 	// Fetch the AMP instance
 	instance := &ampv1alpha1.AMP{}
+
+	reqLogger.Info("Trying to get AMP resource", "Request", request)
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			reqLogger.Info("AMP Resource not found. Ignoring since object must be deleted", "client error", err, "AMP", instance)
 			return reconcile.Result{}, nil
 		}
+		reqLogger.Error(err, "AMP Resource cannot be created. Requeuing request...", "AMP", instance)
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+	reqLogger.Info("Successfully retreived AMP resource", "AMP", instance)
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
+	reqLogger.Info("Setting defaults for AMP resource")
+	instance.SetDefaults() // TODO check where to put this
+	reqLogger.Info("Set defaults for AMP resource", "AMP", instance)
+
+	objs, err := createAMP(instance)
+	if err != nil {
+		reqLogger.Error(err, "Error creating AMP objects")
+		return reconcile.Result{}, err
+	}
 
 	// Set AMP instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		instance.SetDefaults()
-		r.client.Update(context.TODO(), instance)
+	for idx := range objs {
+		objectMeta := (objs[idx].Object).(metav1.Object)
+		objectMeta.SetNamespace(instance.Namespace)
+		err = controllerutil.SetControllerReference(instance, (objs[idx].Object).(metav1.Object), r.scheme)
 		if err != nil {
+			reqLogger.Error(err, "Object", objs[idx].Object)
 			return reconcile.Result{}, err
 		}
-		err = r.client.Create(context.TODO(), pod)
+	}
+
+	// Create zync Objects
+	for rawidxvar, _ := range objs {
+		//fmt.Println("TESTMSORIANO: " + objs[idx].Object.GetObjectKind().GroupVersionKind().Kind)
+		//aux := objs[idx].Object
+		//fmt.Println("TESTMSORIANO: " + aux.GetObjectKind().GroupVersionKind().Kind)
+
+		//var found runtime.Object
+		//r.client.Get(context.TODO(), types.NamespacedName{Name: objectMeta.GetName(), Namespace: objectMeta.GetNamespace()}, found)
+		obj := objs[rawidxvar].Object
+		//objCopy := obj.DeepCopyObject()
+
+		objectMeta := obj.(metav1.Object)
+		fmt.Println("TESTMSORIANO: " + obj.GetObjectKind().GroupVersionKind().Kind)
+		objectInfo := fmt.Sprintf("Created object %s/%s", obj.GetObjectKind().GroupVersionKind().Kind, objectMeta.GetName())
+		reqLogger.Info(objectInfo)
+		fmt.Printf("TESTBEFORE %#v\n", obj)
+		err = r.client.Create(context.TODO(), obj) // TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
+		fmt.Printf("TESTAFTER %#v\n", obj)
+		objectInfo = fmt.Sprintf("Created object %s/%s", obj.GetObjectKind().GroupVersionKind().Kind, objectMeta.GetName())
+		reqLogger.Info(objectInfo)
 		if err != nil {
+			reqLogger.Error(err, "Object", obj)
 			return reconcile.Result{}, err
 		}
 
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
+		reqLogger.Info(objectInfo)
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
 	return reconcile.Result{}, nil
 }
 
@@ -154,4 +192,225 @@ func newPodForCR(cr *ampv1alpha1.AMP) *corev1.Pod {
 			},
 		},
 	}
+}
+
+func createAMP(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	results, err := createAMPObjects(cr)
+	if err != nil {
+		return nil, err
+	}
+
+	postProcessAMPObjects(cr, results)
+
+	return results, nil
+}
+
+func createAMPObjects(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	results := []runtime.RawExtension{}
+
+	images, err := createImages(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, images...)
+
+	redis, err := createRedis(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, redis...)
+
+	backend, err := createBackend(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, backend...)
+
+	mysql, err := createMysql(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, mysql...)
+
+	memcached, err := createMemcached(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, memcached...)
+
+	system, err := createSystem(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, system...)
+
+	zync, err := createZync(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, zync...)
+
+	apicast, err := createApicast(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, apicast...)
+
+	wildcardRouter, err := createWildcardRouter(cr)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, wildcardRouter...)
+
+	return results, nil
+}
+
+func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) {
+	if cr.Spec.Evaluation {
+		e := component.Evaluation{}
+		e.PostProcessObjects(objects)
+	}
+}
+
+func createImages(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorAmpImagesOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetAmpImagesOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	i := component.AmpImages{Options: opts}
+	result, err := i.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createRedis(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorRedisOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetRedisOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	r := component.Redis{Options: opts}
+	result, err := r.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createBackend(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorBackendOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetBackendOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	b := component.Backend{Options: opts}
+	result, err := b.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createMysql(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorMysqlOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetMysqlOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	m := component.Mysql{Options: opts}
+	result, err := m.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createMemcached(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorMemcachedOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetMemcachedOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	i := component.Memcached{Options: opts}
+	result, err := i.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createSystem(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorSystemOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetSystemOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	i := component.System{Options: opts}
+	result, err := i.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createZync(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorZyncOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetZyncOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	z := component.Zync{Options: opts}
+	result, err := z.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createApicast(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorApicastOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetApicastOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	z := component.Apicast{Options: opts}
+	result, err := z.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createWildcardRouter(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorWildcardRouterOptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetWildcardRouterOptions()
+	if err != nil {
+		return nil, err
+	}
+	z := component.WildcardRouter{Options: opts}
+	result, err := z.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
