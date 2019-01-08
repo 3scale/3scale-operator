@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
@@ -10,6 +12,7 @@ import (
 
 type S3 struct {
 	options []string
+	Options *S3Options
 }
 
 type S3Options struct {
@@ -27,9 +30,92 @@ func NewS3(options []string) *S3 {
 	return s3
 }
 
+type S3OptionsBuilder struct {
+	options S3Options
+}
+
+func (s3 *S3OptionsBuilder) AwsAccessKeyId(awsAccessKeyId string) {
+	s3.options.awsAccessKeyId = awsAccessKeyId
+}
+
+func (s3 *S3OptionsBuilder) AwsSecretAccessKey(awsSecretAccessKey string) {
+	s3.options.awsSecretAccessKey = awsSecretAccessKey
+}
+
+func (s3 *S3OptionsBuilder) AwsRegion(awsRegion string) {
+	s3.options.awsRegion = awsRegion
+}
+
+func (s3 *S3OptionsBuilder) AwsBucket(awsBucket string) {
+	s3.options.awsBucket = awsBucket
+}
+
+func (s3 *S3OptionsBuilder) FileUploadStorage(fileUploadStorage string) {
+	s3.options.fileUploadStorage = fileUploadStorage
+}
+
+func (s3 *S3OptionsBuilder) Build() (*S3Options, error) {
+	if s3.options.awsAccessKeyId == "" {
+		return nil, fmt.Errorf("no AWS access key id has been provided")
+	}
+	if s3.options.awsSecretAccessKey == "" {
+		return nil, fmt.Errorf("no AWS secret access key has been provided")
+	}
+	if s3.options.awsRegion == "" {
+		return nil, fmt.Errorf("no AWS region has been provided")
+	}
+	if s3.options.awsBucket == "" {
+		return nil, fmt.Errorf("no AWS bucket has been provided")
+	}
+	if s3.options.fileUploadStorage == "" {
+		return nil, fmt.Errorf("no file upload storage has been provided")
+	}
+
+	return &s3.options, nil
+}
+
+type S3OptionsProvider interface {
+	GetS3Options() *S3Options
+}
+type CLIS3OptionsProvider struct {
+}
+
+func (o *CLIS3OptionsProvider) GetS3Options() (*S3Options, error) {
+	sob := S3OptionsBuilder{}
+	sob.AwsAccessKeyId("${AWS_ACCESS_KEY_ID}")
+	sob.AwsSecretAccessKey("${AWS_SECRET_ACCESS_KEY}")
+	sob.AwsRegion("${AWS_REGION}")
+	sob.AwsBucket("${AWS_BUCKET}")
+	sob.FileUploadStorage("${FILE_UPLOAD_STORAGE}")
+	res, err := sob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create S3 Options - %s", err)
+	}
+	return res, nil
+}
+
+func (s3 *S3) setS3Options() {
+	// TODO move this outside this specific method
+	optionsProvider := CLIS3OptionsProvider{}
+	s3Opts, err := optionsProvider.GetS3Options()
+	_ = err
+	s3.Options = s3Opts
+}
+
 func (s3 *S3) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	s3.setS3Options() // TODO move this outside
 	s3.buildParameters(template)
-	s3.buildObjects(template)
+	s3.addObjectsIntoTemplate(template)
+}
+
+func (s3 *S3) GetObjects() ([]runtime.RawExtension, error) {
+	objects := s3.buildObjects()
+	return objects, nil
+}
+
+func (s3 *S3) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := s3.buildObjects()
+	template.Objects = append(template.Objects, objects...)
 }
 
 func (s3 *S3) removeSystemStorageReferences(template *templatev1.Template) {
@@ -143,11 +229,11 @@ func (s3 *S3) addNewParametersToSystemEnvironmentCfgMap(template *templatev1.Tem
 	for _, param := range template.Parameters {
 		switch param.Name {
 		case "FILE_UPLOAD_STORAGE":
-			systemEnvCfgMap.Data["FILE_UPLOAD_STORAGE"] = "${FILE_UPLOAD_STORAGE}"
+			systemEnvCfgMap.Data["FILE_UPLOAD_STORAGE"] = s3.Options.fileUploadStorage
 		case "AWS_BUCKET":
-			systemEnvCfgMap.Data["AWS_BUCKET"] = "${AWS_BUCKET}"
+			systemEnvCfgMap.Data["AWS_BUCKET"] = s3.Options.awsBucket
 		case "AWS_REGION":
-			systemEnvCfgMap.Data["AWS_REGION"] = "${AWS_REGION}"
+			systemEnvCfgMap.Data["AWS_REGION"] = s3.Options.awsRegion
 		}
 	}
 
@@ -167,6 +253,7 @@ func (s3 *S3) removeSystemStoragePVC(template *templatev1.Template) {
 }
 
 func (s3 *S3) PostProcess(template *templatev1.Template, otherComponents []Component) {
+	s3.setS3Options() // TODO move this outside
 	s3.removeSystemStoragePVC(template)
 	s3.removeSystemStorageReferences(template)
 	s3.removeRWXStorageClassParameter(template)
@@ -205,13 +292,13 @@ func (s3 *S3) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (s3 *S3) buildObjects(template *templatev1.Template) {
+func (s3 *S3) buildObjects() []runtime.RawExtension {
 	s3AWSSecret := s3.buildS3AWSSecret()
 
 	objects := []runtime.RawExtension{
 		runtime.RawExtension{Object: s3AWSSecret},
 	}
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 func (s3 *S3) buildS3AWSSecret() *v1.Secret {
@@ -224,8 +311,8 @@ func (s3 *S3) buildS3AWSSecret() *v1.Secret {
 			Name: "aws-auth",
 		},
 		StringData: map[string]string{
-			"AWS_ACCESS_KEY_ID":     "${AWS_ACCESS_KEY_ID}",
-			"AWS_SECRET_ACCESS_KEY": "${AWS_SECRET_ACCESS_KEY}",
+			"AWS_ACCESS_KEY_ID":     s3.Options.awsAccessKeyId,
+			"AWS_SECRET_ACCESS_KEY": s3.Options.awsSecretAccessKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
