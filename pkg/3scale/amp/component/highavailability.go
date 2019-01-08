@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
@@ -9,6 +11,7 @@ import (
 
 type HighAvailability struct {
 	options []string
+	Options *HighAvailabilityOptions
 }
 
 type HighAvailabilityOptions struct {
@@ -37,11 +40,94 @@ func NewHighAvailability(options []string) *HighAvailability {
 	return ha
 }
 
+type HighAvailabilityOptionsBuilder struct {
+	options HighAvailabilityOptions
+}
+
+func (ha *HighAvailabilityOptionsBuilder) ApicastProductionRedisURL(apicastProductionRedisURL string) {
+	ha.options.apicastProductionRedisURL = apicastProductionRedisURL
+}
+
+func (ha *HighAvailabilityOptionsBuilder) ApicastStagingRedisURL(apicastStagingRedisURL string) {
+	ha.options.apicastStagingRedisURL = apicastStagingRedisURL
+}
+
+func (ha *HighAvailabilityOptionsBuilder) BackendRedisQueuesEndpoint(backendRedisQueuesEndpoint string) {
+	ha.options.backendRedisQueuesEndpoint = backendRedisQueuesEndpoint
+}
+
+func (ha *HighAvailabilityOptionsBuilder) BackendRedisStorageEndpoint(backendRedisStorageEndpoint string) {
+	ha.options.backendRedisStorageEndpoint = backendRedisStorageEndpoint
+}
+
+func (ha *HighAvailabilityOptionsBuilder) SystemDatabaseURL(systemDatabaseURL string) {
+	ha.options.systemDatabaseURL = systemDatabaseURL
+}
+
+func (ha *HighAvailabilityOptionsBuilder) SystemRedisURL(systemRedisURL string) {
+	ha.options.systemRedisURL = systemRedisURL
+}
+
+func (ha *HighAvailabilityOptionsBuilder) Build() (*HighAvailabilityOptions, error) {
+	if ha.options.apicastProductionRedisURL == "" {
+		return nil, fmt.Errorf("no Apicast production URL has been provided")
+	}
+	if ha.options.apicastStagingRedisURL == "" {
+		return nil, fmt.Errorf("no Apicast staging redis URL has been provided")
+	}
+	if ha.options.backendRedisQueuesEndpoint == "" {
+		return nil, fmt.Errorf("no Backend Redis queues endpoint option has been provided")
+	}
+	if ha.options.backendRedisStorageEndpoint == "" {
+		return nil, fmt.Errorf("no Backend Redis storage endpoint has been provided")
+	}
+	if ha.options.systemDatabaseURL == "" {
+		return nil, fmt.Errorf("no System database URL has been provided")
+	}
+	if ha.options.systemRedisURL == "" {
+		return nil, fmt.Errorf("no System redis URL has been provided")
+	}
+
+	return &ha.options, nil
+}
+
+type HighAvailabilityOptionsProvider interface {
+	GetHighAvailabilityOptions() *HighAvailabilityOptions
+}
+type CLIHighAvailabilityOptionsProvider struct {
+}
+
+func (o *CLIHighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*HighAvailabilityOptions, error) {
+	hob := HighAvailabilityOptionsBuilder{}
+	hob.ApicastProductionRedisURL("${APICAST_PRODUCTION_REDIS_URL}")
+	hob.ApicastStagingRedisURL("${APICAST_STAGING_REDIS_URL}")
+	hob.BackendRedisQueuesEndpoint("${BACKEND_REDIS_QUEUES_ENDPOINT}")
+	hob.BackendRedisStorageEndpoint("${BACKEND_REDIS_STORAGE_ENDPOINT}")
+	hob.SystemDatabaseURL("${SYSTEM_DATABASE_URL}")
+	hob.SystemRedisURL("${SYSTEM_REDIS_URL}")
+	res, err := hob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create High Availability Options - %s", err)
+	}
+	return res, nil
+}
+
+func (ha *HighAvailability) setHAOptions() {
+	// TODO move this outside this specific method
+	optionsProvider := CLIHighAvailabilityOptionsProvider{}
+	haOpts, err := optionsProvider.GetHighAvailabilityOptions()
+	_ = err
+	ha.Options = haOpts
+}
+
 func (ha *HighAvailability) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	ha.setHAOptions() // TODO move this outside
 	ha.buildParameters(template)
 }
 
+// TODO check how to postprocess independently of templates
 func (ha *HighAvailability) PostProcess(template *templatev1.Template, otherComponents []Component) {
+	ha.setHAOptions() // TODO move this outside
 	ha.increaseReplicasNumber(template)
 	ha.deleteInternalDatabasesObjects(template)
 	ha.deleteDBRelatedParameters(template)
@@ -128,15 +214,15 @@ func (ha *HighAvailability) updateDatabasesURLS(template *templatev1.Template) {
 		if ok {
 			switch secret.Name {
 			case "system-redis":
-				secret.StringData["URL"] = "${SYSTEM_REDIS_URL}"
+				secret.StringData["URL"] = ha.Options.systemRedisURL
 			case "system-database":
-				secret.StringData["URL"] = "${SYSTEM_DATABASE_URL}"
+				secret.StringData["URL"] = ha.Options.systemDatabaseURL
 			case "apicast-redis":
-				secret.StringData["PRODUCTION_URL"] = "${APICAST_PRODUCTION_REDIS_URL}"
-				secret.StringData["STAGING_URL"] = "${APICAST_STAGING_REDIS_URL}"
+				secret.StringData["PRODUCTION_URL"] = ha.Options.apicastProductionRedisURL
+				secret.StringData["STAGING_URL"] = ha.Options.apicastStagingRedisURL
 			case "backend-redis":
-				secret.StringData["REDIS_STORAGE_URL"] = "${BACKEND_REDIS_STORAGE_ENDPOINT}"
-				secret.StringData["REDIS_QUEUES_URL"] = "${BACKEND_REDIS_QUEUES_ENDPOINT}"
+				secret.StringData["REDIS_STORAGE_URL"] = ha.Options.backendRedisStorageEndpoint
+				secret.StringData["REDIS_QUEUES_URL"] = ha.Options.backendRedisQueuesEndpoint
 			}
 		}
 	}
