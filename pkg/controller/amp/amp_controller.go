@@ -3,6 +3,7 @@ package amp
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 
@@ -13,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -109,7 +111,7 @@ func (r *ReconcileAMP) Reconcile(request reconcile.Request) (reconcile.Result, e
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			reqLogger.Info("AMP Resource not found. Ignoring since object must be deleted", "client error", err, "AMP", instance)
+			reqLogger.Info("AMP Resource not found. Ignoring since object must have been deleted", "client error", err, "AMP", instance)
 			return reconcile.Result{}, nil
 		}
 		reqLogger.Error(err, "AMP Resource cannot be created. Requeuing request...", "AMP", instance)
@@ -140,58 +142,35 @@ func (r *ReconcileAMP) Reconcile(request reconcile.Request) (reconcile.Result, e
 	}
 
 	// Create zync Objects
-	for rawidxvar, _ := range objs {
-		//fmt.Println("TESTMSORIANO: " + objs[idx].Object.GetObjectKind().GroupVersionKind().Kind)
-		//aux := objs[idx].Object
-		//fmt.Println("TESTMSORIANO: " + aux.GetObjectKind().GroupVersionKind().Kind)
+	for idx := range objs {
+		obj := objs[idx].Object
+		objCopy := obj.DeepCopyObject() // We create a copy because the r.client.Create method removes TypeMeta for some reason
+		objectMeta := objCopy.(metav1.Object)
+		objectInfo := fmt.Sprintf("%s/%s", objCopy.GetObjectKind().GroupVersionKind().Kind, objectMeta.GetName())
 
-		//var found runtime.Object
-		//r.client.Get(context.TODO(), types.NamespacedName{Name: objectMeta.GetName(), Namespace: objectMeta.GetNamespace()}, found)
-		obj := objs[rawidxvar].Object
-		//objCopy := obj.DeepCopyObject()
-
-		objectMeta := obj.(metav1.Object)
-		fmt.Println("TESTMSORIANO: " + obj.GetObjectKind().GroupVersionKind().Kind)
-		objectInfo := fmt.Sprintf("Created object %s/%s", obj.GetObjectKind().GroupVersionKind().Kind, objectMeta.GetName())
-		reqLogger.Info(objectInfo)
-		fmt.Printf("TESTBEFORE %#v\n", obj)
-		err = r.client.Create(context.TODO(), obj) // TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
-		fmt.Printf("TESTAFTER %#v\n", obj)
-		objectInfo = fmt.Sprintf("Created object %s/%s", obj.GetObjectKind().GroupVersionKind().Kind, objectMeta.GetName())
-		reqLogger.Info(objectInfo)
-		if err != nil {
-			reqLogger.Error(err, "Object", obj)
+		newobj := reflect.New(reflect.TypeOf(obj).Elem()).Interface()
+		found := newobj.(runtime.Object)
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: objectMeta.GetName(), Namespace: objectMeta.GetNamespace()}, found)
+		if err != nil && errors.IsNotFound(err) {
+			// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
+			err = r.client.Create(context.TODO(), obj)
+			if err != nil {
+				reqLogger.Error(err, "Error creating object "+objectInfo, obj)
+				return reconcile.Result{}, err
+			}
+			reqLogger.Info("Created object " + objectInfo)
+		} else if err != nil {
+			reqLogger.Error(err, "Failed to get "+objectInfo)
 			return reconcile.Result{}, err
 		}
-
-		reqLogger.Info(objectInfo)
+		reqLogger.Info("Object " + objectInfo + " already exists")
+		// Here means that the object has been able to be obtained
+		// and checking for differences should be done to reconcile possible
+		// differences that we want to handle
 	}
 
 	reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
 	return reconcile.Result{}, nil
-}
-
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *ampv1alpha1.AMP) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
-	}
 }
 
 func createAMP(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
