@@ -1,13 +1,18 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
+	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Productized struct {
 	options []string
+	Options *ProductizedOptions
 }
 
 func NewProductized(options []string) *Productized {
@@ -17,39 +22,148 @@ func NewProductized(options []string) *Productized {
 	return productized
 }
 
+type ProductizedOptions struct {
+	ampRelease     string
+	apicastImage   string
+	backendImage   string
+	routerImage    string
+	systemImage    string
+	zyncImage      string
+	memcachedImage string
+}
+
+type ProductizedOptionsBuilder struct {
+	options ProductizedOptions
+}
+
+func (productized *ProductizedOptionsBuilder) AmpRelease(ampRelease string) {
+	productized.options.ampRelease = ampRelease
+}
+
+func (productized *ProductizedOptionsBuilder) ApicastImage(apicastImage string) {
+	productized.options.apicastImage = apicastImage
+}
+
+func (productized *ProductizedOptionsBuilder) BackendImage(backendImage string) {
+	productized.options.backendImage = backendImage
+}
+
+func (productized *ProductizedOptionsBuilder) RouterImage(routerImage string) {
+	productized.options.routerImage = routerImage
+}
+
+func (productized *ProductizedOptionsBuilder) SystemImage(systemImage string) {
+	productized.options.systemImage = systemImage
+}
+
+func (productized *ProductizedOptionsBuilder) ZyncImage(zyncImage string) {
+	productized.options.zyncImage = zyncImage
+}
+
+func (productized *ProductizedOptionsBuilder) MemcachedImage(memcachedImage string) {
+	productized.options.memcachedImage = memcachedImage
+}
+
+func (productized *ProductizedOptionsBuilder) Build() (*ProductizedOptions, error) {
+	if productized.options.ampRelease == "" {
+		return nil, fmt.Errorf("no AMP release has been provided")
+	}
+	if productized.options.apicastImage == "" {
+		return nil, fmt.Errorf("no Apicast image has been provided")
+	}
+	if productized.options.backendImage == "" {
+		return nil, fmt.Errorf("no Backend image has been provided")
+	}
+	if productized.options.routerImage == "" {
+		return nil, fmt.Errorf("no Router image has been provided")
+	}
+	if productized.options.systemImage == "" {
+		return nil, fmt.Errorf("no System image has been provided")
+	}
+	if productized.options.zyncImage == "" {
+		return nil, fmt.Errorf("no Zync image has been provided")
+	}
+	if productized.options.memcachedImage == "" {
+		return nil, fmt.Errorf("no Memcached image has been provided")
+	}
+	return &productized.options, nil
+}
+
+type ProductizedOptionsProvider interface {
+	GetProductizedOptions() *ProductizedOptions
+}
+type CLIProductizedOptionsProvider struct {
+}
+
+func (o *CLIProductizedOptionsProvider) GetProductizedOptions() (*ProductizedOptions, error) {
+	pob := ProductizedOptionsBuilder{}
+	pob.ApicastImage("${AMP_APICAST_IMAGE}")
+	pob.BackendImage("${AMP_BACKEND_IMAGE}")
+	pob.RouterImage("${AMP_ROUTER_IMAGE}")
+	pob.SystemImage("${AMP_SYSTEM_IMAGE}")
+	pob.ZyncImage("${AMP_ZYNC_IMAGE}")
+	pob.MemcachedImage("${MEMCACHED_IMAGE}")
+	res, err := pob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Productized Options - %s", err)
+	}
+	return res, nil
+}
+
 func (productized *Productized) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
 }
 
 func (productized *Productized) PostProcess(template *templatev1.Template, otherComponents []Component) {
-	productized.removeAmpServiceAccount(template)
-	productized.removeAmpServiceAccountReferences(template)
-	productized.UpdateAmpImagesURIs(template)
+	// TODO move this outside this specific method
+	optionsProvider := CLIProductizedOptionsProvider{}
+	productizedOpts, err := optionsProvider.GetProductizedOptions()
+	_ = err
+	productized.Options = productizedOpts
+	res := template.Objects
+	res = productized.removeAmpServiceAccount(res)
+	res = productized.removeAmpServiceAccountReferences(res)
+	productized.updateAmpImagesParameters(template)
+	template.Objects = res
 }
 
-func (productized *Productized) removeAmpServiceAccount(template *templatev1.Template) {
-	for idx, rawExtension := range template.Objects {
+func (productized *Productized) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawExtension {
+	res := objects
+	res = productized.removeAmpServiceAccount(res)
+	res = productized.removeAmpServiceAccountReferences(res)
+	res = productized.updateAmpImagesURIs(res)
+
+	return res
+}
+
+func (productized *Productized) removeAmpServiceAccount(objects []runtime.RawExtension) []runtime.RawExtension {
+	res := objects
+	for idx, rawExtension := range res {
 		obj := rawExtension.Object
 		sa, ok := obj.(*v1.ServiceAccount)
 		if ok {
 			if sa.ObjectMeta.Name == "amp" {
-				template.Objects = append(template.Objects[:idx], template.Objects[idx+1:]...) // This deletes the element in the array
+				res = append(res[:idx], res[idx+1:]...) // This deletes the element in the array
 				break
 			}
 		}
 	}
+	return res
 }
 
-func (productized *Productized) removeAmpServiceAccountReferences(template *templatev1.Template) {
-	for _, rawExtension := range template.Objects {
+func (productized *Productized) removeAmpServiceAccountReferences(objects []runtime.RawExtension) []runtime.RawExtension {
+	res := objects
+	for _, rawExtension := range res {
 		obj := rawExtension.Object
 		dc, ok := obj.(*appsv1.DeploymentConfig)
 		if ok {
 			dc.Spec.Template.Spec.ServiceAccountName = ""
 		}
 	}
+
+	return res
 }
 
-func (productized *Productized) UpdateAmpImagesURIs(template *templatev1.Template) {
+func (productized *Productized) updateAmpImagesParameters(template *templatev1.Template) {
 	for paramIdx := range template.Parameters {
 		param := &template.Parameters[paramIdx]
 		switch param.Name {
@@ -67,4 +181,36 @@ func (productized *Productized) UpdateAmpImagesURIs(template *templatev1.Templat
 			param.Value = "registry.access.redhat.com/3scale-amp20/memcached"
 		}
 	}
+}
+
+func (productized *Productized) updateAmpImagesURIs(objects []runtime.RawExtension) []runtime.RawExtension {
+	res := objects
+
+	for _, rawExtension := range res {
+		obj := rawExtension.Object
+		is, ok := obj.(*imagev1.ImageStream)
+		if ok {
+			for tagIdx := range is.Spec.Tags {
+				switch is.Name {
+				case "amp-apicast":
+					is.Spec.Tags[tagIdx].From.Name = productized.Options.apicastImage
+				case "amp-system":
+					is.Spec.Tags[tagIdx].From.Name = productized.Options.systemImage
+				case "amp-backend":
+					is.Spec.Tags[tagIdx].From.Name = productized.Options.backendImage
+				case "amp-wildcard-router":
+					is.Spec.Tags[tagIdx].From.Name = productized.Options.routerImage
+				case "amp-zync":
+					is.Spec.Tags[tagIdx].From.Name = productized.Options.zyncImage
+				}
+			}
+		} else {
+			dc, ok := obj.(*appsv1.DeploymentConfig)
+			if ok && dc.Name == "system-memcache" {
+				dc.Spec.Template.Spec.Containers[0].Image = productized.Options.memcachedImage
+			}
+		}
+	}
+
+	return res
 }

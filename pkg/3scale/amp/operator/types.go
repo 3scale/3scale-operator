@@ -43,3 +43,7 @@ type OperatorApicastOptionsProvider struct {
 type OperatorWildcardRouterOptionsProvider struct {
 	AmpSpec *ampv1alpha1.AMPSpec
 }
+
+type OperatorProductizedOptionsProvider struct {
+	AmpSpec *ampv1alpha1.AMPSpec
+}

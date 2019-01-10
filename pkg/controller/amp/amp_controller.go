@@ -244,11 +244,24 @@ func createAMPObjects(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return results, nil
 }
 
-func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) {
+func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
 	if cr.Spec.Evaluation {
 		e := component.Evaluation{}
 		e.PostProcessObjects(objects)
 	}
+
+	if cr.Spec.Productized {
+		optsProvider := operator.OperatorProductizedOptionsProvider{AmpSpec: &cr.Spec}
+		opts, err := optsProvider.GetProductized()
+		if err != nil {
+			return nil, err
+		}
+		p := component.Productized{Options: opts}
+		objects = p.PostProcessObjects(objects)
+	}
+
+	return objects, nil
+
 }
 
 func createImages(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
