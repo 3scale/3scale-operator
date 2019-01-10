@@ -179,7 +179,10 @@ func createAMP(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 		return nil, err
 	}
 
-	postProcessAMPObjects(cr, results)
+	results, err = postProcessAMPObjects(cr, results)
+	if err != nil {
+		return nil, err
+	}
 
 	return results, nil
 }
@@ -241,6 +244,14 @@ func createAMPObjects(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	}
 	results = append(results, wildcardRouter...)
 
+	if cr.Spec.S3Version {
+		s3, err := createS3(cr)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, s3...)
+	}
+
 	return results, nil
 }
 
@@ -252,7 +263,7 @@ func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) 
 
 	if cr.Spec.Productized {
 		optsProvider := operator.OperatorProductizedOptionsProvider{AmpSpec: &cr.Spec}
-		opts, err := optsProvider.GetProductized()
+		opts, err := optsProvider.GetProductizedOptions()
 		if err != nil {
 			return nil, err
 		}
@@ -260,8 +271,17 @@ func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) 
 		objects = p.PostProcessObjects(objects)
 	}
 
-	return objects, nil
+	if cr.Spec.S3Version {
+		optsProvider := operator.OperatorS3OptionsProvider{AmpSpec: &cr.Spec}
+		opts, err := optsProvider.GetS3Options()
+		if err != nil {
+			return nil, err
+		}
+		s := component.S3{Options: opts}
+		objects = s.PostProcessObjects(objects)
+	}
 
+	return objects, nil
 }
 
 func createImages(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
@@ -400,6 +420,21 @@ func createWildcardRouter(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	}
 	z := component.WildcardRouter{Options: opts}
 	result, err := z.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func createS3(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorS3OptionsProvider{AmpSpec: &cr.Spec}
+	opts, err := optsProvider.GetS3Options()
+	if err != nil {
+		return nil, err
+	}
+	s := component.S3{Options: opts}
+	result, err := s.GetObjects()
 	if err != nil {
 		return nil, err
 	}

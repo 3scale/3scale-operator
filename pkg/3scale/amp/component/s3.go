@@ -118,8 +118,8 @@ func (s3 *S3) addObjectsIntoTemplate(template *templatev1.Template) {
 	template.Objects = append(template.Objects, objects...)
 }
 
-func (s3 *S3) removeSystemStorageReferences(template *templatev1.Template) {
-	for _, rawExtension := range template.Objects {
+func (s3 *S3) removeSystemStorageReferences(objects []runtime.RawExtension) {
+	for _, rawExtension := range objects {
 		obj := rawExtension.Object
 		dc, ok := obj.(*appsv1.DeploymentConfig)
 		if ok {
@@ -192,9 +192,9 @@ func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 	}
 }
 
-func (s3 *S3) addNewParametersToSystemBaseEnv(template *templatev1.Template) {
+func (s3 *S3) addCfgMapElemsToSystemBaseEnv(objects []runtime.RawExtension) {
 	newCfgMapElements := s3.getNewCfgMapElements()
-	for _, rawExtension := range template.Objects {
+	for _, rawExtension := range objects {
 		obj := rawExtension.Object
 		dc, ok := obj.(*appsv1.DeploymentConfig)
 		if ok {
@@ -212,11 +212,11 @@ func (s3 *S3) addNewParametersToSystemBaseEnv(template *templatev1.Template) {
 	}
 }
 
-func (s3 *S3) addNewParametersToSystemEnvironmentCfgMap(template *templatev1.Template) {
+func (s3 *S3) addS3PostprocessOptionsToSystemEnvironmentCfgMap(objects []runtime.RawExtension) {
 	var systemEnvCfgMap *v1.ConfigMap
 
-	for rawExtIdx := range template.Objects {
-		obj := template.Objects[rawExtIdx].Object
+	for rawExtIdx := range objects {
+		obj := objects[rawExtIdx].Object
 		cfgmap, ok := obj.(*v1.ConfigMap)
 		if ok {
 			if cfgmap.Name == "system-environment" {
@@ -226,39 +226,48 @@ func (s3 *S3) addNewParametersToSystemEnvironmentCfgMap(template *templatev1.Tem
 		}
 	}
 
-	for _, param := range template.Parameters {
-		switch param.Name {
-		case "FILE_UPLOAD_STORAGE":
-			systemEnvCfgMap.Data["FILE_UPLOAD_STORAGE"] = s3.Options.fileUploadStorage
-		case "AWS_BUCKET":
-			systemEnvCfgMap.Data["AWS_BUCKET"] = s3.Options.awsBucket
-		case "AWS_REGION":
-			systemEnvCfgMap.Data["AWS_REGION"] = s3.Options.awsRegion
-		}
-	}
-
+	systemEnvCfgMap.Data["FILE_UPLOAD_STORAGE"] = s3.Options.fileUploadStorage
+	systemEnvCfgMap.Data["AWS_BUCKET"] = s3.Options.awsBucket
+	systemEnvCfgMap.Data["AWS_REGION"] = s3.Options.awsRegion
 }
 
-func (s3 *S3) removeSystemStoragePVC(template *templatev1.Template) {
-	for idx, rawExtension := range template.Objects {
+func (s3 *S3) removeSystemStoragePVC(objects []runtime.RawExtension) []runtime.RawExtension {
+	res := objects
+
+	for idx, rawExtension := range res {
 		obj := rawExtension.Object
 		pvc, ok := obj.(*v1.PersistentVolumeClaim)
 		if ok {
 			if pvc.ObjectMeta.Name == "system-storage" {
-				template.Objects = append(template.Objects[:idx], template.Objects[idx+1:]...) // This deletes the element in the array
+				res = append(res[:idx], res[idx+1:]...) // This deletes the element in the array
 				break
 			}
 		}
 	}
+
+	return res
 }
 
 func (s3 *S3) PostProcess(template *templatev1.Template, otherComponents []Component) {
 	s3.setS3Options() // TODO move this outside
-	s3.removeSystemStoragePVC(template)
-	s3.removeSystemStorageReferences(template)
+
+	res := template.Objects
+	res = s3.removeSystemStoragePVC(res)
+	s3.removeSystemStorageReferences(res)
+	s3.addS3PostprocessOptionsToSystemEnvironmentCfgMap(template.Objects)
+	s3.addCfgMapElemsToSystemBaseEnv(template.Objects)
 	s3.removeRWXStorageClassParameter(template)
-	s3.addNewParametersToSystemEnvironmentCfgMap(template)
-	s3.addNewParametersToSystemBaseEnv(template)
+	template.Objects = res
+}
+
+func (s3 *S3) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawExtension {
+	res := objects
+	res = s3.removeSystemStoragePVC(res)
+	s3.removeSystemStorageReferences(res)
+	s3.addS3PostprocessOptionsToSystemEnvironmentCfgMap(res)
+	s3.addCfgMapElemsToSystemBaseEnv(res)
+
+	return res
 }
 
 func (s3 *S3) buildParameters(template *templatev1.Template) {

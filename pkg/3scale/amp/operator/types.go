@@ -47,3 +47,7 @@ type OperatorWildcardRouterOptionsProvider struct {
 type OperatorProductizedOptionsProvider struct {
 	AmpSpec *ampv1alpha1.AMPSpec
 }
+
+type OperatorS3OptionsProvider struct {
+	AmpSpec *ampv1alpha1.AMPSpec
+}
