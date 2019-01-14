@@ -11,10 +11,18 @@ import (
 type APISpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Description       string               `json:"description"`
-	IntegrationMethod IntegrationMethod    `json:"integrationMethod"`
-	PlanSelector      metav1.LabelSelector `json:"planSelector"`
-	MetricSelector    metav1.LabelSelector `json:"metricSelector"`
+	APIBase
+	APISelectors
+}
+
+type APIBase struct {
+	Description       string            `json:"description"`
+	IntegrationMethod IntegrationMethod `json:"integrationMethod"`
+}
+
+type APISelectors struct {
+	PlanSelector   metav1.LabelSelector `json:"planSelector"`
+	MetricSelector metav1.LabelSelector `json:"metricSelector"`
 }
 
 // APIStatus defines the observed state of API
@@ -54,12 +62,38 @@ type IntegrationMethod struct {
 	ApicastHosted *ApicastHosted `json:"apicastHosted"`
 }
 
+func (api *API) getIntegrationMethodType() string {
+	if api.Spec.IntegrationMethod.ApicastHosted != nil {
+		return "ApicastHosted"
+	} else if api.Spec.IntegrationMethod.ApicastOnPrem != nil {
+		return "ApicastOnPrem"
+	} else if api.Spec.IntegrationMethod.CodePlugin != nil {
+		return "CodePlugin"
+	}
+	return "Unknown"
+}
+
 type ApicastHosted struct {
+	APIcastBaseOptions
+	APIcastBaseSelectors
+}
+
+type APIcastBaseOptions struct {
 	PrivateBaseURL         string                        `json:"privateBaseURL"`
 	APITestGetRequest      string                        `json:"apiTestGetRequest"`
 	AuthenticationSettings ApicastAuthenticationSettings `json:"authenticationSettings"`
-	MappingRulesSelector   metav1.LabelSelector          `json:"mappingRulesSelector"`
-	PoliciesSelector       metav1.LabelSelector          `json:"policiesSelector"`
+}
+
+type APIcastBaseSelectors struct {
+	MappingRulesSelector metav1.LabelSelector `json:"mappingRulesSelector"`
+	PoliciesSelector     metav1.LabelSelector `json:"policiesSelector"`
+}
+
+type ApicastOnPrem struct {
+	APIcastBaseOptions
+	StagingPublicBaseURL    string `json:"stagingPublicBaseURL"`
+	ProductionPublicBaseURL string `json:"productionPublicBaseURL"`
+	APIcastBaseSelectors
 }
 
 type ApicastAuthenticationSettings struct {
@@ -93,16 +127,6 @@ type Authentication struct {
 
 type MatchLabels struct {
 	API string `json:"api"`
-}
-
-type ApicastOnPrem struct {
-	PrivateBaseURL          string                        `json:"privateBaseURL"`
-	StagingPublicBaseURL    string                        `json:"stagingPublicBaseURL"`
-	ProductionPublicBaseURL string                        `json:"productionPublicBaseURL"`
-	APITestGetRequest       string                        `json:"apiTestGetRequest"`
-	AuthenticationSettings  ApicastAuthenticationSettings `json:"authenticationSettings"`
-	MappingRulesSelector    metav1.LabelSelector          `json:"mappingRulesSelector"`
-	PoliciesSelector        metav1.LabelSelector          `json:"policiesSelector"`
 }
 
 type IntegrationCredentials struct {
