@@ -6,7 +6,7 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,6 +15,29 @@ import (
 
 type System struct {
 	options []string
+}
+
+type SystemOptions struct {
+	adminAccessToken    string
+	adminPassword       string
+	adminUsername       string
+	ampRelease          string
+	apicastAccessToken  string
+	apicastRegistryURL  string
+	appLabel            string
+	masterAccessToken   string
+	masterName          string
+	masterUsername      string
+	masterPassword      string
+	recaptchaPublicKey  string
+	recaptchaPrivateKey string
+	appSecretKeyBase    string
+	backendSharedSecret string
+	tenantName          string
+	wildcardDomain      string
+	mysqlDatabaseName   string
+	mysqlRootPassword   string
+	storageClassName    string
 }
 
 func NewSystem(options []string) *System {

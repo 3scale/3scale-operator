@@ -9,6 +9,10 @@ type AmpEvalTemplate struct {
 	components []Component
 }
 
+type AmpEvalTemplateOptions struct {
+	ampTemplateOptions AmpTemplateOptions
+}
+
 func NewAmpEvalTemplate(options []string) *AmpEvalTemplate {
 	components := []Component{
 		NewAmpTemplate(options),

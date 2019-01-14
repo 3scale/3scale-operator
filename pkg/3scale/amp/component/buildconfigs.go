@@ -4,13 +4,18 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type BuildConfigs struct {
 	options []string
+}
+
+type BuildConfigsOptions struct {
+	appLabel string
+	gitRef   string
 }
 
 func NewBuildConfigs(options []string) *BuildConfigs {

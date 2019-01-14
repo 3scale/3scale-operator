@@ -9,6 +9,18 @@ type AmpTemplate struct {
 	components []Component
 }
 
+type AmpTemplateOptions struct {
+	ampImagesOptions      AmpImagesOptions
+	redisOptions          RedisOptions
+	backendOptions        BackendOptions
+	mysqlOptions          MysqlOptions
+	memcachedOptions      MemcachedOptions
+	systemOptions         SystemOptions
+	zyncOptions           ZyncOptions
+	apicastOptions        ApicastOptions
+	wildcardRouterOptions WildcardRouterOptions
+}
+
 func NewAmpTemplate(options []string) *AmpTemplate {
 	components := []Component{
 		NewAmpImages(options),

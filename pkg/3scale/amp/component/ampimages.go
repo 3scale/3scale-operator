@@ -16,6 +16,18 @@ type AmpImages struct {
 	options []string
 }
 
+type AmpImagesOptions struct {
+	appLabel             string
+	ampRelease           string
+	apicastImage         string
+	backendImage         string
+	routerImage          string
+	systemImage          string
+	zyncImage            string
+	postgreSQLImage      string
+	insecureImportPolicy bool
+}
+
 func NewAmpImages(options []string) *AmpImages {
 	ampImages := &AmpImages{
 		options: options,

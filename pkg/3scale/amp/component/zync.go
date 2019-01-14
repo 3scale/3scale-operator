@@ -1,9 +1,11 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -12,6 +14,13 @@ import (
 
 type Zync struct {
 	options []string
+}
+
+type ZyncOptions struct {
+	appLabel            string
+	authenticationToken string
+	databasePassword    string
+	secretKeyBase       string
 }
 
 func NewZync(options []string) *Zync {

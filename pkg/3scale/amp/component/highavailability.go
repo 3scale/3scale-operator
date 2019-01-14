@@ -3,12 +3,21 @@ package component
 import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type HighAvailability struct {
 	options []string
+}
+
+type HighAvailabilityOptions struct {
+	apicastProductionRedisURL   string
+	apicastStagingRedisURL      string
+	backendRedisQueuesEndpoint  string
+	backendRedisStorageEndpoint string
+	systemDatabaseURL           string
+	systemRedisURL              string
 }
 
 const (

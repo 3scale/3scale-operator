@@ -4,7 +4,7 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,6 +13,14 @@ import (
 
 type Backend struct {
 	options []string
+}
+
+type BackendOptions struct {
+	appLabel              string
+	systemBackendPassword string
+	systemBackendUsername string
+	tenantName            string
+	wildcardDomain        string
 }
 
 func NewBackend(options []string) *Backend {

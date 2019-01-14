@@ -3,13 +3,21 @@ package component
 import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type S3 struct {
 	options []string
+}
+
+type S3Options struct {
+	awsAccessKeyId     string
+	awsSecretAccessKey string
+	awsRegion          string
+	awsBucket          string
+	fileUploadStorage  string
 }
 
 func NewS3(options []string) *S3 {

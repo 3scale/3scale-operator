@@ -3,7 +3,7 @@ package component
 import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,6 +15,11 @@ type Memcached struct {
 	// TemplateObjects
 	// CLI Flags??? should be in this object???
 	options []string
+}
+
+type MemcachedOptions struct {
+	appLabel string
+	image    string
 }
 
 func NewMemcached(options []string) *Memcached {
