@@ -28,7 +28,7 @@ func (r NonBindingTrigger) Map(o handler.MapObject) []reconcile.Request {
 	return r(o)
 }
 
-// newReconciler returns a new reconcile.Reconciler
+// newReconciler returns a new reconcile.
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	return &ReconcileBinding{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
@@ -55,23 +55,23 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 	// All those objects can change the outcome of the consolidated objects because the binding points to it.
-	err = c.Watch(&source.Kind{Type: &apiv1alpha1.API{}}, &handler.EnqueueRequestsFromMapFunc{NonBindingTriggerFunc})
+	err = c.Watch(&source.Kind{Type: &apiv1alpha1.API{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: NonBindingTriggerFunc})
 	if err != nil {
 		return err
 	}
-	err = c.Watch(&source.Kind{Type: &apiv1alpha1.Plan{}}, &handler.EnqueueRequestsFromMapFunc{NonBindingTriggerFunc})
+	err = c.Watch(&source.Kind{Type: &apiv1alpha1.Plan{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: NonBindingTriggerFunc})
 	if err != nil {
 		return err
 	}
-	err = c.Watch(&source.Kind{Type: &apiv1alpha1.Limit{}}, &handler.EnqueueRequestsFromMapFunc{NonBindingTriggerFunc})
+	err = c.Watch(&source.Kind{Type: &apiv1alpha1.Limit{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: NonBindingTriggerFunc})
 	if err != nil {
 		return err
 	}
-	err = c.Watch(&source.Kind{Type: &apiv1alpha1.Metric{}}, &handler.EnqueueRequestsFromMapFunc{NonBindingTriggerFunc})
+	err = c.Watch(&source.Kind{Type: &apiv1alpha1.Metric{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: NonBindingTriggerFunc})
 	if err != nil {
 		return err
 	}
-	err = c.Watch(&source.Kind{Type: &apiv1alpha1.MappingRule{}}, &handler.EnqueueRequestsFromMapFunc{NonBindingTriggerFunc})
+	err = c.Watch(&source.Kind{Type: &apiv1alpha1.MappingRule{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: NonBindingTriggerFunc})
 	if err != nil {
 		return err
 	}
@@ -80,6 +80,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 }
 
 var _ reconcile.Reconciler = &ReconcileBinding{}
+
 // ReconcileBinding reconciles a Binding object
 type ReconcileBinding struct {
 	// This client, initialized using mgr.Client() above, is a split client
@@ -93,6 +94,7 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	// If the trigger comes from an object different from a Binding, we will get
 	// all the binding object from the same namespace and reconcile them.
+	// This is a hack. but we don't have owner references, so it should work.
 	if request.Name == "_NonBinding" {
 		opts := client.ListOptions{}
 		opts.InNamespace(request.Namespace)
@@ -131,7 +133,7 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client) (reconcile.Result, error) {
 
 	//consolidated := apiv1alpha1.NewConsolidated(binding.Name+"-consolidated", binding.Namespace, nil, nil)
-	// Create an empty consolidated object to represent the current state.
+	//Create an empty consolidated object to represent the current state.
 	currentConsolidated := &apiv1alpha1.Consolidated{}
 
 	// Try to get the current Consolidated object based on the binding name and namespace
@@ -180,6 +182,7 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client) (reconci
 		} else {
 			// Consolidated Objects are different, let's update the existing one with the desired object.
 			trueVar := true
+			// We set the binding as the owner of the consolidated object, if one gets removed, this one would  too
 			desiredConsolidated.SetOwnerReferences(append(desiredConsolidated.GetOwnerReferences(), v1.OwnerReference{
 				APIVersion: "api.3scale.net/v1alpha1",
 				Kind:       "Binding",
