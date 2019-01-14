@@ -12,8 +12,8 @@ import (
 type BindingSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	CredentialsRef v1.SecretReference `json:"credentialsRef"`
-	APISelector metav1.LabelSelector `json:"APISelector"`
+	CredentialsRef v1.SecretReference   `json:"credentialsRef"`
+	APISelector    metav1.LabelSelector `json:"APISelector"`
 }
 
 // BindingStatus defines the observed state of Binding

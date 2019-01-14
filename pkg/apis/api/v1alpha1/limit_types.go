@@ -10,10 +10,18 @@ import (
 
 // LimitSpec defines the desired state of Limit
 type LimitSpec struct {
+	LimitBase
+	LimitObjectRef
+}
+
+type LimitBase struct {
+	Description string             `json:"description"`
+	Period      string             `json:"period"`
+	MaxValue    int64              `json:"maxValue"`
+}
+
+type LimitObjectRef struct {
 	Metric      v1.ObjectReference `json:"metric"`
-	Description string `json:"description"`
-	Period      string `json:"period"`
-	MaxValue    int64  `json:"maxValue"`
 }
 
 // LimitStatus defines the observed state of Limit

@@ -12,10 +12,18 @@ import (
 type MappingRuleSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-    Path string `json:"path"`
-    Method string `json:"method"`
-    Increment int64 `json:"increment"`
-    MetricRef v1.ObjectReference `json:"metricRef"`
+	MappingRuleBase
+	MappingRuleMetricRef
+}
+
+type MappingRuleBase struct {
+	Path      string             `json:"path"`
+	Method    string             `json:"method"`
+	Increment int64              `json:"increment"`
+}
+
+type MappingRuleMetricRef struct {
+	MetricRef v1.ObjectReference `json:"metricRef"`
 }
 
 // MappingRuleStatus defines the observed state of MappingRule
@@ -48,5 +56,3 @@ type MappingRuleList struct {
 func init() {
 	SchemeBuilder.Register(&MappingRule{}, &MappingRuleList{})
 }
-
-
