@@ -8,6 +8,7 @@ import (
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	v12 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
@@ -41,7 +42,14 @@ func TestBindingController(t *testing.T) {
 
 	ConsolidatedList := &operator.ConsolidatedList{
 		TypeMeta: v1.TypeMeta{
-			Kind:       "API",
+			Kind:       "Consolidated",
+			APIVersion: "v1alpha1",
+		},
+	}
+
+	MetricList := &operator.MetricList{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "Metric",
 			APIVersion: "v1alpha1",
 		},
 	}
@@ -60,12 +68,17 @@ func TestBindingController(t *testing.T) {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}
 
+	err = framework.AddToFrameworkScheme(apis.AddToScheme, MetricList)
+	if err != nil {
+		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
+	}
+
 	t.Run("binding-group", func(t *testing.T) {
-		t.Run("ConsolidatedObject", BindingController)
+		t.Run("BasicBinding", BasicBindingController)
 	})
 }
 
-func BindingController(t *testing.T) {
+func BasicBindingController(t *testing.T) {
 	t.Parallel()
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
@@ -83,12 +96,12 @@ func BindingController(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = BindingCreationTest(t, f, ctx); err != nil {
+	if err = BasicBinding(t, f, ctx); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func BindingCreationTest(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
+func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
 		return fmt.Errorf("could not get namespace: %v", err)
@@ -107,7 +120,7 @@ func BindingCreationTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 		Spec: operator.BindingSpec{
 			CredentialsRef: v12.SecretReference{
 				Name:      "test",
-				Namespace: "myproject",
+				Namespace: namespace,
 			},
 			APISelector: v1.LabelSelector{
 				MatchLabels:      map[string]string{"api": "myapi"},
@@ -123,30 +136,103 @@ func BindingCreationTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 		},
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "myapi",
-			Namespace: "myproject",
 			Labels:    map[string]string{"api": "myapi"},
+			Namespace: namespace,
 		},
 		Spec: operator.APISpec{
-			Description: "",
-			IntegrationMethod: operator.IntegrationMethod{
-				ApicastOnPrem: &operator.ApicastOnPrem{
-					AuthenticationSettings: operator.ApicastAuthenticationSettings{
-						Credentials: operator.IntegrationCredentials{
-							APIKey: &operator.APIKey{
-								AuthParameterName:   "query",
-								CredentialsLocation: "user_key",
+			APIBase: operator.APIBase{
+				Description: "test",
+				IntegrationMethod: operator.IntegrationMethod{
+					ApicastOnPrem: &operator.ApicastOnPrem{
+						APIcastBaseOptions: operator.APIcastBaseOptions{
+							PrivateBaseURL:    "a",
+							APITestGetRequest: "a",
+							AuthenticationSettings: operator.ApicastAuthenticationSettings{
+								HostHeader:  "",
+								SecretToken: "",
+								Credentials: operator.IntegrationCredentials{
+									APIKey: &operator.APIKey{
+										AuthParameterName:   "query",
+										CredentialsLocation: "user-key",
+									},
+								},
+								Errors: operator.Errors{
+									AuthenticationFailed: operator.Authentication{
+										ResponseCode: 0,
+										ContentType:  "",
+										ResponseBody: "",
+									},
+									AuthenticationMissing: operator.Authentication{
+										ResponseCode: 0,
+										ContentType:  "",
+										ResponseBody: "",
+									},
+								},
+							},
+						},
+						StagingPublicBaseURL:    "a",
+						ProductionPublicBaseURL: "a",
+						APIcastBaseSelectors: operator.APIcastBaseSelectors{
+							MappingRulesSelector: v1.LabelSelector{
+								MatchLabels:      nil,
+								MatchExpressions: nil,
+							},
+							PoliciesSelector: v1.LabelSelector{
+								MatchLabels:      nil,
+								MatchExpressions: nil,
 							},
 						},
 					},
 				},
 			},
-			PlanSelector:   v1.LabelSelector{},
-			MetricSelector: v1.LabelSelector{},
+			APISelectors: operator.APISelectors{
+				PlanSelector:   v1.LabelSelector{},
+				MetricSelector: v1.LabelSelector{},
+			},
 		},
 		Status: operator.APIStatus{},
 	}
 
+	exampleSecret := &v12.Secret{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "test",
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"access_token":     []byte("test"),
+			"admin_portal_url": []byte("test"),
+		},
+		StringData: nil,
+		Type:       v12.SecretTypeOpaque,
+	}
+
+	exampleMetric := &operator.Metric{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "Metric",
+			APIVersion: "v1alpha1",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "test01-metric",
+			Namespace: namespace,
+		},
+		Spec: operator.MetricSpec{
+			Unit:           "hits",
+			Description:    "test",
+			IncrementsHits: false,
+		},
+		Status: operator.MetricStatus{},
+	}
+
 	err = f.Client.Create(goctx.TODO(), myAPI, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	if err != nil {
+		return err
+	}
+
+	err = f.Client.Create(goctx.TODO(), exampleSecret, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		return err
 	}
@@ -156,17 +242,41 @@ func BindingCreationTest(t *testing.T, f *framework.Framework, ctx *framework.Te
 		return err
 	}
 
-	time.Sleep(5 * time.Second)
-
-	consolidated := &operator.Consolidated{}
-
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "test01-consolidated", Namespace: namespace}, consolidated)
+	err = f.Client.Create(goctx.TODO(), exampleMetric, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		return err
 	}
 
+	consolidated := &operator.Consolidated{}
+
+	tries := 1
+Retry:
+	tries++
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "test01-consolidated", Namespace: namespace}, consolidated)
+	if err != nil && errors.IsNotFound(err) && tries < 3 {
+		time.Sleep(2 * time.Second)
+		goto Retry
+	} else if err != nil {
+		return err
+	}
+
+	if len(consolidated.Spec.APIs) == 0 {
+		return fmt.Errorf("APIs for consolidated object are empty: %#v", consolidated)
+	}
+
 	if consolidated.Spec.APIs[0].Name != "myapi" {
 		return fmt.Errorf("expected API in consolidated object named: myapi, got: %s", consolidated.Spec.APIs[0].Name)
+	}
+	if consolidated.Spec.APIs[0].IntegrationMethod.ApicastOnPrem == nil {
+		return fmt.Errorf("expected API integration ApicastOnPrem")
+	}
+
+	if len(consolidated.Spec.APIs[0].Metrics) == 0 {
+		return fmt.Errorf("metrics for API are empty")
+	}
+
+	if consolidated.Spec.APIs[0].Metrics[0].Name != "test01-metric" {
+		return fmt.Errorf("expected metric name to be test01-metric, got %s", consolidated.Spec.APIs[0].Metrics[0].Name)
 	}
 
 	return nil
