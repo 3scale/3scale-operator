@@ -23,6 +23,43 @@ type ZyncOptions struct {
 	secretKeyBase       string
 }
 
+type ZyncOptionsBuilder struct {
+	options ZyncOptions
+}
+
+func (z *ZyncOptionsBuilder) AppLabel(appLabel string) {
+	z.options.appLabel = appLabel
+}
+
+func (z *ZyncOptionsBuilder) AuthenticationToken(authToken string) {
+	z.options.authenticationToken = authToken
+}
+
+func (z *ZyncOptionsBuilder) DatabasePassword(dbPass string) {
+	z.options.databasePassword = dbPass
+}
+
+func (z *ZyncOptionsBuilder) SecretKeyBase(secretKeyBase string) {
+	z.options.secretKeyBase = secretKeyBase
+}
+
+func (z *ZyncOptionsBuilder) Build() (*ZyncOptions, error) {
+	if z.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if z.options.authenticationToken == "" {
+		return nil, fmt.Errorf("no Authentication Token has been provided")
+	}
+	if z.options.databasePassword == "" {
+		return nil, fmt.Errorf("no Database Password has been provided")
+	}
+	if z.options.secretKeyBase == "" {
+		return nil, fmt.Errorf("no Secret Key Base has been provided")
+	}
+
+	return &z.options, nil
+}
+
 func NewZync(options []string) *Zync {
 	zync := &Zync{
 		options: options,
