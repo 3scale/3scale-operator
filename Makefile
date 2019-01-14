@@ -1,4 +1,4 @@
-.PHONY: build e2e
+.PHONY: build local-e2e
 UNAME := $(shell uname)
 
 ifeq (${UNAME}, Linux)
@@ -17,20 +17,31 @@ vendor: Gopkg.lock
 
 $(operator-sdk): vendor
 
-NAMESPACE ?= quay.io/3scale/3scale-operator
+IMAGE ?= quay.io/3scale/3scale-operator
 VERSION ?= v0.0.1
-IMAGE ?= $(NAMESPACE):$(VERSION)
-TEST_IMAGE ?= $(IMAGE)-test
+NAMESPACE ?= operator-test
+TEST_IMAGE ?= $(IMAGE):$(VERSION)-$(USER)-test
 
 build: $(operator-sdk)
-	go run $(operator-sdk) build $(NAMESPACE):$(VERSION)
+	go run $(operator-sdk) build $(IMAGE):$(VERSION)
 
-test: $(operator-sdk)
-	go run $(operator-sdk) test local $@
+push: 
+	docker push $(IMAGE):$(VERSION)
 
-e2e: $(operator-sdk)
-	oc delete namespace myproject && oc new-project myproject
+build-test: $(operator-sdk)
 	go run $(operator-sdk) build $(TEST_IMAGE)
+
+push-test:
 	docker push $(TEST_IMAGE)
+
+local-e2e-setup: $(operator-sdk)
+	oc new-project $(NAMESPACE)
+
+local-e2e-run: $(operator-sdk)
 	cat deploy/operator.orig | sed "s@REPLACE_IMAGE@$(TEST_IMAGE)@g" > deploy/operator.yaml
-	go run $(operator-sdk) test local ./test/e2e --namespace=myproject
+	go run $(operator-sdk) test local ./test/e2e --namespace $(NAMESPACE) --go-test-flags "-v"
+
+local-e2e-clean: $(operator-sdk)
+	oc delete --force project $(NAMESPACE) || true
+
+local-e2e: build-test push-test local-e2e-clean local-e2e-setup local-e2e-run local-e2e-clean
