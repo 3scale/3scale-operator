@@ -2,12 +2,14 @@ package v1alpha1
 
 import (
 	"context"
+	portaClient "github.com/3scale/3scale-porta-go-client/client"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strconv"
 )
 
 // TODO: Add options to enable defaults to builders
@@ -435,6 +437,11 @@ func NewInternalApicastOnPremFromApicastOnPrem(namespace string, prem ApicastOnP
 	return &internalApicastOnPrem, nil
 }
 
+func NewConsolidatedFrom3scale(creds InternalCredential, apis []InternalAPI) (*Consolidated, error) {
+
+	return &Consolidated{}, nil
+}
+
 func getAPIs(namespace string, matchLabels map[string]string, c client.Client) (*APIList, error) {
 	apis := &APIList{}
 	opts := &client.ListOptions{}
@@ -474,4 +481,75 @@ func getLimits(namespace string, matchLabels map[string]string, c client.Client)
 	opts.MatchingLabels(matchLabels)
 	err := c.List(context.TODO(), &opts, limits)
 	return limits, err
+}
+
+// Returns a list of InternalPlans from the 3scale account based on a serviceID.
+func getInternalPlansFrom3scale(c *portaClient.ThreeScaleClient, svcId, accessToken string) (*[]InternalPlan, error) {
+	var internalPlans []InternalPlan
+	plansList, err := c.ListAppPlanByServiceId(accessToken, svcId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, appPlan := range plansList.Plans {
+		limits, err := c.ListLimitsPerAppPlan(accessToken, appPlan.ID)
+		if err != nil {
+			return nil, err
+		}
+		var internalLimits []InternalLimit
+		for _, limit := range limits.Limits {
+
+			maxValue, err := strconv.ParseInt(limit.Value, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+
+			internalLimit := InternalLimit{
+				Name:        limit.XMLName.Local,
+				Description: "",
+				Period:      limit.Period,
+				MaxValue:    maxValue,
+				Metric:      limit.MetricID,
+			}
+
+			internalLimits = append(internalLimits, internalLimit)
+		}
+
+		trialPeriodDays, err := strconv.ParseInt(appPlan.TrialPeriodDays, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		setupFee, err := strconv.ParseInt(appPlan.SetupFee, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		costMonth, err := strconv.ParseInt(appPlan.CostPerMonth, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		approvalRequired, err := strconv.ParseBool(appPlan.EndUserRequired)
+		if err != nil {
+			return nil, err
+		}
+
+		internalPlan := &InternalPlan{
+			Name:             appPlan.PlanName,
+			TrialPeriodDays:  trialPeriodDays,
+			ApprovalRequired: approvalRequired,
+			Costs: PlanCost{
+				SetupFee:  setupFee,
+				CostMonth: costMonth,
+			},
+			Limits: internalLimits,
+		}
+
+		internalPlans = append(internalPlans, *internalPlan)
+
+	}
+
+	return &internalPlans, nil
+
 }

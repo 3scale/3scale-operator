@@ -3,6 +3,7 @@ package consolidated
 import (
 	"context"
 	"log"
+	"reflect"
 
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -79,8 +80,8 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 	log.Printf("Reconciling Consolidated %s/%s\n", request.Namespace, request.Name)
 
 	// Fetch the Consolidated instance
-	instance := &apiv1alpha1.Consolidated{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	consolidated := &apiv1alpha1.Consolidated{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, consolidated)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -93,5 +94,17 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 	}
 
 	log.Printf("Detected Consolidated: %s, %s ", request.Name, request.Namespace)
+
+	existingState, err := apiv1alpha1.NewConsolidatedFrom3scale()
+	if err != nil {
+		return reconcile.Result{Requeue:true}, err
+	}
+
+	if reflect.DeepEqual(consolidated, existingState) {
+		return reconcile.Result{}, nil
+	} else {
+		return reconcile.Result{}, nil
+	}
+
 	return reconcile.Result{}, nil
 }
