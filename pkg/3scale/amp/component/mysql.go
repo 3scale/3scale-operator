@@ -35,14 +35,14 @@ func (mysql *Mysql) PostProcess(template *templatev1.Template, otherComponents [
 
 func (mysql *Mysql) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
+		{
 			Name:        "MYSQL_USER",
 			DisplayName: "MySQL User",
 			Description: "Username for MySQL user that will be used for accessing the database.",
 			Value:       "mysql",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "MYSQL_PASSWORD",
 			DisplayName: "MySQL Password",
 			Description: "Password for the MySQL user.",
@@ -50,14 +50,14 @@ func (mysql *Mysql) buildParameters(template *templatev1.Template) {
 			From:        "[a-z0-9]{8}",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "MYSQL_DATABASE",
 			DisplayName: "MySQL Database Name",
 			Description: "Name of the MySQL database accessed.",
 			Value:       "system",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "MYSQL_ROOT_PASSWORD",
 			DisplayName: "MySQL Root password.",
 			Description: "Password for Root user.",
@@ -76,10 +76,10 @@ func (mysql *Mysql) buildObjects(template *templatev1.Template) {
 	systemMysqlPersistentVolumeClaim := mysql.buildSystemMysqlPersistentVolumeClaim()
 
 	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: systemMysqlDeploymentConfig},
-		runtime.RawExtension{Object: systemMysqlMainConfigConfigMap},
-		runtime.RawExtension{Object: systemMysqlExtraConfigConfigMap},
-		runtime.RawExtension{Object: systemMysqlPersistentVolumeClaim},
+		{Object: systemMysqlDeploymentConfig},
+		{Object: systemMysqlMainConfigConfigMap},
+		{Object: systemMysqlExtraConfigConfigMap},
+		{Object: systemMysqlPersistentVolumeClaim},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -153,48 +153,48 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
-						v1.Volume{
+						{
 							Name: "mysql-storage",
 							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 								ClaimName: "mysql-storage",
 								ReadOnly:  false}},
-						}, v1.Volume{
+						}, {
 							Name: "mysql-extra-conf",
 							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "mysql-extra-conf"}}},
-						}, v1.Volume{
+						}, {
 							Name: "mysql-main-conf",
 							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "mysql-main-conf"}}}},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "system-mysql",
 							Image: "${MYSQL_IMAGE}",
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{HostPort: 0,
+								{HostPort: 0,
 									ContainerPort: 3306,
 									Protocol:      v1.Protocol("TCP")},
 							},
 							Env: []v1.EnvVar{
-								v1.EnvVar{
+								{
 									Name:  "MYSQL_USER",
 									Value: "${MYSQL_USER}",
-								}, v1.EnvVar{
+								}, {
 									Name:  "MYSQL_PASSWORD",
 									Value: "${MYSQL_PASSWORD}",
-								}, v1.EnvVar{
+								}, {
 									Name:  "MYSQL_DATABASE",
 									Value: "${MYSQL_DATABASE}",
-								}, v1.EnvVar{
+								}, {
 									Name:  "MYSQL_ROOT_PASSWORD",
 									Value: "${MYSQL_ROOT_PASSWORD}",
-								}, v1.EnvVar{
+								}, {
 									Name:  "MYSQL_LOWER_CASE_TABLE_NAMES",
 									Value: "1",
-								}, v1.EnvVar{
+								}, {
 									Name:  "MYSQL_DEFAULTS_FILE",
 									Value: "/etc/my-extra/my.cnf"},
 							},
@@ -208,15 +208,15 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 								},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
+								{
 									Name:      "mysql-storage",
 									ReadOnly:  false,
 									MountPath: "/var/lib/mysql/data",
-								}, v1.VolumeMount{
+								}, {
 									Name:      "mysql-extra-conf",
 									ReadOnly:  false,
 									MountPath: "/etc/my-extra.d",
-								}, v1.VolumeMount{
+								}, {
 									Name:      "mysql-main-conf",
 									ReadOnly:  false,
 									MountPath: "/etc/my-extra"},

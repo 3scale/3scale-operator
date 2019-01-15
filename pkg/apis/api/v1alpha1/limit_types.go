@@ -15,13 +15,13 @@ type LimitSpec struct {
 }
 
 type LimitBase struct {
-	Description string             `json:"description"`
-	Period      string             `json:"period"`
-	MaxValue    int64              `json:"maxValue"`
+	Description string `json:"description"`
+	Period      string `json:"period"`
+	MaxValue    int64  `json:"maxValue"`
 }
 
 type LimitObjectRef struct {
-	Metric      v1.ObjectReference `json:"metric"`
+	Metric v1.ObjectReference `json:"metric"`
 }
 
 // LimitStatus defines the observed state of Limit

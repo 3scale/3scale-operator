@@ -49,15 +49,15 @@ func (backend *Backend) buildObjects(template *templatev1.Template) {
 	backendListenerSecrets := backend.buildBackendListenerSecrets()
 
 	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: backendCronDeploymentConfig},
-		runtime.RawExtension{Object: backendListenerDeploymentConfig},
-		runtime.RawExtension{Object: backendListenerService},
-		runtime.RawExtension{Object: backendListenerRoute},
-		runtime.RawExtension{Object: backendWorkerDeploymentConfig},
-		runtime.RawExtension{Object: backendEnvConfigMap},
-		runtime.RawExtension{Object: backendInternalApiCredsForSystem},
-		runtime.RawExtension{Object: backendRedisSecrets},
-		runtime.RawExtension{Object: backendListenerSecrets},
+		{Object: backendCronDeploymentConfig},
+		{Object: backendListenerDeploymentConfig},
+		{Object: backendListenerService},
+		{Object: backendListenerRoute},
+		{Object: backendWorkerDeploymentConfig},
+		{Object: backendEnvConfigMap},
+		{Object: backendInternalApiCredsForSystem},
+		{Object: backendRedisSecrets},
+		{Object: backendListenerSecrets},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -109,7 +109,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "worker", "app": "${APP_LABEL}", "deploymentConfig": "backend-worker"},
 				},
 				Spec: v1.PodSpec{InitContainers: []v1.Container{
-					v1.Container{
+					{
 						Name:  "backend-redis-svc",
 						Image: "amp-backend:latest",
 						Command: []string{
@@ -124,7 +124,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 					},
 				},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "backend-worker",
 							Image: "amp-backend:latest",
 							Args:  []string{"bin/3scale_backend_worker", "run"},
@@ -194,7 +194,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "cron", "app": "${APP_LABEL}", "deploymentConfig": "backend-cron"},
 				},
 				Spec: v1.PodSpec{InitContainers: []v1.Container{
-					v1.Container{
+					{
 						Name:  "backend-redis-svc",
 						Image: "amp-backend:latest",
 						Command: []string{
@@ -209,7 +209,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 					},
 				},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "backend-cron",
 							Image: "amp-backend:latest",
 							Args:  []string{"backend-cron"},
@@ -281,12 +281,12 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "listener", "app": "${APP_LABEL}", "deploymentConfig": "backend-listener"},
 				},
 				Spec: v1.PodSpec{Containers: []v1.Container{
-					v1.Container{
+					{
 						Name:  "backend-listener",
 						Image: "amp-backend:latest",
 						Args:  []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
 						Ports: []v1.ContainerPort{
-							v1.ContainerPort{HostPort: 0,
+							{HostPort: 0,
 								ContainerPort: 3000,
 								Protocol:      v1.Protocol("TCP")},
 						},
@@ -352,7 +352,7 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:     "http",
 					Protocol: v1.Protocol("TCP"),
 					Port:     3000,
