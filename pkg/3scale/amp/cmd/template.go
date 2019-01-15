@@ -103,7 +103,7 @@ func runCommand(cmd *cobra.Command, args []string) {
 	componentOptions := []string{}
 	componentObjects := []component.Component{}
 
-	for component := range inputComponents {
+	for component, _ := range inputComponents {
 		if !isAnAvailableComponent(component, availableOrderedComponents) {
 			panic("invalid component")
 		}
@@ -254,25 +254,25 @@ func buildTemplateMessage() string {
 
 func buildTemplateParameters() []templatev1.Parameter {
 	parameters := []templatev1.Parameter{
-		{
+		templatev1.Parameter{
 			Name:        "AMP_RELEASE",
 			Description: "AMP release tag.",
 			Required:    true,
 			Value:       "2.4.0",
 		},
-		{
+		templatev1.Parameter{
 			Name:        "APP_LABEL",
 			Description: "Used for object app labels",
 			Required:    true,
 			Value:       "3scale-api-management",
 		},
-		{
+		templatev1.Parameter{
 			Name:        "TENANT_NAME",
 			Description: "Tenant name under the root that Admin UI will be available with -admin suffix.",
 			Required:    true,
 			Value:       "3scale",
 		},
-		{
+		templatev1.Parameter{
 			Name:        "RWX_STORAGE_CLASS",
 			Description: "The Storage Class to be used by ReadWriteMany PVCs",
 			Required:    false,

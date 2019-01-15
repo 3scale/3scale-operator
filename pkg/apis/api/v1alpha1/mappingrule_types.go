@@ -17,9 +17,9 @@ type MappingRuleSpec struct {
 }
 
 type MappingRuleBase struct {
-	Path      string `json:"path"`
-	Method    string `json:"method"`
-	Increment int64  `json:"increment"`
+	Path      string             `json:"path"`
+	Method    string             `json:"method"`
+	Increment int64              `json:"increment"`
 }
 
 type MappingRuleMetricRef struct {

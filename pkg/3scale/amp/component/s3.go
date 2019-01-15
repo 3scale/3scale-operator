@@ -168,27 +168,27 @@ func (s3 *S3) PostProcess(template *templatev1.Template, otherComponents []Compo
 
 func (s3 *S3) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		{
+		templatev1.Parameter{
 			Name:        "FILE_UPLOAD_STORAGE",
 			Description: "Define Assets Storage",
 			Required:    false,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "AWS_ACCESS_KEY_ID",
 			Description: "AWS Access Key ID to use in S3 Storage for assets.",
 			Required:    false,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "AWS_SECRET_ACCESS_KEY",
 			Description: "AWS Access Key Secret to use in S3 Storage for assets.",
 			Required:    false,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "AWS_BUCKET",
 			Description: "AWS S3 Bucket Name to use in S3 Storage for assets.",
 			Required:    false,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "AWS_REGION",
 			Description: "AWS Region to use in S3 Storage for assets.",
 			Required:    false,
@@ -201,7 +201,7 @@ func (s3 *S3) buildObjects(template *templatev1.Template) {
 	s3AWSSecret := s3.buildS3AWSSecret()
 
 	objects := []runtime.RawExtension{
-		{Object: s3AWSSecret},
+		runtime.RawExtension{Object: s3AWSSecret},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
