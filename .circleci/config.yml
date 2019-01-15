@@ -1,4 +1,77 @@
-version: 2
+version: 2.1
+
+commands:
+  install-openshift:
+    steps:
+      - run:
+          name: Install OpenShift Client Tools
+          working_directory: /tmp
+          command: |
+            curl --fail -L  https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz | tar -xzf-
+            sudo mv /tmp/openshift-origin-client-tools-*-linux-64bit/oc /usr/local/bin/
+      - run:
+          name: Configure Docker
+          command: |
+            echo '{"insecure-registries": ["172.30.0.0/16"]}' | sudo tee --append /etc/docker/daemon.json
+            sudo service docker restart
+
+      - run:
+          name: Start and Configure OpenShift Cluster
+          command: |
+            oc cluster up --public-hostname=127.0.0.1 --routing-suffix=lvh.me \
+              --enable=persistent-volumes --enable=registry --enable=router --enable=web-console
+            oc login -u system:admin --insecure-skip-tls-verify=true > /dev/null
+            oc adm policy add-cluster-role-to-user cluster-admin developer > /dev/null
+            oc login -u developer --insecure-skip-tls-verify=true > /dev/null
+
+            oc wait --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
+            oc wait --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
+  create-secrets:
+    steps:
+      - run:
+          name: Import OpenShift Secrets
+          command: |
+            oc create secret docker-registry quay-auth \
+              --docker-password="${DOCKER_PASSWORD}" \
+              --docker-username="${DOCKER_USERNAME}" \
+              --docker-server="${DOCKER_REGISTRY}"
+  build-amp:
+    steps:
+      - run:
+          name: Build images
+          command: |
+            oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml -o json --param WILDCARD_DOMAIN=lvh/me --param AMP_RELEASE=master | jq -j '.items[] | select(.kind == "ImageStream")' | oc create -f -
+
+            oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml --allow-missing-imagestream-tags
+            set -x
+            oc cancel-build $(oc get bc --output=name)
+            for bc in $(oc get bc --output=name); do oc start-build $bc --wait --follow & done
+            wait
+            oc delete events --all
+  oc-observe:
+    steps:
+      - run:
+          name: Observe OpenShift Pod changes
+          command: |
+            oc observe pods --maximum-errors=-1 --no-headers --object-env-var=OBJECT --type-env-var=TYPE -- jq -n --raw-output 'env.OBJECT | fromjson | "\(env.TYPE) \(.kind) \(.metadata.name) started at \(.status.startTime) (\(.status.phase)) \(.status.conditions // [] | map("\(.type): \(.status) @ \(.lastTransitionTime)") | join(", "))"'
+          background: true
+  oc-status:
+    parameters:
+      report_name:
+        type: string
+        default: "events"
+
+    steps:
+      - run:
+          name: Collect OpenShift events and status
+          command: |
+            mkdir -p reports
+            oc status
+            oc get events -o json > reports/<< parameters.report_name >>.json
+          when: always
+      - store_artifacts:
+          path: reports
+
 jobs:
   build:
     docker:
@@ -31,9 +104,65 @@ jobs:
           name: Build
           command: |
               make build NAMESPACE=172.30.1.1:5000/openshift VERSION=test
+  deploy:
+    machine:
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - checkout
+      - install-openshift
+      - create-secrets
+      - build-amp
+      - oc-observe
+      - run:
+          name: Deploy 3scale
+          command: |
+            ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
+              oc new-app -f- --param WILDCARD_DOMAIN=lvh.me --param AMP_RELEASE=master
+            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
+            oc get events | egrep ' Failed ' || :
+            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+
+      - oc-status
+
+      - run:
+          name: Push images to quay.io
+          command: |
+            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+            oc whoami --show-token | docker login -u $(oc whoami) --password-stdin 172.30.1.1:5000
+            project=$(oc project -q)
+
+            oc image mirror $(for component in apicast wildcard-router zync ; do
+              echo 172.30.1.1:5000/$project/amp-$component:latest=quay.io/3scale/$component:nightly
+            done) 172.30.1.1:5000/$project/amp-backend:latest=quay.io/3scale/apisonator:nightly \
+            172.30.1.1:5000/$project/amp-system:latest=quay.io/3scale/porta:nightly --insecure
+  generator:
+    docker:
+      - image: circleci/golang:1.10
+    working_directory: /go/src/github.com/3scale/3scale-operator
+    steps:
+      - checkout
+      - run: dep ensure
+      - run: make clean test -j 2 --directory pkg/3scale/amp
 workflows:
   version: 2
   build:
     jobs:
       - build
+  templates:
+    jobs:
+      - generator
+      - deploy:
+          context: org-global
+  nightly:
+    jobs:
+      - deploy:
+          context: org-global
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master

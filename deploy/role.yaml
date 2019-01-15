@@ -42,5 +42,8 @@ rules:
   - plans
   - limits
   - mappingrules
+  - amp.3scale.net
+  resources:
+  - '*'
   verbs:
   - '*'
