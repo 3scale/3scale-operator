@@ -10,6 +10,14 @@
   version = "v0.33.1"
 
 [[projects]]
+  digest = "1:91981d63946f5d802a03ab508e7d5a701f6c3f85100949719a467dd81033a9eb"
+  name = "github.com/3scale/3scale-porta-go-client"
+  packages = ["client"]
+  pruneopts = "NT"
+  revision = "91f46f5fe308b7ad92068b92bdece0721be09ca1"
+  version = "v0.0.2"
+
+[[projects]]
   digest = "1:d8ebbd207f3d3266d4423ce4860c9f3794956306ded6c7ba312ecc69cdfbf04c"
   name = "github.com/PuerkitoBio/purell"
   packages = ["."]
@@ -847,6 +855,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/3scale/3scale-porta-go-client/client",
     "github.com/operator-framework/operator-sdk/commands/operator-sdk",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/test",
