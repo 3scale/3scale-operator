@@ -40,13 +40,13 @@ func (bcs *BuildConfigs) buildObjects(template *templatev1.Template) {
 	buildOpenrestyCentosSevenImageStream := bcs.buildOpenrestyCentosSevenImageStream()
 
 	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: backendBuildConfig},
-		runtime.RawExtension{Object: zyncBuildConfig},
-		runtime.RawExtension{Object: apicastBuildConfig},
-		runtime.RawExtension{Object: wildcardRouterBuildConfig},
-		runtime.RawExtension{Object: systemBuildConfig},
-		runtime.RawExtension{Object: buildRubyCentosSevenImageStream},
-		runtime.RawExtension{Object: buildOpenrestyCentosSevenImageStream},
+		{Object: backendBuildConfig},
+		{Object: zyncBuildConfig},
+		{Object: apicastBuildConfig},
+		{Object: wildcardRouterBuildConfig},
+		{Object: systemBuildConfig},
+		{Object: buildRubyCentosSevenImageStream},
+		{Object: buildOpenrestyCentosSevenImageStream},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -93,7 +93,7 @@ func (bcs *BuildConfigs) buildBackendBuildConfig() *buildv1.BuildConfig {
 				},
 			},
 			Triggers: []buildv1.BuildTriggerPolicy{
-				buildv1.BuildTriggerPolicy{
+				{
 					Type: buildv1.ImageChangeBuildTriggerType,
 				},
 			},
@@ -140,10 +140,10 @@ func (bcs *BuildConfigs) buildZyncBuildConfig() *buildv1.BuildConfig {
 				},
 			},
 			Triggers: []buildv1.BuildTriggerPolicy{
-				buildv1.BuildTriggerPolicy{
+				{
 					Type: buildv1.ImageChangeBuildTriggerType,
 				},
-				buildv1.BuildTriggerPolicy{
+				{
 					Type: buildv1.ConfigChangeBuildTriggerType,
 				},
 			},
@@ -193,10 +193,10 @@ func (bcs *BuildConfigs) buildApicastBuildConfig() *buildv1.BuildConfig {
 				},
 			},
 			Triggers: []buildv1.BuildTriggerPolicy{
-				buildv1.BuildTriggerPolicy{
+				{
 					Type: buildv1.ImageChangeBuildTriggerType,
 				},
-				buildv1.BuildTriggerPolicy{
+				{
 					Type: buildv1.ConfigChangeBuildTriggerType,
 				},
 			},
@@ -245,10 +245,10 @@ func (bcs *BuildConfigs) buildWildcardRouterBuildConfig() *buildv1.BuildConfig {
 				},
 			},
 			Triggers: []buildv1.BuildTriggerPolicy{
-				buildv1.BuildTriggerPolicy{
+				{
 					Type: buildv1.ImageChangeBuildTriggerType,
 				},
-				buildv1.BuildTriggerPolicy{
+				{
 					Type: buildv1.ConfigChangeBuildTriggerType,
 				},
 			},
@@ -296,7 +296,7 @@ func (bcs *BuildConfigs) buildSystemBuildConfig() *buildv1.BuildConfig {
 				},
 			},
 			Triggers: []buildv1.BuildTriggerPolicy{
-				buildv1.BuildTriggerPolicy{
+				{
 					Type: buildv1.ImageChangeBuildTriggerType,
 				},
 			},
@@ -316,7 +316,7 @@ func (bcs *BuildConfigs) buildRubyCentosSevenImageStream() *imagev1.ImageStream 
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
+				{
 					Name: "latest",
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
@@ -340,7 +340,7 @@ func (bcs *BuildConfigs) buildOpenrestyCentosSevenImageStream() *imagev1.ImageSt
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
+				{
 					Name: "builder",
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
@@ -357,7 +357,7 @@ func (bcs *BuildConfigs) buildOpenrestyCentosSevenImageStream() *imagev1.ImageSt
 
 func (bcs *BuildConfigs) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
+		{
 			Name:        "GIT_REF",
 			Required:    true,
 			Value:       "master",

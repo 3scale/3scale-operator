@@ -33,32 +33,32 @@ func (apicast *Apicast) PostProcess(template *templatev1.Template, otherComponen
 
 func (apicast *Apicast) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
+		{
 			Name:        "APICAST_ACCESS_TOKEN",
 			Description: "Read Only Access Token that is APIcast going to use to download its configuration.",
 			Generate:    "expression",
 			From:        "[a-z0-9]{8}",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "APICAST_MANAGEMENT_API",
 			Description: "Scope of the APIcast Management API. Can be disabled, status or debug. At least status required for health checks.",
 			Value:       "status",
 			Required:    false,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "APICAST_OPENSSL_VERIFY",
 			Description: "Turn on/off the OpenSSL peer verification when downloading the configuration. Can be set to true/false.",
 			Value:       "false",
 			Required:    false,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "APICAST_RESPONSE_CODES",
 			Description: "Enable logging response codes in APIcast.",
 			Value:       "true",
 			Required:    false,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "APICAST_REGISTRY_URL",
 			Description: "The URL to point to APIcast policies registry management",
 			Value:       "http://apicast-staging:8090/policies",
@@ -79,14 +79,14 @@ func (apicast *Apicast) buildObjects(template *templatev1.Template) {
 	apicastRedisSecret := apicast.buildApicastRedisSecrets()
 
 	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: apicastStagingDeploymentConfig},
-		runtime.RawExtension{Object: apicastProductionDeploymentConfig},
-		runtime.RawExtension{Object: apicastStagingService},
-		runtime.RawExtension{Object: apicastProductionService},
-		runtime.RawExtension{Object: apicastStagingRoute},
-		runtime.RawExtension{Object: apicastProductionRoute},
-		runtime.RawExtension{Object: apicastEnvConfigMap},
-		runtime.RawExtension{Object: apicastRedisSecret},
+		{Object: apicastStagingDeploymentConfig},
+		{Object: apicastProductionDeploymentConfig},
+		{Object: apicastStagingService},
+		{Object: apicastProductionService},
+		{Object: apicastStagingRoute},
+		{Object: apicastProductionRoute},
+		{Object: apicastEnvConfigMap},
+		{Object: apicastRedisSecret},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -133,13 +133,13 @@ func (apicast *Apicast) buildApicastStagingService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "gateway",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
 				},
-				v1.ServicePort{
+				{
 					Name:       "management",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       8090,
@@ -193,13 +193,13 @@ func (apicast *Apicast) buildApicastProductionService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "gateway",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
 				},
-				v1.ServicePort{
+				{
 					Name:       "management",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       8090,
@@ -277,17 +277,17 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp",
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
+								{
 									ContainerPort: 8080,
 									Protocol:      v1.ProtocolTCP,
 								},
-								v1.ContainerPort{
+								{
 									ContainerPort: 8090,
 									Protocol:      v1.ProtocolTCP,
 								},
-								v1.ContainerPort{
+								{
 									ContainerPort: 9421,
 									Protocol:      v1.ProtocolTCP,
 									Name:          "metrics",
@@ -400,12 +400,12 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp",
 					InitContainers: []v1.Container{
-						v1.Container{
+						{
 							Name:    "system-master-svc",
 							Image:   "amp-apicast:latest",
 							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
 							Env: []v1.EnvVar{
-								v1.EnvVar{
+								{
 									Name:  "SLEEP_SECONDS",
 									Value: "1",
 								},
@@ -413,17 +413,17 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
+								{
 									ContainerPort: 8080,
 									Protocol:      v1.ProtocolTCP,
 								},
-								v1.ContainerPort{
+								{
 									ContainerPort: 8090,
 									Protocol:      v1.ProtocolTCP,
 								},
-								v1.ContainerPort{
+								{
 									ContainerPort: 9421,
 									Protocol:      v1.ProtocolTCP,
 									Name:          "metrics",

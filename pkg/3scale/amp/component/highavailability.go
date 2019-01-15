@@ -135,32 +135,32 @@ func (ha *HighAvailability) updateDatabasesURLS(template *templatev1.Template) {
 
 func (ha *HighAvailability) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
+		{
 			Name:        "BACKEND_REDIS_STORAGE_ENDPOINT",
 			Description: "Define the external backend-redis storage endpoint to connect to",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "BACKEND_REDIS_QUEUES_ENDPOINT",
 			Description: "Define the external backend-redis queues endpoint to connect to",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "SYSTEM_REDIS_URL",
 			Description: "Define the external system-redis to connect to",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "APICAST_STAGING_REDIS_URL",
 			Description: "Define the external apicast-staging redis to connect to",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "APICAST_PRODUCTION_REDIS_URL",
 			Description: "Define the external apicast-staging redis to connect to",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "SYSTEM_DATABASE_URL",
 			Description: "Define the external system-mysql to connect to",
 			Required:    true,

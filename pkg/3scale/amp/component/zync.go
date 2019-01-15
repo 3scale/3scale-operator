@@ -32,7 +32,7 @@ func (zync *Zync) PostProcess(template *templatev1.Template, otherComponents []C
 
 func (zync *Zync) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
+		{
 			Name:        "ZYNC_DATABASE_PASSWORD",
 			DisplayName: "PostgreSQL Connection Password",
 			Description: "Password for the PostgreSQL connection user.",
@@ -40,13 +40,13 @@ func (zync *Zync) buildParameters(template *templatev1.Template) {
 			From:        "[a-zA-Z0-9]{16}",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:     "ZYNC_SECRET_KEY_BASE",
 			Generate: "expression",
 			From:     "[a-zA-Z0-9]{16}",
 			Required: true,
 		},
-		templatev1.Parameter{
+		{
 			Name:     "ZYNC_AUTHENTICATION_TOKEN",
 			Generate: "expression",
 			From:     "[a-zA-Z0-9]{16}",
@@ -64,11 +64,11 @@ func (zync *Zync) buildObjects(template *templatev1.Template) {
 	zyncSecret := zync.buildZyncSecret()
 
 	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: zyncDeploymentConfig},
-		runtime.RawExtension{Object: zyncDatabaseDeploymentConfig},
-		runtime.RawExtension{Object: zyncService},
-		runtime.RawExtension{Object: zyncDatabaseService},
-		runtime.RawExtension{Object: zyncSecret},
+		{Object: zyncDeploymentConfig},
+		{Object: zyncDatabaseDeploymentConfig},
+		{Object: zyncService},
+		{Object: zyncDatabaseService},
+		{Object: zyncSecret},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -143,26 +143,26 @@ func (zync *Zync) buildZyncCronDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: map[string]string{"name": "zync-cron"},
 				},
 				Spec: v1.PodSpec{Containers: []v1.Container{
-					v1.Container{
+					{
 						Name:  "zync-cron",
 						Image: "amp-zync:latest", // TODO decide what to do with references to ImageStreams
 						Args:  []string{"zync-cron"},
 						Env: []v1.EnvVar{
-							v1.EnvVar{
+							{
 								Name:  "CONFIG_REDIS_PROXY",
 								Value: "redis://zync-redis:6379/0", // TODO decide what to do with references to the 'zync-redis' service
-							}, v1.EnvVar{
+							}, {
 								Name: "CONFIG_REDIS_SENTINEL_HOSTS",
-							}, v1.EnvVar{
+							}, {
 								Name: "CONFIG_REDIS_SENTINEL_ROLE",
-							}, v1.EnvVar{
+							}, {
 								Name:  "CONFIG_QUEUES_MASTER_NAME",
 								Value: "redis://zync-redis:6379/1", // TODO decide what to do with references to the 'zync-redis' service
-							}, v1.EnvVar{
+							}, {
 								Name: "CONFIG_QUEUES_SENTINEL_HOSTS",
-							}, v1.EnvVar{
+							}, {
 								Name: "CONFIG_QUEUES_SENTINEL_ROLE",
-							}, v1.EnvVar{
+							}, {
 								Name:  "RACK_ENV",
 								Value: "production",
 							},
@@ -227,7 +227,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp",
 					InitContainers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "zync-db-svc",
 							Image: "amp-zync:latest",
 							Command: []string{
@@ -235,11 +235,11 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 								"-c",
 								"bundle exec sh -c \"until rake boot:db; do sleep $SLEEP_SECONDS; done\"",
 							}, Env: []v1.EnvVar{
-								v1.EnvVar{
+								{
 									Name:  "SLEEP_SECONDS",
 									Value: "1",
 								},
-								v1.EnvVar{
+								{
 									Name: "DATABASE_URL",
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
@@ -254,22 +254,22 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "zync",
 							Image: "amp-zync:latest",
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
+								{
 									ContainerPort: 8080,
 									Protocol:      v1.Protocol("TCP")},
 							},
 							Env: []v1.EnvVar{
-								v1.EnvVar{
+								{
 									Name:  "RAILS_LOG_TO_STDOUT",
 									Value: "true",
-								}, v1.EnvVar{
+								}, {
 									Name:  "RAILS_ENV",
 									Value: "production",
-								}, v1.EnvVar{
+								}, {
 									Name: "DATABASE_URL",
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
@@ -279,7 +279,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 											Key: "DATABASE_URL",
 										},
 									},
-								}, v1.EnvVar{
+								}, {
 									Name: "SECRET_KEY_BASE",
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
@@ -289,7 +289,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 											Key: "SECRET_KEY_BASE",
 										},
 									},
-								}, v1.EnvVar{
+								}, {
 									Name: "ZYNC_AUTHENTICATION_TOKEN",
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
@@ -397,26 +397,26 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 				Spec: v1.PodSpec{
 					RestartPolicy: v1.RestartPolicyAlways,
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "postgresql",
 							Image: " ",
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
+								{
 									ContainerPort: 5432,
 									Protocol:      v1.Protocol("TCP")},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
+								{
 									Name:      "zync-database-data",
 									MountPath: "/var/lib/pgsql/data",
 								},
 							},
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Env: []v1.EnvVar{
-								v1.EnvVar{
+								{
 									Name:  "POSTGRESQL_USER",
 									Value: "zync",
-								}, v1.EnvVar{
+								}, {
 									Name: "POSTGRESQL_PASSWORD",
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
@@ -426,7 +426,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 											Key: "ZYNC_DATABASE_PASSWORD",
 										},
 									},
-								}, v1.EnvVar{
+								}, {
 									Name:  "POSTGRESQL_DATABASE",
 									Value: "zync_production",
 								},
@@ -462,7 +462,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					Volumes: []v1.Volume{
-						v1.Volume{
+						{
 							Name: "zync-database-data",
 							VolumeSource: v1.VolumeSource{
 								EmptyDir: &v1.EmptyDirVolumeSource{
@@ -492,7 +492,7 @@ func (zync *Zync) buildZyncService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "8080-tcp",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       8080,
@@ -520,7 +520,7 @@ func (zync *Zync) buildZyncDatabaseService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "postgresql",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       5432,

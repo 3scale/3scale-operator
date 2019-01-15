@@ -33,12 +33,12 @@ func (wr *WildcardRouter) PostProcess(template *templatev1.Template, otherCompon
 
 func (wr *WildcardRouter) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
+		{
 			Name:        "WILDCARD_DOMAIN",
 			Description: "Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com.",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "WILDCARD_POLICY",
 			Description: "Use \"Subdomain\" to create a wildcard route for apicast wildcard router",
 			Value:       "None",
@@ -54,9 +54,9 @@ func (wr *WildcardRouter) buildObjects(template *templatev1.Template) {
 	wildcardRouterRoute := wr.buildWildcardRouterRoute()
 
 	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: wildcardRouterDeploymentConfig},
-		runtime.RawExtension{Object: wildcardRouterService},
-		runtime.RawExtension{Object: wildcardRouterRoute},
+		{Object: wildcardRouterDeploymentConfig},
+		{Object: wildcardRouterService},
+		{Object: wildcardRouterRoute},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -104,7 +104,7 @@ func (wr *WildcardRouter) buildWildcardRouterService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "http",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       8080,
@@ -178,9 +178,9 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp",
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
+								{
 									ContainerPort: 8080,
 									Protocol:      v1.ProtocolTCP,
 									Name:          "http",

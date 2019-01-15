@@ -43,13 +43,13 @@ func (ampImages *AmpImages) buildObjects(template *templatev1.Template) {
 	quayServiceAccount := ampImages.buildQuayServiceAccount()
 
 	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: backendImageStream},
-		runtime.RawExtension{Object: zyncImageStream},
-		runtime.RawExtension{Object: apicastImageStream},
-		runtime.RawExtension{Object: wildcardRouterImageStream},
-		runtime.RawExtension{Object: systemImageStream},
-		runtime.RawExtension{Object: postgreSQLImageStream},
-		runtime.RawExtension{Object: quayServiceAccount},
+		{Object: backendImageStream},
+		{Object: zyncImageStream},
+		{Object: apicastImageStream},
+		{Object: wildcardRouterImageStream},
+		{Object: systemImageStream},
+		{Object: postgreSQLImageStream},
+		{Object: quayServiceAccount},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -69,7 +69,7 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
+				{
 					Name: "latest",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "amp-backend (latest)",
@@ -79,7 +79,7 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 						Name: "${AMP_RELEASE}",
 					},
 				},
-				imagev1.TagReference{
+				{
 					Name: "${AMP_RELEASE}",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "amp-backend ${AMP_RELEASE}",
@@ -114,7 +114,7 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
+				{
 					Name: "latest",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP Zync (latest)",
@@ -124,7 +124,7 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 						Name: "${AMP_RELEASE}",
 					},
 				},
-				imagev1.TagReference{
+				{
 					Name: "${AMP_RELEASE}",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP Zync ${AMP_RELEASE}",
@@ -159,7 +159,7 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
+				{
 					Name: "latest",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP APIcast (latest)",
@@ -169,7 +169,7 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 						Name: "${AMP_RELEASE}",
 					},
 				},
-				imagev1.TagReference{
+				{
 					Name: "${AMP_RELEASE}",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP APIcast ${AMP_RELEASE}",
@@ -204,7 +204,7 @@ func (ampImages *AmpImages) buildWildcardRouterImageStream() *imagev1.ImageStrea
 		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
+				{
 					Name: "latest",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP APIcast Wildcard Router (latest)",
@@ -214,7 +214,7 @@ func (ampImages *AmpImages) buildWildcardRouterImageStream() *imagev1.ImageStrea
 						Name: "${AMP_RELEASE}",
 					},
 				},
-				imagev1.TagReference{
+				{
 					Name: "${AMP_RELEASE}",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP APIcast Wildcard Router ${AMP_RELEASE}",
@@ -249,7 +249,7 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
+				{
 					Name: "latest",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP System (latest)",
@@ -259,7 +259,7 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 						Name: "${AMP_RELEASE}",
 					},
 				},
-				imagev1.TagReference{
+				{
 					Name: "${AMP_RELEASE}",
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP system ${AMP_RELEASE}",
@@ -289,7 +289,7 @@ func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
+				{
 					Name: "9.5",
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
@@ -311,56 +311,56 @@ func (ampImages *AmpImages) buildQuayServiceAccount() *v1.ServiceAccount {
 			Name: "amp",
 		},
 		ImagePullSecrets: []v1.LocalObjectReference{
-			v1.LocalObjectReference{
+			{
 				Name: "quay-auth"}}}
 }
 
 func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
+		{
 			Name:     "AMP_BACKEND_IMAGE",
 			Required: true,
 			Value:    "quay.io/3scale/apisonator:nightly",
 		},
-		templatev1.Parameter{
+		{
 			Name:     "AMP_ZYNC_IMAGE",
 			Value:    "quay.io/3scale/zync:nightly",
 			Required: true,
 		},
-		templatev1.Parameter{
+		{
 			Name:     "AMP_APICAST_IMAGE",
 			Value:    "quay.io/3scale/apicast:nightly",
 			Required: true,
 		},
-		templatev1.Parameter{
+		{
 			Name:     "AMP_ROUTER_IMAGE",
 			Value:    "quay.io/3scale/wildcard-router:nightly",
 			Required: true,
 		},
-		templatev1.Parameter{
+		{
 			Name:     "AMP_SYSTEM_IMAGE",
 			Value:    "quay.io/3scale/porta:nightly",
 			Required: true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "POSTGRESQL_IMAGE",
 			Description: "Postgresql image to use",
 			Value:       "registry.access.redhat.com/rhscl/postgresql-95-rhel7:9.5",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "MYSQL_IMAGE",
 			Description: "Mysql image to use",
 			Value:       "registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "MEMCACHED_IMAGE",
 			Description: "Memcached image to use",
 			Value:       "registry.access.redhat.com/3scale-amp20/memcached",
 			Required:    true,
 		},
-		templatev1.Parameter{
+		{
 			Name:        "IMAGESTREAM_TAG_IMPORT_INSECURE",
 			Description: "Set to true if the server may bypass certificate verification or connect directly over HTTP during image import.",
 			Value:       "false",
