@@ -52,10 +52,10 @@ func (redis *Redis) buildBackendRedisObjects(template *templatev1.Template) {
 	cm := redis.buildBackendConfigMap()
 	bpvc := redis.buildBackendRedisPVC()
 	objects := []runtime.RawExtension{
-		{Object: dc},
-		{Object: bs},
-		{Object: cm},
-		{Object: bpvc},
+		runtime.RawExtension{Object: dc},
+		runtime.RawExtension{Object: bs},
+		runtime.RawExtension{Object: cm},
+		runtime.RawExtension{Object: bpvc},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -74,6 +74,8 @@ func (redis *Redis) buildDeploymentConfigTypeMeta() metav1.TypeMeta {
 		APIVersion: "apps.openshift.io/v1",
 	}
 }
+
+const ()
 
 func (redis *Redis) buildDeploymentConfigObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
@@ -162,7 +164,7 @@ func (redis *Redis) buildPodObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildPodVolumes() []v1.Volume {
 	return []v1.Volume{
-		{
+		v1.Volume{
 			Name: backendRedisStorageVolumeName,
 			VolumeSource: v1.VolumeSource{
 				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
@@ -170,7 +172,7 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 				},
 			},
 		},
-		{
+		v1.Volume{
 			Name: backendRedisConfigVolumeName,
 			VolumeSource: v1.VolumeSource{
 				ConfigMap: &v1.ConfigMapVolumeSource{
@@ -178,7 +180,7 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 						Name: backendRedisConfigVolumeName,
 					},
 					Items: []v1.KeyToPath{
-						{
+						v1.KeyToPath{
 							Key:  backendRedisConfigMapKey,
 							Path: backendRedisConfigMapKey,
 						},
@@ -191,7 +193,7 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 
 func (redis *Redis) buildPodContainers() []v1.Container {
 	return []v1.Container{
-		{
+		v1.Container{
 			Image:           backendRedisContainerImageName,
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Name:            backendRedisContainerName,
@@ -264,11 +266,11 @@ func (redis *Redis) buildPodContainerLivenessProbe() *v1.Probe {
 
 func (redis *Redis) buildPodContainerVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
-		{
+		v1.VolumeMount{
 			Name:      backendRedisStorageVolumeName,
 			MountPath: "/var/lib/redis/data",
 		},
-		{
+		v1.VolumeMount{
 			Name:      backendRedisConfigVolumeName,
 			MountPath: "/etc/redis.d/",
 		},
@@ -314,7 +316,7 @@ func (redis *Redis) buildServiceSpec() v1.ServiceSpec {
 
 func (redis *Redis) buildServicePorts() []v1.ServicePort {
 	return []v1.ServicePort{
-		{
+		v1.ServicePort{
 			Port:       6379,
 			TargetPort: intstr.FromInt(6379),
 			Protocol:   v1.ProtocolTCP,
@@ -487,24 +489,24 @@ func (redis *Redis) buildSystemRedisObjects(template *templatev1.Template) {
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
-						{
+						v1.Volume{
 							Name: "system-redis-storage",
 							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 								ClaimName: "system-redis-storage",
 								ReadOnly:  false}},
-						}, {
+						}, v1.Volume{
 							Name: "redis-config",
 							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "redis-config",
 								},
 								Items: []v1.KeyToPath{
-									{
+									v1.KeyToPath{
 										Key:  "redis.conf",
 										Path: "redis.conf"}}}}},
 					},
 					Containers: []v1.Container{
-						{
+						v1.Container{
 							Name:    "system-redis",
 							Image:   "${REDIS_IMAGE}",
 							Command: []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
@@ -520,11 +522,11 @@ func (redis *Redis) buildSystemRedisObjects(template *templatev1.Template) {
 								},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								{
+								v1.VolumeMount{
 									Name:      "system-redis-storage",
 									ReadOnly:  false,
 									MountPath: "/var/lib/redis/data",
-								}, {
+								}, v1.VolumeMount{
 									Name:      "redis-config",
 									ReadOnly:  false,
 									MountPath: "/etc/redis.d/"},
@@ -580,8 +582,8 @@ func (redis *Redis) buildSystemRedisObjects(template *templatev1.Template) {
 			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")}}}}
 
 	objects := []runtime.RawExtension{
-		{Object: systemRedisDC},
-		{Object: systemRedisPVC},
+		runtime.RawExtension{Object: systemRedisDC},
+		runtime.RawExtension{Object: systemRedisPVC},
 	}
 
 	template.Objects = append(template.Objects, objects...)

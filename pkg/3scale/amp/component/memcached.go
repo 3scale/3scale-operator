@@ -65,7 +65,7 @@ func (m *Memcached) buildObjects(template *templatev1.Template) {
 	systemMemcachedDeploymentConfig := m.buildSystemMemcachedDeploymentConfig()
 
 	objects := []runtime.RawExtension{
-		{Object: systemMemcachedDeploymentConfig},
+		runtime.RawExtension{Object: systemMemcachedDeploymentConfig},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -109,12 +109,12 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "memcache", "app": "${APP_LABEL}", "deploymentConfig": "system-memcache"},
 				},
 				Spec: v1.PodSpec{Containers: []v1.Container{
-					{
+					v1.Container{
 						Name:    "memcache",
 						Image:   "${MEMCACHED_IMAGE}",
 						Command: []string{"memcached", "-m", "64"},
 						Ports: []v1.ContainerPort{
-							{HostPort: 0,
+							v1.ContainerPort{HostPort: 0,
 								ContainerPort: 11211,
 								Protocol:      v1.Protocol("TCP")},
 						},

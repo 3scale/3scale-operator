@@ -35,80 +35,80 @@ func (system *System) PostProcess(template *templatev1.Template, otherComponents
 
 func (system *System) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		{
+		templatev1.Parameter{
 			Name:        "SYSTEM_BACKEND_USERNAME",
 			Description: "Internal 3scale API username for internal 3scale api auth.",
 			Value:       "3scale_api_user",
 			Required:    true,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "SYSTEM_BACKEND_PASSWORD",
 			Description: "Internal 3scale API password for internal 3scale api auth.",
 			Generate:    "expression",
 			From:        "[a-z0-9]{8}",
 			Required:    true,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "SYSTEM_BACKEND_SHARED_SECRET",
 			Description: "Shared secret to import events from backend to system.",
 			Generate:    "expression",
 			From:        "[a-z0-9]{8}",
 			Required:    true,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "SYSTEM_APP_SECRET_KEY_BASE",
 			Description: "System application secret key base",
 			Generate:    "expression",
 			From:        "[a-f0-9]{128}",
 			Required:    true,
 		},
-		{
+		templatev1.Parameter{
 			Name:     "ADMIN_PASSWORD",
 			Generate: "expression",
 			From:     "[a-z0-9]{8}",
 			Required: true,
 		},
-		{
+		templatev1.Parameter{
 			Name:     "ADMIN_USERNAME",
 			Value:    "admin",
 			Required: true,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "ADMIN_ACCESS_TOKEN",
 			Description: "Admin Access Token with all scopes and write permissions for API access.",
 			Generate:    "expression",
 			From:        "[a-z0-9]{16}",
 			Required:    false,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "MASTER_NAME",
 			Description: "The root name which Master Admin UI will be available at.",
 			Value:       "master",
 			Required:    true,
 		},
-		{
+		templatev1.Parameter{
 			Name:     "MASTER_USER",
 			Value:    "master",
 			Required: true,
 		},
-		{
+		templatev1.Parameter{
 			Name:     "MASTER_PASSWORD",
 			Generate: "expression",
 			From:     "[a-z0-9]{8}",
 			Required: true,
 		},
-		{
+		templatev1.Parameter{
 			Name:     "MASTER_ACCESS_TOKEN",
 			Generate: "expression",
 			From:     "[a-z0-9]{8}",
 			Required: true,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "RECAPTCHA_PUBLIC_KEY",
 			Description: "reCAPTCHA site key (used in spam protection)",
 			Required:    false,
 		},
-		{
+		templatev1.Parameter{
 			Name:        "RECAPTCHA_PRIVATE_KEY",
 			Description: "reCAPTCHA secret key (used in spam protection)",
 			Required:    false,
@@ -150,31 +150,31 @@ func (system *System) buildObjects(template *templatev1.Template) {
 	systemMemcachedSecret := system.buildSystemMemcachedSecrets()
 
 	objects := []runtime.RawExtension{
-		{Object: systemSharedStorage},
-		{Object: systemProviderService},
-		{Object: systemMasterService},
-		{Object: systemDeveloperService},
-		{Object: systemProviderRoute},
-		{Object: systemMasterRoute},
-		{Object: systemDeveloperRoute},
-		{Object: systemMysqlService},
-		{Object: systemRedisService},
-		{Object: systemSphinxService},
-		{Object: systemMemcachedService},
-		{Object: systemConfigMap},
-		{Object: systemSmtpConfigMap},
-		{Object: systemEnvironmentConfigMap},
-		{Object: systemAppDeploymentConfig},
-		{Object: systemSidekiqDeploymentConfig},
-		{Object: systemSphinxDeploymentConfig},
-		{Object: systemEventsHookSecret},
-		{Object: systemRedisSecret},
-		{Object: systemMasterApicastSecret},
-		{Object: systemDatabaseSecret},
-		{Object: systemSeedSecret},
-		{Object: systemRecaptchaSecret},
-		{Object: systemAppSecret},
-		{Object: systemMemcachedSecret},
+		runtime.RawExtension{Object: systemSharedStorage},
+		runtime.RawExtension{Object: systemProviderService},
+		runtime.RawExtension{Object: systemMasterService},
+		runtime.RawExtension{Object: systemDeveloperService},
+		runtime.RawExtension{Object: systemProviderRoute},
+		runtime.RawExtension{Object: systemMasterRoute},
+		runtime.RawExtension{Object: systemDeveloperRoute},
+		runtime.RawExtension{Object: systemMysqlService},
+		runtime.RawExtension{Object: systemRedisService},
+		runtime.RawExtension{Object: systemSphinxService},
+		runtime.RawExtension{Object: systemMemcachedService},
+		runtime.RawExtension{Object: systemConfigMap},
+		runtime.RawExtension{Object: systemSmtpConfigMap},
+		runtime.RawExtension{Object: systemEnvironmentConfigMap},
+		runtime.RawExtension{Object: systemAppDeploymentConfig},
+		runtime.RawExtension{Object: systemSidekiqDeploymentConfig},
+		runtime.RawExtension{Object: systemSphinxDeploymentConfig},
+		runtime.RawExtension{Object: systemEventsHookSecret},
+		runtime.RawExtension{Object: systemRedisSecret},
+		runtime.RawExtension{Object: systemMasterApicastSecret},
+		runtime.RawExtension{Object: systemDatabaseSecret},
+		runtime.RawExtension{Object: systemSeedSecret},
+		runtime.RawExtension{Object: systemRecaptchaSecret},
+		runtime.RawExtension{Object: systemAppSecret},
+		runtime.RawExtension{Object: systemMemcachedSecret},
 	}
 	template.Objects = append(template.Objects, objects...)
 }
@@ -560,39 +560,39 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
-						{
+						v1.Volume{
 							Name: "system-storage",
 							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 								ClaimName: "system-storage",
 								ReadOnly:  false}},
-						}, {
+						}, v1.Volume{
 							Name: "system-config",
 							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "system",
 								},
 								Items: []v1.KeyToPath{
-									{
+									v1.KeyToPath{
 										Key:  "zync.yml",
 										Path: "zync.yml",
 									},
-									{
+									v1.KeyToPath{
 										Key:  "rolling_updates.yml",
 										Path: "rolling_updates.yml",
 									},
-									{
+									v1.KeyToPath{
 										Key:  "service_discovery.yml",
 										Path: "service_discovery.yml",
 									},
 								}}}},
 					},
 					Containers: []v1.Container{
-						{
+						v1.Container{
 							Name:  "system-master",
 							Image: "amp-system:latest",
 							Args:  []string{"env", "TENANT_MODE=master", "PORT=3002", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports: []v1.ContainerPort{
-								{
+								v1.ContainerPort{
 									Name:          "master",
 									HostPort:      0,
 									ContainerPort: 3002,
@@ -610,11 +610,11 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								{
+								v1.VolumeMount{
 									Name:      "system-storage",
 									ReadOnly:  false,
 									MountPath: "/opt/system/public/system",
-								}, {
+								}, v1.VolumeMount{
 									Name:      "system-config",
 									ReadOnly:  false,
 									MountPath: "/opt/system-extra-configs"},
@@ -642,7 +642,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									},
 									Scheme: v1.URIScheme("HTTP"),
 									HTTPHeaders: []v1.HTTPHeader{
-										{
+										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
 											Value: "https"}}},
 								},
@@ -656,12 +656,12 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							Stdin:           false,
 							StdinOnce:       false,
 							TTY:             false,
-						}, {
+						}, v1.Container{
 							Name:  "system-provider",
 							Image: "amp-system:latest",
 							Args:  []string{"env", "TENANT_MODE=provider", "PORT=3000", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports: []v1.ContainerPort{
-								{
+								v1.ContainerPort{
 									Name:          "provider",
 									HostPort:      0,
 									ContainerPort: 3000,
@@ -679,11 +679,11 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								{
+								v1.VolumeMount{
 									Name:      "system-storage",
 									ReadOnly:  false,
 									MountPath: "/opt/system/public/system",
-								}, {
+								}, v1.VolumeMount{
 									Name:      "system-config",
 									ReadOnly:  false,
 									MountPath: "/opt/system-extra-configs"},
@@ -711,7 +711,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									},
 									Scheme: v1.URIScheme("HTTP"),
 									HTTPHeaders: []v1.HTTPHeader{
-										{
+										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
 											Value: "https"}}},
 								},
@@ -725,12 +725,12 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							Stdin:           false,
 							StdinOnce:       false,
 							TTY:             false,
-						}, {
+						}, v1.Container{
 							Name:  "system-developer",
 							Image: "amp-system:latest",
 							Args:  []string{"env", "PORT=3001", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports: []v1.ContainerPort{
-								{
+								v1.ContainerPort{
 									Name:          "developer",
 									HostPort:      0,
 									ContainerPort: 3001,
@@ -748,11 +748,11 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								{
+								v1.VolumeMount{
 									Name:      "system-storage",
 									ReadOnly:  true,
 									MountPath: "/opt/system/public/system",
-								}, {
+								}, v1.VolumeMount{
 									Name:      "system-config",
 									ReadOnly:  false,
 									MountPath: "/opt/system-extra-configs"},
@@ -780,7 +780,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									},
 									Scheme: v1.URIScheme("HTTP"),
 									HTTPHeaders: []v1.HTTPHeader{
-										{
+										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
 											Value: "https"}}},
 								},
@@ -847,37 +847,37 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
-						{
+						v1.Volume{
 							Name: "system-tmp",
 							VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{
 								Medium: v1.StorageMedium("Memory")}},
-						}, {
+						}, v1.Volume{
 							Name: "system-storage",
 							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 								ClaimName: "system-storage",
 								ReadOnly:  false}},
-						}, {
+						}, v1.Volume{
 							Name: "system-config",
 							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "system",
 								},
 								Items: []v1.KeyToPath{
-									{
+									v1.KeyToPath{
 										Key:  "zync.yml",
 										Path: "zync.yml",
-									}, {
+									}, v1.KeyToPath{
 										Key:  "rolling_updates.yml",
 										Path: "rolling_updates.yml",
 									},
-									{
+									v1.KeyToPath{
 										Key:  "service_discovery.yml",
 										Path: "service_discovery.yml",
 									},
 								}}}},
 					},
 					InitContainers: []v1.Container{
-						{
+						v1.Container{
 							Name:  "check-svc",
 							Image: "amp-system:latest",
 							Command: []string{
@@ -892,7 +892,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 						},
 					},
 					Containers: []v1.Container{
-						{
+						v1.Container{
 							Name:  "system-sidekiq",
 							Image: "amp-system:latest",
 							Args:  []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
@@ -908,15 +908,15 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 								},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								{
+								v1.VolumeMount{
 									Name:      "system-storage",
 									ReadOnly:  false,
 									MountPath: "/opt/system/public/system",
-								}, {
+								}, v1.VolumeMount{
 									Name:      "system-tmp",
 									ReadOnly:  false,
 									MountPath: "/tmp",
-								}, {
+								}, v1.VolumeMount{
 									Name:      "system-config",
 									ReadOnly:  false,
 									MountPath: "/opt/system-extra-configs"},
@@ -973,7 +973,7 @@ func (system *System) buildSystemProviderService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
+				v1.ServicePort{
 					Name:       "http",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       3000,
@@ -1001,7 +1001,7 @@ func (system *System) buildSystemMasterService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
+				v1.ServicePort{
 					Name:       "http",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       3000,
@@ -1029,7 +1029,7 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
+				v1.ServicePort{
 					Name:       "http",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       3000,
@@ -1057,7 +1057,7 @@ func (system *System) buildSystemMysqlService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
+				v1.ServicePort{
 					Name:       "system-mysql",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       3306,
@@ -1086,7 +1086,7 @@ func (system *System) buildSystemRedisService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
+				v1.ServicePort{
 					Name:       "redis",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       6379,
@@ -1114,7 +1114,7 @@ func (system *System) buildSystemSphinxService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
+				v1.ServicePort{
 					Name:       "sphinx",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       9306,
@@ -1142,7 +1142,7 @@ func (system *System) buildSystemMemcachedService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
+				v1.ServicePort{
 					Name:       "memcache",
 					Protocol:   v1.Protocol("TCP"),
 					Port:       11211,
@@ -1384,7 +1384,7 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp",
 					InitContainers: []v1.Container{
-						{
+						v1.Container{
 							Name:    "system-master-svc",
 							Image:   "amp-system:latest",
 							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
@@ -1394,7 +1394,7 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 						},
 					},
 					Volumes: []v1.Volume{
-						{
+						v1.Volume{
 							Name: "system-sphinx-database",
 							VolumeSource: v1.VolumeSource{
 								EmptyDir: &v1.EmptyDirVolumeSource{
@@ -1404,13 +1404,13 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 						},
 					},
 					Containers: []v1.Container{
-						{
+						v1.Container{
 							Name:            "system-sphinx",
 							Image:           "amp-system:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Args:            []string{"rake", "openshift:thinking_sphinx:start"},
 							VolumeMounts: []v1.VolumeMount{
-								{
+								v1.VolumeMount{
 									Name:      "system-sphinx-database",
 									MountPath: "/opt/system/db/sphinx",
 								},

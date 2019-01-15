@@ -14,13 +14,13 @@ type PlanSpec struct {
 }
 
 type PlanBase struct {
-	TrialPeriod     int64    `json:"trialPeriod"`
-	AprovalRequired bool     `json:"aprovalRequired"`
-	Costs           PlanCost `json:"costs"`
+	TrialPeriod     int64                `json:"trialPeriod"`
+	AprovalRequired bool                 `json:"aprovalRequired"`
+	Costs           PlanCost             `json:"costs"`
 }
 
 type PlanSelectors struct {
-	LimitSelector metav1.LabelSelector `json:"limitSelector"`
+	LimitSelector   metav1.LabelSelector `json:"limitSelector"`
 }
 
 type PlanCost struct {
