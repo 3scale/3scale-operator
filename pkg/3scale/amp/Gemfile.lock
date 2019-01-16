@@ -1,0 +1,15 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    deepsort (0.4.1)
+    hashdiff (0.3.7)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  deepsort
+  hashdiff
+
+BUNDLED WITH
+   1.16.2

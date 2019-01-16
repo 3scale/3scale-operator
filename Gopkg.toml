@@ -9,6 +9,13 @@ required = [
   "k8s.io/code-generator/cmd/openapi-gen",
   "k8s.io/gengo/args",
   "github.com/operator-framework/operator-sdk/commands/operator-sdk",
+
+  "github.com/spf13/cobra/cobra",
+  "github.com/openshift/api",
+  "k8s.io/apimachinery/pkg/runtime/serializer",
+  "k8s.io/client-go/kubernetes/scheme",
+  "github.com/luci/go-render/render",
+  "gopkg.in/yaml.v2",
 ]
 
 [[override]]
@@ -44,7 +51,7 @@ required = [
   name = "github.com/operator-framework/operator-sdk"
   # The version rule is used for a specific release and the master branch for in between releases.
   # branch = "v0.1.x" #osdk_branch_annotation
-  version = "=v0.1.1" #osdk_version_annotation
+  version = "=v0.2.1" #osdk_version_annotation
 
 [prune]
   go-tests = true

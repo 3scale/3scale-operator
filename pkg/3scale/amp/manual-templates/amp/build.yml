@@ -1,0 +1,173 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: "amp-build"
+message: "AMP BuildConfig Template"
+objects:
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+    labels:
+      app: zync
+    name: ruby-24-centos7
+  spec:
+    tags:
+    - from:
+        kind: DockerImage
+        name: centos/ruby-24-centos7
+      name: latest
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+    labels:
+      app: zync
+    name: zync
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: amp-zync:latest
+    source:
+      git:
+        uri: https://github.com/3scale/zync.git
+        ref: "${GIT_REF}"
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: ruby-24-centos7:latest
+      type: Source
+    triggers:
+    - type: ConfigChange
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: system
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: amp-system:latest
+    source:
+      git:
+        uri: "https://github.com/3scale/porta.git"
+        ref: "${GIT_REF}"
+      type: "Git"
+    strategy:
+      type: Docker
+      dockerStrategy:
+        dockerfilePath: openshift/system/Dockerfile.on_prem
+        forcePull: true
+    triggers:
+      - type: ConfigChange
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: apicast
+    name: apicast
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: amp-apicast:latest
+    source:
+      contextDir: gateway
+      git:
+        uri: https://github.com/3scale/apicast.git
+        ref: "${GIT_REF}"
+      type: Git
+    strategy:
+      sourceStrategy:
+        forcePull: true
+        from:
+          kind: ImageStreamTag
+          name: s2i-openresty-centos7:builder
+        runtimeImage:
+          kind: ImageStreamTag
+          name: s2i-openresty-centos7:runtime
+      type: Source
+    triggers:
+    - type: ConfigChange
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: wildcard-router
+    name: wildcard-router
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: amp-wildcard-router:latest
+    source:
+      git:
+        uri: https://github.com/3scale/wildcard-router-service.git
+        ref: "${GIT_REF}"
+      type: Git
+    strategy:
+      type: Source
+      sourceStrategy:
+        forcePull: true
+        from:
+          kind: ImageStreamTag
+          name: s2i-openresty-centos7:builder
+    triggers:
+    - type: ConfigChange
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: apicast
+    name: s2i-openresty-centos7
+  spec:
+    tags:
+    - from:
+        kind: DockerImage
+        name: quay.io/3scale/s2i-openresty-centos7:master
+      name: builder
+      importPolicy:
+        scheduled: true
+    - from:
+        kind: DockerImage
+        name: quay.io/3scale/s2i-openresty-centos7:master-runtime
+      name: runtime
+      importPolicy:
+        scheduled: true
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+      name: backend
+  spec:
+      output:
+          to:
+              kind: ImageStreamTag
+              name: amp-backend:latest
+      source:
+          git:
+              uri: "https://github.com/3scale/apisonator.git"
+              ref: "${GIT_REF}"
+          type: Git
+      strategy:
+          type: Docker
+          dockerStrategy:
+              contextDir: /
+              dockerfilePath: openshift/distro/centos/7/release/Dockerfile
+      triggers:
+        - type: ConfigChange
+
+parameters:
+- name: GIT_REF
+  description: "Git Reference to use. Can be a tag or branch."
+  value: "master"
+  required: true

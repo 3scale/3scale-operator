@@ -8,20 +8,21 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// LimitSpec defines the desired state of Limit
+// LimitSpec defines SPEC of the limit object, contains LimitBase and the LimitObjectRef
 type LimitSpec struct {
 	LimitBase
 	LimitObjectRef
 }
 
+// LimitBase contains the limit period and the max value for said period.
 type LimitBase struct {
-	Description string             `json:"description"`
-	Period      string             `json:"period"`
-	MaxValue    int64              `json:"maxValue"`
+	Period   string `json:"period"`
+	MaxValue int64  `json:"maxValue"`
 }
 
+// LimitObjectRef contains he Metric ObjectReference
 type LimitObjectRef struct {
-	Metric      v1.ObjectReference `json:"metric"`
+	Metric v1.ObjectReference `json:"metricRef"`
 }
 
 // LimitStatus defines the observed state of Limit
@@ -32,7 +33,7 @@ type LimitStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Limit is the Schema for the limits API
+// Limit is the Schema for the limits API object
 // +k8s:openapi-gen=true
 type Limit struct {
 	metav1.TypeMeta   `json:",inline"`

@@ -34,6 +34,7 @@ rules:
   - create
 - apiGroups:
   - api.3scale.net
+  - amp.3scale.net
   resources:
   - '*'
   - consolidateds
@@ -42,5 +43,7 @@ rules:
   - plans
   - limits
   - mappingrules
+  resources:
+  - '*'
   verbs:
   - '*'

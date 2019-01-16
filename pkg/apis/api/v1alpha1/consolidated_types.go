@@ -320,11 +320,10 @@ func NewInternalLimitFromLimit(limit Limit, c client.Client) (*InternalLimit, er
 		return nil, err
 	} else {
 		internalLimit = InternalLimit{
-			Name:        limit.Name,
-			Description: limit.Spec.Description,
-			Period:      limit.Spec.Period,
-			MaxValue:    limit.Spec.MaxValue,
-			Metric:      metric.Name,
+			Name:     limit.Name,
+			Period:   limit.Spec.Period,
+			MaxValue: limit.Spec.MaxValue,
+			Metric:   metric.Name,
 		}
 	}
 	return &internalLimit, nil
