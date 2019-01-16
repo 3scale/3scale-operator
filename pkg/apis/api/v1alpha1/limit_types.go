@@ -16,8 +16,8 @@ type LimitSpec struct {
 
 // LimitBase contains the limit period and the max value for said period.
 type LimitBase struct {
-	Period      string `json:"period"`
-	MaxValue    int64  `json:"maxValue"`
+	Period   string `json:"period"`
+	MaxValue int64  `json:"maxValue"`
 }
 
 // LimitObjectRef contains he Metric ObjectReference
