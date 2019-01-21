@@ -95,14 +95,16 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 
 	log.Printf("Detected Consolidated: %s, %s ", request.Name, request.Namespace)
 
-	existingState, err := apiv1alpha1.NewConsolidatedFrom3scale()
+	existingState, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials,consolidated.Spec.APIs)
 	if err != nil {
 		return reconcile.Result{Requeue:true}, err
 	}
 
 	if reflect.DeepEqual(consolidated, existingState) {
+		log.Printf("Consolidated %s/%s is ok\n", request.Namespace, request.Name)
 		return reconcile.Result{}, nil
 	} else {
+		log.Printf("Consolidated %s/%s needs to be reconciled\n", request.Namespace, request.Name)
 		return reconcile.Result{}, nil
 	}
 

@@ -508,7 +508,26 @@ func CompareConsolidated(consolidatedA, consolidatedB Consolidated) bool {
 
 func NewConsolidatedFrom3scale(creds InternalCredential, apis []InternalAPI) (*Consolidated, error) {
 
+	consolidated := ConsolidatedSpec{
+		Credentials: creds,
+		APIs:        nil,
+	}
+
+	for _,desiredAPI := range apis {
+		internalAPI, err := getInternalAPIfrom3scale(creds, desiredAPI)
+		if err != nil {
+			log.Printf("API %s doesn't exists in 3scale", internalAPI.Name)
+		} else {
+			consolidated.APIs = append(consolidated.APIs, *internalAPI)
+		}
+	}
+
 	return &Consolidated{}, nil
+}
+
+func getInternalAPIfrom3scale(creds InternalCredential, api InternalAPI) (*InternalAPI, error) {
+
+	return &InternalAPI{}, nil
 }
 
 func getAPIs(namespace string, matchLabels map[string]string, c client.Client) (*APIList, error) {
@@ -551,6 +570,9 @@ func getLimits(namespace string, matchLabels map[string]string, c client.Client)
 	err := c.List(context.TODO(), &opts, limits)
 	return limits, err
 }
+
+
+
 
 // Returns a list of InternalPlans from the 3scale account based on a serviceID.
 func getInternalPlansFrom3scale(c *portaClient.ThreeScaleClient, svcId, accessToken string) (*[]InternalPlan, error) {
