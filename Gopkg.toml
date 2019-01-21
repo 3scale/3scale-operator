@@ -11,8 +11,6 @@ required = [
 
   "github.com/spf13/cobra/cobra",
   "github.com/openshift/api",
-  "k8s.io/apimachinery/pkg/runtime/serializer",
-  "k8s.io/client-go/kubernetes/scheme",
   "github.com/luci/go-render/render",
   "gopkg.in/yaml.v2",
 ]
