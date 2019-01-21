@@ -10,7 +10,6 @@ required = [
   "k8s.io/gengo/args",
 
   "github.com/spf13/cobra/cobra",
-  "github.com/openshift/api",
   "github.com/luci/go-render/render",
   "gopkg.in/yaml.v2",
 ]
@@ -49,6 +48,11 @@ required = [
   # The version rule is used for a specific release and the master branch for in between releases.
   # branch = "v0.2.x" #osdk_branch_annotation
   version = "=v0.2.1" #osdk_version_annotation
+
+[[override]]
+  name = "github.com/openshift/api"
+  # revision for the current tip of the branch "release-3.11"
+  revision = "5ad8479f64f1b60ee9c62ce8ef1fe6638838725e"
 
 [prune]
   go-tests = true
