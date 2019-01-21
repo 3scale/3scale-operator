@@ -91,6 +91,16 @@ jobs:
             - v1-gopkg-cache-{{ arch }}-{{ .Branch }}
 
       - run:
+          name: Install operator-sdk
+          command: |
+              mkdir -p ${GOPATH}/src/github.com/operator-framework
+              cd ${GOPATH}/src/github.com/operator-framework
+              git clone https://github.com/operator-framework/operator-sdk --branch v0.2.1
+              cd operator-sdk
+              make dep
+              make install
+
+      - run:
           name: Install dependencies
           command: |
             make vendor
