@@ -139,7 +139,7 @@ jobs:
             172.30.1.1:5000/$project/amp-system:latest=quay.io/3scale/porta:nightly --insecure
   generator:
     docker:
-      - image: circleci/golang:1.10
+      - image: circleci/golang:1.11
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - checkout
