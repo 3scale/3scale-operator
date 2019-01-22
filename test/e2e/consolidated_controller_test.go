@@ -218,6 +218,23 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 		Status: operator.MetricStatus{},
 	}
 
+	exampleMetric2 := &operator.Metric{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "Metric",
+			APIVersion: "v1alpha1",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "test02-metric",
+			Namespace: namespace,
+		},
+		Spec: operator.MetricSpec{
+			Unit:           "hits",
+			Description:    "test",
+			IncrementsHits: false,
+		},
+		Status: operator.MetricStatus{},
+	}
+
 	err = f.Client.Create(goctx.TODO(), myAPI, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		return err
@@ -232,39 +249,95 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 	if err != nil {
 		return err
 	}
+	err = f.Client.Create(goctx.TODO(), exampleMetric2, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	if err != nil {
+		return err
+	}
 
 	err = f.Client.Create(goctx.TODO(), exampleMetric, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		return err
 	}
 
-	consolidated := &operator.Consolidated{}
+	existingConsolidated := &operator.Consolidated{}
 
 	time.Sleep(5 * time.Second)
 
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "test01-consolidated", Namespace: namespace}, consolidated)
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "test01-consolidated", Namespace: namespace}, existingConsolidated)
 	if err != nil {
 		return err
 	}
 
-	if len(consolidated.Spec.APIs) == 0 {
-		return fmt.Errorf("APIs for consolidated object are empty: %#v", consolidated)
+	desiredConsolidated := &operator.Consolidated{
+		TypeMeta:   v1.TypeMeta{},
+		ObjectMeta: v1.ObjectMeta{},
+		Spec: operator.ConsolidatedSpec{
+			Credentials: operator.InternalCredential{
+				AccessToken: "test",
+				AdminURL:    "test",
+			},
+			APIs: []operator.InternalAPI{{
+				Name: myAPI.Name,
+				APIBaseInternal: operator.APIBaseInternal{
+					APIBase: operator.APIBase{
+						Description: myAPI.Spec.Description,
+					},
+					IntegrationMethod: operator.InternalIntegration{
+						ApicastOnPrem: &operator.InternalApicastOnPrem{
+							APIcastBaseOptions: operator.APIcastBaseOptions{
+								PrivateBaseURL:    myAPI.Spec.IntegrationMethod.ApicastOnPrem.APIcastBaseOptions.PrivateBaseURL,
+								APITestGetRequest: myAPI.Spec.IntegrationMethod.ApicastOnPrem.APIcastBaseOptions.APITestGetRequest,
+								AuthenticationSettings: operator.ApicastAuthenticationSettings{
+									HostHeader:  "",
+									SecretToken: "",
+									Credentials: operator.IntegrationCredentials{
+										APIKey: &operator.APIKey{
+											AuthParameterName:   "query",
+											CredentialsLocation: "user-key",
+										},
+									},
+									Errors: operator.Errors{
+										AuthenticationFailed: operator.Authentication{
+											ResponseCode: 0,
+											ContentType:  "",
+											ResponseBody: "",
+										},
+										AuthenticationMissing: operator.Authentication{
+											ResponseCode: 0,
+											ContentType:  "",
+											ResponseBody: "",
+										},
+									},
+								},
+							},
+							StagingPublicBaseURL:    myAPI.Spec.IntegrationMethod.ApicastOnPrem.StagingPublicBaseURL,
+							ProductionPublicBaseURL: myAPI.Spec.IntegrationMethod.ApicastOnPrem.ProductionPublicBaseURL,
+							MappingRules:            nil,
+							Policies:                nil,
+						},
+						CodePlugin:    nil,
+						ApicastHosted: nil,
+					},
+				},
+				// Not ordered to test proper sorting in CompareConsolidated
+				Metrics: []operator.InternalMetric{{
+					Name:        exampleMetric2.Name,
+					Unit:        exampleMetric2.Spec.Unit,
+					Description: exampleMetric2.Spec.Description,
+				}, {
+					Name:        exampleMetric.Name,
+					Unit:        exampleMetric.Spec.Unit,
+					Description: exampleMetric.Spec.Description,
+				},},
+				Plans: nil,
+			}},
+		},
+		Status: operator.ConsolidatedStatus{},
 	}
 
-	if consolidated.Spec.APIs[0].Name != "myapi" {
-		return fmt.Errorf("expected API in consolidated object named: myapi, got: %s", consolidated.Spec.APIs[0].Name)
+	if operator.CompareConsolidated(*existingConsolidated, *desiredConsolidated) {
+		return nil
+	} else {
+		return fmt.Errorf("Mismatch between desired and existing consolidated object")
 	}
-	if consolidated.Spec.APIs[0].IntegrationMethod.ApicastOnPrem == nil {
-		return fmt.Errorf("expected API integration ApicastOnPrem")
-	}
-
-	if len(consolidated.Spec.APIs[0].Metrics) == 0 {
-		return fmt.Errorf("metrics for API are empty")
-	}
-
-	if consolidated.Spec.APIs[0].Metrics[0].Name != "test01-metric" {
-		return fmt.Errorf("expected metric name to be test01-metric, got %s", consolidated.Spec.APIs[0].Metrics[0].Name)
-	}
-
-	return nil
 }
