@@ -9,13 +9,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -104,14 +104,14 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 		BindingList := &apiv1alpha1.BindingList{}
 		err := r.client.List(context.TODO(), &opts, BindingList)
 		if err != nil {
-			reqLogger.Error(err,"error")
+			reqLogger.Error(err, "error")
 			return reconcile.Result{}, nil
 		}
 
 		for _, binding := range BindingList.Items {
 			_, err := ReconcileBindingFunc(binding, r.client, reqLogger)
 			if err != nil {
-				reqLogger.Error(err,"error")
+				reqLogger.Error(err, "error")
 			}
 		}
 		return reconcile.Result{}, nil
@@ -121,11 +121,11 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 		if err != nil {
 			// if it's not there (user deleted it for ex.)
 			if errors.IsNotFound(err) {
-				reqLogger.Error(err,"error")
+				reqLogger.Error(err, "error")
 				return reconcile.Result{}, nil
 			}
 			// Error reading the object - requeue the request.
-			reqLogger.Error(err,"error")
+			reqLogger.Error(err, "error")
 			return reconcile.Result{Requeue: true}, err
 		}
 		return ReconcileBindingFunc(*binding, r.client, reqLogger)
@@ -168,14 +168,14 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 
 	} else if err != nil {
 		// Something is broken when trying to get the existing consolidated Object
-		log.Error(err,"error")
+		log.Error(err, "error")
 		return reconcile.Result{Requeue: true}, err
 	} else {
 		// Consolidated Object Already exists
 		// Let's compare those, first, we should calculate the desired Consolidated object.
 		desiredConsolidated, err := apiv1alpha1.NewConsolidatedFromBinding(binding, c)
 		if err != nil {
-			log.Error(err,"error")
+			log.Error(err, "error")
 			return reconcile.Result{Requeue: true}, err
 		}
 		// Compare with the current consolidated object.
@@ -198,7 +198,7 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 			err := c.Update(context.TODO(), desiredConsolidated)
 			if err != nil {
 				// Something went wrong when trying to update the actual consolidated object.
-				log.Error(err,"error")
+				log.Error(err, "error")
 				return reconcile.Result{Requeue: true}, err
 			}
 			// All done here

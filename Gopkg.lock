@@ -393,7 +393,6 @@
     "pkg/scaffold",
     "pkg/scaffold/input",
     "pkg/test",
-    "pkg/test/e2eutil",
     "version",
   ]
   pruneopts = "NT"
@@ -957,6 +956,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/go-logr/logr",
     "github.com/luci/go-render/render",
     "github.com/mitchellh/go-homedir",
     "github.com/openshift/api/apps/v1",
@@ -975,7 +975,6 @@
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/ready",
     "github.com/operator-framework/operator-sdk/pkg/test",
-    "github.com/operator-framework/operator-sdk/pkg/test/e2eutil",
     "github.com/operator-framework/operator-sdk/version",
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/cobra",

@@ -6,9 +6,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/apis"
 	operator "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	v12 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
@@ -87,14 +85,7 @@ func BasicBindingController(t *testing.T) {
 		t.Fatalf("failed to initialize cluster resources: %v", err)
 	}
 	t.Log("Initialized cluster resources")
-
-	namespace, err := ctx.GetNamespace()
-	// get global framework variables
 	f := framework.Global
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, namespace, "3scale-operator", 1, retryInterval, timeout)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	if err = BasicBinding(t, f, ctx); err != nil {
 		t.Fatal(err)
@@ -249,14 +240,10 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 
 	consolidated := &operator.Consolidated{}
 
-	tries := 1
-Retry:
-	tries++
+	time.Sleep(5 * time.Second)
+
 	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Name: "test01-consolidated", Namespace: namespace}, consolidated)
-	if err != nil && errors.IsNotFound(err) && tries < 3 {
-		time.Sleep(2 * time.Second)
-		goto Retry
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 
