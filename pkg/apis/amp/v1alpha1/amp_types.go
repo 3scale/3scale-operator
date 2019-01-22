@@ -1,6 +1,10 @@
 package v1alpha1
 
 import (
+	"math/rand"
+	"time"
+
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	optrand "github.com/3scale/3scale-operator/pkg/crypto/rand"
@@ -152,6 +156,37 @@ type AMPSpec struct {
 type AMPStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	Conditions []AMPCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,4,rep,name=conditions"`
+}
+
+type AMPConditionType string
+
+const (
+	// Ready means the AMP is available. This is, when all of its
+	// elements are up and running
+	AMPReady AMPConditionType = "Ready"
+	// Progressing means the AMP is being deployed
+	AMPProgressing AMPConditionType = "Progressing"
+)
+
+type AMPCondition struct {
+	Type   AMPConditionType   `json:"type" description:"type of AMP condition"`
+	Status v1.ConditionStatus `json:"status" description:"status of the condition, one of True, False, Unknown"` //TODO should be a custom ConditionStatus or the core v1 one?
+
+	// The Reason, Message, LastHeartbeatTime and LastTransitionTime fields are
+	// optional. Unless we really use them they should directly not be used even
+	// if they are optional
+
+	// +optional
+	//Reason *string `json:"reason,omitempty" description:"one-word CamelCase reason for the condition's last transition"`
+	// +optional
+	//Message *string `json:"message,omitempty" description:"human-readable message indicating details about last transition"`
+
+	// +optional
+	//LastHeartbeatTime metav1.Time `json:"lastHeartbeatTime,omitempty" description:"last time we got an update on a given condition"` // TODO the Kubernetes API convention guide says *unversioned.Time should be used but that seems to be a client-side package. I've seen that objects like PersistentVolumeClaim use metav1.Time
+	// +optional
+	//metav1.Time        `json:"lastProbeTime,omitempty" protobuf:"bytes,3,opt,name=lastProbeTime"`
+	//LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" description:"last time the condition transit from one status to another"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
