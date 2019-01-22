@@ -2,14 +2,12 @@ package binding
 
 import (
 	"context"
-	"encoding/json"
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -179,7 +177,7 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 			return reconcile.Result{Requeue: true}, err
 		}
 		// Compare with the current consolidated object.
-		if compareConsolidated(currentConsolidated, desiredConsolidated) {
+		if apiv1alpha1.CompareConsolidated(*currentConsolidated, *desiredConsolidated) {
 			// Desired and existing are equal, nothing to do.
 			log.Info("Skip reconcile: Consolidated config ok.", currentConsolidated.Namespace, currentConsolidated.Name)
 		} else {
@@ -209,9 +207,3 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 	return reconcile.Result{}, nil
 }
 
-func compareConsolidated(consolidatedA, consolidatedB *apiv1alpha1.Consolidated) bool {
-	//Let's compare only the Spec
-	A, _ := json.Marshal(consolidatedA.Spec)
-	B, _ := json.Marshal(consolidatedB.Spec)
-	return reflect.DeepEqual(A, B)
-}

@@ -2,12 +2,15 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"log"
+	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sort"
 )
 
 // TODO: Add options to enable defaults to builders
@@ -47,6 +50,66 @@ type ConsolidatedList struct {
 
 func init() {
 	SchemeBuilder.Register(&Consolidated{}, &ConsolidatedList{})
+}
+
+func (c ConsolidatedSpec) Sort() ConsolidatedSpec {
+
+	for _, api := range c.APIs {
+		sort.Slice(api.Metrics, func(i, j int) bool {
+			if api.Metrics[i].Name != api.Metrics[j].Name {
+				return api.Metrics[i].Name < api.Metrics[j].Name
+			} else {
+				return api.Metrics[i].Unit < api.Metrics[j].Unit
+			}
+		})
+		sort.Slice(api.Plans, func(i, j int) bool {
+			if api.Plans[i].Name != api.Plans[j].Name {
+				return api.Plans[i].Name < api.Plans[j].Name
+			} else {
+				return api.Plans[i].TrialPeriodDays < api.Plans[j].TrialPeriodDays
+			}
+		})
+
+		if api.IntegrationMethod.ApicastOnPrem != nil {
+			sort.Slice(api.IntegrationMethod.ApicastOnPrem.MappingRules, func(i, j int) bool {
+				if api.IntegrationMethod.ApicastOnPrem.MappingRules[i].Name != api.IntegrationMethod.ApicastOnPrem.MappingRules[j].Name {
+					return api.IntegrationMethod.ApicastOnPrem.MappingRules[i].Name < api.IntegrationMethod.ApicastOnPrem.MappingRules[j].Name
+				} else {
+					return api.IntegrationMethod.ApicastOnPrem.MappingRules[i].Metric < api.IntegrationMethod.ApicastOnPrem.MappingRules[j].Metric
+				}
+			})
+		}
+
+		if api.IntegrationMethod.ApicastHosted != nil {
+			sort.Slice(api.IntegrationMethod.ApicastHosted.MappingRules, func(i, j int) bool {
+				if api.IntegrationMethod.ApicastHosted.MappingRules[i].Name != api.IntegrationMethod.ApicastHosted.MappingRules[j].Name {
+					return api.IntegrationMethod.ApicastHosted.MappingRules[i].Name < api.IntegrationMethod.ApicastHosted.MappingRules[j].Name
+				} else {
+					return api.IntegrationMethod.ApicastHosted.MappingRules[i].Metric < api.IntegrationMethod.ApicastHosted.MappingRules[j].Metric
+				}
+			})
+		}
+
+		for _, plan := range api.Plans {
+			sort.Slice(plan.Limits, func(i, j int) bool {
+				if plan.Limits[i].Name != plan.Limits[j].Name {
+					return plan.Limits[i].Name < api.Plans[j].Name
+				} else {
+					return plan.Limits[i].MaxValue < plan.Limits[j].MaxValue
+				}
+			})
+		}
+	}
+
+	sort.Slice(c.APIs, func(i, j int) bool {
+		if c.APIs[i].Name != c.APIs[j].Name {
+			return c.APIs[i].Name < c.APIs[j].Name
+		} else {
+			return c.APIs[i].Description < c.APIs[j].Description
+		}
+	})
+
+	return c
 }
 
 type InternalAPI struct {
@@ -432,6 +495,13 @@ func NewInternalApicastOnPremFromApicastOnPrem(namespace string, prem ApicastOnP
 	}
 
 	return &internalApicastOnPrem, nil
+}
+
+func CompareConsolidated(consolidatedA, consolidatedB Consolidated) bool {
+	//Let's compare only the Spec
+	A, _ := json.Marshal(consolidatedA.Spec.Sort())
+	B, _ := json.Marshal(consolidatedB.Spec.Sort())
+	return reflect.DeepEqual(A, B)
 }
 
 func getAPIs(namespace string, matchLabels map[string]string, c client.Client) (*APIList, error) {
