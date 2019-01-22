@@ -1,16 +1,63 @@
 package component
 
 import (
+	"fmt"
+
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type BuildConfigs struct {
 	options []string
+	Options *BuildConfigsOptions
+}
+
+type BuildConfigsOptions struct {
+	appLabel string
+	gitRef   string
+}
+
+type BuildConfigsOptionsBuilder struct {
+	options BuildConfigsOptions
+}
+
+func (bcs *BuildConfigsOptionsBuilder) AppLabel(appLabel string) {
+	bcs.options.appLabel = appLabel
+}
+
+func (bcs *BuildConfigsOptionsBuilder) GitRef(gitRef string) {
+	bcs.options.gitRef = gitRef
+}
+
+func (bcs *BuildConfigsOptionsBuilder) Build() (*BuildConfigsOptions, error) {
+	if bcs.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if bcs.options.gitRef == "" {
+		return nil, fmt.Errorf("no Git Ref. has been provided")
+	}
+	return &bcs.options, nil
+}
+
+type BuildConfigsOptionsProvider interface {
+	GetBuildConfigsOptions() *BuildConfigsOptions
+}
+type CLIBuildConfigsOptionsProvider struct {
+}
+
+func (o *CLIBuildConfigsOptionsProvider) GetBuildConfigsOptions() (*BuildConfigsOptions, error) {
+	sob := BuildConfigsOptionsBuilder{}
+	sob.AppLabel("${APP_LABEL}")
+	sob.GitRef("${GIT_REF}")
+	res, err := sob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create BuildConfigs Options - %s", err)
+	}
+	return res, nil
 }
 
 func NewBuildConfigs(options []string) *BuildConfigs {
@@ -21,15 +68,30 @@ func NewBuildConfigs(options []string) *BuildConfigs {
 }
 
 func (bcs *BuildConfigs) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIBuildConfigsOptionsProvider{}
+	buildConfigsOpts, err := optionsProvider.GetBuildConfigsOptions()
+	_ = err
+	bcs.Options = buildConfigsOpts
 	bcs.buildParameters(template)
-	bcs.buildObjects(template)
+	bcs.addObjectsIntoTemplate(template)
+}
+
+func (bcs *BuildConfigs) GetObjects() ([]runtime.RawExtension, error) {
+	objects := bcs.buildObjects()
+	return objects, nil
+}
+
+func (bcs *BuildConfigs) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := bcs.buildObjects()
+	template.Objects = append(template.Objects, objects...)
 }
 
 func (bcs *BuildConfigs) PostProcess(template *templatev1.Template, otherComponents []Component) {
 
 }
 
-func (bcs *BuildConfigs) buildObjects(template *templatev1.Template) {
+func (bcs *BuildConfigs) buildObjects() []runtime.RawExtension {
 	backendBuildConfig := bcs.buildBackendBuildConfig()
 	zyncBuildConfig := bcs.buildZyncBuildConfig()
 	apicastBuildConfig := bcs.buildApicastBuildConfig()
@@ -48,7 +110,7 @@ func (bcs *BuildConfigs) buildObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: buildRubyCentosSevenImageStream},
 		runtime.RawExtension{Object: buildOpenrestyCentosSevenImageStream},
 	}
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 func (bcs *BuildConfigs) buildBackendBuildConfig() *buildv1.BuildConfig {
@@ -60,7 +122,7 @@ func (bcs *BuildConfigs) buildBackendBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              bcs.Options.appLabel,
 				"3scale.component": "backend",
 			},
 		},
@@ -75,7 +137,7 @@ func (bcs *BuildConfigs) buildBackendBuildConfig() *buildv1.BuildConfig {
 				Source: buildv1.BuildSource{
 					Git: &buildv1.GitBuildSource{
 						URI: "https://github.com/3scale/backend.git",
-						Ref: "${GIT_REF}",
+						Ref: bcs.Options.gitRef,
 					},
 					SourceSecret: &v1.LocalObjectReference{
 						Name: "github-auth",
@@ -110,7 +172,7 @@ func (bcs *BuildConfigs) buildZyncBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              bcs.Options.appLabel,
 				"3scale.component": "zync",
 			},
 		},
@@ -125,7 +187,7 @@ func (bcs *BuildConfigs) buildZyncBuildConfig() *buildv1.BuildConfig {
 				Source: buildv1.BuildSource{
 					Git: &buildv1.GitBuildSource{
 						URI: "https://github.com/3scale/zync.git",
-						Ref: "${GIT_REF}",
+						Ref: bcs.Options.gitRef,
 					},
 					Type: buildv1.BuildSourceGit,
 				},
@@ -160,7 +222,7 @@ func (bcs *BuildConfigs) buildApicastBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              bcs.Options.appLabel,
 				"3scale.component": "apicast",
 			},
 		},
@@ -176,7 +238,7 @@ func (bcs *BuildConfigs) buildApicastBuildConfig() *buildv1.BuildConfig {
 					ContextDir: "gateway",
 					Git: &buildv1.GitBuildSource{
 						URI: "https://github.com/3scale/apicast.git",
-						Ref: "${GIT_REF}",
+						Ref: bcs.Options.gitRef,
 					},
 					Type: buildv1.BuildSourceGit,
 				},
@@ -213,7 +275,7 @@ func (bcs *BuildConfigs) buildWildcardRouterBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "wildcard-router",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              bcs.Options.appLabel,
 				"3scale.component": "wildcard-router",
 			},
 		},
@@ -228,7 +290,7 @@ func (bcs *BuildConfigs) buildWildcardRouterBuildConfig() *buildv1.BuildConfig {
 				Source: buildv1.BuildSource{
 					Git: &buildv1.GitBuildSource{
 						URI: "https://github.com/3scale/wildcard-router-service.git",
-						Ref: "${GIT_REF}",
+						Ref: bcs.Options.gitRef,
 					},
 					Type: buildv1.BuildSourceGit,
 				},
@@ -265,7 +327,7 @@ func (bcs *BuildConfigs) buildSystemBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              bcs.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
@@ -280,7 +342,7 @@ func (bcs *BuildConfigs) buildSystemBuildConfig() *buildv1.BuildConfig {
 				Source: buildv1.BuildSource{
 					Git: &buildv1.GitBuildSource{
 						URI: "https://github.com/3scale/porta.git",
-						Ref: "${GIT_REF}",
+						Ref: bcs.Options.gitRef,
 					},
 					Type: buildv1.BuildSourceGit,
 				},
@@ -312,7 +374,7 @@ func (bcs *BuildConfigs) buildRubyCentosSevenImageStream() *imagev1.ImageStream 
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "ruby-24-centos7",
-			Labels: map[string]string{"3scale.component": "zync", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "zync", "app": bcs.Options.appLabel},
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
@@ -336,7 +398,7 @@ func (bcs *BuildConfigs) buildOpenrestyCentosSevenImageStream() *imagev1.ImageSt
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "s2i-openresty-centos7",
-			Labels: map[string]string{"3scale.component": "apicast", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "apicast", "app": bcs.Options.appLabel},
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{

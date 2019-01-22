@@ -9,6 +9,11 @@ type AmpHATemplate struct {
 	components []Component
 }
 
+type AmpHATemplateOptions struct {
+	ampTemplateOptions      AmpTemplateOptions
+	highAvailabilityOptions HighAvailabilityOptions
+}
+
 func NewAmpHATemplate(options []string) *AmpHATemplate {
 	components := []Component{
 		NewAmpTemplate(options),

@@ -1,12 +1,13 @@
 package component
 
 import (
+	"fmt"
 	"sort"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,6 +16,30 @@ import (
 
 type System struct {
 	options []string
+	Options *SystemOptions
+}
+
+type SystemOptions struct {
+	adminAccessToken    string
+	adminPassword       string
+	adminUsername       string
+	ampRelease          string
+	apicastAccessToken  string
+	apicastRegistryURL  string
+	appLabel            string
+	masterAccessToken   string
+	masterName          string
+	masterUsername      string
+	masterPassword      string
+	recaptchaPublicKey  string
+	recaptchaPrivateKey string
+	appSecretKeyBase    string
+	backendSharedSecret string
+	tenantName          string
+	wildcardDomain      string
+	mysqlDatabaseName   string
+	mysqlRootPassword   string
+	storageClassName    *string // should this be a string or *string? check what would be the difference between passing a "" and a nil pointer in the PersistentVolumeClaim corresponding field
 }
 
 func NewSystem(options []string) *System {
@@ -24,9 +49,198 @@ func NewSystem(options []string) *System {
 	return system
 }
 
+type SystemOptionsBuilder struct {
+	options SystemOptions
+}
+
+func (s *SystemOptionsBuilder) AdminAccessToken(adminAccessToken string) {
+	s.options.adminAccessToken = adminAccessToken
+}
+
+func (s *SystemOptionsBuilder) AdminPassword(adminPassword string) {
+	s.options.adminPassword = adminPassword
+}
+
+func (s *SystemOptionsBuilder) AdminUsername(adminUsername string) {
+	s.options.adminUsername = adminUsername
+}
+
+func (s *SystemOptionsBuilder) AmpRelease(ampRelease string) {
+	s.options.ampRelease = ampRelease
+}
+
+func (s *SystemOptionsBuilder) ApicastAccessToken(apicastAccessToken string) {
+	s.options.apicastAccessToken = apicastAccessToken
+}
+
+func (s *SystemOptionsBuilder) ApicastRegistryURL(apicastRegistryURL string) {
+	s.options.apicastRegistryURL = apicastRegistryURL
+}
+
+func (s *SystemOptionsBuilder) AppLabel(appLabel string) {
+	s.options.appLabel = appLabel
+}
+
+func (s *SystemOptionsBuilder) MasterAccessToken(masterAccessToken string) {
+	s.options.masterAccessToken = masterAccessToken
+}
+
+func (s *SystemOptionsBuilder) MasterName(masterName string) {
+	s.options.masterName = masterName
+}
+
+func (s *SystemOptionsBuilder) MasterUsername(masterUsername string) {
+	s.options.masterUsername = masterUsername
+}
+
+func (s *SystemOptionsBuilder) MasterPassword(masterPassword string) {
+	s.options.masterPassword = masterPassword
+}
+
+func (s *SystemOptionsBuilder) RecaptchaPublicKey(recaptchaPublicKey string) {
+	s.options.recaptchaPublicKey = recaptchaPublicKey
+}
+
+func (s *SystemOptionsBuilder) RecaptchaPrivateKey(recaptchaPrivateKey string) {
+	s.options.recaptchaPrivateKey = recaptchaPrivateKey
+}
+
+func (s *SystemOptionsBuilder) AppSecretKeyBase(appSecretKeyBase string) {
+	s.options.appSecretKeyBase = appSecretKeyBase
+}
+
+func (s *SystemOptionsBuilder) BackendSharedSecret(backendSharedSecret string) {
+	s.options.backendSharedSecret = backendSharedSecret
+}
+
+func (s *SystemOptionsBuilder) TenantName(tenantName string) {
+	s.options.tenantName = tenantName
+}
+
+func (s *SystemOptionsBuilder) WildcardDomain(wildcardDomain string) {
+	s.options.wildcardDomain = wildcardDomain
+}
+
+func (s *SystemOptionsBuilder) MysqlDatabaseName(mysqlDatabaseName string) {
+	s.options.mysqlDatabaseName = mysqlDatabaseName
+}
+
+func (s *SystemOptionsBuilder) MysqlRootPassword(mysqlRootPassword string) {
+	s.options.mysqlRootPassword = mysqlRootPassword
+}
+
+func (s *SystemOptionsBuilder) StorageClassName(storageClassName *string) {
+	s.options.storageClassName = storageClassName
+}
+
+func (s *SystemOptionsBuilder) Build() (*SystemOptions, error) {
+	if s.options.adminAccessToken == "" {
+		return nil, fmt.Errorf("no admin access token has been provided")
+	}
+	if s.options.adminPassword == "" {
+		return nil, fmt.Errorf("no admin password has been provided")
+	}
+	if s.options.adminUsername == "" {
+		return nil, fmt.Errorf("no admin username has been provided")
+	}
+	if s.options.ampRelease == "" {
+		return nil, fmt.Errorf("no AMP release has been provided")
+	}
+	if s.options.apicastAccessToken == "" {
+		return nil, fmt.Errorf("no apicast access token has been provided")
+	}
+	if s.options.apicastRegistryURL == "" {
+		return nil, fmt.Errorf("no apicast registry url has been provided")
+	}
+	if s.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if s.options.masterAccessToken == "" {
+		return nil, fmt.Errorf("no master access token has been provided")
+	}
+	if s.options.masterName == "" {
+		return nil, fmt.Errorf("no master name has been provided")
+	}
+	if s.options.masterUsername == "" {
+		return nil, fmt.Errorf("no master username has been provided")
+	}
+	if s.options.masterPassword == "" {
+		return nil, fmt.Errorf("no master password has been provided")
+	}
+	if s.options.appSecretKeyBase == "" {
+		return nil, fmt.Errorf("no app secret keybase has been provided")
+	}
+	if s.options.backendSharedSecret == "" {
+		return nil, fmt.Errorf("no backend shared secret has been provided")
+	}
+	if s.options.tenantName == "" {
+		return nil, fmt.Errorf("no tenant name has been provided")
+	}
+	if s.options.wildcardDomain == "" {
+		return nil, fmt.Errorf("no wildcard domain has been provided")
+	}
+	if s.options.mysqlDatabaseName == "" {
+		return nil, fmt.Errorf("no mysql database name has been provided")
+	}
+	if s.options.mysqlRootPassword == "" {
+		return nil, fmt.Errorf("no mysql root password has been provided")
+	}
+	return &s.options, nil
+}
+
+type SystemOptionsProvider interface {
+	GetSystemOptions() *SystemOptions
+}
+type CLISystemOptionsProvider struct {
+}
+
+func (o *CLISystemOptionsProvider) GetSystemOptions() (*SystemOptions, error) {
+	sob := SystemOptionsBuilder{}
+	sob.AdminAccessToken("${ADMIN_ACCESS_TOKEN}")
+	sob.AdminPassword("${ADMIN_PASSWORD}")
+	sob.AdminUsername("${ADMIN_USERNAME}")
+	sob.AmpRelease("${AMP_RELEASE}")
+	sob.ApicastAccessToken("${APICAST_ACCESS_TOKEN}")
+	sob.ApicastRegistryURL("${APICAST_REGISTRY_URL}")
+	sob.MasterAccessToken("${MASTER_ACCESS_TOKEN}")
+	sob.MasterName("${MASTER_NAME}")
+	sob.MasterUsername("${MASTER_USER}")
+	sob.MasterPassword("${MASTER_PASSWORD}")
+	sob.AppLabel("${APP_LABEL}")
+	sob.RecaptchaPublicKey("${RECAPTCHA_PUBLIC_KEY}")
+	sob.RecaptchaPrivateKey("${RECAPTCHA_PRIVATE_KEY}")
+	sob.AppSecretKeyBase("${SYSTEM_APP_SECRET_KEY_BASE}")
+	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
+	sob.TenantName("${TENANT_NAME}")
+	sob.WildcardDomain("${WILDCARD_DOMAIN}")
+	sob.MysqlDatabaseName("${MYSQL_DATABASE}")
+	sob.MysqlRootPassword("${MYSQL_ROOT_PASSWORD}")
+	sob.StorageClassName(nil)
+	res, err := sob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create System Options - %s", err)
+	}
+	return res, nil
+}
+
 func (system *System) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLISystemOptionsProvider{}
+	systemOpts, err := optionsProvider.GetSystemOptions()
+	_ = err
+	system.Options = systemOpts
 	system.buildParameters(template)
-	system.buildObjects(template)
+	system.addObjectsIntoTemplate(template)
+}
+
+func (system *System) GetObjects() ([]runtime.RawExtension, error) {
+	objects := system.buildObjects()
+	return objects, nil
+}
+
+func (system *System) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := system.buildObjects()
+	template.Objects = append(template.Objects, objects...)
 }
 
 func (system *System) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -117,7 +331,7 @@ func (system *System) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (system *System) buildObjects(template *templatev1.Template) {
+func (system *System) buildObjects() []runtime.RawExtension {
 	systemSharedStorage := system.buildSystemSharedPVC()
 	systemProviderService := system.buildSystemProviderService()
 	systemMasterService := system.buildSystemMasterService()
@@ -176,7 +390,7 @@ func (system *System) buildObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: systemAppSecret},
 		runtime.RawExtension{Object: systemMemcachedSecret},
 	}
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
@@ -310,19 +524,19 @@ func (system *System) buildSystemEnvironmentConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-environment",
-			Labels: map[string]string{"3scale.component": "system", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "app": system.Options.appLabel},
 		},
 		Data: map[string]string{
 			"RAILS_ENV":              "production",
 			"FORCE_SSL":              "true",
-			"THREESCALE_SUPERDOMAIN": "${WILDCARD_DOMAIN}",
+			"THREESCALE_SUPERDOMAIN": system.Options.wildcardDomain,
 			"PROVIDER_PLAN":          "enterprise",
-			"APICAST_REGISTRY_URL":   "${APICAST_REGISTRY_URL}",
+			"APICAST_REGISTRY_URL":   system.Options.apicastRegistryURL,
 			"RAILS_LOG_TO_STDOUT":    "true",
 			"RAILS_LOG_LEVEL":        "info",
 			"THINKING_SPHINX_PORT":   "9306",
 			"THREESCALE_SANDBOX_PROXY_OPENSSL_VERIFY_MODE": "VERIFY_NONE",
-			"AMP_RELEASE":  "${AMP_RELEASE}",
+			"AMP_RELEASE":  system.Options.ampRelease,
 			"SSL_CERT_DIR": "/etc/pki/tls/certs",
 		},
 	}
@@ -337,12 +551,12 @@ func (system *System) buildSystemDatabaseSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-database",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"URL": "mysql2://root:${MYSQL_ROOT_PASSWORD}@system-mysql/${MYSQL_DATABASE}",
+			"URL": "mysql2://root:" + system.Options.mysqlRootPassword + "@system-mysql/" + system.Options.mysqlDatabaseName,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -357,7 +571,7 @@ func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-memcache",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
@@ -377,13 +591,13 @@ func (system *System) buildSystemRecaptchaSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-recaptcha",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"PUBLIC_KEY":  "${RECAPTCHA_PUBLIC_KEY}",
-			"PRIVATE_KEY": "${RECAPTCHA_PRIVATE_KEY}",
+			"PUBLIC_KEY":  system.Options.recaptchaPublicKey,
+			"PRIVATE_KEY": system.Options.recaptchaPrivateKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -398,13 +612,13 @@ func (system *System) buildSystemEventsHookSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-events-hook",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
 			"URL":      "http://system-master:3000/master/events/import",
-			"PASSWORD": "${SYSTEM_BACKEND_SHARED_SECRET}",
+			"PASSWORD": system.Options.backendSharedSecret,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -419,7 +633,7 @@ func (system *System) buildSystemRedisSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-redis",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
@@ -439,12 +653,12 @@ func (system *System) buildSystemAppSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-app", // TODO sure this should be a secret on its own?? maybe can join different secrets into one with more values?
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"SECRET_KEY_BASE": "${SYSTEM_APP_SECRET_KEY_BASE}",
+			"SECRET_KEY_BASE": system.Options.appSecretKeyBase,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -459,18 +673,18 @@ func (system *System) buildSystemSeedSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-seed",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"MASTER_DOMAIN":      "${MASTER_NAME}",
-			"MASTER_USER":        "${MASTER_USER}",
-			"MASTER_PASSWORD":    "${MASTER_PASSWORD}",
-			"ADMIN_ACCESS_TOKEN": "${ADMIN_ACCESS_TOKEN}",
-			"ADMIN_USER":         "${ADMIN_USERNAME}",
-			"ADMIN_PASSWORD":     "${ADMIN_PASSWORD}",
-			"TENANT_NAME":        "${TENANT_NAME}",
+			"MASTER_DOMAIN":      system.Options.masterName,
+			"MASTER_USER":        system.Options.masterUsername,
+			"MASTER_PASSWORD":    system.Options.masterPassword,
+			"ADMIN_ACCESS_TOKEN": system.Options.adminAccessToken,
+			"ADMIN_USER":         system.Options.adminUsername,
+			"ADMIN_PASSWORD":     system.Options.adminPassword,
+			"TENANT_NAME":        system.Options.tenantName,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -485,14 +699,14 @@ func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-master-apicast",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"PROXY_CONFIGS_ENDPOINT": "http://${APICAST_ACCESS_TOKEN}@system-master:3000/master/api/proxy/configs",
-			"BASE_URL":               "http://${APICAST_ACCESS_TOKEN}@system-master:3000",
-			"ACCESS_TOKEN":           "${APICAST_ACCESS_TOKEN}",
+			"PROXY_CONFIGS_ENDPOINT": "http://" + system.Options.apicastAccessToken + "@system-master:3000/master/api/proxy/configs",
+			"BASE_URL":               "http://" + system.Options.apicastAccessToken + "@system-master:3000",
+			"ACCESS_TOKEN":           system.Options.apicastAccessToken,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -506,7 +720,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-app",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "app", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "app", "app": system.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -528,7 +742,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 					Pre: &appsv1.LifecycleHook{
 						FailurePolicy: appsv1.LifecycleHookFailurePolicy("Retry"),
 						ExecNewPod: &appsv1.ExecNewPodHook{
-							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy MASTER_ACCESS_TOKEN=\"${MASTER_ACCESS_TOKEN}\""},
+							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy " + "MASTER_ACCESS_TOKEN" + "=\"" + system.Options.masterAccessToken + "\""},
 							Env:           system.buildSystemBaseEnv(),
 							ContainerName: "system-master",
 							Volumes:       []string{"system-storage"}},
@@ -556,7 +770,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 			Selector: map[string]string{"deploymentConfig": "system-app"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "app", "app": "${APP_LABEL}", "deploymentConfig": "system-app"},
+					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "app", "app": system.Options.appLabel, "deploymentConfig": "system-app"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
@@ -807,7 +1021,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-sidekiq",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "sidekiq", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "sidekiq", "app": system.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -843,7 +1057,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 			Selector: map[string]string{"deploymentConfig": "system-sidekiq"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "sidekiq", "app": "${APP_LABEL}", "deploymentConfig": "system-sidekiq"},
+					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "sidekiq", "app": system.Options.appLabel, "deploymentConfig": "system-sidekiq"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
@@ -939,7 +1153,7 @@ func (system *System) buildSystemSharedPVC() *v1.PersistentVolumeClaim {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-storage",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "app",
 			},
@@ -966,7 +1180,7 @@ func (system *System) buildSystemProviderService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-provider",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "provider-ui",
 			},
@@ -994,7 +1208,7 @@ func (system *System) buildSystemMasterService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-master",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "master-ui",
 			},
@@ -1022,7 +1236,7 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-developer",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "developer-ui",
 			},
@@ -1050,7 +1264,7 @@ func (system *System) buildSystemMysqlService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-mysql",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "mysql",
 			},
@@ -1079,7 +1293,7 @@ func (system *System) buildSystemRedisService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-redis",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "redis",
 			},
@@ -1107,7 +1321,7 @@ func (system *System) buildSystemSphinxService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-sphinx",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "sphinx",
 			},
@@ -1135,7 +1349,7 @@ func (system *System) buildSystemMemcachedService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-memcache",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "memcache",
 			},
@@ -1162,7 +1376,7 @@ func (system *System) buildSystemSmtpConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "smtp",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "smtp", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "smtp", "app": system.Options.appLabel},
 		},
 		Data: map[string]string{"address": "", "authentication": "", "domain": "", "openssl.verify.mode": "", "password": "", "port": "", "username": ""}}
 }
@@ -1175,10 +1389,10 @@ func (system *System) buildSystemProviderRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-provider-admin",
-			Labels: map[string]string{"app": "${APP_LABEL}", "3scale.component": "system", "3scale.component-element": "provider-ui"},
+			Labels: map[string]string{"app": system.Options.appLabel, "3scale.component": "system", "3scale.component-element": "provider-ui"},
 		},
 		Spec: routev1.RouteSpec{
-			Host: "${TENANT_NAME}-admin.${WILDCARD_DOMAIN}",
+			Host: system.Options.tenantName + "-admin." + system.Options.wildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: "system-provider",
@@ -1201,10 +1415,10 @@ func (system *System) buildSystemMasterRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-master",
-			Labels: map[string]string{"app": "${APP_LABEL}", "3scale.component": "system", "3scale.component-element": "master-ui"},
+			Labels: map[string]string{"app": system.Options.appLabel, "3scale.component": "system", "3scale.component-element": "master-ui"},
 		},
 		Spec: routev1.RouteSpec{
-			Host: "${MASTER_NAME}.${WILDCARD_DOMAIN}",
+			Host: system.Options.masterName + "." + system.Options.wildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: "system-master",
@@ -1227,10 +1441,10 @@ func (system *System) buildSystemDeveloperRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-developer",
-			Labels: map[string]string{"app": "${APP_LABEL}", "3scale.component": "system", "3scale.component-element": "developer-ui"},
+			Labels: map[string]string{"app": system.Options.appLabel, "3scale.component": "system", "3scale.component-element": "developer-ui"},
 		},
 		Spec: routev1.RouteSpec{
-			Host: "${TENANT_NAME}.${WILDCARD_DOMAIN}",
+			Host: system.Options.tenantName + "." + system.Options.wildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: "system-developer",
@@ -1250,7 +1464,7 @@ func (system *System) buildSystemConfigMap() *v1.ConfigMap {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
@@ -1329,7 +1543,7 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-sphinx",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      system.Options.appLabel,
 				"3scale.component":         "system",
 				"3scale.component-element": "sphinx",
 			},
@@ -1375,7 +1589,7 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app":                      "${APP_LABEL}",
+						"app":                      system.Options.appLabel,
 						"deploymentConfig":         "system-sphinx",
 						"3scale.component":         "system",
 						"3scale.component-element": "sphinx",

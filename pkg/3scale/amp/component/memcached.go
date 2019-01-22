@@ -1,9 +1,11 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,6 +17,12 @@ type Memcached struct {
 	// TemplateObjects
 	// CLI Flags??? should be in this object???
 	options []string
+	Options *MemcachedOptions
+}
+
+type MemcachedOptions struct {
+	appLabel string
+	image    string
 }
 
 func NewMemcached(options []string) *Memcached {
@@ -24,9 +32,64 @@ func NewMemcached(options []string) *Memcached {
 	return redis
 }
 
+type MemcachedOptionsBuilder struct {
+	options MemcachedOptions
+}
+
+func (m *MemcachedOptionsBuilder) AppLabel(appLabel string) {
+	m.options.appLabel = appLabel
+}
+
+func (m *MemcachedOptionsBuilder) Image(image string) {
+	m.options.image = image
+}
+
+func (m *MemcachedOptionsBuilder) Build() (*MemcachedOptions, error) {
+	if m.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if m.options.image == "" {
+		return nil, fmt.Errorf("no Memcached Image has been provided")
+	}
+
+	return &m.options, nil
+}
+
+type MemcachedOptionsProvider interface {
+	GetMemcachedOptions() *MemcachedOptions
+}
+type CLIMemcachedOptionsProvider struct {
+}
+
+func (o *CLIMemcachedOptionsProvider) GetMemcachedOptions() (*MemcachedOptions, error) {
+	rob := MemcachedOptionsBuilder{}
+	rob.AppLabel("${APP_LABEL}")
+	rob.Image("${MEMCACHED_IMAGE}")
+	res, err := rob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Memcached Options - %s", err)
+	}
+	return res, nil
+}
+
 func (m *Memcached) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIMemcachedOptionsProvider{}
+	memcachedOpts, err := optionsProvider.GetMemcachedOptions()
+	_ = err
+	m.Options = memcachedOpts
 	m.buildParameters(template)
-	m.buildObjects(template)
+	m.addObjectsIntoTemplate(template)
+}
+
+func (m *Memcached) GetObjects() ([]runtime.RawExtension, error) {
+	objects := m.buildObjects()
+	return objects, nil
+}
+
+func (m *Memcached) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := m.buildObjects()
+	template.Objects = append(template.Objects, objects...)
 }
 
 func (m *Memcached) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -42,7 +105,7 @@ func (m *Memcached) buildParameters(template *templatev1.Template) {
 		// 	required: true
 		// - name: Memcached_PASSWORD
 		// 	displayName: Memcached Password
-		// 	description: Password for the Memcached user.
+		// 	description: Password for the Memcached usem.
 		// 	generate: expression
 		// 	from: "[a-z0-9]{8}"
 		// 	required: true
@@ -53,7 +116,7 @@ func (m *Memcached) buildParameters(template *templatev1.Template) {
 		// 	required: true
 		// - name: Memcached_ROOT_PASSWORD
 		// 	displayName: Memcached Root password.
-		// 	description: Password for Root user.
+		// 	description: Password for Root usem.
 		// 	generate: expression
 		// 	from: "[a-z0-9]{8}"
 		// 	required: true
@@ -61,13 +124,13 @@ func (m *Memcached) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (m *Memcached) buildObjects(template *templatev1.Template) {
+func (m *Memcached) buildObjects() []runtime.RawExtension {
 	systemMemcachedDeploymentConfig := m.buildSystemMemcachedDeploymentConfig()
 
 	objects := []runtime.RawExtension{
 		runtime.RawExtension{Object: systemMemcachedDeploymentConfig},
 	}
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentConfig {
@@ -78,7 +141,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-memcache",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "memcache", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "memcache", "app": m.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -88,13 +151,11 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{600}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
@@ -106,12 +167,12 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 			Selector: map[string]string{"deploymentConfig": "system-memcache"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "memcache", "app": "${APP_LABEL}", "deploymentConfig": "system-memcache"},
+					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "memcache", "app": m.Options.appLabel, "deploymentConfig": "system-memcache"},
 				},
 				Spec: v1.PodSpec{Containers: []v1.Container{
 					v1.Container{
 						Name:    "memcache",
-						Image:   "${MEMCACHED_IMAGE}",
+						Image:   m.Options.image,
 						Command: []string{"memcached", "-m", "64"},
 						Ports: []v1.ContainerPort{
 							v1.ContainerPort{HostPort: 0,
@@ -131,7 +192,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 						LivenessProbe: &v1.Probe{
 							Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 								Port: intstr.IntOrString{
-									Type:   intstr.Type(0),
+									Type:   intstr.Type(intstr.Int),
 									IntVal: 11211}},
 							},
 							InitialDelaySeconds: 10,

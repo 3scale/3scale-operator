@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
@@ -14,6 +16,19 @@ const (
 
 type AmpImages struct {
 	options []string
+	Options *AmpImagesOptions
+}
+
+type AmpImagesOptions struct {
+	appLabel             string
+	ampRelease           string
+	apicastImage         string
+	backendImage         string
+	routerImage          string
+	systemImage          string
+	zyncImage            string
+	postgreSQLImage      string
+	insecureImportPolicy bool
 }
 
 func NewAmpImages(options []string) *AmpImages {
@@ -23,16 +38,125 @@ func NewAmpImages(options []string) *AmpImages {
 	return ampImages
 }
 
+type AmpImagesOptionsBuilder struct {
+	options AmpImagesOptions
+}
+
+func (ampImages *AmpImagesOptionsBuilder) AppLabel(appLabel string) {
+	ampImages.options.appLabel = appLabel
+}
+
+func (ampImages *AmpImagesOptionsBuilder) AMPRelease(ampRelease string) {
+	ampImages.options.ampRelease = ampRelease
+}
+
+func (ampImages *AmpImagesOptionsBuilder) ApicastImage(apicastImage string) {
+	ampImages.options.apicastImage = apicastImage
+}
+
+func (ampImages *AmpImagesOptionsBuilder) BackendImage(backendImage string) {
+	ampImages.options.backendImage = backendImage
+}
+
+func (ampImages *AmpImagesOptionsBuilder) RouterImage(routerImage string) {
+	ampImages.options.routerImage = routerImage
+}
+
+func (ampImages *AmpImagesOptionsBuilder) SystemImage(systemImage string) {
+	ampImages.options.systemImage = systemImage
+}
+
+func (ampImages *AmpImagesOptionsBuilder) ZyncImage(zyncImage string) {
+	ampImages.options.zyncImage = zyncImage
+}
+
+func (ampImages *AmpImagesOptionsBuilder) PostgreSQLImage(postgreSQLImage string) {
+	ampImages.options.postgreSQLImage = postgreSQLImage
+}
+
+func (ampImages *AmpImagesOptionsBuilder) InsecureImportPolicy(insecureImportPolicy bool) {
+	ampImages.options.insecureImportPolicy = insecureImportPolicy
+}
+
+func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
+	if ampImages.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if ampImages.options.ampRelease == "" {
+		return nil, fmt.Errorf("no AMP release has been provided")
+	}
+	if ampImages.options.apicastImage == "" {
+		return nil, fmt.Errorf("no Apicast image has been provided")
+	}
+	if ampImages.options.backendImage == "" {
+		return nil, fmt.Errorf("no Backend image has been provided")
+	}
+	if ampImages.options.routerImage == "" {
+		return nil, fmt.Errorf("no Router image been provided")
+	}
+	if ampImages.options.systemImage == "" {
+		return nil, fmt.Errorf("no System image has been provided")
+	}
+	if ampImages.options.zyncImage == "" {
+		return nil, fmt.Errorf("no Zync image has been provided")
+	}
+	if ampImages.options.postgreSQLImage == "" {
+		return nil, fmt.Errorf("no PostgreSQL image has been provided")
+	}
+
+	return &ampImages.options, nil
+}
+
+type AmpImagesOptionsProvider interface {
+	GetAmpImagesOptions() *AmpImagesOptions
+}
+type CLIAmpImagesOptionsProvider struct {
+}
+
+func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, error) {
+	aob := AmpImagesOptionsBuilder{}
+	aob.AppLabel("${APP_LABEL}")
+	aob.AMPRelease("${AMP_RELEASE}")
+	aob.ApicastImage("${AMP_APICAST_IMAGE}")
+	aob.BackendImage("${AMP_BACKEND_IMAGE}")
+	aob.RouterImage("${AMP_ROUTER_IMAGE}")
+	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
+	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
+	aob.PostgreSQLImage("${POSTGRESQL_IMAGE}")
+	aob.InsecureImportPolicy(false)
+
+	res, err := aob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create AMPImages Options - %s", err)
+	}
+	return res, nil
+}
+
 func (ampImages *AmpImages) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIAmpImagesOptionsProvider{}
+	ampImagesOpts, err := optionsProvider.GetAmpImagesOptions()
+	_ = err
+	ampImages.Options = ampImagesOpts
 	ampImages.buildParameters(template)
-	ampImages.buildObjects(template)
+	ampImages.addObjectsIntoTemplate(template)
+}
+
+func (ampImages *AmpImages) GetObjects() ([]runtime.RawExtension, error) {
+	objects := ampImages.buildObjects()
+	return objects, nil
+}
+
+func (ampImages *AmpImages) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := ampImages.buildObjects()
+	template.Objects = append(template.Objects, objects...)
 }
 
 func (ampImages *AmpImages) PostProcess(template *templatev1.Template, otherComponents []Component) {
 
 }
 
-func (ampImages *AmpImages) buildObjects(template *templatev1.Template) {
+func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 	backendImageStream := ampImages.buildAmpBackendImageStream()
 	zyncImageStream := ampImages.buildAmpZyncImageStream()
 	apicastImageStream := ampImages.buildApicastImageStream()
@@ -51,7 +175,7 @@ func (ampImages *AmpImages) buildObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: postgreSQLImageStream},
 		runtime.RawExtension{Object: quayServiceAccount},
 	}
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
@@ -59,7 +183,7 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-backend",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              ampImages.Options.appLabel,
 				"3scale.component": "backend",
 			},
 			Annotations: map[string]string{
@@ -76,17 +200,17 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: "${AMP_RELEASE}",
+						Name: ampImages.Options.ampRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: "${AMP_RELEASE}",
+					Name: ampImages.Options.ampRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "amp-backend ${AMP_RELEASE}",
+						"openshift.io/display-name": "amp-backend " + ampImages.Options.ampRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: "${AMP_BACKEND_IMAGE}",
+						Name: ampImages.Options.backendImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						// TODO this was originally a double brace expansion from a variable, that is not possible
@@ -104,7 +228,7 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-zync",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              ampImages.Options.appLabel,
 				"3scale.component": "zync",
 			},
 			Annotations: map[string]string{
@@ -121,17 +245,17 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: "${AMP_RELEASE}",
+						Name: ampImages.Options.ampRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: "${AMP_RELEASE}",
+					Name: ampImages.Options.ampRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP Zync ${AMP_RELEASE}",
+						"openshift.io/display-name": "AMP Zync " + ampImages.Options.ampRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: "${AMP_ZYNC_IMAGE}",
+						Name: ampImages.Options.zyncImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						// TODO this was originally a double brace expansion from a variable, that is not possible
@@ -149,7 +273,7 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-apicast",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              ampImages.Options.appLabel,
 				"3scale.component": "apicast",
 			},
 			Annotations: map[string]string{
@@ -166,17 +290,17 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: "${AMP_RELEASE}",
+						Name: ampImages.Options.ampRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: "${AMP_RELEASE}",
+					Name: ampImages.Options.ampRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP APIcast ${AMP_RELEASE}",
+						"openshift.io/display-name": "AMP APIcast " + ampImages.Options.ampRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: "${AMP_APICAST_IMAGE}",
+						Name: ampImages.Options.apicastImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						// TODO this was originally a double brace expansion from a variable, that is not possible
@@ -194,7 +318,7 @@ func (ampImages *AmpImages) buildWildcardRouterImageStream() *imagev1.ImageStrea
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-wildcard-router",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              ampImages.Options.appLabel,
 				"3scale.component": "wildcard-router",
 			},
 			Annotations: map[string]string{
@@ -211,17 +335,17 @@ func (ampImages *AmpImages) buildWildcardRouterImageStream() *imagev1.ImageStrea
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: "${AMP_RELEASE}",
+						Name: ampImages.Options.ampRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: "${AMP_RELEASE}",
+					Name: ampImages.Options.ampRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP APIcast Wildcard Router ${AMP_RELEASE}",
+						"openshift.io/display-name": "AMP APIcast Wildcard Router " + ampImages.Options.ampRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: "${AMP_ROUTER_IMAGE}",
+						Name: ampImages.Options.routerImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						// TODO this was originally a double brace expansion from a variable, that is not possible
@@ -239,7 +363,7 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-system",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              ampImages.Options.appLabel,
 				"3scale.component": "system",
 			},
 			Annotations: map[string]string{
@@ -256,17 +380,17 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: "${AMP_RELEASE}",
+						Name: ampImages.Options.ampRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: "${AMP_RELEASE}",
+					Name: ampImages.Options.ampRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP system ${AMP_RELEASE}",
+						"openshift.io/display-name": "AMP system " + ampImages.Options.ampRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: "${AMP_SYSTEM_IMAGE}",
+						Name: ampImages.Options.systemImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						Insecure: insecureImportPolicy,
@@ -285,7 +409,7 @@ func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "postgresql",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "postgresql", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "postgresql", "app": ampImages.Options.appLabel},
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
@@ -293,7 +417,7 @@ func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
 					Name: "9.5",
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: "${POSTGRESQL_IMAGE}",
+						Name: ampImages.Options.postgreSQLImage,
 					},
 					Reference: false,
 					ImportPolicy: imagev1.TagImportPolicy{

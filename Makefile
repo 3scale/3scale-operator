@@ -24,6 +24,9 @@ build:
 push:
 	docker push $(IMAGE):$(VERSION)
 
+local:
+	operator-sdk up local --namespace $(NAMESPACE)
+
 e2e-setup:
 	oc new-project $(NAMESPACE)
 

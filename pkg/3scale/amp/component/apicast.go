@@ -1,10 +1,12 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,6 +15,16 @@ import (
 
 type Apicast struct {
 	options []string
+	Options *ApicastOptions
+}
+
+type ApicastOptions struct {
+	appLabel       string
+	managementAPI  string
+	openSSLVerify  string
+	responseCodes  string
+	tenantName     string
+	wildcardDomain string
 }
 
 func NewApicast(options []string) *Apicast {
@@ -22,9 +34,96 @@ func NewApicast(options []string) *Apicast {
 	return apicast
 }
 
+type ApicastOptionsBuilder struct {
+	options ApicastOptions
+}
+
+func (a *ApicastOptionsBuilder) AppLabel(appLabel string) {
+	a.options.appLabel = appLabel
+}
+
+func (a *ApicastOptionsBuilder) ManagementAPI(managementAPI string) {
+	a.options.managementAPI = managementAPI
+}
+
+func (a *ApicastOptionsBuilder) OpenSSLVerify(openSSLVerify string) {
+	a.options.openSSLVerify = openSSLVerify
+}
+
+func (a *ApicastOptionsBuilder) ResponseCodes(responseCodes string) {
+	a.options.responseCodes = responseCodes
+}
+
+func (a *ApicastOptionsBuilder) TenantName(tenantName string) {
+	a.options.tenantName = tenantName
+}
+
+func (a *ApicastOptionsBuilder) WildcardDomain(wildcardDomain string) {
+	a.options.wildcardDomain = wildcardDomain
+}
+
+func (a *ApicastOptionsBuilder) Build() (*ApicastOptions, error) {
+	if a.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if a.options.managementAPI == "" {
+		return nil, fmt.Errorf("no management API has been provided")
+	}
+	if a.options.openSSLVerify == "" {
+		return nil, fmt.Errorf("no OpenSSLVerify option has been provided")
+	}
+	if a.options.responseCodes == "" {
+		return nil, fmt.Errorf("no response codes have been provided")
+	}
+	if a.options.tenantName == "" {
+		return nil, fmt.Errorf("no tenant name has been provided")
+	}
+	if a.options.wildcardDomain == "" {
+		return nil, fmt.Errorf("no wildcard domain has been provided")
+	}
+
+	return &a.options, nil
+}
+
+type ApicastOptionsProvider interface {
+	GetApicastOptions() *ApicastOptions
+}
+type CLIApicastOptionsProvider struct {
+}
+
+func (o *CLIApicastOptionsProvider) GetApicastOptions() (*ApicastOptions, error) {
+	aob := ApicastOptionsBuilder{}
+	aob.AppLabel("${APP_LABEL}")
+	aob.ManagementAPI("${APICAST_MANAGEMENT_API}")
+	aob.OpenSSLVerify("${APICAST_OPENSSL_VERIFY}")
+	aob.ResponseCodes("${APICAST_RESPONSE_CODES}")
+	aob.TenantName("${TENANT_NAME}")
+	aob.WildcardDomain("${WILDCARD_DOMAIN}")
+	res, err := aob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Apicast Options - %s", err)
+	}
+	return res, nil
+}
+
 func (apicast *Apicast) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIApicastOptionsProvider{}
+	apicastOpts, err := optionsProvider.GetApicastOptions()
+	_ = err
+	apicast.Options = apicastOpts
 	apicast.buildParameters(template)
-	apicast.buildObjects(template)
+	apicast.addObjectsIntoTemplate(template)
+}
+
+func (apicast *Apicast) GetObjects() ([]runtime.RawExtension, error) {
+	objects := apicast.buildObjects()
+	return objects, nil
+}
+
+func (apicast *Apicast) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := apicast.buildObjects()
+	template.Objects = append(template.Objects, objects...)
 }
 
 func (apicast *Apicast) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -68,7 +167,7 @@ func (apicast *Apicast) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (apicast *Apicast) buildObjects(template *templatev1.Template) {
+func (apicast *Apicast) buildObjects() []runtime.RawExtension {
 	apicastStagingDeploymentConfig := apicast.buildApicastStagingDeploymentConfig()
 	apicastProductionDeploymentConfig := apicast.buildApicastProductionDeploymentConfig()
 	apicastStagingService := apicast.buildApicastStagingService()
@@ -88,7 +187,7 @@ func (apicast *Apicast) buildObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: apicastEnvConfigMap},
 		runtime.RawExtension{Object: apicastRedisSecret},
 	}
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 func (apicast *Apicast) buildApicastStagingRoute() *routev1.Route {
@@ -99,10 +198,10 @@ func (apicast *Apicast) buildApicastStagingRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "api-apicast-staging",
-			Labels: map[string]string{"app": "${APP_LABEL}", "3scale.component": "apicast", "3scale.component-element": "staging"},
+			Labels: map[string]string{"app": apicast.Options.appLabel, "3scale.component": "apicast", "3scale.component-element": "staging"},
 		},
 		Spec: routev1.RouteSpec{
-			Host: "api-${TENANT_NAME}-apicast-staging.${WILDCARD_DOMAIN}",
+			Host: "api-" + apicast.Options.tenantName + "-apicast-staging." + apicast.Options.wildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: "apicast-staging",
@@ -126,7 +225,7 @@ func (apicast *Apicast) buildApicastStagingService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast-staging",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      apicast.Options.appLabel,
 				"3scale.component":         "apicast",
 				"3scale.component-element": "staging",
 			},
@@ -159,10 +258,10 @@ func (apicast *Apicast) buildApicastProductionRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "api-apicast-production",
-			Labels: map[string]string{"app": "${APP_LABEL}", "3scale.component": "apicast", "3scale.component-element": "production"},
+			Labels: map[string]string{"app": apicast.Options.appLabel, "3scale.component": "apicast", "3scale.component-element": "production"},
 		},
 		Spec: routev1.RouteSpec{
-			Host: "api-${TENANT_NAME}-apicast-production.${WILDCARD_DOMAIN}",
+			Host: "api-" + apicast.Options.tenantName + "-apicast-production." + apicast.Options.wildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: "apicast-production",
@@ -186,7 +285,7 @@ func (apicast *Apicast) buildApicastProductionService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast-production",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      apicast.Options.appLabel,
 				"3scale.component":         "apicast",
 				"3scale.component-element": "production",
 			},
@@ -217,7 +316,7 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast-staging",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      apicast.Options.appLabel,
 				"3scale.component":         "apicast",
 				"3scale.component-element": "staging",
 			},
@@ -265,7 +364,7 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"deploymentConfig":         "apicast-staging",
-						"app":                      "${APP_LABEL}",
+						"app":                      apicast.Options.appLabel,
 						"3scale.component":         "apicast",
 						"3scale.component-element": "staging",
 					},
@@ -339,7 +438,7 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast-production",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      apicast.Options.appLabel,
 				"3scale.component":         "apicast",
 				"3scale.component-element": "production",
 			},
@@ -388,7 +487,7 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"deploymentConfig":         "apicast-production",
-						"app":                      "${APP_LABEL}",
+						"app":                      apicast.Options.appLabel,
 						"3scale.component":         "apicast",
 						"3scale.component-element": "production",
 					},
@@ -511,12 +610,12 @@ func (apicast *Apicast) buildApicastEnvConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-environment",
-			Labels: map[string]string{"3scale.component": "apicast", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "apicast", "app": apicast.Options.appLabel},
 		},
 		Data: map[string]string{
-			"APICAST_MANAGEMENT_API": "${APICAST_MANAGEMENT_API}",
-			"OPENSSL_VERIFY":         "${APICAST_OPENSSL_VERIFY}",
-			"APICAST_RESPONSE_CODES": "${APICAST_RESPONSE_CODES}",
+			"APICAST_MANAGEMENT_API": apicast.Options.managementAPI,
+			"OPENSSL_VERIFY":         apicast.Options.openSSLVerify,
+			"APICAST_RESPONSE_CODES": apicast.Options.responseCodes,
 		},
 	}
 }
@@ -530,7 +629,7 @@ func (apicast *Apicast) buildApicastRedisSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast-redis",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              apicast.Options.appLabel,
 				"3scale.component": "apicast",
 			},
 		},

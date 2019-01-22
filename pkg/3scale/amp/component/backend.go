@@ -1,10 +1,12 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,6 +15,15 @@ import (
 
 type Backend struct {
 	options []string
+	Options *BackendOptions
+}
+
+type BackendOptions struct {
+	appLabel              string
+	systemBackendUsername string
+	systemBackendPassword string
+	tenantName            string
+	wildcardDomain        string
 }
 
 func NewBackend(options []string) *Backend {
@@ -22,9 +33,90 @@ func NewBackend(options []string) *Backend {
 	return backend
 }
 
+type BackendOptionsBuilder struct {
+	options BackendOptions
+}
+
+func (m *BackendOptionsBuilder) AppLabel(appLabel string) {
+	m.options.appLabel = appLabel
+}
+
+func (m *BackendOptionsBuilder) SystemBackendUsername(systemBackendUsername string) {
+	m.options.systemBackendUsername = systemBackendUsername
+}
+
+func (m *BackendOptionsBuilder) SystemBackendPassword(systemBackendPassword string) {
+	m.options.systemBackendPassword = systemBackendPassword
+}
+
+func (m *BackendOptionsBuilder) TenantName(tenantName string) {
+	m.options.tenantName = tenantName
+}
+
+func (m *BackendOptionsBuilder) WildcardDomain(wildcardDomain string) {
+	m.options.wildcardDomain = wildcardDomain
+}
+
+func (m *BackendOptionsBuilder) Build() (*BackendOptions, error) {
+	if m.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if m.options.systemBackendUsername == "" {
+		return nil, fmt.Errorf("no System's Backend Username has been provided")
+	}
+	if m.options.systemBackendPassword == "" {
+		return nil, fmt.Errorf("no System's Backend Password has been provided")
+	}
+	if m.options.tenantName == "" {
+		return nil, fmt.Errorf("no tenant name has been provided")
+	}
+	if m.options.wildcardDomain == "" {
+		return nil, fmt.Errorf("no wildcard domain has been provided")
+	}
+
+	return &m.options, nil
+}
+
+type BackendOptionsProvider interface {
+	GetBackendOptions() *BackendOptions
+}
+type CLIBackendOptionsProvider struct {
+}
+
+func (o *CLIBackendOptionsProvider) GetBackendOptions() (*BackendOptions, error) {
+	bob := BackendOptionsBuilder{}
+	bob.AppLabel("${APP_LABEL}")
+	bob.SystemBackendUsername("${SYSTEM_BACKEND_USERNAME}")
+	bob.SystemBackendPassword("${SYSTEM_BACKEND_PASSWORD}")
+	bob.TenantName("${TENANT_NAME}")
+	bob.WildcardDomain("${WILDCARD_DOMAIN}")
+	res, err := bob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Backend Options - %s", err)
+	}
+	return res, nil
+}
+
 func (backend *Backend) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
 	backend.buildParameters(template)
-	backend.buildObjects(template)
+
+	// TODO move this outside this specific method
+	optionsProvider := CLIBackendOptionsProvider{}
+	backendOpts, err := optionsProvider.GetBackendOptions()
+	_ = err
+	backend.Options = backendOpts
+	backend.buildParameters(template)
+	backend.addObjectsIntoTemplate(template)
+}
+
+func (backend *Backend) GetObjects() ([]runtime.RawExtension, error) {
+	objects := backend.buildObjects()
+	return objects, nil
+}
+
+func (backend *Backend) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := backend.buildObjects()
+	template.Objects = append(template.Objects, objects...)
 }
 
 func (backend *Backend) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -36,7 +128,7 @@ func (backend *Backend) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (backend *Backend) buildObjects(template *templatev1.Template) {
+func (backend *Backend) buildObjects() []runtime.RawExtension {
 	backendCronDeploymentConfig := backend.buildBackendCronDeploymentConfig()
 	backendListenerDeploymentConfig := backend.buildBackendListenerDeploymentConfig()
 	backendListenerService := backend.buildBackendListenerService()
@@ -59,7 +151,7 @@ func (backend *Backend) buildObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: backendRedisSecrets},
 		runtime.RawExtension{Object: backendListenerSecrets},
 	}
-	template.Objects = append(template.Objects, objects...)
+	return objects
 }
 
 func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentConfig {
@@ -70,7 +162,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-worker",
-			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "worker", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "worker", "app": backend.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -106,7 +198,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 			Selector: map[string]string{"deploymentConfig": "backend-worker"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "worker", "app": "${APP_LABEL}", "deploymentConfig": "backend-worker"},
+					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "worker", "app": backend.Options.appLabel, "deploymentConfig": "backend-worker"},
 				},
 				Spec: v1.PodSpec{InitContainers: []v1.Container{
 					v1.Container{
@@ -155,7 +247,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-cron",
-			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "cron", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "cron", "app": backend.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -191,7 +283,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 			Selector: map[string]string{"deploymentConfig": "backend-cron"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "cron", "app": "${APP_LABEL}", "deploymentConfig": "backend-cron"},
+					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "cron", "app": backend.Options.appLabel, "deploymentConfig": "backend-cron"},
 				},
 				Spec: v1.PodSpec{InitContainers: []v1.Container{
 					v1.Container{
@@ -242,7 +334,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-listener",
-			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "listener", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "listener", "app": backend.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -278,7 +370,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 			Selector: map[string]string{"deploymentConfig": "backend-listener"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "listener", "app": "${APP_LABEL}", "deploymentConfig": "backend-listener"},
+					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "listener", "app": backend.Options.appLabel, "deploymentConfig": "backend-listener"},
 				},
 				Spec: v1.PodSpec{Containers: []v1.Container{
 					v1.Container{
@@ -347,7 +439,7 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 			Labels: map[string]string{
 				"3scale.component":         "backend",
 				"3scale.component-element": "listener",
-				"app":                      "${APP_LABEL}",
+				"app":                      backend.Options.appLabel,
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -375,10 +467,10 @@ func (backend *Backend) buildBackendListenerRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend",
-			Labels: map[string]string{"app": "${APP_LABEL}", "3scale.component": "backend"},
+			Labels: map[string]string{"app": backend.Options.appLabel, "3scale.component": "backend"},
 		},
 		Spec: routev1.RouteSpec{
-			Host: "backend-${TENANT_NAME}.${WILDCARD_DOMAIN}",
+			Host: "backend-" + backend.Options.tenantName + "." + backend.Options.wildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: "backend-listener",
@@ -401,7 +493,7 @@ func (backend *Backend) buildBackendEnvConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-environment",
-			Labels: map[string]string{"3scale.component": "backend", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "backend", "app": backend.Options.appLabel},
 		},
 		Data: map[string]string{
 			"RACK_ENV": "production",
@@ -418,7 +510,7 @@ func (backend *Backend) buildBackendRedisSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-redis",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              backend.Options.appLabel,
 				"3scale.component": "backend",
 			},
 		},
@@ -482,13 +574,13 @@ func (backend *Backend) buildBackendInternalApiCredsForSystem() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-internal-api",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              backend.Options.appLabel,
 				"3scale.component": "backend",
 			},
 		},
 		StringData: map[string]string{
-			"username": "${SYSTEM_BACKEND_USERNAME}",
-			"password": "${SYSTEM_BACKEND_PASSWORD}",
+			"username": backend.Options.systemBackendUsername,
+			"password": backend.Options.systemBackendPassword,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -503,13 +595,13 @@ func (backend *Backend) buildBackendListenerSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-listener",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              backend.Options.appLabel,
 				"3scale.component": "backend",
 			},
 		},
 		StringData: map[string]string{
 			"service_endpoint": "http://backend-listener:3000",
-			"route_endpoint":   "https://backend-${TENANT_NAME}.${WILDCARD_DOMAIN}",
+			"route_endpoint":   "https://backend-" + backend.Options.tenantName + "." + backend.Options.wildcardDomain,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

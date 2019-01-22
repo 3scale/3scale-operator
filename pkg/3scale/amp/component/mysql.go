@@ -1,9 +1,11 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,6 +17,88 @@ type Mysql struct {
 	// TemplateObjects
 	// CLI Flags??? should be in this object???
 	options []string
+	Options *MysqlOptions
+}
+
+type MysqlOptions struct {
+	appLabel     string
+	databaseName string
+	image        string
+	user         string
+	password     string
+	rootPassword string
+}
+
+type MysqlOptionsBuilder struct {
+	options MysqlOptions
+}
+
+func (m *MysqlOptionsBuilder) AppLabel(appLabel string) {
+	m.options.appLabel = appLabel
+}
+
+func (m *MysqlOptionsBuilder) DatabaseName(databaseName string) {
+	m.options.databaseName = databaseName
+}
+
+func (m *MysqlOptionsBuilder) Image(image string) {
+	m.options.image = image
+}
+
+func (m *MysqlOptionsBuilder) User(user string) {
+	m.options.user = user
+}
+
+func (m *MysqlOptionsBuilder) Password(password string) {
+	m.options.password = password
+}
+
+func (m *MysqlOptionsBuilder) RootPassword(rootPassword string) {
+	m.options.rootPassword = rootPassword
+}
+
+func (m *MysqlOptionsBuilder) Build() (*MysqlOptions, error) {
+	if m.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if m.options.databaseName == "" {
+		return nil, fmt.Errorf("no Database Name has been provided")
+	}
+	if m.options.image == "" {
+		return nil, fmt.Errorf("no Database Image has been provided")
+	}
+	if m.options.user == "" {
+		return nil, fmt.Errorf("no User has been provided")
+	}
+	if m.options.password == "" {
+		return nil, fmt.Errorf("no Password has been provided")
+	}
+	if m.options.rootPassword == "" {
+		return nil, fmt.Errorf("no Root Password has been provided")
+	}
+
+	return &m.options, nil
+}
+
+type MysqlOptionsProvider interface {
+	GetMysqlOptions() *MysqlOptions
+}
+type CLIMysqlOptionsProvider struct {
+}
+
+func (o *CLIMysqlOptionsProvider) GetMysqlOptions() (*MysqlOptions, error) {
+	mob := MysqlOptionsBuilder{}
+	mob.AppLabel("${APP_LABEL}")
+	mob.DatabaseName("${MYSQL_DATABASE}")
+	mob.Image("${MYSQL_IMAGE}")
+	mob.User("${MYSQL_USER}")
+	mob.Password("${MYSQL_PASSWORD}")
+	mob.RootPassword("${MYSQL_ROOT_PASSWORD}")
+	res, err := mob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create MySQL Options - %s", err)
+	}
+	return res, nil
 }
 
 func NewMysql(options []string) *Mysql {
@@ -25,8 +109,23 @@ func NewMysql(options []string) *Mysql {
 }
 
 func (mysql *Mysql) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIMysqlOptionsProvider{}
+	mysqlOpts, err := optionsProvider.GetMysqlOptions()
+	_ = err
+	mysql.Options = mysqlOpts
 	mysql.buildParameters(template)
-	mysql.buildObjects(template)
+	mysql.addObjectsIntoTemplate(template)
+}
+
+func (mysql *Mysql) GetObjects() ([]runtime.RawExtension, error) {
+	objects := mysql.buildObjects()
+	return objects, nil
+}
+
+func (mysql *Mysql) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := mysql.buildObjects()
+	template.Objects = append(template.Objects, objects...)
 }
 
 func (mysql *Mysql) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -69,7 +168,7 @@ func (mysql *Mysql) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (mysql *Mysql) buildObjects(template *templatev1.Template) {
+func (mysql *Mysql) buildObjects() []runtime.RawExtension {
 	systemMysqlDeploymentConfig := mysql.buildSystemMysqlDeploymentConfig()
 	systemMysqlMainConfigConfigMap := mysql.buildSystemMysqlMainConfigConfigMap()
 	systemMysqlExtraConfigConfigMap := mysql.buildSystemMysqlExtraConfigConfigMap()
@@ -81,7 +180,8 @@ func (mysql *Mysql) buildObjects(template *templatev1.Template) {
 		runtime.RawExtension{Object: systemMysqlExtraConfigConfigMap},
 		runtime.RawExtension{Object: systemMysqlPersistentVolumeClaim},
 	}
-	template.Objects = append(template.Objects, objects...)
+
+	return objects
 }
 
 func (mysql *Mysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
@@ -92,7 +192,7 @@ func (mysql *Mysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-main-conf",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel},
 		},
 		Data: map[string]string{"my.cnf": "!include /etc/my.cnf\n!includedir /etc/my-extra.d\n"}}
 }
@@ -105,7 +205,7 @@ func (mysql *Mysql) buildSystemMysqlExtraConfigConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-extra-conf",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel},
 		},
 		Data: map[string]string{"mysql-charset.cnf": "[client]\ndefault-character-set = utf8\n\n[mysql]\ndefault-character-set = utf8\n\n[mysqld]\ncharacter-set-server = utf8\ncollation-server = utf8_unicode_ci\n"}}
 }
@@ -118,7 +218,7 @@ func (mysql *Mysql) buildSystemMysqlPersistentVolumeClaim() *v1.PersistentVolume
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-storage",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -135,7 +235,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-mysql",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": "${APP_LABEL}"},
+			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -149,7 +249,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 			Selector: map[string]string{"deploymentConfig": "system-mysql"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": "${APP_LABEL}", "deploymentConfig": "system-mysql"},
+					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel, "deploymentConfig": "system-mysql"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
@@ -172,7 +272,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "system-mysql",
-							Image: "${MYSQL_IMAGE}",
+							Image: mysql.Options.image,
 							Ports: []v1.ContainerPort{
 								v1.ContainerPort{HostPort: 0,
 									ContainerPort: 3306,
@@ -181,16 +281,16 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 							Env: []v1.EnvVar{
 								v1.EnvVar{
 									Name:  "MYSQL_USER",
-									Value: "${MYSQL_USER}",
+									Value: mysql.Options.user,
 								}, v1.EnvVar{
 									Name:  "MYSQL_PASSWORD",
-									Value: "${MYSQL_PASSWORD}",
+									Value: mysql.Options.password,
 								}, v1.EnvVar{
 									Name:  "MYSQL_DATABASE",
-									Value: "${MYSQL_DATABASE}",
+									Value: mysql.Options.databaseName,
 								}, v1.EnvVar{
 									Name:  "MYSQL_ROOT_PASSWORD",
-									Value: "${MYSQL_ROOT_PASSWORD}",
+									Value: mysql.Options.rootPassword,
 								}, v1.EnvVar{
 									Name:  "MYSQL_LOWER_CASE_TABLE_NAMES",
 									Value: "1",

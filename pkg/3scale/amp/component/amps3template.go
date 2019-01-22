@@ -9,6 +9,11 @@ type AmpS3Template struct {
 	components []Component
 }
 
+type AmpS3TemplateOptions struct {
+	ampTemplateOptions AmpTemplateOptions
+	s3Options          S3Options
+}
+
 func NewAmpS3Template(options []string) *AmpS3Template {
 	components := []Component{
 		NewAmpTemplate(options),

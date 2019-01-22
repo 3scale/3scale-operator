@@ -1,9 +1,11 @@
 package component
 
 import (
+	"fmt"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -12,6 +14,70 @@ import (
 
 type Zync struct {
 	options []string
+	Options *ZyncOptions
+}
+
+type ZyncOptions struct {
+	appLabel            string
+	authenticationToken string
+	databasePassword    string
+	secretKeyBase       string
+}
+
+type ZyncOptionsBuilder struct {
+	options ZyncOptions
+}
+
+func (z *ZyncOptionsBuilder) AppLabel(appLabel string) {
+	z.options.appLabel = appLabel
+}
+
+func (z *ZyncOptionsBuilder) AuthenticationToken(authToken string) {
+	z.options.authenticationToken = authToken
+}
+
+func (z *ZyncOptionsBuilder) DatabasePassword(dbPass string) {
+	z.options.databasePassword = dbPass
+}
+
+func (z *ZyncOptionsBuilder) SecretKeyBase(secretKeyBase string) {
+	z.options.secretKeyBase = secretKeyBase
+}
+
+func (z *ZyncOptionsBuilder) Build() (*ZyncOptions, error) {
+	if z.options.appLabel == "" {
+		return nil, fmt.Errorf("no AppLabel has been provided")
+	}
+	if z.options.authenticationToken == "" {
+		return nil, fmt.Errorf("no Authentication Token has been provided")
+	}
+	if z.options.databasePassword == "" {
+		return nil, fmt.Errorf("no Database Password has been provided")
+	}
+	if z.options.secretKeyBase == "" {
+		return nil, fmt.Errorf("no Secret Key Base has been provided")
+	}
+
+	return &z.options, nil
+}
+
+type ZyncOptionsProvider interface {
+	GetZyncOptions() *ZyncOptions
+}
+type CLIZyncOptionsProvider struct {
+}
+
+func (o *CLIZyncOptionsProvider) GetZyncOptions() (*ZyncOptions, error) {
+	zob := ZyncOptionsBuilder{}
+	zob.AppLabel("${APP_LABEL}")
+	zob.AuthenticationToken("${ZYNC_AUTHENTICATION_TOKEN}")
+	zob.DatabasePassword("${ZYNC_DATABASE_PASSWORD}")
+	zob.SecretKeyBase("${ZYNC_SECRET_KEY_BASE}")
+	res, err := zob.Build()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Zync Options - %s", err)
+	}
+	return res, nil
 }
 
 func NewZync(options []string) *Zync {
@@ -22,8 +88,30 @@ func NewZync(options []string) *Zync {
 }
 
 func (zync *Zync) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
+	// TODO move this outside this specific method
+	optionsProvider := CLIZyncOptionsProvider{}
+	zyncOpts, err := optionsProvider.GetZyncOptions()
+	_ = err
+	zync.Options = zyncOpts
 	zync.buildParameters(template)
-	zync.buildObjects(template)
+	zync.addObjectsIntoTemplate(template)
+}
+
+func (zync *Zync) buildObjects() []runtime.RawExtension {
+	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
+	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
+	zyncService := zync.buildZyncService()
+	zyncDatabaseService := zync.buildZyncDatabaseService()
+	zyncSecret := zync.buildZyncSecret()
+
+	objects := []runtime.RawExtension{
+		runtime.RawExtension{Object: zyncDeploymentConfig},
+		runtime.RawExtension{Object: zyncDatabaseDeploymentConfig},
+		runtime.RawExtension{Object: zyncService},
+		runtime.RawExtension{Object: zyncDatabaseService},
+		runtime.RawExtension{Object: zyncSecret},
+	}
+	return objects
 }
 
 func (zync *Zync) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -56,20 +144,13 @@ func (zync *Zync) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (zync *Zync) buildObjects(template *templatev1.Template) {
-	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
-	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
-	zyncService := zync.buildZyncService()
-	zyncDatabaseService := zync.buildZyncDatabaseService()
-	zyncSecret := zync.buildZyncSecret()
+func (zync *Zync) GetObjects() ([]runtime.RawExtension, error) {
+	objects := zync.buildObjects()
+	return objects, nil
+}
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: zyncDeploymentConfig},
-		runtime.RawExtension{Object: zyncDatabaseDeploymentConfig},
-		runtime.RawExtension{Object: zyncService},
-		runtime.RawExtension{Object: zyncDatabaseService},
-		runtime.RawExtension{Object: zyncSecret},
-	}
+func (zync *Zync) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := zync.buildObjects()
 	template.Objects = append(template.Objects, objects...)
 }
 
@@ -82,15 +163,15 @@ func (zync *Zync) buildZyncSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              zync.Options.appLabel,
 				"3scale.component": "zync",
 			},
 		},
 		StringData: map[string]string{
-			"SECRET_KEY_BASE":           "${ZYNC_SECRET_KEY_BASE}",
-			"DATABASE_URL":              "postgresql://zync:${ZYNC_DATABASE_PASSWORD}@zync-database:5432/zync_production",
-			"ZYNC_DATABASE_PASSWORD":    "${ZYNC_DATABASE_PASSWORD}",
-			"ZYNC_AUTHENTICATION_TOKEN": "${ZYNC_AUTHENTICATION_TOKEN}",
+			"SECRET_KEY_BASE":           zync.Options.secretKeyBase,
+			"DATABASE_URL":              "postgresql://zync:" + zync.Options.databasePassword + "@zync-database:5432/zync_production",
+			"ZYNC_DATABASE_PASSWORD":    zync.Options.databasePassword,
+			"ZYNC_AUTHENTICATION_TOKEN": zync.Options.authenticationToken,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -190,7 +271,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              zync.Options.appLabel,
 				"3scale.component": "zync",
 			},
 		},
@@ -219,7 +300,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app":              "${APP_LABEL}",
+						"app":              zync.Options.appLabel,
 						"deploymentConfig": "zync",
 						"3scale.component": "zync",
 					},
@@ -356,7 +437,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync-database",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      zync.Options.appLabel,
 				"3scale.component":         "zync",
 				"3scale.component-element": "database",
 			},
@@ -389,7 +470,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"deploymentConfig":         "zync-database",
-						"app":                      "${APP_LABEL}",
+						"app":                      zync.Options.appLabel,
 						"3scale.component":         "zync",
 						"3scale.component-element": "database",
 					},
@@ -486,7 +567,7 @@ func (zync *Zync) buildZyncService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"app":              "${APP_LABEL}",
+				"app":              zync.Options.appLabel,
 				"3scale.component": "zync",
 			},
 		},
@@ -513,7 +594,7 @@ func (zync *Zync) buildZyncDatabaseService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync-database",
 			Labels: map[string]string{
-				"app":                      "${APP_LABEL}",
+				"app":                      zync.Options.appLabel,
 				"3scale.component":         "zync",
 				"3scale.component-element": "database",
 			},
