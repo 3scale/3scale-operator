@@ -150,6 +150,14 @@ type AMPSpec struct {
 	S3Version bool `json:"s3version"`
 
 	HAVersion bool `json:"haversion"`
+
+	// S3 optional configuration TODO redo this
+	// +optional
+	AwsAccessKeyId     *string `json:"awsAccessKeyId, omitempty"`
+	AwsSecretAccessKey *string `json:"awsSecretAccessKey, omitempty"`
+	AwsRegion          *string `json:"awsRegion, omitempty"`
+	AwsBucket          *string `json:"awsBucket, omitempty"`
+	FileUploadStorage  *string `json:"fileUploadStorage, omitempty"`
 }
 
 // AMPStatus defines the observed state of AMP
