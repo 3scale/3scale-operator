@@ -10,6 +10,14 @@
   version = "v0.34.0"
 
 [[projects]]
+  digest = "1:75d2b55b13298745ec068057251d05d65bbae0a668201fe45ad6986551a55601"
+  name = "github.com/BurntSushi/toml"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005"
+  version = "v0.3.1"
+
+[[projects]]
   digest = "1:d8ebbd207f3d3266d4423ce4860c9f3794956306ded6c7ba312ecc69cdfbf04c"
   name = "github.com/PuerkitoBio/purell"
   packages = ["."]
@@ -107,6 +115,14 @@
   pruneopts = "NT"
   revision = "1d29f06aebd59ccdf11ae04aa0334ded96e2d909"
   version = "v0.18.0"
+
+[[projects]]
+  digest = "1:46f80ac86226d204a25df41dd705b4d3790511c7f7f77b82690ee84079629a58"
+  name = "github.com/gobuffalo/envy"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "f3b98d4da2fa434517f47f615e217fa72ff2c51e"
+  version = "v1.6.12"
 
 [[projects]]
   digest = "1:932970e69f16e127aa0653b8263ae588cd127fa53273e19ba44332902c9826f2"
@@ -243,12 +259,28 @@
   version = "v1.0"
 
 [[projects]]
+  digest = "1:f5b9328966ccea0970b1d15075698eff0ddb3e75889560aad2e9f76b289b536a"
+  name = "github.com/joho/godotenv"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "23d116af351c84513e1946b527c88823e476be13"
+  version = "v1.3.0"
+
+[[projects]]
   digest = "1:1d39c063244ad17c4b18e8da1551163b6ffb52bd1640a49a8ec5c3b7bf4dbd5d"
   name = "github.com/json-iterator/go"
   packages = ["."]
   pruneopts = "NT"
   revision = "1624edc4454b8682399def8740d46db5e4362ba4"
   version = "v1.1.5"
+
+[[projects]]
+  digest = "1:4059c14e87a2de3a434430340521b5feece186c1469eff0834c29a63870de3ed"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
@@ -277,6 +309,14 @@
   ]
   pruneopts = "NT"
   revision = "60711f1a8329503b04e1c88535f419d0bb440bff"
+
+[[projects]]
+  digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
+  name = "github.com/markbates/inflect"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "24b83195037b3bc61fcda2d28b7b0518bce293b6"
+  version = "v1.0.4"
 
 [[projects]]
   branch = "master"
@@ -345,7 +385,15 @@
   digest = "1:b186c2fcf87d05c5129ad0d89ea062853b0bdf6d6bca1ed4a22157962f2ad8dd"
   name = "github.com/operator-framework/operator-sdk"
   packages = [
+    "internal/util/fileutil",
+    "internal/util/k8sutil",
     "pkg/k8sutil",
+    "pkg/leader",
+    "pkg/ready",
+    "pkg/scaffold",
+    "pkg/scaffold/input",
+    "pkg/test",
+    "pkg/test/e2eutil",
     "version",
   ]
   pruneopts = "NT"
@@ -383,6 +431,26 @@
   pruneopts = "NT"
   revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
   version = "v2.0.1"
+
+[[projects]]
+  digest = "1:6cdac3ea88790d572bf5d6a2b95e1e0c6b170d6b1210d24819bf5a2a78559fa0"
+  name = "github.com/rogpeppe/go-internal"
+  packages = [
+    "modfile",
+    "module",
+    "semver",
+  ]
+  pruneopts = "NT"
+  revision = "68d1cb014f030acd0f10ac553801e43c0e5da629"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:1f84287a4ca2c8f729d8155ba4c45915f5854ebbd214e406070779753da68422"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "e1e72e9de974bd926e5c56f83753fba2df402ce5"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:a3d234acd819fde4b1875e9e9e68a1d8368115983a74ec23c379973a8f179f07"
@@ -644,6 +712,17 @@
   revision = "2d6f90ab1293a1fb871cf149423ebb72aa7423aa"
 
 [[projects]]
+  digest = "1:117a407949aaaad9f7fbe3da8d6c2055f2c223ac0cbebd39f47ff71899622a91"
+  name = "k8s.io/apiextensions-apiserver"
+  packages = [
+    "pkg/apis/apiextensions",
+    "pkg/apis/apiextensions/v1beta1",
+    "pkg/client/clientset/clientset/scheme",
+  ]
+  pruneopts = "NT"
+  revision = "408db4a50408e2149acbd657bceb2480c13cb0a4"
+
+[[projects]]
   digest = "1:b07bf863262aae765494d60f0d524483f211b29f9bb27d445a79c13af8676bf2"
   name = "k8s.io/apimachinery"
   packages = [
@@ -698,6 +777,7 @@
   name = "k8s.io/client-go"
   packages = [
     "discovery",
+    "discovery/cached",
     "dynamic",
     "kubernetes",
     "kubernetes/scheme",
@@ -892,6 +972,10 @@
     "github.com/openshift/api/template/v1",
     "github.com/openshift/api/user/v1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
+    "github.com/operator-framework/operator-sdk/pkg/leader",
+    "github.com/operator-framework/operator-sdk/pkg/ready",
+    "github.com/operator-framework/operator-sdk/pkg/test",
+    "github.com/operator-framework/operator-sdk/pkg/test/e2eutil",
     "github.com/operator-framework/operator-sdk/version",
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/cobra",
