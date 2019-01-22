@@ -158,6 +158,15 @@ type AMPSpec struct {
 	AwsRegion          *string `json:"awsRegion, omitempty"`
 	AwsBucket          *string `json:"awsBucket, omitempty"`
 	FileUploadStorage  *string `json:"fileUploadStorage, omitempty"`
+
+	// HA optional configuration TODO redo this
+	// +optional
+	ApicastProductionRedisURL   *string `json:"apicastProductionRedisURL, omitempty"`
+	ApicastStagingRedisURL      *string `json:"apicastStagingRedisURL, omitempty"`
+	BackendRedisQueuesEndpoint  *string `json:"backendRedisQueuesEndpoint, omitempty"`
+	BackendRedisStorageEndpoint *string `json:"backendRedisStorageEndpoint, omitempty"`
+	SystemDatabaseURL           *string `json:"systemDatabaseURL, omitempty"`
+	SystemRedisURL              *string `json:"systemRedisURL, omitempty"`
 }
 
 // AMPStatus defines the observed state of AMP

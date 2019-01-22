@@ -127,14 +127,26 @@ func (ha *HighAvailability) AssembleIntoTemplate(template *templatev1.Template, 
 
 // TODO check how to postprocess independently of templates
 func (ha *HighAvailability) PostProcess(template *templatev1.Template, otherComponents []Component) {
+	res := template.Objects
 	ha.setHAOptions() // TODO move this outside
-	ha.increaseReplicasNumber(template)
-	ha.deleteInternalDatabasesObjects(template)
+	ha.increaseReplicasNumber(res)
+	res = ha.deleteInternalDatabasesObjects(res)
+	ha.updateDatabasesURLS(res)
 	ha.deleteDBRelatedParameters(template)
-	ha.updateDatabasesURLS(template)
+
+	template.Objects = res
 }
 
-func (ha *HighAvailability) increaseReplicasNumber(template *templatev1.Template) {
+func (ha *HighAvailability) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawExtension {
+	res := objects
+	ha.increaseReplicasNumber(res)
+	res = ha.deleteInternalDatabasesObjects(res)
+	ha.updateDatabasesURLS(res)
+
+	return res
+}
+
+func (ha *HighAvailability) increaseReplicasNumber(objects []runtime.RawExtension) {
 	// We do not increase the number of replicas in database DeploymentConfigs
 	excludedDeploymentConfigs := map[string]bool{
 		"system-memcache": true,
@@ -142,7 +154,7 @@ func (ha *HighAvailability) increaseReplicasNumber(template *templatev1.Template
 		"zync-database":   true,
 	}
 
-	for _, rawExtension := range template.Objects {
+	for _, rawExtension := range objects {
 		obj := rawExtension.Object
 		dc, ok := obj.(*appsv1.DeploymentConfig)
 		if ok {
@@ -153,37 +165,37 @@ func (ha *HighAvailability) increaseReplicasNumber(template *templatev1.Template
 	}
 }
 
-func (ha *HighAvailability) deleteInternalDatabasesObjects(template *templatev1.Template) {
+func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []runtime.RawExtension) []runtime.RawExtension {
 	keepObjects := []runtime.RawExtension{}
 
-	for rawExtIdx, rawExtension := range template.Objects {
+	for rawExtIdx, rawExtension := range objects {
 		switch obj := (rawExtension.Object).(type) {
 		case *appsv1.DeploymentConfig:
 			if _, ok := highlyAvailableExternalDatabases[obj.ObjectMeta.Name]; !ok {
 				// We create a new array and add to it the elements that will
 				//NOT have to be deleted
-				keepObjects = append(keepObjects, template.Objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[rawExtIdx])
 			}
 		case *v1.Service:
 			if _, ok := highlyAvailableExternalDatabases[obj.ObjectMeta.Name]; !ok {
-				keepObjects = append(keepObjects, template.Objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[rawExtIdx])
 			}
 		case *v1.PersistentVolumeClaim:
 			if obj.ObjectMeta.Name != "backend-redis-storage" && obj.ObjectMeta.Name != "system-redis-storage" &&
 				obj.ObjectMeta.Name != "mysql-storage" {
-				keepObjects = append(keepObjects, template.Objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[rawExtIdx])
 			}
 		case *v1.ConfigMap:
 			if obj.ObjectMeta.Name != "mysql-main-conf" && obj.ObjectMeta.Name != "mysql-extra-conf" &&
 				obj.ObjectMeta.Name != "redis-config" {
-				keepObjects = append(keepObjects, template.Objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[rawExtIdx])
 			}
 		default:
-			keepObjects = append(keepObjects, template.Objects[rawExtIdx])
+			keepObjects = append(keepObjects, objects[rawExtIdx])
 		}
 	}
 
-	template.Objects = keepObjects
+	return keepObjects
 }
 
 func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Template) {
@@ -207,9 +219,9 @@ func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Templ
 	template.Parameters = keepParams
 }
 
-func (ha *HighAvailability) updateDatabasesURLS(template *templatev1.Template) {
-	for rawExtIdx := range template.Objects {
-		obj := template.Objects[rawExtIdx].Object
+func (ha *HighAvailability) updateDatabasesURLS(objects []runtime.RawExtension) {
+	for rawExtIdx := range objects {
+		obj := objects[rawExtIdx].Object
 		secret, ok := obj.(*v1.Secret)
 		if ok {
 			switch secret.Name {

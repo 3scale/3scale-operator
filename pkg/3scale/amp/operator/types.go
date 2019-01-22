@@ -51,3 +51,7 @@ type OperatorProductizedOptionsProvider struct {
 type OperatorS3OptionsProvider struct {
 	AmpSpec *ampv1alpha1.AMPSpec
 }
+
+type OperatorHighAvailabilityOptionsProvider struct {
+	AmpSpec *ampv1alpha1.AMPSpec
+}

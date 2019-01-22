@@ -281,6 +281,16 @@ func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) 
 		objects = s.PostProcessObjects(objects)
 	}
 
+	if cr.Spec.HAVersion {
+		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{AmpSpec: &cr.Spec}
+		opts, err := optsProvider.GetHighAvailabilityOptions()
+		if err != nil {
+			return nil, err
+		}
+		h := component.HighAvailability{Options: opts}
+		objects = h.PostProcessObjects(objects)
+	}
+
 	return objects, nil
 }
 
