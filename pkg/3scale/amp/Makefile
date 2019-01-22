@@ -1,8 +1,6 @@
 .DEFAULT_GOAL := help
 SHELL := bash -eo pipefail
 
-MAKEFLAGS := -j $(shell nproc)
-
 templates = amp.yml amp-s3.yml amp-eval.yml amp-eval-s3.yml amp-ha.yml
 
 targets = $(foreach template,$(templates),./auto-generated-templates/amp/$(template) ./auto-generated-templates/productized_templates/amp/$(template))
