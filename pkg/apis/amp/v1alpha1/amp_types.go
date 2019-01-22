@@ -138,6 +138,14 @@ type AMPSpec struct {
 
 	// +optional
 	WildcardPolicy *string `json:"wildcardPolicy,omitempty"`
+
+	Productized bool `json:"productized"`
+
+	Evaluation bool `json:"evaluation"`
+
+	S3Version bool `json:"s3version"`
+
+	HAVersion bool `json:"haversion"`
 }
 
 // AMPStatus defines the observed state of AMP
@@ -185,7 +193,6 @@ func (amp *AMP) SetDefaults() bool {
 		defaultTenantName := "3scale"
 		ampSpec.TenantName = &defaultTenantName
 		changed = true
-
 	}
 
 	if ampSpec.RwxStorageClass == nil { // Needed??
