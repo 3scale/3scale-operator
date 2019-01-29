@@ -23,6 +23,11 @@ func NewProductized(options []string) *Productized {
 }
 
 type ProductizedOptions struct {
+	productizedNonRequiredOptions
+	productizedRequiredOptions
+}
+
+type productizedRequiredOptions struct {
 	ampRelease     string
 	apicastImage   string
 	backendImage   string
@@ -30,6 +35,9 @@ type ProductizedOptions struct {
 	systemImage    string
 	zyncImage      string
 	memcachedImage string
+}
+
+type productizedNonRequiredOptions struct {
 }
 
 type ProductizedOptionsBuilder struct {
@@ -65,28 +73,42 @@ func (productized *ProductizedOptionsBuilder) MemcachedImage(memcachedImage stri
 }
 
 func (productized *ProductizedOptionsBuilder) Build() (*ProductizedOptions, error) {
+	err := productized.setRequiredOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	productized.setNonRequiredOptions()
+
+	return &productized.options, nil
+}
+
+func (productized *ProductizedOptionsBuilder) setRequiredOptions() error {
 	if productized.options.ampRelease == "" {
-		return nil, fmt.Errorf("no AMP release has been provided")
+		return fmt.Errorf("no AMP release has been provided")
 	}
 	if productized.options.apicastImage == "" {
-		return nil, fmt.Errorf("no Apicast image has been provided")
+		return fmt.Errorf("no Apicast image has been provided")
 	}
 	if productized.options.backendImage == "" {
-		return nil, fmt.Errorf("no Backend image has been provided")
+		return fmt.Errorf("no Backend image has been provided")
 	}
 	if productized.options.routerImage == "" {
-		return nil, fmt.Errorf("no Router image has been provided")
+		return fmt.Errorf("no Router image has been provided")
 	}
 	if productized.options.systemImage == "" {
-		return nil, fmt.Errorf("no System image has been provided")
+		return fmt.Errorf("no System image has been provided")
 	}
 	if productized.options.zyncImage == "" {
-		return nil, fmt.Errorf("no Zync image has been provided")
+		return fmt.Errorf("no Zync image has been provided")
 	}
 	if productized.options.memcachedImage == "" {
-		return nil, fmt.Errorf("no Memcached image has been provided")
+		return fmt.Errorf("no Memcached image has been provided")
 	}
-	return &productized.options, nil
+	return nil
+}
+
+func (productized *ProductizedOptionsBuilder) setNonRequiredOptions() {
 }
 
 type ProductizedOptionsProvider interface {

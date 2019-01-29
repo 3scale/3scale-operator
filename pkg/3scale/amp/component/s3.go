@@ -16,11 +16,19 @@ type S3 struct {
 }
 
 type S3Options struct {
+	s3NonRequiredOptions
+	s3RequiredOptions
+}
+
+type s3RequiredOptions struct {
 	awsAccessKeyId     string
 	awsSecretAccessKey string
 	awsRegion          string
 	awsBucket          string
 	fileUploadStorage  string
+}
+
+type s3NonRequiredOptions struct {
 }
 
 func NewS3(options []string) *S3 {
@@ -55,23 +63,39 @@ func (s3 *S3OptionsBuilder) FileUploadStorage(fileUploadStorage string) {
 }
 
 func (s3 *S3OptionsBuilder) Build() (*S3Options, error) {
-	if s3.options.awsAccessKeyId == "" {
-		return nil, fmt.Errorf("no AWS access key id has been provided")
-	}
-	if s3.options.awsSecretAccessKey == "" {
-		return nil, fmt.Errorf("no AWS secret access key has been provided")
-	}
-	if s3.options.awsRegion == "" {
-		return nil, fmt.Errorf("no AWS region has been provided")
-	}
-	if s3.options.awsBucket == "" {
-		return nil, fmt.Errorf("no AWS bucket has been provided")
-	}
-	if s3.options.fileUploadStorage == "" {
-		return nil, fmt.Errorf("no file upload storage has been provided")
+	err := s3.setRequiredOptions()
+	if err != nil {
+		return nil, err
 	}
 
+	s3.setNonRequiredOptions()
+
 	return &s3.options, nil
+
+}
+
+func (s3 *S3OptionsBuilder) setRequiredOptions() error {
+	if s3.options.awsAccessKeyId == "" {
+		return fmt.Errorf("no AWS access key id has been provided")
+	}
+	if s3.options.awsSecretAccessKey == "" {
+		return fmt.Errorf("no AWS secret access key has been provided")
+	}
+	if s3.options.awsRegion == "" {
+		return fmt.Errorf("no AWS region has been provided")
+	}
+	if s3.options.awsBucket == "" {
+		return fmt.Errorf("no AWS bucket has been provided")
+	}
+	if s3.options.fileUploadStorage == "" {
+		return fmt.Errorf("no file upload storage has been provided")
+	}
+
+	return nil
+}
+
+func (s3 *S3OptionsBuilder) setNonRequiredOptions() {
+
 }
 
 type S3OptionsProvider interface {

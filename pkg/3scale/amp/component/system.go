@@ -20,6 +20,11 @@ type System struct {
 }
 
 type SystemOptions struct {
+	systemNonRequiredOptions
+	systemRequiredOptions
+}
+
+type systemRequiredOptions struct {
 	adminAccessToken    string
 	adminPassword       string
 	adminUsername       string
@@ -40,6 +45,15 @@ type SystemOptions struct {
 	mysqlDatabaseName   string
 	mysqlRootPassword   string
 	storageClassName    *string // should this be a string or *string? check what would be the difference between passing a "" and a nil pointer in the PersistentVolumeClaim corresponding field
+}
+
+type systemNonRequiredOptions struct {
+	databaseURL                            *string
+	memcachedURL                           *string
+	eventHooksURL                          *string
+	redisURL                               *string
+	apicastSystemMasterProxyConfigEndpoint *string
+	apicastSystemMasterBaseURL             *string
 }
 
 func NewSystem(options []string) *System {
@@ -133,59 +147,128 @@ func (s *SystemOptionsBuilder) StorageClassName(storageClassName *string) {
 	s.options.storageClassName = storageClassName
 }
 
+func (s *SystemOptionsBuilder) DatabaseURL(dbURL string) {
+	s.options.databaseURL = &dbURL
+}
+
+func (s *SystemOptionsBuilder) MemcachedURL(memcachedURL string) {
+	s.options.memcachedURL = &memcachedURL
+}
+
+func (s *SystemOptionsBuilder) EventHooksURL(eventHooksURL string) {
+	s.options.eventHooksURL = &eventHooksURL
+}
+
+func (s *SystemOptionsBuilder) RedisURL(redisURL string) {
+	s.options.redisURL = &redisURL
+}
+
+func (s *SystemOptionsBuilder) ApicastSystemMasterProxyConfigEndpoint(endpoint string) {
+	s.options.apicastSystemMasterProxyConfigEndpoint = &endpoint
+}
+
+func (s *SystemOptionsBuilder) ApicastSystemMasterBaseURL(url string) {
+	s.options.apicastSystemMasterBaseURL = &url
+}
+
 func (s *SystemOptionsBuilder) Build() (*SystemOptions, error) {
+	err := s.setRequiredOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	s.setNonRequiredOptions()
+
+	return &s.options, nil
+}
+
+func (s *SystemOptionsBuilder) setRequiredOptions() error {
 	if s.options.adminAccessToken == "" {
-		return nil, fmt.Errorf("no admin access token has been provided")
+		return fmt.Errorf("no admin access token has been provided")
 	}
 	if s.options.adminPassword == "" {
-		return nil, fmt.Errorf("no admin password has been provided")
+		return fmt.Errorf("no admin password has been provided")
 	}
 	if s.options.adminUsername == "" {
-		return nil, fmt.Errorf("no admin username has been provided")
+		return fmt.Errorf("no admin username has been provided")
 	}
 	if s.options.ampRelease == "" {
-		return nil, fmt.Errorf("no AMP release has been provided")
+		return fmt.Errorf("no AMP release has been provided")
 	}
 	if s.options.apicastAccessToken == "" {
-		return nil, fmt.Errorf("no apicast access token has been provided")
+		return fmt.Errorf("no apicast access token has been provided")
 	}
 	if s.options.apicastRegistryURL == "" {
-		return nil, fmt.Errorf("no apicast registry url has been provided")
+		return fmt.Errorf("no apicast registry url has been provided")
 	}
 	if s.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
+		return fmt.Errorf("no AppLabel has been provided")
 	}
 	if s.options.masterAccessToken == "" {
-		return nil, fmt.Errorf("no master access token has been provided")
+		return fmt.Errorf("no master access token has been provided")
 	}
 	if s.options.masterName == "" {
-		return nil, fmt.Errorf("no master name has been provided")
+		return fmt.Errorf("no master name has been provided")
 	}
 	if s.options.masterUsername == "" {
-		return nil, fmt.Errorf("no master username has been provided")
+		return fmt.Errorf("no master username has been provided")
 	}
 	if s.options.masterPassword == "" {
-		return nil, fmt.Errorf("no master password has been provided")
+		return fmt.Errorf("no master password has been provided")
 	}
 	if s.options.appSecretKeyBase == "" {
-		return nil, fmt.Errorf("no app secret keybase has been provided")
+		return fmt.Errorf("no app secret keybase has been provided")
 	}
 	if s.options.backendSharedSecret == "" {
-		return nil, fmt.Errorf("no backend shared secret has been provided")
+		return fmt.Errorf("no backend shared secret has been provided")
 	}
 	if s.options.tenantName == "" {
-		return nil, fmt.Errorf("no tenant name has been provided")
+		return fmt.Errorf("no tenant name has been provided")
 	}
 	if s.options.wildcardDomain == "" {
-		return nil, fmt.Errorf("no wildcard domain has been provided")
+		return fmt.Errorf("no wildcard domain has been provided")
 	}
 	if s.options.mysqlDatabaseName == "" {
-		return nil, fmt.Errorf("no mysql database name has been provided")
+		return fmt.Errorf("no mysql database name has been provided")
 	}
 	if s.options.mysqlRootPassword == "" {
-		return nil, fmt.Errorf("no mysql root password has been provided")
+		return fmt.Errorf("no mysql root password has been provided")
 	}
-	return &s.options, nil
+
+	return nil
+}
+
+func (s *SystemOptionsBuilder) setNonRequiredOptions() {
+	defaultDatabaseURL := "mysql2://root:" + s.options.mysqlRootPassword + "@system-mysql/" + s.options.mysqlDatabaseName
+	defaultMemcachedURL := "system-memcache:11211"
+	defaultEventHooksURL := "http://system-master:3000/master/events/import"
+	defaultRedisURL := "redis://system-redis:6379/1"
+	defaultApicastSystemMasterProxyConfigEndpoint := "http://" + s.options.apicastAccessToken + "@system-master:3000/master/api/proxy/configs"
+	defaultApicastSystemMasterBaseURL := "http://" + s.options.apicastAccessToken + "@system-master:3000"
+
+	if s.options.databaseURL == nil {
+		s.options.databaseURL = &defaultDatabaseURL
+	}
+
+	if s.options.memcachedURL == nil {
+		s.options.memcachedURL = &defaultMemcachedURL
+	}
+
+	if s.options.eventHooksURL == nil {
+		s.options.eventHooksURL = &defaultEventHooksURL
+	}
+
+	if s.options.redisURL == nil {
+		s.options.redisURL = &defaultRedisURL
+	}
+
+	if s.options.apicastSystemMasterProxyConfigEndpoint == nil {
+		s.options.apicastSystemMasterProxyConfigEndpoint = &defaultApicastSystemMasterProxyConfigEndpoint
+	}
+
+	if s.options.apicastSystemMasterBaseURL == nil {
+		s.options.apicastSystemMasterBaseURL = &defaultApicastSystemMasterBaseURL
+	}
 }
 
 type SystemOptionsProvider interface {
@@ -556,7 +639,7 @@ func (system *System) buildSystemDatabaseSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			"URL": "mysql2://root:" + system.Options.mysqlRootPassword + "@system-mysql/" + system.Options.mysqlDatabaseName,
+			"URL": *system.Options.databaseURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -576,7 +659,7 @@ func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			"SERVERS": "system-memcache:11211",
+			"SERVERS": *system.Options.memcachedURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -617,7 +700,7 @@ func (system *System) buildSystemEventsHookSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			"URL":      "http://system-master:3000/master/events/import",
+			"URL":      *system.Options.eventHooksURL,
 			"PASSWORD": system.Options.backendSharedSecret,
 		},
 		Type: v1.SecretTypeOpaque,
@@ -638,7 +721,7 @@ func (system *System) buildSystemRedisSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			"URL": "redis://system-redis:6379/1",
+			"URL": *system.Options.redisURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -704,8 +787,8 @@ func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			"PROXY_CONFIGS_ENDPOINT": "http://" + system.Options.apicastAccessToken + "@system-master:3000/master/api/proxy/configs",
-			"BASE_URL":               "http://" + system.Options.apicastAccessToken + "@system-master:3000",
+			"PROXY_CONFIGS_ENDPOINT": *system.Options.apicastSystemMasterProxyConfigEndpoint,
+			"BASE_URL":               *system.Options.apicastSystemMasterBaseURL,
 			"ACCESS_TOKEN":           system.Options.apicastAccessToken,
 		},
 		Type: v1.SecretTypeOpaque,

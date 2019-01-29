@@ -13,17 +13,55 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	BackendSecretBackendRedisSecretName                    = "backend-redis"
+	BackendSecretBackendRedisStorageURLFieldName           = "REDIS_STORAGE_URL"
+	BackendSecretBackendRedisQueuesURLFieldName            = "REDIS_QUEUES_URL"
+	BackendSecretBackendRedisStorageSentinelHostsFieldName = "REDIS_STORAGE_SENTINEL_HOSTS"
+	BackendSecretBackendRedisStorageSentinelRoleFieldName  = "REDIS_STORAGE_SENTINEL_ROLE"
+	BackendSecretBackendRedisQueuesSentinelHostsFieldName  = "REDIS_QUEUES_SENTINEL_HOSTS"
+	BackendSecretBackendRedisQueuesSentinelRoleFieldName   = "REDIS_QUEUES_SENTINEL_ROLE"
+)
+
+const (
+	BackendSecretInternalApiSecretName        = "backend-internal-api"
+	BackendSecretInternalApiUsernameFieldName = "username"
+	BackendSecretInternalApiPasswordFieldName = "password"
+)
+
+const (
+	BackendSecretBackendListenerSecretName               = "backend-listener"
+	BackendSecretBackendListenerServiceEndpointFieldName = "service_endpoint"
+	BackendSecretBackendListenerRouteEndpointFieldName   = "route_endpoint"
+)
+
 type Backend struct {
 	options []string
 	Options *BackendOptions
 }
 
-type BackendOptions struct {
+type backendRequiredOptions struct {
 	appLabel              string
 	systemBackendUsername string
 	systemBackendPassword string
 	tenantName            string
 	wildcardDomain        string
+}
+
+type backendNonRequiredOptions struct {
+	serviceEndpoint      *string
+	routeEndpoint        *string
+	storageURL           *string
+	queuesURL            *string
+	storageSentinelHosts *string
+	storageSentinelRole  *string
+	queuesSentinelHosts  *string
+	queuesSentinelRole   *string
+}
+
+type BackendOptions struct {
+	backendNonRequiredOptions
+	backendRequiredOptions
 }
 
 func NewBackend(options []string) *Backend {
@@ -57,24 +95,105 @@ func (m *BackendOptionsBuilder) WildcardDomain(wildcardDomain string) {
 	m.options.wildcardDomain = wildcardDomain
 }
 
+func (m *BackendOptionsBuilder) ListenerServiceEndpoint(serviceEndpoint string) {
+	m.options.serviceEndpoint = &serviceEndpoint
+}
+
+func (m *BackendOptionsBuilder) ListenerRouteEndpoint(routeEndpoint string) {
+	m.options.routeEndpoint = &routeEndpoint
+}
+
+func (m *BackendOptionsBuilder) RedisStorageURL(url string) {
+	m.options.storageURL = &url
+}
+
+func (m *BackendOptionsBuilder) RedisQueuesURL(url string) {
+	m.options.queuesURL = &url
+}
+
+func (m *BackendOptionsBuilder) RedisStorageSentinelHosts(hosts string) {
+	m.options.storageSentinelHosts = &hosts
+}
+
+func (m *BackendOptionsBuilder) RedisStorageSentinelRole(role string) {
+	m.options.storageSentinelRole = &role
+}
+
+func (m *BackendOptionsBuilder) RedisQueuesSentinelHosts(hosts string) {
+	m.options.queuesSentinelHosts = &hosts
+}
+
+func (m *BackendOptionsBuilder) RedisQueuesSentinelRole(role string) {
+	m.options.queuesSentinelRole = &role
+}
+
 func (m *BackendOptionsBuilder) Build() (*BackendOptions, error) {
-	if m.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if m.options.systemBackendUsername == "" {
-		return nil, fmt.Errorf("no System's Backend Username has been provided")
-	}
-	if m.options.systemBackendPassword == "" {
-		return nil, fmt.Errorf("no System's Backend Password has been provided")
-	}
-	if m.options.tenantName == "" {
-		return nil, fmt.Errorf("no tenant name has been provided")
-	}
-	if m.options.wildcardDomain == "" {
-		return nil, fmt.Errorf("no wildcard domain has been provided")
+	err := m.setRequiredOptions()
+	if err != nil {
+		return nil, err
 	}
 
+	m.setNonRequiredOptions()
+
 	return &m.options, nil
+}
+
+func (m *BackendOptionsBuilder) setRequiredOptions() error {
+	if m.options.appLabel == "" {
+		return fmt.Errorf("no AppLabel has been provided")
+	}
+	if m.options.systemBackendUsername == "" {
+		return fmt.Errorf("no System's Backend Username has been provided")
+	}
+	if m.options.systemBackendPassword == "" {
+		return fmt.Errorf("no System's Backend Password has been provided")
+	}
+	if m.options.tenantName == "" {
+		return fmt.Errorf("no tenant name has been provided")
+	}
+	if m.options.wildcardDomain == "" {
+		return fmt.Errorf("no wildcard domain has been provided")
+	}
+
+	return nil
+}
+
+func (m *BackendOptionsBuilder) setNonRequiredOptions() {
+
+	defaultServiceEndpoint := "http://backend-listener:3000"
+	defaultRouteEndpoint := "https://backend-" + m.options.tenantName + "." + m.options.wildcardDomain
+
+	defaultStorageURL := "redis://backend-redis:6379/0"
+	defaultQueuesURL := "redis://backend-redis:6379/1"
+	defaultStorageSentinelHosts := ""
+	defaultStorageSentinelRole := ""
+	defaultQueuesSentinelHosts := ""
+	defaultQueuesSentinelRole := ""
+
+	if m.options.serviceEndpoint == nil {
+		m.options.serviceEndpoint = &defaultServiceEndpoint
+	}
+	if m.options.routeEndpoint == nil {
+		m.options.routeEndpoint = &defaultRouteEndpoint
+	}
+	if m.options.storageURL == nil {
+		m.options.storageURL = &defaultStorageURL
+	}
+	if m.options.queuesURL == nil {
+		m.options.queuesURL = &defaultQueuesURL
+	}
+	if m.options.storageSentinelHosts == nil {
+		m.options.storageSentinelHosts = &defaultStorageSentinelHosts
+	}
+	if m.options.storageSentinelRole == nil {
+		m.options.storageSentinelRole = &defaultStorageSentinelRole
+	}
+	if m.options.queuesSentinelHosts == nil {
+		m.options.queuesSentinelHosts = &defaultQueuesSentinelHosts
+	}
+	if m.options.queuesSentinelRole == nil {
+		m.options.queuesSentinelRole = &defaultQueuesSentinelRole
+	}
 }
 
 type BackendOptionsProvider interface {
@@ -515,12 +634,12 @@ func (backend *Backend) buildBackendRedisSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			"REDIS_STORAGE_URL":            "redis://backend-redis:6379/0",
-			"REDIS_QUEUES_URL":             "redis://backend-redis:6379/1",
-			"REDIS_STORAGE_SENTINEL_HOSTS": "",
-			"REDIS_STORAGE_SENTINEL_ROLE":  "",
-			"REDIS_QUEUES_SENTINEL_HOSTS":  "",
-			"REDIS_QUEUES_SENTINEL_ROLE":   "",
+			"REDIS_STORAGE_URL":            *backend.Options.storageURL,
+			"REDIS_QUEUES_URL":             *backend.Options.queuesURL,
+			"REDIS_STORAGE_SENTINEL_HOSTS": *backend.Options.storageSentinelHosts,
+			"REDIS_STORAGE_SENTINEL_ROLE":  *backend.Options.storageSentinelRole,
+			"REDIS_QUEUES_SENTINEL_HOSTS":  *backend.Options.queuesSentinelHosts,
+			"REDIS_QUEUES_SENTINEL_ROLE":   *backend.Options.queuesSentinelRole,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -600,8 +719,8 @@ func (backend *Backend) buildBackendListenerSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			"service_endpoint": "http://backend-listener:3000",
-			"route_endpoint":   "https://backend-" + backend.Options.tenantName + "." + backend.Options.wildcardDomain,
+			"service_endpoint": *backend.Options.serviceEndpoint,
+			"route_endpoint":   *backend.Options.routeEndpoint,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

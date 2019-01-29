@@ -21,8 +21,16 @@ type Redis struct {
 }
 
 type RedisOptions struct {
+	redisNonRequiredOptions
+	redisRequiredOptions
+}
+
+type redisRequiredOptions struct {
 	appLabel string
 	image    string
+}
+
+type redisNonRequiredOptions struct {
 }
 
 func NewRedis(options []string) *Redis {
@@ -45,19 +53,35 @@ func (r *RedisOptionsBuilder) Image(image string) {
 }
 
 func (r *RedisOptionsBuilder) Build() (*RedisOptions, error) {
-	if r.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if r.options.image == "" {
-		return nil, fmt.Errorf("no Redis Image has been provided")
+	err := r.setRequiredOptions()
+	if err != nil {
+		return nil, err
 	}
 
+	r.setNonRequiredOptions()
+
 	return &r.options, nil
+}
+
+func (r *RedisOptionsBuilder) setRequiredOptions() error {
+	if r.options.appLabel == "" {
+		return fmt.Errorf("no AppLabel has been provided")
+	}
+	if r.options.image == "" {
+		return fmt.Errorf("no Redis Image has been provided")
+	}
+
+	return nil
+}
+
+func (r *RedisOptionsBuilder) setNonRequiredOptions() {
+
 }
 
 type RedisOptionsProvider interface {
 	GetRedisOptions() *RedisOptions
 }
+
 type CLIRedisOptionsProvider struct {
 }
 
