@@ -10,6 +10,14 @@
   version = "v0.34.0"
 
 [[projects]]
+  branch = "private-eastizle-integration"
+  digest = "1:984ce4e61fa7fd2fba00af6057656ffe71656edb521d632a261247348108e426"
+  name = "github.com/3scale/3scale-porta-go-client"
+  packages = ["client"]
+  pruneopts = "NT"
+  revision = "12fa47bebb00774393056cae039afd018798fbd7"
+
+[[projects]]
   digest = "1:75d2b55b13298745ec068057251d05d65bbae0a668201fe45ad6986551a55601"
   name = "github.com/BurntSushi/toml"
   packages = ["."]
@@ -969,6 +977,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/3scale/3scale-porta-go-client/client",
     "github.com/go-logr/logr",
     "github.com/luci/go-render/render",
     "github.com/mitchellh/go-homedir",

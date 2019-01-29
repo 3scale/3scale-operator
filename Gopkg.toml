@@ -12,6 +12,7 @@ required = [
   "github.com/spf13/cobra/cobra",
   "github.com/luci/go-render/render",
   "gopkg.in/yaml.v2",
+  "github.com/3scale/3scale-porta-go-client/client",
 ]
 
 [[override]]
@@ -60,7 +61,7 @@ required = [
 
 [[override]]
   name = "github.com/3scale/3scale-porta-go-client"
-  branch = "master"
+  branch = "private-eastizle-integration"
 
 [prune]
   go-tests = true
