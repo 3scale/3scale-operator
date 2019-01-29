@@ -21,12 +21,20 @@ type Mysql struct {
 }
 
 type MysqlOptions struct {
+	mysqlNonRequiredOptions
+	mysqlRequiredOptions
+}
+
+type mysqlRequiredOptions struct {
 	appLabel     string
 	databaseName string
 	image        string
 	user         string
 	password     string
 	rootPassword string
+}
+
+type mysqlNonRequiredOptions struct {
 }
 
 type MysqlOptionsBuilder struct {
@@ -58,26 +66,41 @@ func (m *MysqlOptionsBuilder) RootPassword(rootPassword string) {
 }
 
 func (m *MysqlOptionsBuilder) Build() (*MysqlOptions, error) {
-	if m.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if m.options.databaseName == "" {
-		return nil, fmt.Errorf("no Database Name has been provided")
-	}
-	if m.options.image == "" {
-		return nil, fmt.Errorf("no Database Image has been provided")
-	}
-	if m.options.user == "" {
-		return nil, fmt.Errorf("no User has been provided")
-	}
-	if m.options.password == "" {
-		return nil, fmt.Errorf("no Password has been provided")
-	}
-	if m.options.rootPassword == "" {
-		return nil, fmt.Errorf("no Root Password has been provided")
+	err := m.setRequiredOptions()
+	if err != nil {
+		return nil, err
 	}
 
+	m.setNonRequiredOptions()
+
 	return &m.options, nil
+}
+
+func (m *MysqlOptionsBuilder) setRequiredOptions() error {
+	if m.options.appLabel == "" {
+		return fmt.Errorf("no AppLabel has been provided")
+	}
+	if m.options.databaseName == "" {
+		return fmt.Errorf("no Database Name has been provided")
+	}
+	if m.options.image == "" {
+		return fmt.Errorf("no Database Image has been provided")
+	}
+	if m.options.user == "" {
+		return fmt.Errorf("no User has been provided")
+	}
+	if m.options.password == "" {
+		return fmt.Errorf("no Password has been provided")
+	}
+	if m.options.rootPassword == "" {
+		return fmt.Errorf("no Root Password has been provided")
+	}
+
+	return nil
+}
+
+func (m *MysqlOptionsBuilder) setNonRequiredOptions() {
+
 }
 
 type MysqlOptionsProvider interface {

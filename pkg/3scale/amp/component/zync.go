@@ -18,10 +18,19 @@ type Zync struct {
 }
 
 type ZyncOptions struct {
+	zyncNonRequiredOptions
+	zyncRequiredOptions
+}
+
+type zyncRequiredOptions struct {
 	appLabel            string
 	authenticationToken string
 	databasePassword    string
 	secretKeyBase       string
+}
+
+type zyncNonRequiredOptions struct {
+	databaseURL *string
 }
 
 type ZyncOptionsBuilder struct {
@@ -44,21 +53,43 @@ func (z *ZyncOptionsBuilder) SecretKeyBase(secretKeyBase string) {
 	z.options.secretKeyBase = secretKeyBase
 }
 
+func (z *ZyncOptionsBuilder) DatabaseURL(dbURL string) {
+	z.options.databaseURL = &dbURL
+}
+
 func (z *ZyncOptionsBuilder) Build() (*ZyncOptions, error) {
-	if z.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if z.options.authenticationToken == "" {
-		return nil, fmt.Errorf("no Authentication Token has been provided")
-	}
-	if z.options.databasePassword == "" {
-		return nil, fmt.Errorf("no Database Password has been provided")
-	}
-	if z.options.secretKeyBase == "" {
-		return nil, fmt.Errorf("no Secret Key Base has been provided")
+	err := z.setRequiredOptions()
+	if err != nil {
+		return nil, err
 	}
 
+	z.setNonRequiredOptions()
+
 	return &z.options, nil
+}
+
+func (z *ZyncOptionsBuilder) setRequiredOptions() error {
+	if z.options.appLabel == "" {
+		return fmt.Errorf("no AppLabel has been provided")
+	}
+	if z.options.authenticationToken == "" {
+		return fmt.Errorf("no Authentication Token has been provided")
+	}
+	if z.options.databasePassword == "" {
+		return fmt.Errorf("no Database Password has been provided")
+	}
+	if z.options.secretKeyBase == "" {
+		return fmt.Errorf("no Secret Key Base has been provided")
+	}
+
+	return nil
+}
+
+func (z *ZyncOptionsBuilder) setNonRequiredOptions() {
+	defaultDatabaseURL := "postgresql://zync:" + z.options.databasePassword + "@zync-database:5432/zync_production"
+	if z.options.databaseURL == nil {
+		z.options.databaseURL = &defaultDatabaseURL
+	}
 }
 
 type ZyncOptionsProvider interface {
@@ -169,7 +200,7 @@ func (zync *Zync) buildZyncSecret() *v1.Secret {
 		},
 		StringData: map[string]string{
 			"SECRET_KEY_BASE":           zync.Options.secretKeyBase,
-			"DATABASE_URL":              "postgresql://zync:" + zync.Options.databasePassword + "@zync-database:5432/zync_production",
+			"DATABASE_URL":              *zync.Options.databaseURL,
 			"ZYNC_DATABASE_PASSWORD":    zync.Options.databasePassword,
 			"ZYNC_AUTHENTICATION_TOKEN": zync.Options.authenticationToken,
 		},

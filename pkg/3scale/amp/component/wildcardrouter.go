@@ -19,9 +19,17 @@ type WildcardRouter struct {
 }
 
 type WildcardRouterOptions struct {
+	wildcardRouterNonRequiredOptions
+	wildcardRouterRequiredOptions
+}
+
+type wildcardRouterRequiredOptions struct {
 	appLabel       string
 	wildcardDomain string
 	wildcardPolicy string
+}
+
+type wildcardRouterNonRequiredOptions struct {
 }
 
 type WildcardRouterOptionsBuilder struct {
@@ -41,17 +49,32 @@ func (wr *WildcardRouterOptionsBuilder) WildcardPolicy(wildcardPolicy string) {
 }
 
 func (wr *WildcardRouterOptionsBuilder) Build() (*WildcardRouterOptions, error) {
-	if wr.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if wr.options.wildcardDomain == "" {
-		return nil, fmt.Errorf("no Wildcard Domain has been provided")
-	}
-	if wr.options.wildcardPolicy == "" {
-		return nil, fmt.Errorf("no Wildcard Policy has been provided")
+	err := wr.setRequiredOptions()
+	if err != nil {
+		return nil, err
 	}
 
+	wr.setNonRequiredOptions()
+
 	return &wr.options, nil
+}
+
+func (wr *WildcardRouterOptionsBuilder) setRequiredOptions() error {
+	if wr.options.appLabel == "" {
+		return fmt.Errorf("no AppLabel has been provided")
+	}
+	if wr.options.wildcardDomain == "" {
+		return fmt.Errorf("no Wildcard Domain has been provided")
+	}
+	if wr.options.wildcardPolicy == "" {
+		return fmt.Errorf("no Wildcard Policy has been provided")
+	}
+
+	return nil
+}
+
+func (wr *WildcardRouterOptionsBuilder) setNonRequiredOptions() {
+
 }
 
 type WildcardRouterOptionsProvider interface {

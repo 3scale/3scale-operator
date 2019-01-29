@@ -19,12 +19,22 @@ type Apicast struct {
 }
 
 type ApicastOptions struct {
+	nonRequiredApicastOptions
+	requiredApicastOptions
+}
+
+type requiredApicastOptions struct {
 	appLabel       string
 	managementAPI  string
 	openSSLVerify  string
 	responseCodes  string
 	tenantName     string
 	wildcardDomain string
+}
+
+type nonRequiredApicastOptions struct {
+	redisProductionURL *string
+	redisStagingURL    *string
 }
 
 func NewApicast(options []string) *Apicast {
@@ -63,26 +73,50 @@ func (a *ApicastOptionsBuilder) WildcardDomain(wildcardDomain string) {
 }
 
 func (a *ApicastOptionsBuilder) Build() (*ApicastOptions, error) {
-	if a.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if a.options.managementAPI == "" {
-		return nil, fmt.Errorf("no management API has been provided")
-	}
-	if a.options.openSSLVerify == "" {
-		return nil, fmt.Errorf("no OpenSSLVerify option has been provided")
-	}
-	if a.options.responseCodes == "" {
-		return nil, fmt.Errorf("no response codes have been provided")
-	}
-	if a.options.tenantName == "" {
-		return nil, fmt.Errorf("no tenant name has been provided")
-	}
-	if a.options.wildcardDomain == "" {
-		return nil, fmt.Errorf("no wildcard domain has been provided")
+	err := a.setRequiredOptions()
+	if err != nil {
+		return nil, err
 	}
 
+	a.setNonRequiredOptions()
+
 	return &a.options, nil
+}
+
+func (a *ApicastOptionsBuilder) setRequiredOptions() error {
+	if a.options.appLabel == "" {
+		return fmt.Errorf("no AppLabel has been provided")
+	}
+	if a.options.managementAPI == "" {
+		return fmt.Errorf("no management API has been provided")
+	}
+	if a.options.openSSLVerify == "" {
+		return fmt.Errorf("no OpenSSLVerify option has been provided")
+	}
+	if a.options.responseCodes == "" {
+		return fmt.Errorf("no response codes have been provided")
+	}
+	if a.options.tenantName == "" {
+		return fmt.Errorf("no tenant name has been provided")
+	}
+	if a.options.wildcardDomain == "" {
+		return fmt.Errorf("no wildcard domain has been provided")
+	}
+
+	return nil
+}
+
+func (a *ApicastOptionsBuilder) setNonRequiredOptions() {
+	defaultRedisProductionURL := "redis://system-redis:6379/1"
+	defaultRedisStagingURL := "redis://system-redis:6379/2"
+
+	if a.options.redisProductionURL == nil {
+		a.options.redisProductionURL = &defaultRedisProductionURL
+	}
+
+	if a.options.redisStagingURL == nil {
+		a.options.redisStagingURL = &defaultRedisStagingURL
+	}
 }
 
 type ApicastOptionsProvider interface {
@@ -634,8 +668,8 @@ func (apicast *Apicast) buildApicastRedisSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			"PRODUCTION_URL": "redis://system-redis:6379/1",
-			"STAGING_URL":    "redis://system-redis:6379/2",
+			"PRODUCTION_URL": *apicast.Options.redisProductionURL,
+			"STAGING_URL":    *apicast.Options.redisStagingURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

@@ -21,8 +21,16 @@ type Memcached struct {
 }
 
 type MemcachedOptions struct {
+	memcachedNonRequiredOptions
+	memcachedRequiredOptions
+}
+
+type memcachedRequiredOptions struct {
 	appLabel string
 	image    string
+}
+
+type memcachedNonRequiredOptions struct {
 }
 
 func NewMemcached(options []string) *Memcached {
@@ -45,14 +53,29 @@ func (m *MemcachedOptionsBuilder) Image(image string) {
 }
 
 func (m *MemcachedOptionsBuilder) Build() (*MemcachedOptions, error) {
-	if m.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if m.options.image == "" {
-		return nil, fmt.Errorf("no Memcached Image has been provided")
+	err := m.setRequiredOptions()
+	if err != nil {
+		return nil, err
 	}
 
+	m.setNonRequiredOptions()
+
 	return &m.options, nil
+}
+
+func (m *MemcachedOptionsBuilder) setRequiredOptions() error {
+	if m.options.appLabel == "" {
+		return fmt.Errorf("no AppLabel has been provided")
+	}
+	if m.options.image == "" {
+		return fmt.Errorf("no Memcached Image has been provided")
+	}
+
+	return nil
+}
+
+func (m *MemcachedOptionsBuilder) setNonRequiredOptions() {
+
 }
 
 type MemcachedOptionsProvider interface {
