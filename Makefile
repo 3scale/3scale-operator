@@ -11,12 +11,12 @@ endif
 help: Makefile
 	@sed -n 's/^##//p' $<
 
-## Gopkg.lock: Check toml is sync'ed with lock file
-Gopkg.lock: Gopkg.toml
+## dep-check: Run dep check
+dep-check:
 	dep check
 
 ## vendor: Populate vendor directory
-vendor: Gopkg.lock
+vendor Gopkg.lock: Gopkg.toml
 	dep ensure -v
 
 IMAGE ?= quay.io/3scale/3scale-operator
