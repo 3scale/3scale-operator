@@ -12,6 +12,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	ZyncSecretName                         = "zync"
+	ZyncSecretKeyBaseFieldName             = "SECRET_KEY_BASE"
+	ZyncSecretDatabaseURLFieldName         = "DATABASE_URL"
+	ZyncSecretDatabasePasswordFieldName    = "ZYNC_DATABASE_PASSWORD"
+	ZyncSecretAuthenticationTokenFieldName = "ZYNC_AUTHENTICATION_TOKEN"
+)
+
 type Zync struct {
 	options []string
 	Options *ZyncOptions
@@ -192,17 +200,17 @@ func (zync *Zync) buildZyncSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync",
+			Name: ZyncSecretName,
 			Labels: map[string]string{
 				"app":              zync.Options.appLabel,
 				"3scale.component": "zync",
 			},
 		},
 		StringData: map[string]string{
-			"SECRET_KEY_BASE":           zync.Options.secretKeyBase,
-			"DATABASE_URL":              *zync.Options.databaseURL,
-			"ZYNC_DATABASE_PASSWORD":    zync.Options.databasePassword,
-			"ZYNC_AUTHENTICATION_TOKEN": zync.Options.authenticationToken,
+			ZyncSecretKeyBaseFieldName:             zync.Options.secretKeyBase,
+			ZyncSecretDatabaseURLFieldName:         *zync.Options.databaseURL,
+			ZyncSecretDatabasePasswordFieldName:    zync.Options.databasePassword,
+			ZyncSecretAuthenticationTokenFieldName: zync.Options.authenticationToken,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

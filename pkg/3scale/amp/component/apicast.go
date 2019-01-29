@@ -13,6 +13,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	ApicastSecretRedisSecretName             = "apicast-redis"
+	ApicastSecretRedisProductionURLFieldName = "PRODUCTION_URL"
+	ApicastSecretRedisStagingURLFieldName    = "STAGING_URL"
+)
+
 type Apicast struct {
 	options []string
 	Options *ApicastOptions
@@ -619,7 +625,7 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 		createEnvVarFromValue("APICAST_CONFIGURATION_LOADER", "lazy"),
 		createEnvVarFromValue("APICAST_CONFIGURATION_CACHE", "0"),
 		createEnvVarFromValue("THREESCALE_DEPLOYMENT_ENV", "staging"),
-		createEnvvarFromSecret("REDIS_URL", "apicast-redis", "STAGING_URL"),
+		createEnvvarFromSecret("REDIS_URL", ApicastSecretRedisSecretName, ApicastSecretRedisStagingURLFieldName),
 	)
 	return result
 }
@@ -631,7 +637,7 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 		createEnvVarFromValue("APICAST_CONFIGURATION_LOADER", "boot"),
 		createEnvVarFromValue("APICAST_CONFIGURATION_CACHE", "300"),
 		createEnvVarFromValue("THREESCALE_DEPLOYMENT_ENV", "production"),
-		createEnvvarFromSecret("REDIS_URL", "apicast-redis", "PRODUCTION_URL"),
+		createEnvvarFromSecret("REDIS_URL", ApicastSecretRedisSecretName, ApicastSecretRedisProductionURLFieldName),
 	)
 	return result
 }
@@ -661,15 +667,15 @@ func (apicast *Apicast) buildApicastRedisSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-redis",
+			Name: ApicastSecretRedisSecretName,
 			Labels: map[string]string{
 				"app":              apicast.Options.appLabel,
 				"3scale.component": "apicast",
 			},
 		},
 		StringData: map[string]string{
-			"PRODUCTION_URL": *apicast.Options.redisProductionURL,
-			"STAGING_URL":    *apicast.Options.redisStagingURL,
+			ApicastSecretRedisProductionURLFieldName: *apicast.Options.redisProductionURL,
+			ApicastSecretRedisStagingURLFieldName:    *apicast.Options.redisStagingURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

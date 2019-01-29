@@ -14,6 +14,56 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	SystemSecretSystemDatabaseSecretName   = "system-database"
+	SystemSecretSystemDatabaseURLFieldName = "URL"
+)
+
+const (
+	SystemSecretSystemMemcachedSecretName       = "system-memcache"
+	SystemSecretSystemMemcachedServersFieldName = "SERVERS"
+)
+
+const (
+	SystemSecretSystemRecaptchaSecretName          = "system-recaptcha"
+	SystemSecretSystemRecaptchaPublicKeyFieldName  = "PUBLIC_KEY"
+	SystemSecretSystemRecaptchaPrivateKeyFieldName = "PRIVATE_KEY"
+)
+
+const (
+	SystemSecretSystemEventsHookSecretName        = "system-events-hook"
+	SystemSecretSystemEventsHookURLFieldName      = "URL"
+	SystemSecretSystemEventsHookPasswordFieldName = "PASSWORD"
+)
+
+const (
+	SystemSecretSystemRedisSecretName   = "system-redis"
+	SystemSecretSystemRedisURLFieldName = "URL"
+)
+
+const (
+	SystemSecretSystemAppSecretName             = "system-app"
+	SystemSecretSystemAppSecretKeyBaseFieldName = "SECRET_KEY_BASE"
+)
+
+const (
+	SystemSecretSystemSeedSecretName                = "system-seed"
+	SystemSecretSystemSeedMasterDomainFieldName     = "MASTER_DOMAIN"
+	SystemSecretSystemSeedMasterUserFieldName       = "MASTER_USER"
+	SystemSecretSystemSeedMasterPasswordFieldName   = "MASTER_PASSWORD"
+	SystemSecretSystemSeedAdminAccessTokenFieldName = "ADMIN_ACCESS_TOKEN"
+	SystemSecretSystemSeedAdminUserFieldName        = "ADMIN_USER"
+	SystemSecretSystemSeedAdminPasswordFieldName    = "ADMIN_PASSWORD"
+	SystemSecretSystemSeedTenantNameFieldName       = "TENANT_NAME"
+)
+
+const (
+	SystemSecretSystemMasterApicastSecretName                    = "system-master-apicast"
+	SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName = "PROXY_CONFIGS_ENDPOINT"
+	SystemSecretSystemMasterApicastBaseURL                       = "BASE_URL"
+	SystemSecretSystemMsaterApicastAccessToken                   = "ACCESS_TOKEN"
+)
+
 type System struct {
 	options []string
 	Options *SystemOptions
@@ -528,7 +578,7 @@ func (system *System) buildSystemSphinxEnv() []v1.EnvVar {
 
 	result = append(result,
 		createEnvVarFromConfigMap("RAILS_ENV", "system-environment", "RAILS_ENV"),
-		createEnvvarFromSecret("DATABASE_URL", "system-database", "URL"),
+		createEnvvarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
 		createEnvVarFromValue("THINKING_SPHINX_ADDRESS", "0.0.0.0"),
 		createEnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "db/sphinx/production.conf"),
 		createEnvVarFromValue("THINKING_SPHINX_PID_FILE", "db/sphinx/searchd.pid"),
@@ -545,30 +595,30 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	result = append(result, baseEnvConfigMapEnvs...)
 
 	result = append(result,
-		createEnvvarFromSecret("DATABASE_URL", "system-database", "URL"),
+		createEnvvarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
 
-		createEnvvarFromSecret("MASTER_DOMAIN", "system-seed", "MASTER_DOMAIN"),
-		createEnvvarFromSecret("MASTER_USER", "system-seed", "MASTER_USER"),
-		createEnvvarFromSecret("MASTER_PASSWORD", "system-seed", "MASTER_PASSWORD"),
+		createEnvvarFromSecret("MASTER_DOMAIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterDomainFieldName),
+		createEnvvarFromSecret("MASTER_USER", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterUserFieldName),
+		createEnvvarFromSecret("MASTER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterPasswordFieldName),
 
-		createEnvvarFromSecret("ADMIN_ACCESS_TOKEN", "system-seed", "ADMIN_ACCESS_TOKEN"),
-		createEnvvarFromSecret("USER_LOGIN", "system-seed", "ADMIN_USER"),
-		createEnvvarFromSecret("USER_PASSWORD", "system-seed", "ADMIN_PASSWORD"),
-		createEnvvarFromSecret("TENANT_NAME", "system-seed", "TENANT_NAME"),
+		createEnvvarFromSecret("ADMIN_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminAccessTokenFieldName),
+		createEnvvarFromSecret("USER_LOGIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminUserFieldName),
+		createEnvvarFromSecret("USER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminPasswordFieldName),
+		createEnvvarFromSecret("TENANT_NAME", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedTenantNameFieldName),
 
 		createEnvVarFromValue("THINKING_SPHINX_ADDRESS", "system-sphinx"),
 		createEnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "/tmp/sphinx.conf"),
 
-		createEnvvarFromSecret("EVENTS_SHARED_SECRET", "system-events-hook", "PASSWORD"),
+		createEnvvarFromSecret("EVENTS_SHARED_SECRET", SystemSecretSystemEventsHookSecretName, SystemSecretSystemEventsHookPasswordFieldName),
 
-		createEnvvarFromSecret("RECAPTCHA_PUBLIC_KEY", "system-recaptcha", "PUBLIC_KEY"),
-		createEnvvarFromSecret("RECAPTCHA_PRIVATE_KEY", "system-recaptcha", "PRIVATE_KEY"),
+		createEnvvarFromSecret("RECAPTCHA_PUBLIC_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPublicKeyFieldName),
+		createEnvvarFromSecret("RECAPTCHA_PRIVATE_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPrivateKeyFieldName),
 
-		createEnvvarFromSecret("SECRET_KEY_BASE", "system-app", "SECRET_KEY_BASE"),
+		createEnvvarFromSecret("SECRET_KEY_BASE", SystemSecretSystemAppSecretName, SystemSecretSystemAppSecretKeyBaseFieldName),
 
-		createEnvvarFromSecret("REDIS_URL", "system-redis", "URL"),
+		createEnvvarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
 
-		createEnvvarFromSecret("MEMCACHE_SERVERS", "system-memcache", "SERVERS"),
+		createEnvvarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
 
 		createEnvvarFromSecret("BACKEND_REDIS_URL", "backend-redis", "REDIS_STORAGE_URL"),
 	)
@@ -632,14 +682,14 @@ func (system *System) buildSystemDatabaseSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-database",
+			Name: SystemSecretSystemDatabaseSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"URL": *system.Options.databaseURL,
+			SystemSecretSystemDatabaseURLFieldName: *system.Options.databaseURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -652,14 +702,14 @@ func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-memcache",
+			Name: SystemSecretSystemMemcachedSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"SERVERS": *system.Options.memcachedURL,
+			SystemSecretSystemMemcachedServersFieldName: *system.Options.memcachedURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -672,15 +722,15 @@ func (system *System) buildSystemRecaptchaSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-recaptcha",
+			Name: SystemSecretSystemRecaptchaSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"PUBLIC_KEY":  system.Options.recaptchaPublicKey,
-			"PRIVATE_KEY": system.Options.recaptchaPrivateKey,
+			SystemSecretSystemRecaptchaPublicKeyFieldName:  system.Options.recaptchaPublicKey,
+			SystemSecretSystemRecaptchaPrivateKeyFieldName: system.Options.recaptchaPrivateKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -693,15 +743,15 @@ func (system *System) buildSystemEventsHookSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-events-hook",
+			Name: SystemSecretSystemEventsHookSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"URL":      *system.Options.eventHooksURL,
-			"PASSWORD": system.Options.backendSharedSecret,
+			SystemSecretSystemEventsHookURLFieldName:      *system.Options.eventHooksURL,
+			SystemSecretSystemEventsHookPasswordFieldName: system.Options.backendSharedSecret,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -714,14 +764,14 @@ func (system *System) buildSystemRedisSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-redis",
+			Name: SystemSecretSystemRedisSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"URL": *system.Options.redisURL,
+			SystemSecretSystemRedisURLFieldName: *system.Options.redisURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -734,14 +784,14 @@ func (system *System) buildSystemAppSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-app", // TODO sure this should be a secret on its own?? maybe can join different secrets into one with more values?
+			Name: SystemSecretSystemAppSecretName, // TODO sure this should be a secret on its own?? maybe can join different secrets into one with more values?
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"SECRET_KEY_BASE": system.Options.appSecretKeyBase,
+			SystemSecretSystemAppSecretKeyBaseFieldName: system.Options.appSecretKeyBase,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -754,20 +804,20 @@ func (system *System) buildSystemSeedSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-seed",
+			Name: SystemSecretSystemSeedSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"MASTER_DOMAIN":      system.Options.masterName,
-			"MASTER_USER":        system.Options.masterUsername,
-			"MASTER_PASSWORD":    system.Options.masterPassword,
-			"ADMIN_ACCESS_TOKEN": system.Options.adminAccessToken,
-			"ADMIN_USER":         system.Options.adminUsername,
-			"ADMIN_PASSWORD":     system.Options.adminPassword,
-			"TENANT_NAME":        system.Options.tenantName,
+			SystemSecretSystemSeedMasterDomainFieldName:     system.Options.masterName,
+			SystemSecretSystemSeedMasterUserFieldName:       system.Options.masterUsername,
+			SystemSecretSystemSeedMasterPasswordFieldName:   system.Options.masterPassword,
+			SystemSecretSystemSeedAdminAccessTokenFieldName: system.Options.adminAccessToken,
+			SystemSecretSystemSeedAdminUserFieldName:        system.Options.adminUsername,
+			SystemSecretSystemSeedAdminPasswordFieldName:    system.Options.adminPassword,
+			SystemSecretSystemSeedTenantNameFieldName:       system.Options.tenantName,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -780,16 +830,16 @@ func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-master-apicast",
+			Name: SystemSecretSystemMasterApicastSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
 				"3scale.component": "system",
 			},
 		},
 		StringData: map[string]string{
-			"PROXY_CONFIGS_ENDPOINT": *system.Options.apicastSystemMasterProxyConfigEndpoint,
-			"BASE_URL":               *system.Options.apicastSystemMasterBaseURL,
-			"ACCESS_TOKEN":           system.Options.apicastAccessToken,
+			SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName: *system.Options.apicastSystemMasterProxyConfigEndpoint,
+			SystemSecretSystemMasterApicastBaseURL:                       *system.Options.apicastSystemMasterBaseURL,
+			SystemSecretSystemMsaterApicastAccessToken:                   system.Options.apicastAccessToken,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -1184,7 +1234,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 							},
 							Env: []v1.EnvVar{
 								createEnvVarFromValue("SLEEP_SECONDS", "1"),
-								createEnvvarFromSecret("REDIS_URL", "system-redis", "URL"),
+								createEnvvarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
 							},
 						},
 					},
