@@ -10,6 +10,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+const (
+	S3SecretAWSSecretName               = "aws-auth"
+	S3SecretAWSAccessKeyIdFieldName     = "AWS_ACCESS_KEY_ID"
+	S3SecretAWSSecretAccessKeyFieldName = "AWS_SECRET_ACCESS_KEY"
+)
+
 type S3 struct {
 	options []string
 	Options *S3Options
@@ -209,8 +215,8 @@ func (s3 *S3) removeRWXStorageClassParameter(template *templatev1.Template) {
 func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 	return []v1.EnvVar{
 		createEnvVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-		createEnvvarFromSecret("AWS_ACCESS_KEY_ID", "aws-auth", "AWS_ACCESS_KEY_ID"),
-		createEnvvarFromSecret("AWS_SECRET_ACCESS_KEY", "aws-auth", "AWS_SECRET_ACCESS_KEY"),
+		createEnvvarFromSecret("AWS_ACCESS_KEY_ID", S3SecretAWSSecretName, S3SecretAWSAccessKeyIdFieldName),
+		createEnvvarFromSecret("AWS_SECRET_ACCESS_KEY", S3SecretAWSSecretName, S3SecretAWSSecretAccessKeyFieldName),
 		createEnvVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
 		createEnvVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
 	}
@@ -341,13 +347,12 @@ func (s3 *S3) buildS3AWSSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "aws-auth",
+			Name: S3SecretAWSSecretName,
 		},
 		StringData: map[string]string{
-			"AWS_ACCESS_KEY_ID":     s3.Options.awsAccessKeyId,
-			"AWS_SECRET_ACCESS_KEY": s3.Options.awsSecretAccessKey,
+			S3SecretAWSAccessKeyIdFieldName:     s3.Options.awsAccessKeyId,
+			S3SecretAWSSecretAccessKeyFieldName: s3.Options.awsSecretAccessKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-
 }
