@@ -1,9 +1,10 @@
 package v1alpha1
 
 import (
-	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -60,68 +61,21 @@ type APIManagerSpec struct {
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
 
+	// TODO. This should be moved to a Secret.
 	// +optional
 	MysqlUser *string `json:"mysqlUser,omitempty"`
 
+	// TODO. This should be moved to a Secret.
 	// +optional
 	MysqlPassword *string `json:"mysqlPassword,omitempty"`
 
+	// TODO. This should be moved to a Secret.
+	// +optional
+	MysqlRootPassword *string `json:"mysqlRootPassword,omitempty"`
+
+	// TODO. This should be moved to a Secret.
 	// +optional
 	MysqlDatabase *string `json:"mysqlDatabase,omitempty"`
-
-	// +optional
-	MysqlRootPassword *string `json:"mysqlRootPassword,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	SystemBackendUsername *string `json:"systemBackendUsername,omitempty"`
-
-	// +optional
-	SystemBackendPassword *string `json:"systemBackendPassword,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	SystemBackendSharedSecret *string `json:"systemBackendSharedSecret,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	SystemAppSecretKeyBase *string `json:"systemAppSecretKeyBase,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	AdminPassword *string `json:"adminPassword,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	AdminUsername *string `json:"adminUsername,omitempty"`
-
-	// +optional
-	AdminAccessToken *string `json:"adminAccessToken,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	MasterName *string `json:"masterName,omitempty"`
-
-	// +optional
-	MasterUser *string `json:"masterUser,omitempty"`
-
-	// +optional
-	MasterPassword *string `json:"masterPassword,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	MasterAccessToken *string `json:"masterAccessToken,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	RecaptchaPublicKey *string `json:"recaptchaPublicKey,omitempty"`
-
-	// +optional
-	RecaptchaPrivateKey *string `json:"recaptchaPrivateKey,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	ZyncDatabasePassword *string `json:"zyncDatabasePassword,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	ZyncSecretKeyBase *string `json:"zyncSecretKeyBase,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	ZyncAuthenticationToken *string `json:"zyncAuthenticationToken,omitempty"` // TODO this should be gathered from a secret
-
-	// +optional
-	ApicastAccessToken *string `json:"apicastAccessToken,omitempty"` // TODO this should be gathered from a secret
 
 	// +optional
 	ApicastManagementApi *string `json:"apicastManagementApi,omitempty"`
@@ -150,20 +104,9 @@ type APIManagerSpec struct {
 
 	// S3 optional configuration TODO redo this
 	// +optional
-	AwsAccessKeyId     *string `json:"awsAccessKeyId, omitempty"`
-	AwsSecretAccessKey *string `json:"awsSecretAccessKey, omitempty"`
-	AwsRegion          *string `json:"awsRegion, omitempty"`
-	AwsBucket          *string `json:"awsBucket, omitempty"`
-	FileUploadStorage  *string `json:"fileUploadStorage, omitempty"`
-
-	// HA optional configuration TODO redo this
-	// +optional
-	ApicastProductionRedisURL   *string `json:"apicastProductionRedisURL, omitempty"`
-	ApicastStagingRedisURL      *string `json:"apicastStagingRedisURL, omitempty"`
-	BackendRedisQueuesEndpoint  *string `json:"backendRedisQueuesEndpoint, omitempty"`
-	BackendRedisStorageEndpoint *string `json:"backendRedisStorageEndpoint, omitempty"`
-	SystemDatabaseURL           *string `json:"systemDatabaseURL, omitempty"`
-	SystemRedisURL              *string `json:"systemRedisURL, omitempty"`
+	AwsRegion         *string `json:"awsRegion, omitempty"`
+	AwsBucket         *string `json:"awsBucket, omitempty"`
+	FileUploadStorage *string `json:"fileUploadStorage, omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -315,129 +258,21 @@ func (apimanager *APIManager) SetDefaults() bool {
 		changed = true
 	}
 
-	if spec.MysqlPassword == nil {
-		defaultMysqlPassword := oprand.String(8)
-		spec.MysqlPassword = &defaultMysqlPassword
-		changed = true
-	}
-
 	if spec.MysqlDatabase == nil {
 		defaultMysqlDatabase := "system"
 		spec.MysqlDatabase = &defaultMysqlDatabase
 		changed = true
 	}
 
+	if spec.MysqlPassword == nil {
+		defaultMysqlPassword := oprand.String(8)
+		spec.MysqlPassword = &defaultMysqlPassword
+		changed = true
+	}
+
 	if spec.MysqlRootPassword == nil {
 		defaultMysqlRootPassword := oprand.String(8)
 		spec.MysqlRootPassword = &defaultMysqlRootPassword
-		changed = true
-	}
-
-	if spec.SystemBackendUsername == nil {
-		defaultSystemBackendUsername := "3scale_api_user"
-		spec.SystemBackendUsername = &defaultSystemBackendUsername
-		changed = true
-	}
-
-	if spec.SystemBackendPassword == nil {
-		defaultSystemBackendPassword := oprand.String(8)
-		spec.SystemBackendPassword = &defaultSystemBackendPassword
-		changed = true
-	}
-
-	if spec.SystemBackendSharedSecret == nil {
-		defaultSystemBackendSharedSecret := oprand.String(8)
-		spec.SystemBackendSharedSecret = &defaultSystemBackendSharedSecret
-		changed = true
-	}
-
-	if spec.SystemAppSecretKeyBase == nil {
-		// TODO is not exactly what we were generating
-		// in OpenShift templates. We were generating
-		// '[a-f0-9]{128}' . Ask system if there's some reason
-		// for that and if we can change it. If must be that range
-		// then we should create another function to generate
-		// hexadecimal string output
-		defaultSystemAppSecretKeyBase := oprand.String(128)
-		spec.SystemAppSecretKeyBase = &defaultSystemAppSecretKeyBase
-		changed = true
-	}
-
-	if spec.AdminPassword == nil {
-		defaultAdminPassword := oprand.String(8)
-		spec.AdminPassword = &defaultAdminPassword
-		changed = true
-	}
-
-	if spec.AdminUsername == nil {
-		defaultAdminUsername := "admin"
-		spec.AdminUsername = &defaultAdminUsername
-		changed = true
-	}
-
-	if spec.AdminAccessToken == nil {
-		defaultAdminAccessToken := oprand.String(16)
-		spec.AdminAccessToken = &defaultAdminAccessToken
-		changed = true
-	}
-
-	if spec.MasterName == nil {
-		defaultMasterName := "master"
-		spec.MasterName = &defaultMasterName
-		changed = true
-	}
-
-	if spec.MasterUser == nil {
-		defaultMasterUser := "master"
-		spec.MasterUser = &defaultMasterUser
-		changed = true
-	}
-
-	if spec.MasterPassword == nil {
-		defaultMasterPassword := oprand.String(8)
-		spec.MasterPassword = &defaultMasterPassword
-		changed = true
-	}
-
-	if spec.MasterAccessToken == nil {
-		defaultMasterAccessToken := oprand.String(8)
-		spec.MasterAccessToken = &defaultMasterAccessToken
-		changed = true
-	}
-
-	if spec.RecaptchaPublicKey == nil {
-		defaultRecaptchaPublicKey := "" // TODO is this correct? is an empty OpenShift parameter equal to the empty string? or null/nil?
-		spec.RecaptchaPublicKey = &defaultRecaptchaPublicKey
-		changed = true
-	}
-
-	if spec.RecaptchaPrivateKey == nil {
-		defaultRecaptchaPrivateKey := "" // TODO is this correct? is an empty OpenShift parameter equal to the empty string? or null/nil?
-		spec.RecaptchaPrivateKey = &defaultRecaptchaPrivateKey
-		changed = true
-	}
-
-	if spec.ZyncDatabasePassword == nil {
-		defaultZyncDatabasePassword := oprand.String(16)
-		spec.ZyncDatabasePassword = &defaultZyncDatabasePassword
-		changed = true
-	}
-
-	if spec.ZyncSecretKeyBase == nil {
-		defaultZyncSecretKeyBase := oprand.String(16)
-		spec.ZyncSecretKeyBase = &defaultZyncSecretKeyBase
-		changed = true
-	}
-
-	if spec.ZyncAuthenticationToken == nil {
-		defaultZyncAuthenticationToken := oprand.String(16)
-		spec.ZyncAuthenticationToken = &defaultZyncAuthenticationToken
-		changed = true
-	}
-
-	if spec.ApicastAccessToken == nil {
-		defaultApicastAccessToken := oprand.String(8)
-		spec.ApicastAccessToken = &defaultApicastAccessToken
 		changed = true
 	}
 

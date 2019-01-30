@@ -78,6 +78,14 @@ func (a *ApicastOptionsBuilder) WildcardDomain(wildcardDomain string) {
 	a.options.wildcardDomain = wildcardDomain
 }
 
+func (a *ApicastOptionsBuilder) RedisProductionURL(url string) {
+	a.options.redisProductionURL = &url
+}
+
+func (a *ApicastOptionsBuilder) RedisStagingURL(url string) {
+	a.options.redisStagingURL = &url
+}
+
 func (a *ApicastOptionsBuilder) Build() (*ApicastOptions, error) {
 	err := a.setRequiredOptions()
 	if err != nil {

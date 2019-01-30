@@ -251,6 +251,8 @@ func (ha *HighAvailability) updateDatabasesURLS(objects []runtime.RawExtension) 
 			switch secret.Name {
 			case "system-redis":
 				secret.StringData["URL"] = ha.Options.systemRedisURL
+
+			// TODO delete mysql-standalone specific parameters
 			case "system-database":
 				secret.StringData["URL"] = ha.Options.systemDatabaseURL
 			case "apicast-redis":

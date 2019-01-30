@@ -179,98 +179,13 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.MysqlDatabase != nil {
-		in, out := &in.MysqlDatabase, &out.MysqlDatabase
-		*out = new(string)
-		**out = **in
-	}
 	if in.MysqlRootPassword != nil {
 		in, out := &in.MysqlRootPassword, &out.MysqlRootPassword
 		*out = new(string)
 		**out = **in
 	}
-	if in.SystemBackendUsername != nil {
-		in, out := &in.SystemBackendUsername, &out.SystemBackendUsername
-		*out = new(string)
-		**out = **in
-	}
-	if in.SystemBackendPassword != nil {
-		in, out := &in.SystemBackendPassword, &out.SystemBackendPassword
-		*out = new(string)
-		**out = **in
-	}
-	if in.SystemBackendSharedSecret != nil {
-		in, out := &in.SystemBackendSharedSecret, &out.SystemBackendSharedSecret
-		*out = new(string)
-		**out = **in
-	}
-	if in.SystemAppSecretKeyBase != nil {
-		in, out := &in.SystemAppSecretKeyBase, &out.SystemAppSecretKeyBase
-		*out = new(string)
-		**out = **in
-	}
-	if in.AdminPassword != nil {
-		in, out := &in.AdminPassword, &out.AdminPassword
-		*out = new(string)
-		**out = **in
-	}
-	if in.AdminUsername != nil {
-		in, out := &in.AdminUsername, &out.AdminUsername
-		*out = new(string)
-		**out = **in
-	}
-	if in.AdminAccessToken != nil {
-		in, out := &in.AdminAccessToken, &out.AdminAccessToken
-		*out = new(string)
-		**out = **in
-	}
-	if in.MasterName != nil {
-		in, out := &in.MasterName, &out.MasterName
-		*out = new(string)
-		**out = **in
-	}
-	if in.MasterUser != nil {
-		in, out := &in.MasterUser, &out.MasterUser
-		*out = new(string)
-		**out = **in
-	}
-	if in.MasterPassword != nil {
-		in, out := &in.MasterPassword, &out.MasterPassword
-		*out = new(string)
-		**out = **in
-	}
-	if in.MasterAccessToken != nil {
-		in, out := &in.MasterAccessToken, &out.MasterAccessToken
-		*out = new(string)
-		**out = **in
-	}
-	if in.RecaptchaPublicKey != nil {
-		in, out := &in.RecaptchaPublicKey, &out.RecaptchaPublicKey
-		*out = new(string)
-		**out = **in
-	}
-	if in.RecaptchaPrivateKey != nil {
-		in, out := &in.RecaptchaPrivateKey, &out.RecaptchaPrivateKey
-		*out = new(string)
-		**out = **in
-	}
-	if in.ZyncDatabasePassword != nil {
-		in, out := &in.ZyncDatabasePassword, &out.ZyncDatabasePassword
-		*out = new(string)
-		**out = **in
-	}
-	if in.ZyncSecretKeyBase != nil {
-		in, out := &in.ZyncSecretKeyBase, &out.ZyncSecretKeyBase
-		*out = new(string)
-		**out = **in
-	}
-	if in.ZyncAuthenticationToken != nil {
-		in, out := &in.ZyncAuthenticationToken, &out.ZyncAuthenticationToken
-		*out = new(string)
-		**out = **in
-	}
-	if in.ApicastAccessToken != nil {
-		in, out := &in.ApicastAccessToken, &out.ApicastAccessToken
+	if in.MysqlDatabase != nil {
+		in, out := &in.MysqlDatabase, &out.MysqlDatabase
 		*out = new(string)
 		**out = **in
 	}
@@ -299,16 +214,6 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.AwsAccessKeyId != nil {
-		in, out := &in.AwsAccessKeyId, &out.AwsAccessKeyId
-		*out = new(string)
-		**out = **in
-	}
-	if in.AwsSecretAccessKey != nil {
-		in, out := &in.AwsSecretAccessKey, &out.AwsSecretAccessKey
-		*out = new(string)
-		**out = **in
-	}
 	if in.AwsRegion != nil {
 		in, out := &in.AwsRegion, &out.AwsRegion
 		*out = new(string)
@@ -321,36 +226,6 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 	}
 	if in.FileUploadStorage != nil {
 		in, out := &in.FileUploadStorage, &out.FileUploadStorage
-		*out = new(string)
-		**out = **in
-	}
-	if in.ApicastProductionRedisURL != nil {
-		in, out := &in.ApicastProductionRedisURL, &out.ApicastProductionRedisURL
-		*out = new(string)
-		**out = **in
-	}
-	if in.ApicastStagingRedisURL != nil {
-		in, out := &in.ApicastStagingRedisURL, &out.ApicastStagingRedisURL
-		*out = new(string)
-		**out = **in
-	}
-	if in.BackendRedisQueuesEndpoint != nil {
-		in, out := &in.BackendRedisQueuesEndpoint, &out.BackendRedisQueuesEndpoint
-		*out = new(string)
-		**out = **in
-	}
-	if in.BackendRedisStorageEndpoint != nil {
-		in, out := &in.BackendRedisStorageEndpoint, &out.BackendRedisStorageEndpoint
-		*out = new(string)
-		**out = **in
-	}
-	if in.SystemDatabaseURL != nil {
-		in, out := &in.SystemDatabaseURL, &out.SystemDatabaseURL
-		*out = new(string)
-		**out = **in
-	}
-	if in.SystemRedisURL != nil {
-		in, out := &in.SystemRedisURL, &out.SystemRedisURL
 		*out = new(string)
 		**out = **in
 	}

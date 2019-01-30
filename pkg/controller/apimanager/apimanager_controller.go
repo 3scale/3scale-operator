@@ -8,6 +8,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -101,7 +102,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	instance.SetDefaults() // TODO check where to put this
 	reqLogger.Info("Set defaults for APIManager resource", "APIManager", instance)
 
-	objs, err := createAPIManager(instance)
+	objs, err := createAPIManager(instance, r.client)
 	if err != nil {
 		reqLogger.Error(err, "Error creating APIManager objects")
 		return reconcile.Result{}, err
@@ -141,6 +142,15 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, err
 		}
 		reqLogger.Info("Object " + objectInfo + " already exists")
+
+		// Update secrets with consistent data
+		if secret, ok := objCopy.(*v1.Secret); ok {
+			reqLogger.Info("Object is a secret. Updating object...")
+			err = r.client.Update(context.TODO(), secret)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
 		// Here means that the object has been able to be obtained
 		// and checking for differences should be done to reconcile possible
 		// differences that we want to handle
@@ -150,8 +160,8 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
-func createAPIManager(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	results, err := createAPIManagerObjects(cr)
+func createAPIManager(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+	results, err := createAPIManagerObjects(cr, client)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +174,7 @@ func createAPIManager(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, erro
 	return results, nil
 }
 
-func createAPIManagerObjects(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
 	results := []runtime.RawExtension{}
 
 	images, err := createImages(cr)
@@ -179,7 +189,7 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager) ([]runtime.RawExtensio
 	}
 	results = append(results, redis...)
 
-	backend, err := createBackend(cr)
+	backend, err := createBackend(cr, client)
 	if err != nil {
 		return nil, err
 	}
@@ -197,19 +207,19 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager) ([]runtime.RawExtensio
 	}
 	results = append(results, memcached...)
 
-	system, err := createSystem(cr)
+	system, err := createSystem(cr, client)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, system...)
 
-	zync, err := createZync(cr)
+	zync, err := createZync(cr, client)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, zync...)
 
-	apicast, err := createApicast(cr)
+	apicast, err := createApicast(cr, client)
 	if err != nil {
 		return nil, err
 	}
@@ -303,8 +313,8 @@ func createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createBackend(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec}
+func createBackend(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
 	opts, err := optsProvider.GetBackendOptions()
 	if err != nil {
 		return nil, err
@@ -351,8 +361,8 @@ func createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error
 	return result, nil
 }
 
-func createSystem(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec}
+func createSystem(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
 	opts, err := optsProvider.GetSystemOptions()
 	if err != nil {
 		return nil, err
@@ -367,8 +377,8 @@ func createSystem(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createZync(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec}
+func createZync(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
 	opts, err := optsProvider.GetZyncOptions()
 	if err != nil {
 		return nil, err
@@ -383,8 +393,8 @@ func createZync(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createApicast(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec}
+func createApicast(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {
 		return nil, err

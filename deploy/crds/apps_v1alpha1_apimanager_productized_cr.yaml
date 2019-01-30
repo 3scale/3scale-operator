@@ -5,7 +5,5 @@ metadata:
 spec:
   ampRelease: "2.4"
   wildcardDomain: msoriano.127.0.0.1.nip.io
-  productized: false
+  productized: true
   evaluation: true
-  s3version: false
-  haversion: false

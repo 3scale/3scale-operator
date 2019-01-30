@@ -2,6 +2,7 @@ package operator
 
 import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // TODO probably this could be in only one type where the different
@@ -18,6 +19,8 @@ type OperatorRedisOptionsProvider struct {
 
 type OperatorBackendOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
 }
 
 type OperatorMysqlOptionsProvider struct {
@@ -30,14 +33,20 @@ type OperatorMemcachedOptionsProvider struct {
 
 type OperatorSystemOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
 }
 
 type OperatorZyncOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
 }
 
 type OperatorApicastOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
 }
 
 type OperatorWildcardRouterOptionsProvider struct {
@@ -50,8 +59,12 @@ type OperatorProductizedOptionsProvider struct {
 
 type OperatorS3OptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
 }
 
 type OperatorHighAvailabilityOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
 }

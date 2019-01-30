@@ -61,7 +61,7 @@ const (
 	SystemSecretSystemMasterApicastSecretName                    = "system-master-apicast"
 	SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName = "PROXY_CONFIGS_ENDPOINT"
 	SystemSecretSystemMasterApicastBaseURL                       = "BASE_URL"
-	SystemSecretSystemMsaterApicastAccessToken                   = "ACCESS_TOKEN"
+	SystemSecretSystemMasterApicastAccessToken                   = "ACCESS_TOKEN"
 )
 
 type System struct {
@@ -92,14 +92,12 @@ type systemRequiredOptions struct {
 	backendSharedSecret string
 	tenantName          string
 	wildcardDomain      string
-	mysqlDatabaseName   string
-	mysqlRootPassword   string
+	databaseURL         string
 	storageClassName    *string // should this be a string or *string? check what would be the difference between passing a "" and a nil pointer in the PersistentVolumeClaim corresponding field
 }
 
 type systemNonRequiredOptions struct {
-	databaseURL                            *string
-	memcachedURL                           *string
+	memcachedServers                       *string
 	eventHooksURL                          *string
 	redisURL                               *string
 	apicastSystemMasterProxyConfigEndpoint *string
@@ -185,24 +183,16 @@ func (s *SystemOptionsBuilder) WildcardDomain(wildcardDomain string) {
 	s.options.wildcardDomain = wildcardDomain
 }
 
-func (s *SystemOptionsBuilder) MysqlDatabaseName(mysqlDatabaseName string) {
-	s.options.mysqlDatabaseName = mysqlDatabaseName
-}
-
-func (s *SystemOptionsBuilder) MysqlRootPassword(mysqlRootPassword string) {
-	s.options.mysqlRootPassword = mysqlRootPassword
-}
-
 func (s *SystemOptionsBuilder) StorageClassName(storageClassName *string) {
 	s.options.storageClassName = storageClassName
 }
 
 func (s *SystemOptionsBuilder) DatabaseURL(dbURL string) {
-	s.options.databaseURL = &dbURL
+	s.options.databaseURL = dbURL
 }
 
-func (s *SystemOptionsBuilder) MemcachedURL(memcachedURL string) {
-	s.options.memcachedURL = &memcachedURL
+func (s *SystemOptionsBuilder) MemcachedServers(servers string) {
+	s.options.memcachedServers = &servers
 }
 
 func (s *SystemOptionsBuilder) EventHooksURL(eventHooksURL string) {
@@ -278,30 +268,19 @@ func (s *SystemOptionsBuilder) setRequiredOptions() error {
 	if s.options.wildcardDomain == "" {
 		return fmt.Errorf("no wildcard domain has been provided")
 	}
-	if s.options.mysqlDatabaseName == "" {
-		return fmt.Errorf("no mysql database name has been provided")
-	}
-	if s.options.mysqlRootPassword == "" {
-		return fmt.Errorf("no mysql root password has been provided")
-	}
 
 	return nil
 }
 
 func (s *SystemOptionsBuilder) setNonRequiredOptions() {
-	defaultDatabaseURL := "mysql2://root:" + s.options.mysqlRootPassword + "@system-mysql/" + s.options.mysqlDatabaseName
-	defaultMemcachedURL := "system-memcache:11211"
+	defaultMemcachedServers := "system-memcache:11211"
 	defaultEventHooksURL := "http://system-master:3000/master/events/import"
 	defaultRedisURL := "redis://system-redis:6379/1"
 	defaultApicastSystemMasterProxyConfigEndpoint := "http://" + s.options.apicastAccessToken + "@system-master:3000/master/api/proxy/configs"
 	defaultApicastSystemMasterBaseURL := "http://" + s.options.apicastAccessToken + "@system-master:3000"
 
-	if s.options.databaseURL == nil {
-		s.options.databaseURL = &defaultDatabaseURL
-	}
-
-	if s.options.memcachedURL == nil {
-		s.options.memcachedURL = &defaultMemcachedURL
+	if s.options.memcachedServers == nil {
+		s.options.memcachedServers = &defaultMemcachedServers
 	}
 
 	if s.options.eventHooksURL == nil {
@@ -346,8 +325,7 @@ func (o *CLISystemOptionsProvider) GetSystemOptions() (*SystemOptions, error) {
 	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
 	sob.TenantName("${TENANT_NAME}")
 	sob.WildcardDomain("${WILDCARD_DOMAIN}")
-	sob.MysqlDatabaseName("${MYSQL_DATABASE}")
-	sob.MysqlRootPassword("${MYSQL_ROOT_PASSWORD}")
+	sob.DatabaseURL("mysql2://root:" + "${MYSQL_ROOT_PASSWORD}" + "@system-mysql/" + "${MYSQL_DATABASE}")
 	sob.StorageClassName(nil)
 	res, err := sob.Build()
 	if err != nil {
@@ -689,7 +667,7 @@ func (system *System) buildSystemDatabaseSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemDatabaseURLFieldName: *system.Options.databaseURL,
+			SystemSecretSystemDatabaseURLFieldName: system.Options.databaseURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -709,7 +687,7 @@ func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemMemcachedServersFieldName: *system.Options.memcachedURL,
+			SystemSecretSystemMemcachedServersFieldName: *system.Options.memcachedServers,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -839,7 +817,7 @@ func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
 		StringData: map[string]string{
 			SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName: *system.Options.apicastSystemMasterProxyConfigEndpoint,
 			SystemSecretSystemMasterApicastBaseURL:                       *system.Options.apicastSystemMasterBaseURL,
-			SystemSecretSystemMsaterApicastAccessToken:                   system.Options.apicastAccessToken,
+			SystemSecretSystemMasterApicastAccessToken:                   system.Options.apicastAccessToken,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
