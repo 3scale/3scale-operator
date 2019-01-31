@@ -165,6 +165,8 @@ workflows:
       - generator
       - deploy:
           context: org-global
+          requires:
+            - generator
   nightly:
     jobs:
       - deploy:
