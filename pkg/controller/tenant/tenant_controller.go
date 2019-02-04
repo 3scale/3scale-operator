@@ -142,6 +142,7 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 		}
 	}
 
+	reqLogger.Info("Tenant created successfully")
 	return reconcile.Result{}, nil
 }
 
