@@ -1,6 +1,25 @@
 version: 2.1
 
 commands:
+  install-operator-sdk:
+    steps:
+      - run:
+          name: Install operator-sdk
+          command: |
+            mkdir -p ${GOPATH}/src/github.com/operator-framework
+            cd ${GOPATH}/src/github.com/operator-framework
+            git clone https://github.com/operator-framework/operator-sdk --branch v0.2.1
+            cd operator-sdk
+            make dep
+            make install
+
+  install-operator-dependencies:
+    steps:
+      - run:
+          name: Install operator dependencies
+          command: |
+            make vendor
+
   install-openshift:
     steps:
       - run:
@@ -9,6 +28,7 @@ commands:
           command: |
             curl --fail -L  https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz | tar -xzf-
             sudo mv /tmp/openshift-origin-client-tools-*-linux-64bit/oc /usr/local/bin/
+            sudo mv /tmp/openshift-origin-client-tools-*-linux-64bit/kubectl /usr/local/bin/
       - run:
           name: Configure Docker
           command: |
@@ -26,6 +46,83 @@ commands:
 
             oc wait --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
             oc wait --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
+
+  deploy-3scale-eval-from-template:
+    steps:
+      - run:
+          name: Deploy 3scale
+          command: |
+            ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
+              oc new-app -f- --param WILDCARD_DOMAIN=lvh.me --param AMP_RELEASE=master
+            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
+
+            oc get events | egrep ' Failed ' || :
+            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+
+  deploy-3scale-eval-from-operator:
+    steps:
+      - run:
+          name: Deploy 3scale
+          command: |
+            oc login -u system:admin --insecure-skip-tls-verify=true
+            for i in `ls deploy/crds/*_crd.yaml`; do kubectl create -f $i ; done
+
+            oc login -u developer --insecure-skip-tls-verify=true
+            NAMESPACE="operator-test"
+            oc new-project ${NAMESPACE}
+            oc project ${NAMESPACE}
+
+            kubectl create -f deploy/service_account.yaml
+
+            oc login -u system:admin --insecure-skip-tls-verify=true
+            kubectl create -f deploy/role.yaml
+            kubectl create -f deploy/role_binding.yaml
+            oc login -u developer --insecure-skip-tls-verify=true
+
+
+            kubectl create -f deploy/operator.orig
+            echo "Waiting until the operator Deployment is in status 'available'..."
+            oc wait --for=condition=available deployment/3scale-operator --namespace=${NAMESPACE}
+            oc login -u system:admin --insecure-skip-tls-verify=true
+            kubectl create -f deploy/crds/amp_v1alpha1_amp_cr.yaml
+
+            echo "Waiting until at least one DeploymentConfig is being created..."
+            DCS=$(oc get dc --output=name)
+            while [ "$DCS" = "" ]; do
+              DCS=$(oc get dc --output=name)
+              sleep 1
+            done
+
+            echo "Waiting until all DeploymentConfigs are in status 'available'..."
+            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
+            # Just double check it in case we've been too fast gathering all the DeploymentConfigs
+            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
+
+            echo "Checking for failed events..."
+            oc get events | egrep ' Failed ' || :
+            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+
+  push-3scale-images-to-quay:
+    steps:
+      - run:
+          name: Push images to quay.io
+          command: |
+            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+            oc whoami --show-token | docker login -u $(oc whoami) --password-stdin 172.30.1.1:5000
+            project=$(oc project -q)
+
+            oc image mirror $(for component in apicast wildcard-router zync ; do
+              echo 172.30.1.1:5000/$project/amp-$component:latest=quay.io/3scale/$component:nightly
+            done) 172.30.1.1:5000/$project/amp-backend:latest=quay.io/3scale/apisonator:nightly \
+            172.30.1.1:5000/$project/amp-system:latest=quay.io/3scale/porta:nightly --insecure
+  push-3scale-operator-image-to-quay:
+    steps:
+      - run:
+          name: Push 3scale-operator test image to quay.io
+          command: |
+            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+            make push VERSION=test
+
   create-secrets:
     steps:
       - run:
@@ -73,7 +170,7 @@ commands:
           path: reports
 
 jobs:
-  build:
+  build-operator:
     docker:
       - image: circleci/golang:1.11
     working_directory: /go/src/github.com/3scale/3scale-operator
@@ -90,20 +187,8 @@ jobs:
             - v1-gopkg-cache-{{ arch }}-{{ checksum "Gopkg.lock" }}
             - v1-gopkg-cache-{{ arch }}-{{ .Branch }}
 
-      - run:
-          name: Install operator-sdk
-          command: |
-              mkdir -p ${GOPATH}/src/github.com/operator-framework
-              cd ${GOPATH}/src/github.com/operator-framework
-              git clone https://github.com/operator-framework/operator-sdk --branch v0.2.1
-              cd operator-sdk
-              make dep
-              make install
-
-      - run:
-          name: Install dependencies
-          command: |
-            make vendor
+      - install-operator-sdk
+      - install-operator-dependencies
 
       - save_cache:
           key: v1-gopkg-cache-{{ arch }}-{{ checksum "Gopkg.lock" }}
@@ -113,7 +198,9 @@ jobs:
       - run:
           name: Build
           command: |
-              make build NAMESPACE=172.30.1.1:5000/openshift VERSION=test
+              make build VERSION=test
+
+      - push-3scale-operator-image-to-quay
   deploy:
     machine:
       docker_layer_caching: true
@@ -124,29 +211,21 @@ jobs:
       - create-secrets
       - build-amp
       - oc-observe
-      - run:
-          name: Deploy 3scale
-          command: |
-            ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
-              oc new-app -f- --param WILDCARD_DOMAIN=lvh.me --param AMP_RELEASE=master
-            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
-
-            oc get events | egrep ' Failed ' || :
-            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
-
+      - deploy-3scale-eval-from-template
       - oc-status
+      - push-3scale-images-to-quay
 
-      - run:
-          name: Push images to quay.io
-          command: |
-            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
-            oc whoami --show-token | docker login -u $(oc whoami) --password-stdin 172.30.1.1:5000
-            project=$(oc project -q)
-
-            oc image mirror $(for component in apicast wildcard-router zync ; do
-              echo 172.30.1.1:5000/$project/amp-$component:latest=quay.io/3scale/$component:nightly
-            done) 172.30.1.1:5000/$project/amp-backend:latest=quay.io/3scale/apisonator:nightly \
-            172.30.1.1:5000/$project/amp-system:latest=quay.io/3scale/porta:nightly --insecure
+  deploy-apimanager:
+    machine:
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - checkout
+      - install-openshift
+      - build-amp
+      - oc-observe
+      - deploy-3scale-eval-from-operator
+      - oc-status
   generator:
     docker:
       - image: circleci/golang:1.11
@@ -157,9 +236,14 @@ jobs:
       - run: make clean test -j 2 --directory pkg/3scale/amp
 workflows:
   version: 2
-  build:
+  operator:
     jobs:
-      - build
+      - build-operator:
+          context: org-global
+      - deploy-apimanager:
+          context: org-global
+          requires:
+            - build-operator
   templates:
     jobs:
       - generator
