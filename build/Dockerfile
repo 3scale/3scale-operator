@@ -4,4 +4,4 @@ RUN apk upgrade --update --no-cache
 
 USER nobody
 
-ADD build/_output/bin/3scale-operator /usr/local/bin/testop
+ADD build/_output/bin/3scale-operator /usr/local/bin/3scale-operator
