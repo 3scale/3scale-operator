@@ -84,7 +84,7 @@ commands:
             echo "Waiting until the operator Deployment is in status 'available'..."
             oc wait --for=condition=available deployment/3scale-operator --namespace=${NAMESPACE}
             oc login -u system:admin --insecure-skip-tls-verify=true
-            kubectl create -f deploy/crds/amp_v1alpha1_amp_cr.yaml
+            kubectl create -f deploy/crds/apps_v1alpha1_apimanager_cr.yaml
 
             echo "Waiting until at least one DeploymentConfig is being created..."
             DCS=$(oc get dc --output=name)

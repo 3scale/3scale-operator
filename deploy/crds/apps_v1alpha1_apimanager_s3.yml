@@ -1,5 +1,5 @@
-apiVersion: amp.3scale.net/v1alpha1
-kind: AMP
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
 metadata:
   name: example-amp-s3
 spec:

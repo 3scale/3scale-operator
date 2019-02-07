@@ -8,9 +8,9 @@ import (
 
 func (o *OperatorWildcardRouterOptionsProvider) GetWildcardRouterOptions() (*component.WildcardRouterOptions, error) {
 	optProv := component.WildcardRouterOptionsBuilder{}
-	optProv.AppLabel(*o.AmpSpec.AppLabel)
-	optProv.WildcardDomain(o.AmpSpec.WildcardDomain)
-	optProv.WildcardPolicy(*o.AmpSpec.WildcardPolicy)
+	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
+	optProv.WildcardDomain(o.APIManagerSpec.WildcardDomain)
+	optProv.WildcardPolicy(*o.APIManagerSpec.WildcardPolicy)
 	res, err := optProv.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create WildcardRouter Options - %s", err)
