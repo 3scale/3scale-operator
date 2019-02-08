@@ -24,8 +24,8 @@ type PlanSelectors struct {
 }
 
 type PlanCost struct {
-	SetupFee  int64 `json:"setupFee,omitempty"`
-	CostMonth int64 `json:"costMonth,omitempty"`
+	SetupFee  float64 `json:"setupFee,omitempty"`
+	CostMonth float64 `json:"costMonth,omitempty"`
 }
 
 // PlanStatus defines the observed state of Plan

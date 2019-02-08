@@ -2,9 +2,6 @@ package consolidated
 
 import (
 	"context"
-	"log"
-	"reflect"
-
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,13 +10,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"time"
 )
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
  */
+
+var log = logf.Log.WithName("consolidated_controller")
 
 // Add creates a new Consolidated Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -69,15 +70,16 @@ type ReconcileConsolidated struct {
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a Consolidated object and makes changes based on the state read
+// ReconcileWith3scale reads that state of the cluster for a Consolidated object and makes changes based on the state read
 // and what is in the Consolidated.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
+// TODO(user): Modify this ReconcileWith3scale function to implement your Controller logic.  This example creates
 // a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	log.Printf("Reconciling Consolidated %s/%s\n", request.Namespace, request.Name)
+	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	reqLogger.Info("Reconciling Consolidated Object")
 
 	// Fetch the Consolidated instance
 	consolidated := &apiv1alpha1.Consolidated{}
@@ -92,21 +94,24 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+	reqLogger.Info("Found consolidated object", request.Name, request.Namespace)
 
-	log.Printf("Detected Consolidated: %s, %s ", request.Name, request.Namespace)
-
-	existingState, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials,consolidated.Spec.APIs)
+	existingState, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials, consolidated.Spec.APIs)
 	if err != nil {
-		return reconcile.Result{Requeue:true}, err
+		return reconcile.Result{Requeue: true}, err
 	}
 
-	if reflect.DeepEqual(consolidated, existingState) {
-		log.Printf("Consolidated %s/%s is ok\n", request.Namespace, request.Name)
-		return reconcile.Result{}, nil
-	} else {
-		log.Printf("Consolidated %s/%s needs to be reconciled\n", request.Namespace, request.Name)
-		return reconcile.Result{}, nil
+	if apiv1alpha1.CompareConsolidated(*consolidated, *existingState) {
+		reqLogger.Info("State between CRs and 3scale is consistent.", "namespace", request.Namespace, "name", request.Name)
+		return reconcile.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, nil
 	}
 
-	return reconcile.Result{}, nil
+	reqLogger.Info("State is not consistent, reconciling", "namespace", request.Namespace, "name", request.Name)
+	apisDiff := apiv1alpha1.DiffAPIs(consolidated.Spec.APIs, existingState.Spec.APIs)
+	err = apisDiff.ReconcileWith3scale(consolidated.Spec.Credentials)
+	if err != nil {
+		reqLogger.Error(err, "Error Reconciling APIs")
+	}
+
+	return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 }

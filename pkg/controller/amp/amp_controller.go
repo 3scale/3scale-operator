@@ -90,9 +90,9 @@ type ReconcileAMP struct {
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a AMP object and makes changes based on the state read
+// ReconcileWith3scale reads that state of the cluster for a AMP object and makes changes based on the state read
 // and what is in the AMP.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
+// TODO(user): Modify this ReconcileWith3scale function to implement your Controller logic.  This example creates
 // a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
