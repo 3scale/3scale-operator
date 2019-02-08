@@ -1,4 +1,4 @@
-package amp
+package apimanager
 
 import (
 	"context"
@@ -6,11 +6,8 @@ import (
 	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-
-	ampv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/amp/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,14 +22,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_amp")
+var log = logf.Log.WithName("controller_apimanager")
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
  */
 
-// Add creates a new AMP Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new APIManager Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -40,97 +37,77 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileAMP{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileAPIManager{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("amp-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("apimanager-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource AMP
-	err = c.Watch(&source.Kind{Type: &ampv1alpha1.AMP{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource APIManager
+	err = c.Watch(&source.Kind{Type: &appsv1alpha1.APIManager{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
-
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner AMP
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &ampv1alpha1.AMP{},
-	})
-	if err != nil {
-		return err
-	}
-
-	/*
-		err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-			IsController: true,
-			OwnerType:    &ampv1alpha1.AMP{},
-		})
-		if err != nil {
-			return err
-		}
-	*/
 
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileAMP{}
+var _ reconcile.Reconciler = &ReconcileAPIManager{}
 
-// ReconcileAMP reconciles a AMP object
-type ReconcileAMP struct {
+// ReconcileAPIManager reconciles a APIManager object
+type ReconcileAPIManager struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a AMP object and makes changes based on the state read
-// and what is in the AMP.Spec
+// Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
+// and what is in the APIManager.Spec
 // TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
 // a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileAMP) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling AMP")
+	reqLogger.Info("Reconciling APIManager")
 
-	// Fetch the AMP instance
-	instance := &ampv1alpha1.AMP{}
+	// Fetch the APIManager instance
+	instance := &appsv1alpha1.APIManager{}
 
-	reqLogger.Info("Trying to get AMP resource", "Request", request)
+	reqLogger.Info("Trying to get APIManager resource", "Request", request)
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			reqLogger.Info("AMP Resource not found. Ignoring since object must have been deleted", "client error", err, "AMP", instance)
+			reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted", "client error", err, "APIManager", instance)
 			return reconcile.Result{}, nil
 		}
-		reqLogger.Error(err, "AMP Resource cannot be created. Requeuing request...", "AMP", instance)
+		reqLogger.Error(err, "APIManager Resource cannot be created. Requeuing request...", "APIManager", instance)
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	reqLogger.Info("Successfully retreived AMP resource", "AMP", instance)
+	reqLogger.Info("Successfully retreived APIManager resource", "APIManager", instance)
 
-	reqLogger.Info("Setting defaults for AMP resource")
+	reqLogger.Info("Setting defaults for APIManager resource")
 	instance.SetDefaults() // TODO check where to put this
-	reqLogger.Info("Set defaults for AMP resource", "AMP", instance)
+	reqLogger.Info("Set defaults for APIManager resource", "APIManager", instance)
 
-	objs, err := createAMP(instance)
+	objs, err := createAPIManager(instance)
 	if err != nil {
-		reqLogger.Error(err, "Error creating AMP objects")
+		reqLogger.Error(err, "Error creating APIManager objects")
 		return reconcile.Result{}, err
 	}
 
-	// Set AMP instance as the owner and controller
+	// Set APIManager instance as the owner and controller
 	for idx := range objs {
 		objectMeta := (objs[idx].Object).(metav1.Object)
 		objectMeta.SetNamespace(instance.Namespace)
@@ -173,13 +150,13 @@ func (r *ReconcileAMP) Reconcile(request reconcile.Request) (reconcile.Result, e
 	return reconcile.Result{}, nil
 }
 
-func createAMP(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	results, err := createAMPObjects(cr)
+func createAPIManager(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	results, err := createAPIManagerObjects(cr)
 	if err != nil {
 		return nil, err
 	}
 
-	results, err = postProcessAMPObjects(cr, results)
+	results, err = postProcessAPIManagerObjects(cr, results)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +164,7 @@ func createAMP(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return results, nil
 }
 
-func createAMPObjects(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
+func createAPIManagerObjects(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	results := []runtime.RawExtension{}
 
 	images, err := createImages(cr)
@@ -255,14 +232,14 @@ func createAMPObjects(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return results, nil
 }
 
-func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
+func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
 	if cr.Spec.Evaluation {
 		e := component.Evaluation{}
 		e.PostProcessObjects(objects)
 	}
 
 	if cr.Spec.Productized {
-		optsProvider := operator.OperatorProductizedOptionsProvider{AmpSpec: &cr.Spec}
+		optsProvider := operator.OperatorProductizedOptionsProvider{APIManagerSpec: &cr.Spec}
 		opts, err := optsProvider.GetProductizedOptions()
 		if err != nil {
 			return nil, err
@@ -272,7 +249,7 @@ func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) 
 	}
 
 	if cr.Spec.S3Version {
-		optsProvider := operator.OperatorS3OptionsProvider{AmpSpec: &cr.Spec}
+		optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec}
 		opts, err := optsProvider.GetS3Options()
 		if err != nil {
 			return nil, err
@@ -282,7 +259,7 @@ func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) 
 	}
 
 	if cr.Spec.HAVersion {
-		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{AmpSpec: &cr.Spec}
+		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec}
 		opts, err := optsProvider.GetHighAvailabilityOptions()
 		if err != nil {
 			return nil, err
@@ -294,8 +271,8 @@ func postProcessAMPObjects(cr *ampv1alpha1.AMP, objects []runtime.RawExtension) 
 	return objects, nil
 }
 
-func createImages(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorAmpImagesOptionsProvider{AmpSpec: &cr.Spec}
+func createImages(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorAmpImagesOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetAmpImagesOptions()
 	if err != nil {
 		return nil, err
@@ -310,8 +287,8 @@ func createImages(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createRedis(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorRedisOptionsProvider{AmpSpec: &cr.Spec}
+func createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorRedisOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetRedisOptions()
 	if err != nil {
 		return nil, err
@@ -326,8 +303,8 @@ func createRedis(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createBackend(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorBackendOptionsProvider{AmpSpec: &cr.Spec}
+func createBackend(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetBackendOptions()
 	if err != nil {
 		return nil, err
@@ -342,8 +319,8 @@ func createBackend(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createMysql(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorMysqlOptionsProvider{AmpSpec: &cr.Spec}
+func createMysql(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetMysqlOptions()
 	if err != nil {
 		return nil, err
@@ -358,8 +335,8 @@ func createMysql(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createMemcached(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorMemcachedOptionsProvider{AmpSpec: &cr.Spec}
+func createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorMemcachedOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetMemcachedOptions()
 	if err != nil {
 		return nil, err
@@ -374,8 +351,8 @@ func createMemcached(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createSystem(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorSystemOptionsProvider{AmpSpec: &cr.Spec}
+func createSystem(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetSystemOptions()
 	if err != nil {
 		return nil, err
@@ -390,8 +367,8 @@ func createSystem(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createZync(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorZyncOptionsProvider{AmpSpec: &cr.Spec}
+func createZync(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetZyncOptions()
 	if err != nil {
 		return nil, err
@@ -406,8 +383,8 @@ func createZync(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createApicast(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorApicastOptionsProvider{AmpSpec: &cr.Spec}
+func createApicast(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {
 		return nil, err
@@ -422,8 +399,8 @@ func createApicast(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createWildcardRouter(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorWildcardRouterOptionsProvider{AmpSpec: &cr.Spec}
+func createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorWildcardRouterOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetWildcardRouterOptions()
 	if err != nil {
 		return nil, err
@@ -437,8 +414,8 @@ func createWildcardRouter(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createS3(cr *ampv1alpha1.AMP) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorS3OptionsProvider{AmpSpec: &cr.Spec}
+func createS3(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetS3Options()
 	if err != nil {
 		return nil, err

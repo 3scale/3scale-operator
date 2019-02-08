@@ -8,7 +8,7 @@ import (
 
 func (o *OperatorProductizedOptionsProvider) GetProductizedOptions() (*component.ProductizedOptions, error) {
 	pob := component.ProductizedOptionsBuilder{}
-	pob.AmpRelease(o.AmpSpec.AmpRelease)
+	pob.AmpRelease(o.APIManagerSpec.AmpRelease)
 	pob.ApicastImage("registry.access.redhat.com/3scale-amp24/apicast-gateway")
 	pob.BackendImage("registry.access.redhat.com/3scale-amp24/backend")
 	pob.RouterImage("registry.access.redhat.com/3scale-amp22/wildcard-router")

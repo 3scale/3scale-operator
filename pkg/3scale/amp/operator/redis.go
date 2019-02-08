@@ -8,8 +8,8 @@ import (
 
 func (o *OperatorRedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error) {
 	optProv := component.RedisOptionsBuilder{}
-	optProv.AppLabel(*o.AmpSpec.AppLabel)
-	optProv.Image(*o.AmpSpec.RedisImage)
+	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
+	optProv.Image(*o.APIManagerSpec.RedisImage)
 	res, err := optProv.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Redis Options - %s", err)

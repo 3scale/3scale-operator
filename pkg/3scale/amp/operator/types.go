@@ -1,7 +1,7 @@
 package operator
 
 import (
-	ampv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/amp/v1alpha1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 )
 
 // TODO probably this could be in only one type where the different
@@ -9,49 +9,49 @@ import (
 // duplicate the data to allow having possible future differences in
 // the required data
 type OperatorAmpImagesOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorRedisOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorBackendOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorMysqlOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorMemcachedOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorSystemOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorZyncOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorApicastOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorWildcardRouterOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorProductizedOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorS3OptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
 type OperatorHighAvailabilityOptionsProvider struct {
-	AmpSpec *ampv1alpha1.AMPSpec
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }

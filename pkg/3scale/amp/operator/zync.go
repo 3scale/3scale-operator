@@ -8,10 +8,10 @@ import (
 
 func (o *OperatorZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	optProv := component.ZyncOptionsBuilder{}
-	optProv.AppLabel(*o.AmpSpec.AppLabel)
-	optProv.AuthenticationToken(*o.AmpSpec.ZyncAuthenticationToken)
-	optProv.DatabasePassword(*o.AmpSpec.ZyncDatabasePassword)
-	optProv.SecretKeyBase(*o.AmpSpec.ZyncSecretKeyBase)
+	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
+	optProv.AuthenticationToken(*o.APIManagerSpec.ZyncAuthenticationToken)
+	optProv.DatabasePassword(*o.APIManagerSpec.ZyncDatabasePassword)
+	optProv.SecretKeyBase(*o.APIManagerSpec.ZyncSecretKeyBase)
 	res, err := optProv.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Zync Options - %s", err)

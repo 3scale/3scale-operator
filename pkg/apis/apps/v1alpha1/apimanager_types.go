@@ -1,27 +1,24 @@
 package v1alpha1
 
 import (
-	"math/rand"
-	"time"
-
+	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	optrand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// AMPSpec defines the desired state of AMP
-
-// We use pointers to a Type when the field is optional, to allow differentiate
-// Between an unset value from the zero value of the type.
+// We use pointers in a spec field when the field is optional, to allow differentiate
+// Between an unset value from the zero value of the field.
 // This is a common convention
 // used in kubernetes: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#optional-vs-required
-type AMPSpec struct {
+
+// APIManagerSpec defines the desired state of APIManager
+type APIManagerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+
 	AmpRelease string `json:"ampRelease"`
 
 	// +optional
@@ -169,26 +166,38 @@ type AMPSpec struct {
 	SystemRedisURL              *string `json:"systemRedisURL, omitempty"`
 }
 
-// AMPStatus defines the observed state of AMP
-type AMPStatus struct {
+// APIManagerStatus defines the observed state of APIManager
+type APIManagerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Conditions []AMPCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,4,rep,name=conditions"`
+	Conditions []APIManagerCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,4,rep,name=conditions"`
 }
 
-type AMPConditionType string
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// APIManager is the Schema for the apimanagers API
+// +k8s:openapi-gen=true
+type APIManager struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   APIManagerSpec   `json:"spec,omitempty"`
+	Status APIManagerStatus `json:"status,omitempty"`
+}
+
+type APIManagerConditionType string
 
 const (
-	// Ready means the AMP is available. This is, when all of its
+	// Ready means the APIManager is available. This is, when all of its
 	// elements are up and running
-	AMPReady AMPConditionType = "Ready"
-	// Progressing means the AMP is being deployed
-	AMPProgressing AMPConditionType = "Progressing"
+	APIManagerReady APIManagerConditionType = "Ready"
+	// Progressing means the APIManager is being deployed
+	APIManagerProgressing APIManagerConditionType = "Progressing"
 )
 
-type AMPCondition struct {
-	Type   AMPConditionType   `json:"type" description:"type of AMP condition"`
-	Status v1.ConditionStatus `json:"status" description:"status of the condition, one of True, False, Unknown"` //TODO should be a custom ConditionStatus or the core v1 one?
+type APIManagerCondition struct {
+	Type   APIManagerConditionType `json:"type" description:"type of APIManager condition"`
+	Status v1.ConditionStatus      `json:"status" description:"status of the condition, one of True, False, Unknown"` //TODO should be a custom ConditionStatus or the core v1 one?
 
 	// The Reason, Message, LastHeartbeatTime and LastTransitionTime fields are
 	// optional. Unless we really use them they should directly not be used even
@@ -208,291 +217,259 @@ type AMPCondition struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AMP is the Schema for the amps API
-// +k8s:openapi-gen=true
-type AMP struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   AMPSpec   `json:"spec,omitempty"`
-	Status AMPStatus `json:"status,omitempty"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// AMPList contains a list of AMP
-type AMPList struct {
+// APIManagerList contains a list of APIManager
+type APIManagerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AMP `json:"items"`
+	Items           []APIManager `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AMP{}, &AMPList{})
+	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
 }
 
-// SetDefaults sets the default values for the AMP spec and returns true if the spec was changed
-func (amp *AMP) SetDefaults() bool {
+// SetDefaults sets the default values for the APIManager spec and returns true if the spec was changed
+func (apimanager *APIManager) SetDefaults() bool {
 	changed := false
-	ampSpec := &amp.Spec
-	if ampSpec.AppLabel == nil {
+	spec := &apimanager.Spec
+	if spec.AppLabel == nil {
 		defaultAppLabel := "3scale-api-management"
-		ampSpec.AppLabel = &defaultAppLabel
+		spec.AppLabel = &defaultAppLabel
 		changed = true
 	}
 
-	if ampSpec.TenantName == nil {
+	if spec.TenantName == nil {
 		defaultTenantName := "3scale"
-		ampSpec.TenantName = &defaultTenantName
+		spec.TenantName = &defaultTenantName
 		changed = true
 	}
 
-	if ampSpec.RwxStorageClass == nil { // Needed??
-		ampSpec.RwxStorageClass = nil //in OpenShift template would be "null" in the parameter and nul in the field
+	if spec.RwxStorageClass == nil { // Needed??
+		spec.RwxStorageClass = nil //in OpenShift template would be "null" in the parameter and nul in the field
 		changed = true
 	}
 
-	if ampSpec.AmpBackendImage == nil {
+	if spec.AmpBackendImage == nil {
 		defaultAmpBackendImage := "quay.io/3scale/apisonator:nightly"
-		ampSpec.AmpBackendImage = &defaultAmpBackendImage
+		spec.AmpBackendImage = &defaultAmpBackendImage
 		changed = true
 	}
 
-	if ampSpec.AmpZyncImage == nil {
+	if spec.AmpZyncImage == nil {
 		defaultAmpZyncImage := "quay.io/3scale/zync:nightly"
-		ampSpec.AmpZyncImage = &defaultAmpZyncImage
+		spec.AmpZyncImage = &defaultAmpZyncImage
 		changed = true
 	}
 
-	if ampSpec.AmpApicastImage == nil {
+	if spec.AmpApicastImage == nil {
 		defaultAmpApicastImage := "quay.io/3scale/apicast:nightly"
-		ampSpec.AmpApicastImage = &defaultAmpApicastImage
+		spec.AmpApicastImage = &defaultAmpApicastImage
 		changed = true
 	}
 
-	if ampSpec.AmpRouterImage == nil {
+	if spec.AmpRouterImage == nil {
 		defaultAmpRouterImage := "quay.io/3scale/wildcard-router:nightly"
-		ampSpec.AmpRouterImage = &defaultAmpRouterImage
+		spec.AmpRouterImage = &defaultAmpRouterImage
 		changed = true
 	}
 
-	if ampSpec.AmpSystemImage == nil {
+	if spec.AmpSystemImage == nil {
 		defaultAmpSystemImage := "quay.io/3scale/porta:nightly"
-		ampSpec.AmpSystemImage = &defaultAmpSystemImage
+		spec.AmpSystemImage = &defaultAmpSystemImage
 		changed = true
 	}
 
-	if ampSpec.PostgreSQLImage == nil {
+	if spec.PostgreSQLImage == nil {
 		defaultPostgreSQLImage := "registry.access.redhat.com/rhscl/postgresql-95-rhel7:9.5"
-		ampSpec.PostgreSQLImage = &defaultPostgreSQLImage
+		spec.PostgreSQLImage = &defaultPostgreSQLImage
 		changed = true
 	}
 
-	if ampSpec.MysqlImage == nil {
+	if spec.MysqlImage == nil {
 		defaultMysqlImage := "registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7"
-		ampSpec.MysqlImage = &defaultMysqlImage
+		spec.MysqlImage = &defaultMysqlImage
 		changed = true
 	}
 
-	if ampSpec.MemcachedImage == nil {
+	if spec.MemcachedImage == nil {
 		defaultMemcachedImage := "registry.access.redhat.com/3scale-amp20/memcached"
-		ampSpec.MemcachedImage = &defaultMemcachedImage
+		spec.MemcachedImage = &defaultMemcachedImage
 		changed = true
 	}
 
-	if ampSpec.ImageStreamTagImportInsecure == nil {
+	if spec.ImageStreamTagImportInsecure == nil {
 		defaultImageStreamTagImportInsecure := false
-		ampSpec.ImageStreamTagImportInsecure = &defaultImageStreamTagImportInsecure
+		spec.ImageStreamTagImportInsecure = &defaultImageStreamTagImportInsecure
 		changed = true
 	}
 
-	if ampSpec.RedisImage == nil {
+	if spec.RedisImage == nil {
 		defaultRedisImage := "registry.access.redhat.com/rhscl/redis-32-rhel7:3.2"
-		ampSpec.RedisImage = &defaultRedisImage
+		spec.RedisImage = &defaultRedisImage
 		changed = true
 	}
 
-	if ampSpec.MysqlUser == nil {
+	if spec.MysqlUser == nil {
 		defaultMysqlUser := "mysql"
-		ampSpec.MysqlUser = &defaultMysqlUser
+		spec.MysqlUser = &defaultMysqlUser
 		changed = true
 	}
 
-	if ampSpec.MysqlPassword == nil {
-		defaultMysqlPassword := optrand.String(8)
-		ampSpec.MysqlPassword = &defaultMysqlPassword
+	if spec.MysqlPassword == nil {
+		defaultMysqlPassword := oprand.String(8)
+		spec.MysqlPassword = &defaultMysqlPassword
 		changed = true
 	}
 
-	if ampSpec.MysqlDatabase == nil {
+	if spec.MysqlDatabase == nil {
 		defaultMysqlDatabase := "system"
-		ampSpec.MysqlDatabase = &defaultMysqlDatabase
+		spec.MysqlDatabase = &defaultMysqlDatabase
 		changed = true
 	}
 
-	if ampSpec.MysqlRootPassword == nil {
-		defaultMysqlRootPassword := optrand.String(8)
-		ampSpec.MysqlRootPassword = &defaultMysqlRootPassword
+	if spec.MysqlRootPassword == nil {
+		defaultMysqlRootPassword := oprand.String(8)
+		spec.MysqlRootPassword = &defaultMysqlRootPassword
 		changed = true
 	}
 
-	if ampSpec.SystemBackendUsername == nil {
+	if spec.SystemBackendUsername == nil {
 		defaultSystemBackendUsername := "3scale_api_user"
-		ampSpec.SystemBackendUsername = &defaultSystemBackendUsername
+		spec.SystemBackendUsername = &defaultSystemBackendUsername
 		changed = true
 	}
 
-	if ampSpec.SystemBackendPassword == nil {
-		defaultSystemBackendPassword := optrand.String(8)
-		ampSpec.SystemBackendPassword = &defaultSystemBackendPassword
+	if spec.SystemBackendPassword == nil {
+		defaultSystemBackendPassword := oprand.String(8)
+		spec.SystemBackendPassword = &defaultSystemBackendPassword
 		changed = true
 	}
 
-	if ampSpec.SystemBackendSharedSecret == nil {
-		defaultSystemBackendSharedSecret := optrand.String(8)
-		ampSpec.SystemBackendSharedSecret = &defaultSystemBackendSharedSecret
+	if spec.SystemBackendSharedSecret == nil {
+		defaultSystemBackendSharedSecret := oprand.String(8)
+		spec.SystemBackendSharedSecret = &defaultSystemBackendSharedSecret
 		changed = true
 	}
 
-	if ampSpec.SystemAppSecretKeyBase == nil {
+	if spec.SystemAppSecretKeyBase == nil {
 		// TODO is not exactly what we were generating
 		// in OpenShift templates. We were generating
 		// '[a-f0-9]{128}' . Ask system if there's some reason
 		// for that and if we can change it. If must be that range
 		// then we should create another function to generate
 		// hexadecimal string output
-		defaultSystemAppSecretKeyBase := optrand.String(128)
-		ampSpec.SystemAppSecretKeyBase = &defaultSystemAppSecretKeyBase
+		defaultSystemAppSecretKeyBase := oprand.String(128)
+		spec.SystemAppSecretKeyBase = &defaultSystemAppSecretKeyBase
 		changed = true
 	}
 
-	if ampSpec.AdminPassword == nil {
-		defaultAdminPassword := optrand.String(8)
-		ampSpec.AdminPassword = &defaultAdminPassword
+	if spec.AdminPassword == nil {
+		defaultAdminPassword := oprand.String(8)
+		spec.AdminPassword = &defaultAdminPassword
 		changed = true
 	}
 
-	if ampSpec.AdminUsername == nil {
+	if spec.AdminUsername == nil {
 		defaultAdminUsername := "admin"
-		ampSpec.AdminUsername = &defaultAdminUsername
+		spec.AdminUsername = &defaultAdminUsername
 		changed = true
 	}
 
-	if ampSpec.AdminAccessToken == nil {
-		defaultAdminAccessToken := optrand.String(16)
-		ampSpec.AdminAccessToken = &defaultAdminAccessToken
+	if spec.AdminAccessToken == nil {
+		defaultAdminAccessToken := oprand.String(16)
+		spec.AdminAccessToken = &defaultAdminAccessToken
 		changed = true
 	}
 
-	if ampSpec.MasterName == nil {
+	if spec.MasterName == nil {
 		defaultMasterName := "master"
-		ampSpec.MasterName = &defaultMasterName
+		spec.MasterName = &defaultMasterName
 		changed = true
 	}
 
-	if ampSpec.MasterUser == nil {
+	if spec.MasterUser == nil {
 		defaultMasterUser := "master"
-		ampSpec.MasterUser = &defaultMasterUser
+		spec.MasterUser = &defaultMasterUser
 		changed = true
 	}
 
-	if ampSpec.MasterPassword == nil {
-		defaultMasterPassword := optrand.String(8)
-		ampSpec.MasterPassword = &defaultMasterPassword
+	if spec.MasterPassword == nil {
+		defaultMasterPassword := oprand.String(8)
+		spec.MasterPassword = &defaultMasterPassword
 		changed = true
 	}
 
-	if ampSpec.MasterAccessToken == nil {
-		defaultMasterAccessToken := optrand.String(8)
-		ampSpec.MasterAccessToken = &defaultMasterAccessToken
+	if spec.MasterAccessToken == nil {
+		defaultMasterAccessToken := oprand.String(8)
+		spec.MasterAccessToken = &defaultMasterAccessToken
 		changed = true
 	}
 
-	if ampSpec.RecaptchaPublicKey == nil {
+	if spec.RecaptchaPublicKey == nil {
 		defaultRecaptchaPublicKey := "" // TODO is this correct? is an empty OpenShift parameter equal to the empty string? or null/nil?
-		ampSpec.RecaptchaPublicKey = &defaultRecaptchaPublicKey
+		spec.RecaptchaPublicKey = &defaultRecaptchaPublicKey
 		changed = true
 	}
 
-	if ampSpec.RecaptchaPrivateKey == nil {
+	if spec.RecaptchaPrivateKey == nil {
 		defaultRecaptchaPrivateKey := "" // TODO is this correct? is an empty OpenShift parameter equal to the empty string? or null/nil?
-		ampSpec.RecaptchaPrivateKey = &defaultRecaptchaPrivateKey
+		spec.RecaptchaPrivateKey = &defaultRecaptchaPrivateKey
 		changed = true
 	}
 
-	if ampSpec.ZyncDatabasePassword == nil {
-		defaultZyncDatabasePassword := optrand.String(16)
-		ampSpec.ZyncDatabasePassword = &defaultZyncDatabasePassword
+	if spec.ZyncDatabasePassword == nil {
+		defaultZyncDatabasePassword := oprand.String(16)
+		spec.ZyncDatabasePassword = &defaultZyncDatabasePassword
 		changed = true
 	}
 
-	if ampSpec.ZyncSecretKeyBase == nil {
-		defaultZyncSecretKeyBase := optrand.String(16)
-		ampSpec.ZyncSecretKeyBase = &defaultZyncSecretKeyBase
+	if spec.ZyncSecretKeyBase == nil {
+		defaultZyncSecretKeyBase := oprand.String(16)
+		spec.ZyncSecretKeyBase = &defaultZyncSecretKeyBase
 		changed = true
 	}
 
-	if ampSpec.ZyncAuthenticationToken == nil {
-		defaultZyncAuthenticationToken := optrand.String(16)
-		ampSpec.ZyncAuthenticationToken = &defaultZyncAuthenticationToken
+	if spec.ZyncAuthenticationToken == nil {
+		defaultZyncAuthenticationToken := oprand.String(16)
+		spec.ZyncAuthenticationToken = &defaultZyncAuthenticationToken
 		changed = true
 	}
 
-	if ampSpec.ApicastAccessToken == nil {
-		defaultApicastAccessToken := optrand.String(8)
-		ampSpec.ApicastAccessToken = &defaultApicastAccessToken
+	if spec.ApicastAccessToken == nil {
+		defaultApicastAccessToken := oprand.String(8)
+		spec.ApicastAccessToken = &defaultApicastAccessToken
 		changed = true
 	}
 
-	if ampSpec.ApicastManagementApi == nil {
+	if spec.ApicastManagementApi == nil {
 		defaultApicastManagementApi := "status"
-		ampSpec.ApicastManagementApi = &defaultApicastManagementApi
+		spec.ApicastManagementApi = &defaultApicastManagementApi
 		changed = true
 	}
 
-	if ampSpec.ApicastOpenSSLVerify == nil {
+	if spec.ApicastOpenSSLVerify == nil {
 		defaultApicastOpenSSLVerify := false
-		ampSpec.ApicastOpenSSLVerify = &defaultApicastOpenSSLVerify
+		spec.ApicastOpenSSLVerify = &defaultApicastOpenSSLVerify
 		changed = true
 	}
 
-	if ampSpec.ApicastResponseCodes == nil {
+	if spec.ApicastResponseCodes == nil {
 		defaultApicastResponseCodes := true
-		ampSpec.ApicastResponseCodes = &defaultApicastResponseCodes
+		spec.ApicastResponseCodes = &defaultApicastResponseCodes
 		changed = true
 	}
 
-	if ampSpec.ApicastRegistryURL == nil {
+	if spec.ApicastRegistryURL == nil {
 		defaultApicastRegistryURL := "http://apicast-staging:8090/policies"
-		ampSpec.ApicastRegistryURL = &defaultApicastRegistryURL
+		spec.ApicastRegistryURL = &defaultApicastRegistryURL
 		changed = true
 	}
 
-	if ampSpec.WildcardPolicy == nil {
+	if spec.WildcardPolicy == nil {
 		defaultWildcardPolicy := "None" //TODO should be a set of predefined values (a custom type enum-like to be used)
-		ampSpec.WildcardPolicy = &defaultWildcardPolicy
+		spec.WildcardPolicy = &defaultWildcardPolicy
 		changed = true
 	}
 
 	return changed
-}
-
-// Generate random alphanumeric string of size 'size'.
-// TODO move variables to constants, the creation of the randomgenerator
-// to some kind of singleton/global variable, move it into its own package
-// maybe make it concurrencysafe etc...
-func generateRandString(size int) string {
-	alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	numbers := "0123456789"
-	alphanumeric := alphabet + numbers
-
-	result := make([]byte, size)
-
-	randgen := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
-
-	for i := range result {
-		result[i] = alphanumeric[randgen.Int63()%int64(len(alphanumeric))]
-	}
-
-	return string(result)
 }

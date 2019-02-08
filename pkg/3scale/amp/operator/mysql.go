@@ -8,12 +8,12 @@ import (
 
 func (o *OperatorMysqlOptionsProvider) GetMysqlOptions() (*component.MysqlOptions, error) {
 	optProv := component.MysqlOptionsBuilder{}
-	optProv.AppLabel(*o.AmpSpec.AppLabel)
-	optProv.DatabaseName(*o.AmpSpec.MysqlDatabase)
-	optProv.Image(*o.AmpSpec.MysqlImage)
-	optProv.User(*o.AmpSpec.MysqlUser)
-	optProv.Password(*o.AmpSpec.MysqlPassword)
-	optProv.RootPassword(*o.AmpSpec.MysqlRootPassword)
+	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
+	optProv.DatabaseName(*o.APIManagerSpec.MysqlDatabase)
+	optProv.Image(*o.APIManagerSpec.MysqlImage)
+	optProv.User(*o.APIManagerSpec.MysqlUser)
+	optProv.Password(*o.APIManagerSpec.MysqlPassword)
+	optProv.RootPassword(*o.APIManagerSpec.MysqlRootPassword)
 	res, err := optProv.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Mysql Options - %s", err)

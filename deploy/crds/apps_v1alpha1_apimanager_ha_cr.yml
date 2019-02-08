@@ -1,7 +1,7 @@
-apiVersion: amp.3scale.net/v1alpha1
-kind: AMP
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
 metadata:
-  name: example-amp-ha
+  name: example-apimanager-ha
 spec:
   # Add fields here
   ampRelease: "2.4"

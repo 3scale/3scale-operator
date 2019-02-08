@@ -32,13 +32,13 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - 'image.openshift.io'
+  - image.openshift.io
   resources:
   - imagestreams
   verbs:
   - '*'
 - apiGroups:
-  - 'route.openshift.io'
+  - route.openshift.io
   resources:
   - routes
   - routes/custom-host
@@ -46,7 +46,7 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - 'apps.openshift.io'
+  - apps.openshift.io
   resources:
   - deploymentconfigs
   verbs:
@@ -56,16 +56,14 @@ rules:
   resources:
   - servicemonitors
   verbs:
-  - "get"
-  - "create"
+  - get
+  - create
 - apiGroups:
-  - amp.3scale.net
+  - apps.3scale.net
   resources:
   - '*'
   verbs:
   - '*'
-  - "get"
-  - "create"
 - apiGroups:
   - api.3scale.net
   resources:
@@ -76,6 +74,5 @@ rules:
   - plans
   - limits
   - mappingrules
-  - amp.3scale.net
   verbs:
   - '*'
