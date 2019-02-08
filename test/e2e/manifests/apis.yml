@@ -1,0 +1,51 @@
+apiVersion: v1
+items:
+- apiVersion: api.3scale.net/v1alpha1
+  kind: API
+  metadata:
+    creationTimestamp: 2019-01-25T13:28:41Z
+    generation: 1
+    labels:
+      environment: production
+    name: myapi
+    namespace: operator-test
+    resourceVersion: "1364154"
+    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/apis/myapi
+    uid: 21a5eafc-20a5-11e9-b8c6-0e4109beb104
+  spec:
+    PlanSelector:
+      matchLabel:
+        api: myapi
+    description: 3scale service for my awesome api
+    integrationMethod:
+      apicastHosted:
+        apiTestGetRequest: /
+        authenticationSettings:
+          credentials:
+            apiKey:
+              authParameterName: user-key
+              credentialsLocation: headers
+          errors:
+            authenticationFailed:
+              contentType: text/plain; charset=us-ascii
+              responseBody: Authentication failed
+              responseCode: 403
+            authenticationMissing:
+              contentType: text/plain; charset=us-ascii
+              responseBody: Authentication Missing
+              responseCode: 403
+          hostHeader: testing.com
+          secretToken: Shared_secret_sent_from_proxy_to_API_backend_9603f637ca51ccfe
+        mappingRulesSelector:
+          matchLabels:
+            api: myapi
+        privateBaseURL: https://echo-api.3scale.net:443
+        productionPublicBaseURL: https://api.testing.com
+        stagingPublicBaseURL: https://api.testing.com
+    metricSelector:
+      matchLabel:
+        api: myapi
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

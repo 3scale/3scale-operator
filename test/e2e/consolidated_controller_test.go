@@ -272,7 +272,7 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 		TypeMeta:   v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{},
 		Spec: operator.ConsolidatedSpec{
-			Credentials: operator.InternalCredential{
+			Credentials: operator.InternalCredentials{
 				AccessToken: "test",
 				AdminURL:    "test",
 			},
