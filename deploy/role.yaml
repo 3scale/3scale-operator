@@ -33,7 +33,16 @@ rules:
   - "get"
   - "create"
 - apiGroups:
+  - api.3scale.net
   - amp.3scale.net
+  resources:
+  - '*'
+  - consolidateds
+  - bindings
+  - metrics
+  - plans
+  - limits
+  - mappingrules
   resources:
   - '*'
   verbs:
