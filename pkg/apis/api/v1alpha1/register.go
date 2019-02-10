@@ -10,9 +10,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/scheme"
 )
 
+const (
+	version    = "v1alpha1"
+	groupName  = "api.3scale.net"
+	TenantKind = "Tenant"
+)
+
 var (
 	// SchemeGroupVersion is group version used to register these objects
-	SchemeGroupVersion = schema.GroupVersion{Group: "api.3scale.net", Version: "v1alpha1"}
+	SchemeGroupVersion = schema.GroupVersion{Group: groupName, Version: version}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
