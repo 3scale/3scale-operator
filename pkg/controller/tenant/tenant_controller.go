@@ -106,12 +106,6 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	// TODO: Validate tenant resource
-	reqLogger.Info("Tenant info", "Tenant.OrgName", tenantR.Spec.OrgName)
-	reqLogger.Info("Tenant info", "Tenant.DestinationNS", tenantR.Spec.DestinationNS)
-	reqLogger.Info("Tenant info", "Tenant.UserName", tenantR.Spec.UserName)
-	reqLogger.Info("Tenant info", "Tenant.Email", tenantR.Spec.Email)
-
 	masterAdminURL, masterAccessToken, err := FetchMasterCredentials(r.client, tenantR)
 	if err != nil {
 		log.Error(err, "Error fetching master credentials secret")
@@ -130,19 +124,11 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 	err = internalReconciler.Run()
 	if err != nil {
 		log.Error(err, "Error in tenant reconciliation")
-		switch err.(type) {
-		case *AccessTokenNotAvailableError:
-			// Update resource status
-			// TODO
-			// Return and don't requeue
-			return reconcile.Result{}, nil
-		default:
-			// Error reading the object - requeue the request.
-			return reconcile.Result{}, err
-		}
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Tenant created successfully")
+	reqLogger.Info("Tenant reconciled successfully")
 	return reconcile.Result{}, nil
 }
 
