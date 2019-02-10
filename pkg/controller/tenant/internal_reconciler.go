@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
@@ -48,68 +49,117 @@ func (r *InternalReconciler) Run() error {
 		return err
 	}
 
-	err = r.reconcileAdminUser(tenantDef)
+	adminUserDef, err := r.reconcileAdminUser(tenantDef)
 	if err != nil {
 		return err
 	}
 
-	return r.reconcileAccessTokenSecret(tenantDef)
+	err = r.reconcileAccessTokenSecret(tenantDef)
+	if err != nil {
+		return err
+	}
+
+	tenantStatus := r.getTenantStatus(tenantDef, adminUserDef)
+
+	return r.updateTenantStatus(tenantStatus)
 }
 
 // This method makes sure that tenant exists, otherwise it will create one
 // On method completion:
-// * tenant will exist with specified admin user
-// * tenant's access_token will be available
-func (r *InternalReconciler) reconcileTenant() (*porta_client_pkg.Signup, error) {
-	tenantDef, err := r.findTenant()
+// * tenant will exist
+// * tenant's attributes will be updated if required
+func (r *InternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, error) {
+	tenantDef, err := r.fetchTenant()
 	if err != nil {
 		return nil, err
 	}
 
 	if tenantDef == nil {
-		tenantDef, err = r.createTenant()
+		tenantDef, err := r.createTenant()
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		// If tenant is found, access token owned by that tenant admin is not provided
-		r.logger.Info("Tenant already exists", "TenantID", tenantDef.Account.ID)
+		r.logger.Info("Tenant already exists", "TenantID", tenantDef.Signup.Account.ID)
+		// Tenant is not created, check tenant desired state matches current state
+		// When created, not needed to update
+		err := r.syncTenant(tenantDef)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return tenantDef, err
+	return tenantDef, nil
 }
 
-////
-//
-// This method makes sure tenant admin user is active
-// On method completion, tenant admin user will be active
-func (r *InternalReconciler) reconcileAdminUser(tenantDef *porta_client_pkg.Signup) error {
-	adminUser := r.findAdminUser(tenantDef)
-
-	if adminUser == nil {
-		return fmt.Errorf("Admin user not found and should be available"+
-			"TenandId: %s. Admin Username: %s, Admin email: %s", tenantDef.Account.ID,
-			r.tenantR.Spec.UserName, r.tenantR.Spec.Email)
+func (r *InternalReconciler) fetchTenant() (*porta_client_pkg.Tenant, error) {
+	if r.tenantR.Status.TenantID == 0 {
+		// tenantID not in status field
+		// Tenant has to be created
+		return nil, nil
 	}
 
-	// activate user operation just works when user is in pending state
-	// activate when suspended?
-	if adminUser.State == "pending" {
-		err := r.activateAdminUser(adminUser)
+	tenantDef, err := r.portaClient.ShowTenant(r.masterAccessToken, r.tenantR.Status.TenantID)
+	if err != nil && porta_client_pkg.IsNotFound(err) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return tenantDef, nil
+}
+
+func (r *InternalReconciler) syncTenant(tenantDef *porta_client_pkg.Tenant) error {
+	// If tenant desired state is not current state, update
+	triggerSync := func() bool {
+		if r.tenantR.Spec.OrgName != tenantDef.Signup.Account.OrgName {
+			return true
+		}
+
+		if r.tenantR.Spec.Email != tenantDef.Signup.Account.SupportEmail {
+			return true
+		}
+
+		return false
+	}()
+
+	if triggerSync {
+		r.logger.Info("Syncing tenant", "TenantID", tenantDef.Signup.Account.ID)
+		tenantDef.Signup.Account.OrgName = r.tenantR.Spec.OrgName
+		tenantDef.Signup.Account.SupportEmail = r.tenantR.Spec.Email
+		params := porta_client_pkg.Params{
+			"support_email": r.tenantR.Spec.Email,
+			"org_name":      r.tenantR.Spec.OrgName,
+		}
+		_, err := r.portaClient.UpdateTenant(r.masterAccessToken, r.tenantR.Status.TenantID, params)
 		if err != nil {
 			return err
 		}
-	} else {
-		r.logger.Info("Admin user already active", "UserID", adminUser.ID)
 	}
 
 	return nil
 }
 
+////
+//
+// This method makes sure admin user:
+// * is active
+// * user's attributes will be updated if required
+func (r *InternalReconciler) reconcileAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
+	adminUserDef, err := r.fetchAdminUser(tenantDef)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.syncAdminUser(tenantDef, adminUserDef)
+	if err != nil {
+		return nil, err
+	}
+
+	return adminUserDef, nil
+}
+
 // This method makes sure secret with tenant's access_token exists
-func (r *InternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_pkg.Signup) error {
-	//r.logger.Info("Creating a new Secret", "Secret.Namespace", pod.Namespace, "Secret.Name", pod.Name)
-	// if AccessToken is not available, update Tenant Resource Status
-	// AccessToken might not be available if tenant was not created in the pipeline
-	// because it already existed. In that case, token is not available.
-	// Currently, there is no way to create tenant's user admin's access token using master account access_token.
+func (r *InternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_pkg.Tenant) error {
 	adminAccessTokenSecretNN := types.NamespacedName{
 		Name:      adminAccessTokenName,
 		Namespace: r.tenantR.Spec.DestinationNS,
@@ -120,14 +170,9 @@ func (r *InternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_
 	}
 
 	if adminAccessTokenSecret == nil {
-		if tenantDef.AccessToken.Value != "" {
-			err = r.createAdminAcessTokenSecret(tenantDef, adminAccessTokenSecretNN)
-			if err != nil {
-				return err
-			}
-		} else {
-			return NewAccessTokenNotAvailableError("Could not create admin access token secret",
-				tenantDef.Account.ID, adminAccessTokenSecretNN)
+		err = r.createAdminAcessTokenSecret(tenantDef, adminAccessTokenSecretNN)
+		if err != nil {
+			return err
 		}
 	} else {
 		r.logger.Info("Admin user access token secret already exists",
@@ -137,7 +182,7 @@ func (r *InternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_
 }
 
 // Create Tenant using porta client
-func (r *InternalReconciler) createTenant() (*porta_client_pkg.Signup, error) {
+func (r *InternalReconciler) createTenant() (*porta_client_pkg.Tenant, error) {
 	password, err := r.getAdminPassword()
 	if err != nil {
 		return nil, err
@@ -152,53 +197,6 @@ func (r *InternalReconciler) createTenant() (*porta_client_pkg.Signup, error) {
 		r.tenantR.Spec.Email,
 		password,
 	)
-}
-
-// Find Tenant in account list
-// identity function is based on:
-// * Organization Name
-// * Email
-// * Username
-func (r *InternalReconciler) findTenant() (*porta_client_pkg.Signup, error) {
-	accountList, err := r.portaClient.ListAccounts(r.masterAccessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	var tenantDef *porta_client_pkg.Signup
-
-	// flat map operation to search current tenant in account list
-	// internal data type to build flat list
-	type TenantInfo struct {
-		Idx      int
-		OrgName  string
-		Email    string
-		UserName string
-	}
-	tenantInfoList := []*TenantInfo{}
-	for accountIdx, account := range accountList.Accounts {
-		for _, user := range account.Users.Users {
-			tenantInfoList = append(tenantInfoList, &TenantInfo{
-				Idx:      accountIdx,
-				OrgName:  account.OrgName,
-				Email:    account.SupportEmail,
-				UserName: user.UserName,
-			})
-		}
-	}
-
-	for _, tenantInfo := range tenantInfoList {
-		if tenantInfo.OrgName == r.tenantR.Spec.OrgName &&
-			tenantInfo.Email == r.tenantR.Spec.Email &&
-			tenantInfo.UserName == r.tenantR.Spec.UserName {
-
-			// There is no AccessToken info available
-			tenantDef = &porta_client_pkg.Signup{
-				Account: accountList.Accounts[tenantInfo.Idx],
-			}
-		}
-	}
-	return tenantDef, nil
 }
 
 func (r *InternalReconciler) getAdminPassword() (string, error) {
@@ -225,15 +223,72 @@ func (r *InternalReconciler) getAdminPassword() (string, error) {
 	return bytes.NewBuffer(passwordByteArray).String(), err
 }
 
-func (r *InternalReconciler) findAdminUser(tenantDef *porta_client_pkg.Signup) *porta_client_pkg.User {
-	// Current implementation only searchs on tenant info (account information).
-	// Should be there because previous step make sure tenant is created or already exists
-	// with the given admin user
-	// An alternate implementation would be fetch users state from 3scale API
-	for _, user := range tenantDef.Account.Users.Users {
+//
+func (r *InternalReconciler) fetchAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
+	if r.tenantR.Status.AdminUserID == 0 {
+		// UserID not in status field
+		return r.findAdminUser(tenantDef)
+	}
+
+	//
+	return r.portaClient.ReadUser(r.masterAccessToken, tenantDef.Signup.Account.ID, r.tenantR.Status.AdminUserID)
+}
+
+func (r *InternalReconciler) findAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
+	// Only admin users
+	// Any state
+	filterParams := porta_client_pkg.Params{
+		"role": "admin",
+	}
+	userList, err := r.portaClient.ListUser(r.masterAccessToken, tenantDef.Signup.Account.ID, filterParams)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range userList {
 		if user.Email == r.tenantR.Spec.Email && user.UserName == r.tenantR.Spec.UserName {
 			// user is already a copy from User slice element
-			return &user
+			return &user, nil
+		}
+	}
+	return nil, fmt.Errorf("Admin user not found and should be available"+
+		"TenantID: %s. Admin Username: %s, Admin email: %s", tenantDef.Signup.Account.ID,
+		r.tenantR.Spec.UserName, r.tenantR.Spec.Email)
+}
+func (r *InternalReconciler) syncAdminUser(tenantDef *porta_client_pkg.Tenant, adminUser *porta_client_pkg.User) error {
+	// If adminUser desired state is not current state, update
+	if adminUser.State == "pending" {
+		err := r.activateAdminUser(adminUser)
+		if err != nil {
+			return err
+		}
+	} else {
+		r.logger.Info("Admin user already active", "TenantID", tenantDef.Signup.Account.ID, "UserID", adminUser.ID)
+	}
+
+	triggerSync := func() bool {
+		if r.tenantR.Spec.UserName != adminUser.UserName {
+			return true
+		}
+
+		if r.tenantR.Spec.Email != adminUser.Email {
+			return true
+		}
+
+		return false
+	}()
+
+	if triggerSync {
+		r.logger.Info("Syncing adminUser", "TenantID", tenantDef.Signup.Account.ID, "UserID", adminUser.ID)
+		adminUser.UserName = r.tenantR.Spec.UserName
+		adminUser.Email = r.tenantR.Spec.Email
+		params := porta_client_pkg.Params{
+			"username": r.tenantR.Spec.UserName,
+			"email":    r.tenantR.Spec.Email,
+		}
+		_, err := r.portaClient.UpdateUser(r.masterAccessToken, tenantDef.Signup.Account.ID, adminUser.ID, params)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -261,8 +316,13 @@ func (r *InternalReconciler) findAccessTokenSecret(nn types.NamespacedName) (*v1
 	return adminAccessTokenSecret, nil
 }
 
-func (r *InternalReconciler) createAdminAcessTokenSecret(tenantDef *porta_client_pkg.Signup, nn types.NamespacedName) error {
+func (r *InternalReconciler) createAdminAcessTokenSecret(tenantDef *porta_client_pkg.Tenant, nn types.NamespacedName) error {
 	r.logger.Info("Creating admin access token secret", "Secret NS", nn.Namespace, "Secret name", nn.Name)
+
+	tenantProviderKey, err := r.findTenantProviderKey(tenantDef)
+	if err != nil {
+		return err
+	}
 
 	secret := &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
@@ -274,8 +334,39 @@ func (r *InternalReconciler) createAdminAcessTokenSecret(tenantDef *porta_client
 			Name:      nn.Name,
 			Labels:    map[string]string{"app": "3scale-operator"},
 		},
-		StringData: map[string]string{secretAdminAccessTokenKey: tenantDef.AccessToken.Value},
+		StringData: map[string]string{secretAdminAccessTokenKey: tenantProviderKey},
 		Type:       v1.SecretTypeOpaque,
 	}
+	addOwnerRefToObject(secret, asOwner(r.tenantR))
 	return r.k8sClient.Create(context.TODO(), secret)
+}
+
+func (r *InternalReconciler) findTenantProviderKey(tenantDef *porta_client_pkg.Tenant) (string, error) {
+	// Tenant Provider Key is available on provider application list
+	appList, err := r.portaClient.ListApplications(r.masterAccessToken, tenantDef.Signup.Account.ID)
+	if err != nil {
+		return "", err
+	}
+
+	if len(appList.Applications) != 1 {
+		return "", fmt.Errorf("Unexpected application list. TenantID: %s", tenantDef.Signup.Account.ID)
+	}
+
+	return appList.Applications[0].Application.UserKey, nil
+}
+
+func (r *InternalReconciler) getTenantStatus(tenantDef *porta_client_pkg.Tenant, adminUserDef *porta_client_pkg.User) *apiv1alpha1.TenantStatus {
+	return &apiv1alpha1.TenantStatus{
+		TenantID:    tenantDef.Signup.Account.ID,
+		AdminUserID: adminUserDef.ID,
+	}
+}
+
+func (r *InternalReconciler) updateTenantStatus(tenantStatus *apiv1alpha1.TenantStatus) error {
+	// don't update the status if there aren't any changes.
+	if reflect.DeepEqual(r.tenantR.Status, *tenantStatus) {
+		return nil
+	}
+	r.tenantR.Status = *tenantStatus
+	return r.k8sClient.Status().Update(context.TODO(), r.tenantR)
 }
