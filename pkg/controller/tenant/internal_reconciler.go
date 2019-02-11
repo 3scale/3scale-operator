@@ -75,7 +75,7 @@ func (r *InternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, error)
 	}
 
 	if tenantDef == nil {
-		tenantDef, err := r.createTenant()
+		tenantDef, err = r.createTenant()
 		if err != nil {
 			return nil, err
 		}
@@ -240,19 +240,19 @@ func (r *InternalReconciler) findAdminUser(tenantDef *porta_client_pkg.Tenant) (
 	filterParams := porta_client_pkg.Params{
 		"role": "admin",
 	}
-	userList, err := r.portaClient.ListUser(r.masterAccessToken, tenantDef.Signup.Account.ID, filterParams)
+	userList, err := r.portaClient.ListUsers(r.masterAccessToken, tenantDef.Signup.Account.ID, filterParams)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, user := range userList {
-		if user.Email == r.tenantR.Spec.Email && user.UserName == r.tenantR.Spec.UserName {
+	for _, user := range userList.Users {
+		if user.User.Email == r.tenantR.Spec.Email && user.User.UserName == r.tenantR.Spec.UserName {
 			// user is already a copy from User slice element
-			return &user, nil
+			return &user.User, nil
 		}
 	}
 	return nil, fmt.Errorf("Admin user not found and should be available"+
-		"TenantID: %s. Admin Username: %s, Admin email: %s", tenantDef.Signup.Account.ID,
+		"TenantID: %d. Admin Username: %s, Admin email: %s", tenantDef.Signup.Account.ID,
 		r.tenantR.Spec.UserName, r.tenantR.Spec.Email)
 }
 func (r *InternalReconciler) syncAdminUser(tenantDef *porta_client_pkg.Tenant, adminUser *porta_client_pkg.User) error {
@@ -349,7 +349,7 @@ func (r *InternalReconciler) findTenantProviderKey(tenantDef *porta_client_pkg.T
 	}
 
 	if len(appList.Applications) != 1 {
-		return "", fmt.Errorf("Unexpected application list. TenantID: %s", tenantDef.Signup.Account.ID)
+		return "", fmt.Errorf("Unexpected application list. TenantID: %d", tenantDef.Signup.Account.ID)
 	}
 
 	return appList.Applications[0].Application.UserKey, nil
