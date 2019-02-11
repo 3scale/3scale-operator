@@ -276,8 +276,8 @@ type InternalLimit struct {
 }
 
 type InternalCredentials struct {
-	AccessToken string `json:"accessToken"`
-	AdminURL    string `json:"adminURL"`
+	AuthToken string `json:"token"`
+	AdminURL  string `json:"adminURL"`
 }
 
 //TODO: Refactor Diffs.
@@ -316,7 +316,7 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 		}
 
 		serviceNeedsUpdate := false
-		service, err := getServiceFromInternalAPI(c, creds.AccessToken, apiPair.A.Name)
+		service, err := getServiceFromInternalAPI(c, creds.AuthToken, apiPair.A.Name)
 		if err != nil {
 			return err
 		}
@@ -342,17 +342,17 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 
 		// Update the service with the params
 		if serviceNeedsUpdate {
-			_, err := c.UpdateService(creds.AccessToken, service.ID, serviceParams)
+			_, err := c.UpdateService(creds.AuthToken, service.ID, serviceParams)
 			if err != nil {
 				return err
 			}
 		}
 
-		desiredProxy, err := get3scaleProxyFromInternalIntegration(apiPair.A.IntegrationMethod)
+		desiredProxy, err := get3scaleProxyFromInternalAPI(apiPair.A)
 		if err != nil {
 			return err
 		}
-		existingProxy, err := get3scaleProxyFromInternalIntegration(apiPair.B.IntegrationMethod)
+		existingProxy, err := get3scaleProxyFromInternalAPI(apiPair.B)
 		if err != nil {
 			return err
 		}
@@ -370,7 +370,7 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 				}
 			}
 
-			_, err = c.UpdateProxy(creds.AccessToken, service.ID, proxyParams)
+			_, err = c.UpdateProxy(creds.AuthToken, service.ID, proxyParams)
 			if err != nil {
 				return err
 			}
@@ -378,7 +378,7 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 
 		// Get the Difference in Metrics for the API
 		metricsDiff := DiffMetrics(apiPair.A.Metrics, apiPair.B.Metrics)
-		err = metricsDiff.ReconcileWith3scale(c, creds.AccessToken, service.ID, apiPair.A)
+		err = metricsDiff.ReconcileWith3scale(c, creds.AuthToken, service.ID, apiPair.A)
 		if err != nil {
 			return err
 		}
@@ -401,12 +401,12 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 			}
 
 			if !found {
-				metric, err := metricNametoMetric(c, creds.AccessToken, service.ID, desiredMappingRule.Metric)
+				metric, err := metricNametoMetric(c, creds.AuthToken, service.ID, desiredMappingRule.Metric)
 				if err != nil {
 					return err
 				}
 
-				_, err = c.CreateMappingRule(creds.AccessToken, service.ID, strings.ToUpper(desiredMappingRule.Method), desiredMappingRule.Path, int(desiredMappingRule.Increment), metric.ID)
+				_, err = c.CreateMappingRule(creds.AuthToken, service.ID, strings.ToUpper(desiredMappingRule.Method), desiredMappingRule.Path, int(desiredMappingRule.Increment), metric.ID)
 				if err != nil {
 					return err
 				}
@@ -427,11 +427,11 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 			}
 
 			if !found {
-				mappingRule, err := get3scaleMappingRulefromInternalMappingRule(c, creds.AccessToken, service.ID, existingMappingRule)
+				mappingRule, err := get3scaleMappingRulefromInternalMappingRule(c, creds.AuthToken, service.ID, existingMappingRule)
 				if err != nil {
 					return err
 				}
-				err = c.DeleteMappingRule(creds.AccessToken, service.ID, mappingRule.ID)
+				err = c.DeleteMappingRule(creds.AuthToken, service.ID, mappingRule.ID)
 				if err != nil {
 					return err
 				}
@@ -440,19 +440,18 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 
 		// Because MappingRules are not Unique, let's remove duplicated mappingRules
 
-
 		// ReconcileWith3scale Plans
 		plansDiff := DiffPlans(apiPair.A.Plans, apiPair.B.Plans)
-		err = plansDiff.ReconcileWith3scale(c, creds.AccessToken, service.ID, apiPair.A)
+		err = plansDiff.ReconcileWith3scale(c, creds.AuthToken, service.ID, apiPair.A)
 		if err != nil {
 			return err
 		}
 
 		// Promote config if needed
-		productionProxy, _ := c.GetLatestProxyConfig(creds.AccessToken, service.ID, "production")
-		sandboxProxy, _ := c.GetLatestProxyConfig(creds.AccessToken, service.ID, "sandbox")
+		productionProxy, _ := c.GetLatestProxyConfig(creds.AuthToken, service.ID, "production")
+		sandboxProxy, _ := c.GetLatestProxyConfig(creds.AuthToken, service.ID, "sandbox")
 		if productionProxy.ProxyConfig.Version != sandboxProxy.ProxyConfig.Version {
-			_, err := c.PromoteProxyConfig(creds.AccessToken, service.ID, "sandbox", strconv.Itoa(sandboxProxy.ProxyConfig.Version), "production")
+			_, err := c.PromoteProxyConfig(creds.AuthToken, service.ID, "sandbox", strconv.Itoa(sandboxProxy.ProxyConfig.Version), "production")
 			if err != nil {
 				return err
 			}
@@ -475,17 +474,17 @@ type MetricPair struct {
 	B InternalMetric
 }
 
-func (d *MetricsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, accessToken string, serviceId string, api InternalAPI) error {
+func (d *MetricsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, authToken string, serviceId string, api InternalAPI) error {
 
 	for _, metric := range d.MissingFromB {
-		err := CreateInternalMetricIn3scale(c, accessToken, api, metric)
+		err := CreateInternalMetricIn3scale(c, authToken, api, metric)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, metric := range d.MissingFromA {
-		err := DeleteInternalMetricFrom3scale(c, accessToken, api, metric)
+		err := DeleteInternalMetricFrom3scale(c, authToken, api, metric)
 		if err != nil {
 			return err
 		}
@@ -496,7 +495,7 @@ func (d *MetricsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, acces
 	for _, metric := range d.NotEqual {
 
 		// We need the metric ID in 3scale.
-		metric3scale, err := metricNametoMetric(c, accessToken, serviceId, metric.B.Name)
+		metric3scale, err := metricNametoMetric(c, authToken, serviceId, metric.B.Name)
 		if err != nil {
 			return err
 		}
@@ -506,7 +505,7 @@ func (d *MetricsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, acces
 		params.AddParam("description", metric.A.Description)
 		params.AddParam("unit", metric.A.Unit)
 
-		_, err = c.UpdateMetric(accessToken, serviceId, metric3scale.ID, params)
+		_, err = c.UpdateMetric(authToken, serviceId, metric3scale.ID, params)
 		if err != nil {
 			return err
 		}
@@ -527,22 +526,22 @@ type PlanPair struct {
 	B InternalPlan
 }
 
-func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, accessToken string, serviceId string, api InternalAPI) error {
+func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, authToken string, serviceId string, api InternalAPI) error {
 
 	for _, plan := range d.MissingFromA {
-		plan3scale, err := get3scalePlanFromInternalPlan(c, accessToken, serviceId, plan)
+		plan3scale, err := get3scalePlanFromInternalPlan(c, authToken, serviceId, plan)
 		if err != nil {
 			return err
 		}
 
-		err = c.DeleteAppPlan(accessToken, serviceId, plan3scale.ID)
+		err = c.DeleteAppPlan(authToken, serviceId, plan3scale.ID)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, plan := range d.MissingFromB {
-		plan3scale, err := c.CreateAppPlan(accessToken, serviceId, plan.Name, "")
+		plan3scale, err := c.CreateAppPlan(authToken, serviceId, plan.Name, "")
 		if err != nil {
 			return err
 		}
@@ -552,11 +551,11 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, accessT
 			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(accessToken, serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
+		_, err = c.UpdateAppPlan(authToken, serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
 	}
 
 	for _, planPair := range d.NotEqual {
-		plan3scale, err := get3scalePlanFromInternalPlan(c, accessToken, serviceId, planPair.B)
+		plan3scale, err := get3scalePlanFromInternalPlan(c, authToken, serviceId, planPair.B)
 		if err != nil {
 			return err
 		}
@@ -566,10 +565,10 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, accessT
 			"cost_per_month":    strconv.FormatFloat(planPair.A.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(planPair.A.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(accessToken, serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
+		_, err = c.UpdateAppPlan(authToken, serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
 
 		limitsDiff := DiffLimits(planPair.A.Limits, planPair.B.Limits)
-		err = limitsDiff.ReconcileWith3scale(c, accessToken, serviceId, plan3scale.ID)
+		err = limitsDiff.ReconcileWith3scale(c, authToken, serviceId, plan3scale.ID)
 		if err != nil {
 			return err
 		}
@@ -591,27 +590,27 @@ type LimitPair struct {
 	B InternalLimit
 }
 
-func (d *LimitsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, accessToken string, serviceId string, planID string) error {
+func (d *LimitsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, authToken string, serviceId string, planID string) error {
 
 	for _, limit := range d.MissingFromA {
-		metric, err := metricNametoMetric(c, accessToken, serviceId, limit.Metric)
+		metric, err := metricNametoMetric(c, authToken, serviceId, limit.Metric)
 		if err != nil {
 			return err
 		}
-		limit3scale, err := get3scaleLimitFromInternalLimit(c, accessToken, serviceId, planID, limit)
+		limit3scale, err := get3scaleLimitFromInternalLimit(c, authToken, serviceId, planID, limit)
 		if err != nil {
 			return err
 		}
 		//TODO: Delete always report an error, fix this, for now, we ignore it.
-		_ = c.DeleteLimitPerAppPlan(accessToken, planID, metric.ID, limit3scale.ID)
+		_ = c.DeleteLimitPerAppPlan(authToken, planID, metric.ID, limit3scale.ID)
 	}
 
 	for _, limit := range d.MissingFromB {
-		metric, err := metricNametoMetric(c, accessToken, serviceId, limit.Metric)
+		metric, err := metricNametoMetric(c, authToken, serviceId, limit.Metric)
 		if err != nil {
 			return err
 		}
-		_, err = c.CreateLimitAppPlan(accessToken, planID, metric.ID, limit.Period, int(limit.MaxValue))
+		_, err = c.CreateLimitAppPlan(authToken, planID, metric.ID, limit.Period, int(limit.MaxValue))
 		if err != nil {
 			return err
 		}
@@ -819,8 +818,8 @@ func NewConsolidatedFromBinding(binding Binding, c client.Client) (*Consolidated
 		log.Printf("secret: %s found for %s", binding.Spec.CredentialsRef.Name, binding.Name)
 
 		consolidated.Spec.Credentials = InternalCredentials{
-			AccessToken: string(secret.Data["access_token"]),
-			AdminURL:    string(secret.Data["admin_portal_url"]),
+			AuthToken: string(secret.Data["token"]),
+			AdminURL:  string(secret.Data["adminURL"]),
 		}
 	}
 	// GET APIS
@@ -1152,33 +1151,33 @@ func CompareInternalAPI(APIA, APIB InternalAPI) bool {
 			APIB.Plans[i].Limits[j].Name = "limit"
 		}
 	}
-
-	if APIA.IntegrationMethod.ApicastOnPrem != nil {
-		for i := range APIA.IntegrationMethod.ApicastOnPrem.MappingRules {
-			APIA.IntegrationMethod.ApicastOnPrem.MappingRules[i].Name = "mapping_rule"
-		}
-	} else if APIA.IntegrationMethod.ApicastHosted != nil {
-		for i := range APIA.IntegrationMethod.ApicastHosted.MappingRules {
-			APIA.IntegrationMethod.ApicastHosted.MappingRules[i].Name = "mapping_rule"
-		}
-	}
-
-	if APIB.IntegrationMethod.ApicastOnPrem != nil {
-		for i := range APIB.IntegrationMethod.ApicastOnPrem.MappingRules {
-			APIB.IntegrationMethod.ApicastOnPrem.MappingRules[i].Name = "mapping_rule"
-		}
-	} else if APIB.IntegrationMethod.ApicastHosted != nil {
-		for i := range APIB.IntegrationMethod.ApicastHosted.MappingRules {
-			APIB.IntegrationMethod.ApicastHosted.MappingRules[i].Name = "mapping_rule"
+	if APIA.GetIntegrationName() != APIB.GetIntegrationName() {
+		return false
+	} else {
+		switch APIA.GetIntegrationName() {
+		case "ApicastOnPrem":
+			for i := range APIA.IntegrationMethod.ApicastOnPrem.MappingRules {
+				APIA.IntegrationMethod.ApicastOnPrem.MappingRules[i].Name = "mapping_rule"
+			}
+			for i := range APIB.IntegrationMethod.ApicastOnPrem.MappingRules {
+				APIB.IntegrationMethod.ApicastOnPrem.MappingRules[i].Name = "mapping_rule"
+			}
+		case "ApicastHosted":
+			for i := range APIA.IntegrationMethod.ApicastHosted.MappingRules {
+				APIA.IntegrationMethod.ApicastHosted.MappingRules[i].Name = "mapping_rule"
+			}
+			for i := range APIB.IntegrationMethod.ApicastHosted.MappingRules {
+				APIB.IntegrationMethod.ApicastHosted.MappingRules[i].Name = "mapping_rule"
+			}
 		}
 	}
 
 	A, _ := json.Marshal(APIA)
 	B, _ := json.Marshal(APIB)
 
-
 	return reflect.DeepEqual(A, B)
 }
+
 func ComparePlans(a, b InternalPlan) bool {
 
 	if a.Name == b.Name && a.ApprovalRequired == b.ApprovalRequired &&
@@ -1199,11 +1198,12 @@ func ComparePlans(a, b InternalPlan) bool {
 	return true
 }
 
-func get3scaleProxyFromInternalIntegration(integration InternalIntegration) (portaClient.Proxy, error) {
+func get3scaleProxyFromInternalAPI(api InternalAPI) (portaClient.Proxy, error) {
 
-	//TODO: Improve get3scaleProxyFromInternalIntegration.
+	//TODO: Improve get3scaleProxyFromInternalAPI.
 	var proxy portaClient.Proxy
 
+	integration := api.IntegrationMethod
 	if integration.ApicastHosted != nil {
 		proxy.HostnameRewrite = integration.ApicastHosted.AuthenticationSettings.HostHeader
 		proxy.ApiBackend = integration.ApicastHosted.PrivateBaseURL
@@ -1253,16 +1253,30 @@ func get3scaleProxyFromInternalIntegration(integration InternalIntegration) (por
 			proxy.CredentialsLocation = integration.ApicastOnPrem.AuthenticationSettings.Credentials.APIKey.CredentialsLocation
 			proxy.AuthUserKey = integration.ApicastOnPrem.AuthenticationSettings.Credentials.APIKey.AuthParameterName
 		}
+	} else if integration.CodePlugin != nil {
+		if integration.CodePlugin.AuthenticationSettings.Credentials.OpenIDConnector != nil {
+			proxy.CredentialsLocation = integration.CodePlugin.AuthenticationSettings.Credentials.OpenIDConnector.CredentialsLocation
+			proxy.OidcIssuerEndpoint = integration.CodePlugin.AuthenticationSettings.Credentials.OpenIDConnector.Issuer
+
+		} else if integration.CodePlugin.AuthenticationSettings.Credentials.AppID != nil {
+			proxy.CredentialsLocation = integration.CodePlugin.AuthenticationSettings.Credentials.AppID.CredentialsLocation
+			proxy.AuthAppID = integration.CodePlugin.AuthenticationSettings.Credentials.AppID.AppIDParameterName
+			proxy.AuthAppKey = integration.CodePlugin.AuthenticationSettings.Credentials.AppID.AppKeyParameterName
+
+		} else if integration.CodePlugin.AuthenticationSettings.Credentials.APIKey != nil {
+			proxy.CredentialsLocation = integration.CodePlugin.AuthenticationSettings.Credentials.APIKey.CredentialsLocation
+			proxy.AuthUserKey = integration.CodePlugin.AuthenticationSettings.Credentials.APIKey.AuthParameterName
+		}
 	} else {
 		return proxy, fmt.Errorf("integrationMethod invalid")
 	}
 
 	return proxy, nil
 }
-func getServiceMappingRulesFrom3scale(c *portaClient.ThreeScaleClient, accessToken string, service portaClient.Service) (*[]InternalMappingRule, error) {
+func getServiceMappingRulesFrom3scale(c *portaClient.ThreeScaleClient, authToken string, service portaClient.Service) (*[]InternalMappingRule, error) {
 
 	var mappingRules []InternalMappingRule
-	mappingRulesFrom3scale, _ := c.ListMappingRule(accessToken, service.ID)
+	mappingRulesFrom3scale, _ := c.ListMappingRule(authToken, service.ID)
 
 	for _, mapping := range mappingRulesFrom3scale.MappingRules {
 
@@ -1292,8 +1306,8 @@ func getServiceMappingRulesFrom3scale(c *portaClient.ThreeScaleClient, accessTok
 	}
 	return &mappingRules, nil
 }
-func getServiceFromInternalAPI(c *portaClient.ThreeScaleClient, accessToken string, serviceName string) (portaClient.Service, error) {
-	services, err := c.ListServices(accessToken)
+func getServiceFromInternalAPI(c *portaClient.ThreeScaleClient, ThreescaleCredential string, serviceName string) (portaClient.Service, error) {
+	services, err := c.ListServices(ThreescaleCredential)
 
 	if err != nil {
 		return portaClient.Service{}, err
@@ -1306,13 +1320,13 @@ func getServiceFromInternalAPI(c *portaClient.ThreeScaleClient, accessToken stri
 	}
 	return portaClient.Service{}, fmt.Errorf("notfound")
 }
-func get3scaleLimitFromInternalLimit(c *portaClient.ThreeScaleClient, accessToken string, serviceID string, planID string, limit InternalLimit) (portaClient.Limit, error) {
+func get3scaleLimitFromInternalLimit(c *portaClient.ThreeScaleClient, authToken string, serviceID string, planID string, limit InternalLimit) (portaClient.Limit, error) {
 
-	limits3scale, err := c.ListLimitsPerAppPlan(accessToken, planID, )
+	limits3scale, err := c.ListLimitsPerAppPlan(authToken, planID, )
 	if err != nil {
 		return portaClient.Limit{}, err
 	}
-	metric3scale, err := metricNametoMetric(c, accessToken, serviceID, limit.Metric)
+	metric3scale, err := metricNametoMetric(c, authToken, serviceID, limit.Metric)
 	if err != nil {
 		return portaClient.Limit{}, err
 	}
@@ -1331,8 +1345,8 @@ func get3scaleLimitFromInternalLimit(c *portaClient.ThreeScaleClient, accessToke
 
 	return portaClient.Limit{}, fmt.Errorf("limit not found")
 }
-func get3scalePlanFromInternalPlan(c *portaClient.ThreeScaleClient, accessToken string, serviceID string, plan InternalPlan) (portaClient.Plan, error) {
-	plans3scale, err := c.ListAppPlanByServiceId(accessToken, serviceID)
+func get3scalePlanFromInternalPlan(c *portaClient.ThreeScaleClient, authToken string, serviceID string, plan InternalPlan) (portaClient.Plan, error) {
+	plans3scale, err := c.ListAppPlanByServiceId(authToken, serviceID)
 	if err != nil {
 		return portaClient.Plan{}, err
 
@@ -1345,9 +1359,9 @@ func get3scalePlanFromInternalPlan(c *portaClient.ThreeScaleClient, accessToken 
 
 	return portaClient.Plan{}, fmt.Errorf("not found")
 }
-func get3scaleMappingRulefromInternalMappingRule(c *portaClient.ThreeScaleClient, accessToken string, serviceID string, internalMappingRule InternalMappingRule) (portaClient.MappingRule, error) {
-	mappingRules, err := c.ListMappingRule(accessToken, serviceID)
-	metric, err := metricNametoMetric(c, accessToken, serviceID, internalMappingRule.Metric)
+func get3scaleMappingRulefromInternalMappingRule(c *portaClient.ThreeScaleClient, authToken string, serviceID string, internalMappingRule InternalMappingRule) (portaClient.MappingRule, error) {
+	mappingRules, err := c.ListMappingRule(authToken, serviceID)
+	metric, err := metricNametoMetric(c, authToken, serviceID, internalMappingRule.Metric)
 	internalIncrement := strconv.FormatInt(internalMappingRule.Increment, 10)
 	if err != nil {
 		return portaClient.MappingRule{}, err
@@ -1418,7 +1432,7 @@ func NewConsolidatedFrom3scale(creds InternalCredentials, apis []InternalAPI) (*
 	}
 
 	for _, desiredAPI := range apis {
-		internalAPI, err := GetInternalAPIfrom3scale(c, creds.AccessToken, desiredAPI)
+		internalAPI, err := GetInternalAPIfrom3scale(c, creds.AuthToken, desiredAPI)
 		if err != nil {
 			log.Printf("API %s doesn't exists in 3scale", desiredAPI.Name)
 		} else {
@@ -1435,17 +1449,17 @@ func NewConsolidatedFrom3scale(creds InternalCredentials, apis []InternalAPI) (*
 
 	return &consolidated, nil
 }
-func GetInternalAPIfrom3scale(c *portaClient.ThreeScaleClient, accessToken string, api InternalAPI) (*InternalAPI, error) {
+func GetInternalAPIfrom3scale(c *portaClient.ThreeScaleClient, authToken string, api InternalAPI) (*InternalAPI, error) {
 
-	service, err := getServiceFromInternalAPI(c, accessToken, api.Name)
+	service, err := getServiceFromInternalAPI(c, authToken, api.Name)
 	if err != nil {
 		return nil, err
 	}
-	proxyConfig, err := c.ReadProxy(accessToken, service.ID)
+	proxyConfig, err := c.ReadProxy(authToken, service.ID)
 	if err != nil {
 		return nil, err
 	}
-	applicationPlans, err := c.ListAppPlanByServiceId(accessToken, service.ID)
+	applicationPlans, err := c.ListAppPlanByServiceId(authToken, service.ID)
 
 	// Initialize the InternalAPI with whatever info we have.
 	internalAPI := InternalAPI{
@@ -1519,7 +1533,7 @@ func GetInternalAPIfrom3scale(c *portaClient.ThreeScaleClient, accessToken strin
 
 	case "self_managed":
 		// This is ApicastOnPrem for us.
-		mappingRules, _ := getServiceMappingRulesFrom3scale(c, accessToken, service)
+		mappingRules, _ := getServiceMappingRulesFrom3scale(c, authToken, service)
 
 		internalAPI.APIBaseInternal.IntegrationMethod = InternalIntegration{
 			ApicastOnPrem: &InternalApicastOnPrem{
@@ -1545,7 +1559,7 @@ func GetInternalAPIfrom3scale(c *portaClient.ThreeScaleClient, accessToken strin
 
 	case "hosted":
 		// This is ApicastHosted for us.
-		mappingRules, _ := getServiceMappingRulesFrom3scale(c, accessToken, service)
+		mappingRules, _ := getServiceMappingRulesFrom3scale(c, authToken, service)
 
 		internalAPI.APIBaseInternal.IntegrationMethod = InternalIntegration{
 			ApicastHosted: &InternalApicastHosted{
@@ -1608,10 +1622,10 @@ func GetInternalAPIfrom3scale(c *portaClient.ThreeScaleClient, accessToken strin
 			Limits: nil,
 		}
 
-		limits, _ := c.ListLimitsPerAppPlan(accessToken, applicationPlan.ID)
+		limits, _ := c.ListLimitsPerAppPlan(authToken, applicationPlan.ID)
 		for _, limit := range limits.Limits {
 			maxValue, _ := strconv.ParseInt(limit.Value, 10, 64)
-			metric, _ := metricIDtoMetric(c, accessToken, service.ID, limit.MetricID)
+			metric, _ := metricIDtoMetric(c, authToken, service.ID, limit.MetricID)
 			internalLimit := InternalLimit{
 				Name:     limit.XMLName.Local,
 				Period:   limit.Period,
@@ -1627,9 +1641,9 @@ func GetInternalAPIfrom3scale(c *portaClient.ThreeScaleClient, accessToken strin
 	return &internalAPI, nil
 }
 
-func metricNametoMetric(c *portaClient.ThreeScaleClient, accessToken string, serviceID string, metricName string) (portaClient.Metric, error) {
+func metricNametoMetric(c *portaClient.ThreeScaleClient, authToken string, serviceID string, metricName string) (portaClient.Metric, error) {
 	m := portaClient.Metric{}
-	metrics, err := c.ListMetrics(accessToken, serviceID)
+	metrics, err := c.ListMetrics(authToken, serviceID)
 	if err != nil {
 		return m, err
 	}
@@ -1644,10 +1658,10 @@ func metricNametoMetric(c *portaClient.ThreeScaleClient, accessToken string, ser
 	return m, fmt.Errorf("metric not found")
 
 }
-func metricIDtoMetric(c *portaClient.ThreeScaleClient, accessToken string, serviceID string, metricID string) (portaClient.Metric, error) {
+func metricIDtoMetric(c *portaClient.ThreeScaleClient, authToken string, serviceID string, metricID string) (portaClient.Metric, error) {
 	m := portaClient.Metric{}
 
-	metrics, err := c.ListMetrics(accessToken, serviceID)
+	metrics, err := c.ListMetrics(authToken, serviceID)
 	if err != nil {
 		return m, err
 	}
@@ -1700,13 +1714,13 @@ func NewPortaClient(portalUrl string) (*portaClient.ThreeScaleClient, error) {
 	return c, nil
 }
 
-func CreateInternalMetricIn3scale(c *portaClient.ThreeScaleClient, accessToken string, api InternalAPI, metric InternalMetric) error {
+func CreateInternalMetricIn3scale(c *portaClient.ThreeScaleClient, authToken string, api InternalAPI, metric InternalMetric) error {
 
-	service, err := getServiceFromInternalAPI(c, accessToken, api.Name)
+	service, err := getServiceFromInternalAPI(c, authToken, api.Name)
 	if err != nil {
 		return err
 	}
-	_, err = c.CreateMetric(accessToken, service.ID, metric.Name, metric.Description, metric.Unit)
+	_, err = c.CreateMetric(authToken, service.ID, metric.Name, metric.Description, metric.Unit)
 	return err
 }
 
@@ -1737,15 +1751,15 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 		//TODO: add end_user_registration_required to API object.
 	}
 
-	service, err := c.CreateService(creds.AccessToken, api.Name)
+	service, err := c.CreateService(creds.AuthToken, api.Name)
 	if err != nil {
 		return err
 	}
-	_, err = c.UpdateService(creds.AccessToken, service.ID, params)
+	_, err = c.UpdateService(creds.AuthToken, service.ID, params)
 	if err != nil {
 		return err
 	}
-	desiredProxy, err := get3scaleProxyFromInternalIntegration(api.IntegrationMethod)
+	desiredProxy, err := get3scaleProxyFromInternalAPI(api)
 
 	// Wrap this into a func.
 	proxyParams := portaClient.NewParams()
@@ -1758,34 +1772,34 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 			proxyParams.AddParam(varName, varValue.(string))
 		}
 	}
-	_, err = c.UpdateProxy(creds.AccessToken, service.ID, proxyParams)
+	_, err = c.UpdateProxy(creds.AuthToken, service.ID, proxyParams)
 	if err != nil {
 		return err
 	}
 
 	// Promote config if needed
-	productionProxy, _ := c.GetLatestProxyConfig(creds.AccessToken, service.ID, "production")
-	sandboxProxy, _ := c.GetLatestProxyConfig(creds.AccessToken, service.ID, "sandbox")
+	productionProxy, _ := c.GetLatestProxyConfig(creds.AuthToken, service.ID, "production")
+	sandboxProxy, _ := c.GetLatestProxyConfig(creds.AuthToken, service.ID, "sandbox")
 	if productionProxy.ProxyConfig.Version != sandboxProxy.ProxyConfig.Version {
-		_, err := c.PromoteProxyConfig(creds.AccessToken, service.ID, "sandbox", strconv.Itoa(sandboxProxy.ProxyConfig.Version), "production")
+		_, err := c.PromoteProxyConfig(creds.AuthToken, service.ID, "sandbox", strconv.Itoa(sandboxProxy.ProxyConfig.Version), "production")
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, metric := range api.Metrics {
-		_, err := c.CreateMetric(creds.AccessToken, service.ID, metric.Name, metric.Description, metric.Unit)
+		_, err := c.CreateMetric(creds.AuthToken, service.ID, metric.Name, metric.Description, metric.Unit)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, mappingRule := range api.GetIntegration().getMappingRules() {
-		metric, err := metricNametoMetric(c, creds.AccessToken, service.ID, mappingRule.Metric)
+		metric, err := metricNametoMetric(c, creds.AuthToken, service.ID, mappingRule.Metric)
 		if err != nil {
 			return err
 		}
-		_, err = c.CreateMappingRule(creds.AccessToken, service.ID, strings.ToUpper(mappingRule.Method), mappingRule.Path, int(mappingRule.Increment), metric.ID)
+		_, err = c.CreateMappingRule(creds.AuthToken, service.ID, strings.ToUpper(mappingRule.Method), mappingRule.Path, int(mappingRule.Increment), metric.ID)
 		if err != nil {
 			return err
 		}
@@ -1794,7 +1808,7 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 	for _, plan := range api.Plans {
 		//TODO: expose publishing a plan from the CRD model
 
-		plan3scale, err := c.CreateAppPlan(creds.AccessToken, service.ID, plan.Name, "")
+		plan3scale, err := c.CreateAppPlan(creds.AuthToken, service.ID, plan.Name, "")
 		if err != nil {
 			return err
 		}
@@ -1805,17 +1819,17 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(creds.AccessToken, service.ID, plan3scale.ID, plan3scale.PlanName, "", params)
+		_, err = c.UpdateAppPlan(creds.AuthToken, service.ID, plan3scale.ID, plan3scale.PlanName, "", params)
 		if err != nil {
 			return err
 		}
 
 		for _, limit := range plan.Limits {
-			metric, err := metricNametoMetric(c, creds.AccessToken, service.ID, limit.Metric)
+			metric, err := metricNametoMetric(c, creds.AuthToken, service.ID, limit.Metric)
 			if err != nil {
 				return err
 			}
-			_, err = c.CreateLimitAppPlan(creds.AccessToken, plan3scale.ID, metric.ID, limit.Period, int(limit.MaxValue))
+			_, err = c.CreateLimitAppPlan(creds.AuthToken, plan3scale.ID, metric.ID, limit.Period, int(limit.MaxValue))
 			if err != nil {
 				return err
 			}
@@ -1831,32 +1845,32 @@ func DeleteInternalAPIFrom3scale(creds InternalCredentials, api InternalAPI) err
 		return err
 	}
 
-	services, err := c.ListServices(creds.AccessToken)
+	services, err := c.ListServices(creds.AuthToken)
 	if err != nil {
 		return err
 	}
 
 	for _, service := range services.Services {
 		if service.SystemName == api.Name {
-			return c.DeleteService(creds.AccessToken, service.ID)
+			return c.DeleteService(creds.AuthToken, service.ID)
 		}
 	}
 	return nil
 }
-func DeleteInternalMetricFrom3scale(c *portaClient.ThreeScaleClient, accessToken string, api InternalAPI, metric InternalMetric) error {
+func DeleteInternalMetricFrom3scale(c *portaClient.ThreeScaleClient, authToken string, api InternalAPI, metric InternalMetric) error {
 
-	service, err := getServiceFromInternalAPI(c, accessToken, api.Name)
+	service, err := getServiceFromInternalAPI(c, authToken, api.Name)
 	if err != nil {
 		return err
 	}
 
-	metric3scale, err := metricNametoMetric(c, accessToken, service.ID, metric.Name)
+	metric3scale, err := metricNametoMetric(c, authToken, service.ID, metric.Name)
 	if err != nil {
 		return err
 	}
 
 	// TODO: fix DeleteMetric Returns always errors
-	_ = c.DeleteMetric(accessToken, service.ID, metric3scale.ID)
+	_ = c.DeleteMetric(authToken, service.ID, metric3scale.ID)
 	//if err != nil {
 	//	return err
 	//}

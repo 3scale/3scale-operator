@@ -194,8 +194,8 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			"access_token":     []byte("test"),
-			"admin_portal_url": []byte("test"),
+			"token":    []byte("test"),
+			"adminURL": []byte("test"),
 		},
 		StringData: nil,
 		Type:       v12.SecretTypeOpaque,
@@ -273,8 +273,8 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 		ObjectMeta: v1.ObjectMeta{},
 		Spec: operator.ConsolidatedSpec{
 			Credentials: operator.InternalCredentials{
-				AccessToken: "test",
-				AdminURL:    "test",
+				AuthToken: "test",
+				AdminURL:  "test",
 			},
 			APIs: []operator.InternalAPI{{
 				Name: myAPI.Name,
