@@ -28,13 +28,12 @@ type ProductizedOptions struct {
 }
 
 type productizedRequiredOptions struct {
-	ampRelease     string
-	apicastImage   string
-	backendImage   string
-	routerImage    string
-	systemImage    string
-	zyncImage      string
-	memcachedImage string
+	ampRelease   string
+	apicastImage string
+	backendImage string
+	routerImage  string
+	systemImage  string
+	zyncImage    string
 }
 
 type productizedNonRequiredOptions struct {
@@ -68,10 +67,6 @@ func (productized *ProductizedOptionsBuilder) ZyncImage(zyncImage string) {
 	productized.options.zyncImage = zyncImage
 }
 
-func (productized *ProductizedOptionsBuilder) MemcachedImage(memcachedImage string) {
-	productized.options.memcachedImage = memcachedImage
-}
-
 func (productized *ProductizedOptionsBuilder) Build() (*ProductizedOptions, error) {
 	err := productized.setRequiredOptions()
 	if err != nil {
@@ -102,9 +97,6 @@ func (productized *ProductizedOptionsBuilder) setRequiredOptions() error {
 	if productized.options.zyncImage == "" {
 		return fmt.Errorf("no Zync image has been provided")
 	}
-	if productized.options.memcachedImage == "" {
-		return fmt.Errorf("no Memcached image has been provided")
-	}
 	return nil
 }
 
@@ -124,7 +116,6 @@ func (o *CLIProductizedOptionsProvider) GetProductizedOptions() (*ProductizedOpt
 	pob.RouterImage("${AMP_ROUTER_IMAGE}")
 	pob.SystemImage("${AMP_SYSTEM_IMAGE}")
 	pob.ZyncImage("${AMP_ZYNC_IMAGE}")
-	pob.MemcachedImage("${MEMCACHED_IMAGE}")
 	res, err := pob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Productized Options - %s", err)
@@ -199,8 +190,6 @@ func (productized *Productized) updateAmpImagesParameters(template *templatev1.T
 			param.Value = "registry.access.redhat.com/3scale-amp22/wildcard-router"
 		case "AMP_ZYNC_IMAGE":
 			param.Value = "registry.access.redhat.com/3scale-amp24/zync"
-		case "MEMCACHED_IMAGE":
-			param.Value = "registry.access.redhat.com/3scale-amp20/memcached"
 		}
 	}
 }
@@ -229,11 +218,6 @@ func (productized *Productized) updateAmpImagesURIs(objects []runtime.RawExtensi
 						is.Spec.Tags[tagIdx].From.Name = productized.Options.zyncImage
 					}
 				}
-			}
-		} else {
-			dc, ok := obj.(*appsv1.DeploymentConfig)
-			if ok && dc.Name == "system-memcache" {
-				dc.Spec.Template.Spec.Containers[0].Image = productized.Options.memcachedImage
 			}
 		}
 	}
