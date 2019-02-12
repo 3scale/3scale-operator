@@ -18,16 +18,12 @@ var randomGenerator *rand.Rand = rand.New(rand.NewSource(time.Now().UTC().UnixNa
 
 // String generates random alphanumeric string of size 'size'.
 func String(length int) string {
-	return StringWithCharset(length, alphabetCharset)
+	return StringWithCharset(length, alphanumericCharset)
 }
 
 // String generates random hexadecimal strings of size 'size'
 func HexadecimalString(length int) string {
 	return StringWithCharset(length, hexadecimalCharset)
-}
-
-func AlphanumericString(length int) string {
-	return StringWithCharset(length, alphanumericCharset)
 }
 
 // StringWithCharset generates random string of length 'length' with all of its
