@@ -335,9 +335,16 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 		desiredBackendVersion := CredentialTypeToBackendVersion[apiPair.A.GetIntegration().getCredentialTypeName()]
 		existingBackendVersion := CredentialTypeToBackendVersion[apiPair.B.GetIntegration().getCredentialTypeName()]
 
-		if desiredBackendVersion == existingBackendVersion {
+		if desiredBackendVersion != existingBackendVersion {
 			serviceNeedsUpdate = true
 			serviceParams.AddParam("backend_version", desiredBackendVersion)
+		}
+
+
+		//Check if api description is different and mark it for update
+		if apiPair.A.Description != apiPair.B.Description {
+			serviceNeedsUpdate = true
+			serviceParams.AddParam("description", apiPair.A.Description)
 		}
 
 		// Update the service with the params
@@ -457,7 +464,6 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 			}
 		}
 
-		return nil
 	}
 	return nil
 
