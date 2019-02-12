@@ -80,7 +80,7 @@ commands:
             oc login -u developer --insecure-skip-tls-verify=true
 
 
-            kubectl create -f deploy/operator.orig
+            kubectl create -f deploy/operator.yaml
             echo "Waiting until the operator Deployment is in status 'available'..."
             oc wait --for=condition=available deployment/3scale-operator --namespace=${NAMESPACE}
             oc login -u system:admin --insecure-skip-tls-verify=true

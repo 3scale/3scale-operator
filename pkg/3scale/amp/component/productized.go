@@ -213,17 +213,21 @@ func (productized *Productized) updateAmpImagesURIs(objects []runtime.RawExtensi
 		is, ok := obj.(*imagev1.ImageStream)
 		if ok {
 			for tagIdx := range is.Spec.Tags {
-				switch is.Name {
-				case "amp-apicast":
-					is.Spec.Tags[tagIdx].From.Name = productized.Options.apicastImage
-				case "amp-system":
-					is.Spec.Tags[tagIdx].From.Name = productized.Options.systemImage
-				case "amp-backend":
-					is.Spec.Tags[tagIdx].From.Name = productized.Options.backendImage
-				case "amp-wildcard-router":
-					is.Spec.Tags[tagIdx].From.Name = productized.Options.routerImage
-				case "amp-zync":
-					is.Spec.Tags[tagIdx].From.Name = productized.Options.zyncImage
+				// Only change the ImageStream tag name that has the ampRelease
+				// value. We do not modify the latest tag
+				if is.Spec.Tags[tagIdx].Name == productized.Options.ampRelease {
+					switch is.Name {
+					case "amp-apicast":
+						is.Spec.Tags[tagIdx].From.Name = productized.Options.apicastImage
+					case "amp-system":
+						is.Spec.Tags[tagIdx].From.Name = productized.Options.systemImage
+					case "amp-backend":
+						is.Spec.Tags[tagIdx].From.Name = productized.Options.backendImage
+					case "amp-wildcard-router":
+						is.Spec.Tags[tagIdx].From.Name = productized.Options.routerImage
+					case "amp-zync":
+						is.Spec.Tags[tagIdx].From.Name = productized.Options.zyncImage
+					}
 				}
 			}
 		} else {

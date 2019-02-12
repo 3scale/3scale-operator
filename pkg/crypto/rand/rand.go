@@ -7,8 +7,11 @@ import (
 
 const lowercaseAlphabetCharset = "abcdefghijklmnopqrstuvwxyz"
 const uppercaseAlphabetCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const alphabetCharset = lowercaseAlphabetCharset + uppercaseAlphabetCharset
 const numericCharset = "0123456789"
+const alphabetCharset = lowercaseAlphabetCharset + uppercaseAlphabetCharset
+const alphanumericUppercaseCharset = uppercaseAlphabetCharset + numericCharset
+const alphanumericLowercaseCharset = lowercaseAlphabetCharset + numericCharset
+const alphanumericCharset = lowercaseAlphabetCharset + uppercaseAlphabetCharset + numericCharset
 const hexadecimalCharset = numericCharset + "ABCDEF"
 
 var randomGenerator *rand.Rand = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
@@ -21,6 +24,10 @@ func String(length int) string {
 // String generates random hexadecimal strings of size 'size'
 func HexadecimalString(length int) string {
 	return StringWithCharset(length, hexadecimalCharset)
+}
+
+func AlphanumericString(length int) string {
+	return StringWithCharset(length, alphanumericCharset)
 }
 
 // StringWithCharset generates random string of length 'length' with all of its
