@@ -1177,7 +1177,6 @@ func CompareInternalAPI(APIA, APIB InternalAPI) bool {
 
 	return reflect.DeepEqual(A, B)
 }
-
 func ComparePlans(a, b InternalPlan) bool {
 
 	if a.Name == b.Name && a.ApprovalRequired == b.ApprovalRequired &&
@@ -1723,7 +1722,6 @@ func CreateInternalMetricIn3scale(c *portaClient.ThreeScaleClient, authToken str
 	_, err = c.CreateMetric(authToken, service.ID, metric.Name, metric.Description, metric.Unit)
 	return err
 }
-
 func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error {
 
 	c, err := NewPortaClient(creds.AdminURL)
@@ -1732,12 +1730,12 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 	}
 
 	// Get the proper 3scale deployment Option based on the integrationMethod
-	// TODO: Create a MAP with InternalAPI->3scale "translation"
-
 	deploymentOption := IntegrationMethodToDeploymentType[api.GetIntegrationName()]
 	if deploymentOption == "" {
 		return fmt.Errorf("unknown integration method")
 	}
+
+	// Get the proper backendVersion based on the CredentialType
 
 	backendVersion := CredentialTypeToBackendVersion[api.GetIntegration().getCredentialTypeName()]
 	if backendVersion == "" {
@@ -1748,7 +1746,6 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 		"description":       api.Description,
 		"deployment_option": deploymentOption,
 		"backend_version":   backendVersion,
-		//TODO: add end_user_registration_required to API object.
 	}
 
 	service, err := c.CreateService(creds.AuthToken, api.Name)
@@ -1794,11 +1791,25 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 		}
 	}
 
+	defaultMappingRules, err := c.ListMappingRule(creds.AuthToken, service.ID)
+	if err != nil {
+		return err
+	}
+
+	for _, defaultMappingRule := range defaultMappingRules.MappingRules {
+		err := c.DeleteMappingRule(creds.AuthToken, service.ID, defaultMappingRule.ID)
+		if err != nil {
+			return err
+		}
+
+	}
+
 	for _, mappingRule := range api.GetIntegration().getMappingRules() {
 		metric, err := metricNametoMetric(c, creds.AuthToken, service.ID, mappingRule.Metric)
 		if err != nil {
 			return err
 		}
+
 		_, err = c.CreateMappingRule(creds.AuthToken, service.ID, strings.ToUpper(mappingRule.Method), mappingRule.Path, int(mappingRule.Increment), metric.ID)
 		if err != nil {
 			return err
