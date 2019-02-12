@@ -106,6 +106,17 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
+	changed := tenantR.SetDefaults()
+	if changed {
+		err = r.client.Update(context.TODO(), tenantR)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		reqLogger.Info("Tenant resource updated with defaults")
+		// Expect for re-trigger
+		return reconcile.Result{}, nil
+	}
+
 	masterAdminURL, masterAccessToken, err := FetchMasterCredentials(r.client, tenantR)
 	if err != nil {
 		log.Error(err, "Error fetching master credentials secret")
@@ -113,14 +124,14 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	portaClient, err := helper.PortaClientFromURLString(masterAdminURL)
+	portaClient, err := helper.PortaClientFromURLString(masterAdminURL, masterAccessToken)
 	if err != nil {
 		log.Error(err, "Error creating porta client object")
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
-	internalReconciler := NewInternalReconciler(r.client, tenantR, portaClient, masterAccessToken, reqLogger)
+	internalReconciler := NewInternalReconciler(r.client, tenantR, portaClient, reqLogger)
 	err = internalReconciler.Run()
 	if err != nil {
 		log.Error(err, "Error in tenant reconciliation")

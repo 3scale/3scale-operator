@@ -10,12 +10,12 @@
   version = "v0.34.0"
 
 [[projects]]
-  branch = "private-eastizle-integration"
-  digest = "1:984ce4e61fa7fd2fba00af6057656ffe71656edb521d632a261247348108e426"
+  branch = "master"
+  digest = "1:dbc6c1b2569fd4d29fec67ac52656ad958aa3ad19d4b6b16662aafa1a33a6c30"
   name = "github.com/3scale/3scale-porta-go-client"
   packages = ["client"]
   pruneopts = "NT"
-  revision = "12fa47bebb00774393056cae039afd018798fbd7"
+  revision = "338667ea20a5d67020e0d7f1830cd3d00e97c976"
 
 [[projects]]
   digest = "1:75d2b55b13298745ec068057251d05d65bbae0a668201fe45ad6986551a55601"

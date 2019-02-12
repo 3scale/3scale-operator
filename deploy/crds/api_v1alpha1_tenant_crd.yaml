@@ -11,3 +11,38 @@ spec:
     singular: tenant
   scope: Namespaced
   version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            username:
+              type: string
+            email:
+              type: string
+            organizationName:
+              type: string
+            passwordCredentialsRef:
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+            masterCredentialsRef:
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+            tenantSecretRef:
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+          required:
+            - username
+            - email
+            - organizationName
+            - passwordCredentialsRef
+            - masterCredentialsRef

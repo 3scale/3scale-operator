@@ -1,7 +1,10 @@
 package v1alpha1
 
 import (
-	"k8s.io/api/core/v1"
+	"fmt"
+	"strings"
+
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -15,8 +18,8 @@ type TenantSpec struct {
 	UserName             string             `json:"username"`
 	Email                string             `json:"email"`
 	OrgName              string             `json:"organizationName"`
-	DestinationNS        string             `json:"destinationNamespace"`
-	Password             v1.SecretReference `json:"passwordCredentialsRef"`
+	TenantSecretRef      v1.SecretReference `json:"tenantSecretRef"`
+	AdminPasswordRef     v1.SecretReference `json:"passwordCredentialsRef"`
 	MasterCredentialsRef v1.SecretReference `json:"masterCredentialsRef"`
 }
 
@@ -38,6 +41,21 @@ type Tenant struct {
 
 	Spec   TenantSpec   `json:"spec,omitempty"`
 	Status TenantStatus `json:"status,omitempty"`
+}
+
+// SetDefaults sets the default vaules for the tenant spec and returns true if the spec was changed
+func (t *Tenant) SetDefaults() bool {
+	changed := false
+	ts := &t.Spec
+	if ts.TenantSecretRef.Name == "" {
+		ts.TenantSecretRef.Name = fmt.Sprintf("%s-%s", strings.ToLower(t.Name), strings.ToLower(t.Spec.OrgName))
+		changed = true
+	}
+	if ts.TenantSecretRef.Namespace == "" {
+		ts.TenantSecretRef.Namespace = t.Namespace
+		changed = true
+	}
+	return changed
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

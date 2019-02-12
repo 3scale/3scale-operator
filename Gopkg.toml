@@ -61,7 +61,7 @@ required = [
 
 [[override]]
   name = "github.com/3scale/3scale-porta-go-client"
-  branch = "private-eastizle-integration"
+  branch = "master"
 
 [prune]
   go-tests = true
