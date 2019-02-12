@@ -39,7 +39,7 @@ func (o *OperatorApicastOptionsProvider) setSecretBasedOptions(aob *component.Ap
 }
 
 func (o *OperatorApicastOptionsProvider) setApicastRedisOptions(aob *component.ApicastOptionsBuilder) error {
-	currSecret, err := getSecret(component.ZyncSecretName, o.Namespace, o.Client)
+	currSecret, err := getSecret(component.ApicastSecretRedisSecretName, o.Namespace, o.Client)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return err
