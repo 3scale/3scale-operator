@@ -1228,8 +1228,10 @@ func get3scaleProxyFromInternalAPI(api InternalAPI) (portaClient.Proxy, error) {
 		}
 	} else if integration.ApicastOnPrem != nil {
 		proxy.HostnameRewrite = integration.ApicastOnPrem.AuthenticationSettings.HostHeader
-		proxy.Endpoint = integration.ApicastOnPrem.PrivateBaseURL
+		proxy.ApiBackend = integration.ApicastOnPrem.PrivateBaseURL
 		proxy.ApiTestPath = integration.ApicastOnPrem.APITestGetRequest
+		proxy.SandboxEndpoint = integration.ApicastOnPrem.StagingPublicBaseURL
+		proxy.Endpoint = integration.ApicastOnPrem.ProductionPublicBaseURL
 		proxy.ErrorStatusAuthFailed = strconv.FormatInt(integration.ApicastOnPrem.AuthenticationSettings.Errors.AuthenticationFailed.ResponseCode, 10)
 		proxy.ErrorAuthFailed = integration.ApicastOnPrem.AuthenticationSettings.Errors.AuthenticationFailed.ResponseBody
 		proxy.ErrorAuthMissing = integration.ApicastOnPrem.AuthenticationSettings.Errors.AuthenticationMissing.ResponseBody
