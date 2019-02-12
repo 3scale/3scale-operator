@@ -340,7 +340,6 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 			serviceParams.AddParam("backend_version", desiredBackendVersion)
 		}
 
-
 		//Check if api description is different and mark it for update
 		if apiPair.A.Description != apiPair.B.Description {
 			serviceNeedsUpdate = true
@@ -634,17 +633,11 @@ func DiffLimits(aLimits []InternalLimit, bLimits []InternalLimit) LimitsDiff {
 	for _, aLimit := range aLimits {
 		found := false
 		for _, bLimit := range bLimits {
-			if aLimit.Name == bLimit.Name {
+			if aLimit.Metric == bLimit.Metric &&
+				aLimit.MaxValue == bLimit.MaxValue &&
+				aLimit.Period == bLimit.Period {
 				found = true
-				if aLimit == bLimit {
-					limitDiff.Equal = append(limitDiff.Equal, aLimit)
-				} else {
-					limitPair := LimitPair{
-						A: aLimit,
-						B: bLimit,
-					}
-					limitDiff.NotEqual = append(limitDiff.NotEqual, limitPair)
-				}
+				limitDiff.Equal = append(limitDiff.Equal, aLimit)
 				break
 			}
 		}
