@@ -54,6 +54,10 @@ required = [
   # revision for the current tip of the branch "release-3.11"
   revision = "5ad8479f64f1b60ee9c62ce8ef1fe6638838725e"
 
+[[override]]
+  name = "github.com/openshift/client-go"
+	branch = "release-3.11"
+
 [prune]
   go-tests = true
   non-go = true

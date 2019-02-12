@@ -3,21 +3,15 @@ package e2e
 import (
 	goctx "context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/3scale/3scale-operator/pkg/apis"
 	operator "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	v12 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"testing"
-	"time"
-)
-
-var (
-	retryInterval        = time.Second * 5
-	timeout              = time.Second * 60
-	cleanupRetryInterval = time.Second * 1
-	cleanupTimeout       = time.Second * 5
 )
 
 func TestBindingController(t *testing.T) {
@@ -328,7 +322,7 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 					Name:        exampleMetric.Name,
 					Unit:        exampleMetric.Spec.Unit,
 					Description: exampleMetric.Spec.Description,
-				},},
+				}},
 				Plans: nil,
 			}},
 		},
