@@ -1236,7 +1236,9 @@ func get3scaleProxyFromInternalAPI(api InternalAPI) (portaClient.Proxy, error) {
 		proxy.HostnameRewrite = integration.ApicastOnPrem.AuthenticationSettings.HostHeader
 		proxy.ApiBackend = integration.ApicastOnPrem.PrivateBaseURL
 		proxy.ApiTestPath = integration.ApicastOnPrem.APITestGetRequest
+		// TODO: FIX 3scale adds the port if missing, reconciliation will fail
 		proxy.SandboxEndpoint = integration.ApicastOnPrem.StagingPublicBaseURL
+		// TODO: FIX 3scale adds the port if missing, reconciliation will fail
 		proxy.Endpoint = integration.ApicastOnPrem.ProductionPublicBaseURL
 		proxy.ErrorStatusAuthFailed = strconv.FormatInt(integration.ApicastOnPrem.AuthenticationSettings.Errors.AuthenticationFailed.ResponseCode, 10)
 		proxy.ErrorAuthFailed = integration.ApicastOnPrem.AuthenticationSettings.Errors.AuthenticationFailed.ResponseBody
