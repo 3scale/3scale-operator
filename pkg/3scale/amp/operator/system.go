@@ -250,7 +250,7 @@ func (o *OperatorSystemOptionsProvider) setSystemMasterApicastOptions(builder *c
 
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the Memcached servers secret
+			// Do nothing because there are no required options for related to the secret
 			builder.ApicastAccessToken(defaultSystemMasterApicastAccessToken)
 		} else {
 			return err
