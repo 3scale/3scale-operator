@@ -10,12 +10,12 @@
   version = "v0.35.1"
 
 [[projects]]
-  branch = "missingfields"
-  digest = "1:865608d12bbc3844a304ec3c5b1c8b812859f6d2cead1ef33911c371075bcc6b"
+  branch = "master"
+  digest = "1:20707be871b87238c801005cbca5dd1153341d1e1736c66341f0d724ce3bae5b"
   name = "github.com/3scale/3scale-porta-go-client"
   packages = ["client"]
   pruneopts = "NT"
-  revision = "49ea01acc80866c4b4fc142d25580023b1186407"
+  revision = "eaae83bf0cb6afaf2e7435eee19693a271515327"
 
 [[projects]]
   digest = "1:75d2b55b13298745ec068057251d05d65bbae0a668201fe45ad6986551a55601"

@@ -56,7 +56,7 @@ required = [
 
 [[override]]
   name = "github.com/3scale/3scale-porta-go-client"
-  branch = "missingfields"
+  branch = "master"
 
 [prune]
   go-tests = true
