@@ -31,7 +31,7 @@ e2e-setup:
 	oc new-project $(NAMESPACE)
 
 e2e-run:
-	operator-sdk test local ./test/e2e --namespace $(NAMESPACE) --up-local
+	operator-sdk test local ./test/e2e --namespace $(NAMESPACE) --up-local --go-test-flags '-v -timeout 0'
 
 e2e-clean:
 	oc delete --force project $(NAMESPACE) || true
