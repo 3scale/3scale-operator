@@ -3,21 +3,13 @@ items:
 - apiVersion: api.3scale.net/v1alpha1
   kind: Binding
   metadata:
-    creationTimestamp: 2019-01-25T13:35:37Z
-    generation: 1
     labels:
       environment: production
     name: test
-    namespace: operator-test
-    resourceVersion: "811763"
-    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/bindings/test
-    uid: 19a42dca-20a6-11e9-b8c6-0e4109beb104
   spec:
     APISelector:
-      matchLabels:
-        environment: production
     credentialsRef:
-      name: demo-credentials-secret
+      name: threescale-credentials
 kind: List
 metadata:
   resourceVersion: ""

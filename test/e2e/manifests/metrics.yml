@@ -3,34 +3,29 @@ items:
 - apiVersion: api.3scale.net/v1alpha1
   kind: Metric
   metadata:
-    creationTimestamp: 2019-01-25T13:29:00Z
-    generation: 1
     labels:
-      environment: production
-    name: getapps
-    namespace: operator-test
-    resourceVersion: "797000"
-    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/metrics/getapps
-    uid: 2cec6025-20a5-11e9-b8c6-0e4109beb104
+      api: api01
+    name: metric01
   spec:
-    description: Example metric
-    incrementHits: false
+    description: metric01
     unit: hit
 - apiVersion: api.3scale.net/v1alpha1
   kind: Metric
   metadata:
-    creationTimestamp: 2019-01-25T13:29:00Z
-    generation: 1
     labels:
-      environment: production
-    name: listapps
-    namespace: operator-test
-    resourceVersion: "796999"
-    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/metrics/listapps
-    uid: 2ceb0b98-20a5-11e9-b8c6-0e4109beb104
+      api: api01
+    name: metric02
   spec:
-    description: Example method
-    incrementHits: true
+    description: metric02
+    unit: hit
+- apiVersion: api.3scale.net/v1alpha1
+  kind: Metric
+  metadata:
+    labels:
+      api: api02
+    name: metric03
+  spec:
+    description: metric03
     unit: hit
 kind: List
 metadata:

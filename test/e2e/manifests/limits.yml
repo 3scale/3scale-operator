@@ -1,58 +1,43 @@
 apiVersion: v1
 items:
+
 - apiVersion: api.3scale.net/v1alpha1
   kind: Limit
   metadata:
-    creationTimestamp: 2019-01-25T13:28:54Z
-    generation: 1
     labels:
-      plan: premium
-    name: getapps-eternity-100
-    namespace: operator-test
-    resourceVersion: "988749"
-    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/limits/getapps-eternity-100
-    uid: 2948b8f5-20a5-11e9-b8c6-0e4109beb104
+      api: api01
+    name: plan01-metric01-1
   spec:
-    description: Limit for list_apps in premium plan
-    maxValue: 1020
+    description: Limit for metric metric01
+    maxValue: 1
     metricRef:
-      name: getapps
+      name: metric01
     period: day
+
 - apiVersion: api.3scale.net/v1alpha1
   kind: Limit
   metadata:
-    creationTimestamp: 2019-01-25T13:28:54Z
-    generation: 1
     labels:
-      plan: basic
-    name: listapps-eternity-100
-    namespace: operator-test
-    resourceVersion: "796972"
-    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/limits/listapps-eternity-100
-    uid: 2947376b-20a5-11e9-b8c6-0e4109beb104
+      api: api01
+    name: plan02-metric02-2
   spec:
-    description: Limit for list_apps in basic plan
-    maxValue: 100
+    description: Limit for metric02 in plan02
+    maxValue: 2
     metric:
-      name: listapps
+      name: metric02
     period: enternity
+
 - apiVersion: api.3scale.net/v1alpha1
   kind: Limit
   metadata:
-    creationTimestamp: 2019-01-25T13:28:54Z
-    generation: 1
     labels:
-      plan: premium
-    name: listapps-eternity-1000
-    namespace: operator-test
-    resourceVersion: "796974"
-    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/limits/listapps-eternity-1000
-    uid: 294a2310-20a5-11e9-b8c6-0e4109beb104
+      api: api02
+    name: plan03-metric03-1000
   spec:
-    description: Limit for listapps in premium plan
+    description: Limit for metric03 in plan03
     maxValue: 10
     metric:
-      name: listapps
+      name: metric03
     period: day
 kind: List
 metadata:
