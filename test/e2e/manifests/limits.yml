@@ -23,9 +23,9 @@ items:
   spec:
     description: Limit for metric02 in plan02
     maxValue: 2
-    metric:
+    metricRef:
       name: metric02
-    period: enternity
+    period: eternity
 
 - apiVersion: api.3scale.net/v1alpha1
   kind: Limit
@@ -36,7 +36,7 @@ items:
   spec:
     description: Limit for metric03 in plan03
     maxValue: 10
-    metric:
+    metricRef:
       name: metric03
     period: day
 kind: List

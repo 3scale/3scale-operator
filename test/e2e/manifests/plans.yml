@@ -13,7 +13,7 @@ items:
       setupFee: 0
     limitSelector:
       matchLabels:
-        api: myapi
+        api: api01
     trialPeriod: 0
 - apiVersion: api.3scale.net/v1alpha1
   kind: Plan
