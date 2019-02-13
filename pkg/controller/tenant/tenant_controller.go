@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
@@ -22,20 +23,11 @@ import (
 
 var log = logf.Log.WithName("controller_tenant")
 
-// Master credentials secret field name for access token
-const secretMasterAccessTokenKey = "access_token"
-
-// Master credentials secret field name for admin URL
-const secretMasterAdminURLKey = "admin_portal_url"
-
 // Secret field name with Tenant's admin user password
-const secretMasterAdminPasswordKey = "admin_password"
-
-// Secret name with tenant's admin user access token
-const adminAccessTokenName = "admin-access-token"
+const TenantAdminPasswordSecretField = "admin_password"
 
 // Tenant's admin user access token secret field name for access token
-const SecretAdminAccessTokenKey = "access_token"
+const TenantProviderKeySecretField = "provider_key"
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -117,14 +109,14 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, nil
 	}
 
-	masterAdminURL, masterAccessToken, err := FetchMasterCredentials(r.client, tenantR)
+	masterAccessToken, err := FetchMasterCredentials(r.client, tenantR)
 	if err != nil {
 		log.Error(err, "Error fetching master credentials secret")
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
-	portaClient, err := helper.PortaClientFromURLString(masterAdminURL, masterAccessToken)
+	portaClient, err := helper.PortaClientFromURLString(tenantR.Spec.SystemMasterURL, masterAccessToken)
 	if err != nil {
 		log.Error(err, "Error creating porta client object")
 		// Error reading the object - requeue the request.
@@ -144,7 +136,7 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 }
 
 // FetchMasterCredentials get secret using k8s client
-func FetchMasterCredentials(k8sClient client.Client, tenantR *apiv1alpha1.Tenant) (string, string, error) {
+func FetchMasterCredentials(k8sClient client.Client, tenantR *apiv1alpha1.Tenant) (string, error) {
 	masterCredentialsSecret := &v1.Secret{}
 
 	err := k8sClient.Get(context.TODO(),
@@ -156,22 +148,15 @@ func FetchMasterCredentials(k8sClient client.Client, tenantR *apiv1alpha1.Tenant
 		masterCredentialsSecret)
 
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	masterAccessTokenByteArray, ok := masterCredentialsSecret.Data[secretMasterAccessTokenKey]
+	masterAccessTokenByteArray, ok := masterCredentialsSecret.Data[component.SystemSecretSystemSeedMasterAccessTokenFieldName]
 	if !ok {
-		return "", "", fmt.Errorf("Key not found in master secret (ns: %s, name: %s) key: %s",
+		return "", fmt.Errorf("Key not found in master secret (ns: %s, name: %s) key: %s",
 			tenantR.Spec.MasterCredentialsRef.Namespace, tenantR.Spec.MasterCredentialsRef.Name,
-			secretMasterAccessTokenKey)
+			component.SystemSecretSystemSeedMasterAccessTokenFieldName)
 	}
 
-	masterAdminURLByteArray, ok := masterCredentialsSecret.Data[secretMasterAdminURLKey]
-	if !ok {
-		return "", "", fmt.Errorf("key not found in master secret (ns: %s, name: %s) key: %s",
-			tenantR.Spec.MasterCredentialsRef.Namespace, tenantR.Spec.MasterCredentialsRef.Name,
-			secretMasterAdminURLKey)
-	}
-
-	return bytes.NewBuffer(masterAdminURLByteArray).String(), bytes.NewBuffer(masterAccessTokenByteArray).String(), nil
+	return bytes.NewBuffer(masterAccessTokenByteArray).String(), nil
 }
