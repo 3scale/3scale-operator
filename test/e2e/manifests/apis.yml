@@ -1,0 +1,121 @@
+apiVersion: v1
+items:
+- apiVersion: api.3scale.net/v1alpha1
+  kind: API
+  metadata:
+    creationTimestamp: 2019-01-25T13:28:41Z
+    generation: 1
+    labels:
+      environment: production
+    name: api01
+    namespace: operator-test
+    resourceVersion: "1364154"
+    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/apis/myapi
+    uid: 21a5eafc-20a5-11e9-b8c6-0e4109beb104
+  spec:
+    planSelector:
+      matchLabels:
+        api: api01
+    description: api01
+    integrationMethod:
+      apicastHosted:
+        apiTestGetRequest: /
+        authenticationSettings:
+          credentials:
+            apiKey:
+              authParameterName: user-key
+              credentialsLocation: headers
+          errors:
+            authenticationFailed:
+              contentType: text/plain; charset=us-ascii
+              responseBody: Authentication failed
+              responseCode: 403
+            authenticationMissing:
+              contentType: text/plain; charset=us-ascii
+              responseBody: Authentication Missing
+              responseCode: 403
+          hostHeader: ""
+          secretToken: Shared_secret_sent_from_proxy_to_API_backend_9603f637ca51ccfe
+        mappingRulesSelector:
+          matchLabels:
+            api: api01
+        privateBaseURL: https://echo-api.3scale.net:443
+    metricSelector:
+      matchLabels:
+        api: api01
+- apiVersion: api.3scale.net/v1alpha1
+  kind: API
+  metadata:
+    creationTimestamp: 2019-01-25T13:28:41Z
+    generation: 1
+    labels:
+      environment: staging
+    name: api02
+    namespace: operator-test
+    resourceVersion: "1364154"
+    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/apis/myapi
+    uid: 21a5eafc-20a5-11e9-b8c6-0e4109beb104
+  spec:
+    planSelector:
+      matchLabels:
+        api: api02
+    description: api02
+    integrationMethod:
+      apicastOnPrem:
+        apiTestGetRequest: /
+        authenticationSettings:
+          credentials:
+            apiKey:
+              authParameterName: user-key
+              credentialsLocation: headers
+          errors:
+            authenticationFailed:
+              contentType: text/plain; charset=us-ascii
+              responseBody: Authentication failed
+              responseCode: 403
+            authenticationMissing:
+              contentType: text/plain; charset=us-ascii
+              responseBody: Authentication Missing
+              responseCode: 403
+          hostHeader: api02.testing.com
+          secretToken: Shared_secret_sent_from_proxy_to_API_backend_9603f637ca51ccfe
+        mappingRulesSelector:
+          matchLabels:
+            api: api02
+        privateBaseURL: https://echo-api.3scale.net:443
+        productionPublicBaseURL: https://api.testing.com:443
+        stagingPublicBaseURL: https://api.testing.com:443
+    metricSelector:
+      matchLabels:
+        api: api02
+- apiVersion: api.3scale.net/v1alpha1
+  kind: API
+  metadata:
+    creationTimestamp: 2019-01-25T13:28:41Z
+    generation: 1
+    labels:
+      environment: devel
+    name: api03
+    namespace: operator-test
+    resourceVersion: "1364154"
+    selfLink: /apis/api.3scale.net/v1alpha1/namespaces/operator-test/apis/myapi
+    uid: 21a5eafc-20a5-11e9-b8c6-0e4109beb104
+  spec:
+    planSelector:
+      matchLabels:
+        api: api02
+    description: api02
+    integrationMethod:
+      codePlugin:
+        authenticationSettings:
+          credentials:
+            apiKey:
+              authParameterName: user-key
+              credentialsLocation: headers
+    metricSelector:
+      matchLabels:
+        api: api02
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

@@ -12,7 +12,6 @@ required = [
   "github.com/spf13/cobra/cobra",
   "github.com/luci/go-render/render",
   "gopkg.in/yaml.v2",
-  "github.com/3scale/3scale-porta-go-client/client",
 ]
 
 [[override]]
@@ -54,10 +53,6 @@ required = [
   name = "github.com/openshift/api"
   # revision for the current tip of the branch "release-3.11"
   revision = "5ad8479f64f1b60ee9c62ce8ef1fe6638838725e"
-
-[[override]]
-  name = "github.com/openshift/client-go"
-  branch = "release-3.11"
 
 [[override]]
   name = "github.com/3scale/3scale-porta-go-client"

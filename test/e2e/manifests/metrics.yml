@@ -1,0 +1,33 @@
+apiVersion: v1
+items:
+- apiVersion: api.3scale.net/v1alpha1
+  kind: Metric
+  metadata:
+    labels:
+      api: api01
+    name: metric01
+  spec:
+    description: metric01
+    unit: hit
+- apiVersion: api.3scale.net/v1alpha1
+  kind: Metric
+  metadata:
+    labels:
+      api: api01
+    name: metric02
+  spec:
+    description: metric02
+    unit: hit
+- apiVersion: api.3scale.net/v1alpha1
+  kind: Metric
+  metadata:
+    labels:
+      api: api02
+    name: metric03
+  spec:
+    description: metric03
+    unit: hit
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
