@@ -18,6 +18,7 @@ type TenantSpec struct {
 	UserName             string             `json:"username"`
 	Email                string             `json:"email"`
 	OrgName              string             `json:"organizationName"`
+	SystemMasterURL      string             `json:"systemMasterUrl"`
 	TenantSecretRef      v1.SecretReference `json:"tenantSecretRef"`
 	AdminPasswordRef     v1.SecretReference `json:"passwordCredentialsRef"`
 	MasterCredentialsRef v1.SecretReference `json:"masterCredentialsRef"`
