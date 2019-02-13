@@ -7,5 +7,3 @@ spec:
   wildcardDomain: msoriano.127.0.0.1.nip.io
   productized: false
   evaluation: true
-  s3version: false
-  haversion: false

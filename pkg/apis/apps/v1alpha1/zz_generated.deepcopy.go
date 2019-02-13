@@ -214,6 +214,11 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Productized != nil {
+		in, out := &in.Productized, &out.Productized
+		*out = new(bool)
+		**out = **in
+	}
 	if in.AwsRegion != nil {
 		in, out := &in.AwsRegion, &out.AwsRegion
 		*out = new(string)

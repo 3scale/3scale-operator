@@ -1,6 +1,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  creationTimestamp: null
   name: apimanagers.apps.3scale.net
 spec:
   group: apps.3scale.net
@@ -11,16 +12,97 @@ spec:
     singular: apimanager
   scope: Namespaced
   version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
   validation:
     openAPIV3Schema:
       properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
         spec:
           properties:
+            ampApicastImage:
+              type: string
+            ampBackendImage:
+              type: string
             ampRelease:
+              type: string
+            ampRouterImage:
+              type: string
+            ampSystemImage:
+              type: string
+            ampZyncImage:
+              type: string
+            apicastManagementApi:
+              type: string
+            apicastOpenSSLVerify:
+              type: boolean
+            apicastRegistryURL:
+              type: string
+            apicastResponseCodes:
+              type: boolean
+            appLabel:
+              type: string
+            awsBucket:
+              type: string
+            awsRegion:
+              type: string
+            evaluation:
+              type: boolean
+            fileUploadStorage:
+              type: string
+            haversion:
+              type: boolean
+            imageStreamTagImportInsecure:
+              type: boolean
+            memcachedImage:
+              type: string
+            mysqlDatabase:
+              type: string
+            mysqlImage:
+              type: string
+            mysqlPassword:
+              type: string
+            mysqlRootPassword:
+              type: string
+            mysqlUser:
+              type: string
+            postgreSQLImage:
+              type: string
+            productized:
+              type: boolean
+            redisImage:
+              type: string
+            rwxStorageClass:
+              type: string
+            tenantName:
               type: string
             wildcardDomain:
               type: string
+            wildcardPolicy:
+              type: string
           required:
-            - ampRelease
-            - wildcardDomain
-
+          - ampRelease
+          - wildcardDomain
+          type: object
+        status:
+          properties:
+            conditions:
+              items:
+                properties:
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - type
+                - status
+                type: object
+              type: array
+          type: object
