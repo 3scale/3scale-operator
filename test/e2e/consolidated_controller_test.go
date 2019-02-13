@@ -86,6 +86,7 @@ func BasicBindingController(t *testing.T) {
 	}
 }
 
+
 func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) error {
 	namespace, err := ctx.GetNamespace()
 	if err != nil {
@@ -188,8 +189,8 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			"access_token":     []byte("test"),
-			"admin_portal_url": []byte("test"),
+			"token":    []byte("test"),
+			"adminURL": []byte("test"),
 		},
 		StringData: nil,
 		Type:       v12.SecretTypeOpaque,
@@ -266,9 +267,9 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 		TypeMeta:   v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{},
 		Spec: operator.ConsolidatedSpec{
-			Credentials: operator.InternalCredential{
-				AccessToken: "test",
-				AdminURL:    "test",
+			Credentials: operator.InternalCredentials{
+				AuthToken: "test",
+				AdminURL:  "test",
 			},
 			APIs: []operator.InternalAPI{{
 				Name: myAPI.Name,
@@ -322,7 +323,7 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 					Name:        exampleMetric.Name,
 					Unit:        exampleMetric.Spec.Unit,
 					Description: exampleMetric.Spec.Description,
-				}},
+				},},
 				Plans: nil,
 			}},
 		},
