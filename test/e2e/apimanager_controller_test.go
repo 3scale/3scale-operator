@@ -11,7 +11,6 @@ import (
 	e2eutil "github.com/3scale/3scale-operator/test/e2e/e2eutil"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	frameworke2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -96,7 +95,7 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 			Productized:    &productized,
 			Evaluation:     true,
 		},
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-apimanager",
 			Namespace: namespace,
 		},
