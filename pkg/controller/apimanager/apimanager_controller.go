@@ -248,7 +248,7 @@ func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, objects []runtime
 		e.PostProcessObjects(objects)
 	}
 
-	if cr.Spec.Productized {
+	if *cr.Spec.Productized {
 		optsProvider := operator.OperatorProductizedOptionsProvider{APIManagerSpec: &cr.Spec}
 		opts, err := optsProvider.GetProductizedOptions()
 		if err != nil {

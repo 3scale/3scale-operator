@@ -94,19 +94,27 @@ type APIManagerSpec struct {
 	// +optional
 	WildcardPolicy *string `json:"wildcardPolicy,omitempty"`
 
-	Productized bool `json:"productized"`
+	// +optional
+	Productized *bool `json:"productized"`
 
+	// +optional
 	Evaluation bool `json:"evaluation"`
 
+	// +optional
 	S3Version bool `json:"s3version"`
 
+	// +optional
 	HAVersion bool `json:"haversion"`
 
 	// S3 optional configuration TODO redo this
 	// +optional
-	AwsRegion         *string `json:"awsRegion, omitempty"`
-	AwsBucket         *string `json:"awsBucket, omitempty"`
-	FileUploadStorage *string `json:"fileUploadStorage, omitempty"`
+	AwsRegion *string `json:"awsRegion,omitempty"`
+
+	// +optional
+	AwsBucket *string `json:"awsBucket,omitempty"`
+
+	// +optional
+	FileUploadStorage *string `json:"fileUploadStorage,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -304,6 +312,11 @@ func (apimanager *APIManager) SetDefaults() bool {
 		defaultWildcardPolicy := "None" //TODO should be a set of predefined values (a custom type enum-like to be used)
 		spec.WildcardPolicy = &defaultWildcardPolicy
 		changed = true
+	}
+
+	if spec.Productized == nil {
+		defaultProductized := true
+		spec.Productized = &defaultProductized
 	}
 
 	return changed
