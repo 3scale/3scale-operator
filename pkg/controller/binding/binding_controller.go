@@ -159,6 +159,7 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 			UID:        binding.UID,
 			Controller: &trueVar,
 		}))
+		consolidated.SetFinalizers([]string{"finalizer.api.3scale.net"})
 
 		err = c.Create(context.TODO(), consolidated)
 		if err != nil {

@@ -96,6 +96,23 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 	}
 	reqLogger.Info("Found consolidated object", request.Name, request.Namespace)
 
+	if consolidated.DeletionTimestamp != nil && consolidated.GetFinalizers() != nil {
+
+		reqLogger.Info("Terminating consolidated object", request.Name, request.Namespace)
+		for _, api := range consolidated.Spec.APIs {
+			_ = apiv1alpha1.DeleteInternalAPIFrom3scale(consolidated.Spec.Credentials, api)
+		}
+
+		//Remove finalizer
+		consolidated.SetFinalizers(nil)
+		err := r.client.Update(context.TODO(),consolidated)
+		if err != nil {
+			reqLogger.Error(err, "Error removing finalizer from consolidated object")
+		}
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+
+	}
+
 	existingState, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials, consolidated.Spec.APIs)
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
