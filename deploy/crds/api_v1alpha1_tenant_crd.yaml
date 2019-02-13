@@ -1,0 +1,48 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: tenants.api.3scale.net
+spec:
+  group: api.3scale.net
+  names:
+    kind: Tenant
+    listKind: TenantList
+    plural: tenants
+    singular: tenant
+  scope: Namespaced
+  version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            username:
+              type: string
+            email:
+              type: string
+            organizationName:
+              type: string
+            passwordCredentialsRef:
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+            masterCredentialsRef:
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+            tenantSecretRef:
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+          required:
+            - username
+            - email
+            - organizationName
+            - passwordCredentialsRef
+            - masterCredentialsRef

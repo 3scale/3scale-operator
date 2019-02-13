@@ -74,5 +74,6 @@ rules:
   - plans
   - limits
   - mappingrules
+  - tenants
   verbs:
   - '*'

@@ -1,0 +1,7 @@
+apiVersion: api.3scale.net/v1alpha1
+kind: Tenant
+metadata:
+  name: example-tenant
+spec:
+  # Add fields here
+  size: 3
