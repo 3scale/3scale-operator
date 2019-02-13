@@ -1,15 +1,19 @@
 package e2e
 
 import (
+	"bytes"
 	goctx "context"
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/apis"
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	appsgroup "github.com/3scale/3scale-operator/pkg/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/controller/tenant"
+	e2eutil "github.com/3scale/3scale-operator/test/e2e/e2eutil"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	frameworke2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	v1 "k8s.io/api/core/v1"
@@ -100,7 +104,7 @@ func TestFullHappyPath(t *testing.T) {
 			Name:      adminPassSecretName,
 			Labels:    map[string]string{"app": "3scale-operator"},
 		},
-		StringData: map[string]string{tenant.SecretAdminAccessTokenKey: adminPass},
+		StringData: map[string]string{tenant.TenantAdminPasswordSecretField: adminPass},
 		Type:       v1.SecretTypeOpaque,
 	}
 	err = f.Client.Create(goctx.TODO(), adminPassSecret, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
@@ -108,28 +112,58 @@ func TestFullHappyPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Creating tenant admin pass secret")
-	// TODO wait until secret is avaiable??
+	err = e2eutil.WaitForSecret(t, f.KubeClient, namespace, adminPassSecretName, retryInterval, time.Minute*15)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	systemSeedSecret, err := f.KubeClient.CoreV1().Secrets(namespace).Get(component.SystemSecretSystemSeedSecretName, metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	masterDomainByteArray, ok := systemSeedSecret.Data[component.SystemSecretSystemSeedMasterDomainFieldName]
+	if !ok {
+		t.Fatalf("field %s not found in systemseed secret", component.SystemSecretSystemSeedMasterDomainFieldName)
+	}
+
+	masterDomain := bytes.NewBuffer(masterDomainByteArray).String()
 
 	// deploy tenant resource
+	tenantSecretName := "tenantProviderKeySecret"
 	tenant := &apiv1alpha1.Tenant{
 		Spec: apiv1alpha1.TenantSpec{
-			UserName: "admin",
-			Email:    "admin@example.com",
-			OrgName:  "ECorp",
+			UserName:        "admin",
+			Email:           "admin@example.com",
+			OrgName:         "ECorp",
+			SystemMasterURL: fmt.Sprintf("%s.%s", masterDomain, apimanager.Spec.WildcardDomain),
 			AdminPasswordRef: v1.SecretReference{
 				Name:      adminPassSecretName,
 				Namespace: namespace,
 			},
 			MasterCredentialsRef: v1.SecretReference{
-				Name:      adminPassSecretName,
+				Name:      component.SystemSecretSystemSeedSecretName,
+				Namespace: namespace,
+			},
+			TenantSecretRef: v1.SecretReference{
+				Name:      tenantSecretName,
 				Namespace: namespace,
 			},
 		},
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "tenant01",
 			Namespace: namespace,
 		},
 	}
+	t.Log("Creating tenant resource")
+	err = f.Client.Create(goctx.TODO(), tenant, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = e2eutil.WaitForSecret(t, f.KubeClient, namespace, tenantSecretName, retryInterval, time.Minute*15)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("Tenant reconciliation DONE")
 }
 
 func tenantList() *apiv1alpha1.TenantList {
