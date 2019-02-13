@@ -35,7 +35,7 @@ const secretMasterAdminPasswordKey = "admin_password"
 const adminAccessTokenName = "admin-access-token"
 
 // Tenant's admin user access token secret field name for access token
-const secretAdminAccessTokenKey = "access_token"
+const SecretAdminAccessTokenKey = "access_token"
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
