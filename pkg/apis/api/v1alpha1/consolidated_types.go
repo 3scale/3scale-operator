@@ -365,17 +365,8 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 		}
 
 		if desiredProxy != existingProxy {
-			// Wrap this into a func.
-			proxyParams := portaClient.NewParams()
-			v := reflect.ValueOf(desiredProxy)
-			for i := 0; i < v.NumField(); i++ {
-				varName := v.Type().Field(i).Tag.Get("xml")
-				varValue := v.Field(i).Interface()
-				if !(v.Type().Field(i).Name == "XMLName") &&
-					!(varValue.(string) == "") {
-					proxyParams.AddParam(varName, varValue.(string))
-				}
-			}
+
+			proxyParams := getProxyParamsFromProxy(desiredProxy, desiredDeploymentOption, desiredBackendVersion)
 
 			_, err = c.UpdateProxy(service.ID, proxyParams)
 			if err != nil {
@@ -1392,6 +1383,63 @@ func get3scaleMappingRulefromInternalMappingRule(c *portaClient.ThreeScaleClient
 	return portaClient.MappingRule{}, fmt.Errorf("not found")
 }
 
+func getProxyParamsFromProxy(proxy portaClient.Proxy, deploymentOption, backendVersion string) portaClient.Params {
+
+	// TODO: This is far from optimal, fix this
+	proxyParams := portaClient.NewParams()
+
+	switch deploymentOption {
+
+	case "hosted":
+		proxyParams.AddParam("hostname_rewrite", proxy.HostnameRewrite)
+		proxyParams.AddParam("api_backend", proxy.ApiBackend)
+		proxyParams.AddParam("api_test_path", proxy.ApiTestPath)
+		proxyParams.AddParam("error_status_auth_failed", proxy.ErrorStatusAuthFailed)
+		proxyParams.AddParam("error_auth_failed", proxy.ErrorAuthFailed)
+		proxyParams.AddParam("error_auth_missing", proxy.ErrorAuthMissing)
+		proxyParams.AddParam("error_status_auth_failed", proxy.ErrorStatusAuthFailed)
+		proxyParams.AddParam("error_headers_auth_failed", proxy.ErrorHeadersAuthFailed)
+		proxyParams.AddParam("error_status_auth_missing", proxy.ErrorStatusAuthMissing)
+		proxyParams.AddParam("error_headers_auth_missing", proxy.ErrorHeadersAuthMissing)
+		proxyParams.AddParam("secret_token", proxy.SecretToken)
+	case "self_managed":
+		proxyParams.AddParam("hostname_rewrite", proxy.HostnameRewrite)
+		proxyParams.AddParam("api_backend", proxy.ApiBackend)
+		proxyParams.AddParam("api_test_path", proxy.ApiTestPath)
+		// TODO: FIX 3scale adds the port if missing, reconciliation will fail
+		proxyParams.AddParam("sandbox_endpoint", proxy.SandboxEndpoint)
+		proxyParams.AddParam("endpoint", proxy.Endpoint)
+		proxyParams.AddParam("error_auth_failed", proxy.ErrorAuthFailed)
+		proxyParams.AddParam("error_auth_missing", proxy.ErrorAuthMissing)
+		proxyParams.AddParam("error_status_auth_failed", proxy.ErrorStatusAuthFailed)
+		proxyParams.AddParam("error_headers_auth_failed", proxy.ErrorHeadersAuthFailed)
+		proxyParams.AddParam("error_status_auth_missing", proxy.ErrorStatusAuthMissing)
+		proxyParams.AddParam("error_headers_auth_missing", proxy.ErrorHeadersAuthMissing)
+		proxyParams.AddParam("secret_token", proxy.SecretToken)
+
+	case "plugin_rest":
+		// Nothing!
+	}
+
+	switch backendVersion {
+	case "oidc":
+		proxyParams.AddParam("credentials_location", proxy.CredentialsLocation)
+		proxyParams.AddParam("oidc_issuer_endpoint", proxy.OidcIssuerEndpoint)
+
+	case "2":
+		proxyParams.AddParam("credentials_location", proxy.CredentialsLocation)
+		proxyParams.AddParam("auth_app_id", proxy.AuthAppID)
+		proxyParams.AddParam("auth_app_key", proxy.AuthAppKey)
+
+	case "1":
+		proxyParams.AddParam("credentials_location", proxy.CredentialsLocation)
+		proxyParams.AddParam("auth_user_key", proxy.AuthUserKey)
+
+	}
+
+	return proxyParams
+}
+
 func getAPIs(namespace string, matchLabels map[string]string, c client.Client) (*APIList, error) {
 	apis := &APIList{}
 	opts := &client.ListOptions{}
@@ -1737,7 +1785,6 @@ func CreateInternalMetricIn3scale(c *portaClient.ThreeScaleClient, api InternalA
 	_, err = c.CreateMetric(service.ID, metric.Name, metric.Description, metric.Unit)
 	return err
 }
-
 func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error {
 
 	c, err := NewPortaClient(creds)
@@ -1773,18 +1820,8 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 		return err
 	}
 	desiredProxy, err := get3scaleProxyFromInternalAPI(api)
+	proxyParams := getProxyParamsFromProxy(desiredProxy, deploymentOption, backendVersion)
 
-	// Wrap this into a func.
-	proxyParams := portaClient.NewParams()
-	v := reflect.ValueOf(desiredProxy)
-	for i := 0; i < v.NumField(); i++ {
-		varName := v.Type().Field(i).Tag.Get("xml")
-		varValue := v.Field(i).Interface()
-		if !(v.Type().Field(i).Name == "XMLName") &&
-			!(varValue.(string) == "") {
-			proxyParams.AddParam(varName, varValue.(string))
-		}
-	}
 	_, err = c.UpdateProxy(service.ID, proxyParams)
 	if err != nil {
 		return err
