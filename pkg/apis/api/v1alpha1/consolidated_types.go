@@ -263,6 +263,7 @@ type InternalMetric struct {
 }
 type InternalPlan struct {
 	Name             string          `json:"name"`
+	Default          bool            `json:"default"`
 	TrialPeriodDays  int64           `json:"trialPeriodDays"`
 	ApprovalRequired bool            `json:"approvalRequired"`
 	Costs            PlanCost        `json:"costs"`
@@ -546,7 +547,7 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, service
 	}
 
 	for _, plan := range d.MissingFromB {
-		plan3scale, err := c.CreateAppPlan(serviceId, plan.Name, "")
+		plan3scale, err := c.CreateAppPlan(serviceId, plan.Name, "publish")
 		if err != nil {
 			return err
 		}
@@ -556,7 +557,11 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, service
 			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
+		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "publish", params)
+
+		if plan.Default {
+			_, err = c.SetDefaultPlan(serviceId, plan3scale.ID)
+		}
 	}
 
 	for _, planPair := range d.NotEqual {
@@ -570,7 +575,11 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, service
 			"cost_per_month":    strconv.FormatFloat(planPair.A.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(planPair.A.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
+		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "publish", params)
+
+		if planPair.A.Default {
+			_, err = c.SetDefaultPlan(serviceId, plan3scale.ID)
+		}
 
 		limitsDiff := DiffLimits(planPair.A.Limits, planPair.B.Limits)
 		err = limitsDiff.ReconcileWith3scale(c, serviceId, plan3scale.ID)
@@ -942,6 +951,7 @@ func NewInternalPlanFromPlan(plan Plan, c client.Client) (*InternalPlan, error) 
 	// Fill the internal Plan with Plan and Limits.
 	internalPlan := InternalPlan{
 		Name:             plan.Name,
+		Default:          plan.Spec.Default,
 		TrialPeriodDays:  plan.Spec.TrialPeriod,
 		ApprovalRequired: plan.Spec.AprovalRequired,
 		Costs:            plan.Spec.Costs,
@@ -1179,7 +1189,8 @@ func CompareInternalAPI(APIA, APIB InternalAPI) bool {
 func ComparePlans(a, b InternalPlan) bool {
 
 	if a.Name == b.Name && a.ApprovalRequired == b.ApprovalRequired &&
-		a.TrialPeriodDays == b.TrialPeriodDays && a.Costs == b.Costs {
+		a.TrialPeriodDays == b.TrialPeriodDays && a.Costs == b.Costs &&
+		a.Default == b.Default {
 		if len(a.Limits) == len(b.Limits) {
 			for i := range a.Limits {
 				if a.Limits[i] != b.Limits[i] {
@@ -1617,6 +1628,7 @@ func GetInternalAPIfrom3scale(c *portaClient.ThreeScaleClient, api InternalAPI) 
 			Name:             applicationPlan.PlanName,
 			TrialPeriodDays:  trialPeriodDays,
 			ApprovalRequired: approvalRequired,
+			Default:          applicationPlan.Default,
 			Costs: PlanCost{
 				SetupFee:  setupFee,
 				CostMonth: costMonth,
@@ -1823,7 +1835,7 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 	for _, plan := range api.Plans {
 		//TODO: expose publishing a plan from the CRD model
 
-		plan3scale, err := c.CreateAppPlan(service.ID, plan.Name, "")
+		plan3scale, err := c.CreateAppPlan(service.ID, plan.Name, "publish")
 		if err != nil {
 			return err
 		}
@@ -1834,9 +1846,13 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(service.ID, plan3scale.ID, plan3scale.PlanName, "", params)
+		_, err = c.UpdateAppPlan(service.ID, plan3scale.ID, plan3scale.PlanName, "publish", params)
 		if err != nil {
 			return err
+		}
+
+		if plan.Default {
+			_, err = c.SetDefaultPlan(service.ID, plan3scale.ID)
 		}
 
 		for _, limit := range plan.Limits {

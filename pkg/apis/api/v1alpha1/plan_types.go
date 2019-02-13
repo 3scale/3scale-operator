@@ -14,6 +14,7 @@ type PlanSpec struct {
 }
 
 type PlanBase struct {
+	Default         bool     `json:"default"`
 	TrialPeriod     int64    `json:"trialPeriod"`
 	AprovalRequired bool     `json:"aprovalRequired"`
 	Costs           PlanCost `json:"costs"`
