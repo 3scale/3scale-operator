@@ -70,7 +70,7 @@ func (api *API) getIntegrationMethodType() string {
 	} else if api.Spec.IntegrationMethod.CodePlugin != nil {
 		return "CodePlugin"
 	}
-	return "Unknown"
+	return ""
 }
 
 type ApicastHosted struct {
