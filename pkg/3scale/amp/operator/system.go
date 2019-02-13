@@ -212,11 +212,6 @@ func (o *OperatorSystemOptionsProvider) setSystemSeedOptions(builder *component.
 	defaultAdminPassword := oprand.String(8)
 	defaultAdminAccessToken := oprand.String(16)
 	//defaultSeedTenantName := *o.APIManagerSpec.TenantName // Fix this. Why is TENANT_NAME a secret in system seed? Does not seem a secret so should be directly gathered from the value
-	// TODO fix this. MasterAccessToken does not belong to any secret currently.
-	// Changing this requires changes in the system datamodel because
-	// it is referenced in a system run command instead of from an environment variable.
-	// Also, we need to change this because this was originally an OpenShift template parameter
-	// so this has to be configurable via a secret (with a default).
 	defaultMasterAccessToken := oprand.String(8)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -239,7 +234,7 @@ func (o *OperatorSystemOptionsProvider) setSystemSeedOptions(builder *component.
 		builder.AdminUsername(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminUserFieldName, defaultAdminUser))
 		builder.AdminPassword(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminPasswordFieldName, defaultAdminPassword))
 		builder.AdminAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminAccessTokenFieldName, defaultAdminAccessToken))
-		builder.MasterAccessToken(defaultMasterAccessToken)
+		builder.MasterAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterAccessTokenFieldName, defaultMasterAccessToken))
 	}
 	return nil
 }
