@@ -47,14 +47,15 @@ const (
 )
 
 const (
-	SystemSecretSystemSeedSecretName                = "system-seed"
-	SystemSecretSystemSeedMasterDomainFieldName     = "MASTER_DOMAIN"
-	SystemSecretSystemSeedMasterUserFieldName       = "MASTER_USER"
-	SystemSecretSystemSeedMasterPasswordFieldName   = "MASTER_PASSWORD"
-	SystemSecretSystemSeedAdminAccessTokenFieldName = "ADMIN_ACCESS_TOKEN"
-	SystemSecretSystemSeedAdminUserFieldName        = "ADMIN_USER"
-	SystemSecretSystemSeedAdminPasswordFieldName    = "ADMIN_PASSWORD"
-	SystemSecretSystemSeedTenantNameFieldName       = "TENANT_NAME"
+	SystemSecretSystemSeedSecretName                 = "system-seed"
+	SystemSecretSystemSeedMasterDomainFieldName      = "MASTER_DOMAIN"
+	SystemSecretSystemSeedMasterAccessTokenFieldName = "MASTER_ACCESS_TOKEN"
+	SystemSecretSystemSeedMasterUserFieldName        = "MASTER_USER"
+	SystemSecretSystemSeedMasterPasswordFieldName    = "MASTER_PASSWORD"
+	SystemSecretSystemSeedAdminAccessTokenFieldName  = "ADMIN_ACCESS_TOKEN"
+	SystemSecretSystemSeedAdminUserFieldName         = "ADMIN_USER"
+	SystemSecretSystemSeedAdminPasswordFieldName     = "ADMIN_PASSWORD"
+	SystemSecretSystemSeedTenantNameFieldName        = "TENANT_NAME"
 )
 
 const (
@@ -789,13 +790,14 @@ func (system *System) buildSystemSeedSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemSeedMasterDomainFieldName:     system.Options.masterName,
-			SystemSecretSystemSeedMasterUserFieldName:       system.Options.masterUsername,
-			SystemSecretSystemSeedMasterPasswordFieldName:   system.Options.masterPassword,
-			SystemSecretSystemSeedAdminAccessTokenFieldName: system.Options.adminAccessToken,
-			SystemSecretSystemSeedAdminUserFieldName:        system.Options.adminUsername,
-			SystemSecretSystemSeedAdminPasswordFieldName:    system.Options.adminPassword,
-			SystemSecretSystemSeedTenantNameFieldName:       system.Options.tenantName,
+			SystemSecretSystemSeedMasterDomainFieldName:      system.Options.masterName,
+			SystemSecretSystemSeedMasterAccessTokenFieldName: system.Options.masterAccessToken,
+			SystemSecretSystemSeedMasterUserFieldName:        system.Options.masterUsername,
+			SystemSecretSystemSeedMasterPasswordFieldName:    system.Options.masterPassword,
+			SystemSecretSystemSeedAdminAccessTokenFieldName:  system.Options.adminAccessToken,
+			SystemSecretSystemSeedAdminUserFieldName:         system.Options.adminUsername,
+			SystemSecretSystemSeedAdminPasswordFieldName:     system.Options.adminPassword,
+			SystemSecretSystemSeedTenantNameFieldName:        system.Options.tenantName,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -853,6 +855,8 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 					Pre: &appsv1.LifecycleHook{
 						FailurePolicy: appsv1.LifecycleHookFailurePolicy("Retry"),
 						ExecNewPod: &appsv1.ExecNewPodHook{
+							// TODO the MASTER_ACCESS_TOKEN reference should be probably set as an envvar that gathers its value from the system-seed secret
+							// but changing that probably has some implications during an upgrade process of the product
 							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy " + "MASTER_ACCESS_TOKEN" + "=\"" + system.Options.masterAccessToken + "\""},
 							Env:           system.buildSystemBaseEnv(),
 							ContainerName: "system-master",
