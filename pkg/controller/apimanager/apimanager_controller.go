@@ -114,7 +114,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		objectMeta.SetNamespace(instance.Namespace)
 		err = controllerutil.SetControllerReference(instance, (objs[idx].Object).(metav1.Object), r.scheme)
 		if err != nil {
-			reqLogger.Error(err, "Object", objs[idx].Object)
+			reqLogger.Error(err, "Error setting OwnerReference", "Object", objs[idx].Object)
 			return reconcile.Result{}, err
 		}
 	}
@@ -129,19 +129,22 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		newobj := reflect.New(reflect.TypeOf(obj).Elem()).Interface()
 		found := newobj.(runtime.Object)
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: objectMeta.GetName(), Namespace: objectMeta.GetNamespace()}, found)
-		if err != nil && errors.IsNotFound(err) {
-			// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
-			err = r.client.Create(context.TODO(), obj)
-			if err != nil {
-				reqLogger.Error(err, "Error creating object "+objectInfo, obj)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
+				err = r.client.Create(context.TODO(), obj)
+				if err != nil {
+					reqLogger.Error(err, "Error creating object "+objectInfo, "Object", obj)
+					return reconcile.Result{}, err
+				}
+				reqLogger.Info("Created object " + objectInfo)
+			} else {
+				reqLogger.Error(err, "Failed to get "+objectInfo)
 				return reconcile.Result{}, err
 			}
-			reqLogger.Info("Created object " + objectInfo)
-		} else if err != nil {
-			reqLogger.Error(err, "Failed to get "+objectInfo)
-			return reconcile.Result{}, err
+		} else {
+			reqLogger.Info("Object " + objectInfo + " already exists")
 		}
-		reqLogger.Info("Object " + objectInfo + " already exists")
 
 		// Update secrets with consistent data
 		if secret, ok := objCopy.(*v1.Secret); ok {
