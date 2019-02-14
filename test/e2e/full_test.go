@@ -112,7 +112,7 @@ func TestFullHappyPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Creating tenant admin pass secret")
-	err = e2eutil.WaitForSecret(t, f.KubeClient, namespace, adminPassSecretName, retryInterval, time.Minute*15)
+	err = e2eutil.WaitForSecret(t, f.KubeClient, namespace, adminPassSecretName, retryInterval, time.Minute*2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,13 +129,13 @@ func TestFullHappyPath(t *testing.T) {
 	masterDomain := bytes.NewBuffer(masterDomainByteArray).String()
 
 	// deploy tenant resource
-	tenantSecretName := "tenantProviderKeySecret"
+	tenantSecretName := "tenantproviderkeysecret"
 	tenant := &apiv1alpha1.Tenant{
 		Spec: apiv1alpha1.TenantSpec{
 			UserName:        "admin",
 			Email:           "admin@example.com",
 			OrgName:         "ECorp",
-			SystemMasterURL: fmt.Sprintf("%s.%s", masterDomain, apimanager.Spec.WildcardDomain),
+			SystemMasterURL: fmt.Sprintf("https://%s.%s", masterDomain, apimanager.Spec.WildcardDomain),
 			AdminPasswordRef: v1.SecretReference{
 				Name:      adminPassSecretName,
 				Namespace: namespace,
@@ -159,7 +159,7 @@ func TestFullHappyPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = e2eutil.WaitForSecret(t, f.KubeClient, namespace, tenantSecretName, retryInterval, time.Minute*15)
+	err = e2eutil.WaitForSecret(t, f.KubeClient, namespace, tenantSecretName, retryInterval, time.Minute*2)
 	if err != nil {
 		t.Fatal(err)
 	}
