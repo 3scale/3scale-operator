@@ -2,6 +2,7 @@ package binding
 
 import (
 	"context"
+	"encoding/json"
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -195,6 +196,11 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 			}))
 			// Set the proper Meta from the existing object.
 			desiredConsolidated.ObjectMeta = currentConsolidated.ObjectMeta
+
+			// Add a list of the previous APIs.
+			previousVersion, _ := json.Marshal(currentConsolidated.Spec)
+			desiredConsolidated.Status.PreviousVersion = string(previousVersion)
+
 			err := c.Update(context.TODO(), desiredConsolidated)
 			if err != nil {
 				// Something went wrong when trying to update the actual consolidated object.
