@@ -3,7 +3,6 @@ package consolidated
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -129,7 +128,6 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 		if !apiv1alpha1.CompareConsolidated(*consolidated, *previousConsolidated) {
 			reqLogger.Info("Previous version of the consolidated object is different", request.Name, request.Namespace)
 			apisDiff := apiv1alpha1.DiffAPIs(consolidated.Spec.APIs, previousConsolidated.Spec.APIs)
-			fmt.Printf("\n\n\n %#v \n\n\n", apisDiff)
 			for _, api := range apisDiff.MissingFromA {
 				err = apiv1alpha1.DeleteInternalAPIFrom3scale(consolidated.Spec.Credentials, api)
 				if err != nil {
