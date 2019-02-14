@@ -390,15 +390,15 @@
   revision = "5ad8479f64f1b60ee9c62ce8ef1fe6638838725e"
 
 [[projects]]
-  digest = "1:3e8b0f8d2ed4b10f83a0719c1e8853bdb4bbce2ca365aba2843dc9487e4ab35c"
+  branch = "release-3.11"
+  digest = "1:7a400f10664543108f603f64a5228112995fb64c89881bb148f56af5989df030"
   name = "github.com/openshift/client-go"
   packages = [
     "apps/clientset/versioned/scheme",
     "apps/clientset/versioned/typed/apps/v1",
   ]
   pruneopts = "NT"
-  revision = "1fa528d3be060e4c7178eb69e76d37cf7e699e3c"
-  version = "v3.9.0"
+  revision = "431ec9a26e5021f35fa41ee9a89842db9bfdb370"
 
 [[projects]]
   digest = "1:b186c2fcf87d05c5129ad0d89ea062853b0bdf6d6bca1ed4a22157962f2ad8dd"

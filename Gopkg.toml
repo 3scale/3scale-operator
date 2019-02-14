@@ -55,6 +55,10 @@ required = [
   revision = "5ad8479f64f1b60ee9c62ce8ef1fe6638838725e"
 
 [[override]]
+  name = "github.com/openshift/client-go"
+  branch = "release-3.11"
+
+[[override]]
   name = "github.com/3scale/3scale-porta-go-client"
   branch = "master"
 
