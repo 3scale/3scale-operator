@@ -1,0 +1,52 @@
+apiVersion: v1
+items:
+- apiVersion: api.3scale.net/v1alpha1
+  kind: Plan
+  metadata:
+    labels:
+      api: api01
+    name: plan01
+  spec:
+    aprovalRequired: false
+    costs:
+      costMonth: 0
+      setupFee: 0
+    limitSelector:
+      matchLabels:
+        api: api01
+    trialPeriod: 0
+- apiVersion: api.3scale.net/v1alpha1
+  kind: Plan
+  metadata:
+    labels:
+      api: api01
+    name: plan02
+  spec:
+    aprovalRequired: false
+    costs:
+      costMonth: 0
+      setupFee: 0
+    limitSelector:
+      matchLabels:
+        plan: plan02
+    trialPeriod: 0
+- apiVersion: api.3scale.net/v1alpha1
+  kind: Plan
+  metadata:
+    labels:
+      api: api02
+    name: plan03
+  spec:
+    aprovalRequired: false
+    costs:
+      costMonth: 0
+      setupFee: 0
+    limitSelector:
+      matchLabels:
+        plan: plan03
+    trialPeriod: 0
+
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

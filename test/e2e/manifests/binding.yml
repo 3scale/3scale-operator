@@ -1,0 +1,16 @@
+apiVersion: v1
+items:
+- apiVersion: api.3scale.net/v1alpha1
+  kind: Binding
+  metadata:
+    labels:
+      environment: production
+    name: test
+  spec:
+    APISelector:
+    credentialsRef:
+      name: threescale-credentials
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
