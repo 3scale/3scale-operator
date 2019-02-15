@@ -5,6 +5,7 @@ import (
 	goctx "context"
 	"fmt"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -64,6 +65,7 @@ func TestFullHappyPath(t *testing.T) {
 		clusterURL.Scheme = "https"
 	}
 	clusterHost := clusterURL.Host
+	clusterHost = strings.Split(clusterHost, ":")[0]
 
 	err = frameworke2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "3scale-operator", 1, retryInterval, timeout)
 	if err != nil {
@@ -142,7 +144,7 @@ func TestFullHappyPath(t *testing.T) {
 
 	// deploy tenant resource
 	tenantSecretName := "tenantproviderkeysecret"
-	systemMasterURL := fmt.Sprintf("https://%s.%s", masterDomain, clusterURL.Host)
+	systemMasterURL := fmt.Sprintf("https://%s.%s", masterDomain, apimanager.Spec.WildcardDomain)
 	tenant := &apiv1alpha1.Tenant{
 		Spec: apiv1alpha1.TenantSpec{
 			UserName:        "admin",
