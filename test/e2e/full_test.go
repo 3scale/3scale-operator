@@ -4,6 +4,7 @@ import (
 	"bytes"
 	goctx "context"
 	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
@@ -54,6 +55,16 @@ func TestFullHappyPath(t *testing.T) {
 	f := framework.Global
 	t.Log("waiting until operator Deployment is ready...")
 
+	cfgHost := f.KubeConfig.Host
+	clusterURL, err := url.Parse(cfgHost)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if clusterURL.Scheme == "" {
+		clusterURL.Scheme = "https"
+	}
+	clusterHost := clusterURL.Host
+
 	err = frameworke2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "3scale-operator", 1, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
@@ -61,11 +72,12 @@ func TestFullHappyPath(t *testing.T) {
 	t.Log("operator Deployment is ready")
 
 	// Deploy APIManager resource
-	var productized bool = true
+	productized := true
+	apiManagerWildcardDomain := fmt.Sprintf("test1.%s.nip.io", clusterHost)
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			AmpRelease:     "2.4",
-			WildcardDomain: "test1.127.0.0.1.nip.io",
+			WildcardDomain: apiManagerWildcardDomain,
 			Productized:    &productized,
 			Evaluation:     true,
 		},
@@ -130,12 +142,13 @@ func TestFullHappyPath(t *testing.T) {
 
 	// deploy tenant resource
 	tenantSecretName := "tenantproviderkeysecret"
+	systemMasterURL := fmt.Sprintf("https://%s.%s", masterDomain, clusterURL.Host)
 	tenant := &apiv1alpha1.Tenant{
 		Spec: apiv1alpha1.TenantSpec{
 			UserName:        "admin",
 			Email:           "admin@example.com",
 			OrgName:         "ECorp",
-			SystemMasterURL: fmt.Sprintf("https://%s.%s", masterDomain, apimanager.Spec.WildcardDomain),
+			SystemMasterURL: systemMasterURL,
 			AdminPasswordRef: v1.SecretReference{
 				Name:      adminPassSecretName,
 				Namespace: namespace,
