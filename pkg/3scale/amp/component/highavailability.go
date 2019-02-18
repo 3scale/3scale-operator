@@ -6,6 +6,7 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -20,6 +21,7 @@ type HighAvailabilityOptions struct {
 }
 
 type requiredHighAvailabilityOptions struct {
+	appLabel                    string
 	apicastProductionRedisURL   string
 	apicastStagingRedisURL      string
 	backendRedisQueuesEndpoint  string
@@ -50,6 +52,10 @@ func NewHighAvailability(options []string) *HighAvailability {
 
 type HighAvailabilityOptionsBuilder struct {
 	options HighAvailabilityOptions
+}
+
+func (ha *HighAvailabilityOptionsBuilder) AppLabel(appLabel string) {
+	ha.options.appLabel = appLabel
 }
 
 func (ha *HighAvailabilityOptionsBuilder) ApicastProductionRedisURL(apicastProductionRedisURL string) {
@@ -123,6 +129,7 @@ type CLIHighAvailabilityOptionsProvider struct {
 
 func (o *CLIHighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*HighAvailabilityOptions, error) {
 	hob := HighAvailabilityOptionsBuilder{}
+	hob.AppLabel("${APP_LABEL}")
 	hob.ApicastProductionRedisURL("${APICAST_PRODUCTION_REDIS_URL}")
 	hob.ApicastStagingRedisURL("${APICAST_STAGING_REDIS_URL}")
 	hob.BackendRedisQueuesEndpoint("${BACKEND_REDIS_QUEUES_ENDPOINT}")
@@ -144,9 +151,30 @@ func (ha *HighAvailability) setHAOptions() {
 	ha.Options = haOpts
 }
 
+func (ha *HighAvailability) GetObjects() ([]runtime.RawExtension, error) {
+	objects := ha.buildObjects()
+	return objects, nil
+}
+
 func (ha *HighAvailability) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
 	ha.setHAOptions() // TODO move this outside
+	ha.addObjectsIntoTemplate(template)
+
 	ha.buildParameters(template)
+}
+
+func (ha *HighAvailability) addObjectsIntoTemplate(template *templatev1.Template) {
+	objects := ha.buildObjects()
+	template.Objects = append(template.Objects, objects...)
+}
+
+func (ha *HighAvailability) buildObjects() []runtime.RawExtension {
+	systemDatabaseSecrets := ha.createSystemDatabaseSecret()
+
+	objects := []runtime.RawExtension{
+		runtime.RawExtension{Object: systemDatabaseSecrets},
+	}
+	return objects
 }
 
 // TODO check how to postprocess independently of templates
@@ -168,6 +196,26 @@ func (ha *HighAvailability) PostProcessObjects(objects []runtime.RawExtension) [
 	ha.updateDatabasesURLS(res)
 
 	return res
+}
+
+func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: SystemSecretSystemDatabaseSecretName,
+			Labels: map[string]string{
+				"app":              ha.Options.appLabel,
+				"3scale.component": "system",
+			},
+		},
+		StringData: map[string]string{
+			SystemSecretSystemDatabaseURLFieldName: ha.Options.systemDatabaseURL,
+		},
+		Type: v1.SecretTypeOpaque,
+	}
 }
 
 func (ha *HighAvailability) increaseReplicasNumber(objects []runtime.RawExtension) {
@@ -251,10 +299,6 @@ func (ha *HighAvailability) updateDatabasesURLS(objects []runtime.RawExtension) 
 			switch secret.Name {
 			case "system-redis":
 				secret.StringData["URL"] = ha.Options.systemRedisURL
-
-			// TODO delete mysql-standalone specific parameters
-			case "system-database":
-				secret.StringData["URL"] = ha.Options.systemDatabaseURL
 			case "apicast-redis":
 				secret.StringData["PRODUCTION_URL"] = ha.Options.apicastProductionRedisURL
 				secret.StringData["STAGING_URL"] = ha.Options.apicastStagingRedisURL

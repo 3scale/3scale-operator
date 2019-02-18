@@ -449,7 +449,6 @@ func (system *System) buildObjects() []runtime.RawExtension {
 	systemProviderRoute := system.buildSystemProviderRoute()
 	systemMasterRoute := system.buildSystemMasterRoute()
 	systemDeveloperRoute := system.buildSystemDeveloperRoute()
-	systemMysqlService := system.buildSystemMysqlService()
 	systemRedisService := system.buildSystemRedisService()
 	systemSphinxService := system.buildSystemSphinxService()
 	systemMemcachedService := system.buildSystemMemcachedService()
@@ -480,7 +479,6 @@ func (system *System) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: systemProviderRoute},
 		runtime.RawExtension{Object: systemMasterRoute},
 		runtime.RawExtension{Object: systemDeveloperRoute},
-		runtime.RawExtension{Object: systemMysqlService},
 		runtime.RawExtension{Object: systemRedisService},
 		runtime.RawExtension{Object: systemSphinxService},
 		runtime.RawExtension{Object: systemMemcachedService},
@@ -1345,36 +1343,6 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 		},
 	}
 }
-
-func (system *System) buildSystemMysqlService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-mysql",
-			Labels: map[string]string{
-				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "mysql",
-			},
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "system-mysql",
-					Protocol:   v1.Protocol("TCP"),
-					Port:       3306,
-					TargetPort: intstr.FromInt(3306),
-					NodePort:   0,
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "system-mysql"},
-		},
-	}
-}
-
 func (system *System) buildSystemRedisService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
