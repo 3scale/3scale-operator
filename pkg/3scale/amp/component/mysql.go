@@ -32,6 +32,7 @@ type mysqlRequiredOptions struct {
 	user         string
 	password     string
 	rootPassword string
+	databaseURL  string
 }
 
 type mysqlNonRequiredOptions struct {
@@ -65,6 +66,10 @@ func (m *MysqlOptionsBuilder) RootPassword(rootPassword string) {
 	m.options.rootPassword = rootPassword
 }
 
+func (m *MysqlOptionsBuilder) DatabaseURL(url string) {
+	m.options.databaseURL = url
+}
+
 func (m *MysqlOptionsBuilder) Build() (*MysqlOptions, error) {
 	err := m.setRequiredOptions()
 	if err != nil {
@@ -95,6 +100,9 @@ func (m *MysqlOptionsBuilder) setRequiredOptions() error {
 	if m.options.rootPassword == "" {
 		return fmt.Errorf("no Root Password has been provided")
 	}
+	if m.options.databaseURL == "" {
+		return fmt.Errorf("no Database URL has been provided")
+	}
 
 	return nil
 }
@@ -117,6 +125,8 @@ func (o *CLIMysqlOptionsProvider) GetMysqlOptions() (*MysqlOptions, error) {
 	mob.User("${MYSQL_USER}")
 	mob.Password("${MYSQL_PASSWORD}")
 	mob.RootPassword("${MYSQL_ROOT_PASSWORD}")
+	mob.DatabaseURL("mysql2://root:" + "${MYSQL_ROOT_PASSWORD}" + "@system-mysql/" + "${MYSQL_DATABASE}")
+
 	res, err := mob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create MySQL Options - %s", err)
@@ -196,12 +206,14 @@ func (mysql *Mysql) buildObjects() []runtime.RawExtension {
 	systemMysqlMainConfigConfigMap := mysql.buildSystemMysqlMainConfigConfigMap()
 	systemMysqlExtraConfigConfigMap := mysql.buildSystemMysqlExtraConfigConfigMap()
 	systemMysqlPersistentVolumeClaim := mysql.buildSystemMysqlPersistentVolumeClaim()
+	systemDatabaseSecret := mysql.buildSystemDatabaseSecrets()
 
 	objects := []runtime.RawExtension{
 		runtime.RawExtension{Object: systemMysqlDeploymentConfig},
 		runtime.RawExtension{Object: systemMysqlMainConfigConfigMap},
 		runtime.RawExtension{Object: systemMysqlExtraConfigConfigMap},
 		runtime.RawExtension{Object: systemMysqlPersistentVolumeClaim},
+		runtime.RawExtension{Object: systemDatabaseSecret},
 	}
 
 	return objects
@@ -373,6 +385,29 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 				},
 			},
 		},
+	}
+}
+
+// Each database is responsible to create the needed secrets for the other components
+func (mysql *Mysql) buildSystemDatabaseSecrets() *v1.Secret {
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: SystemSecretSystemDatabaseSecretName,
+			Labels: map[string]string{
+				"app":              mysql.Options.appLabel,
+				"3scale.component": "system",
+			},
+		},
+		StringData: map[string]string{
+			SystemSecretSystemDatabaseUserFieldName:     mysql.Options.user,
+			SystemSecretSystemDatabasePasswordFieldName: mysql.Options.password,
+			SystemSecretSystemDatabaseURLFieldName:      mysql.Options.databaseURL,
+		},
+		Type: v1.SecretTypeOpaque,
 	}
 }
 

@@ -25,6 +25,8 @@ type OperatorBackendOptionsProvider struct {
 
 type OperatorMysqlOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
 }
 
 type OperatorMemcachedOptionsProvider struct {
