@@ -331,8 +331,11 @@ func (r *InternalReconciler) createTenantProviderKeySecret(tenantDef *porta_clie
 			Name:      nn.Name,
 			Labels:    map[string]string{"app": "3scale-operator"},
 		},
-		StringData: map[string]string{TenantProviderKeySecretField: tenantProviderKey},
-		Type:       v1.SecretTypeOpaque,
+		StringData: map[string]string{
+			TenantProviderKeySecretField:    tenantProviderKey,
+			TenantAdminDomainKeySecretField: tenantDef.Signup.Account.AdminDomain,
+		},
+		Type: v1.SecretTypeOpaque,
 	}
 	addOwnerRefToObject(secret, asOwner(r.tenantR))
 	return r.k8sClient.Create(context.TODO(), secret)
