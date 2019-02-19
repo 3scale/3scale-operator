@@ -15,8 +15,12 @@ import (
 )
 
 const (
-	SystemSecretSystemDatabaseSecretName   = "system-database"
-	SystemSecretSystemDatabaseURLFieldName = "URL"
+	SystemSecretSystemDatabaseSecretName            = "system-database"
+	SystemSecretSystemDatabaseURLFieldName          = "URL"
+	SystemSecretSystemDatabaseDatabaseNameFieldName = "DB_NAME"
+	SystemSecretSystemDatabaseUserFieldName         = "DB_USER"
+	SystemSecretSystemDatabasePasswordFieldName     = "DB_PASSWORD"
+	SystemSecretSystemDatabaseRootPasswordFieldName = "DB_ROOT_PASSWORD"
 )
 
 const (
@@ -93,7 +97,6 @@ type systemRequiredOptions struct {
 	backendSharedSecret string
 	tenantName          string
 	wildcardDomain      string
-	databaseURL         string
 	storageClassName    *string // should this be a string or *string? check what would be the difference between passing a "" and a nil pointer in the PersistentVolumeClaim corresponding field
 }
 
@@ -186,10 +189,6 @@ func (s *SystemOptionsBuilder) WildcardDomain(wildcardDomain string) {
 
 func (s *SystemOptionsBuilder) StorageClassName(storageClassName *string) {
 	s.options.storageClassName = storageClassName
-}
-
-func (s *SystemOptionsBuilder) DatabaseURL(dbURL string) {
-	s.options.databaseURL = dbURL
 }
 
 func (s *SystemOptionsBuilder) MemcachedServers(servers string) {
@@ -326,7 +325,6 @@ func (o *CLISystemOptionsProvider) GetSystemOptions() (*SystemOptions, error) {
 	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
 	sob.TenantName("${TENANT_NAME}")
 	sob.WildcardDomain("${WILDCARD_DOMAIN}")
-	sob.DatabaseURL("mysql2://root:" + "${MYSQL_ROOT_PASSWORD}" + "@system-mysql/" + "${MYSQL_DATABASE}")
 	sob.StorageClassName(nil)
 	res, err := sob.Build()
 	if err != nil {
@@ -469,7 +467,6 @@ func (system *System) buildObjects() []runtime.RawExtension {
 	systemRedisSecret := system.buildSystemRedisSecrets()
 	systemMasterApicastSecret := system.buildSystemMasterApicastSecrets()
 
-	systemDatabaseSecret := system.buildSystemDatabaseSecrets()
 	systemSeedSecret := system.buildSystemSeedSecrets()
 	systemRecaptchaSecret := system.buildSystemRecaptchaSecrets()
 	systemAppSecret := system.buildSystemAppSecrets()
@@ -496,7 +493,6 @@ func (system *System) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: systemEventsHookSecret},
 		runtime.RawExtension{Object: systemRedisSecret},
 		runtime.RawExtension{Object: systemMasterApicastSecret},
-		runtime.RawExtension{Object: systemDatabaseSecret},
 		runtime.RawExtension{Object: systemSeedSecret},
 		runtime.RawExtension{Object: systemRecaptchaSecret},
 		runtime.RawExtension{Object: systemAppSecret},
@@ -651,26 +647,6 @@ func (system *System) buildSystemEnvironmentConfigMap() *v1.ConfigMap {
 			"AMP_RELEASE":  system.Options.ampRelease,
 			"SSL_CERT_DIR": "/etc/pki/tls/certs",
 		},
-	}
-}
-
-func (system *System) buildSystemDatabaseSecrets() *v1.Secret {
-	return &v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: SystemSecretSystemDatabaseSecretName,
-			Labels: map[string]string{
-				"app":              system.Options.appLabel,
-				"3scale.component": "system",
-			},
-		},
-		StringData: map[string]string{
-			SystemSecretSystemDatabaseURLFieldName: system.Options.databaseURL,
-		},
-		Type: v1.SecretTypeOpaque,
 	}
 }
 

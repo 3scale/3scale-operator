@@ -63,15 +63,7 @@ spec:
               type: boolean
             memcachedImage:
               type: string
-            mysqlDatabase:
-              type: string
             mysqlImage:
-              type: string
-            mysqlPassword:
-              type: string
-            mysqlRootPassword:
-              type: string
-            mysqlUser:
               type: string
             postgreSQLImage:
               type: string

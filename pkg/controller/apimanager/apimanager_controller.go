@@ -198,7 +198,7 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) 
 	}
 	results = append(results, backend...)
 
-	mysql, err := createMysql(cr)
+	mysql, err := createMysql(cr, client)
 	if err != nil {
 		return nil, err
 	}
@@ -332,8 +332,8 @@ func createBackend(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime
 	return result, nil
 }
 
-func createMysql(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec}
+func createMysql(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
 	opts, err := optsProvider.GetMysqlOptions()
 	if err != nil {
 		return nil, err

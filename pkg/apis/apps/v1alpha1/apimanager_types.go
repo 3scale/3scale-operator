@@ -3,8 +3,6 @@ package v1alpha1
 import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -60,22 +58,6 @@ type APIManagerSpec struct {
 
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
-
-	// TODO. This should be moved to a Secret.
-	// +optional
-	MysqlUser *string `json:"mysqlUser,omitempty"`
-
-	// TODO. This should be moved to a Secret.
-	// +optional
-	MysqlPassword *string `json:"mysqlPassword,omitempty"`
-
-	// TODO. This should be moved to a Secret.
-	// +optional
-	MysqlRootPassword *string `json:"mysqlRootPassword,omitempty"`
-
-	// TODO. This should be moved to a Secret.
-	// +optional
-	MysqlDatabase *string `json:"mysqlDatabase,omitempty"`
 
 	// +optional
 	ApicastManagementApi *string `json:"apicastManagementApi,omitempty"`
@@ -257,30 +239,6 @@ func (apimanager *APIManager) SetDefaults() bool {
 	if spec.RedisImage == nil {
 		defaultRedisImage := "registry.access.redhat.com/rhscl/redis-32-rhel7:3.2"
 		spec.RedisImage = &defaultRedisImage
-		changed = true
-	}
-
-	if spec.MysqlUser == nil {
-		defaultMysqlUser := "mysql"
-		spec.MysqlUser = &defaultMysqlUser
-		changed = true
-	}
-
-	if spec.MysqlDatabase == nil {
-		defaultMysqlDatabase := "system"
-		spec.MysqlDatabase = &defaultMysqlDatabase
-		changed = true
-	}
-
-	if spec.MysqlPassword == nil {
-		defaultMysqlPassword := oprand.String(8)
-		spec.MysqlPassword = &defaultMysqlPassword
-		changed = true
-	}
-
-	if spec.MysqlRootPassword == nil {
-		defaultMysqlRootPassword := oprand.String(8)
-		spec.MysqlRootPassword = &defaultMysqlRootPassword
 		changed = true
 	}
 

@@ -956,9 +956,15 @@ objects:
         containers:
         - env:
           - name: MYSQL_USER
-            value: ${MYSQL_USER}
+            valueFrom:
+              secretKeyRef:
+                key: DB_USER
+                name: system-database
           - name: MYSQL_PASSWORD
-            value: ${MYSQL_PASSWORD}
+            valueFrom:
+              secretKeyRef:
+                key: DB_PASSWORD
+                name: system-database
           - name: MYSQL_DATABASE
             value: ${MYSQL_DATABASE}
           - name: MYSQL_ROOT_PASSWORD
@@ -1066,6 +1072,19 @@ objects:
       requests:
         storage: 1Gi
   status: {}
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    creationTimestamp: null
+    labels:
+      3scale.component: system
+      app: ${APP_LABEL}
+    name: system-database
+  stringData:
+    DB_PASSWORD: ${MYSQL_PASSWORD}
+    DB_USER: ${MYSQL_USER}
+    URL: mysql2://root:${MYSQL_ROOT_PASSWORD}@system-mysql/${MYSQL_DATABASE}
+  type: Opaque
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -2888,17 +2907,6 @@ objects:
     ACCESS_TOKEN: ${APICAST_ACCESS_TOKEN}
     BASE_URL: http://${APICAST_ACCESS_TOKEN}@system-master:3000
     PROXY_CONFIGS_ENDPOINT: http://${APICAST_ACCESS_TOKEN}@system-master:3000/master/api/proxy/configs
-  type: Opaque
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    creationTimestamp: null
-    labels:
-      3scale.component: system
-      app: ${APP_LABEL}
-    name: system-database
-  stringData:
-    URL: mysql2://root:${MYSQL_ROOT_PASSWORD}@system-mysql/${MYSQL_DATABASE}
   type: Opaque
 - apiVersion: v1
   kind: Secret

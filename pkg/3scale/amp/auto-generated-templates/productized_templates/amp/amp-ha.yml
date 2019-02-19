@@ -687,6 +687,19 @@ objects:
     route_endpoint: https://backend-${TENANT_NAME}.${WILDCARD_DOMAIN}
     service_endpoint: http://backend-listener:3000
   type: Opaque
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    creationTimestamp: null
+    labels:
+      3scale.component: system
+      app: ${APP_LABEL}
+    name: system-database
+  stringData:
+    DB_PASSWORD: ${MYSQL_PASSWORD}
+    DB_USER: ${MYSQL_USER}
+    URL: ${SYSTEM_DATABASE_URL}
+  type: Opaque
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -2507,17 +2520,6 @@ objects:
     ACCESS_TOKEN: ${APICAST_ACCESS_TOKEN}
     BASE_URL: http://${APICAST_ACCESS_TOKEN}@system-master:3000
     PROXY_CONFIGS_ENDPOINT: http://${APICAST_ACCESS_TOKEN}@system-master:3000/master/api/proxy/configs
-  type: Opaque
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    creationTimestamp: null
-    labels:
-      3scale.component: system
-      app: ${APP_LABEL}
-    name: system-database
-  stringData:
-    URL: ${SYSTEM_DATABASE_URL}
   type: Opaque
 - apiVersion: v1
   kind: Secret

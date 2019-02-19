@@ -169,26 +169,6 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.MysqlUser != nil {
-		in, out := &in.MysqlUser, &out.MysqlUser
-		*out = new(string)
-		**out = **in
-	}
-	if in.MysqlPassword != nil {
-		in, out := &in.MysqlPassword, &out.MysqlPassword
-		*out = new(string)
-		**out = **in
-	}
-	if in.MysqlRootPassword != nil {
-		in, out := &in.MysqlRootPassword, &out.MysqlRootPassword
-		*out = new(string)
-		**out = **in
-	}
-	if in.MysqlDatabase != nil {
-		in, out := &in.MysqlDatabase, &out.MysqlDatabase
-		*out = new(string)
-		**out = **in
-	}
 	if in.ApicastManagementApi != nil {
 		in, out := &in.ApicastManagementApi, &out.ApicastManagementApi
 		*out = new(string)

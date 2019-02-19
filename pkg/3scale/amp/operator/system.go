@@ -30,12 +30,7 @@ func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOpt
 }
 
 func (o *OperatorSystemOptionsProvider) setSecretBasedOptions(builder *component.SystemOptionsBuilder) error {
-	err := o.setSystemDatabaseOptions(builder)
-	if err != nil {
-		return fmt.Errorf("unable to create System Database secret options - %s", err)
-	}
-
-	err = o.setSystemMemcachedOptions(builder)
+	err := o.setSystemMemcachedOptions(builder)
 	if err != nil {
 		return fmt.Errorf("unable to create System Memcached secret options - %s", err)
 	}
@@ -70,29 +65,6 @@ func (o *OperatorSystemOptionsProvider) setSecretBasedOptions(builder *component
 		return fmt.Errorf("unable to create System Master Apicast secret options - %s", err)
 	}
 
-	return nil
-}
-
-func (o *OperatorSystemOptionsProvider) setSystemDatabaseOptions(builder *component.SystemOptionsBuilder) error {
-	currSecret, err := getSecret(component.SystemSecretSystemDatabaseSecretName, o.Namespace, o.Client)
-	defaultDatabaseName := *o.APIManagerSpec.MysqlDatabase
-	defaultDatabaseRootPassword := *o.APIManagerSpec.MysqlRootPassword
-	// TODO is this correct?? in templates the user provides dbname and rootpassword
-	// but the secret is only the URL.
-	defaultDatabaseURL := "mysql2://root:" + defaultDatabaseRootPassword + "@system-mysql/" + defaultDatabaseName
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Set options defaults
-			builder.DatabaseURL(defaultDatabaseURL)
-		} else {
-			return err
-		}
-	} else {
-		// If a field of a secret already exists in the deployed secret then
-		// We do not modify it. Otherwise we set a default value
-		secretData := currSecret.Data
-		builder.DatabaseURL(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseURLFieldName, defaultDatabaseURL))
-	}
 	return nil
 }
 
