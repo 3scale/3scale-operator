@@ -26,8 +26,11 @@ var log = logf.Log.WithName("controller_tenant")
 // Secret field name with Tenant's admin user password
 const TenantAdminPasswordSecretField = "admin_password"
 
-// Tenant's admin user access token secret field name for access token
-const TenantProviderKeySecretField = "provider_key"
+// Tenant's credentials secret field name for access token
+const TenantProviderKeySecretField = "token"
+
+// Tenant's credentials secret field name for admin domain url
+const TenantAdminDomainKeySecretField = "adminURL"
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
