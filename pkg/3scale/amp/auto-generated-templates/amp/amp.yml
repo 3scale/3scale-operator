@@ -1070,6 +1070,25 @@ objects:
     unavailableReplicas: 0
     updatedReplicas: 0
 - apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: null
+    labels:
+      3scale.component: system
+      3scale.component-element: mysql
+      app: ${APP_LABEL}
+    name: system-mysql
+  spec:
+    ports:
+    - name: system-mysql
+      port: 3306
+      protocol: TCP
+      targetPort: 3306
+    selector:
+      deploymentConfig: system-mysql
+  status:
+    loadBalancer: {}
+- apiVersion: v1
   data:
     my.cnf: |
       !include /etc/my.cnf
@@ -1344,25 +1363,6 @@ objects:
       weight: null
   status:
     ingress: null
-- apiVersion: v1
-  kind: Service
-  metadata:
-    creationTimestamp: null
-    labels:
-      3scale.component: system
-      3scale.component-element: mysql
-      app: ${APP_LABEL}
-    name: system-mysql
-  spec:
-    ports:
-    - name: system-mysql
-      port: 3306
-      protocol: TCP
-      targetPort: 3306
-    selector:
-      deploymentConfig: system-mysql
-  status:
-    loadBalancer: {}
 - apiVersion: v1
   kind: Service
   metadata:

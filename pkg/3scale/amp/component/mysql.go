@@ -108,7 +108,6 @@ func (m *MysqlOptionsBuilder) setRequiredOptions() error {
 }
 
 func (m *MysqlOptionsBuilder) setNonRequiredOptions() {
-
 }
 
 type MysqlOptionsProvider interface {
@@ -126,7 +125,6 @@ func (o *CLIMysqlOptionsProvider) GetMysqlOptions() (*MysqlOptions, error) {
 	mob.Password("${MYSQL_PASSWORD}")
 	mob.RootPassword("${MYSQL_ROOT_PASSWORD}")
 	mob.DatabaseURL("mysql2://root:" + "${MYSQL_ROOT_PASSWORD}" + "@system-mysql/" + "${MYSQL_DATABASE}")
-
 	res, err := mob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create MySQL Options - %s", err)
@@ -203,6 +201,7 @@ func (mysql *Mysql) buildParameters(template *templatev1.Template) {
 
 func (mysql *Mysql) buildObjects() []runtime.RawExtension {
 	systemMysqlDeploymentConfig := mysql.buildSystemMysqlDeploymentConfig()
+	systemMysqlService := mysql.buildSystemMysqlService()
 	systemMysqlMainConfigConfigMap := mysql.buildSystemMysqlMainConfigConfigMap()
 	systemMysqlExtraConfigConfigMap := mysql.buildSystemMysqlExtraConfigConfigMap()
 	systemMysqlPersistentVolumeClaim := mysql.buildSystemMysqlPersistentVolumeClaim()
@@ -210,6 +209,7 @@ func (mysql *Mysql) buildObjects() []runtime.RawExtension {
 
 	objects := []runtime.RawExtension{
 		runtime.RawExtension{Object: systemMysqlDeploymentConfig},
+		runtime.RawExtension{Object: systemMysqlService},
 		runtime.RawExtension{Object: systemMysqlMainConfigConfigMap},
 		runtime.RawExtension{Object: systemMysqlExtraConfigConfigMap},
 		runtime.RawExtension{Object: systemMysqlPersistentVolumeClaim},
@@ -217,6 +217,35 @@ func (mysql *Mysql) buildObjects() []runtime.RawExtension {
 	}
 
 	return objects
+}
+
+func (mysql *Mysql) buildSystemMysqlService() *v1.Service {
+	return &v1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system-mysql",
+			Labels: map[string]string{
+				"app":                      mysql.Options.appLabel,
+				"3scale.component":         "system",
+				"3scale.component-element": "mysql",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:       "system-mysql",
+					Protocol:   v1.Protocol("TCP"),
+					Port:       3306,
+					TargetPort: intstr.FromInt(3306),
+					NodePort:   0,
+				},
+			},
+			Selector: map[string]string{"deploymentConfig": "system-mysql"},
+		},
+	}
 }
 
 func (mysql *Mysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
@@ -316,13 +345,11 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 							Env: []v1.EnvVar{
 								createEnvvarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
 								createEnvvarFromSecret("MYSQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
-
 								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
 								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
 								// are deprecated we should be able to change this.
 								createEnvVarFromValue("MYSQL_DATABASE", mysql.Options.databaseName),
 								createEnvVarFromValue("MYSQL_ROOT_PASSWORD", mysql.Options.rootPassword),
-
 								createEnvVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
 								createEnvVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
 							},

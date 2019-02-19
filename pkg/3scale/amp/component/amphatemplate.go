@@ -16,7 +16,14 @@ type AmpHATemplateOptions struct {
 
 func NewAmpHATemplate(options []string) *AmpHATemplate {
 	components := []Component{
-		NewAmpTemplate(options),
+		NewAmpImages(options),
+		NewRedis(options),
+		NewBackend(options),
+		NewMemcached(options),
+		NewSystem(options),
+		NewZync(options),
+		NewApicast(options),
+		NewWildcardRouter(options),
 		NewHighAvailability(options),
 	}
 
