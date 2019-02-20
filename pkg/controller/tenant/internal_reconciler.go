@@ -321,6 +321,11 @@ func (r *InternalReconciler) createTenantProviderKeySecret(tenantDef *porta_clie
 		return err
 	}
 
+	adminURL, err := URLFromDomain(tenantDef.Signup.Account.AdminDomain)
+	if err != nil {
+		return err
+	}
+
 	secret := &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -333,7 +338,7 @@ func (r *InternalReconciler) createTenantProviderKeySecret(tenantDef *porta_clie
 		},
 		StringData: map[string]string{
 			TenantProviderKeySecretField:    tenantProviderKey,
-			TenantAdminDomainKeySecretField: tenantDef.Signup.Account.AdminDomain,
+			TenantAdminDomainKeySecretField: adminURL.String(),
 		},
 		Type: v1.SecretTypeOpaque,
 	}
