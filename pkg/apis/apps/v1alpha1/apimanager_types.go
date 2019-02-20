@@ -1,8 +1,12 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -18,85 +22,19 @@ type APIManagerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 
-	AmpRelease string `json:"ampRelease"`
-
+	APIManagerCommonSpec `json:",inline"`
 	// +optional
-	AppLabel *string `json:"appLabel,omitempty"`
-
+	ApicastSpec *ApicastSpec `json:"apicast,omitempty"`
 	// +optional
-	TenantName *string `json:"tenantName,omitempty"`
-
+	BackendSpec *BackendSpec `json:"backend,omitempty"`
 	// +optional
-	RwxStorageClass *string `json:"rwxStorageClass,omitempty"` // TODO is this correct? maybe a pointer to String?
-
+	SystemSpec *SystemSpec `json:"system,omitempty"`
 	// +optional
-	AmpBackendImage *string `json:"ampBackendImage,omitempty"`
-
+	ZyncSpec *ZyncSpec `json:"zync,omitempty"`
 	// +optional
-	AmpZyncImage *string `json:"ampZyncImage,omitempty"`
-
+	WildcardRouterSpec *WildcardRouterSpec `json:"wildcardRouter,omitempty"`
 	// +optional
-	AmpApicastImage *string `json:"ampApicastImage,omitempty"`
-
-	// +optional
-	AmpRouterImage *string `json:"ampRouterImage,omitempty"`
-
-	// +optional
-	AmpSystemImage *string `json:"ampSystemImage,omitempty"`
-
-	// +optional
-	PostgreSQLImage *string `json:"postgreSQLImage,omitempty"`
-
-	// +optional
-	MysqlImage *string `json:"mysqlImage,omitempty"`
-
-	// +optional
-	MemcachedImage *string `json:"memcachedImage,omitempty"`
-
-	// +optional
-	ImageStreamTagImportInsecure *bool `json:"imageStreamTagImportInsecure,omitempty"`
-
-	// +optional
-	RedisImage *string `json:"redisImage,omitempty"`
-
-	// +optional
-	ApicastManagementApi *string `json:"apicastManagementApi,omitempty"`
-
-	// +optional
-	ApicastOpenSSLVerify *bool `json:"apicastOpenSSLVerify,omitempty"`
-
-	// +optional
-	ApicastResponseCodes *bool `json:"apicastResponseCodes,omitempty"`
-
-	// +optional
-	ApicastRegistryURL *string `json:"apicastRegistryURL,omitempty"`
-
-	WildcardDomain string `json:"wildcardDomain"`
-
-	// +optional
-	WildcardPolicy *string `json:"wildcardPolicy,omitempty"`
-
-	// +optional
-	Productized *bool `json:"productized"`
-
-	// +optional
-	Evaluation bool `json:"evaluation"`
-
-	// +optional
-	S3Version bool `json:"s3version"`
-
-	// +optional
-	HAVersion bool `json:"haversion"`
-
-	// S3 optional configuration TODO redo this
-	// +optional
-	AwsRegion *string `json:"awsRegion,omitempty"`
-
-	// +optional
-	AwsBucket *string `json:"awsBucket,omitempty"`
-
-	// +optional
-	FileUploadStorage *string `json:"fileUploadStorage,omitempty"`
+	HighAvailabilitySpec *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -157,14 +95,167 @@ type APIManagerList struct {
 	Items           []APIManager `json:"items"`
 }
 
+type APIManagerCommonSpec struct {
+	ProductVersion product.Version `json:"productVersion"`
+	WildcardDomain string          `json:"wildcardDomain"`
+	// +optional
+	AppLabel *string `json:"appLabel,omitempty"`
+	// +optional
+	TenantName *string `json:"tenantName,omitempty"`
+	// +optional
+	WildcardPolicy *string `json:"wildcardPolicy,omitempty"`
+	// +optional
+	ImageStreamTagImportInsecure *bool `json:"imageStreamTagImportInsecure,omitempty"`
+	// +optional
+	ResourceRequirementsEnabled *bool `json:"resourceRequirementsEnabled,omitempty"`
+}
+
+type ApicastSpec struct {
+	// +optional
+	ApicastManagementAPI *string `json:"mananagementAPI,omitempty"`
+	// +optional
+	OpenSSLVerify *bool `json:"openSSLVerify,omitempty"`
+	// +optional
+	IncludeResponseCodes *bool `json:"responseCodes,omitempty"`
+	// +optional
+	RegistryURL *string `json:"registryURL,omitempty"`
+	// +optional
+	Image *string `json:"image,omitempty"`
+}
+
+type BackendSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+
+	// +optional
+	RedisImage *string `json:"redisImage,omitempty"`
+}
+
+type SystemSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+
+	// +optional
+	MemcachedImage *string `json:"memcachedImage,omitempty"`
+
+	// +optional
+	RedisImage *string `json:"redisImage,omitempty"`
+
+	// TODO should this field be optional? We have different approaches in Kubernetes.
+	// For example, in v1.Volume it is optional and there's an implied behaviour
+	// on which one is the default VolumeSource of the ones available. However,
+	// on v1.Probe the Handler field is mandatory and says that one of the
+	// available values and only one should be specified (it mandates to write
+	// something)
+	// +optional
+	FileStorageSpec *SystemFileStorageSpec `json:"fileStorage,omitempty"`
+
+	// TODO should union fields be optional?
+	// +optional
+	DatabaseSpec *SystemDatabaseSpec `json:"database,omitempty"`
+}
+
+type SystemFileStorageSpec struct {
+	// Union type. Only one of the fields can be set.
+	// +optional
+	PVC *SystemPVCSpec `json:"persistentVolumeClaim,omitempty"`
+	// +optional
+	S3 *SystemS3Spec `json:"s3,omitempty"`
+}
+
+type SystemPVCSpec struct {
+	// +optional
+	StorageClassName *string `json:"storageClassName,omitempty"`
+}
+
+type SystemS3Spec struct {
+	AWSRegion         string `json:"awsRegion"`
+	AWSBucket         string `json:"awsBucket"`
+	FileUploadStorage string `json:"fileUploadStorage"`
+}
+
+type SystemDatabaseSpec struct {
+	// Union type. Only one of the fields can be set
+	// +optional
+	MySQLSpec *SystemMySQLSpec `json:"mysql,omitempty"`
+	// In the future PostgreSQL support will be added
+}
+
+type SystemMySQLSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+}
+
+type ZyncSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+	// +optional
+	PostgreSQLImage *string `json:"postgreSQLImage,omitempty"`
+}
+
+type WildcardRouterSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+}
+
+type HighAvailabilitySpec struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
 func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
 }
 
 // SetDefaults sets the default values for the APIManager spec and returns true if the spec was changed
-func (apimanager *APIManager) SetDefaults() bool {
+func (apimanager *APIManager) SetDefaults() (bool, error) {
+	var err error
+	changed := false
+	changed = apimanager.setAPIManagerCommonSpecDefaults()
+	changed = apimanager.setApicastSpecDefaults()
+	changed, err = apimanager.setSystemSpecDefaults()
+
+	return changed, err
+}
+
+func (apimanager *APIManager) setApicastSpecDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
+
+	defaultApicastManagementAPI := "status"
+	defaultApicastOpenSSLVerify := false
+	defaultApicastResponseCodes := true
+	defaultApicastRegistryURL := "http://apicast-staging:8090/policies"
+	if spec.ApicastSpec == nil {
+
+		changed = true
+		spec.ApicastSpec = &ApicastSpec{
+			ApicastManagementAPI: &defaultApicastManagementAPI,
+			OpenSSLVerify:        &defaultApicastOpenSSLVerify,
+			IncludeResponseCodes: &defaultApicastResponseCodes,
+			RegistryURL:          &defaultApicastRegistryURL,
+		}
+	} else {
+		if spec.ApicastSpec.ApicastManagementAPI == nil {
+			spec.ApicastSpec.ApicastManagementAPI = &defaultApicastManagementAPI
+		}
+		if spec.ApicastSpec.OpenSSLVerify == nil {
+			spec.ApicastSpec.OpenSSLVerify = &defaultApicastOpenSSLVerify
+		}
+		if spec.ApicastSpec.IncludeResponseCodes == nil {
+			spec.ApicastSpec.IncludeResponseCodes = &defaultApicastResponseCodes
+		}
+		if spec.ApicastSpec.RegistryURL == nil {
+			spec.ApicastSpec.RegistryURL = &defaultApicastRegistryURL
+		}
+	}
+
+	return changed
+}
+
+func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
+	changed := false
+	spec := &apimanager.Spec
+
 	if spec.AppLabel == nil {
 		defaultAppLabel := "3scale-api-management"
 		spec.AppLabel = &defaultAppLabel
@@ -177,56 +268,9 @@ func (apimanager *APIManager) SetDefaults() bool {
 		changed = true
 	}
 
-	if spec.RwxStorageClass == nil { // Needed??
-		spec.RwxStorageClass = nil //in OpenShift template would be "null" in the parameter and nul in the field
-		changed = true
-	}
-
-	if spec.AmpBackendImage == nil {
-		defaultAmpBackendImage := "quay.io/3scale/apisonator:nightly"
-		spec.AmpBackendImage = &defaultAmpBackendImage
-		changed = true
-	}
-
-	if spec.AmpZyncImage == nil {
-		defaultAmpZyncImage := "quay.io/3scale/zync:nightly"
-		spec.AmpZyncImage = &defaultAmpZyncImage
-		changed = true
-	}
-
-	if spec.AmpApicastImage == nil {
-		defaultAmpApicastImage := "quay.io/3scale/apicast:nightly"
-		spec.AmpApicastImage = &defaultAmpApicastImage
-		changed = true
-	}
-
-	if spec.AmpRouterImage == nil {
-		defaultAmpRouterImage := "quay.io/3scale/wildcard-router:nightly"
-		spec.AmpRouterImage = &defaultAmpRouterImage
-		changed = true
-	}
-
-	if spec.AmpSystemImage == nil {
-		defaultAmpSystemImage := "quay.io/3scale/porta:nightly"
-		spec.AmpSystemImage = &defaultAmpSystemImage
-		changed = true
-	}
-
-	if spec.PostgreSQLImage == nil {
-		defaultPostgreSQLImage := "registry.access.redhat.com/rhscl/postgresql-95-rhel7:9.5"
-		spec.PostgreSQLImage = &defaultPostgreSQLImage
-		changed = true
-	}
-
-	if spec.MysqlImage == nil {
-		defaultMysqlImage := "registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7"
-		spec.MysqlImage = &defaultMysqlImage
-		changed = true
-	}
-
-	if spec.MemcachedImage == nil {
-		defaultMemcachedImage := "registry.access.redhat.com/3scale-amp20/memcached"
-		spec.MemcachedImage = &defaultMemcachedImage
+	if spec.WildcardPolicy == nil {
+		defaultWildcardPolicy := "None" //TODO should be a set of predefined values (a custom type enum-like to be used)
+		spec.WildcardPolicy = &defaultWildcardPolicy
 		changed = true
 	}
 
@@ -236,46 +280,80 @@ func (apimanager *APIManager) SetDefaults() bool {
 		changed = true
 	}
 
-	if spec.RedisImage == nil {
-		defaultRedisImage := "registry.access.redhat.com/rhscl/redis-32-rhel7:3.2"
-		spec.RedisImage = &defaultRedisImage
+	if spec.ResourceRequirementsEnabled == nil {
+		defaultResourceRequirementsEnabled := true
+		spec.ResourceRequirementsEnabled = &defaultResourceRequirementsEnabled
 		changed = true
 	}
 
-	if spec.ApicastManagementApi == nil {
-		defaultApicastManagementApi := "status"
-		spec.ApicastManagementApi = &defaultApicastManagementApi
-		changed = true
-	}
-
-	if spec.ApicastOpenSSLVerify == nil {
-		defaultApicastOpenSSLVerify := false
-		spec.ApicastOpenSSLVerify = &defaultApicastOpenSSLVerify
-		changed = true
-	}
-
-	if spec.ApicastResponseCodes == nil {
-		defaultApicastResponseCodes := true
-		spec.ApicastResponseCodes = &defaultApicastResponseCodes
-		changed = true
-	}
-
-	if spec.ApicastRegistryURL == nil {
-		defaultApicastRegistryURL := "http://apicast-staging:8090/policies"
-		spec.ApicastRegistryURL = &defaultApicastRegistryURL
-		changed = true
-	}
-
-	if spec.WildcardPolicy == nil {
-		defaultWildcardPolicy := "None" //TODO should be a set of predefined values (a custom type enum-like to be used)
-		spec.WildcardPolicy = &defaultWildcardPolicy
-		changed = true
-	}
-
-	if spec.Productized == nil {
-		defaultProductized := true
-		spec.Productized = &defaultProductized
-	}
+	// TODO do something with mandatory parameters?
+	// TODO check that only compatible ProductRelease versions are compatible?
 
 	return changed
+}
+
+func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
+	// TODO fix how should be shown
+	changed := false
+	spec := &apimanager.Spec
+
+	if spec.SystemSpec == nil {
+		spec.SystemSpec = &SystemSpec{}
+	}
+
+	changed, err := apimanager.setSystemFileStorageSpecDefaults()
+	if err != nil {
+		return changed, err
+	}
+
+	changed, err = apimanager.setSystemDatabaseSpecDefaults()
+	if err != nil {
+		return changed, err
+	}
+
+	return changed, nil
+}
+
+func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
+	changed := false
+	systemSpec := apimanager.Spec.SystemSpec
+
+	defaultFileStorageSpec := &SystemFileStorageSpec{
+		PVC: &SystemPVCSpec{
+			StorageClassName: nil,
+		},
+	}
+	if systemSpec.FileStorageSpec == nil {
+		systemSpec.FileStorageSpec = defaultFileStorageSpec
+		changed = true
+	} else {
+		if systemSpec.FileStorageSpec.PVC != nil && systemSpec.FileStorageSpec.S3 != nil {
+			return changed, fmt.Errorf("Only one FileStorage can be chosen at the same time")
+		}
+		if systemSpec.FileStorageSpec.PVC == nil && systemSpec.FileStorageSpec.S3 == nil {
+			systemSpec.FileStorageSpec.PVC = &SystemPVCSpec{
+				StorageClassName: nil,
+			}
+			changed = true
+		}
+	}
+
+	return changed, nil
+}
+
+func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
+	changed := false
+	systemSpec := apimanager.Spec.SystemSpec
+	defaultDatabaseSpec := &SystemDatabaseSpec{
+		MySQLSpec: &SystemMySQLSpec{
+			Image: nil,
+		},
+	}
+
+	if systemSpec.DatabaseSpec == nil {
+		systemSpec.DatabaseSpec = defaultDatabaseSpec
+		changed = true
+	}
+
+	return changed, nil
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
@@ -13,9 +14,21 @@ import (
 func (o *OperatorMysqlOptionsProvider) GetMysqlOptions() (*component.MysqlOptions, error) {
 	optProv := component.MysqlOptionsBuilder{}
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	optProv.Image(*o.APIManagerSpec.MysqlImage)
+	productVersion := o.APIManagerSpec.ProductVersion
+	imageProvider, err := product.NewImageProvider(productVersion)
+	if err != nil {
+		return nil, err
+	}
 
-	err := o.setSecretBasedOptions(&optProv)
+	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.DatabaseSpec != nil &&
+		o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec != nil && o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec.Image != nil {
+		optProv.Image(*o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec.Image)
+	} else {
+		optProv.Image(imageProvider.GetSystemMySQLImage())
+	}
+
+	err = o.setSecretBasedOptions(&optProv)
 	if err != nil {
 		return nil, err
 	}

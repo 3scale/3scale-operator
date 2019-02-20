@@ -8,9 +8,10 @@ import (
 
 func (o *OperatorS3OptionsProvider) GetS3Options() (*component.S3Options, error) {
 	sob := component.S3OptionsBuilder{}
-	sob.AwsRegion(*o.APIManagerSpec.AwsRegion)
-	sob.AwsBucket(*o.APIManagerSpec.AwsBucket)
-	sob.FileUploadStorage(*o.APIManagerSpec.FileUploadStorage)
+	SystemS3Spec := *o.APIManagerSpec.SystemSpec.FileStorageSpec.S3
+	sob.AwsRegion(SystemS3Spec.AWSRegion)
+	sob.AwsBucket(SystemS3Spec.AWSBucket)
+	sob.FileUploadStorage(SystemS3Spec.FileUploadStorage)
 	res, err := sob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create S3 Options - %s", err)

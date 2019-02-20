@@ -10,12 +10,20 @@ import (
 
 func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, error) {
 	optProv := component.SystemOptionsBuilder{}
-	optProv.AmpRelease(o.APIManagerSpec.AmpRelease)
-	optProv.ApicastRegistryURL(*o.APIManagerSpec.ApicastRegistryURL)
+
+	productVersion := o.APIManagerSpec.ProductVersion
+
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
+	optProv.AmpRelease(string(productVersion))
+	optProv.ApicastRegistryURL(*o.APIManagerSpec.ApicastSpec.RegistryURL)
 	optProv.TenantName(*o.APIManagerSpec.TenantName)
 	optProv.WildcardDomain(o.APIManagerSpec.WildcardDomain)
-	optProv.StorageClassName(o.APIManagerSpec.RwxStorageClass)
+
+	if o.APIManagerSpec.SystemSpec.FileStorageSpec.PVC == nil {
+		optProv.StorageClassName(nil)
+	} else {
+		optProv.StorageClassName(o.APIManagerSpec.SystemSpec.FileStorageSpec.PVC.StorageClassName)
+	}
 
 	err := o.setSecretBasedOptions(&optProv)
 	if err != nil {

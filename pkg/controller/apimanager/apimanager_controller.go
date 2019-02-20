@@ -7,6 +7,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -99,8 +100,20 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	reqLogger.Info("Successfully retreived APIManager resource", "APIManager", instance)
 
 	reqLogger.Info("Setting defaults for APIManager resource")
-	instance.SetDefaults() // TODO check where to put this
-	reqLogger.Info("Set defaults for APIManager resource", "APIManager", instance)
+	changed, err := instance.SetDefaults() // TODO check where to put this
+	if err != nil {
+		// Error setting defaults - Stop reconciliation
+		return reconcile.Result{}, nil
+	}
+	if changed {
+		reqLogger.Info("Set defaults for APIManager resource", "APIManager", instance)
+		err = r.client.Update(context.TODO(), instance)
+		if err != nil {
+			reqLogger.Error(err, "APIManager Resource cannot be updated. Requeuing request...", "APIManager", instance)
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{}, nil
+	}
 
 	objs, err := createAPIManager(instance, r.client)
 	if err != nil {
@@ -234,7 +247,7 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) 
 	}
 	results = append(results, wildcardRouter...)
 
-	if cr.Spec.S3Version {
+	if cr.Spec.SystemSpec.FileStorageSpec.S3 != nil {
 		s3, err := createS3(cr)
 		if err != nil {
 			return nil, err
@@ -246,12 +259,12 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) 
 }
 
 func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
-	if cr.Spec.Evaluation {
+	if !*cr.Spec.ResourceRequirementsEnabled {
 		e := component.Evaluation{}
 		e.PostProcessObjects(objects)
 	}
 
-	if *cr.Spec.Productized {
+	if product.IsProductizedVersion(cr.Spec.ProductVersion) {
 		optsProvider := operator.OperatorProductizedOptionsProvider{APIManagerSpec: &cr.Spec}
 		opts, err := optsProvider.GetProductizedOptions()
 		if err != nil {
@@ -261,7 +274,7 @@ func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, objects []runtime
 		objects = p.PostProcessObjects(objects)
 	}
 
-	if cr.Spec.S3Version {
+	if cr.Spec.SystemSpec.FileStorageSpec.S3 != nil {
 		optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec}
 		opts, err := optsProvider.GetS3Options()
 		if err != nil {
@@ -271,7 +284,7 @@ func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, objects []runtime
 		objects = s.PostProcessObjects(objects)
 	}
 
-	if cr.Spec.HAVersion {
+	if cr.Spec.HighAvailabilitySpec != nil && cr.Spec.HighAvailabilitySpec.Enabled {
 		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec}
 		opts, err := optsProvider.GetHighAvailabilityOptions()
 		if err != nil {

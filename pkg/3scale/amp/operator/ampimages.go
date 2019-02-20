@@ -3,19 +3,58 @@ package operator
 import (
 	"fmt"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 )
 
 func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOptions, error) {
 	optProv := component.AmpImagesOptionsBuilder{}
+
+	productVersion := o.APIManagerSpec.ProductVersion
+	imageProvider, err := product.NewImageProvider(productVersion)
+	if err != nil {
+		return nil, err
+	}
+
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	optProv.AMPRelease(o.APIManagerSpec.AmpRelease)
-	optProv.ApicastImage(*o.APIManagerSpec.AmpApicastImage)
-	optProv.BackendImage(*o.APIManagerSpec.AmpBackendImage)
-	optProv.RouterImage(*o.APIManagerSpec.AmpRouterImage)
-	optProv.SystemImage(*o.APIManagerSpec.AmpSystemImage)
-	optProv.ZyncImage(*o.APIManagerSpec.AmpZyncImage)
-	optProv.PostgreSQLImage(*o.APIManagerSpec.PostgreSQLImage)
+	optProv.AMPRelease(string(productVersion))
+	if o.APIManagerSpec.ApicastSpec != nil && o.APIManagerSpec.ApicastSpec.Image != nil {
+		optProv.ApicastImage(*o.APIManagerSpec.ApicastSpec.Image)
+	} else {
+		optProv.ApicastImage(imageProvider.GetApicastImage())
+	}
+
+	if o.APIManagerSpec.BackendSpec != nil && o.APIManagerSpec.BackendSpec.Image != nil {
+		optProv.BackendImage(*o.APIManagerSpec.BackendSpec.Image)
+	} else {
+		optProv.BackendImage(imageProvider.GetBackendImage())
+	}
+
+	if o.APIManagerSpec.WildcardRouterSpec != nil && o.APIManagerSpec.WildcardRouterSpec.Image != nil {
+		optProv.RouterImage(*o.APIManagerSpec.WildcardRouterSpec.Image)
+	} else {
+		optProv.RouterImage(imageProvider.GetWildcardRouterImage())
+	}
+
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.Image != nil {
+		optProv.SystemImage(*o.APIManagerSpec.SystemSpec.Image)
+	} else {
+		optProv.SystemImage(imageProvider.GetSystemImage())
+	}
+
+	if o.APIManagerSpec.ZyncSpec != nil && o.APIManagerSpec.ZyncSpec.Image != nil {
+		optProv.ZyncImage(*o.APIManagerSpec.ZyncSpec.Image)
+	} else {
+		optProv.ZyncImage(imageProvider.GetZyncImage())
+	}
+
+	if o.APIManagerSpec.ZyncSpec != nil && o.APIManagerSpec.ZyncSpec.PostgreSQLImage != nil {
+		optProv.PostgreSQLImage(*o.APIManagerSpec.ZyncSpec.PostgreSQLImage)
+	} else {
+		optProv.PostgreSQLImage(imageProvider.GetZyncPostgreSQLImage())
+	}
+
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 	res, err := optProv.Build()
 	if err != nil {

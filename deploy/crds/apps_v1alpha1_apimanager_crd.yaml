@@ -31,7 +31,7 @@ spec:
               type: string
             ampBackendImage:
               type: string
-            ampRelease:
+            productVersion:
               type: string
             ampRouterImage:
               type: string
@@ -80,7 +80,7 @@ spec:
             wildcardPolicy:
               type: string
           required:
-          - ampRelease
+          - productVersion
           - wildcardDomain
           type: object
         status:
