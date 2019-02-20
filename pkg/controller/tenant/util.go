@@ -1,6 +1,8 @@
 package tenant
 
 import (
+	"net/url"
+
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -20,4 +22,13 @@ func asOwner(t *apiv1alpha1.Tenant) metav1.OwnerReference {
 		UID:        t.UID,
 		Controller: &trueVar,
 	}
+}
+
+func URLFromDomain(domain string) (*url.URL, error) {
+	u, err := url.Parse(domain)
+	if err != nil {
+		return nil, err
+	}
+	u.Scheme = "https"
+	return u, nil
 }
