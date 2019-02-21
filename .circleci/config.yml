@@ -43,6 +43,7 @@ commands:
             oc login -u system:admin --insecure-skip-tls-verify=true > /dev/null
             oc adm policy add-cluster-role-to-user cluster-admin developer > /dev/null
             oc login -u developer --insecure-skip-tls-verify=true > /dev/null
+            oc set env dc/router ROUTER_ALLOW_WILDCARD_ROUTES=true -n default
 
             oc wait --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
             oc wait --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
