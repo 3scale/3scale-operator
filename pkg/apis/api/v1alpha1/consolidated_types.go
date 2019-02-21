@@ -964,7 +964,7 @@ func NewInternalPlanFromPlan(plan Plan, c client.Client) (*InternalPlan, error) 
 			internalLimit, err := NewInternalLimitFromLimit(limit, c)
 			if err != nil {
 				//TODO: UPDATE STATUS OBJECT
-				log.Printf("limit %s couldn't be converted", limit.Name)
+				log.Printf("limit %s couldn't be converted: %s", limit.Name, err)
 			} else {
 				internalPlan.Limits = append(internalPlan.Limits, *internalLimit)
 			}
@@ -986,18 +986,23 @@ func NewInternalLimitFromLimit(limit Limit, c client.Client) (*InternalLimit, er
 		Namespace: namespace,
 		Name:      limit.Spec.Metric.Name,
 	}
-	err := c.Get(context.TODO(), reference, metric)
-	if err != nil {
-		// Something is broken
-		return nil, err
+	if limit.Spec.Metric.Name == "Hits" || limit.Spec.Metric.Name == "hits" {
+		metric.Name = "hits"
 	} else {
-		internalLimit = InternalLimit{
-			Name:     limit.Name,
-			Period:   limit.Spec.Period,
-			MaxValue: limit.Spec.MaxValue,
-			Metric:   metric.Name,
+		err := c.Get(context.TODO(), reference, metric)
+		if err != nil {
+			// Something is broken
+			return nil, err
 		}
 	}
+
+	internalLimit = InternalLimit{
+		Name:     limit.Name,
+		Period:   limit.Spec.Period,
+		MaxValue: limit.Spec.MaxValue,
+		Metric:   metric.Name,
+	}
+
 	return &internalLimit, nil
 }
 func NewInternalMappingRuleFromMappingRule(mappingRule MappingRule, c client.Client) (*InternalMappingRule, error) {
@@ -1152,6 +1157,7 @@ func CompareInternalAPI(APIA, APIB InternalAPI) bool {
 			APIB.Plans[i].Limits[j].Name = "limit"
 		}
 	}
+
 	if APIA.GetIntegrationName() != APIB.GetIntegrationName() {
 		return false
 	} else {
