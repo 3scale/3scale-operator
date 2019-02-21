@@ -248,7 +248,7 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) 
 	results = append(results, wildcardRouter...)
 
 	if cr.Spec.SystemSpec.FileStorageSpec.S3 != nil {
-		s3, err := createS3(cr)
+		s3, err := createS3(cr, client)
 		if err != nil {
 			return nil, err
 		}
@@ -440,8 +440,8 @@ func createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, 
 	return result, nil
 }
 
-func createS3(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec}
+func createS3(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
 	opts, err := optsProvider.GetS3Options()
 	if err != nil {
 		return nil, err

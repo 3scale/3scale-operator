@@ -12,6 +12,12 @@ func (o *OperatorS3OptionsProvider) GetS3Options() (*component.S3Options, error)
 	sob.AwsRegion(SystemS3Spec.AWSRegion)
 	sob.AwsBucket(SystemS3Spec.AWSBucket)
 	sob.FileUploadStorage(SystemS3Spec.FileUploadStorage)
+
+	err := o.setSecretBasedOptions(&sob)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := sob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create S3 Options - %s", err)
