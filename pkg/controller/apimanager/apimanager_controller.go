@@ -182,7 +182,7 @@ func createAPIManager(cr *appsv1alpha1.APIManager, client client.Client) ([]runt
 		return nil, err
 	}
 
-	results, err = postProcessAPIManagerObjects(cr, results)
+	results, err = postProcessAPIManagerObjects(cr, client, results)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) 
 	return results, nil
 }
 
-func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
+func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
 	if !*cr.Spec.ResourceRequirementsEnabled {
 		e := component.Evaluation{}
 		e.PostProcessObjects(objects)
@@ -285,7 +285,7 @@ func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, objects []runtime
 	}
 
 	if cr.Spec.HighAvailabilitySpec != nil && cr.Spec.HighAvailabilitySpec.Enabled {
-		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec}
+		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
 		opts, err := optsProvider.GetHighAvailabilityOptions()
 		if err != nil {
 			return nil, err
