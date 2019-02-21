@@ -29,7 +29,8 @@ func (o *OperatorS3OptionsProvider) setSecretBasedOptions(sob *component.S3Optio
 }
 
 func (o *OperatorS3OptionsProvider) setAWSSecretOptions(sob *component.S3OptionsBuilder) error {
-	currSecret, err := getSecret(component.S3SecretAWSSecretName, o.Namespace, o.Client)
+	awsCredentialsSecretName := o.APIManagerSpec.SystemSpec.FileStorageSpec.S3.AWSCredentials.Name
+	currSecret, err := getSecret(awsCredentialsSecretName, o.Namespace, o.Client)
 	if err != nil {
 		return err
 	}
@@ -40,13 +41,13 @@ func (o *OperatorS3OptionsProvider) setAWSSecretOptions(sob *component.S3Options
 	var result *string
 	result = getSecretDataValue(secretData, component.S3SecretAWSAccessKeyIdFieldName)
 	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSAccessKeyIdFieldName, component.S3SecretAWSSecretName)
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSAccessKeyIdFieldName, awsCredentialsSecretName)
 	}
 	sob.AwsAccessKeyId(*result)
 
 	result = getSecretDataValue(secretData, component.S3SecretAWSSecretAccessKeyFieldName)
 	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSSecretAccessKeyFieldName, component.S3SecretAWSSecretName)
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSSecretAccessKeyFieldName, awsCredentialsSecretName)
 	}
 	sob.AwsSecretAccessKey(*result)
 

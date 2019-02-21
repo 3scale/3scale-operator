@@ -160,7 +160,7 @@ type SystemFileStorageSpec struct {
 	// +optional
 	PVC *SystemPVCSpec `json:"persistentVolumeClaim,omitempty"`
 	// +optional
-	S3 *SystemS3Spec `json:"s3,omitempty"`
+	S3 *SystemS3Spec `json:"sthree,omitempty"`
 }
 
 type SystemPVCSpec struct {
@@ -169,9 +169,10 @@ type SystemPVCSpec struct {
 }
 
 type SystemS3Spec struct {
-	AWSRegion         string `json:"awsRegion"`
-	AWSBucket         string `json:"awsBucket"`
-	FileUploadStorage string `json:"fileUploadStorage"`
+	AWSBucket         string                  `json:"awsBucket"`
+	AWSRegion         string                  `json:"awsRegion"`
+	AWSCredentials    v1.LocalObjectReference `json:"awsCredentialsSecret"`
+	FileUploadStorage string                  `json:"fileUploadStorage"`
 }
 
 type SystemDatabaseSpec struct {

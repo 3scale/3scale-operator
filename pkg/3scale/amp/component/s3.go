@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	S3SecretAWSSecretName               = "aws-auth"
 	S3SecretAWSAccessKeyIdFieldName     = "AWS_ACCESS_KEY_ID"
 	S3SecretAWSSecretAccessKeyFieldName = "AWS_SECRET_ACCESS_KEY"
 )
@@ -27,11 +26,12 @@ type S3Options struct {
 }
 
 type s3RequiredOptions struct {
-	awsAccessKeyId     string
-	awsSecretAccessKey string
-	awsRegion          string
-	awsBucket          string
-	fileUploadStorage  string
+	awsAccessKeyId       string
+	awsSecretAccessKey   string
+	awsRegion            string
+	awsBucket            string
+	fileUploadStorage    string
+	awsCredentialsSecret string
 }
 
 type s3NonRequiredOptions struct {
@@ -68,6 +68,10 @@ func (s3 *S3OptionsBuilder) FileUploadStorage(fileUploadStorage string) {
 	s3.options.fileUploadStorage = fileUploadStorage
 }
 
+func (s3 *S3OptionsBuilder) AWSCredentialsSecret(awsCredentials string) {
+	s3.options.awsCredentialsSecret = awsCredentials
+}
+
 func (s3 *S3OptionsBuilder) Build() (*S3Options, error) {
 	err := s3.setRequiredOptions()
 	if err != nil {
@@ -96,6 +100,9 @@ func (s3 *S3OptionsBuilder) setRequiredOptions() error {
 	if s3.options.fileUploadStorage == "" {
 		return fmt.Errorf("no file upload storage has been provided")
 	}
+	if s3.options.awsCredentialsSecret == "" {
+		return fmt.Errorf("no AWS credentials secret has been provided")
+	}
 
 	return nil
 }
@@ -117,6 +124,7 @@ func (o *CLIS3OptionsProvider) GetS3Options() (*S3Options, error) {
 	sob.AwsRegion("${AWS_REGION}")
 	sob.AwsBucket("${AWS_BUCKET}")
 	sob.FileUploadStorage("${FILE_UPLOAD_STORAGE}")
+	sob.AWSCredentialsSecret("aws-auth")
 	res, err := sob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create S3 Options - %s", err)
@@ -215,8 +223,8 @@ func (s3 *S3) removeRWXStorageClassParameter(template *templatev1.Template) {
 func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 	return []v1.EnvVar{
 		createEnvVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-		createEnvvarFromSecret("AWS_ACCESS_KEY_ID", S3SecretAWSSecretName, S3SecretAWSAccessKeyIdFieldName),
-		createEnvvarFromSecret("AWS_SECRET_ACCESS_KEY", S3SecretAWSSecretName, S3SecretAWSSecretAccessKeyFieldName),
+		createEnvvarFromSecret("AWS_ACCESS_KEY_ID", s3.Options.awsCredentialsSecret, S3SecretAWSAccessKeyIdFieldName),
+		createEnvvarFromSecret("AWS_SECRET_ACCESS_KEY", s3.Options.awsCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
 		createEnvVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
 		createEnvVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
 	}
@@ -347,7 +355,7 @@ func (s3 *S3) buildS3AWSSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: S3SecretAWSSecretName,
+			Name: s3.Options.awsCredentialsSecret,
 		},
 		StringData: map[string]string{
 			S3SecretAWSAccessKeyIdFieldName:     s3.Options.awsAccessKeyId,
