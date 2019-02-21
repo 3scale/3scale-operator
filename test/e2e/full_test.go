@@ -4,6 +4,8 @@ import (
 	"bytes"
 	goctx "context"
 	"fmt"
+	v12 "github.com/openshift/api/route/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"net/url"
 	"strings"
 	"testing"
@@ -15,7 +17,7 @@ import (
 	appsgroup "github.com/3scale/3scale-operator/pkg/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/controller/tenant"
-	e2eutil "github.com/3scale/3scale-operator/test/e2e/e2eutil"
+	"github.com/3scale/3scale-operator/test/e2e/e2eutil"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	frameworke2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	v1 "k8s.io/api/core/v1"
@@ -75,6 +77,7 @@ func TestFullHappyPath(t *testing.T) {
 
 	// Deploy APIManager resource
 	productized := true
+	wildcardPolicy := string(v12.WildcardPolicySubdomain)
 	apiManagerWildcardDomain := fmt.Sprintf("test1.%s.nip.io", clusterHost)
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
@@ -82,6 +85,7 @@ func TestFullHappyPath(t *testing.T) {
 			WildcardDomain: apiManagerWildcardDomain,
 			Productized:    &productized,
 			Evaluation:     true,
+			WildcardPolicy: &wildcardPolicy,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-apimanager",
@@ -179,6 +183,306 @@ func TestFullHappyPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Tenant reconciliation DONE")
+
+	api := &apiv1alpha1.API{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testapi",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.APISpec{
+			APIBase: apiv1alpha1.APIBase{
+				Description: "testapi created by 3scale operator",
+				IntegrationMethod: apiv1alpha1.IntegrationMethod{
+					ApicastHosted: &apiv1alpha1.ApicastHosted{
+						APIcastBaseOptions: apiv1alpha1.APIcastBaseOptions{
+							PrivateBaseURL:    "https://echo-api.3scale.net:443",
+							APITestGetRequest: "/",
+							AuthenticationSettings: apiv1alpha1.ApicastAuthenticationSettings{
+								HostHeader:  "",
+								SecretToken: "Shared_secret_sent_from_proxy_to_API_backend_7c2229057468d5fd",
+								Credentials: apiv1alpha1.IntegrationCredentials{
+									APIKey: &apiv1alpha1.APIKey{
+										AuthParameterName:   "user_key",
+										CredentialsLocation: "query",
+									},
+								},
+								Errors: apiv1alpha1.Errors{
+									AuthenticationFailed: apiv1alpha1.Authentication{
+										ResponseCode: 403,
+										ContentType:  "text/plain; charset=us-ascii",
+										ResponseBody: "Authentication failed",
+									},
+									AuthenticationMissing: apiv1alpha1.Authentication{
+										ResponseCode: 403,
+										ContentType:  "text/plain; charset=us-ascii",
+										ResponseBody: "Authentication parameters missing",
+									},
+								},
+							},
+						},
+						APIcastBaseSelectors: apiv1alpha1.APIcastBaseSelectors{
+							MappingRulesSelector: metav1.LabelSelector{
+								MatchLabels: map[string]string{"environment": "testing"},
+							},
+						},
+					},
+				},
+			},
+			APISelectors: apiv1alpha1.APISelectors{
+				PlanSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"environment": "testing"},
+				},
+				MetricSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"environment": "testing"},
+				},
+			},
+		},
+		Status: apiv1alpha1.APIStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), api, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	metric01 := &apiv1alpha1.Metric{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "metric01",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.MetricSpec{
+			Unit:           "hits",
+			Description:    "metric 01",
+			IncrementsHits: false,
+		},
+		Status: apiv1alpha1.MetricStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), metric01, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	metric02 := &apiv1alpha1.Metric{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "metric02",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.MetricSpec{
+			Unit:           "hits",
+			Description:    "metric 02",
+			IncrementsHits: false,
+		},
+		Status: apiv1alpha1.MetricStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), metric02, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	plan := &apiv1alpha1.Plan{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "plan01",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.PlanSpec{
+			PlanBase: apiv1alpha1.PlanBase{
+				Default:         true,
+				TrialPeriod:     0,
+				AprovalRequired: false,
+				Costs: apiv1alpha1.PlanCost{
+					SetupFee:  0,
+					CostMonth: 0,
+				},
+			},
+			PlanSelectors: apiv1alpha1.PlanSelectors{
+				LimitSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"environment": "testing"},
+				},
+			},
+		},
+		Status: apiv1alpha1.PlanStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), plan, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	limit01 := &apiv1alpha1.Limit{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "limit01",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.LimitSpec{
+			LimitBase: apiv1alpha1.LimitBase{
+				Period:   "eternity",
+				MaxValue: 100,
+			},
+			LimitObjectRef: apiv1alpha1.LimitObjectRef{
+				Metric: v1.ObjectReference{
+					Namespace: namespace,
+					Name:      "metric01",
+				},
+			},
+		},
+		Status: apiv1alpha1.LimitStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), limit01, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	limit02 := &apiv1alpha1.Limit{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "limit02",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.LimitSpec{
+			LimitBase: apiv1alpha1.LimitBase{
+				Period:   "day",
+				MaxValue: 100,
+			},
+			LimitObjectRef: apiv1alpha1.LimitObjectRef{
+				Metric: v1.ObjectReference{
+					Namespace: namespace,
+					Name:      "hits",
+				},
+			},
+		},
+		Status: apiv1alpha1.LimitStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), limit02, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mappingRule01 := &apiv1alpha1.MappingRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "mappingrule01",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.MappingRuleSpec{
+			MappingRuleBase: apiv1alpha1.MappingRuleBase{
+				Path:      "/testing",
+				Method:    "GET",
+				Increment: 1,
+			},
+			MappingRuleMetricRef: apiv1alpha1.MappingRuleMetricRef{
+				MetricRef: v1.ObjectReference{
+					Namespace: namespace,
+					Name:      "Hits",
+				},
+			},
+		},
+		Status: apiv1alpha1.MappingRuleStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), mappingRule01, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mappingRule02 := &apiv1alpha1.MappingRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "mappingrule02",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.MappingRuleSpec{
+			MappingRuleBase: apiv1alpha1.MappingRuleBase{
+				Path:      "/metric01",
+				Method:    "POST",
+				Increment: 10,
+			},
+			MappingRuleMetricRef: apiv1alpha1.MappingRuleMetricRef{
+				MetricRef: v1.ObjectReference{
+					Namespace: namespace,
+					Name:      "metric01",
+				},
+			},
+		},
+		Status: apiv1alpha1.MappingRuleStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), mappingRule02, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	binding := &apiv1alpha1.Binding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testbinding",
+			Namespace: namespace,
+			Labels:    map[string]string{"environment": "testing"},
+		},
+		Spec: apiv1alpha1.BindingSpec{
+			CredentialsRef: v1.SecretReference{
+				Name:      tenantSecretName,
+				Namespace: namespace,
+			},
+			APISelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{"environment": "testing"},
+			},
+		},
+		Status: apiv1alpha1.BindingStatus{},
+	}
+
+	err = f.Client.Create(goctx.TODO(), binding, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = e2eutil.WaitForConsolidated(t, f.Client, namespace, binding.Name+"-consolidated", retryInterval, timeout)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	consolidated := apiv1alpha1.Consolidated{}
+
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: namespace, Name: binding.Name + "-consolidated",}, &consolidated)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("Checking the consolidated object with 3scale")
+
+
+	err = e2eutil.WaitForReconciliationWith3scale(t, consolidated, 120 * time.Second, 240 * time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//	retries := 0
+//RETRY:
+//
+//	if retries > 2 {
+//		t.Fatal("Reconciliation of consolidated object is failing")
+//	}
+//
+//	desiredConsolidated, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials, consolidated.Spec.APIs)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	if !apiv1alpha1.CompareConsolidated(consolidated, *desiredConsolidated) {
+//		t.Log("Consolidated object is not yet reconcile, retrying.")
+//
+//		retries = retries + 1
+//		time.Sleep(120 * time.Second)
+//		goto RETRY
+//
+//	}
 }
 
 func tenantList() *apiv1alpha1.TenantList {
