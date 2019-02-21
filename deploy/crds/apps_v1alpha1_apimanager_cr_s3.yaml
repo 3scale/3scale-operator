@@ -1,0 +1,15 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager-s3
+spec:
+  productVersion: "2.4"
+  wildcardDomain: <desired-domain>
+  system:
+    fileStorage:
+      sthree:
+        awsRegion: <region>
+        awsBucket: <bucket-name>
+        awsCredentialsSecret:
+          name: <credentials-secret-name>
+        fileUploadStorage: <file-upload-storage-name>

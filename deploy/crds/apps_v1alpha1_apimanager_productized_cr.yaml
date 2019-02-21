@@ -1,9 +1,0 @@
-apiVersion: apps.3scale.net/v1alpha1
-kind: APIManager
-metadata:
-  name: example-apimanager
-spec:
-  ampRelease: "2.4"
-  wildcardDomain: msoriano.127.0.0.1.nip.io
-  productized: true
-  evaluation: true

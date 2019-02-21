@@ -1,0 +1,11 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager-ha
+spec:
+  productVersion: "2.4"
+  wildcardDomain: <desired-domain>
+  # HA mode expects to have pre-created secrets with the desired database URL.
+  # See reference documentation.
+  highAvailability:
+    enabled: true
