@@ -202,7 +202,7 @@ func (r *InternalReconciler) getAdminPassword() (string, error) {
 	err := r.k8sClient.Get(context.TODO(),
 		types.NamespacedName{
 			Name:      r.tenantR.Spec.AdminPasswordRef.Name,
-			Namespace: r.tenantR.Spec.AdminPasswordRef.Namespace,
+			Namespace: r.tenantR.Namespace,
 		},
 		tenantAdminSecret)
 
@@ -213,7 +213,7 @@ func (r *InternalReconciler) getAdminPassword() (string, error) {
 	passwordByteArray, ok := tenantAdminSecret.Data[secretMasterAdminPasswordKey]
 	if !ok {
 		return "", fmt.Errorf("Not found admin password secret (ns: %s, name: %s) attribute: %s",
-			r.tenantR.Spec.AdminPasswordRef.Namespace, r.tenantR.Spec.AdminPasswordRef.Name,
+			r.tenantR.Namespace, r.tenantR.Spec.AdminPasswordRef.Name,
 			secretMasterAdminPasswordKey)
 	}
 
