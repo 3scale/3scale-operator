@@ -26,13 +26,9 @@ spec:
               properties:
                 name:
                   type: string
-                namespace:
-                  type: string
             masterCredentialsRef:
               properties:
                 name:
-                  type: string
-                namespace:
                   type: string
             tenantSecretRef:
               properties:
