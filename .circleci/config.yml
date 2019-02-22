@@ -48,6 +48,31 @@ commands:
             oc wait --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
             oc wait --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
 
+  install-golang:
+    steps:
+      - run:
+          name: Setup GO env
+          command: |
+            mkdir -p ~/tmp
+            echo 'export TMPDIR=~/tmp/' >> $BASH_ENV
+            echo 'export GOROOT=/opt/go' >> $BASH_ENV
+            echo 'export GOPATH=~/go' >> $BASH_ENV
+            sudo mkdir -p /opt/go/bin
+            mkdir -p ~/go/bin
+            echo 'export PATH=$GOROOT/bin:$PATH' >> $BASH_ENV
+            echo 'export PATH=$GOPATH/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: Install Golang
+          command: |
+            curl --fail -L https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
+
+  install-dep:
+    steps:
+      - run:
+          name: Install Golang dep
+          command: |
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sudo GOPATH=$GOPATH PATH=$GOROOT/bin:$PATH sh
+
   deploy-3scale-eval-from-template:
     steps:
       - run:
@@ -60,17 +85,13 @@ commands:
             oc get events | egrep ' Failed ' || :
             oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
 
-  deploy-3scale-eval-from-operator:
+  deploy-roles-service-account:
     steps:
       - run:
-          name: Deploy 3scale
+          name: Deploy service account and roles
           command: |
-            oc login -u system:admin --insecure-skip-tls-verify=true
-            for i in `ls deploy/crds/*_crd.yaml`; do kubectl create -f $i ; done
-
             oc login -u developer --insecure-skip-tls-verify=true
             NAMESPACE="operator-test"
-            oc new-project ${NAMESPACE}
             oc project ${NAMESPACE}
 
             kubectl create -f deploy/service_account.yaml
@@ -78,30 +99,30 @@ commands:
             oc login -u system:admin --insecure-skip-tls-verify=true
             kubectl create -f deploy/role.yaml
             kubectl create -f deploy/role_binding.yaml
+
+  create-namespace:
+    steps:
+      - run:
+          name: Create test namespace
+          command: |
             oc login -u developer --insecure-skip-tls-verify=true
+            NAMESPACE="operator-test"
+            oc new-project ${NAMESPACE}
+            oc project ${NAMESPACE}
 
-
-            kubectl create -f deploy/operator.yaml
-            echo "Waiting until the operator Deployment is in status 'available'..."
-            oc wait --for=condition=available deployment/3scale-operator --namespace=${NAMESPACE}
+  register-3scale-operator-crd:
+    steps:
+      - run:
+          name: Register 3scale operator CRD
+          command: |
             oc login -u system:admin --insecure-skip-tls-verify=true
-            kubectl create -f deploy/crds/apps_v1alpha1_apimanager_cr.yaml
+            for i in `ls deploy/crds/*_crd.yaml`; do kubectl create -f $i ; done
 
-            echo "Waiting until at least one DeploymentConfig is being created..."
-            DCS=$(oc get dc --output=name)
-            while [ "$DCS" = "" ]; do
-              DCS=$(oc get dc --output=name)
-              sleep 1
-            done
-
-            echo "Waiting until all DeploymentConfigs are in status 'available'..."
-            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
-            # Just double check it in case we've been too fast gathering all the DeploymentConfigs
-            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
-
-            echo "Checking for failed events..."
-            oc get events | egrep ' Failed ' || :
-            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+  setup-3scale-operator:
+    steps:
+      - register-3scale-operator-crd
+      - create-namespace
+      - deploy-roles-service-account
 
   push-3scale-images-to-quay:
     steps:
@@ -216,17 +237,21 @@ jobs:
       - oc-status
       - push-3scale-images-to-quay
 
-  deploy-apimanager:
+  run-e2e-test:
     machine:
-      docker_layer_caching: true
+      enabled: true
     resource_class: large
+    working_directory: ~/go/src/github.com/3scale/3scale-operator
     steps:
+      - install-golang
+      - install-dep
+      - install-operator-sdk
       - checkout
+      - install-operator-dependencies
       - install-openshift
-      - build-amp
-      - oc-observe
-      - deploy-3scale-eval-from-operator
-      - oc-status
+      - setup-3scale-operator
+      - run: make e2e-run
+
   generator:
     docker:
       - image: circleci/golang:1.11
@@ -241,7 +266,7 @@ workflows:
     jobs:
       - build-operator:
           context: org-global
-      - deploy-apimanager:
+      - run-e2e-test:
           context: org-global
           requires:
             - build-operator
