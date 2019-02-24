@@ -454,39 +454,38 @@ func TestFullHappyPath(t *testing.T) {
 
 	consolidated := apiv1alpha1.Consolidated{}
 
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: namespace, Name: binding.Name + "-consolidated",}, &consolidated)
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: namespace, Name: binding.Name + "-consolidated"}, &consolidated)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Log("Checking the consolidated object with 3scale")
 
-
-	err = e2eutil.WaitForReconciliationWith3scale(t, consolidated, 120 * time.Second, 240 * time.Second)
+	err = e2eutil.WaitForReconciliationWith3scale(t, consolidated, 120*time.Second, 240*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	//	retries := 0
-//RETRY:
-//
-//	if retries > 2 {
-//		t.Fatal("Reconciliation of consolidated object is failing")
-//	}
-//
-//	desiredConsolidated, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials, consolidated.Spec.APIs)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	if !apiv1alpha1.CompareConsolidated(consolidated, *desiredConsolidated) {
-//		t.Log("Consolidated object is not yet reconcile, retrying.")
-//
-//		retries = retries + 1
-//		time.Sleep(120 * time.Second)
-//		goto RETRY
-//
-//	}
+	//RETRY:
+	//
+	//	if retries > 2 {
+	//		t.Fatal("Reconciliation of consolidated object is failing")
+	//	}
+	//
+	//	desiredConsolidated, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials, consolidated.Spec.APIs)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//	if !apiv1alpha1.CompareConsolidated(consolidated, *desiredConsolidated) {
+	//		t.Log("Consolidated object is not yet reconcile, retrying.")
+	//
+	//		retries = retries + 1
+	//		time.Sleep(120 * time.Second)
+	//		goto RETRY
+	//
+	//	}
 }
 
 func tenantList() *apiv1alpha1.TenantList {
