@@ -4,12 +4,15 @@ import (
 	"bytes"
 	goctx "context"
 	"fmt"
-	v12 "github.com/openshift/api/route/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+
+	routev1 "github.com/openshift/api/route/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/apis"
@@ -76,16 +79,17 @@ func TestFullHappyPath(t *testing.T) {
 	t.Log("operator Deployment is ready")
 
 	// Deploy APIManager resource
-	productized := true
-	wildcardPolicy := string(v12.WildcardPolicySubdomain)
+	enableResourceRequirements := false
+	wildcardPolicy := string(routev1.WildcardPolicySubdomain)
 	apiManagerWildcardDomain := fmt.Sprintf("test1.%s.nip.io", clusterHost)
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
-			AmpRelease:     "2.4",
-			WildcardDomain: apiManagerWildcardDomain,
-			Productized:    &productized,
-			Evaluation:     true,
-			WildcardPolicy: &wildcardPolicy,
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				ProductVersion:              product.ProductUpstream,
+				WildcardDomain:              apiManagerWildcardDomain,
+				WildcardPolicy:              &wildcardPolicy,
+				ResourceRequirementsEnabled: &enableResourceRequirements,
+			},
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-apimanager",

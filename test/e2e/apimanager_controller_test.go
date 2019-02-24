@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/apis"
 	appsgroup "github.com/3scale/3scale-operator/pkg/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -87,13 +88,14 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	}
 	t.Log("operator Deployment is ready")
 
-	var productized bool = true
+	enableResourceRequirements := false
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
-			AmpRelease:     "2.4",
-			WildcardDomain: "test1.127.0.0.1.nip.io",
-			Productized:    &productized,
-			Evaluation:     true,
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				ProductVersion:              product.ProductUpstream,
+				WildcardDomain:              "test1.127.0.0.1.nip.io",
+				ResourceRequirementsEnabled: &enableResourceRequirements,
+			},
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-apimanager",
