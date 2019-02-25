@@ -26,8 +26,9 @@ type RedisOptions struct {
 }
 
 type redisRequiredOptions struct {
-	appLabel string
-	image    string
+	appLabel     string
+	backendImage string
+	systemImage  string
 }
 
 type redisNonRequiredOptions struct {
@@ -48,8 +49,12 @@ func (r *RedisOptionsBuilder) AppLabel(appLabel string) {
 	r.options.appLabel = appLabel
 }
 
-func (r *RedisOptionsBuilder) Image(image string) {
-	r.options.image = image
+func (r *RedisOptionsBuilder) BackendImage(image string) {
+	r.options.backendImage = image
+}
+
+func (r *RedisOptionsBuilder) SystemImage(image string) {
+	r.options.systemImage = image
 }
 
 func (r *RedisOptionsBuilder) Build() (*RedisOptions, error) {
@@ -67,8 +72,12 @@ func (r *RedisOptionsBuilder) setRequiredOptions() error {
 	if r.options.appLabel == "" {
 		return fmt.Errorf("no AppLabel has been provided")
 	}
-	if r.options.image == "" {
-		return fmt.Errorf("no Redis Image has been provided")
+	if r.options.backendImage == "" {
+		return fmt.Errorf("no Redis Backend Image has been provided")
+	}
+
+	if r.options.systemImage == "" {
+		return fmt.Errorf("no Redis System Image has been provided")
 	}
 
 	return nil
@@ -88,7 +97,9 @@ type CLIRedisOptionsProvider struct {
 func (o *CLIRedisOptionsProvider) GetRedisOptions() (*RedisOptions, error) {
 	rob := RedisOptionsBuilder{}
 	rob.AppLabel("${APP_LABEL}")
-	rob.Image("${REDIS_IMAGE}")
+	rob.BackendImage("${REDIS_IMAGE}")
+	rob.SystemImage("${REDIS_IMAGE}")
+
 	res, err := rob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Redis Options - %s", err)
@@ -287,7 +298,7 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 func (redis *Redis) buildPodContainers() []v1.Container {
 	return []v1.Container{
 		v1.Container{
-			Image:           redis.Options.image,
+			Image:           redis.Options.backendImage,
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Name:            backendRedisContainerName,
 			Command:         redis.buildPodContainerCommand(),
@@ -601,7 +612,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 					Containers: []v1.Container{
 						v1.Container{
 							Name:    "system-redis",
-							Image:   redis.Options.image,
+							Image:   redis.Options.systemImage,
 							Command: []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
 							Args:    []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
 							Resources: v1.ResourceRequirements{

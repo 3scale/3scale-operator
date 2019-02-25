@@ -3,5 +3,5 @@ kind: APIManager
 metadata:
   name: example-apimanager
 spec:
-  productVersion: "2.4"
+  productVersion: "upstream"
   wildcardDomain: <desired-domain>
