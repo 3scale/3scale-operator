@@ -4,12 +4,15 @@ import (
 	"bytes"
 	goctx "context"
 	"fmt"
-	v12 "github.com/openshift/api/route/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+
+	routev1 "github.com/openshift/api/route/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/apis"
@@ -76,16 +79,17 @@ func TestFullHappyPath(t *testing.T) {
 	t.Log("operator Deployment is ready")
 
 	// Deploy APIManager resource
-	productized := true
-	wildcardPolicy := string(v12.WildcardPolicySubdomain)
+	enableResourceRequirements := false
+	wildcardPolicy := string(routev1.WildcardPolicySubdomain)
 	apiManagerWildcardDomain := fmt.Sprintf("test1.%s.nip.io", clusterHost)
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
-			AmpRelease:     "2.4",
-			WildcardDomain: apiManagerWildcardDomain,
-			Productized:    &productized,
-			Evaluation:     true,
-			WildcardPolicy: &wildcardPolicy,
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				ProductVersion:              product.ProductUpstream,
+				WildcardDomain:              apiManagerWildcardDomain,
+				WildcardPolicy:              &wildcardPolicy,
+				ResourceRequirementsEnabled: &enableResourceRequirements,
+			},
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-apimanager",
@@ -450,39 +454,38 @@ func TestFullHappyPath(t *testing.T) {
 
 	consolidated := apiv1alpha1.Consolidated{}
 
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: namespace, Name: binding.Name + "-consolidated",}, &consolidated)
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: namespace, Name: binding.Name + "-consolidated"}, &consolidated)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Log("Checking the consolidated object with 3scale")
 
-
-	err = e2eutil.WaitForReconciliationWith3scale(t, consolidated, 120 * time.Second, 240 * time.Second)
+	err = e2eutil.WaitForReconciliationWith3scale(t, consolidated, 120*time.Second, 240*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	//	retries := 0
-//RETRY:
-//
-//	if retries > 2 {
-//		t.Fatal("Reconciliation of consolidated object is failing")
-//	}
-//
-//	desiredConsolidated, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials, consolidated.Spec.APIs)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	if !apiv1alpha1.CompareConsolidated(consolidated, *desiredConsolidated) {
-//		t.Log("Consolidated object is not yet reconcile, retrying.")
-//
-//		retries = retries + 1
-//		time.Sleep(120 * time.Second)
-//		goto RETRY
-//
-//	}
+	//RETRY:
+	//
+	//	if retries > 2 {
+	//		t.Fatal("Reconciliation of consolidated object is failing")
+	//	}
+	//
+	//	desiredConsolidated, err := apiv1alpha1.NewConsolidatedFrom3scale(consolidated.Spec.Credentials, consolidated.Spec.APIs)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//
+	//	if !apiv1alpha1.CompareConsolidated(consolidated, *desiredConsolidated) {
+	//		t.Log("Consolidated object is not yet reconcile, retrying.")
+	//
+	//		retries = retries + 1
+	//		time.Sleep(120 * time.Second)
+	//		goto RETRY
+	//
+	//	}
 }
 
 func tenantList() *apiv1alpha1.TenantList {
