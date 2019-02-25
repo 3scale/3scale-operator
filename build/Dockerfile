@@ -1,7 +1,15 @@
 FROM alpine:3.8
 
-RUN apk upgrade --update --no-cache
+ENV OPERATOR=/usr/local/bin/3scale-operator \
+    USER_UID=1001 \
+    USER_NAME=3scale-operator
 
-USER nobody
+# install operator binary
+COPY build/_output/bin/3scale-operator ${OPERATOR}
 
-ADD build/_output/bin/3scale-operator /usr/local/bin/3scale-operator
+COPY build/bin /usr/local/bin
+RUN  /usr/local/bin/user_setup
+
+ENTRYPOINT ["/usr/local/bin/entrypoint"]
+
+USER ${USER_UID}
