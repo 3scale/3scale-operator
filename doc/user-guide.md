@@ -168,6 +168,50 @@ oc create -f <yaml-name>
 This should trigger the deployment of a 3scale API Management
 solution in the "operator-test" project
 
+## Deploy Tenants custom resource
+
+Deploying the *APIManager* custom resource (see section above) creates a default tenant.
+Optionally, you may create other tenants deploying **Tenant custom resource** objects.
+
+To deploy a new tenant in your 3scale instance, create a new YAML file with the following content:
+
+```yaml
+apiVersion: api.3scale.net/v1alpha1
+kind: Tenant
+metadata:
+  name: ecorp-tenant
+spec:
+  username: admin
+  systemMasterUrl: https://master.amp24.127.0.0.1.nip.io
+  email: admin@ecorp.com
+  organizationName: ECorp
+  masterCredentialsRef:
+    name: system-seed
+    namespace: operator-test
+  passwordCredentialsRef:
+    name: ecorp-admin-secret
+    namespace: operator-test
+  tenantSecretRef:
+    name: ecorp-tenant-secret
+    namespace: operator-test
+```
+
+To look at more information on what the Tenant Custom Resource fields are,
+refer to the [Tenant CRD Reference](tenant-crd-reference.md) documentation.
+
+```sh
+export NAMESPACE="operator-test"
+oc project ${NAMESPACE}
+oc create -f <yaml-name>
+```
+
+This should trigger the creation of a new tenant in your 3scale API Management
+solution in the "operator-test" project.
+
+Tenant *provider_key* and *admin domain url* will be stored in a secret.
+The secret location can be specified using *tenantSecretRef* tenant spec key.
+Refer to [Tenant CRD Reference](tenant-crd-reference.md) documentation for more information.
+
 ## Deploy the Capabilities related custom resources
 
 TODO
