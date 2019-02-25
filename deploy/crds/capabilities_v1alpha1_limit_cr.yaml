@@ -1,4 +1,4 @@
-apiVersion: api.3scale.net/v1alpha1
+apiVersion: capabilities.3scale.net/v1alpha1
 kind: Limit
 metadata:
   name: example-limit
