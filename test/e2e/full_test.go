@@ -16,7 +16,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/apis"
-	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
+	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
 	appsgroup "github.com/3scale/3scale-operator/pkg/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/controller/tenant"

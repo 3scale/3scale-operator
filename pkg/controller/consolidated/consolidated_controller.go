@@ -3,7 +3,7 @@ package consolidated
 import (
 	"context"
 	"encoding/json"
-	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
+	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"

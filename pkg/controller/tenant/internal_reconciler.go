@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
+	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
 	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
