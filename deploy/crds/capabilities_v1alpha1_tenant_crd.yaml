@@ -1,6 +1,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  creationTimestamp: null
   name: tenants.capabilities.3scale.net
 spec:
   group: capabilities.3scale.net
@@ -10,38 +11,56 @@ spec:
     plural: tenants
     singular: tenant
   scope: Namespaced
-  version: v1alpha1
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
         spec:
           properties:
-            username:
-              type: string
             email:
               type: string
+            masterCredentialsRef:
+              type: object
             organizationName:
               type: string
+            passwordCredentialsRef:
+              type: object
             systemMasterUrl:
               type: string
-            passwordCredentialsRef:
-              properties:
-                name:
-                  type: string
-            masterCredentialsRef:
-              properties:
-                name:
-                  type: string
             tenantSecretRef:
-              properties:
-                name:
-                  type: string
-                namespace:
-                  type: string
+              type: object
+            username:
+              type: string
           required:
-            - username
-            - email
-            - organizationName
-            - systemMasterUrl
-            - passwordCredentialsRef
-            - masterCredentialsRef
+          - username
+          - email
+          - organizationName
+          - systemMasterUrl
+          - tenantSecretRef
+          - passwordCredentialsRef
+          - masterCredentialsRef
+          type: object
+        status:
+          properties:
+            adminID:
+              format: int64
+              type: integer
+            tenantID:
+              format: int64
+              type: integer
+          required:
+          - tenantID
+          - adminID
+          type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
