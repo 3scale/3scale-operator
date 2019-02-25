@@ -83,21 +83,21 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	// Fetch the APIManager instance
 	instance := &appsv1alpha1.APIManager{}
 
-	reqLogger.Info("Trying to get APIManager resource", "Request", request)
+	reqLogger.Info("Trying to get APIManager resource")
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted", "client error", err, "APIManager", instance)
+			reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted")
 			return reconcile.Result{}, nil
 		}
-		reqLogger.Error(err, "APIManager Resource cannot be created. Requeuing request...", "APIManager", instance)
+		reqLogger.Error(err, "APIManager Resource cannot be created. Requeuing request...")
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	reqLogger.Info("Successfully retreived APIManager resource", "APIManager", instance)
+	reqLogger.Info("Successfully retreived APIManager resource")
 
 	reqLogger.Info("Setting defaults for APIManager resource")
 	changed, err := instance.SetDefaults() // TODO check where to put this
@@ -106,33 +106,39 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, nil
 	}
 	if changed {
-		reqLogger.Info("Set defaults for APIManager resource", "APIManager", instance)
+		reqLogger.Info("Updating defaults for APIManager resource")
 		err = r.client.Update(context.TODO(), instance)
 		if err != nil {
-			reqLogger.Error(err, "APIManager Resource cannot be updated. Requeuing request...", "APIManager", instance)
+			reqLogger.Error(err, "APIManager Resource cannot be updated. Requeuing request...")
 			return reconcile.Result{}, err
 		}
+		reqLogger.Info("Successfully updated defaults for APIManager resource")
 		return reconcile.Result{}, nil
 	}
 
 	objs, err := createAPIManager(instance, r.client)
 	if err != nil {
-		reqLogger.Error(err, "Error creating APIManager objects")
+		reqLogger.Error(err, "Error creating APIManager objects. Requeuing request...")
 		return reconcile.Result{}, err
 	}
 
 	// Set APIManager instance as the owner and controller
 	for idx := range objs {
-		objectMeta := (objs[idx].Object).(metav1.Object)
+		obj := objs[idx].Object
+		objectMeta := obj.(metav1.Object)
 		objectMeta.SetNamespace(instance.Namespace)
-		err = controllerutil.SetControllerReference(instance, (objs[idx].Object).(metav1.Object), r.scheme)
+		err = controllerutil.SetControllerReference(instance, objectMeta, r.scheme)
 		if err != nil {
-			reqLogger.Error(err, "Error setting OwnerReference", "Object", objs[idx].Object)
+			reqLogger.Error(err, "Error setting OwnerReference on object. Requeuing request...",
+				"Kind", obj.GetObjectKind(),
+				"Namespace", objectMeta.GetNamespace(),
+				"Name", objectMeta.GetName(),
+			)
 			return reconcile.Result{}, err
 		}
 	}
 
-	// Create zync Objects
+	// Create APIManager Objects
 	for idx := range objs {
 		obj := objs[idx].Object
 		objCopy := obj.DeepCopyObject() // We create a copy because the r.client.Create method removes TypeMeta for some reason
@@ -147,16 +153,16 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 				// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
 				err = r.client.Create(context.TODO(), obj)
 				if err != nil {
-					reqLogger.Error(err, "Error creating object "+objectInfo, "Object", obj)
+					reqLogger.Error(err, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 					return reconcile.Result{}, err
 				}
-				reqLogger.Info("Created object " + objectInfo)
+				reqLogger.Info(fmt.Sprintf("Created object %s", objectInfo))
 			} else {
-				reqLogger.Error(err, "Failed to get "+objectInfo)
+				reqLogger.Error(err, fmt.Sprintf("Failed to get %s.  Requeuing request...", objectInfo))
 				return reconcile.Result{}, err
 			}
 		} else {
-			reqLogger.Info("Object " + objectInfo + " already exists")
+			reqLogger.Info(fmt.Sprintf("Object %s already exists", objectInfo))
 		}
 
 		// Update secrets with consistent data
@@ -164,6 +170,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 			reqLogger.Info("Object is a secret. Updating object...")
 			err = r.client.Update(context.TODO(), secret)
 			if err != nil {
+				reqLogger.Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
 				return reconcile.Result{}, err
 			}
 		}
