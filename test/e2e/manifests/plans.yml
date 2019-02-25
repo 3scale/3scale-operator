@@ -1,6 +1,6 @@
 apiVersion: v1
 items:
-- apiVersion: api.3scale.net/v1alpha1
+- apiVersion: capabilities.3scale.net/v1alpha1
   kind: Plan
   metadata:
     labels:
@@ -15,7 +15,7 @@ items:
       matchLabels:
         api: api01
     trialPeriod: 0
-- apiVersion: api.3scale.net/v1alpha1
+- apiVersion: capabilities.3scale.net/v1alpha1
   kind: Plan
   metadata:
     labels:
@@ -30,7 +30,7 @@ items:
       matchLabels:
         plan: plan02
     trialPeriod: 0
-- apiVersion: api.3scale.net/v1alpha1
+- apiVersion: capabilities.3scale.net/v1alpha1
   kind: Plan
   metadata:
     labels:
