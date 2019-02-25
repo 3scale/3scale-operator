@@ -12,7 +12,6 @@ import (
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	frameworke2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	clientappsv1 "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
@@ -88,14 +87,15 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	}
 	t.Log("operator Deployment is ready")
 
+	var productized bool = true
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			AmpRelease:     "2.4",
 			WildcardDomain: "test1.127.0.0.1.nip.io",
-			Productized:    true,
+			Productized:    &productized,
 			Evaluation:     true,
 		},
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-apimanager",
 			Namespace: namespace,
 		},

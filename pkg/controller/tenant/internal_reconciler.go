@@ -157,23 +157,23 @@ func (r *InternalReconciler) reconcileAdminUser(tenantDef *porta_client_pkg.Tena
 
 // This method makes sure secret with tenant's access_token exists
 func (r *InternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_pkg.Tenant) error {
-	adminAccessTokenSecretNN := types.NamespacedName{
+	tenantProviderKeySecretNN := types.NamespacedName{
 		Name:      r.tenantR.Spec.TenantSecretRef.Name,
 		Namespace: r.tenantR.Spec.TenantSecretRef.Namespace,
 	}
-	adminAccessTokenSecret, err := r.findAccessTokenSecret(adminAccessTokenSecretNN)
+	tenantProviderKeySecret, err := r.findAccessTokenSecret(tenantProviderKeySecretNN)
 	if err != nil {
 		return err
 	}
 
-	if adminAccessTokenSecret == nil {
-		err = r.createAdminAcessTokenSecret(tenantDef, adminAccessTokenSecretNN)
+	if tenantProviderKeySecret == nil {
+		err = r.createTenantProviderKeySecret(tenantDef, tenantProviderKeySecretNN)
 		if err != nil {
 			return err
 		}
 	} else {
 		r.logger.Info("Admin user access token secret already exists",
-			"Secret NS", adminAccessTokenSecretNN.Namespace, "Secret name", adminAccessTokenSecretNN.Name)
+			"Secret NS", tenantProviderKeySecretNN.Namespace, "Secret name", tenantProviderKeySecretNN.Name)
 	}
 	return nil
 }
@@ -210,11 +210,11 @@ func (r *InternalReconciler) getAdminPassword() (string, error) {
 		return "", err
 	}
 
-	passwordByteArray, ok := tenantAdminSecret.Data[secretMasterAdminPasswordKey]
+	passwordByteArray, ok := tenantAdminSecret.Data[TenantAdminPasswordSecretField]
 	if !ok {
 		return "", fmt.Errorf("Not found admin password secret (ns: %s, name: %s) attribute: %s",
 			r.tenantR.Namespace, r.tenantR.Spec.AdminPasswordRef.Name,
-			secretMasterAdminPasswordKey)
+			TenantAdminPasswordSecretField)
 	}
 
 	return bytes.NewBuffer(passwordByteArray).String(), err
@@ -313,10 +313,15 @@ func (r *InternalReconciler) findAccessTokenSecret(nn types.NamespacedName) (*v1
 	return adminAccessTokenSecret, nil
 }
 
-func (r *InternalReconciler) createAdminAcessTokenSecret(tenantDef *porta_client_pkg.Tenant, nn types.NamespacedName) error {
+func (r *InternalReconciler) createTenantProviderKeySecret(tenantDef *porta_client_pkg.Tenant, nn types.NamespacedName) error {
 	r.logger.Info("Creating admin access token secret", "Secret NS", nn.Namespace, "Secret name", nn.Name)
 
 	tenantProviderKey, err := r.findTenantProviderKey(tenantDef)
+	if err != nil {
+		return err
+	}
+
+	adminURL, err := URLFromDomain(tenantDef.Signup.Account.AdminDomain)
 	if err != nil {
 		return err
 	}
@@ -331,8 +336,11 @@ func (r *InternalReconciler) createAdminAcessTokenSecret(tenantDef *porta_client
 			Name:      nn.Name,
 			Labels:    map[string]string{"app": "3scale-operator"},
 		},
-		StringData: map[string]string{secretAdminAccessTokenKey: tenantProviderKey},
-		Type:       v1.SecretTypeOpaque,
+		StringData: map[string]string{
+			TenantProviderKeySecretField:    tenantProviderKey,
+			TenantAdminDomainKeySecretField: adminURL.String(),
+		},
+		Type: v1.SecretTypeOpaque,
 	}
 	addOwnerRefToObject(secret, asOwner(r.tenantR))
 	return r.k8sClient.Create(context.TODO(), secret)

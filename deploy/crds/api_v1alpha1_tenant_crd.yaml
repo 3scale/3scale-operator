@@ -22,6 +22,8 @@ spec:
               type: string
             organizationName:
               type: string
+            systemMasterUrl:
+              type: string
             passwordCredentialsRef:
               properties:
                 name:
@@ -40,5 +42,6 @@ spec:
             - username
             - email
             - organizationName
+            - systemMasterUrl
             - passwordCredentialsRef
             - masterCredentialsRef
