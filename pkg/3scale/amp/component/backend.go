@@ -281,7 +281,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-worker",
-			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "worker", "app": backend.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "worker", "app": backend.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -317,7 +317,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 			Selector: map[string]string{"deploymentConfig": "backend-worker"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "worker", "app": backend.Options.appLabel, "deploymentConfig": "backend-worker"},
+					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "worker", "app": backend.Options.appLabel, "deploymentConfig": "backend-worker"},
 				},
 				Spec: v1.PodSpec{InitContainers: []v1.Container{
 					v1.Container{
@@ -366,7 +366,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-cron",
-			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "cron", "app": backend.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "cron", "app": backend.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -402,7 +402,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 			Selector: map[string]string{"deploymentConfig": "backend-cron"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "cron", "app": backend.Options.appLabel, "deploymentConfig": "backend-cron"},
+					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "cron", "app": backend.Options.appLabel, "deploymentConfig": "backend-cron"},
 				},
 				Spec: v1.PodSpec{InitContainers: []v1.Container{
 					v1.Container{
@@ -453,7 +453,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-listener",
-			Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "listener", "app": backend.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "listener", "app": backend.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -489,7 +489,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 			Selector: map[string]string{"deploymentConfig": "backend-listener"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "backend", "3scale.component-element": "listener", "app": backend.Options.appLabel, "deploymentConfig": "backend-listener"},
+					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "listener", "app": backend.Options.appLabel, "deploymentConfig": "backend-listener"},
 				},
 				Spec: v1.PodSpec{Containers: []v1.Container{
 					v1.Container{
@@ -556,8 +556,8 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-listener",
 			Labels: map[string]string{
-				"3scale.component":         "backend",
-				"3scale.component-element": "listener",
+				"threescale_component":         "backend",
+				"threescale_component_element": "listener",
 				"app":                      backend.Options.appLabel,
 			},
 		},
@@ -586,7 +586,7 @@ func (backend *Backend) buildBackendListenerRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend",
-			Labels: map[string]string{"app": backend.Options.appLabel, "3scale.component": "backend"},
+			Labels: map[string]string{"app": backend.Options.appLabel, "threescale_component": "backend"},
 		},
 		Spec: routev1.RouteSpec{
 			Host: "backend-" + backend.Options.tenantName + "." + backend.Options.wildcardDomain,
@@ -612,7 +612,7 @@ func (backend *Backend) buildBackendEnvConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-environment",
-			Labels: map[string]string{"3scale.component": "backend", "app": backend.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "backend", "app": backend.Options.appLabel},
 		},
 		Data: map[string]string{
 			"RACK_ENV": "production",
@@ -630,7 +630,7 @@ func (backend *Backend) buildBackendRedisSecrets() *v1.Secret {
 			Name: BackendSecretBackendRedisSecretName,
 			Labels: map[string]string{
 				"app":              backend.Options.appLabel,
-				"3scale.component": "backend",
+				"threescale_component": "backend",
 			},
 		},
 		StringData: map[string]string{
@@ -694,7 +694,7 @@ func (backend *Backend) buildBackendInternalApiCredsForSystem() *v1.Secret {
 			Name: BackendSecretInternalApiSecretName,
 			Labels: map[string]string{
 				"app":              backend.Options.appLabel,
-				"3scale.component": "backend",
+				"threescale_component": "backend",
 			},
 		},
 		StringData: map[string]string{
@@ -715,7 +715,7 @@ func (backend *Backend) buildBackendListenerSecrets() *v1.Secret {
 			Name: BackendSecretBackendListenerSecretName,
 			Labels: map[string]string{
 				"app":              backend.Options.appLabel,
-				"3scale.component": "backend",
+				"threescale_component": "backend",
 			},
 		},
 		StringData: map[string]string{

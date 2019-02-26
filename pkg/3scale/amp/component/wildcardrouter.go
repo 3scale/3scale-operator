@@ -166,7 +166,7 @@ func (wr *WildcardRouter) buildWildcardRouterRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-wildcard-router",
-			Labels: map[string]string{"app": wr.Options.appLabel, "3scale.component": "apicast", "3scale.component-element": "wildcard-router"},
+			Labels: map[string]string{"app": wr.Options.appLabel, "threescale_component": "apicast", "threescale_component_element": "wildcard-router"},
 		},
 		Spec: routev1.RouteSpec{
 			Host: "apicast-wildcard." + wr.Options.wildcardDomain,
@@ -195,8 +195,8 @@ func (wr *WildcardRouter) buildWildcardRouterService() *v1.Service {
 			Name: "apicast-wildcard-router",
 			Labels: map[string]string{
 				"app":                      wr.Options.appLabel,
-				"3scale.component":         "apicast",
-				"3scale.component-element": "wildcard-router",
+				"threescale_component":         "apicast",
+				"threescale_component_element": "wildcard-router",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -220,8 +220,8 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 			Name: "apicast-wildcard-router",
 			Labels: map[string]string{
 				"app":                      wr.Options.appLabel,
-				"3scale.component":         "apicast",
-				"3scale.component-element": "wildcard-router",
+				"threescale_component":         "apicast",
+				"threescale_component_element": "wildcard-router",
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -268,8 +268,8 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 					Labels: map[string]string{
 						"deploymentConfig":         "apicast-wildcard-router",
 						"app":                      wr.Options.appLabel,
-						"3scale.component":         "apicast",
-						"3scale.component-element": "wildcard-router",
+						"threescale_component":         "apicast",
+						"threescale_component_element": "wildcard-router",
 					},
 				},
 				Spec: v1.PodSpec{

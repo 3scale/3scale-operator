@@ -205,8 +205,8 @@ const (
 func (redis *Redis) buildLabelsForDeploymentConfigObjectMeta() map[string]string {
 	return map[string]string{
 		"app":                      redis.Options.appLabel,
-		"3scale.component":         backendComponentNameLabel,
-		"3scale.component-element": backendComponentElementLabel,
+		"threescale_component":         backendComponentNameLabel,
+		"threescale_component_element": backendComponentElementLabel,
 	}
 }
 
@@ -260,8 +260,8 @@ func (redis *Redis) buildPodObjectMeta() metav1.ObjectMeta {
 		Labels: map[string]string{
 			"deploymentConfig":         backendRedisDCSelectorName,
 			"app":                      redis.Options.appLabel,
-			"3scale.component":         backendComponentNameLabel,
-			"3scale.component-element": backendComponentElementLabel,
+			"threescale_component":         backendComponentNameLabel,
+			"threescale_component_element": backendComponentElementLabel,
 		},
 	}
 }
@@ -399,8 +399,8 @@ func (redis *Redis) buildServiceObjectMeta() metav1.ObjectMeta {
 func (redis *Redis) buildLabelsForServiceObjectMeta() map[string]string {
 	return map[string]string{
 		"app":                      redis.Options.appLabel,
-		"3scale.component":         "backend",
-		"3scale.component-element": "redis",
+		"threescale_component":         "backend",
+		"threescale_component_element": "redis",
 	}
 }
 
@@ -452,8 +452,8 @@ func (redis *Redis) buildConfigMapObjectMeta() metav1.ObjectMeta {
 func (redis *Redis) buildLabelsForConfigMapObjectMeta() map[string]string {
 	return map[string]string{
 		"app":                      redis.Options.appLabel,
-		"3scale.component":         "system", // TODO should also be redis???
-		"3scale.component-element": "redis",
+		"threescale_component":         "system", // TODO should also be redis???
+		"threescale_component_element": "redis",
 	}
 }
 
@@ -538,8 +538,8 @@ func (redis *Redis) buildPVCObjectMeta() metav1.ObjectMeta {
 func (redis *Redis) buildLabelsForPVCObjectMeta() map[string]string {
 	return map[string]string{
 		"app":                      redis.Options.appLabel,
-		"3scale.component":         "backend",
-		"3scale.component-element": "redis",
+		"threescale_component":         "backend",
+		"threescale_component_element": "redis",
 	}
 }
 
@@ -574,7 +574,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-redis",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "redis", "app": redis.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "redis", "app": redis.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -589,7 +589,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 			Selector: map[string]string{"deploymentConfig": "system-redis"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "redis", "app": redis.Options.appLabel, "deploymentConfig": "system-redis"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "redis", "app": redis.Options.appLabel, "deploymentConfig": "system-redis"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
@@ -674,8 +674,8 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-redis-storage",
 			Labels: map[string]string{
-				"3scale.component":         "system",
-				"3scale.component-element": "redis",
+				"threescale_component":         "system",
+				"threescale_component_element": "redis",
 				"app":                      redis.Options.appLabel,
 			},
 		},

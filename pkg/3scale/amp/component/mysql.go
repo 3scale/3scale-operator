@@ -229,8 +229,8 @@ func (mysql *Mysql) buildSystemMysqlService() *v1.Service {
 			Name: "system-mysql",
 			Labels: map[string]string{
 				"app":                      mysql.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "mysql",
+				"threescale_component":         "system",
+				"threescale_component_element": "mysql",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -256,7 +256,7 @@ func (mysql *Mysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-main-conf",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel},
 		},
 		Data: map[string]string{"my.cnf": "!include /etc/my.cnf\n!includedir /etc/my-extra.d\n"}}
 }
@@ -269,7 +269,7 @@ func (mysql *Mysql) buildSystemMysqlExtraConfigConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-extra-conf",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel},
 		},
 		Data: map[string]string{"mysql-charset.cnf": "[client]\ndefault-character-set = utf8\n\n[mysql]\ndefault-character-set = utf8\n\n[mysqld]\ncharacter-set-server = utf8\ncollation-server = utf8_unicode_ci\n"}}
 }
@@ -282,7 +282,7 @@ func (mysql *Mysql) buildSystemMysqlPersistentVolumeClaim() *v1.PersistentVolume
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-storage",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -299,7 +299,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-mysql",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -313,7 +313,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 			Selector: map[string]string{"deploymentConfig": "system-mysql"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "mysql", "app": mysql.Options.appLabel, "deploymentConfig": "system-mysql"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel, "deploymentConfig": "system-mysql"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
@@ -419,7 +419,7 @@ func (mysql *Mysql) buildSystemDatabaseSecrets() *v1.Secret {
 			Name: SystemSecretSystemDatabaseSecretName,
 			Labels: map[string]string{
 				"app":              mysql.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{

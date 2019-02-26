@@ -184,7 +184,7 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 			Name: "amp-backend",
 			Labels: map[string]string{
 				"app":              ampImages.Options.appLabel,
-				"3scale.component": "backend",
+				"threescale_component": "backend",
 			},
 			Annotations: map[string]string{
 				"openshift.io/display-name": "AMP backend",
@@ -229,7 +229,7 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 			Name: "amp-zync",
 			Labels: map[string]string{
 				"app":              ampImages.Options.appLabel,
-				"3scale.component": "zync",
+				"threescale_component": "zync",
 			},
 			Annotations: map[string]string{
 				"openshift.io/display-name": "AMP Zync",
@@ -274,7 +274,7 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 			Name: "amp-apicast",
 			Labels: map[string]string{
 				"app":              ampImages.Options.appLabel,
-				"3scale.component": "apicast",
+				"threescale_component": "apicast",
 			},
 			Annotations: map[string]string{
 				"openshift.io/display-name": "AMP APIcast",
@@ -319,7 +319,7 @@ func (ampImages *AmpImages) buildWildcardRouterImageStream() *imagev1.ImageStrea
 			Name: "amp-wildcard-router",
 			Labels: map[string]string{
 				"app":              ampImages.Options.appLabel,
-				"3scale.component": "wildcard-router",
+				"threescale_component": "wildcard-router",
 			},
 			Annotations: map[string]string{
 				"openshift.io/display-name": "AMP APIcast Wildcard Router",
@@ -364,7 +364,7 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 			Name: "amp-system",
 			Labels: map[string]string{
 				"app":              ampImages.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 			Annotations: map[string]string{
 				"openshift.io/display-name": "AMP System",
@@ -409,7 +409,7 @@ func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "postgresql",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "postgresql", "app": ampImages.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": ampImages.Options.appLabel},
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{

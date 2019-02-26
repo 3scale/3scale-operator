@@ -164,7 +164,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-memcache",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "memcache", "app": m.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -190,7 +190,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 			Selector: map[string]string{"deploymentConfig": "system-memcache"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "memcache", "app": m.Options.appLabel, "deploymentConfig": "system-memcache"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.appLabel, "deploymentConfig": "system-memcache"},
 				},
 				Spec: v1.PodSpec{Containers: []v1.Container{
 					v1.Container{

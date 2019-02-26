@@ -647,7 +647,7 @@ func (system *System) buildSystemEnvironmentConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-environment",
-			Labels: map[string]string{"3scale.component": "system", "app": system.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "app": system.Options.appLabel},
 		},
 		Data: map[string]string{
 			"RAILS_ENV":              "production",
@@ -675,7 +675,7 @@ func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
 			Name: SystemSecretSystemMemcachedSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
@@ -695,7 +695,7 @@ func (system *System) buildSystemRecaptchaSecrets() *v1.Secret {
 			Name: SystemSecretSystemRecaptchaSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
@@ -716,7 +716,7 @@ func (system *System) buildSystemEventsHookSecrets() *v1.Secret {
 			Name: SystemSecretSystemEventsHookSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
@@ -737,7 +737,7 @@ func (system *System) buildSystemRedisSecrets() *v1.Secret {
 			Name: SystemSecretSystemRedisSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
@@ -757,7 +757,7 @@ func (system *System) buildSystemAppSecrets() *v1.Secret {
 			Name: SystemSecretSystemAppSecretName, // TODO sure this should be a secret on its own?? maybe can join different secrets into one with more values?
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
@@ -777,7 +777,7 @@ func (system *System) buildSystemSeedSecrets() *v1.Secret {
 			Name: SystemSecretSystemSeedSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
@@ -805,7 +805,7 @@ func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
 			Name: SystemSecretSystemMasterApicastSecretName,
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
@@ -825,7 +825,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-app",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "app", "app": system.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "app", "app": system.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -877,7 +877,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 			Selector: map[string]string{"deploymentConfig": "system-app"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "app", "app": system.Options.appLabel, "deploymentConfig": "system-app"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "app", "app": system.Options.appLabel, "deploymentConfig": "system-app"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
@@ -1128,7 +1128,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-sidekiq",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "sidekiq", "app": system.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "sidekiq", "app": system.Options.appLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -1164,7 +1164,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 			Selector: map[string]string{"deploymentConfig": "system-sidekiq"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "sidekiq", "app": system.Options.appLabel, "deploymentConfig": "system-sidekiq"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "sidekiq", "app": system.Options.appLabel, "deploymentConfig": "system-sidekiq"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
@@ -1261,8 +1261,8 @@ func (system *System) buildSystemSharedPVC() *v1.PersistentVolumeClaim {
 			Name: "system-storage",
 			Labels: map[string]string{
 				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "app",
+				"threescale_component":         "system",
+				"threescale_component_element": "app",
 			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
@@ -1288,8 +1288,8 @@ func (system *System) buildSystemProviderService() *v1.Service {
 			Name: "system-provider",
 			Labels: map[string]string{
 				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "provider-ui",
+				"threescale_component":         "system",
+				"threescale_component_element": "provider-ui",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -1316,8 +1316,8 @@ func (system *System) buildSystemMasterService() *v1.Service {
 			Name: "system-master",
 			Labels: map[string]string{
 				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "master-ui",
+				"threescale_component":         "system",
+				"threescale_component_element": "master-ui",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -1344,8 +1344,8 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 			Name: "system-developer",
 			Labels: map[string]string{
 				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "developer-ui",
+				"threescale_component":         "system",
+				"threescale_component_element": "developer-ui",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -1371,8 +1371,8 @@ func (system *System) buildSystemRedisService() *v1.Service {
 			Name: "system-redis",
 			Labels: map[string]string{
 				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "redis",
+				"threescale_component":         "system",
+				"threescale_component_element": "redis",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -1399,8 +1399,8 @@ func (system *System) buildSystemSphinxService() *v1.Service {
 			Name: "system-sphinx",
 			Labels: map[string]string{
 				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "sphinx",
+				"threescale_component":         "system",
+				"threescale_component_element": "sphinx",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -1427,8 +1427,8 @@ func (system *System) buildSystemMemcachedService() *v1.Service {
 			Name: "system-memcache",
 			Labels: map[string]string{
 				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "memcache",
+				"threescale_component":         "system",
+				"threescale_component_element": "memcache",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -1453,7 +1453,7 @@ func (system *System) buildSystemSmtpConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "smtp",
-			Labels: map[string]string{"3scale.component": "system", "3scale.component-element": "smtp", "app": system.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "smtp", "app": system.Options.appLabel},
 		},
 		Data: map[string]string{"address": "", "authentication": "", "domain": "", "openssl.verify.mode": "", "password": "", "port": "", "username": ""}}
 }
@@ -1466,7 +1466,7 @@ func (system *System) buildSystemProviderRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-provider-admin",
-			Labels: map[string]string{"app": system.Options.appLabel, "3scale.component": "system", "3scale.component-element": "provider-ui"},
+			Labels: map[string]string{"app": system.Options.appLabel, "threescale_component": "system", "threescale_component_element": "provider-ui"},
 		},
 		Spec: routev1.RouteSpec{
 			Host: system.Options.tenantName + "-admin." + system.Options.wildcardDomain,
@@ -1492,7 +1492,7 @@ func (system *System) buildSystemMasterRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-master",
-			Labels: map[string]string{"app": system.Options.appLabel, "3scale.component": "system", "3scale.component-element": "master-ui"},
+			Labels: map[string]string{"app": system.Options.appLabel, "threescale_component": "system", "threescale_component_element": "master-ui"},
 		},
 		Spec: routev1.RouteSpec{
 			Host: system.Options.masterName + "." + system.Options.wildcardDomain,
@@ -1518,7 +1518,7 @@ func (system *System) buildSystemDeveloperRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-developer",
-			Labels: map[string]string{"app": system.Options.appLabel, "3scale.component": "system", "3scale.component-element": "developer-ui"},
+			Labels: map[string]string{"app": system.Options.appLabel, "threescale_component": "system", "threescale_component_element": "developer-ui"},
 		},
 		Spec: routev1.RouteSpec{
 			Host: system.Options.tenantName + "." + system.Options.wildcardDomain,
@@ -1542,7 +1542,7 @@ func (system *System) buildSystemConfigMap() *v1.ConfigMap {
 			Name: "system",
 			Labels: map[string]string{
 				"app":              system.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		TypeMeta: metav1.TypeMeta{
@@ -1621,8 +1621,8 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 			Name: "system-sphinx",
 			Labels: map[string]string{
 				"app":                      system.Options.appLabel,
-				"3scale.component":         "system",
-				"3scale.component-element": "sphinx",
+				"threescale_component":         "system",
+				"threescale_component_element": "sphinx",
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -1668,8 +1668,8 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 					Labels: map[string]string{
 						"app":                      system.Options.appLabel,
 						"deploymentConfig":         "system-sphinx",
-						"3scale.component":         "system",
-						"3scale.component-element": "sphinx",
+						"threescale_component":         "system",
+						"threescale_component_element": "sphinx",
 					},
 				},
 				Spec: v1.PodSpec{

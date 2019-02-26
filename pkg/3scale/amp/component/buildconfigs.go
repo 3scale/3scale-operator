@@ -123,7 +123,7 @@ func (bcs *BuildConfigs) buildBackendBuildConfig() *buildv1.BuildConfig {
 			Name: "backend",
 			Labels: map[string]string{
 				"app":              bcs.Options.appLabel,
-				"3scale.component": "backend",
+				"threescale_component": "backend",
 			},
 		},
 		Spec: buildv1.BuildConfigSpec{
@@ -173,7 +173,7 @@ func (bcs *BuildConfigs) buildZyncBuildConfig() *buildv1.BuildConfig {
 			Name: "zync",
 			Labels: map[string]string{
 				"app":              bcs.Options.appLabel,
-				"3scale.component": "zync",
+				"threescale_component": "zync",
 			},
 		},
 		Spec: buildv1.BuildConfigSpec{
@@ -223,7 +223,7 @@ func (bcs *BuildConfigs) buildApicastBuildConfig() *buildv1.BuildConfig {
 			Name: "apicast",
 			Labels: map[string]string{
 				"app":              bcs.Options.appLabel,
-				"3scale.component": "apicast",
+				"threescale_component": "apicast",
 			},
 		},
 		Spec: buildv1.BuildConfigSpec{
@@ -276,7 +276,7 @@ func (bcs *BuildConfigs) buildWildcardRouterBuildConfig() *buildv1.BuildConfig {
 			Name: "wildcard-router",
 			Labels: map[string]string{
 				"app":              bcs.Options.appLabel,
-				"3scale.component": "wildcard-router",
+				"threescale_component": "wildcard-router",
 			},
 		},
 		Spec: buildv1.BuildConfigSpec{
@@ -328,7 +328,7 @@ func (bcs *BuildConfigs) buildSystemBuildConfig() *buildv1.BuildConfig {
 			Name: "system",
 			Labels: map[string]string{
 				"app":              bcs.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		Spec: buildv1.BuildConfigSpec{
@@ -374,7 +374,7 @@ func (bcs *BuildConfigs) buildRubyCentosSevenImageStream() *imagev1.ImageStream 
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "ruby-24-centos7",
-			Labels: map[string]string{"3scale.component": "zync", "app": bcs.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "zync", "app": bcs.Options.appLabel},
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
@@ -398,7 +398,7 @@ func (bcs *BuildConfigs) buildOpenrestyCentosSevenImageStream() *imagev1.ImageSt
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "s2i-openresty-centos7",
-			Labels: map[string]string{"3scale.component": "apicast", "app": bcs.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "apicast", "app": bcs.Options.appLabel},
 		},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{

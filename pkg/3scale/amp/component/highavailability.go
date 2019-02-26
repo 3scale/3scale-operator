@@ -208,7 +208,7 @@ func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
 			Name: SystemSecretSystemDatabaseSecretName,
 			Labels: map[string]string{
 				"app":              ha.Options.appLabel,
-				"3scale.component": "system",
+				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
