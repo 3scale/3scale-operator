@@ -1154,6 +1154,11 @@ objects:
                 secretKeyRef:
                   key: ADMIN_PASSWORD
                   name: system-seed
+            - name: USER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  key: ADMIN_EMAIL
+                  name: system-seed
             - name: TENANT_NAME
               valueFrom:
                 secretKeyRef:
@@ -1379,6 +1384,11 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: ADMIN_PASSWORD
+                name: system-seed
+          - name: USER_EMAIL
+            valueFrom:
+              secretKeyRef:
+                key: ADMIN_EMAIL
                 name: system-seed
           - name: TENANT_NAME
             valueFrom:
@@ -1628,6 +1638,11 @@ objects:
               secretKeyRef:
                 key: ADMIN_PASSWORD
                 name: system-seed
+          - name: USER_EMAIL
+            valueFrom:
+              secretKeyRef:
+                key: ADMIN_EMAIL
+                name: system-seed
           - name: TENANT_NAME
             valueFrom:
               secretKeyRef:
@@ -1874,6 +1889,11 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: ADMIN_PASSWORD
+                name: system-seed
+          - name: USER_EMAIL
+            valueFrom:
+              secretKeyRef:
+                key: ADMIN_EMAIL
                 name: system-seed
           - name: TENANT_NAME
             valueFrom:
@@ -2183,6 +2203,11 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: ADMIN_PASSWORD
+                name: system-seed
+          - name: USER_EMAIL
+            valueFrom:
+              secretKeyRef:
+                key: ADMIN_EMAIL
                 name: system-seed
           - name: TENANT_NAME
             valueFrom:
@@ -2518,6 +2543,7 @@ objects:
     name: system-seed
   stringData:
     ADMIN_ACCESS_TOKEN: ${ADMIN_ACCESS_TOKEN}
+    ADMIN_EMAIL: ${ADMIN_EMAIL}
     ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ADMIN_USER: ${ADMIN_USERNAME}
     MASTER_ACCESS_TOKEN: ${MASTER_ACCESS_TOKEN}
@@ -3379,6 +3405,7 @@ parameters:
 - name: ADMIN_USERNAME
   required: true
   value: admin
+- name: ADMIN_EMAIL
 - description: Admin Access Token with all scopes and write permissions for API access.
   from: '[a-z0-9]{16}'
   generate: expression

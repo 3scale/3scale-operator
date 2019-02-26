@@ -215,6 +215,11 @@ func (o *OperatorSystemOptionsProvider) setSystemSeedOptions(builder *component.
 		builder.AdminPassword(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminPasswordFieldName, defaultAdminPassword))
 		builder.AdminAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminAccessTokenFieldName, defaultAdminAccessToken))
 		builder.MasterAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterAccessTokenFieldName, defaultMasterAccessToken))
+
+		result := getSecretDataValue(secretData, component.SystemSecretSystemSeedAdminEmailFieldName)
+		if result != nil {
+			builder.AdminEmail(*result)
+		}
 	}
 	return nil
 }
