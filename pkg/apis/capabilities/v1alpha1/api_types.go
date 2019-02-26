@@ -11,8 +11,8 @@ import (
 type APISpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	APIBase
-	APISelectors
+	APIBase      `json:",inline"`
+	APISelectors `json:",inline"`
 }
 
 type APIBase struct {
@@ -21,8 +21,10 @@ type APIBase struct {
 }
 
 type APISelectors struct {
-	PlanSelector   metav1.LabelSelector `json:"planSelector"`
-	MetricSelector metav1.LabelSelector `json:"metricSelector"`
+	// +optional
+	PlanSelector *metav1.LabelSelector `json:"planSelector,omitempty"`
+	// +optional
+	MetricSelector *metav1.LabelSelector `json:"metricSelector,omitempty"`
 }
 
 // APIStatus defines the observed state of API
@@ -57,9 +59,12 @@ func init() {
 }
 
 type IntegrationMethod struct {
-	ApicastOnPrem *ApicastOnPrem `json:"apicastOnPrem"`
-	CodePlugin    *CodePlugin    `json:"codePlugin"`
-	ApicastHosted *ApicastHosted `json:"apicastHosted"`
+	// +optional
+	ApicastOnPrem *ApicastOnPrem `json:"apicastOnPrem,omitempty"`
+	// +optional
+	CodePlugin *CodePlugin `json:"codePlugin,omitempty"`
+	// +optional
+	ApicastHosted *ApicastHosted `json:"apicastHosted,omitempty"`
 }
 
 func (api *API) getIntegrationMethodType() string {
@@ -74,8 +79,8 @@ func (api *API) getIntegrationMethodType() string {
 }
 
 type ApicastHosted struct {
-	APIcastBaseOptions
-	APIcastBaseSelectors
+	APIcastBaseOptions   `json:",inline"`
+	APIcastBaseSelectors `json:",inline"`
 }
 
 type APIcastBaseOptions struct {
@@ -85,15 +90,17 @@ type APIcastBaseOptions struct {
 }
 
 type APIcastBaseSelectors struct {
-	MappingRulesSelector metav1.LabelSelector `json:"mappingRulesSelector"`
-	PoliciesSelector     metav1.LabelSelector `json:"policiesSelector"`
+	// +optional
+	MappingRulesSelector *metav1.LabelSelector `json:"mappingRulesSelector,omitempty"`
+	// +optional
+	PoliciesSelector *metav1.LabelSelector `json:"policiesSelector,omitempty"`
 }
 
 type ApicastOnPrem struct {
-	APIcastBaseOptions
+	APIcastBaseOptions      `json:",inline"`
 	StagingPublicBaseURL    string `json:"stagingPublicBaseURL"`
 	ProductionPublicBaseURL string `json:"productionPublicBaseURL"`
-	APIcastBaseSelectors
+	APIcastBaseSelectors    `json:",inline"`
 }
 
 type ApicastAuthenticationSettings struct {
@@ -130,9 +137,12 @@ type MatchLabels struct {
 }
 
 type IntegrationCredentials struct {
-	APIKey          *APIKey          `json:"apiKey"`
-	AppID           *AppID           `json:"appID"`
-	OpenIDConnector *OpenIDConnector `json:"openIDConnector"`
+	// +optional
+	APIKey *APIKey `json:"apiKey,omitempty"`
+	// +optional
+	AppID *AppID `json:"appID,omitempty"`
+	// +optional
+	OpenIDConnector *OpenIDConnector `json:"openIDConnector,omitempty"`
 }
 
 type OpenIDConnector struct {

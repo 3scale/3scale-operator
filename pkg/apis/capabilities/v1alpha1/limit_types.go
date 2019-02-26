@@ -10,8 +10,8 @@ import (
 
 // LimitSpec defines SPEC of the limit object, contains LimitBase and the LimitObjectRef
 type LimitSpec struct {
-	LimitBase
-	LimitObjectRef
+	LimitBase      `json:",inline"`
+	LimitObjectRef `json:",inline"`
 }
 
 // LimitBase contains the limit period and the max value for said period.

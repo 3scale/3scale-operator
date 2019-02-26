@@ -22,6 +22,8 @@ import (
 
 // TODO: Add options to enable defaults to builders
 
+// +k8s:openapi-gen=false
+
 // ConsolidatedSpec defines the desired state of Consolidated
 type ConsolidatedSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -92,6 +94,7 @@ func (c ConsolidatedSpec) Sort() ConsolidatedSpec {
 }
 
 // ConsolidatedStatus defines the observed state of Consolidated
+// +k8s:openapi-gen=false
 type ConsolidatedStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -100,7 +103,6 @@ type ConsolidatedStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // Consolidated is the Schema for the consolidateds API
-// +k8s:openapi-gen=true
 type Consolidated struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -262,6 +264,8 @@ type InternalMetric struct {
 	Unit        string `json:"unit"`
 	Description string `json:"description"`
 }
+
+// +k8s:openapi-gen=false
 type InternalPlan struct {
 	Name             string          `json:"name"`
 	Default          bool            `json:"default"`
@@ -276,7 +280,6 @@ type InternalLimit struct {
 	MaxValue int64  `json:"maxValue"`
 	Metric   string `json:"metric"`
 }
-
 type InternalCredentials struct {
 	AuthToken string `json:"token"`
 	AdminURL  string `json:"adminURL"`
@@ -549,7 +552,11 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, service
 			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "publish", params)
+
+		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
+		if err != nil {
+			return err
+		}
 
 		if plan.Default {
 			_, err = c.SetDefaultPlan(serviceId, plan3scale.ID)
@@ -567,7 +574,16 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, service
 			"cost_per_month":    strconv.FormatFloat(planPair.A.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(planPair.A.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "publish", params)
+		stateEvent := ""
+
+		if plan3scale.State != "published" {
+			stateEvent = "publish"
+		}
+
+		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, stateEvent, params)
+		if err != nil {
+			return err
+		}
 
 		if planPair.A.Default {
 			_, err = c.SetDefaultPlan(serviceId, plan3scale.ID)
@@ -1890,7 +1906,7 @@ func CreateInternalAPIIn3scale(creds InternalCredentials, api InternalAPI) error
 			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
-		_, err = c.UpdateAppPlan(service.ID, plan3scale.ID, plan3scale.PlanName, "publish", params)
+		_, err = c.UpdateAppPlan(service.ID, plan3scale.ID, plan3scale.PlanName, "", params)
 		if err != nil {
 			return err
 		}
