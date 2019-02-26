@@ -154,13 +154,13 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 		}
 		trueVar := true
 		consolidated.SetOwnerReferences(append(consolidated.GetOwnerReferences(), v1.OwnerReference{
-			APIVersion: "api.3scale.net/v1alpha1",
+			APIVersion: "capabilities.3scale.net/v1alpha1",
 			Kind:       "Binding",
 			Name:       binding.Name,
 			UID:        binding.UID,
 			Controller: &trueVar,
 		}))
-		consolidated.SetFinalizers([]string{"finalizer.api.3scale.net"})
+		consolidated.SetFinalizers([]string{"finalizer.capabilities.3scale.net"})
 
 		err = c.Create(context.TODO(), consolidated)
 		if err != nil {
@@ -188,7 +188,7 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 			trueVar := true
 			// We set the binding as the owner of the consolidated object, if one gets removed, this one would  too
 			desiredConsolidated.SetOwnerReferences(append(desiredConsolidated.GetOwnerReferences(), v1.OwnerReference{
-				APIVersion: "api.3scale.net/v1alpha1",
+				APIVersion: "capabilities.3scale.net/v1alpha1",
 				Kind:       "Binding",
 				Name:       binding.Name,
 				UID:        binding.UID,
