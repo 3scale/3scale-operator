@@ -159,11 +159,11 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 						StagingPublicBaseURL:    "a",
 						ProductionPublicBaseURL: "a",
 						APIcastBaseSelectors: operator.APIcastBaseSelectors{
-							MappingRulesSelector: v1.LabelSelector{
+							MappingRulesSelector: &v1.LabelSelector{
 								MatchLabels:      nil,
 								MatchExpressions: nil,
 							},
-							PoliciesSelector: v1.LabelSelector{
+							PoliciesSelector: &v1.LabelSelector{
 								MatchLabels:      nil,
 								MatchExpressions: nil,
 							},
@@ -172,8 +172,8 @@ func BasicBinding(t *testing.T, f *framework.Framework, ctx *framework.TestCtx) 
 				},
 			},
 			APISelectors: operator.APISelectors{
-				PlanSelector:   v1.LabelSelector{},
-				MetricSelector: v1.LabelSelector{},
+				PlanSelector:   &v1.LabelSelector{},
+				MetricSelector: &v1.LabelSelector{},
 			},
 		},
 		Status: operator.APIStatus{},
