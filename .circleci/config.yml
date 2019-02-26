@@ -216,7 +216,7 @@ jobs:
       - checkout
       - install-operator-dependencies
       - install-openshift
-      - run: make e2e-run
+      - run: make e2e
 
   generator:
     docker:
