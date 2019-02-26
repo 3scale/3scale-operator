@@ -103,6 +103,11 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 		},
 	}
 
+	var start time.Time
+	var elapsed time.Duration
+
+	start = time.Now()
+
 	err = f.Client.Create(goctx.TODO(), apimanager, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
 	if err != nil {
 		t.Fatal(err)
@@ -117,6 +122,9 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	elapsed = time.Since(start)
+	t.Logf("APIManager creation and availability took %s seconds", elapsed)
 }
 
 func waitForAllApiManagerStandardDeploymentConfigs(t *testing.T, kubeclient kubernetes.Interface, osAppsV1Client clientappsv1.AppsV1Interface, namespace, name string, retryInterval, timeout time.Duration) error {

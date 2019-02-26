@@ -16,9 +16,9 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/apis"
-	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
 	appsgroup "github.com/3scale/3scale-operator/pkg/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/controller/tenant"
 	"github.com/3scale/3scale-operator/test/e2e/e2eutil"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
@@ -97,6 +97,11 @@ func TestFullHappyPath(t *testing.T) {
 		},
 	}
 
+	var start time.Time
+	var elapsed time.Duration
+
+	start = time.Now()
+
 	err = f.Client.Create(goctx.TODO(), apimanager, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
 	if err != nil {
 		t.Fatal(err)
@@ -112,6 +117,10 @@ func TestFullHappyPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	elapsed = time.Since(start)
+	t.Logf("APIManager creation and availability took %s seconds", elapsed)
+
+	start = time.Now()
 	// Deploy Tenant resource
 	// - Deploy AdminPass secret
 	adminPassSecretName := "tenant01adminsecretname"
@@ -187,6 +196,10 @@ func TestFullHappyPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Tenant reconciliation DONE")
+	elapsed = time.Since(start)
+	t.Logf("Tenant creation and availability took %s seconds", elapsed)
+
+	start = time.Now()
 
 	api := &apiv1alpha1.API{
 		ObjectMeta: metav1.ObjectMeta{
@@ -466,6 +479,8 @@ func TestFullHappyPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	elapsed = time.Since(start)
+	t.Logf("Creation consolidated took %s seconds", elapsed)
 	//	retries := 0
 	//RETRY:
 	//
