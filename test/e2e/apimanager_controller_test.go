@@ -43,7 +43,7 @@ func newAPIManagerCluster(t *testing.T) (*framework.Framework, *framework.TestCt
 	t.Parallel()
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
-	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: 5 * time.Minute, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		t.Fatalf("failed to initialize cluster resources: %v", err)
 	}
@@ -69,7 +69,7 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
 
-	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: 5 * time.Minute, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		t.Fatalf("failed to initialize cluster resources: %v", err)
 	}
@@ -103,7 +103,12 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 		},
 	}
 
-	err = f.Client.Create(goctx.TODO(), apimanager, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	var start time.Time
+	var elapsed time.Duration
+
+	start = time.Now()
+
+	err = f.Client.Create(goctx.TODO(), apimanager, &framework.CleanupOptions{TestContext: ctx, Timeout: 5 * time.Minute, RetryInterval: retryInterval})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,6 +122,9 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	elapsed = time.Since(start)
+	t.Logf("APIManager creation and availability took %s seconds", elapsed)
 }
 
 func waitForAllApiManagerStandardDeploymentConfigs(t *testing.T, kubeclient kubernetes.Interface, osAppsV1Client clientappsv1.AppsV1Interface, namespace, name string, retryInterval, timeout time.Duration) error {
