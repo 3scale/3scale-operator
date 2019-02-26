@@ -48,7 +48,7 @@ func TestFullHappyPath(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
 
-	err = ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err = ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: 5 * time.Minute, RetryInterval: cleanupRetryInterval})
 	if err != nil {
 		t.Fatalf("failed to initialize cluster resources: %v", err)
 	}
@@ -102,7 +102,7 @@ func TestFullHappyPath(t *testing.T) {
 
 	start = time.Now()
 
-	err = f.Client.Create(goctx.TODO(), apimanager, &framework.CleanupOptions{TestContext: ctx, Timeout: timeout, RetryInterval: retryInterval})
+	err = f.Client.Create(goctx.TODO(), apimanager, &framework.CleanupOptions{TestContext: ctx, Timeout: 5 * time.Minute, RetryInterval: retryInterval})
 	if err != nil {
 		t.Fatal(err)
 	}
