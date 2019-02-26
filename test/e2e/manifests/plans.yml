@@ -8,6 +8,7 @@ items:
     name: plan01
   spec:
     aprovalRequired: false
+    default: true
     costs:
       costMonth: 0
       setupFee: 0
@@ -22,6 +23,7 @@ items:
       api: api01
     name: plan02
   spec:
+    default: false
     aprovalRequired: false
     costs:
       costMonth: 0
@@ -37,6 +39,7 @@ items:
       api: api02
     name: plan03
   spec:
+    default: false
     aprovalRequired: false
     costs:
       costMonth: 0
