@@ -8,7 +8,8 @@ commands:
           command: |
             mkdir -p ${GOPATH}/src/github.com/operator-framework
             cd ${GOPATH}/src/github.com/operator-framework
-            git clone https://github.com/operator-framework/operator-sdk --branch v0.2.1
+            git clone https://github.com/operator-framework/operator-sdk
+            git checkout 99ae4aed7387dcfdc07ecf6169cf35b7bca47924
             cd operator-sdk
             make dep
             make install
@@ -36,13 +37,18 @@ commands:
             sudo service docker restart
 
       - run:
+          name: Get docker host IP
+          command: |
+            echo "export DOCKER_HOST_IP=$(docker run --net=host codenvy/che-ip)" >> $BASH_ENV
+
+      - run:
           name: Start and Configure OpenShift Cluster
           command: |
-            oc cluster up --public-hostname=127.0.0.1 --routing-suffix=lvh.me \
+            oc cluster up --public-hostname=${DOCKER_HOST_IP} --routing-suffix=nip.io \
               --enable=persistent-volumes --enable=registry --enable=router --enable=web-console
-            oc login -u system:admin --insecure-skip-tls-verify=true > /dev/null
+            oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true > /dev/null
             oc adm policy add-cluster-role-to-user cluster-admin developer > /dev/null
-            oc login -u developer --insecure-skip-tls-verify=true > /dev/null
+            oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true > /dev/null
             oc set env dc/router ROUTER_ALLOW_WILDCARD_ROUTES=true -n default
 
             oc wait --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
@@ -90,13 +96,13 @@ commands:
       - run:
           name: Deploy service account and roles
           command: |
-            oc login -u developer --insecure-skip-tls-verify=true
+            oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true
             NAMESPACE="operator-test"
             oc project ${NAMESPACE}
 
             kubectl create -f deploy/service_account.yaml
 
-            oc login -u system:admin --insecure-skip-tls-verify=true
+            oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true
             kubectl create -f deploy/role.yaml
             kubectl create -f deploy/role_binding.yaml
 
@@ -105,7 +111,7 @@ commands:
       - run:
           name: Create test namespace
           command: |
-            oc login -u developer --insecure-skip-tls-verify=true
+            oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true
             NAMESPACE="operator-test"
             oc new-project ${NAMESPACE}
             oc project ${NAMESPACE}
@@ -115,7 +121,7 @@ commands:
       - run:
           name: Register 3scale operator CRD
           command: |
-            oc login -u system:admin --insecure-skip-tls-verify=true
+            oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true
             for i in `ls deploy/crds/*_crd.yaml`; do kubectl create -f $i ; done
 
   setup-3scale-operator:
