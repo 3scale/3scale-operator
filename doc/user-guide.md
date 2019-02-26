@@ -176,7 +176,7 @@ Optionally, you may create other tenants deploying **Tenant custom resource** ob
 To deploy a new tenant in your 3scale instance, create a new YAML file with the following content:
 
 ```yaml
-apiVersion: api.3scale.net/v1alpha1
+apiVersion: capabilities.3scale.net/v1alpha1
 kind: Tenant
 metadata:
   name: ecorp-tenant

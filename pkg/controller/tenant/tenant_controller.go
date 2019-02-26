@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/api/v1alpha1"
+	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

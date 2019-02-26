@@ -1,7 +1,7 @@
 apiVersion: v1
 items:
 
-- apiVersion: api.3scale.net/v1alpha1
+- apiVersion: capabilities.3scale.net/v1alpha1
   kind: Limit
   metadata:
     labels:
@@ -14,7 +14,7 @@ items:
       name: metric01
     period: day
 
-- apiVersion: api.3scale.net/v1alpha1
+- apiVersion: capabilities.3scale.net/v1alpha1
   kind: Limit
   metadata:
     labels:
@@ -27,7 +27,7 @@ items:
       name: metric02
     period: eternity
 
-- apiVersion: api.3scale.net/v1alpha1
+- apiVersion: capabilities.3scale.net/v1alpha1
   kind: Limit
   metadata:
     labels:

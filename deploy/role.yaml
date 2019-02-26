@@ -65,7 +65,7 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - api.3scale.net
+  - capabilities.3scale.net
   resources:
   - '*'
   - consolidateds
