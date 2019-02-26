@@ -18,8 +18,8 @@ objects:
       openshift.io/display-name: AMP backend
     creationTimestamp: null
     labels:
-      3scale.component: backend
       app: ${APP_LABEL}
+      threescale_component: backend
     name: amp-backend
   spec:
     lookupPolicy:
@@ -55,8 +55,8 @@ objects:
       openshift.io/display-name: AMP Zync
     creationTimestamp: null
     labels:
-      3scale.component: zync
       app: ${APP_LABEL}
+      threescale_component: zync
     name: amp-zync
   spec:
     lookupPolicy:
@@ -92,8 +92,8 @@ objects:
       openshift.io/display-name: AMP APIcast
     creationTimestamp: null
     labels:
-      3scale.component: apicast
       app: ${APP_LABEL}
+      threescale_component: apicast
     name: amp-apicast
   spec:
     lookupPolicy:
@@ -129,8 +129,8 @@ objects:
       openshift.io/display-name: AMP APIcast Wildcard Router
     creationTimestamp: null
     labels:
-      3scale.component: wildcard-router
       app: ${APP_LABEL}
+      threescale_component: wildcard-router
     name: amp-wildcard-router
   spec:
     lookupPolicy:
@@ -166,8 +166,8 @@ objects:
       openshift.io/display-name: AMP System
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: amp-system
   spec:
     lookupPolicy:
@@ -201,9 +201,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: postgresql
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: postgresql
     name: postgresql
   spec:
     lookupPolicy:
@@ -226,9 +226,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
-      3scale.component-element: redis
       app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: redis
     name: backend-redis
   spec:
     replicas: 1
@@ -241,10 +241,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: backend
-          3scale.component-element: redis
           app: ${APP_LABEL}
           deploymentConfig: backend-redis
+          threescale_component: backend
+          threescale_component_element: redis
       spec:
         containers:
         - args:
@@ -308,9 +308,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
-      3scale.component-element: redis
       app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: redis
     name: backend-redis
   spec:
     ports:
@@ -373,18 +373,18 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: redis
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: redis
     name: redis-config
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
-      3scale.component-element: redis
       app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: redis
     name: backend-redis-storage
   spec:
     accessModes:
@@ -399,9 +399,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: redis
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: redis
     name: system-redis
   spec:
     replicas: 1
@@ -414,10 +414,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: system
-          3scale.component-element: redis
           app: ${APP_LABEL}
           deploymentConfig: system-redis
+          threescale_component: system
+          threescale_component_element: redis
       spec:
         containers:
         - args:
@@ -482,9 +482,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: redis
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: redis
     name: system-redis-storage
   spec:
     accessModes:
@@ -499,9 +499,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
-      3scale.component-element: cron
       app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: cron
     name: backend-cron
   spec:
     replicas: 1
@@ -520,10 +520,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: backend
-          3scale.component-element: cron
           app: ${APP_LABEL}
           deploymentConfig: backend-cron
+          threescale_component: backend
+          threescale_component_element: cron
       spec:
         containers:
         - args:
@@ -616,9 +616,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
-      3scale.component-element: listener
       app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: listener
     name: backend-listener
   spec:
     replicas: 1
@@ -637,10 +637,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: backend
-          3scale.component-element: listener
           app: ${APP_LABEL}
           deploymentConfig: backend-listener
+          threescale_component: backend
+          threescale_component_element: listener
       spec:
         containers:
         - args:
@@ -747,9 +747,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
-      3scale.component-element: listener
       app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: listener
     name: backend-listener
   spec:
     ports:
@@ -766,8 +766,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
       app: ${APP_LABEL}
+      threescale_component: backend
     name: backend
   spec:
     host: backend-${TENANT_NAME}.${WILDCARD_DOMAIN}
@@ -787,9 +787,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
-      3scale.component-element: worker
       app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: worker
     name: backend-worker
   spec:
     replicas: 1
@@ -808,10 +808,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: backend
-          3scale.component-element: worker
           app: ${APP_LABEL}
           deploymentConfig: backend-worker
+          threescale_component: backend
+          threescale_component_element: worker
       spec:
         containers:
         - args:
@@ -917,16 +917,16 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
       app: ${APP_LABEL}
+      threescale_component: backend
     name: backend-environment
 - apiVersion: v1
   kind: Secret
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
       app: ${APP_LABEL}
+      threescale_component: backend
     name: backend-internal-api
   stringData:
     password: ${SYSTEM_BACKEND_PASSWORD}
@@ -937,8 +937,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
       app: ${APP_LABEL}
+      threescale_component: backend
     name: backend-redis
   stringData:
     REDIS_QUEUES_SENTINEL_HOSTS: ""
@@ -953,8 +953,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: backend
       app: ${APP_LABEL}
+      threescale_component: backend
     name: backend-listener
   stringData:
     route_endpoint: https://backend-${TENANT_NAME}.${WILDCARD_DOMAIN}
@@ -965,9 +965,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: mysql
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: mysql
     name: system-mysql
   spec:
     replicas: 1
@@ -980,10 +980,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: system
-          3scale.component-element: mysql
           app: ${APP_LABEL}
           deploymentConfig: system-mysql
+          threescale_component: system
+          threescale_component_element: mysql
       spec:
         containers:
         - env:
@@ -1065,9 +1065,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: mysql
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: mysql
     name: system-mysql
   spec:
     ports:
@@ -1088,9 +1088,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: mysql
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: mysql
     name: mysql-main-conf
 - apiVersion: v1
   data:
@@ -1108,18 +1108,18 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: mysql
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: mysql
     name: mysql-extra-conf
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: mysql
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: mysql
     name: mysql-storage
   spec:
     accessModes:
@@ -1134,8 +1134,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-database
   stringData:
     DB_PASSWORD: ${MYSQL_PASSWORD}
@@ -1147,9 +1147,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: memcache
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: memcache
     name: system-memcache
   spec:
     replicas: 1
@@ -1168,10 +1168,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: system
-          3scale.component-element: memcache
           app: ${APP_LABEL}
           deploymentConfig: system-memcache
+          threescale_component: system
+          threescale_component_element: memcache
       spec:
         containers:
         - command:
@@ -1220,9 +1220,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: app
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: app
     name: system-storage
   spec:
     accessModes:
@@ -1238,9 +1238,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: provider-ui
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: provider-ui
     name: system-provider
   spec:
     ports:
@@ -1257,9 +1257,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: master-ui
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: master-ui
     name: system-master
   spec:
     ports:
@@ -1276,9 +1276,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: developer-ui
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: developer-ui
     name: system-developer
   spec:
     ports:
@@ -1295,9 +1295,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: provider-ui
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: provider-ui
     name: system-provider-admin
   spec:
     host: ${TENANT_NAME}-admin.${WILDCARD_DOMAIN}
@@ -1317,9 +1317,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: master-ui
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: master-ui
     name: system-master
   spec:
     host: ${MASTER_NAME}.${WILDCARD_DOMAIN}
@@ -1339,9 +1339,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: developer-ui
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: developer-ui
     name: system-developer
   spec:
     host: ${TENANT_NAME}.${WILDCARD_DOMAIN}
@@ -1361,9 +1361,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: redis
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: redis
     name: system-redis
   spec:
     ports:
@@ -1380,9 +1380,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: sphinx
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: sphinx
     name: system-sphinx
   spec:
     ports:
@@ -1399,9 +1399,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: memcache
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: memcache
     name: system-memcache
   spec:
     ports:
@@ -1464,8 +1464,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system
 - apiVersion: v1
   data:
@@ -1480,9 +1480,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: smtp
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: smtp
     name: smtp
 - apiVersion: v1
   data:
@@ -1501,17 +1501,17 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-environment
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: app
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: app
     name: system-app
   spec:
     replicas: 1
@@ -1753,10 +1753,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: system
-          3scale.component-element: app
           app: ${APP_LABEL}
           deploymentConfig: system-app
+          threescale_component: system
+          threescale_component_element: app
       spec:
         containers:
         - args:
@@ -2557,9 +2557,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: sidekiq
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: sidekiq
     name: system-sidekiq
   spec:
     replicas: 1
@@ -2578,10 +2578,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: system
-          3scale.component-element: sidekiq
           app: ${APP_LABEL}
           deploymentConfig: system-sidekiq
+          threescale_component: system
+          threescale_component_element: sidekiq
       spec:
         containers:
         - args:
@@ -2869,9 +2869,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
-      3scale.component-element: sphinx
       app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: sphinx
     name: system-sphinx
   spec:
     replicas: 1
@@ -2890,10 +2890,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: system
-          3scale.component-element: sphinx
           app: ${APP_LABEL}
           deploymentConfig: system-sphinx
+          threescale_component: system
+          threescale_component_element: sphinx
       spec:
         containers:
         - args:
@@ -2977,8 +2977,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-events-hook
   stringData:
     PASSWORD: ${SYSTEM_BACKEND_SHARED_SECRET}
@@ -2989,8 +2989,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-redis
   stringData:
     URL: redis://system-redis:6379/1
@@ -3000,8 +3000,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-master-apicast
   stringData:
     ACCESS_TOKEN: ${APICAST_ACCESS_TOKEN}
@@ -3013,8 +3013,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-seed
   stringData:
     ADMIN_ACCESS_TOKEN: ${ADMIN_ACCESS_TOKEN}
@@ -3032,8 +3032,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-recaptcha
   stringData:
     PRIVATE_KEY: ${RECAPTCHA_PRIVATE_KEY}
@@ -3044,8 +3044,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-app
   stringData:
     SECRET_KEY_BASE: ${SYSTEM_APP_SECRET_KEY_BASE}
@@ -3055,8 +3055,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: system
       app: ${APP_LABEL}
+      threescale_component: system
     name: system-memcache
   stringData:
     SERVERS: system-memcache:11211
@@ -3066,8 +3066,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: zync
       app: ${APP_LABEL}
+      threescale_component: zync
     name: zync
   spec:
     replicas: 1
@@ -3079,9 +3079,9 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: zync
           app: ${APP_LABEL}
           deploymentConfig: zync
+          threescale_component: zync
       spec:
         containers:
         - env:
@@ -3176,9 +3176,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: zync
-      3scale.component-element: database
       app: ${APP_LABEL}
+      threescale_component: zync
+      threescale_component_element: database
     name: zync-database
   spec:
     replicas: 1
@@ -3191,10 +3191,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: zync
-          3scale.component-element: database
           app: ${APP_LABEL}
           deploymentConfig: zync-database
+          threescale_component: zync
+          threescale_component_element: database
       spec:
         containers:
         - env:
@@ -3264,8 +3264,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: zync
       app: ${APP_LABEL}
+      threescale_component: zync
     name: zync
   spec:
     ports:
@@ -3282,9 +3282,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: zync
-      3scale.component-element: database
       app: ${APP_LABEL}
+      threescale_component: zync
+      threescale_component_element: database
     name: zync-database
   spec:
     ports:
@@ -3301,8 +3301,8 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: zync
       app: ${APP_LABEL}
+      threescale_component: zync
     name: zync
   stringData:
     DATABASE_URL: postgresql://zync:${ZYNC_DATABASE_PASSWORD}@zync-database:5432/zync_production
@@ -3315,9 +3315,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: staging
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: staging
     name: apicast-staging
   spec:
     replicas: 1
@@ -3339,10 +3339,10 @@ objects:
           prometheus.io/scrape: "true"
         creationTimestamp: null
         labels:
-          3scale.component: apicast
-          3scale.component-element: staging
           app: ${APP_LABEL}
           deploymentConfig: apicast-staging
+          threescale_component: apicast
+          threescale_component_element: staging
       spec:
         containers:
         - env:
@@ -3437,9 +3437,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: production
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: production
     name: apicast-production
   spec:
     replicas: 1
@@ -3461,10 +3461,10 @@ objects:
           prometheus.io/scrape: "true"
         creationTimestamp: null
         labels:
-          3scale.component: apicast
-          3scale.component-element: production
           app: ${APP_LABEL}
           deploymentConfig: apicast-production
+          threescale_component: apicast
+          threescale_component_element: production
       spec:
         containers:
         - env:
@@ -3572,9 +3572,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: staging
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: staging
     name: apicast-staging
   spec:
     ports:
@@ -3595,9 +3595,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: production
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: production
     name: apicast-production
   spec:
     ports:
@@ -3618,9 +3618,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: staging
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: staging
     name: api-apicast-staging
   spec:
     host: api-${TENANT_NAME}-apicast-staging.${WILDCARD_DOMAIN}
@@ -3640,9 +3640,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: production
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: production
     name: api-apicast-production
   spec:
     host: api-${TENANT_NAME}-apicast-production.${WILDCARD_DOMAIN}
@@ -3666,16 +3666,16 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
       app: ${APP_LABEL}
+      threescale_component: apicast
     name: apicast-environment
 - apiVersion: v1
   kind: Secret
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
       app: ${APP_LABEL}
+      threescale_component: apicast
     name: apicast-redis
   stringData:
     PRODUCTION_URL: redis://system-redis:6379/1
@@ -3686,9 +3686,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: wildcard-router
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: wildcard-router
     name: apicast-wildcard-router
   spec:
     replicas: 1
@@ -3707,10 +3707,10 @@ objects:
       metadata:
         creationTimestamp: null
         labels:
-          3scale.component: apicast
-          3scale.component-element: wildcard-router
           app: ${APP_LABEL}
           deploymentConfig: apicast-wildcard-router
+          threescale_component: apicast
+          threescale_component_element: wildcard-router
       spec:
         containers:
         - env:
@@ -3761,9 +3761,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: wildcard-router
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: wildcard-router
     name: apicast-wildcard-router
   spec:
     ports:
@@ -3780,9 +3780,9 @@ objects:
   metadata:
     creationTimestamp: null
     labels:
-      3scale.component: apicast
-      3scale.component-element: wildcard-router
       app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: wildcard-router
     name: apicast-wildcard-router
   spec:
     host: apicast-wildcard.${WILDCARD_DOMAIN}
