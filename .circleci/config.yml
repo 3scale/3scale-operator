@@ -216,7 +216,11 @@ jobs:
       - checkout
       - install-operator-dependencies
       - install-openshift
-      - run: make e2e
+      - run: 
+          name: run E2E tests
+          command: |
+            make e2e
+          no_output_timeout: 1800
 
   generator:
     docker:
