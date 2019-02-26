@@ -48,6 +48,7 @@ commands:
               --enable=persistent-volumes --enable=registry --enable=router --enable=web-console
             oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true > /dev/null
             oc adm policy add-cluster-role-to-user cluster-admin developer > /dev/null
+            oc adm policy add-scc-to-group hostmount-anyuid system:serviceaccounts
             oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true > /dev/null
             oc set env dc/router ROUTER_ALLOW_WILDCARD_ROUTES=true -n default
 
