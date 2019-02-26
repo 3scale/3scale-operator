@@ -150,10 +150,10 @@ kind: APIManager
 metadata:
   name: example-apimanager
 spec:
-  ampRelease: "2.4"
-  wildcardDomain: testdomain.127.0.0.1.nip.io
-  productized: true
-  evaluation: true
+  productVersion: <productVersion>
+  wildcardDomain: <wildcardDomain>
+  wildcardPolicy: <None|Subdomain>
+  resourceRequirementsEnabled: true
 ```
 
 To look at more information on what the APIManager fields are
@@ -196,8 +196,9 @@ spec:
     namespace: operator-test
 ```
 
-To look at more information on what the Tenant Custom Resource fields are,
-refer to the [Tenant CRD Reference](tenant-crd-reference.md) documentation.
+To look at more information on what the Tenant Custom Resource fields and
+possible values are refer to
+the [Tenant CRD Reference](tenant-crd-reference.md) documentation.
 
 ```sh
 export NAMESPACE="operator-test"
