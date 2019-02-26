@@ -22,7 +22,6 @@ vendor Gopkg.lock: Gopkg.toml
 IMAGE ?= quay.io/3scale/3scale-operator
 VERSION ?= v0.0.1
 NAMESPACE ?= operator-test
-TEST_IMAGE ?= $(IMAGE):$(VERSION)-$(USER)-test
 
 ## build: Build operator
 build:
