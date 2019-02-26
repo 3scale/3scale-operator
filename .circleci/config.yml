@@ -91,45 +91,6 @@ commands:
             oc get events | egrep ' Failed ' || :
             oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
 
-  deploy-roles-service-account:
-    steps:
-      - run:
-          name: Deploy service account and roles
-          command: |
-            oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true
-            NAMESPACE="operator-test"
-            oc project ${NAMESPACE}
-
-            kubectl create -f deploy/service_account.yaml
-
-            oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true
-            kubectl create -f deploy/role.yaml
-            kubectl create -f deploy/role_binding.yaml
-
-  create-namespace:
-    steps:
-      - run:
-          name: Create test namespace
-          command: |
-            oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true
-            NAMESPACE="operator-test"
-            oc new-project ${NAMESPACE}
-            oc project ${NAMESPACE}
-
-  register-3scale-operator-crd:
-    steps:
-      - run:
-          name: Register 3scale operator CRD
-          command: |
-            oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true
-            for i in `ls deploy/crds/*_crd.yaml`; do kubectl create -f $i ; done
-
-  setup-3scale-operator:
-    steps:
-      - register-3scale-operator-crd
-      - create-namespace
-      - deploy-roles-service-account
-
   push-3scale-images-to-quay:
     steps:
       - run:
@@ -255,7 +216,6 @@ jobs:
       - checkout
       - install-operator-dependencies
       - install-openshift
-      - setup-3scale-operator
       - run: make e2e-run
 
   generator:
