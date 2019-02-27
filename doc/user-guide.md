@@ -184,15 +184,13 @@ metadata:
   name: ecorp-tenant
 spec:
   username: admin
-  systemMasterUrl: https://master.amp24.127.0.0.1.nip.io
+  systemMasterUrl: https://master.<wildcardDomain>
   email: admin@ecorp.com
   organizationName: ECorp
   masterCredentialsRef:
     name: system-seed
-    namespace: operator-test
   passwordCredentialsRef:
     name: ecorp-admin-secret
-    namespace: operator-test
   tenantSecretRef:
     name: ecorp-tenant-secret
     namespace: operator-test
