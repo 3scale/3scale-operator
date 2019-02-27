@@ -232,7 +232,6 @@ jobs:
           name: Update the operator image
           command: |
             sed "s@REPLACE_IMAGE@quay.io/3scale/3scale-operator:${CIRCLE_SHA1}@g" -i deploy/operator.yaml
-            cat deploy/operator.yaml
       - run:
           name: run E2E tests
           command: |
