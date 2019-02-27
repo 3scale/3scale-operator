@@ -181,12 +181,12 @@ jobs:
       - run:
           name: Build Operator
           command: |
-              make build VERSION=${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+              make build VERSION=${CIRCLE_BUILD_NUM}
 
       - run:
           name: Push 3scale-operator image
           command: |
-            make push VERSION=${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+            make push VERSION=${CIRCLE_BUILD_NUM}
 
   deploy_templates:
     machine:
@@ -230,7 +230,7 @@ jobs:
       - run:
           name: Update the operator image
           command: |
-            sed "s@REPLACE_IMAGE@quay.io/3scale/3scale-operator:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}@g" -i deploy/operator.yaml
+            sed "s@REPLACE_IMAGE@quay.io/3scale/3scale-operator:${CIRCLE_BUILD_NUM}@g" -i deploy/operator.yaml
             cat deploy/operator.yaml
       - run:
           name: run E2E tests
