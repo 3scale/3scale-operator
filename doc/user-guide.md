@@ -158,6 +158,10 @@ spec:
   resourceRequirementsEnabled: true
 ```
 
+If wildcardPolicy is `Subdomain`, wildcard routes at the OpenShift router
+level need to be enabled. You can do so by executing
+`oc set env dc/router ROUTER_ALLOW_WILDCARD_ROUTES=true -n default`
+
 To look at more information on what the APIManager fields are
 refer to the [Reference](reference.md) documentation.
 
