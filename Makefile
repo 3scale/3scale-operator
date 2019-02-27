@@ -41,11 +41,11 @@ e2e-setup:
 
 ## e2e-run: operator local test
 e2e-local-run:
-	operator-sdk test local ./test/e2e --namespace $(NAMESPACE) --up-local --go-test-flags '-v -timeout 0'
+	operator-sdk test local ./test/e2e --up-local --go-test-flags '-v -timeout 0'
 
 ## e2e-run: operator local test
 e2e-run:
-	operator-sdk test local ./test/e2e --namespace $(NAMESPACE) --go-test-flags '-v -timeout 0'
+	operator-sdk test local ./test/e2e --go-test-flags '-v -timeout 0'
 
 ## e2e-clean: delete operator OCP project
 e2e-clean:

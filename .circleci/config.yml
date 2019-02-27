@@ -217,7 +217,6 @@ jobs:
       - checkout
       - install-operator-dependencies
       - install-openshift
-      - oc-observe
       - run:
           name: run E2E tests
           command: |
