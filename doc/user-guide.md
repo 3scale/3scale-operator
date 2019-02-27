@@ -11,8 +11,7 @@ This guide shows an example of how to:
   need to be the same than the one deployed from the deployment of
   an APIManager resource. The available Capabilities custom resources are:
   * API
-  * Binding (TODO)
-  * Consolidated
+  * Binding
   * Limit
   * MappingRule
   * Metric
@@ -21,7 +20,7 @@ This guide shows an example of how to:
 
 ## Prerequisites
 
-* [operator-sdk] version v0.2.1.
+* [operator-sdk] version v0.5.0.
 * [dep][dep_tool] version v0.5.0+.
 * [git][git_tool]
 * [go] version 1.11+
@@ -159,7 +158,7 @@ spec:
 ```
 
 To look at more information on what the APIManager fields are
-refer to the [Reference](reference.md) documentation.
+refer to the [Reference](apimanager-reference.md) documentation.
 
 ```sh
 export NAMESPACE="operator-test"
@@ -213,12 +212,149 @@ solution in the "operator-test" project.
 
 Tenant *provider_key* and *admin domain url* will be stored in a secret.
 The secret location can be specified using *tenantSecretRef* tenant spec key.
-Refer to [Tenant CRD Reference](tenant-crd-reference.md) documentation for more information.
+Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more information.
 
 ## Deploy the Capabilities related custom resources
 
-TODO
+Here, we will start to configure APIs, metrics, mappingrules... in our newly created tenant by only using Openshift Objects!
 
+So let's create our first API:
+
+```yaml
+apiVersion: capabilities.3scale.net/v1alpha1
+kind: API
+metadata:
+  creationTimestamp: 2019-01-25T13:28:41Z
+  generation: 1
+  labels:
+    environment: testing
+  name: api01
+spec:
+  planSelector:
+    matchLabels:
+      api: api01
+  description: api01
+  integrationMethod:
+    apicastHosted:
+      apiTestGetRequest: /
+      authenticationSettings:
+        credentials:
+          apiKey:
+            authParameterName: user-key
+            credentialsLocation: headers
+        errors:
+          authenticationFailed:
+            contentType: text/plain; charset=us-ascii
+            responseBody: Authentication failed
+            responseCode: 403
+          authenticationMissing:
+            contentType: text/plain; charset=us-ascii
+            responseBody: Authentication Missing
+            responseCode: 403
+        hostHeader: ""
+        secretToken: Shared_secret_sent_from_proxy_to_API_backend_9603f637ca51ccfe
+      mappingRulesSelector:
+        matchLabels:
+          api: api01
+      privateBaseURL: https://echo-api.3scale.net:443
+  metricSelector:
+    matchLabels:
+      api: api01
+```
+
+In all the Selectors (metric, plan, mappingrules...) we use a specific label "api: api01", you can change that and add as many labels and play with the selectors to cover really complex scenarios.
+
+We should add a Plan: 
+
+```yaml
+apiVersion: capabilities.3scale.net/v1alpha1
+kind: Plan
+metadata:
+  labels:
+    api: api01
+  name: plan01
+spec:
+  aprovalRequired: false
+  default: true
+  costs:
+    costMonth: 0
+    setupFee: 0
+  limitSelector:
+    matchLabels:
+      api: api01
+  trialPeriod: 0
+```
+
+A metric called metric01:
+
+```yaml
+apiVersion: capabilities.3scale.net/v1alpha1
+kind: Metric
+metadata:
+  labels:
+    api: api01
+  name: metric01
+spec:
+  description: metric01
+  unit: hit
+  incrementHits: false
+
+```
+
+A simple limit with a limit of 10 hits per day for the previous metric: 
+
+```yaml
+apiVersion: capabilities.3scale.net/v1alpha1
+kind: Limit
+metadata:
+  labels:
+    api: api01
+  name: plan01-metric01-day-10
+spec:
+  description: Limit for metric01 in plan01
+  maxValue: 10
+  metricRef:
+    name: metric01
+  period: day
+```
+
+And a MappingRule to increment the metric01:
+
+```yaml
+apiVersion: capabilities.3scale.net/v1alpha1
+kind: MappingRule
+metadata:
+  labels:
+    api: api01
+  name: metric01-get-path01
+spec:
+  increment: 1
+  method: GET
+  metricRef:
+    name: metric01
+  path: /path01
+```
+
+And now, let's "bind" all together with the binding object, we will use the credential created by the Tenant Controller:
+```yaml
+apiVersion: capabilities.3scale.net/v1alpha1
+kind: Binding
+metadata:
+  name: mytestingbinding
+spec:
+  credentialsRef:
+    name: ecorp-tenant-secret
+  APISelector:
+    matchLabels:
+      environment: testing
+```
+
+As you can see, the binding object will reference the `ecorp-tenant-secret` and just create the API objects that are labeled as "environment: staging
+
+Now, navigate to your new created 3scale Tenant, and check that everything has been created!
+
+For more information, check the reference doc: [Capabilities CRD Reference](api-crd-reference.md)
+ 
 ## Cleanup
 
 Delete the created custom resources:
@@ -230,10 +366,6 @@ all 3Scale API Management related objects in where it has been deployed:
 ```sh
 oc delete -f <yaml-name-of-the-apimanager-custom-resource>
 ```
-
-Delete the capabilities custom resources
-
-TODO
 
 Delete the 3scale-operator operator, its associated roles and
 service accounts
@@ -248,7 +380,7 @@ oc delete -f deploy/role.yaml
 Delete the APIManager and Capabilities related CRDs:
 
 ```sh
-for i in `ls deploy/crds/*_crd.yaml`; do oc delete -f $i ; done
+oc delete -f deploy/crds/
 ```
 
 [git_tool]:https://git-scm.com/downloads
