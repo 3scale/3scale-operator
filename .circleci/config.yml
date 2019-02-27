@@ -43,9 +43,10 @@ commands:
 
       - run:
           name: Start and Configure OpenShift Cluster
+          working_directory: /tmp/openshift
           command: |
-            oc cluster up --public-hostname=${DOCKER_HOST_IP} --routing-suffix=nip.io \
-              --enable=persistent-volumes --enable=registry --enable=router --enable=web-console
+            oc cluster up --public-hostname=${DOCKER_HOST_IP} --enable=persistent-volumes \
+              --enable=registry --enable=router
             oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true > /dev/null
             oc adm policy add-cluster-role-to-user cluster-admin developer > /dev/null
             oc adm policy add-scc-to-group hostmount-anyuid system:serviceaccounts
@@ -54,6 +55,15 @@ commands:
 
             oc wait --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
             oc wait --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
+
+      - run:
+          name: Preparing an OpenShift Project to Accept Pushes
+          command: |
+            oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true > /dev/null
+            oc new-project pushed
+            oc create serviceaccount pusher
+            oc policy add-role-to-user system:image-builder system:serviceaccount:pushed:pusher
+            oc create imagestream threescale-operator
 
   install-golang:
     steps:
@@ -105,13 +115,6 @@ commands:
               echo 172.30.1.1:5000/$project/amp-$component:latest=quay.io/3scale/$component:nightly
             done) 172.30.1.1:5000/$project/amp-backend:latest=quay.io/3scale/apisonator:nightly \
             172.30.1.1:5000/$project/amp-system:latest=quay.io/3scale/porta:nightly --insecure
-  push-3scale-operator-image-to-quay:
-    steps:
-      - run:
-          name: Push 3scale-operator test image to quay.io
-          command: |
-            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
-            make push VERSION=test
 
   create-secrets:
     steps:
@@ -160,10 +163,13 @@ commands:
           path: reports
 
 jobs:
-  build-operator:
+  master-operator:
     docker:
       - image: circleci/golang:1.11
     working_directory: /go/src/github.com/3scale/3scale-operator
+    branches:
+      only:
+        - master
     steps:
 
       - setup_remote_docker:
@@ -186,11 +192,14 @@ jobs:
             - "/go/pkg"
 
       - run:
-          name: Build
+          name: Build Operator
           command: |
-              make build VERSION=test
+              make build VERSION=master
 
-      - push-3scale-operator-image-to-quay
+      - run:
+          name: Push 3scale-operator image to quay.io
+          command: |
+            make push VERSION=master
 
   deploy_templates:
     machine:
@@ -219,18 +228,32 @@ jobs:
       - oc-status
       - push-3scale-images-to-quay
 
-  run-e2e-test:
+  run-operator-e2e-test:
     machine:
       enabled: true
     resource_class: large
     working_directory: ~/go/src/github.com/3scale/3scale-operator
     steps:
+      - install-openshift
       - install-golang
       - install-dep
       - install-operator-sdk
       - checkout
       - install-operator-dependencies
-      - install-openshift
+      - run:
+          name: Build Operator
+          command: |
+            make build IMAGE=172.30.1.1:5000/pushed/threescale-operator VERSION=latest
+      - run:
+          name: Push Operator
+          command: |
+            oc describe secret $(oc describe sa pusher | grep Tokens | awk '{print $2}') | grep "token:" | awk '{print $2}' | docker login -u anything --password-stdin 172.30.1.1:5000
+            make push IMAGE=172.30.1.1:5000/pushed/threescale-operator VERSION=latest
+      - run:
+          name: Update the operator image
+          command: |
+            sed "s@REPLACE_IMAGE@pushed/threescale-operator:latest@g" -i deploy/operator.yaml
+            cat deploy/operator.yaml
       - run:
           name: run E2E tests
           command: |
@@ -249,12 +272,8 @@ workflows:
   version: 2
   operator:
     jobs:
-      - build-operator:
+      - run-operator-e2e-test:
           context: org-global
-      - run-e2e-test:
-          context: org-global
-          requires:
-            - build-operator
   templates:
     jobs:
       - generator
