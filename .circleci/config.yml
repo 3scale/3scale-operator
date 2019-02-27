@@ -249,7 +249,7 @@ jobs:
       - run:
           name: Update the operator image
           command: |
-            sed "s@REPLACE_IMAGE@pushed/threescale-operator:latest@g" -i deploy/operator.yaml
+            sed "s@REPLACE_IMAGE@172.30.1.1:5000/pushed/threescale-operator:latest@g" -i deploy/operator.yaml
             cat deploy/operator.yaml
       - run:
           name: run E2E tests
