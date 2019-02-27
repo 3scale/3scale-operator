@@ -26,7 +26,7 @@ that the operator is able to understand and process.
 
 ## Prerequisites
 
-* [operator-sdk] version v0.2.1.
+* [operator-sdk] version v0.5.0.
 * [dep][dep_tool] version v0.5.0+.
 * [git][git_tool]
 * [go] version 1.11+
@@ -115,10 +115,10 @@ make e2e-local-run
 
 ## Documentation
 
-* [User guide](docs/user-guide.md)
-* [APIManager reference](docs/apimanager-reference.md)
-* [Tenant reference](docs/tenant-reference.md)
-* TODO refer to capabilities reference
+* [User guide](doc/user-guide.md)
+* [APIManager reference](doc/apimanager-reference.md)
+* [Tenant reference](doc/tenant-reference.md)
+* [Capabilities reference](doc/api-crd-reference.md) 
 
 [git_tool]:https://git-scm.com/downloads
 [operator-sdk]:https://github.com/operator-framework/operator-sdk
