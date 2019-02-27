@@ -163,13 +163,10 @@ commands:
           path: reports
 
 jobs:
-  master-operator:
+  push-master-operator:
     docker:
       - image: circleci/golang:1.11
     working_directory: /go/src/github.com/3scale/3scale-operator
-    branches:
-      only:
-        - master
     steps:
 
       - setup_remote_docker:
@@ -274,6 +271,11 @@ workflows:
     jobs:
       - run-operator-e2e-test:
           context: org-global
+      - push-master-operator:
+          filters:
+            branches:
+              only:
+                - master
   templates:
     jobs:
       - generator
