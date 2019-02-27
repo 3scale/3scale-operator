@@ -272,6 +272,8 @@ workflows:
       - run-operator-e2e-test:
           context: org-global
       - push-master-operator:
+          requires:
+            - run-operator-e2e-test
           filters:
             branches:
               only:
