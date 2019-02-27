@@ -191,6 +191,20 @@ jobs:
               make build VERSION=test
 
       - push-3scale-operator-image-to-quay
+
+  deploy_templates:
+    machine:
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - checkout
+      - install-openshift
+      - create-secrets
+      - build-amp
+      - oc-observe
+      - deploy-3scale-eval-from-template
+      - oc-status
+
   deploy:
     machine:
       docker_layer_caching: true
@@ -244,7 +258,7 @@ workflows:
   templates:
     jobs:
       - generator
-      - deploy:
+      - deploy_templates:
           context: org-global
           requires:
             - generator
