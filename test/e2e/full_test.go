@@ -239,7 +239,7 @@ func TestFullHappyPath(t *testing.T) {
 							},
 						},
 						APIcastBaseSelectors: apiv1alpha1.APIcastBaseSelectors{
-							MappingRulesSelector: metav1.LabelSelector{
+							MappingRulesSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{"environment": "testing"},
 							},
 						},
@@ -247,10 +247,10 @@ func TestFullHappyPath(t *testing.T) {
 				},
 			},
 			APISelectors: apiv1alpha1.APISelectors{
-				PlanSelector: metav1.LabelSelector{
+				PlanSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{"environment": "testing"},
 				},
-				MetricSelector: metav1.LabelSelector{
+				MetricSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{"environment": "testing"},
 				},
 			},
@@ -474,7 +474,7 @@ func TestFullHappyPath(t *testing.T) {
 
 	t.Log("Checking the consolidated object with 3scale")
 
-	err = e2eutil.WaitForReconciliationWith3scale(t, consolidated, 120*time.Second, 240*time.Second)
+	err = e2eutil.WaitForReconciliationWith3scale(t, consolidated, 30*time.Second, 240*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}

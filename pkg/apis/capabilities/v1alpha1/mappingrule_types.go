@@ -12,8 +12,8 @@ import (
 type MappingRuleSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	MappingRuleBase
-	MappingRuleMetricRef
+	MappingRuleBase      `json:",inline"`
+	MappingRuleMetricRef `json:",inline"`
 }
 
 type MappingRuleBase struct {
