@@ -6,7 +6,7 @@ This guide shows an example of how to:
 * Deploy an APIManager custom resource. An APIManager custom resource allows
    you to deploy a 3scale API Management solution
 * Deploy the Capabilities custom resources. The Capabilities custom resources
-   allow you to define 3scale Porta(TODO insert link) API definitions and set
+   allow you to define 3scale [Porta](https://github.com/3scale/porta) API definitions and set
   them into a Porta installation. This Porta installation does not necessarily
   need to be the same than the one deployed from the deployment of
   an APIManager resource. The available Capabilities custom resources are:
@@ -30,6 +30,7 @@ This guide shows an example of how to:
 * Access to a Openshift v3.11.0+ cluster.
 * A user with administrative privileges in the OpenShift cluster.
 
+
 ## Warning
 
 The 3scale-operator is not in a stable status. Deploy the 3scale-operator and
@@ -40,7 +41,7 @@ to deploy it in a namespace where no other elements exists.
 
 ## Install the 3scale Operator
 
-To download and prepare the environment for 3scale-operator:
+Download the 3scale-operator project into your machine:
 
 ```sh
 mkdir -p $GOPATH/src/github.com/3scale
@@ -48,11 +49,7 @@ cd $GOPATH/src/github.com/3scale
 git clone https://github.com/3scale/3scale-operator
 cd 3scale-operator
 git checkout master
-make vendor
 ```
-
-This installs the CLI binary `operator-sdk` at `$GOPATH/bin`.
-
 ## Create a new OpenShift project
 
 ```sh
@@ -101,7 +98,7 @@ other elements exist:
 ```sh
 export NAMESPACE="operator-test"
 oc project ${NAMESPACE}
-oc get all // This hould'nt return any result
+oc get all // This shouldn't return any result
 ```
 
 Deploy the ServiceAccount that will be used by the 3scale-operator:
@@ -124,7 +121,12 @@ oc create -f deploy/role_binding.yaml
 
 ## Obtain and Set the desired operator image in the operator YAML
 
-TODO
+Set the operator's container image into the operator YAML. For example,
+if you want to use the latest available operator image use:
+
+```
+sed -i 's|REPLACE_IMAGE|quay.io/3scale/3scale-operator:latest|g' deploy/operator.yaml
+```
 
 ## Deploy the 3scale-operator
 
@@ -222,7 +224,8 @@ TODO
 Delete the created custom resources:
 
 Delete the APIManager custom resource and the 3scale API Management solution
-elements that have been deployed from it:
+elements that have been deployed from it. Deleting the APIManager will delete
+all 3Scale API Management related objects in where it has been deployed:
 
 ```sh
 oc delete -f <yaml-name-of-the-apimanager-custom-resource>
@@ -231,6 +234,16 @@ oc delete -f <yaml-name-of-the-apimanager-custom-resource>
 Delete the capabilities custom resources
 
 TODO
+
+Delete the 3scale-operator operator, its associated roles and
+service accounts
+
+```sh
+oc delete -f deploy/operator.yaml
+oc delete -f deploy/role_binding.yaml
+oc delete -f deploy/service_account.yaml
+oc delete -f deploy/role.yaml
+```
 
 Delete the APIManager and Capabilities related CRDs:
 
@@ -241,3 +254,6 @@ for i in `ls deploy/crds/*_crd.yaml`; do oc delete -f $i ; done
 [git_tool]:https://git-scm.com/downloads
 [operator-sdk]:https://github.com/operator-framework/operator-sdk
 [dep_tool]:https://golang.github.io/dep/docs/installation.html
+[go]:https://golang.org/
+[kubernetes]:https://kubernetes.io/
+[oc]:https://docs.okd.io/3.11/cli_reference/get_started_cli.html#cli-reference-get-started-cli
