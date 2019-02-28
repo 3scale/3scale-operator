@@ -69,7 +69,7 @@ CRD Diagram:
 
 ### Tenant Secret
 
-The credentials are typically provided by the [Tenant Controller](/doc/tenant-crd-reference.md)
+The credentials are typically provided by the [Tenant Controller](/doc/tenant-reference.md)
 and stored in a secret, defined by the tenant CR.
 
 But this Secret can also be created by the user following this schema: 
