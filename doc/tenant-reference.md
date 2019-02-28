@@ -29,7 +29,6 @@ If this is the case, `masterCredentialsRef` object should look like:
 ```yaml
 masterCredentialsRef:
   name: system-seed
-  namespace: YOUR-NAMESPACE
 ```
 
 Tenant controller will fetch the secret and read the following fields:
@@ -59,7 +58,6 @@ then, `masterCredentialsRef` object should look like:
 ```yaml
 masterCredentialsRef:
   name: ecorp-master-secret
-  namespace: YOUR-NAMESPACE
 ```
 
 #### Admin Secret
@@ -96,7 +94,6 @@ then, `passwordCredentialsRef` object should look like:
 ```yaml
 passwordCredentialsRef:
   name: ecorp-admin-secret
-  namespace: YOUR-NAMESPACE
 ```
 
 #### Tenant Secret
