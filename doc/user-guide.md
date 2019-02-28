@@ -178,7 +178,24 @@ solution in the "operator-test" project
 Deploying the *APIManager* custom resource (see section above) creates a default tenant.
 Optionally, you may create other tenants deploying **Tenant custom resource** objects.
 
-To deploy a new tenant in your 3scale instance, create a new YAML file with the following content:
+To deploy a new tenant in your 3scale instance, first, create secret to store admin password:
+
+```sh
+$ cat ecorp-admin-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ecorp-admin-secret
+type: Opaque
+stringData:
+  admin_password: <admin password value>
+
+
+$ oc create -f ecorp-admin-secret.yaml
+secret/ecorp-admin-secret created
+```
+
+then, create a new Tenant CR YAML file with the following content:
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1alpha1
@@ -201,7 +218,7 @@ spec:
 
 To look at more information on what the Tenant Custom Resource fields and
 possible values are refer to
-the [Tenant CRD Reference](tenant-crd-reference.md) documentation.
+the [Tenant CRD Reference](tenant-reference.md) documentation.
 
 ```sh
 export NAMESPACE="operator-test"
@@ -266,7 +283,7 @@ spec:
 
 In all the Selectors (metric, plan, mappingrules...) we use a specific label "api: api01", you can change that and add as many labels and play with the selectors to cover really complex scenarios.
 
-We should add a Plan: 
+We should add a Plan:
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1alpha1
@@ -303,7 +320,7 @@ spec:
 
 ```
 
-A simple limit with a limit of 10 hits per day for the previous metric: 
+A simple limit with a limit of 10 hits per day for the previous metric:
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1alpha1
@@ -356,7 +373,7 @@ As you can see, the binding object will reference the `ecorp-tenant-secret` and 
 Now, navigate to your new created 3scale Tenant, and check that everything has been created!
 
 For more information, check the reference doc: [Capabilities CRD Reference](api-crd-reference.md)
- 
+
 ## Cleanup
 
 Delete the created custom resources:
