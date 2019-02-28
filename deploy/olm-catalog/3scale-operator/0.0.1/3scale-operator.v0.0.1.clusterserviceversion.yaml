@@ -1,0 +1,151 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  creationTimestamp: null
+  name: 3scale-operator.v0.0.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - kind: APIManager
+      name: apimanagers.apps.3scale.net
+      version: v1alpha1
+    - kind: API
+      name: apis.capabilities.3scale.net
+      version: v1alpha1
+    - kind: Binding
+      name: bindings.capabilities.3scale.net
+      version: v1alpha1
+    - kind: Consolidated
+      name: consolidateds.capabilities.3scale.net
+      version: ""
+    - kind: Limit
+      name: limits.capabilities.3scale.net
+      version: v1alpha1
+    - kind: MappingRule
+      name: mappingrules.capabilities.3scale.net
+      version: v1alpha1
+    - kind: Metric
+      name: metrics.capabilities.3scale.net
+      version: v1alpha1
+    - kind: Plan
+      name: plans.capabilities.3scale.net
+      version: v1alpha1
+    - kind: Tenant
+      name: tenants.capabilities.3scale.net
+      version: v1alpha1
+  description: Placeholder description
+  displayName: 3scale Operator
+  install:
+    spec:
+      deployments:
+      - name: 3scale-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: 3scale-operator
+          strategy: {}
+          template:
+            metadata:
+              creationTimestamp: null
+              labels:
+                name: 3scale-operator
+            spec:
+              containers:
+              - command:
+                - 3scale-operator
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: 3scale-operator
+                image: REPLACE_IMAGE
+                imagePullPolicy: Always
+                name: 3scale-operator
+                resources: {}
+              serviceAccountName: 3scale-operator
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - endpoints
+          - persistentvolumeclaims
+          - events
+          - configmaps
+          - secrets
+          - serviceaccounts
+          - bindings/finalizers
+          verbs:
+          - '*'
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - daemonsets
+          - replicasets
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - image.openshift.io
+          resources:
+          - imagestreams
+          - imagestreams/layers
+          verbs:
+          - '*'
+        - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes
+          - routes/custom-host
+          - routes/status
+          verbs:
+          - '*'
+        - apiGroups:
+          - apps.openshift.io
+          resources:
+          - deploymentconfigs
+          verbs:
+          - '*'
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - apps.3scale.net
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - '*'
+          - consolidateds
+          - bindings
+          - metrics
+          - plans
+          - limits
+          - mappingrules
+          - tenants
+          verbs:
+          - '*'
+        serviceAccountName: 3scale-operator
+    strategy: deployment
+  maturity: Basic Install
+  provider: {}
+  version: 0.0.1
