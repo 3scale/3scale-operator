@@ -22,7 +22,6 @@ vendor Gopkg.lock: Gopkg.toml
 IMAGE ?= quay.io/3scale/3scale-operator
 VERSION ?= v0.0.1
 NAMESPACE ?= operator-test
-TEST_IMAGE ?= $(IMAGE):$(VERSION)-$(USER)-test
 
 ## build: Build operator
 build:
@@ -41,8 +40,12 @@ e2e-setup:
 	oc new-project $(NAMESPACE)
 
 ## e2e-run: operator local test
+e2e-local-run:
+	operator-sdk test local ./test/e2e --up-local --go-test-flags '-v -timeout 0'
+
+## e2e-run: operator local test
 e2e-run:
-	operator-sdk test local ./test/e2e --namespace $(NAMESPACE) --up-local --go-test-flags '-v -timeout 0'
+	operator-sdk test local ./test/e2e --go-test-flags '-v -timeout 0'
 
 ## e2e-clean: delete operator OCP project
 e2e-clean:

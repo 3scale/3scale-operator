@@ -35,6 +35,7 @@ rules:
   - image.openshift.io
   resources:
   - imagestreams
+  - imagestreams/layers
   verbs:
   - '*'
 - apiGroups:

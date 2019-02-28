@@ -8,8 +8,9 @@ commands:
           command: |
             mkdir -p ${GOPATH}/src/github.com/operator-framework
             cd ${GOPATH}/src/github.com/operator-framework
-            git clone https://github.com/operator-framework/operator-sdk --branch v0.2.1
+            git clone https://github.com/operator-framework/operator-sdk
             cd operator-sdk
+            git checkout 99ae4aed7387dcfdc07ecf6169cf35b7bca47924
             make dep
             make install
 
@@ -36,17 +37,49 @@ commands:
             sudo service docker restart
 
       - run:
-          name: Start and Configure OpenShift Cluster
+          name: Get docker host IP
           command: |
-            oc cluster up --public-hostname=127.0.0.1 --routing-suffix=lvh.me \
-              --enable=persistent-volumes --enable=registry --enable=router --enable=web-console
-            oc login -u system:admin --insecure-skip-tls-verify=true > /dev/null
+            echo "export DOCKER_HOST_IP=$(docker run --net=host codenvy/che-ip)" >> $BASH_ENV
+
+      - run:
+          name: Start and Configure OpenShift Cluster
+          working_directory: /tmp/openshift
+          command: |
+            oc cluster up --public-hostname=${DOCKER_HOST_IP} --enable=persistent-volumes \
+              --enable=registry --enable=router
+            oc login https://${DOCKER_HOST_IP}:8443 -u system:admin --insecure-skip-tls-verify=true > /dev/null
             oc adm policy add-cluster-role-to-user cluster-admin developer > /dev/null
-            oc login -u developer --insecure-skip-tls-verify=true > /dev/null
+            oc adm policy add-scc-to-group hostmount-anyuid system:serviceaccounts
+            oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true > /dev/null
             oc set env dc/router ROUTER_ALLOW_WILDCARD_ROUTES=true -n default
 
             oc wait --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
             oc wait --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
+
+  install-golang:
+    steps:
+      - run:
+          name: Setup GO env
+          command: |
+            mkdir -p ~/tmp
+            echo 'export TMPDIR=~/tmp/' >> $BASH_ENV
+            echo 'export GOROOT=/opt/go' >> $BASH_ENV
+            echo 'export GOPATH=~/go' >> $BASH_ENV
+            sudo mkdir -p /opt/go/bin
+            mkdir -p ~/go/bin
+            echo 'export PATH=$GOROOT/bin:$PATH' >> $BASH_ENV
+            echo 'export PATH=$GOPATH/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: Install Golang
+          command: |
+            curl --fail -L https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
+
+  install-dep:
+    steps:
+      - run:
+          name: Install Golang dep
+          command: |
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sudo GOPATH=$GOPATH PATH=$GOROOT/bin:$PATH sh
 
   deploy-3scale-eval-from-template:
     steps:
@@ -57,49 +90,6 @@ commands:
               oc new-app -f- --param WILDCARD_DOMAIN=lvh.me --param AMP_RELEASE=master
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
-            oc get events | egrep ' Failed ' || :
-            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
-
-  deploy-3scale-eval-from-operator:
-    steps:
-      - run:
-          name: Deploy 3scale
-          command: |
-            oc login -u system:admin --insecure-skip-tls-verify=true
-            for i in `ls deploy/crds/*_crd.yaml`; do kubectl create -f $i ; done
-
-            oc login -u developer --insecure-skip-tls-verify=true
-            NAMESPACE="operator-test"
-            oc new-project ${NAMESPACE}
-            oc project ${NAMESPACE}
-
-            kubectl create -f deploy/service_account.yaml
-
-            oc login -u system:admin --insecure-skip-tls-verify=true
-            kubectl create -f deploy/role.yaml
-            kubectl create -f deploy/role_binding.yaml
-            oc login -u developer --insecure-skip-tls-verify=true
-
-
-            kubectl create -f deploy/operator.yaml
-            echo "Waiting until the operator Deployment is in status 'available'..."
-            oc wait --for=condition=available deployment/3scale-operator --namespace=${NAMESPACE}
-            oc login -u system:admin --insecure-skip-tls-verify=true
-            kubectl create -f deploy/crds/apps_v1alpha1_apimanager_cr.yaml
-
-            echo "Waiting until at least one DeploymentConfig is being created..."
-            DCS=$(oc get dc --output=name)
-            while [ "$DCS" = "" ]; do
-              DCS=$(oc get dc --output=name)
-              sleep 1
-            done
-
-            echo "Waiting until all DeploymentConfigs are in status 'available'..."
-            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
-            # Just double check it in case we've been too fast gathering all the DeploymentConfigs
-            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
-
-            echo "Checking for failed events..."
             oc get events | egrep ' Failed ' || :
             oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
 
@@ -116,13 +106,6 @@ commands:
               echo 172.30.1.1:5000/$project/amp-$component:latest=quay.io/3scale/$component:nightly
             done) 172.30.1.1:5000/$project/amp-backend:latest=quay.io/3scale/apisonator:nightly \
             172.30.1.1:5000/$project/amp-system:latest=quay.io/3scale/porta:nightly --insecure
-  push-3scale-operator-image-to-quay:
-    steps:
-      - run:
-          name: Push 3scale-operator test image to quay.io
-          command: |
-            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
-            make push VERSION=test
 
   create-secrets:
     steps:
@@ -176,7 +159,6 @@ jobs:
       - image: circleci/golang:1.11
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
-
       - setup_remote_docker:
           reusable: true
           exclusive: false
@@ -197,11 +179,29 @@ jobs:
             - "/go/pkg"
 
       - run:
-          name: Build
+          name: Build Operator
           command: |
-              make build VERSION=test
+              make build VERSION=${CIRCLE_SHA1}
 
-      - push-3scale-operator-image-to-quay
+      - run:
+          name: Push 3scale-operator image
+          command: |
+            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+            make push VERSION=${CIRCLE_SHA1}
+
+  deploy_templates:
+    machine:
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - checkout
+      - install-openshift
+      - create-secrets
+      - build-amp
+      - oc-observe
+      - deploy-3scale-eval-from-template
+      - oc-status
+
   deploy:
     machine:
       docker_layer_caching: true
@@ -216,17 +216,28 @@ jobs:
       - oc-status
       - push-3scale-images-to-quay
 
-  deploy-apimanager:
+  run-operator-e2e-test:
     machine:
-      docker_layer_caching: true
+      enabled: true
     resource_class: large
+    working_directory: ~/go/src/github.com/3scale/3scale-operator
     steps:
-      - checkout
       - install-openshift
-      - build-amp
-      - oc-observe
-      - deploy-3scale-eval-from-operator
-      - oc-status
+      - install-golang
+      - install-dep
+      - install-operator-sdk
+      - checkout
+      - install-operator-dependencies
+      - run:
+          name: Update the operator image
+          command: |
+            sed "s@REPLACE_IMAGE@quay.io/3scale/3scale-operator:${CIRCLE_SHA1}@g" -i deploy/operator.yaml
+      - run:
+          name: run E2E tests
+          command: |
+            make e2e-run
+          no_output_timeout: 1800
+
   generator:
     docker:
       - image: circleci/golang:1.11
@@ -241,14 +252,15 @@ workflows:
     jobs:
       - build-operator:
           context: org-global
-      - deploy-apimanager:
+      - run-operator-e2e-test:
           context: org-global
           requires:
             - build-operator
+
   templates:
     jobs:
       - generator
-      - deploy:
+      - deploy_templates:
           context: org-global
           requires:
             - generator
