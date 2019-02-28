@@ -54,11 +54,6 @@ to install a sample 3scale API Management solution and API definitions:
 # As an OpenShift administrative user create the 3scale-operator CRDs:
 for i in `ls deploy/crds/*_crd.yaml`; do oc create -f $i ; done
 
-# Create the roles and role bindings associated to the 3scale-operator
-# to be deployed
-oc create -f deploy/role.yaml
-oc create -f deploy/role_binding.yaml
-
 # Create a new empty project (this can be done with any desired OpenShift user)
 # ** It is very important to deploy all the elements in this new unique project,
 # because deploying the resources in existing infrastructure could
@@ -69,6 +64,11 @@ oc project $NAMESPACE
 
 # Create the 3scale-operator ServiceAccount
 oc create -f deploy/service_account.yaml
+
+# Create the roles and role bindings associated to the 3scale-operator
+# to be deployed
+oc create -f deploy/role.yaml
+oc create -f deploy/role_binding.yaml
 
 # Set the desired operator image in the operator YAML. For example,
 # the latest available one
