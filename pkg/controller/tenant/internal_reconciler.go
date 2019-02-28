@@ -374,7 +374,5 @@ func (r *InternalReconciler) updateTenantStatus(tenantStatus *apiv1alpha1.Tenant
 	}
 	r.logger.Info("update tenant status", "status", tenantStatus)
 	r.tenantR.Status = *tenantStatus
-	// subresources avaiable from operator-sdk v0.3.0
-	//err := r.k8sClient.Status().Update(context.TODO(), r.tenantR)
-	return r.k8sClient.Update(context.TODO(), r.tenantR)
+	return r.k8sClient.Status().Update(context.TODO(), r.tenantR)
 }
