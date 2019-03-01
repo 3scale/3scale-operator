@@ -130,19 +130,18 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 			apisDiff := apiv1alpha1.DiffAPIs(consolidated.Spec.APIs, previousConsolidated.Spec.APIs)
 			for _, api := range apisDiff.MissingFromA {
 				err = apiv1alpha1.DeleteInternalAPIFrom3scale(consolidated.Spec.Credentials, api)
-				if err != nil {
 
+				if err != nil {
 					reqLogger.Error(err, "Error deleting non desired API")
 					return reconcile.Result{Requeue: true, RequeueAfter: 30 * time.Second}, err
+				}
 
-				} else {
-					consolidated.Status.PreviousVersion = ""
-					err = r.client.Status().Update(context.TODO(), consolidated)
+				consolidated.Status.PreviousVersion = ""
+				err = r.client.Status().Update(context.TODO(), consolidated)
 
-					if err != nil {
-						reqLogger.Error(err, "Failed to update consolidated status")
-						return reconcile.Result{Requeue: true, RequeueAfter: 30 * time.Second}, err
-					}
+				if err != nil {
+					reqLogger.Error(err, "Failed to update consolidated status")
+					return reconcile.Result{Requeue: true, RequeueAfter: 30 * time.Second}, err
 				}
 			}
 		}

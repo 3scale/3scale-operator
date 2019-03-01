@@ -207,9 +207,9 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 
 			// Add a list of the previous APIs.
 			consolidatedStatus := apiv1alpha1.ConsolidatedStatus{}
-			consolidatedStatus.PreviousVersion =  string(previousVersion)
+			consolidatedStatus.PreviousVersion = string(previousVersion)
 			desiredConsolidated.Status = consolidatedStatus
-			err = c.Status().Update(context.TODO(),desiredConsolidated)
+			err = c.Status().Update(context.TODO(), desiredConsolidated)
 			if err != nil {
 				// Something went wrong when trying to update the actual consolidated object.
 				log.Error(err, "error")
