@@ -123,7 +123,7 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 			reqLogger.Error(err, "Error reading previous version from consolidated object")
 		}
 
-		previousConsolidated := &apiv1alpha1.Consolidated{Spec:*previousConsolidatedSpec}
+		previousConsolidated := &apiv1alpha1.Consolidated{Spec: *previousConsolidatedSpec}
 
 		if !apiv1alpha1.CompareConsolidated(*consolidated, *previousConsolidated) {
 			reqLogger.Info("Previous version of the consolidated object is different", request.Name, request.Namespace)
@@ -131,16 +131,20 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 			for _, api := range apisDiff.MissingFromA {
 				err = apiv1alpha1.DeleteInternalAPIFrom3scale(consolidated.Spec.Credentials, api)
 				if err != nil {
+
 					reqLogger.Error(err, "Error deleting non desired API")
+					return reconcile.Result{Requeue: true, RequeueAfter: 30 * time.Second}, err
+
+				} else {
+					consolidated.Status.PreviousVersion = ""
+					err = r.client.Status().Update(context.TODO(), consolidated)
+
+					if err != nil {
+						reqLogger.Error(err, "Failed to update consolidated status")
+						return reconcile.Result{Requeue: true, RequeueAfter: 30 * time.Second}, err
+					}
 				}
 			}
-		}
-
-		consolidated.Status.PreviousVersion = ""
-		err = r.client.Update(context.TODO(), consolidated)
-
-		if err != nil {
-			reqLogger.Error(err, "Failed to update consolidated status")
 		}
 	}
 
@@ -151,7 +155,7 @@ func (r *ReconcileConsolidated) Reconcile(request reconcile.Request) (reconcile.
 
 	if apiv1alpha1.CompareConsolidated(*consolidated, *existingState) {
 		reqLogger.Info("State between CRs and 3scale is consistent.", "namespace", request.Namespace, "name", request.Name)
-		return reconcile.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, nil
+		return reconcile.Result{Requeue: true, RequeueAfter: 1 * time.Minute}, nil
 	}
 
 	reqLogger.Info("State is not consistent, reconciling", "namespace", request.Namespace, "name", request.Name)

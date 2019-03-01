@@ -196,10 +196,7 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 			}))
 			// Set the proper Meta from the existing object.
 			desiredConsolidated.ObjectMeta = currentConsolidated.ObjectMeta
-
-			// Add a list of the previous APIs.
 			previousVersion, _ := json.Marshal(currentConsolidated.Spec)
-			desiredConsolidated.Status.PreviousVersion = string(previousVersion)
 
 			err := c.Update(context.TODO(), desiredConsolidated)
 			if err != nil {
@@ -207,6 +204,18 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 				log.Error(err, "error")
 				return reconcile.Result{Requeue: true}, err
 			}
+
+			// Add a list of the previous APIs.
+			consolidatedStatus := apiv1alpha1.ConsolidatedStatus{}
+			consolidatedStatus.PreviousVersion =  string(previousVersion)
+			desiredConsolidated.Status = consolidatedStatus
+			err = c.Status().Update(context.TODO(),desiredConsolidated)
+			if err != nil {
+				// Something went wrong when trying to update the actual consolidated object.
+				log.Error(err, "error")
+				return reconcile.Result{Requeue: true}, err
+			}
+
 			// All done here
 			log.Info("Reconciliation: Consolidated config has been updated.", currentConsolidated.Namespace, currentConsolidated.Name)
 		}
