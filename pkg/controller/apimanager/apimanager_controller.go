@@ -116,7 +116,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, nil
 	}
 
-	objs, err := createAPIManager(instance, r.client)
+	objs, err := r.apiManagerObjects(instance)
 	if err != nil {
 		reqLogger.Error(err, "Error creating APIManager objects. Requeuing request...")
 		return reconcile.Result{}, err
@@ -183,13 +183,13 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
-func createAPIManager(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	results, err := createAPIManagerObjects(cr, client)
+func (r *ReconcileAPIManager) apiManagerObjects(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	results, err := r.apiManagerObjectsGroup(cr)
 	if err != nil {
 		return nil, err
 	}
 
-	results, err = postProcessAPIManagerObjects(cr, client, results)
+	results, err = r.postProcessAPIManagerObjectsGroup(cr, results)
 	if err != nil {
 		return nil, err
 	}
@@ -197,65 +197,65 @@ func createAPIManager(cr *appsv1alpha1.APIManager, client client.Client) ([]runt
 	return results, nil
 }
 
-func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	results := []runtime.RawExtension{}
 
-	images, err := createImages(cr)
+	images, err := r.createImages(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, images...)
 
-	redis, err := createRedis(cr)
+	redis, err := r.createRedis(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, redis...)
 
-	backend, err := createBackend(cr, client)
+	backend, err := r.createBackend(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, backend...)
 
-	mysql, err := createMysql(cr, client)
+	mysql, err := r.createMysql(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, mysql...)
 
-	memcached, err := createMemcached(cr)
+	memcached, err := r.createMemcached(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, memcached...)
 
-	system, err := createSystem(cr, client)
+	system, err := r.createSystem(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, system...)
 
-	zync, err := createZync(cr, client)
+	zync, err := r.createZync(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, zync...)
 
-	apicast, err := createApicast(cr, client)
+	apicast, err := r.createApicast(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, apicast...)
 
-	wildcardRouter, err := createWildcardRouter(cr)
+	wildcardRouter, err := r.createWildcardRouter(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, wildcardRouter...)
 
 	if cr.Spec.SystemSpec.FileStorageSpec.S3 != nil {
-		s3, err := createS3(cr, client)
+		s3, err := r.createS3(cr)
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +265,7 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) 
 	return results, nil
 }
 
-func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1.APIManager, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
 	if !*cr.Spec.ResourceRequirementsEnabled {
 		e := component.Evaluation{}
 		e.PostProcessObjects(objects)
@@ -292,7 +292,7 @@ func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Cli
 	}
 
 	if cr.Spec.HighAvailabilitySpec != nil && cr.Spec.HighAvailabilitySpec.Enabled {
-		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 		opts, err := optsProvider.GetHighAvailabilityOptions()
 		if err != nil {
 			return nil, err
@@ -304,7 +304,7 @@ func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Cli
 	return objects, nil
 }
 
-func createImages(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createImages(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	optsProvider := operator.OperatorAmpImagesOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetAmpImagesOptions()
 	if err != nil {
@@ -320,15 +320,15 @@ func createImages(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	optsProvider := operator.OperatorRedisOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetRedisOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	r := component.Redis{Options: opts}
-	result, err := r.GetObjects()
+	redis := component.Redis{Options: opts}
+	result, err := redis.GetObjects()
 	if err != nil {
 		return nil, err
 	}
@@ -336,8 +336,8 @@ func createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createBackend(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetBackendOptions()
 	if err != nil {
 		return nil, err
@@ -352,8 +352,8 @@ func createBackend(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime
 	return result, nil
 }
 
-func createMysql(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createMysql(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetMysqlOptions()
 	if err != nil {
 		return nil, err
@@ -368,7 +368,7 @@ func createMysql(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.R
 	return result, nil
 }
 
-func createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	optsProvider := operator.OperatorMemcachedOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetMemcachedOptions()
 	if err != nil {
@@ -384,8 +384,8 @@ func createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error
 	return result, nil
 }
 
-func createSystem(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetSystemOptions()
 	if err != nil {
 		return nil, err
@@ -400,8 +400,8 @@ func createSystem(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.
 	return result, nil
 }
 
-func createZync(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetZyncOptions()
 	if err != nil {
 		return nil, err
@@ -416,8 +416,8 @@ func createZync(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.Ra
 	return result, nil
 }
 
-func createApicast(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {
 		return nil, err
@@ -432,7 +432,7 @@ func createApicast(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime
 	return result, nil
 }
 
-func createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	optsProvider := operator.OperatorWildcardRouterOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetWildcardRouterOptions()
 	if err != nil {
@@ -447,8 +447,8 @@ func createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, 
 	return result, nil
 }
 
-func createS3(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetS3Options()
 	if err != nil {
 		return nil, err
