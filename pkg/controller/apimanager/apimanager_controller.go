@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/go-logr/logr"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
@@ -39,7 +41,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileAPIManager{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileAPIManager{client: mgr.GetClient(), scheme: mgr.GetScheme(), reqLogger: log}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -65,8 +67,9 @@ var _ reconcile.Reconciler = &ReconcileAPIManager{}
 type ReconcileAPIManager struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client    client.Client
+	scheme    *runtime.Scheme
+	reqLogger logr.Logger
 }
 
 // Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
@@ -77,48 +80,48 @@ type ReconcileAPIManager struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling APIManager")
+	r.reqLogger = log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	r.reqLogger.Info("Reconciling APIManager")
 
 	// Fetch the APIManager instance
 	instance := &appsv1alpha1.APIManager{}
 
-	reqLogger.Info("Trying to get APIManager resource")
+	r.reqLogger.Info("Trying to get APIManager resource")
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted")
+			r.reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted")
 			return reconcile.Result{}, nil
 		}
-		reqLogger.Error(err, "APIManager Resource cannot be created. Requeuing request...")
+		r.reqLogger.Error(err, "APIManager Resource cannot be created. Requeuing request...")
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	reqLogger.Info("Successfully retreived APIManager resource")
+	r.reqLogger.Info("Successfully retreived APIManager resource")
 
-	reqLogger.Info("Setting defaults for APIManager resource")
+	r.reqLogger.Info("Setting defaults for APIManager resource")
 	changed, err := instance.SetDefaults() // TODO check where to put this
 	if err != nil {
 		// Error setting defaults - Stop reconciliation
 		return reconcile.Result{}, nil
 	}
 	if changed {
-		reqLogger.Info("Updating defaults for APIManager resource")
+		r.reqLogger.Info("Updating defaults for APIManager resource")
 		err = r.client.Update(context.TODO(), instance)
 		if err != nil {
-			reqLogger.Error(err, "APIManager Resource cannot be updated. Requeuing request...")
+			r.reqLogger.Error(err, "APIManager Resource cannot be updated. Requeuing request...")
 			return reconcile.Result{}, err
 		}
-		reqLogger.Info("Successfully updated defaults for APIManager resource")
+		r.reqLogger.Info("Successfully updated defaults for APIManager resource")
 		return reconcile.Result{}, nil
 	}
 
 	objs, err := r.apiManagerObjects(instance)
 	if err != nil {
-		reqLogger.Error(err, "Error creating APIManager objects. Requeuing request...")
+		r.reqLogger.Error(err, "Error creating APIManager objects. Requeuing request...")
 		return reconcile.Result{}, err
 	}
 
@@ -129,7 +132,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		objectMeta.SetNamespace(instance.Namespace)
 		err = controllerutil.SetControllerReference(instance, objectMeta, r.scheme)
 		if err != nil {
-			reqLogger.Error(err, "Error setting OwnerReference on object. Requeuing request...",
+			r.reqLogger.Error(err, "Error setting OwnerReference on object. Requeuing request...",
 				"Kind", obj.GetObjectKind(),
 				"Namespace", objectMeta.GetNamespace(),
 				"Name", objectMeta.GetName(),
@@ -153,24 +156,24 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 				// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
 				err = r.client.Create(context.TODO(), obj)
 				if err != nil {
-					reqLogger.Error(err, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
+					r.reqLogger.Error(err, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 					return reconcile.Result{}, err
 				}
-				reqLogger.Info(fmt.Sprintf("Created object %s", objectInfo))
+				r.reqLogger.Info(fmt.Sprintf("Created object %s", objectInfo))
 			} else {
-				reqLogger.Error(err, fmt.Sprintf("Failed to get %s.  Requeuing request...", objectInfo))
+				r.reqLogger.Error(err, fmt.Sprintf("Failed to get %s.  Requeuing request...", objectInfo))
 				return reconcile.Result{}, err
 			}
 		} else {
-			reqLogger.Info(fmt.Sprintf("Object %s already exists", objectInfo))
+			r.reqLogger.Info(fmt.Sprintf("Object %s already exists", objectInfo))
 		}
 
 		// Update secrets with consistent data
 		if secret, ok := objCopy.(*v1.Secret); ok {
-			reqLogger.Info("Object is a secret. Updating object...")
+			r.reqLogger.Info("Object is a secret. Updating object...")
 			err = r.client.Update(context.TODO(), secret)
 			if err != nil {
-				reqLogger.Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
+				r.reqLogger.Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
 				return reconcile.Result{}, err
 			}
 		}
@@ -179,7 +182,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		// differences that we want to handle
 	}
 
-	reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
+	r.reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
 	return reconcile.Result{}, nil
 }
 
