@@ -154,10 +154,10 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		if err != nil {
 			if errors.IsNotFound(err) {
 				// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
-				err = r.client.Create(context.TODO(), obj)
-				if err != nil {
-					r.reqLogger.Error(err, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
-					return reconcile.Result{}, err
+				createErr := r.client.Create(context.TODO(), obj)
+				if createErr != nil {
+					r.reqLogger.Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
+					return reconcile.Result{}, createErr
 				}
 				r.reqLogger.Info(fmt.Sprintf("Created object %s", objectInfo))
 			} else {
@@ -166,24 +166,52 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 			}
 		} else {
 			r.reqLogger.Info(fmt.Sprintf("Object %s already exists", objectInfo))
-		}
-
-		// Update secrets with consistent data
-		if secret, ok := objCopy.(*v1.Secret); ok {
-			r.reqLogger.Info("Object is a secret. Updating object...")
-			err = r.client.Update(context.TODO(), secret)
-			if err != nil {
-				r.reqLogger.Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
-				return reconcile.Result{}, err
+			if secret, ok := objCopy.(*v1.Secret); ok {
+				r.reqLogger.Info(fmt.Sprintf("Object %s is a secret. Reconciling it...", objectInfo))
+				// We get copy to avoid modifying possibly obtained object
+				// from the cache
+				foundSecret := found.(*v1.Secret)
+				r.reconcileSecret(secret, foundSecret, instance)
+				if err != nil {
+					r.reqLogger.Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
+					return reconcile.Result{}, err
+				}
 			}
 		}
-		// Here means that the object has been able to be obtained
-		// and checking for differences should be done to reconcile possible
-		// differences that we want to handle
 	}
 
 	r.reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileAPIManager) reconcileSecret(desired, current *v1.Secret, cr *appsv1alpha1.APIManager) error {
+	// We copy the secrets because we don't know the source of them. Might
+	// come from the Cache
+	currentCopy := current.DeepCopy()
+	desiredCopy := desired.DeepCopy()
+
+	// We convert StringData to Data because stringData cannot be read when
+	// obtained from the Kubernetes API and we need to compare the secret
+	// data
+	desiredCopy.Data = secretStringDataToData(desiredCopy.StringData)
+	if secretsEqual(currentCopy, desiredCopy) {
+		r.reqLogger.Info(fmt.Sprintf("Secret %s is already reconciled. Update skipped", currentCopy.Name))
+		return nil
+	}
+	currentCopy.StringData = desiredCopy.StringData
+	currentCopy.Annotations = desiredCopy.Annotations
+	currentCopy.Labels = desiredCopy.Labels
+	currentCopy.Finalizers = desiredCopy.Finalizers
+	err := controllerutil.SetControllerReference(cr, currentCopy, r.scheme)
+	if err != nil {
+		return err
+	}
+
+	r.reqLogger.Info(fmt.Sprintf("Secret %s is not equal to the expected secret. Updating ...", currentCopy.Name))
+	if err = r.client.Update(context.TODO(), currentCopy); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *ReconcileAPIManager) apiManagerObjects(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
