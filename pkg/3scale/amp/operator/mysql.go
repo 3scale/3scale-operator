@@ -61,7 +61,7 @@ func (o *OperatorMysqlOptionsProvider) setSystemDatabaseOptions(builder *compone
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Set options defaults
-			builder.DatabaseName("system")
+			builder.DatabaseName(defaultDatabaseName)
 			builder.User(defaultDatabaseUsername)
 			builder.Password(defaultDatabasePassword)
 			builder.RootPassword(defaultDatabaseRootPassword)
@@ -75,7 +75,7 @@ func (o *OperatorMysqlOptionsProvider) setSystemDatabaseOptions(builder *compone
 		secretData := currSecret.Data
 		builder.User(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseUserFieldName, defaultDatabaseUsername))
 		builder.Password(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabasePasswordFieldName, defaultDatabasePassword))
-		err := o.parseAndSetDatabaseURLAndParts(builder, secretData)
+		err := o.parseAndSetDatabaseURLAndParts(builder, secretData, defaultDatabaseURL)
 		if err != nil {
 			return err
 		}
@@ -83,22 +83,20 @@ func (o *OperatorMysqlOptionsProvider) setSystemDatabaseOptions(builder *compone
 	return nil
 }
 
-func (o *OperatorMysqlOptionsProvider) parseAndSetDatabaseURLAndParts(builder *component.MysqlOptionsBuilder, secretData map[string][]byte) error {
-	resultURLStr := getSecretDataValue(secretData, component.SystemSecretSystemDatabaseURLFieldName)
-	if resultURLStr != nil {
-		resultURL, err := o.SystemDatabaseURLIsValid(*resultURLStr)
-		if err != nil {
-			return err
-		}
-		builder.DatabaseURL(*resultURLStr)
-		builder.DatabaseName(strings.TrimPrefix(resultURL.Path, "/")) // Remove possible leading slash in URL Path
-		dbRootPassword, _ := resultURL.User.Password()
-		builder.RootPassword(dbRootPassword)
+func (o *OperatorMysqlOptionsProvider) parseAndSetDatabaseURLAndParts(builder *component.MysqlOptionsBuilder, secretData map[string][]byte, defaultDatabaseURL string) error {
+	resultURLStr := getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseURLFieldName, defaultDatabaseURL)
+	resultURL, err := o.systemDatabaseURLIsValid(resultURLStr)
+	if err != nil {
+		return err
 	}
+	builder.DatabaseURL(resultURLStr)
+	builder.DatabaseName(strings.TrimPrefix(resultURL.Path, "/")) // Remove possible leading slash in URL Path
+	dbRootPassword, _ := resultURL.User.Password()
+	builder.RootPassword(dbRootPassword)
 	return nil
 }
 
-func (o *OperatorMysqlOptionsProvider) SystemDatabaseURLIsValid(rawURL string) (*url.URL, error) {
+func (o *OperatorMysqlOptionsProvider) systemDatabaseURLIsValid(rawURL string) (*url.URL, error) {
 	resultURL, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, fmt.Errorf("'%s' field of '%s' secret must have 'scheme://user:password@host/path' format", component.SystemSecretSystemDatabaseURLFieldName, component.SystemSecretSystemDatabaseSecretName)
