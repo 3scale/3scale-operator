@@ -216,7 +216,7 @@ objects:
       generation: null
       importPolicy:
         insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
-      name: "9.5"
+      name: "10"
       referencePolicy:
         type: ""
   status:
@@ -3167,7 +3167,7 @@ objects:
         - postgresql
         from:
           kind: ImageStreamTag
-          name: postgresql:9.5
+          name: postgresql:10
       type: ImageChange
   status:
     availableReplicas: 0
@@ -3732,7 +3732,7 @@ parameters:
 - description: Postgresql image to use
   name: POSTGRESQL_IMAGE
   required: true
-  value: registry.access.redhat.com/rhscl/postgresql-95-rhel7:9.5
+  value: registry.access.redhat.com/rhscl/postgresql-10-rhel7
 - description: Mysql image to use
   name: MYSQL_IMAGE
   required: true
