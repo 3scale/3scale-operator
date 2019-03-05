@@ -246,7 +246,7 @@ func (apicast *Apicast) buildApicastStagingRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "api-apicast-staging",
-			Labels: map[string]string{"app": apicast.Options.appLabel, "3scale.component": "apicast", "3scale.component-element": "staging"},
+			Labels: map[string]string{"app": apicast.Options.appLabel, "threescale_component": "apicast", "threescale_component_element": "staging"},
 		},
 		Spec: routev1.RouteSpec{
 			Host: "api-" + apicast.Options.tenantName + "-apicast-staging." + apicast.Options.wildcardDomain,
@@ -274,8 +274,8 @@ func (apicast *Apicast) buildApicastStagingService() *v1.Service {
 			Name: "apicast-staging",
 			Labels: map[string]string{
 				"app":                      apicast.Options.appLabel,
-				"3scale.component":         "apicast",
-				"3scale.component-element": "staging",
+				"threescale_component":         "apicast",
+				"threescale_component_element": "staging",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -306,7 +306,7 @@ func (apicast *Apicast) buildApicastProductionRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "api-apicast-production",
-			Labels: map[string]string{"app": apicast.Options.appLabel, "3scale.component": "apicast", "3scale.component-element": "production"},
+			Labels: map[string]string{"app": apicast.Options.appLabel, "threescale_component": "apicast", "threescale_component_element": "production"},
 		},
 		Spec: routev1.RouteSpec{
 			Host: "api-" + apicast.Options.tenantName + "-apicast-production." + apicast.Options.wildcardDomain,
@@ -334,8 +334,8 @@ func (apicast *Apicast) buildApicastProductionService() *v1.Service {
 			Name: "apicast-production",
 			Labels: map[string]string{
 				"app":                      apicast.Options.appLabel,
-				"3scale.component":         "apicast",
-				"3scale.component-element": "production",
+				"threescale_component":         "apicast",
+				"threescale_component_element": "production",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -365,8 +365,8 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 			Name: "apicast-staging",
 			Labels: map[string]string{
 				"app":                      apicast.Options.appLabel,
-				"3scale.component":         "apicast",
-				"3scale.component-element": "staging",
+				"threescale_component":         "apicast",
+				"threescale_component_element": "staging",
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -413,8 +413,8 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 					Labels: map[string]string{
 						"deploymentConfig":         "apicast-staging",
 						"app":                      apicast.Options.appLabel,
-						"3scale.component":         "apicast",
-						"3scale.component-element": "staging",
+						"threescale_component":         "apicast",
+						"threescale_component_element": "staging",
 					},
 					Annotations: map[string]string{
 						"prometheus.io/scrape": "true",
@@ -487,8 +487,8 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 			Name: "apicast-production",
 			Labels: map[string]string{
 				"app":                      apicast.Options.appLabel,
-				"3scale.component":         "apicast",
-				"3scale.component-element": "production",
+				"threescale_component":         "apicast",
+				"threescale_component_element": "production",
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -536,8 +536,8 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 					Labels: map[string]string{
 						"deploymentConfig":         "apicast-production",
 						"app":                      apicast.Options.appLabel,
-						"3scale.component":         "apicast",
-						"3scale.component-element": "production",
+						"threescale_component":         "apicast",
+						"threescale_component_element": "production",
 					},
 					Annotations: map[string]string{
 						"prometheus.io/scrape": "true",
@@ -658,7 +658,7 @@ func (apicast *Apicast) buildApicastEnvConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-environment",
-			Labels: map[string]string{"3scale.component": "apicast", "app": apicast.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "apicast", "app": apicast.Options.appLabel},
 		},
 		Data: map[string]string{
 			"APICAST_MANAGEMENT_API": apicast.Options.managementAPI,
@@ -678,7 +678,7 @@ func (apicast *Apicast) buildApicastRedisSecrets() *v1.Secret {
 			Name: ApicastSecretRedisSecretName,
 			Labels: map[string]string{
 				"app":              apicast.Options.appLabel,
-				"3scale.component": "apicast",
+				"threescale_component": "apicast",
 			},
 		},
 		StringData: map[string]string{

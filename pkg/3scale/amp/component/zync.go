@@ -203,7 +203,7 @@ func (zync *Zync) buildZyncSecret() *v1.Secret {
 			Name: ZyncSecretName,
 			Labels: map[string]string{
 				"app":              zync.Options.appLabel,
-				"3scale.component": "zync",
+				"threescale_component": "zync",
 			},
 		},
 		StringData: map[string]string{
@@ -311,7 +311,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 			Name: "zync",
 			Labels: map[string]string{
 				"app":              zync.Options.appLabel,
-				"3scale.component": "zync",
+				"threescale_component": "zync",
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -341,7 +341,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: map[string]string{
 						"app":              zync.Options.appLabel,
 						"deploymentConfig": "zync",
-						"3scale.component": "zync",
+						"threescale_component": "zync",
 					},
 				},
 				Spec: v1.PodSpec{
@@ -477,8 +477,8 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 			Name: "zync-database",
 			Labels: map[string]string{
 				"app":                      zync.Options.appLabel,
-				"3scale.component":         "zync",
-				"3scale.component-element": "database",
+				"threescale_component":         "zync",
+				"threescale_component_element": "database",
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -510,8 +510,8 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: map[string]string{
 						"deploymentConfig":         "zync-database",
 						"app":                      zync.Options.appLabel,
-						"3scale.component":         "zync",
-						"3scale.component-element": "database",
+						"threescale_component":         "zync",
+						"threescale_component_element": "database",
 					},
 				},
 				Spec: v1.PodSpec{
@@ -607,7 +607,7 @@ func (zync *Zync) buildZyncService() *v1.Service {
 			Name: "zync",
 			Labels: map[string]string{
 				"app":              zync.Options.appLabel,
-				"3scale.component": "zync",
+				"threescale_component": "zync",
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -634,8 +634,8 @@ func (zync *Zync) buildZyncDatabaseService() *v1.Service {
 			Name: "zync-database",
 			Labels: map[string]string{
 				"app":                      zync.Options.appLabel,
-				"3scale.component":         "zync",
-				"3scale.component-element": "database",
+				"threescale_component":         "zync",
+				"threescale_component_element": "database",
 			},
 		},
 		Spec: v1.ServiceSpec{
