@@ -345,7 +345,7 @@ func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
 				imagev1.TagReference{
-					Name: "9.5",
+					Name: "10",
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
 						Name: ampImages.Options.postgreSQLImage,
@@ -400,7 +400,7 @@ func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:        "POSTGRESQL_IMAGE",
 			Description: "Postgresql image to use",
-			Value:       "registry.access.redhat.com/rhscl/postgresql-95-rhel7:9.5",
+			Value:       "registry.access.redhat.com/rhscl/postgresql-10-rhel7",
 			Required:    true,
 		},
 		templatev1.Parameter{
