@@ -8,10 +8,6 @@ items:
     labels:
       environment: production
     name: api01
-    namespace: operator-test
-    resourceVersion: "1364154"
-    selfLink: /apis/capabilities.3scale.net/v1alpha1/namespaces/operator-test/apis/myapi
-    uid: 21a5eafc-20a5-11e9-b8c6-0e4109beb104
   spec:
     planSelector:
       matchLabels:
@@ -51,10 +47,6 @@ items:
     labels:
       environment: staging
     name: api02
-    namespace: operator-test
-    resourceVersion: "1364154"
-    selfLink: /apis/capabilities.3scale.net/v1alpha1/namespaces/operator-test/apis/myapi
-    uid: 21a5eafc-20a5-11e9-b8c6-0e4109beb104
   spec:
     planSelector:
       matchLabels:
@@ -96,10 +88,6 @@ items:
     labels:
       environment: devel
     name: api03
-    namespace: operator-test
-    resourceVersion: "1364154"
-    selfLink: /apis/capabilities.3scale.net/v1alpha1/namespaces/operator-test/apis/myapi
-    uid: 21a5eafc-20a5-11e9-b8c6-0e4109beb104
   spec:
     planSelector:
       matchLabels:
