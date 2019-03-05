@@ -38,75 +38,6 @@ func NewAmpImages(options []string) *AmpImages {
 	return ampImages
 }
 
-type AmpImagesOptionsBuilder struct {
-	options AmpImagesOptions
-}
-
-func (ampImages *AmpImagesOptionsBuilder) AppLabel(appLabel string) {
-	ampImages.options.appLabel = appLabel
-}
-
-func (ampImages *AmpImagesOptionsBuilder) AMPRelease(ampRelease string) {
-	ampImages.options.ampRelease = ampRelease
-}
-
-func (ampImages *AmpImagesOptionsBuilder) ApicastImage(apicastImage string) {
-	ampImages.options.apicastImage = apicastImage
-}
-
-func (ampImages *AmpImagesOptionsBuilder) BackendImage(backendImage string) {
-	ampImages.options.backendImage = backendImage
-}
-
-func (ampImages *AmpImagesOptionsBuilder) RouterImage(routerImage string) {
-	ampImages.options.routerImage = routerImage
-}
-
-func (ampImages *AmpImagesOptionsBuilder) SystemImage(systemImage string) {
-	ampImages.options.systemImage = systemImage
-}
-
-func (ampImages *AmpImagesOptionsBuilder) ZyncImage(zyncImage string) {
-	ampImages.options.zyncImage = zyncImage
-}
-
-func (ampImages *AmpImagesOptionsBuilder) PostgreSQLImage(postgreSQLImage string) {
-	ampImages.options.postgreSQLImage = postgreSQLImage
-}
-
-func (ampImages *AmpImagesOptionsBuilder) InsecureImportPolicy(insecureImportPolicy bool) {
-	ampImages.options.insecureImportPolicy = insecureImportPolicy
-}
-
-func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
-	if ampImages.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if ampImages.options.ampRelease == "" {
-		return nil, fmt.Errorf("no AMP release has been provided")
-	}
-	if ampImages.options.apicastImage == "" {
-		return nil, fmt.Errorf("no Apicast image has been provided")
-	}
-	if ampImages.options.backendImage == "" {
-		return nil, fmt.Errorf("no Backend image has been provided")
-	}
-	if ampImages.options.routerImage == "" {
-		return nil, fmt.Errorf("no Router image been provided")
-	}
-	if ampImages.options.systemImage == "" {
-		return nil, fmt.Errorf("no System image has been provided")
-	}
-	if ampImages.options.zyncImage == "" {
-		return nil, fmt.Errorf("no Zync image has been provided")
-	}
-	if ampImages.options.postgreSQLImage == "" {
-		return nil, fmt.Errorf("no PostgreSQL image has been provided")
-	}
-
-	return &ampImages.options, nil
-}
-
 type AmpImagesOptionsProvider interface {
 	GetAmpImagesOptions() *AmpImagesOptions
 }
@@ -183,7 +114,7 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-backend",
 			Labels: map[string]string{
-				"app":              ampImages.Options.appLabel,
+				"app":                  ampImages.Options.appLabel,
 				"threescale_component": "backend",
 			},
 			Annotations: map[string]string{
@@ -228,7 +159,7 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-zync",
 			Labels: map[string]string{
-				"app":              ampImages.Options.appLabel,
+				"app":                  ampImages.Options.appLabel,
 				"threescale_component": "zync",
 			},
 			Annotations: map[string]string{
@@ -273,7 +204,7 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-apicast",
 			Labels: map[string]string{
-				"app":              ampImages.Options.appLabel,
+				"app":                  ampImages.Options.appLabel,
 				"threescale_component": "apicast",
 			},
 			Annotations: map[string]string{
@@ -318,7 +249,7 @@ func (ampImages *AmpImages) buildWildcardRouterImageStream() *imagev1.ImageStrea
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-wildcard-router",
 			Labels: map[string]string{
-				"app":              ampImages.Options.appLabel,
+				"app":                  ampImages.Options.appLabel,
 				"threescale_component": "wildcard-router",
 			},
 			Annotations: map[string]string{
@@ -363,7 +294,7 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-system",
 			Labels: map[string]string{
-				"app":              ampImages.Options.appLabel,
+				"app":                  ampImages.Options.appLabel,
 				"threescale_component": "system",
 			},
 			Annotations: map[string]string{

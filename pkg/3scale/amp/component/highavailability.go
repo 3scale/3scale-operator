@@ -50,77 +50,6 @@ func NewHighAvailability(options []string) *HighAvailability {
 	return ha
 }
 
-type HighAvailabilityOptionsBuilder struct {
-	options HighAvailabilityOptions
-}
-
-func (ha *HighAvailabilityOptionsBuilder) AppLabel(appLabel string) {
-	ha.options.appLabel = appLabel
-}
-
-func (ha *HighAvailabilityOptionsBuilder) ApicastProductionRedisURL(apicastProductionRedisURL string) {
-	ha.options.apicastProductionRedisURL = apicastProductionRedisURL
-}
-
-func (ha *HighAvailabilityOptionsBuilder) ApicastStagingRedisURL(apicastStagingRedisURL string) {
-	ha.options.apicastStagingRedisURL = apicastStagingRedisURL
-}
-
-func (ha *HighAvailabilityOptionsBuilder) BackendRedisQueuesEndpoint(backendRedisQueuesEndpoint string) {
-	ha.options.backendRedisQueuesEndpoint = backendRedisQueuesEndpoint
-}
-
-func (ha *HighAvailabilityOptionsBuilder) BackendRedisStorageEndpoint(backendRedisStorageEndpoint string) {
-	ha.options.backendRedisStorageEndpoint = backendRedisStorageEndpoint
-}
-
-func (ha *HighAvailabilityOptionsBuilder) SystemDatabaseURL(systemDatabaseURL string) {
-	ha.options.systemDatabaseURL = systemDatabaseURL
-}
-
-func (ha *HighAvailabilityOptionsBuilder) SystemRedisURL(systemRedisURL string) {
-	ha.options.systemRedisURL = systemRedisURL
-}
-
-func (ha *HighAvailabilityOptionsBuilder) Build() (*HighAvailabilityOptions, error) {
-
-	err := ha.setRequiredOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	ha.setNonRequiredOptions()
-
-	return &ha.options, nil
-}
-
-func (ha *HighAvailabilityOptionsBuilder) setRequiredOptions() error {
-	if ha.options.apicastProductionRedisURL == "" {
-		return fmt.Errorf("no Apicast production URL has been provided")
-	}
-	if ha.options.apicastStagingRedisURL == "" {
-		return fmt.Errorf("no Apicast staging redis URL has been provided")
-	}
-	if ha.options.backendRedisQueuesEndpoint == "" {
-		return fmt.Errorf("no Backend Redis queues endpoint option has been provided")
-	}
-	if ha.options.backendRedisStorageEndpoint == "" {
-		return fmt.Errorf("no Backend Redis storage endpoint has been provided")
-	}
-	if ha.options.systemDatabaseURL == "" {
-		return fmt.Errorf("no System database URL has been provided")
-	}
-	if ha.options.systemRedisURL == "" {
-		return fmt.Errorf("no System redis URL has been provided")
-	}
-
-	return nil
-}
-
-func (ha *HighAvailabilityOptionsBuilder) setNonRequiredOptions() {
-
-}
-
 type HighAvailabilityOptionsProvider interface {
 	GetHighAvailabilityOptions() *HighAvailabilityOptions
 }
@@ -207,7 +136,7 @@ func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemDatabaseSecretName,
 			Labels: map[string]string{
-				"app":              ha.Options.appLabel,
+				"app":                  ha.Options.appLabel,
 				"threescale_component": "system",
 			},
 		},

@@ -71,131 +71,6 @@ func NewBackend(options []string) *Backend {
 	return backend
 }
 
-type BackendOptionsBuilder struct {
-	options BackendOptions
-}
-
-func (m *BackendOptionsBuilder) AppLabel(appLabel string) {
-	m.options.appLabel = appLabel
-}
-
-func (m *BackendOptionsBuilder) SystemBackendUsername(systemBackendUsername string) {
-	m.options.systemBackendUsername = systemBackendUsername
-}
-
-func (m *BackendOptionsBuilder) SystemBackendPassword(systemBackendPassword string) {
-	m.options.systemBackendPassword = systemBackendPassword
-}
-
-func (m *BackendOptionsBuilder) TenantName(tenantName string) {
-	m.options.tenantName = tenantName
-}
-
-func (m *BackendOptionsBuilder) WildcardDomain(wildcardDomain string) {
-	m.options.wildcardDomain = wildcardDomain
-}
-
-func (m *BackendOptionsBuilder) ListenerServiceEndpoint(serviceEndpoint string) {
-	m.options.serviceEndpoint = &serviceEndpoint
-}
-
-func (m *BackendOptionsBuilder) ListenerRouteEndpoint(routeEndpoint string) {
-	m.options.routeEndpoint = &routeEndpoint
-}
-
-func (m *BackendOptionsBuilder) RedisStorageURL(url string) {
-	m.options.storageURL = &url
-}
-
-func (m *BackendOptionsBuilder) RedisQueuesURL(url string) {
-	m.options.queuesURL = &url
-}
-
-func (m *BackendOptionsBuilder) RedisStorageSentinelHosts(hosts string) {
-	m.options.storageSentinelHosts = &hosts
-}
-
-func (m *BackendOptionsBuilder) RedisStorageSentinelRole(role string) {
-	m.options.storageSentinelRole = &role
-}
-
-func (m *BackendOptionsBuilder) RedisQueuesSentinelHosts(hosts string) {
-	m.options.queuesSentinelHosts = &hosts
-}
-
-func (m *BackendOptionsBuilder) RedisQueuesSentinelRole(role string) {
-	m.options.queuesSentinelRole = &role
-}
-
-func (m *BackendOptionsBuilder) Build() (*BackendOptions, error) {
-	err := m.setRequiredOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	m.setNonRequiredOptions()
-
-	return &m.options, nil
-}
-
-func (m *BackendOptionsBuilder) setRequiredOptions() error {
-	if m.options.appLabel == "" {
-		return fmt.Errorf("no AppLabel has been provided")
-	}
-	if m.options.systemBackendUsername == "" {
-		return fmt.Errorf("no System's Backend Username has been provided")
-	}
-	if m.options.systemBackendPassword == "" {
-		return fmt.Errorf("no System's Backend Password has been provided")
-	}
-	if m.options.tenantName == "" {
-		return fmt.Errorf("no tenant name has been provided")
-	}
-	if m.options.wildcardDomain == "" {
-		return fmt.Errorf("no wildcard domain has been provided")
-	}
-
-	return nil
-}
-
-func (m *BackendOptionsBuilder) setNonRequiredOptions() {
-
-	defaultServiceEndpoint := "http://backend-listener:3000"
-	defaultRouteEndpoint := "https://backend-" + m.options.tenantName + "." + m.options.wildcardDomain
-
-	defaultStorageURL := "redis://backend-redis:6379/0"
-	defaultQueuesURL := "redis://backend-redis:6379/1"
-	defaultStorageSentinelHosts := ""
-	defaultStorageSentinelRole := ""
-	defaultQueuesSentinelHosts := ""
-	defaultQueuesSentinelRole := ""
-
-	if m.options.serviceEndpoint == nil {
-		m.options.serviceEndpoint = &defaultServiceEndpoint
-	}
-	if m.options.routeEndpoint == nil {
-		m.options.routeEndpoint = &defaultRouteEndpoint
-	}
-	if m.options.storageURL == nil {
-		m.options.storageURL = &defaultStorageURL
-	}
-	if m.options.queuesURL == nil {
-		m.options.queuesURL = &defaultQueuesURL
-	}
-	if m.options.storageSentinelHosts == nil {
-		m.options.storageSentinelHosts = &defaultStorageSentinelHosts
-	}
-	if m.options.storageSentinelRole == nil {
-		m.options.storageSentinelRole = &defaultStorageSentinelRole
-	}
-	if m.options.queuesSentinelHosts == nil {
-		m.options.queuesSentinelHosts = &defaultQueuesSentinelHosts
-	}
-	if m.options.queuesSentinelRole == nil {
-		m.options.queuesSentinelRole = &defaultQueuesSentinelRole
-	}
-}
-
 type BackendOptionsProvider interface {
 	GetBackendOptions() *BackendOptions
 }
@@ -558,7 +433,7 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 			Labels: map[string]string{
 				"threescale_component":         "backend",
 				"threescale_component_element": "listener",
-				"app":                      backend.Options.appLabel,
+				"app":                          backend.Options.appLabel,
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -629,7 +504,7 @@ func (backend *Backend) buildBackendRedisSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: BackendSecretBackendRedisSecretName,
 			Labels: map[string]string{
-				"app":              backend.Options.appLabel,
+				"app":                  backend.Options.appLabel,
 				"threescale_component": "backend",
 			},
 		},
@@ -693,7 +568,7 @@ func (backend *Backend) buildBackendInternalApiCredsForSystem() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: BackendSecretInternalApiSecretName,
 			Labels: map[string]string{
-				"app":              backend.Options.appLabel,
+				"app":                  backend.Options.appLabel,
 				"threescale_component": "backend",
 			},
 		},
@@ -714,7 +589,7 @@ func (backend *Backend) buildBackendListenerSecrets() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: BackendSecretBackendListenerSecretName,
 			Labels: map[string]string{
-				"app":              backend.Options.appLabel,
+				"app":                  backend.Options.appLabel,
 				"threescale_component": "backend",
 			},
 		},
