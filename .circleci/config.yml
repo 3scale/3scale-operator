@@ -92,6 +92,7 @@ commands:
 
             oc get events | egrep ' Failed ' || :
             oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+          no_output_timeout: 1800
 
   push-3scale-images-to-quay:
     steps:
