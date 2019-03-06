@@ -332,7 +332,7 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 	}
 	sort.Strings(cfgmapkeys)
 	for _, key := range cfgmapkeys {
-		envvar := createEnvVarFromConfigMap(key, "system-environment", key)
+		envvar := envVarFromConfigMap(key, "system-environment", key)
 		result = append(result, envvar)
 	}
 
@@ -351,18 +351,18 @@ func (system *System) getSystemSmtpEnvsFromSMTPConfigMap() []v1.EnvVar {
 	// This cannot be used because the config map keys currently
 	// do not have the same name than the envvar names in base_env
 	// for _, key := range cfgmapkeys {
-	// 	envvar := createEnvVarFromConfigMap(key, "smtp", key)
+	// 	envvar := envVarFromConfigMap(key, "smtp", key)
 	// 	result = append(result, envvar)
 	// }
 
 	result := []v1.EnvVar{
-		createEnvVarFromConfigMap("SMTP_ADDRESS", "smtp", "address"),
-		createEnvVarFromConfigMap("SMTP_USER_NAME", "smtp", "username"),
-		createEnvVarFromConfigMap("SMTP_PASSWORD", "smtp", "password"),
-		createEnvVarFromConfigMap("SMTP_DOMAIN", "smtp", "domain"),
-		createEnvVarFromConfigMap("SMTP_PORT", "smtp", "port"),
-		createEnvVarFromConfigMap("SMTP_AUTHENTICATION", "smtp", "authentication"),
-		createEnvVarFromConfigMap("SMTP_OPENSSL_VERIFY_MODE", "smtp", "openssl.verify.mode"),
+		envVarFromConfigMap("SMTP_ADDRESS", "smtp", "address"),
+		envVarFromConfigMap("SMTP_USER_NAME", "smtp", "username"),
+		envVarFromConfigMap("SMTP_PASSWORD", "smtp", "password"),
+		envVarFromConfigMap("SMTP_DOMAIN", "smtp", "domain"),
+		envVarFromConfigMap("SMTP_PORT", "smtp", "port"),
+		envVarFromConfigMap("SMTP_AUTHENTICATION", "smtp", "authentication"),
+		envVarFromConfigMap("SMTP_OPENSSL_VERIFY_MODE", "smtp", "openssl.verify.mode"),
 	}
 
 	return result
@@ -372,13 +372,13 @@ func (system *System) buildSystemSphinxEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 
 	result = append(result,
-		createEnvVarFromConfigMap("RAILS_ENV", "system-environment", "RAILS_ENV"),
-		createEnvvarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
-		createEnvVarFromValue("THINKING_SPHINX_ADDRESS", "0.0.0.0"),
-		createEnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "db/sphinx/production.conf"),
-		createEnvVarFromValue("THINKING_SPHINX_PID_FILE", "db/sphinx/searchd.pid"),
-		createEnvVarFromValue("DELTA_INDEX_INTERVAL", "5"),
-		createEnvVarFromValue("FULL_REINDEX_INTERVAL", "60"),
+		envVarFromConfigMap("RAILS_ENV", "system-environment", "RAILS_ENV"),
+		envVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
+		envVarFromValue("THINKING_SPHINX_ADDRESS", "0.0.0.0"),
+		envVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "db/sphinx/production.conf"),
+		envVarFromValue("THINKING_SPHINX_PID_FILE", "db/sphinx/searchd.pid"),
+		envVarFromValue("DELTA_INDEX_INTERVAL", "5"),
+		envVarFromValue("FULL_REINDEX_INTERVAL", "60"),
 	)
 	return result
 }
@@ -390,52 +390,52 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	result = append(result, baseEnvConfigMapEnvs...)
 
 	result = append(result,
-		createEnvvarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
+		envVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
 
-		createEnvvarFromSecret("MASTER_DOMAIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterDomainFieldName),
-		createEnvvarFromSecret("MASTER_USER", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterUserFieldName),
-		createEnvvarFromSecret("MASTER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterPasswordFieldName),
+		envVarFromSecret("MASTER_DOMAIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterDomainFieldName),
+		envVarFromSecret("MASTER_USER", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterUserFieldName),
+		envVarFromSecret("MASTER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterPasswordFieldName),
 
-		createEnvvarFromSecret("ADMIN_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminAccessTokenFieldName),
-		createEnvvarFromSecret("USER_LOGIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminUserFieldName),
-		createEnvvarFromSecret("USER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminPasswordFieldName),
-		createEnvvarFromSecret("USER_EMAIL", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminEmailFieldName),
-		createEnvvarFromSecret("TENANT_NAME", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedTenantNameFieldName),
+		envVarFromSecret("ADMIN_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminAccessTokenFieldName),
+		envVarFromSecret("USER_LOGIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminUserFieldName),
+		envVarFromSecret("USER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminPasswordFieldName),
+		envVarFromSecret("USER_EMAIL", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminEmailFieldName),
+		envVarFromSecret("TENANT_NAME", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedTenantNameFieldName),
 
-		createEnvVarFromValue("THINKING_SPHINX_ADDRESS", "system-sphinx"),
-		createEnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "/tmp/sphinx.conf"),
+		envVarFromValue("THINKING_SPHINX_ADDRESS", "system-sphinx"),
+		envVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "/tmp/sphinx.conf"),
 
-		createEnvvarFromSecret("EVENTS_SHARED_SECRET", SystemSecretSystemEventsHookSecretName, SystemSecretSystemEventsHookPasswordFieldName),
+		envVarFromSecret("EVENTS_SHARED_SECRET", SystemSecretSystemEventsHookSecretName, SystemSecretSystemEventsHookPasswordFieldName),
 
-		createEnvvarFromSecret("RECAPTCHA_PUBLIC_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPublicKeyFieldName),
-		createEnvvarFromSecret("RECAPTCHA_PRIVATE_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPrivateKeyFieldName),
+		envVarFromSecret("RECAPTCHA_PUBLIC_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPublicKeyFieldName),
+		envVarFromSecret("RECAPTCHA_PRIVATE_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPrivateKeyFieldName),
 
-		createEnvvarFromSecret("SECRET_KEY_BASE", SystemSecretSystemAppSecretName, SystemSecretSystemAppSecretKeyBaseFieldName),
+		envVarFromSecret("SECRET_KEY_BASE", SystemSecretSystemAppSecretName, SystemSecretSystemAppSecretKeyBaseFieldName),
 
-		createEnvvarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
+		envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
 
-		createEnvvarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
+		envVarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
 
-		createEnvvarFromSecret("BACKEND_REDIS_URL", "backend-redis", "REDIS_STORAGE_URL"),
+		envVarFromSecret("BACKEND_REDIS_URL", "backend-redis", "REDIS_STORAGE_URL"),
 	)
 
-	bckListenerApicastRouteEnv := createEnvvarFromSecret("APICAST_BACKEND_ROOT_ENDPOINT", "backend-listener", "route_endpoint")
-	bckListenerRouteEnv := createEnvvarFromSecret("BACKEND_ROUTE", "backend-listener", "route_endpoint")
+	bckListenerApicastRouteEnv := envVarFromSecret("APICAST_BACKEND_ROOT_ENDPOINT", "backend-listener", "route_endpoint")
+	bckListenerRouteEnv := envVarFromSecret("BACKEND_ROUTE", "backend-listener", "route_endpoint")
 	result = append(result, bckListenerApicastRouteEnv, bckListenerRouteEnv)
 
 	smtpEnvConfigMapEnvs := system.getSystemSmtpEnvsFromSMTPConfigMap()
 	result = append(result, smtpEnvConfigMapEnvs...)
 
-	apicastAccessToken := createEnvvarFromSecret("APICAST_ACCESS_TOKEN", "system-master-apicast", "ACCESS_TOKEN")
+	apicastAccessToken := envVarFromSecret("APICAST_ACCESS_TOKEN", "system-master-apicast", "ACCESS_TOKEN")
 	result = append(result, apicastAccessToken)
 
 	// Add zync secret to envvars sources
-	zyncAuthTokenVar := createEnvvarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN")
+	zyncAuthTokenVar := envVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN")
 	result = append(result, zyncAuthTokenVar)
 
 	// Add backend internal api data to envvars sources
-	systemBackendInternalAPIUser := createEnvvarFromSecret("CONFIG_INTERNAL_API_USER", "backend-internal-api", "username")
-	systemBackendInternalAPIPass := createEnvvarFromSecret("CONFIG_INTERNAL_API_PASSWORD", "backend-internal-api", "password")
+	systemBackendInternalAPIUser := envVarFromSecret("CONFIG_INTERNAL_API_USER", "backend-internal-api", "username")
+	systemBackendInternalAPIPass := envVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", "backend-internal-api", "password")
 	result = append(result, systemBackendInternalAPIUser, systemBackendInternalAPIPass)
 
 	return result
@@ -1013,8 +1013,8 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
 							},
 							Env: []v1.EnvVar{
-								createEnvVarFromValue("SLEEP_SECONDS", "1"),
-								createEnvvarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
+								envVarFromValue("SLEEP_SECONDS", "1"),
+								envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
 							},
 						},
 					},
@@ -1486,7 +1486,7 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 							Image:   "amp-system:latest",
 							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
 							Env: []v1.EnvVar{
-								createEnvVarFromValue("SLEEP_SECONDS", "1"),
+								envVarFromValue("SLEEP_SECONDS", "1"),
 							},
 						},
 					},

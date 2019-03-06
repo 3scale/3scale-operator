@@ -1,8 +1,8 @@
 package component
 
-import "k8s.io/api/core/v1"
+import v1 "k8s.io/api/core/v1"
 
-func createEnvVarFromConfigMap(envVarName string, configMapName, configMapKey string) v1.EnvVar {
+func envVarFromConfigMap(envVarName string, configMapName, configMapKey string) v1.EnvVar {
 	return v1.EnvVar{
 		Name: envVarName,
 		ValueFrom: &v1.EnvVarSource{
@@ -16,14 +16,14 @@ func createEnvVarFromConfigMap(envVarName string, configMapName, configMapKey st
 	}
 }
 
-func createEnvVarFromValue(name string, value string) v1.EnvVar {
+func envVarFromValue(name string, value string) v1.EnvVar {
 	return v1.EnvVar{
 		Name:  name,
 		Value: value,
 	}
 }
 
-func createEnvvarFromSecret(envVarName string, secretName, secretKey string) v1.EnvVar {
+func envVarFromSecret(envVarName string, secretName, secretKey string) v1.EnvVar {
 	return v1.EnvVar{
 		Name: envVarName,
 		ValueFrom: &v1.EnvVarSource{

@@ -204,8 +204,8 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 							"-c",
 							"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
 						}, Env: []v1.EnvVar{
-							createEnvVarFromValue("SLEEP_SECONDS", "1"),
-							createEnvvarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
+							envVarFromValue("SLEEP_SECONDS", "1"),
+							envVarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
 						},
 					},
 				},
@@ -289,8 +289,8 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 							"-c",
 							"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
 						}, Env: []v1.EnvVar{
-							createEnvVarFromValue("SLEEP_SECONDS", "1"),
-							createEnvvarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
+							envVarFromValue("SLEEP_SECONDS", "1"),
+							envVarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
 						},
 					},
 				},
@@ -522,13 +522,13 @@ func (backend *Backend) buildBackendRedisSecrets() *v1.Secret {
 
 func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
 	return []v1.EnvVar{
-		createEnvvarFromSecret("CONFIG_REDIS_PROXY", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
-		createEnvvarFromSecret("CONFIG_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
-		createEnvvarFromSecret("CONFIG_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
-		createEnvvarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
-		createEnvvarFromSecret("CONFIG_QUEUES_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelHostsFieldName),
-		createEnvvarFromSecret("CONFIG_QUEUES_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelRoleFieldName),
-		createEnvVarFromConfigMap("RACK_ENV", "backend-environment", "RACK_ENV"),
+		envVarFromSecret("CONFIG_REDIS_PROXY", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
+		envVarFromSecret("CONFIG_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
+		envVarFromSecret("CONFIG_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
+		envVarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
+		envVarFromSecret("CONFIG_QUEUES_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelHostsFieldName),
+		envVarFromSecret("CONFIG_QUEUES_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelRoleFieldName),
+		envVarFromConfigMap("RACK_ENV", "backend-environment", "RACK_ENV"),
 	}
 }
 
@@ -536,8 +536,8 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, backend.buildBackendCommonEnv()...)
 	result = append(result,
-		createEnvvarFromSecret("CONFIG_EVENTS_HOOK", "system-events-hook", "URL"),
-		createEnvvarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
+		envVarFromSecret("CONFIG_EVENTS_HOOK", "system-events-hook", "URL"),
+		envVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
 	)
 	return result
 }
@@ -552,9 +552,9 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, backend.buildBackendCommonEnv()...)
 	result = append(result,
-		createEnvVarFromValue("PUMA_WORKERS", "16"),
-		createEnvvarFromSecret("CONFIG_INTERNAL_API_USER", BackendSecretInternalApiSecretName, BackendSecretInternalApiUsernameFieldName),
-		createEnvvarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
+		envVarFromValue("PUMA_WORKERS", "16"),
+		envVarFromSecret("CONFIG_INTERNAL_API_USER", BackendSecretInternalApiSecretName, BackendSecretInternalApiUsernameFieldName),
+		envVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
 	)
 	return result
 }

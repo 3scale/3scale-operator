@@ -271,15 +271,15 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 									Protocol:      v1.Protocol("TCP")},
 							},
 							Env: []v1.EnvVar{
-								createEnvvarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
-								createEnvvarFromSecret("MYSQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
+								envVarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
+								envVarFromSecret("MYSQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
 								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
 								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
 								// are deprecated we should be able to change this.
-								createEnvVarFromValue("MYSQL_DATABASE", mysql.Options.databaseName),
-								createEnvVarFromValue("MYSQL_ROOT_PASSWORD", mysql.Options.rootPassword),
-								createEnvVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
-								createEnvVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
+								envVarFromValue("MYSQL_DATABASE", mysql.Options.databaseName),
+								envVarFromValue("MYSQL_ROOT_PASSWORD", mysql.Options.rootPassword),
+								envVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
+								envVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
 							},
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{

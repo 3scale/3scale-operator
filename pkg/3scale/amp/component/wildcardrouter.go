@@ -269,6 +269,6 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 
 func (wr *WildcardRouter) buildWildcardRouterEnv() []v1.EnvVar {
 	return []v1.EnvVar{
-		createEnvvarFromSecret("API_HOST", "system-master-apicast", "BASE_URL"),
+		envVarFromSecret("API_HOST", "system-master-apicast", "BASE_URL"),
 	}
 }

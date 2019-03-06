@@ -155,11 +155,11 @@ func (s3 *S3) removeRWXStorageClassParameter(template *templatev1.Template) {
 
 func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 	return []v1.EnvVar{
-		createEnvVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-		createEnvvarFromSecret("AWS_ACCESS_KEY_ID", s3.Options.awsCredentialsSecret, S3SecretAWSAccessKeyIdFieldName),
-		createEnvvarFromSecret("AWS_SECRET_ACCESS_KEY", s3.Options.awsCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
-		createEnvVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
-		createEnvVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
+		envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
+		envVarFromSecret("AWS_ACCESS_KEY_ID", s3.Options.awsCredentialsSecret, S3SecretAWSAccessKeyIdFieldName),
+		envVarFromSecret("AWS_SECRET_ACCESS_KEY", s3.Options.awsCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
+		envVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
+		envVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
 	}
 }
 
