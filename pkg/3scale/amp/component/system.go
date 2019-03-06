@@ -767,7 +767,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 										IntVal: 0,
 										StrVal: "master",
 									},
-									Scheme: v1.URIScheme("HTTP"),
+									Scheme: v1.URISchemeHTTP,
 									HTTPHeaders: []v1.HTTPHeader{
 										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
@@ -836,7 +836,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 										IntVal: 0,
 										StrVal: "provider",
 									},
-									Scheme: v1.URIScheme("HTTP"),
+									Scheme: v1.URISchemeHTTP,
 									HTTPHeaders: []v1.HTTPHeader{
 										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
@@ -905,7 +905,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 										IntVal: 0,
 										StrVal: "developer",
 									},
-									Scheme: v1.URIScheme("HTTP"),
+									Scheme: v1.URISchemeHTTP,
 									HTTPHeaders: []v1.HTTPHeader{
 										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
