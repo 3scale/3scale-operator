@@ -67,7 +67,7 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | PVC | `persistentVolumeClaim` | \*SystemPVCSpec | No | nil | Used to use a PersistentVolumeClaim as the System's file storage. See [SystemPVCSpec](#SystemPVCSpec) |
-| S3  | `sthree` | \*SystemS3Spec | No | nil | Used to use S3 as the System's file storage. See [SystemS3Spec](#SystemS3Spec) |
+| S3  | `amazonSimpleStorageService` | \*SystemS3Spec | No | nil | Used to use S3 as the System's file storage. See [SystemS3Spec](#SystemS3Spec) |
 
 Only one of the fields can be chosen. If no field is specified then PVC is used.
 
