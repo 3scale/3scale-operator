@@ -169,7 +169,7 @@ func (zync *Zync) buildZyncCronDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Rolling"),
+				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					UpdatePeriodSeconds: &[]int64{1}[0],
 					IntervalSeconds:     &[]int64{1}[0],
