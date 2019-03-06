@@ -235,7 +235,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 			},
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange")},
+					Type: appsv1.DeploymentTriggerOnConfigChange},
 			},
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": "system-mysql"},

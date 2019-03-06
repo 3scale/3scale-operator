@@ -146,7 +146,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange")},
+					Type: appsv1.DeploymentTriggerOnConfigChange},
 			},
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": "system-memcache"},
