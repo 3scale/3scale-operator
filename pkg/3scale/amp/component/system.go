@@ -977,7 +977,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 						v1.Volume{
 							Name: "system-tmp",
 							VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{
-								Medium: v1.StorageMedium("Memory")}},
+								Medium: v1.StorageMediumMemory}},
 						}, v1.Volume{
 							Name: "system-storage",
 							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
