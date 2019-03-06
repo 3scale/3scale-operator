@@ -374,7 +374,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 						Ports: []v1.ContainerPort{
 							v1.ContainerPort{HostPort: 0,
 								ContainerPort: 3000,
-								Protocol:      v1.Protocol("TCP")},
+								Protocol:      v1.ProtocolTCP},
 						},
 						Env: backend.buildBackendListenerEnv(),
 						Resources: v1.ResourceRequirements{
@@ -440,7 +440,7 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:     "http",
-					Protocol: v1.Protocol("TCP"),
+					Protocol: v1.ProtocolTCP,
 					Port:     3000,
 					TargetPort: intstr.IntOrString{
 						Type:   intstr.Type(0),

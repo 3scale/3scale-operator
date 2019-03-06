@@ -158,7 +158,7 @@ func (wr *WildcardRouter) buildWildcardRouterService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "http",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromString("http"),
 				},

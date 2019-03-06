@@ -723,7 +723,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									Name:          "master",
 									HostPort:      0,
 									ContainerPort: 3002,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: system.buildSystemBaseEnv(),
 							Resources: v1.ResourceRequirements{
@@ -792,7 +792,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									Name:          "provider",
 									HostPort:      0,
 									ContainerPort: 3000,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: system.buildSystemBaseEnv(),
 							Resources: v1.ResourceRequirements{
@@ -861,7 +861,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									Name:          "developer",
 									HostPort:      0,
 									ContainerPort: 3001,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: system.buildSystemBaseEnv(),
 							Resources: v1.ResourceRequirements{
@@ -1102,7 +1102,7 @@ func (system *System) buildSystemProviderService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "http",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("provider"),
 				},
@@ -1130,7 +1130,7 @@ func (system *System) buildSystemMasterService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "http",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("master"),
 				},
@@ -1158,7 +1158,7 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "http",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("developer"),
 				},
@@ -1185,7 +1185,7 @@ func (system *System) buildSystemRedisService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "redis",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       6379,
 					TargetPort: intstr.FromInt(6379),
 				},
@@ -1213,7 +1213,7 @@ func (system *System) buildSystemSphinxService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "sphinx",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       9306,
 					TargetPort: intstr.FromInt(9306),
 				},
@@ -1241,7 +1241,7 @@ func (system *System) buildSystemMemcachedService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "memcache",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       11211,
 					TargetPort: intstr.FromInt(11211),
 				},

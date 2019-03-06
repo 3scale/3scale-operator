@@ -162,7 +162,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 						Ports: []v1.ContainerPort{
 							v1.ContainerPort{HostPort: 0,
 								ContainerPort: 11211,
-								Protocol:      v1.Protocol("TCP")},
+								Protocol:      v1.ProtocolTCP},
 						},
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{

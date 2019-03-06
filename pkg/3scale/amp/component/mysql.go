@@ -165,7 +165,7 @@ func (mysql *Mysql) buildSystemMysqlService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "system-mysql",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       3306,
 					TargetPort: intstr.FromInt(3306),
 					NodePort:   0,
@@ -268,7 +268,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 							Ports: []v1.ContainerPort{
 								v1.ContainerPort{HostPort: 0,
 									ContainerPort: 3306,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: []v1.EnvVar{
 								envVarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),

@@ -199,13 +199,13 @@ func (apicast *Apicast) buildApicastStagingService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "gateway",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
 				},
 				v1.ServicePort{
 					Name:       "management",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8090,
 					TargetPort: intstr.FromInt(8090),
 				},
@@ -259,13 +259,13 @@ func (apicast *Apicast) buildApicastProductionService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "gateway",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
 				},
 				v1.ServicePort{
 					Name:       "management",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8090,
 					TargetPort: intstr.FromInt(8090),
 				},
