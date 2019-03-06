@@ -168,7 +168,6 @@ func (mysql *Mysql) buildSystemMysqlService() *v1.Service {
 					Protocol:   v1.Protocol("TCP"),
 					Port:       3306,
 					TargetPort: intstr.FromInt(3306),
-					NodePort:   0,
 				},
 			},
 			Selector: map[string]string{"deploymentConfig": "system-mysql"},
