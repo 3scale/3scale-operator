@@ -21,28 +21,6 @@ type BuildConfigsOptions struct {
 	gitRef   string
 }
 
-type BuildConfigsOptionsBuilder struct {
-	options BuildConfigsOptions
-}
-
-func (bcs *BuildConfigsOptionsBuilder) AppLabel(appLabel string) {
-	bcs.options.appLabel = appLabel
-}
-
-func (bcs *BuildConfigsOptionsBuilder) GitRef(gitRef string) {
-	bcs.options.gitRef = gitRef
-}
-
-func (bcs *BuildConfigsOptionsBuilder) Build() (*BuildConfigsOptions, error) {
-	if bcs.options.appLabel == "" {
-		return nil, fmt.Errorf("no AppLabel has been provided")
-	}
-	if bcs.options.gitRef == "" {
-		return nil, fmt.Errorf("no Git Ref. has been provided")
-	}
-	return &bcs.options, nil
-}
-
 type BuildConfigsOptionsProvider interface {
 	GetBuildConfigsOptions() *BuildConfigsOptions
 }
@@ -122,7 +100,7 @@ func (bcs *BuildConfigs) buildBackendBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend",
 			Labels: map[string]string{
-				"app":              bcs.Options.appLabel,
+				"app":                  bcs.Options.appLabel,
 				"threescale_component": "backend",
 			},
 		},
@@ -172,7 +150,7 @@ func (bcs *BuildConfigs) buildZyncBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"app":              bcs.Options.appLabel,
+				"app":                  bcs.Options.appLabel,
 				"threescale_component": "zync",
 			},
 		},
@@ -222,7 +200,7 @@ func (bcs *BuildConfigs) buildApicastBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast",
 			Labels: map[string]string{
-				"app":              bcs.Options.appLabel,
+				"app":                  bcs.Options.appLabel,
 				"threescale_component": "apicast",
 			},
 		},
@@ -275,7 +253,7 @@ func (bcs *BuildConfigs) buildWildcardRouterBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "wildcard-router",
 			Labels: map[string]string{
-				"app":              bcs.Options.appLabel,
+				"app":                  bcs.Options.appLabel,
 				"threescale_component": "wildcard-router",
 			},
 		},
@@ -327,7 +305,7 @@ func (bcs *BuildConfigs) buildSystemBuildConfig() *buildv1.BuildConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system",
 			Labels: map[string]string{
-				"app":              bcs.Options.appLabel,
+				"app":                  bcs.Options.appLabel,
 				"threescale_component": "system",
 			},
 		},

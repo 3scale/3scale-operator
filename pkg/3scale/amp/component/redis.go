@@ -41,52 +41,6 @@ func NewRedis(options []string) *Redis {
 	return redis
 }
 
-type RedisOptionsBuilder struct {
-	options RedisOptions
-}
-
-func (r *RedisOptionsBuilder) AppLabel(appLabel string) {
-	r.options.appLabel = appLabel
-}
-
-func (r *RedisOptionsBuilder) BackendImage(image string) {
-	r.options.backendImage = image
-}
-
-func (r *RedisOptionsBuilder) SystemImage(image string) {
-	r.options.systemImage = image
-}
-
-func (r *RedisOptionsBuilder) Build() (*RedisOptions, error) {
-	err := r.setRequiredOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	r.setNonRequiredOptions()
-
-	return &r.options, nil
-}
-
-func (r *RedisOptionsBuilder) setRequiredOptions() error {
-	if r.options.appLabel == "" {
-		return fmt.Errorf("no AppLabel has been provided")
-	}
-	if r.options.backendImage == "" {
-		return fmt.Errorf("no Redis Backend Image has been provided")
-	}
-
-	if r.options.systemImage == "" {
-		return fmt.Errorf("no Redis System Image has been provided")
-	}
-
-	return nil
-}
-
-func (r *RedisOptionsBuilder) setNonRequiredOptions() {
-
-}
-
 type RedisOptionsProvider interface {
 	GetRedisOptions() *RedisOptions
 }
@@ -204,7 +158,7 @@ const (
 
 func (redis *Redis) buildLabelsForDeploymentConfigObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                      redis.Options.appLabel,
+		"app":                          redis.Options.appLabel,
 		"threescale_component":         backendComponentNameLabel,
 		"threescale_component_element": backendComponentElementLabel,
 	}
@@ -258,8 +212,8 @@ func (redis *Redis) buildPodTemplateSpec() *v1.PodTemplateSpec {
 func (redis *Redis) buildPodObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Labels: map[string]string{
-			"deploymentConfig":         backendRedisDCSelectorName,
-			"app":                      redis.Options.appLabel,
+			"deploymentConfig":             backendRedisDCSelectorName,
+			"app":                          redis.Options.appLabel,
 			"threescale_component":         backendComponentNameLabel,
 			"threescale_component_element": backendComponentElementLabel,
 		},
@@ -398,7 +352,7 @@ func (redis *Redis) buildServiceObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForServiceObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                      redis.Options.appLabel,
+		"app":                          redis.Options.appLabel,
 		"threescale_component":         "backend",
 		"threescale_component_element": "redis",
 	}
@@ -451,7 +405,7 @@ func (redis *Redis) buildConfigMapObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForConfigMapObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                      redis.Options.appLabel,
+		"app":                          redis.Options.appLabel,
 		"threescale_component":         "system", // TODO should also be redis???
 		"threescale_component_element": "redis",
 	}
@@ -537,7 +491,7 @@ func (redis *Redis) buildPVCObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForPVCObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                      redis.Options.appLabel,
+		"app":                          redis.Options.appLabel,
 		"threescale_component":         "backend",
 		"threescale_component_element": "redis",
 	}
@@ -676,7 +630,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 			Labels: map[string]string{
 				"threescale_component":         "system",
 				"threescale_component_element": "redis",
-				"app":                      redis.Options.appLabel,
+				"app":                          redis.Options.appLabel,
 			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
