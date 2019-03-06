@@ -232,7 +232,7 @@ func (zync *Zync) buildZyncCronDeploymentConfig() *appsv1.DeploymentConfig {
 							Limits:   v1.ResourceList{"cpu": resource.MustParse("150m")},
 							Requests: v1.ResourceList{"cpu": resource.MustParse("50m")},
 						},
-						ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: v1.PullIfNotPresent,
 					},
 				},
 					ServiceAccountName: "amp",

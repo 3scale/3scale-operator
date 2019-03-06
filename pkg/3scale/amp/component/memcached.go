@@ -197,7 +197,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 							SuccessThreshold:    0,
 							FailureThreshold:    0,
 						},
-						ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: v1.PullIfNotPresent,
 					},
 				},
 				}},

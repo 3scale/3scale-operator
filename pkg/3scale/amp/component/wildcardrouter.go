@@ -240,7 +240,7 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 							},
 							Env:             wr.buildWildcardRouterEnv(),
 							Image:           "amp-wildcard-router:latest",
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            "apicast-wildcard-router",
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{

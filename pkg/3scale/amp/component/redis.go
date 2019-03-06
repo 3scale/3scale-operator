@@ -613,7 +613,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 								FailureThreshold:    0,
 							},
 							TerminationMessagePath: "/dev/termination-log",
-							ImagePullPolicy:        v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy:        v1.PullIfNotPresent,
 						},
 					},
 				}},

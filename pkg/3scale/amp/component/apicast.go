@@ -359,7 +359,7 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 							},
 							Env:             apicast.buildApicastStagingEnv(),
 							Image:           "amp-apicast:latest",
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            "apicast-staging",
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{
@@ -495,7 +495,7 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 							},
 							Env:             apicast.buildApicastProductionEnv(),
 							Image:           "amp-apicast:latest",
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            "apicast-production",
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{
