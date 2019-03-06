@@ -307,7 +307,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(0),
+										Type:   intstr.Type(intstr.Int),
 										IntVal: 3306}},
 								},
 								InitialDelaySeconds: 30,

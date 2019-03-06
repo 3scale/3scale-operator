@@ -175,13 +175,11 @@ func (zync *Zync) buildZyncCronDeploymentConfig() *appsv1.DeploymentConfig {
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{600}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			Triggers: appsv1.DeploymentTriggerPolicies{

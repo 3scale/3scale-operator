@@ -641,13 +641,11 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{1200}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					Pre: &appsv1.LifecycleHook{
@@ -749,8 +747,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "master"}},
 								},
 								InitialDelaySeconds: 40,
@@ -763,8 +760,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "master",
 									},
 									Scheme: v1.URISchemeHTTP,
@@ -818,8 +814,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "provider"}},
 								},
 								InitialDelaySeconds: 40,
@@ -832,8 +827,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "provider",
 									},
 									Scheme: v1.URISchemeHTTP,
@@ -887,8 +881,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "developer"}},
 								},
 								InitialDelaySeconds: 40,
@@ -901,8 +894,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "developer",
 									},
 									Scheme: v1.URISchemeHTTP,
@@ -944,13 +936,11 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{1200}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
@@ -1457,11 +1447,11 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					TimeoutSeconds:      &[]int64{1200}[0],

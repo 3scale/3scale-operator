@@ -295,11 +295,11 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					TimeoutSeconds:      &[]int64{1800}[0],
@@ -417,11 +417,11 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					TimeoutSeconds:      &[]int64{1800}[0],

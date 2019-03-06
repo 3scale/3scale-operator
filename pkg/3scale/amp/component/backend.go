@@ -166,13 +166,11 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{1200}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
@@ -251,13 +249,11 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{1200}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
@@ -338,13 +334,11 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{600}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
@@ -391,7 +385,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 						LivenessProbe: &v1.Probe{
 							Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 								Port: intstr.IntOrString{
-									Type:   intstr.Type(0),
+									Type:   intstr.Type(intstr.Int),
 									IntVal: 3000}},
 							},
 							InitialDelaySeconds: 30,
@@ -404,7 +398,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 							Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 								Path: "/status",
 								Port: intstr.IntOrString{
-									Type:   intstr.Type(0),
+									Type:   intstr.Type(intstr.Int),
 									IntVal: 3000}},
 							},
 							InitialDelaySeconds: 30,
@@ -443,7 +437,7 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 					Protocol: v1.ProtocolTCP,
 					Port:     3000,
 					TargetPort: intstr.IntOrString{
-						Type:   intstr.Type(0),
+						Type:   intstr.Type(intstr.Int),
 						IntVal: 3000,
 					},
 				},

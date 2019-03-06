@@ -188,11 +188,11 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					TimeoutSeconds:      &[]int64{1800}[0],
