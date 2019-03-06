@@ -175,7 +175,7 @@ func (apicast *Apicast) buildApicastStagingRoute() *routev1.Route {
 				TargetPort: intstr.FromString("gateway"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
+				Termination:                   routev1.TLSTerminationEdge,
 				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
 		},
 	}
@@ -235,7 +235,7 @@ func (apicast *Apicast) buildApicastProductionRoute() *routev1.Route {
 				TargetPort: intstr.FromString("gateway"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
+				Termination:                   routev1.TLSTerminationEdge,
 				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
 		},
 	}

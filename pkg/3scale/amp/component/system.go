@@ -1284,7 +1284,7 @@ func (system *System) buildSystemProviderRoute() *routev1.Route {
 				TargetPort: intstr.FromString("http"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
+				Termination:                   routev1.TLSTerminationEdge,
 				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
 		},
 	}
@@ -1310,7 +1310,7 @@ func (system *System) buildSystemMasterRoute() *routev1.Route {
 				TargetPort: intstr.FromString("http"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
+				Termination:                   routev1.TLSTerminationEdge,
 				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
 		},
 	}
@@ -1336,7 +1336,7 @@ func (system *System) buildSystemDeveloperRoute() *routev1.Route {
 				TargetPort: intstr.FromString("http"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
+				Termination:                   routev1.TLSTerminationEdge,
 				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
 		},
 	}

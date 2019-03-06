@@ -134,7 +134,7 @@ func (wr *WildcardRouter) buildWildcardRouterRoute() *routev1.Route {
 			},
 			WildcardPolicy: routev1.WildcardPolicyType(wr.Options.wildcardPolicy),
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
+				Termination:                   routev1.TLSTerminationEdge,
 				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
 		},
 	}
