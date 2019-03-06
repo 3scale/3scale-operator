@@ -1285,7 +1285,7 @@ func (system *System) buildSystemProviderRoute() *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -1311,7 +1311,7 @@ func (system *System) buildSystemMasterRoute() *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -1337,7 +1337,7 @@ func (system *System) buildSystemDeveloperRoute() *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }

@@ -474,7 +474,7 @@ func (backend *Backend) buildBackendListenerRoute() *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }

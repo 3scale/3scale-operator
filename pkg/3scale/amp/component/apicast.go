@@ -176,7 +176,7 @@ func (apicast *Apicast) buildApicastStagingRoute() *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -236,7 +236,7 @@ func (apicast *Apicast) buildApicastProductionRoute() *routev1.Route {
 			},
 			TLS: &routev1.TLSConfig{
 				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
