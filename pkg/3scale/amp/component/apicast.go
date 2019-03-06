@@ -535,11 +535,11 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 
 func (apicast *Apicast) buildApicastCommonEnv() []v1.EnvVar {
 	return []v1.EnvVar{
-		createEnvvarFromSecret("THREESCALE_PORTAL_ENDPOINT", "system-master-apicast", "PROXY_CONFIGS_ENDPOINT"),
-		createEnvvarFromSecret("BACKEND_ENDPOINT_OVERRIDE", "backend-listener", "service_endpoint"),
-		createEnvVarFromConfigMap("APICAST_MANAGEMENT_API", "apicast-environment", "APICAST_MANAGEMENT_API"),
-		createEnvVarFromConfigMap("OPENSSL_VERIFY", "apicast-environment", "OPENSSL_VERIFY"),
-		createEnvVarFromConfigMap("APICAST_RESPONSE_CODES", "apicast-environment", "APICAST_RESPONSE_CODES"),
+		envVarFromSecret("THREESCALE_PORTAL_ENDPOINT", "system-master-apicast", "PROXY_CONFIGS_ENDPOINT"),
+		envVarFromSecret("BACKEND_ENDPOINT_OVERRIDE", "backend-listener", "service_endpoint"),
+		envVarFromConfigMap("APICAST_MANAGEMENT_API", "apicast-environment", "APICAST_MANAGEMENT_API"),
+		envVarFromConfigMap("OPENSSL_VERIFY", "apicast-environment", "OPENSSL_VERIFY"),
+		envVarFromConfigMap("APICAST_RESPONSE_CODES", "apicast-environment", "APICAST_RESPONSE_CODES"),
 	}
 }
 
@@ -547,10 +547,10 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, apicast.buildApicastCommonEnv()...)
 	result = append(result,
-		createEnvVarFromValue("APICAST_CONFIGURATION_LOADER", "lazy"),
-		createEnvVarFromValue("APICAST_CONFIGURATION_CACHE", "0"),
-		createEnvVarFromValue("THREESCALE_DEPLOYMENT_ENV", "staging"),
-		createEnvvarFromSecret("REDIS_URL", ApicastSecretRedisSecretName, ApicastSecretRedisStagingURLFieldName),
+		envVarFromValue("APICAST_CONFIGURATION_LOADER", "lazy"),
+		envVarFromValue("APICAST_CONFIGURATION_CACHE", "0"),
+		envVarFromValue("THREESCALE_DEPLOYMENT_ENV", "staging"),
+		envVarFromSecret("REDIS_URL", ApicastSecretRedisSecretName, ApicastSecretRedisStagingURLFieldName),
 	)
 	return result
 }
@@ -559,10 +559,10 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, apicast.buildApicastCommonEnv()...)
 	result = append(result,
-		createEnvVarFromValue("APICAST_CONFIGURATION_LOADER", "boot"),
-		createEnvVarFromValue("APICAST_CONFIGURATION_CACHE", "300"),
-		createEnvVarFromValue("THREESCALE_DEPLOYMENT_ENV", "production"),
-		createEnvvarFromSecret("REDIS_URL", ApicastSecretRedisSecretName, ApicastSecretRedisProductionURLFieldName),
+		envVarFromValue("APICAST_CONFIGURATION_LOADER", "boot"),
+		envVarFromValue("APICAST_CONFIGURATION_CACHE", "300"),
+		envVarFromValue("THREESCALE_DEPLOYMENT_ENV", "production"),
+		envVarFromSecret("REDIS_URL", ApicastSecretRedisSecretName, ApicastSecretRedisProductionURLFieldName),
 	)
 	return result
 }
