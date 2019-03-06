@@ -651,7 +651,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 						StrVal: "25%",
 					},
 					Pre: &appsv1.LifecycleHook{
-						FailurePolicy: appsv1.LifecycleHookFailurePolicy("Retry"),
+						FailurePolicy: appsv1.LifecycleHookFailurePolicyRetry,
 						ExecNewPod: &appsv1.ExecNewPodHook{
 							// TODO the MASTER_ACCESS_TOKEN reference should be probably set as an envvar that gathers its value from the system-seed secret
 							// but changing that probably has some implications during an upgrade process of the product
@@ -661,7 +661,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							Volumes:       []string{"system-storage"}},
 					},
 					Post: &appsv1.LifecycleHook{
-						FailurePolicy: appsv1.LifecycleHookFailurePolicy("Abort"),
+						FailurePolicy: appsv1.LifecycleHookFailurePolicyAbort,
 						ExecNewPod: &appsv1.ExecNewPodHook{
 							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:post_deploy"},
 							ContainerName: "system-master"}}},
