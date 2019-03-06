@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/go-logr/logr"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
@@ -39,7 +41,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileAPIManager{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileAPIManager{client: mgr.GetClient(), scheme: mgr.GetScheme(), reqLogger: log}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -65,8 +67,9 @@ var _ reconcile.Reconciler = &ReconcileAPIManager{}
 type ReconcileAPIManager struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client    client.Client
+	scheme    *runtime.Scheme
+	reqLogger logr.Logger
 }
 
 // Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
@@ -77,48 +80,48 @@ type ReconcileAPIManager struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling APIManager")
+	r.reqLogger = log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	r.reqLogger.Info("Reconciling APIManager")
 
 	// Fetch the APIManager instance
 	instance := &appsv1alpha1.APIManager{}
 
-	reqLogger.Info("Trying to get APIManager resource")
+	r.reqLogger.Info("Trying to get APIManager resource")
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted")
+			r.reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted")
 			return reconcile.Result{}, nil
 		}
-		reqLogger.Error(err, "APIManager Resource cannot be created. Requeuing request...")
+		r.reqLogger.Error(err, "APIManager Resource cannot be created. Requeuing request...")
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	reqLogger.Info("Successfully retreived APIManager resource")
+	r.reqLogger.Info("Successfully retreived APIManager resource")
 
-	reqLogger.Info("Setting defaults for APIManager resource")
+	r.reqLogger.Info("Setting defaults for APIManager resource")
 	changed, err := instance.SetDefaults() // TODO check where to put this
 	if err != nil {
 		// Error setting defaults - Stop reconciliation
 		return reconcile.Result{}, nil
 	}
 	if changed {
-		reqLogger.Info("Updating defaults for APIManager resource")
+		r.reqLogger.Info("Updating defaults for APIManager resource")
 		err = r.client.Update(context.TODO(), instance)
 		if err != nil {
-			reqLogger.Error(err, "APIManager Resource cannot be updated. Requeuing request...")
+			r.reqLogger.Error(err, "APIManager Resource cannot be updated. Requeuing request...")
 			return reconcile.Result{}, err
 		}
-		reqLogger.Info("Successfully updated defaults for APIManager resource")
+		r.reqLogger.Info("Successfully updated defaults for APIManager resource")
 		return reconcile.Result{}, nil
 	}
 
-	objs, err := createAPIManager(instance, r.client)
+	objs, err := r.apiManagerObjects(instance)
 	if err != nil {
-		reqLogger.Error(err, "Error creating APIManager objects. Requeuing request...")
+		r.reqLogger.Error(err, "Error creating APIManager objects. Requeuing request...")
 		return reconcile.Result{}, err
 	}
 
@@ -129,7 +132,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		objectMeta.SetNamespace(instance.Namespace)
 		err = controllerutil.SetControllerReference(instance, objectMeta, r.scheme)
 		if err != nil {
-			reqLogger.Error(err, "Error setting OwnerReference on object. Requeuing request...",
+			r.reqLogger.Error(err, "Error setting OwnerReference on object. Requeuing request...",
 				"Kind", obj.GetObjectKind(),
 				"Namespace", objectMeta.GetNamespace(),
 				"Name", objectMeta.GetName(),
@@ -151,45 +154,73 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		if err != nil {
 			if errors.IsNotFound(err) {
 				// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
-				err = r.client.Create(context.TODO(), obj)
-				if err != nil {
-					reqLogger.Error(err, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
-					return reconcile.Result{}, err
+				createErr := r.client.Create(context.TODO(), obj)
+				if createErr != nil {
+					r.reqLogger.Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
+					return reconcile.Result{}, createErr
 				}
-				reqLogger.Info(fmt.Sprintf("Created object %s", objectInfo))
+				r.reqLogger.Info(fmt.Sprintf("Created object %s", objectInfo))
 			} else {
-				reqLogger.Error(err, fmt.Sprintf("Failed to get %s.  Requeuing request...", objectInfo))
+				r.reqLogger.Error(err, fmt.Sprintf("Failed to get %s.  Requeuing request...", objectInfo))
 				return reconcile.Result{}, err
 			}
 		} else {
-			reqLogger.Info(fmt.Sprintf("Object %s already exists", objectInfo))
-		}
-
-		// Update secrets with consistent data
-		if secret, ok := objCopy.(*v1.Secret); ok {
-			reqLogger.Info("Object is a secret. Updating object...")
-			err = r.client.Update(context.TODO(), secret)
-			if err != nil {
-				reqLogger.Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
-				return reconcile.Result{}, err
+			r.reqLogger.Info(fmt.Sprintf("Object %s already exists", objectInfo))
+			if secret, ok := objCopy.(*v1.Secret); ok {
+				r.reqLogger.Info(fmt.Sprintf("Object %s is a secret. Reconciling it...", objectInfo))
+				// We get copy to avoid modifying possibly obtained object
+				// from the cache
+				foundSecret := found.(*v1.Secret)
+				r.reconcileSecret(secret, foundSecret, instance)
+				if err != nil {
+					r.reqLogger.Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
+					return reconcile.Result{}, err
+				}
 			}
 		}
-		// Here means that the object has been able to be obtained
-		// and checking for differences should be done to reconcile possible
-		// differences that we want to handle
 	}
 
-	reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
+	r.reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
 	return reconcile.Result{}, nil
 }
 
-func createAPIManager(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	results, err := createAPIManagerObjects(cr, client)
+func (r *ReconcileAPIManager) reconcileSecret(desired, current *v1.Secret, cr *appsv1alpha1.APIManager) error {
+	// We copy the secrets because we don't know the source of them. Might
+	// come from the Cache
+	currentCopy := current.DeepCopy()
+	desiredCopy := desired.DeepCopy()
+
+	// We convert StringData to Data because stringData cannot be read when
+	// obtained from the Kubernetes API and we need to compare the secret
+	// data
+	desiredCopy.Data = secretStringDataToData(desiredCopy.StringData)
+	if secretsEqual(currentCopy, desiredCopy) {
+		r.reqLogger.Info(fmt.Sprintf("Secret %s is already reconciled. Update skipped", currentCopy.Name))
+		return nil
+	}
+	currentCopy.StringData = desiredCopy.StringData
+	currentCopy.Annotations = desiredCopy.Annotations
+	currentCopy.Labels = desiredCopy.Labels
+	currentCopy.Finalizers = desiredCopy.Finalizers
+	err := controllerutil.SetControllerReference(cr, currentCopy, r.scheme)
+	if err != nil {
+		return err
+	}
+
+	r.reqLogger.Info(fmt.Sprintf("Secret %s is not equal to the expected secret. Updating ...", currentCopy.Name))
+	if err = r.client.Update(context.TODO(), currentCopy); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ReconcileAPIManager) apiManagerObjects(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	results, err := r.apiManagerObjectsGroup(cr)
 	if err != nil {
 		return nil, err
 	}
 
-	results, err = postProcessAPIManagerObjects(cr, client, results)
+	results, err = r.postProcessAPIManagerObjectsGroup(cr, results)
 	if err != nil {
 		return nil, err
 	}
@@ -197,65 +228,65 @@ func createAPIManager(cr *appsv1alpha1.APIManager, client client.Client) ([]runt
 	return results, nil
 }
 
-func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	results := []runtime.RawExtension{}
 
-	images, err := createImages(cr)
+	images, err := r.createImages(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, images...)
 
-	redis, err := createRedis(cr)
+	redis, err := r.createRedis(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, redis...)
 
-	backend, err := createBackend(cr, client)
+	backend, err := r.createBackend(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, backend...)
 
-	mysql, err := createMysql(cr, client)
+	mysql, err := r.createMysql(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, mysql...)
 
-	memcached, err := createMemcached(cr)
+	memcached, err := r.createMemcached(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, memcached...)
 
-	system, err := createSystem(cr, client)
+	system, err := r.createSystem(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, system...)
 
-	zync, err := createZync(cr, client)
+	zync, err := r.createZync(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, zync...)
 
-	apicast, err := createApicast(cr, client)
+	apicast, err := r.createApicast(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, apicast...)
 
-	wildcardRouter, err := createWildcardRouter(cr)
+	wildcardRouter, err := r.createWildcardRouter(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, wildcardRouter...)
 
 	if cr.Spec.SystemSpec.FileStorageSpec.S3 != nil {
-		s3, err := createS3(cr, client)
+		s3, err := r.createS3(cr)
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +296,7 @@ func createAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client) 
 	return results, nil
 }
 
-func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Client, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1.APIManager, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
 	if !*cr.Spec.ResourceRequirementsEnabled {
 		e := component.Evaluation{}
 		e.PostProcessObjects(objects)
@@ -292,7 +323,7 @@ func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Cli
 	}
 
 	if cr.Spec.HighAvailabilitySpec != nil && cr.Spec.HighAvailabilitySpec.Enabled {
-		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 		opts, err := optsProvider.GetHighAvailabilityOptions()
 		if err != nil {
 			return nil, err
@@ -304,7 +335,7 @@ func postProcessAPIManagerObjects(cr *appsv1alpha1.APIManager, client client.Cli
 	return objects, nil
 }
 
-func createImages(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createImages(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	optsProvider := operator.OperatorAmpImagesOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetAmpImagesOptions()
 	if err != nil {
@@ -320,15 +351,15 @@ func createImages(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	optsProvider := operator.OperatorRedisOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetRedisOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	r := component.Redis{Options: opts}
-	result, err := r.GetObjects()
+	redis := component.Redis{Options: opts}
+	result, err := redis.GetObjects()
 	if err != nil {
 		return nil, err
 	}
@@ -336,8 +367,8 @@ func createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	return result, nil
 }
 
-func createBackend(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetBackendOptions()
 	if err != nil {
 		return nil, err
@@ -352,8 +383,8 @@ func createBackend(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime
 	return result, nil
 }
 
-func createMysql(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createMysql(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetMysqlOptions()
 	if err != nil {
 		return nil, err
@@ -368,7 +399,7 @@ func createMysql(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.R
 	return result, nil
 }
 
-func createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	optsProvider := operator.OperatorMemcachedOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetMemcachedOptions()
 	if err != nil {
@@ -384,8 +415,8 @@ func createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error
 	return result, nil
 }
 
-func createSystem(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetSystemOptions()
 	if err != nil {
 		return nil, err
@@ -400,8 +431,8 @@ func createSystem(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.
 	return result, nil
 }
 
-func createZync(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetZyncOptions()
 	if err != nil {
 		return nil, err
@@ -416,8 +447,8 @@ func createZync(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.Ra
 	return result, nil
 }
 
-func createApicast(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {
 		return nil, err
@@ -432,7 +463,7 @@ func createApicast(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime
 	return result, nil
 }
 
-func createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
 	optsProvider := operator.OperatorWildcardRouterOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetWildcardRouterOptions()
 	if err != nil {
@@ -447,8 +478,8 @@ func createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, 
 	return result, nil
 }
 
-func createS3(cr *appsv1alpha1.APIManager, client client.Client) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetS3Options()
 	if err != nil {
 		return nil, err

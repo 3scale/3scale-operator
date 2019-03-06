@@ -39,28 +39,21 @@ func getSecretDataValue(secretData map[string][]byte, fieldName string) *string 
 	}
 }
 
-/* TODO unfinished
-if exists in Current and not exists in expected then remove what's in current ???
-ix exits in Current and exists in expected then do not modify current
-if not exists in Current and exists in expected then set current to expected
-if not exists in Current and not exists in expected then do nothing
-*/
-// Returns a new map containing the merged data of expected into current.
-// If there are duplicate keys then the contents are NOT overwritten
-// (this is, current has preference). Also, keys already existing in
-// the current map but not existing in expected are removed
-func mergeSecretData(current, expected map[string][]byte) map[string][]byte {
+// Returns a new map containing the contents of `from` and the
+// contents of `to`. The value for entries with duplicated keys
+// will be that of `from`
+func mergeSecretData(from, to map[string][]byte) map[string][]byte {
 	result := map[string][]byte{}
-	for key := range expected {
-		if _, exists := current[key]; !exists {
-			val := make([]byte, len(current[key]))
-			copy(val, current[key])
-			result[key] = val
-		} else {
-			val := make([]byte, len(current[key]))
-			copy(val, expected[key])
-			result[key] = val
-		}
+	for key := range to {
+		val := make([]byte, len(to[key]))
+		copy(val, to[key])
+		result[key] = val
+	}
+
+	for key := range from {
+		val := make([]byte, len(from[key]))
+		copy(val, from[key])
+		result[key] = val
 	}
 
 	return result
