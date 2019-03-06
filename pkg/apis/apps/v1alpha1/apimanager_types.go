@@ -160,7 +160,7 @@ type SystemFileStorageSpec struct {
 	// +optional
 	PVC *SystemPVCSpec `json:"persistentVolumeClaim,omitempty"`
 	// +optional
-	S3 *SystemS3Spec `json:"sthree,omitempty"`
+	S3 *SystemS3Spec `json:"amazonSimpleStorageService,omitempty"`
 }
 
 type SystemPVCSpec struct {

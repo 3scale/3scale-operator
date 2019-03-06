@@ -7,7 +7,7 @@ spec:
   wildcardDomain: <desired-domain>
   system:
     fileStorage:
-      sthree:
+      amazonSimpleStorageService:
         awsRegion: <region>
         awsBucket: <bucket-name>
         awsCredentialsSecret:

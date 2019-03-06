@@ -69,12 +69,7 @@ spec:
                   type: object
                 fileStorage:
                   properties:
-                    persistentVolumeClaim:
-                      properties:
-                        storageClassName:
-                          type: string
-                      type: object
-                    sthree:
+                    amazonSimpleStorageService:
                       properties:
                         awsBucket:
                           type: string
@@ -89,6 +84,11 @@ spec:
                       - awsRegion
                       - awsCredentialsSecret
                       - fileUploadStorage
+                      type: object
+                    persistentVolumeClaim:
+                      properties:
+                        storageClassName:
+                          type: string
                       type: object
                   type: object
                 image:
