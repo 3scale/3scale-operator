@@ -2,11 +2,9 @@ package binding
 
 import (
 	"context"
-	"encoding/json"
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -57,6 +55,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
+
 	// All those objects can change the outcome of the consolidated objects because the binding points to it.
 	err = c.Watch(&source.Kind{Type: &apiv1alpha1.API{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: NonBindingTriggerFunc})
 	if err != nil {
@@ -135,91 +134,132 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 
 func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr.Logger) (reconcile.Result, error) {
 
-	//consolidated := apiv1alpha1.NewConsolidated(binding.Name+"-consolidated", binding.Namespace, nil, nil)
-	//Create an empty consolidated object to represent the current state.
-	currentConsolidated := &apiv1alpha1.Consolidated{}
+	// UpdateRequired controls whether if we need to update the status of the object or not
+	UpdateRequired := false
 
-	// Try to get the current Consolidated object based on the binding name and namespace
-	// we append "-consolidated" to the binding object name.
-	err := c.Get(context.TODO(), types.NamespacedName{Name: binding.Name + "-consolidated", Namespace: binding.Namespace}, currentConsolidated)
-
-	// IF Consolidated doesn't exists, let's create it.
-	if err != nil && errors.IsNotFound(err) {
-		// Getting the current consolidated object failed due to it being non-existent.
-		// Let's create it!
-		log.Info("ReconcileWith3scale: Creating new Consolidated object", currentConsolidated.Namespace, currentConsolidated.Name)
-		consolidated, err := apiv1alpha1.NewConsolidatedFromBinding(binding, c)
-		if err != nil {
-			return reconcile.Result{Requeue: true}, err
+	// Check if there's a finalizer or set it.
+	if binding.HasFinalizer() {
+		if binding.IsTerminating() {
+			log.Info("Binding is terminating, cleaning up.", binding.Name, binding.Namespace)
+			err := binding.CleanUp(c)
+			if err != nil {
+				log.Info("Clean up for Binding failed.", binding.Name, binding.Namespace)
+			}
+			return reconcile.Result{}, nil
 		}
-		trueVar := true
-		consolidated.SetOwnerReferences(append(consolidated.GetOwnerReferences(), v1.OwnerReference{
-			APIVersion: "capabilities.3scale.net/v1alpha1",
-			Kind:       "Binding",
-			Name:       binding.Name,
-			UID:        binding.UID,
-			Controller: &trueVar,
-		}))
-		consolidated.SetFinalizers([]string{"finalizer.capabilities.3scale.net"})
-
-		err = c.Create(context.TODO(), consolidated)
-		if err != nil {
-			return reconcile.Result{Requeue: true}, err
-		}
-
-	} else if err != nil {
-		// Something is broken when trying to get the existing consolidated Object
-		log.Error(err, "error")
-		return reconcile.Result{Requeue: true}, err
 	} else {
-		// Consolidated Object Already exists
-		// Let's compare those, first, we should calculate the desired Consolidated object.
-		desiredConsolidated, err := apiv1alpha1.NewConsolidatedFromBinding(binding, c)
+		err := binding.AddFinalizer(c)
 		if err != nil {
 			log.Error(err, "error")
+		}
+		// Let's just requeue as we have modified the object.
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	// Get the current state in the binding object
+	initialState, err := binding.GetCurrentState()
+	if err != nil {
+		log.Error(err, "Error getting the initial state binding")
+		return reconcile.Result{RequeueAfter: 1 * time.Minute, Requeue: true}, err
+	}
+
+	// Generate a new current state from 3scale
+	currentState, err := binding.NewCurrentState(c)
+	if err != nil {
+		log.Error(err, "Error getting current state from binding status")
+		return reconcile.Result{RequeueAfter: 1 * time.Minute, Requeue: true}, err
+
+	}
+
+	// Set the current state in the binding object
+	err = binding.SetCurrentState(*currentState)
+	if err != nil {
+		log.Error(err, "Error Reconciling APIs")
+	}
+
+	// If the initial state and the current state are different, set the previousState field in the status and
+	// mark the object for update
+	if initialState != nil && !apiv1alpha1.CompareStates(*initialState, *currentState) {
+		err := binding.SetPreviousState(*initialState)
+		if err != nil {
+			log.Error(err, "Error setting previous state")
+		}
+		UpdateRequired = true
+	}
+
+	//Generate a new desiredState from the CRDs
+	desiredState, err := binding.NewDesiredState(c)
+	if err != nil {
+		log.Error(err, "Error getting desired state from binding status")
+
+	}
+	// Set the desiredState in the binding objects
+	err = binding.SetDesiredState(*desiredState)
+	if err != nil {
+		log.Error(err, "Error Reconciling APIs")
+	}
+
+	// Reconcile the previousState, usually to remove a non existant API
+	previousState, _ := binding.GetPreviousState()
+	if previousState != nil {
+		log.Info("Previous State exists, reconciling.", binding.Name, binding.Namespace)
+
+		c, err := apiv1alpha1.NewPortaClient(currentState.Credentials)
+		if err != nil {
+			log.Error(err, "Failed creating client")
+		}
+		desiredState, err := binding.GetDesiredState()
+		if err != nil {
+			log.Error(err, "Failed to get desired state")
+		}
+		apisDiff := apiv1alpha1.DiffAPIs(previousState.APIs, desiredState.APIs)
+		for _, api := range apisDiff.MissingFromB {
+			err := api.DeleteFrom3scale(c)
+			if err != nil {
+				log.Error(err, "Failed to delete internal api from 3scale")
+			}
+		}
+		// Clean the "PreviousState" if needed, and mark the object for udpate
+		binding.Status.PreviousState = nil
+		UpdateRequired = true
+	}
+
+	// Now we check if the State (current, desired) is in sync.
+	// if it's not in sync, we reconcile the APIs and mark the object for update
+	if binding.StateInSync() {
+		log.Info("State is in sync")
+	} else {
+		log.Info("State is not in sync, reconciling APIs")
+		apisDiff := apiv1alpha1.DiffAPIs(desiredState.APIs, currentState.APIs)
+		err = apisDiff.ReconcileWith3scale(desiredState.Credentials)
+		if err != nil {
+			log.Error(err, "Error Reconciling APIs")
+		}
+
+		// Refresh the current State
+		currentState, err := binding.NewCurrentState(c)
+		if err != nil {
+			log.Error(err, "Error getting current state from binding status")
+		}
+		err = binding.SetCurrentState(*currentState)
+		if err != nil {
+			log.Error(err, "Error Reconciling APIs")
+		}
+
+		// Update the LastSync field.
+		binding.SetLastSuccessfulSync()
+		UpdateRequired = true
+		log.Info("Reconciliation finished.")
+	}
+
+	// Update the object status fields.
+	if UpdateRequired {
+		err = binding.UpdateStatus(c)
+		if err != nil {
+			log.Error(err, "Failed to update status of binding object")
 			return reconcile.Result{Requeue: true}, err
 		}
-		// Compare with the current consolidated object.
-		if apiv1alpha1.CompareConsolidated(*currentConsolidated, *desiredConsolidated) {
-			// Desired and existing are equal, nothing to do.
-			log.Info("Skipping reconciliation: Consolidated config ok.", currentConsolidated.Namespace, currentConsolidated.Name)
-		} else {
-			// Consolidated Objects are different, let's update the existing one with the desired object.
-			trueVar := true
-			// We set the binding as the owner of the consolidated object, if one gets removed, this one would  too
-			desiredConsolidated.SetOwnerReferences(append(desiredConsolidated.GetOwnerReferences(), v1.OwnerReference{
-				APIVersion: "capabilities.3scale.net/v1alpha1",
-				Kind:       "Binding",
-				Name:       binding.Name,
-				UID:        binding.UID,
-				Controller: &trueVar,
-			}))
-			// Set the proper Meta from the existing object.
-			desiredConsolidated.ObjectMeta = currentConsolidated.ObjectMeta
-			previousVersion, _ := json.Marshal(currentConsolidated.Spec)
-
-			err := c.Update(context.TODO(), desiredConsolidated)
-			if err != nil {
-				// Something went wrong when trying to update the actual consolidated object.
-				log.Error(err, "error")
-				return reconcile.Result{Requeue: true}, err
-			}
-
-			// Add a list of the previous APIs.
-			consolidatedStatus := apiv1alpha1.ConsolidatedStatus{}
-			consolidatedStatus.PreviousVersion = string(previousVersion)
-			desiredConsolidated.Status = consolidatedStatus
-			err = c.Status().Update(context.TODO(), desiredConsolidated)
-			if err != nil {
-				// Something went wrong when trying to update the actual consolidated object.
-				log.Error(err, "error")
-				return reconcile.Result{Requeue: true}, err
-			}
-
-			// All done here
-			log.Info("Reconciliation: Consolidated config has been updated.", currentConsolidated.Namespace, currentConsolidated.Name)
-		}
 	}
-	// Return without errors and resume the reconcile loop
+
 	return reconcile.Result{RequeueAfter: 1 * time.Minute, Requeue: true}, nil
 }
