@@ -32,6 +32,15 @@ spec:
           - credentialsRef
           type: object
         status:
+          properties:
+            currentState:
+              type: string
+            desiredState:
+              type: string
+            lastSync:
+              type: object
+            previousState:
+              type: string
           type: object
   version: v1alpha1
   versions:
