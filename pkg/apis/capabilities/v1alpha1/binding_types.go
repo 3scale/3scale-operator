@@ -66,15 +66,16 @@ func init() {
 	SchemeBuilder.Register(&Binding{}, &BindingList{})
 }
 
+// State defines an snapshot of the APIs and credentials
 type State struct {
-	Credentials InternalCredentials `json:"credentials"`
+	Credentials internalCredentials `json:"credentials"`
 	APIs        []InternalAPI       `json:"apis"`
 }
 
-func (s *State) Sort() {
+func (s *State) sort() {
 
 	for _, api := range s.APIs {
-		api.Sort()
+		api.sort()
 	}
 
 	sort.Slice(s.APIs, func(i, j int) bool {
@@ -86,6 +87,7 @@ func (s *State) Sort() {
 	})
 }
 
+// CompareStates compares two state objects and return true if equal
 func CompareStates(A, B State) bool {
 
 	//Check the credentials
@@ -96,8 +98,8 @@ func CompareStates(A, B State) bool {
 	// Check if we have the same number of APIs
 	if len(A.APIs) == len(B.APIs) {
 
-		A.Sort()
-		B.Sort()
+		A.sort()
+		B.sort()
 
 		// Compare APIs one by one.
 		for i := range A.APIs {
@@ -111,7 +113,7 @@ func CompareStates(A, B State) bool {
 	return true
 }
 
-// Updates the Binding Object Status with the Desired and Current State
+// UpdateStatus Updates the Binding Object Status with the Desired and Current State
 func (b *Binding) UpdateStatus(c client.Client) error {
 
 	err := c.Status().Update(context.TODO(), b)
@@ -121,21 +123,24 @@ func (b *Binding) UpdateStatus(c client.Client) error {
 
 	return nil
 }
+// SetLastSuccessfulSync adds a timestamp to the binding object
 func (b *Binding) SetLastSuccessfulSync() {
 	now := metav1.Now()
 	timestamp := now.ProtoTime()
 	b.Status.LastSuccessfulSync = timestamp
 }
+// IsTerminating checks if the objects has been marked for deletion
 func (b *Binding) IsTerminating() bool {
 	return b.HasFinalizer() && b.DeletionTimestamp != nil
 }
+// CleanUp remove all the objects referenced by the binding object current state.
 func (b *Binding) CleanUp(c client.Client) error {
 
 	state, err := b.GetCurrentState()
 	portaClient, err := NewPortaClient(state.Credentials)
 
 	for _, api := range state.APIs {
-		api.DeleteFrom3scale(portaClient)
+		_ = api.DeleteFrom3scale(portaClient)
 	}
 
 	//Remove finalizer
@@ -153,6 +158,7 @@ func (b *Binding) CleanUp(c client.Client) error {
 	}
 	return nil
 }
+// AddFinalizer adds the binding finalizer to the meta of the binding object
 func (b *Binding) AddFinalizer(c client.Client) error {
 	finalizers := b.GetFinalizers()
 	bindingFinalizer := BINDING_FINALIZER
@@ -161,6 +167,7 @@ func (b *Binding) AddFinalizer(c client.Client) error {
 	return c.Update(context.TODO(), b)
 
 }
+// SetDesiredState adds the referenced state to the bindingStatus object
 func (b *Binding) SetDesiredState(state State) error {
 	byteState, err := json.Marshal(state)
 	if err != nil {
@@ -170,6 +177,7 @@ func (b *Binding) SetDesiredState(state State) error {
 	b.Status.DesiredState = &desiredState
 	return nil
 }
+// SetCurrentState adds the referenced state to the bindingStatus object
 func (b *Binding) SetCurrentState(state State) error {
 	byteState, err := json.Marshal(state)
 	if err != nil {
@@ -179,6 +187,7 @@ func (b *Binding) SetCurrentState(state State) error {
 	b.Status.CurrentState = &currentState
 	return nil
 }
+// SetPreviousState adds the referenced state to the bindingStatus object
 func (b *Binding) SetPreviousState(state State) error {
 	byteState, err := json.Marshal(state)
 	if err != nil {
@@ -188,6 +197,7 @@ func (b *Binding) SetPreviousState(state State) error {
 	b.Status.PreviousState = &previousState
 	return nil
 }
+// StateInSync compares the current and desired state of the binding object and returns if those are in sync
 func (b *Binding) StateInSync() bool {
 
 	if b.Status.CurrentState == nil || b.Status.DesiredState == nil {
@@ -208,6 +218,7 @@ func (b *Binding) StateInSync() bool {
 
 	return CompareStates(*desiredState, *currentState)
 }
+// GetLastSuccessfulSync gets the status field LastSuccessfulSync
 func (b Binding) GetLastSuccessfulSync() *metav1.Timestamp {
 	if b.Status.LastSuccessfulSync != nil {
 		return b.Status.LastSuccessfulSync
@@ -215,6 +226,7 @@ func (b Binding) GetLastSuccessfulSync() *metav1.Timestamp {
 
 	return nil
 }
+// HasFinalizer checks if the binding object has the binding finalizer set
 func (b Binding) HasFinalizer() bool {
 
 	finalizers := b.Finalizers
@@ -229,9 +241,10 @@ func (b Binding) HasFinalizer() bool {
 
 	return false
 }
+// NewDesiredState creates a new state from the CRDs objects
 func (b Binding) NewDesiredState(c client.Client) (*State, error) {
 
-	internalCredentials, err := b.NewInternalCredentials(c)
+	internalCredentials, err := b.newInternalCredentials(c)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +254,7 @@ func (b Binding) NewDesiredState(c client.Client) (*State, error) {
 		APIs:        nil,
 	}
 
-	apis, err := b.GetAPIs(c)
+	apis, err := b.getAPIs(c)
 	if err != nil && errors.IsNotFound(err) {
 		// No API objects
 		return nil, err
@@ -260,13 +273,14 @@ func (b Binding) NewDesiredState(c client.Client) (*State, error) {
 		}
 	}
 
-	state.Sort()
+	state.sort()
 	return &state, nil
 
 }
+// NewDesiredState creates a new state from the 3scale system
 func (b Binding) NewCurrentState(c client.Client) (*State, error) {
 
-	internalCredentials, err := b.NewInternalCredentials(c)
+	internalCredentials, err := b.newInternalCredentials(c)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +290,7 @@ func (b Binding) NewCurrentState(c client.Client) (*State, error) {
 		APIs:        nil,
 	}
 
-	apis, err := b.GetAPIs(c)
+	apis, err := b.getAPIs(c)
 	if err != nil && errors.IsNotFound(err) {
 		// No API objects
 		log.Printf("Binding: %s in namespace: %s doesn't match any API object", b.Name, b.Namespace)
@@ -304,35 +318,10 @@ func (b Binding) NewCurrentState(c client.Client) (*State, error) {
 		}
 	}
 
-	state.Sort()
+	state.sort()
 	return &state, nil
 }
-func (b Binding) GetAPIs(c client.Client) (*APIList, error) {
-	apis := &APIList{}
-	opts := &client.ListOptions{}
-	opts.InNamespace(b.Namespace)
-	opts.MatchingLabels(b.Spec.APISelector.MatchLabels)
-	err := c.List(context.TODO(), opts, apis)
-	return apis, err
-}
-func (b Binding) NewInternalCredentials(c client.Client) (*InternalCredentials, error) {
-
-	// GET SECRET
-	secret := &v1.Secret{}
-	// TODO: fix namespace default
-	err := c.Get(context.TODO(), types.NamespacedName{Name: b.Spec.CredentialsRef.Name, Namespace: b.Namespace}, secret)
-
-	if err != nil && errors.IsNotFound(err) {
-		return nil, fmt.Errorf("credentialsNotFound")
-	} else if err != nil {
-		return nil, fmt.Errorf("errorGettingCredentials")
-	}
-
-	return &InternalCredentials{
-		AuthToken: string(secret.Data["token"]),
-		AdminURL:  string(secret.Data["adminURL"]),
-	}, nil
-}
+// GetPreviousState returns the status field PreviousState
 func (b Binding) GetPreviousState() (*State, error) {
 	if b.Status.PreviousState != nil {
 
@@ -345,6 +334,7 @@ func (b Binding) GetPreviousState() (*State, error) {
 	}
 	return nil, nil
 }
+// GetDesiredState returns the status field DesiredState
 func (b Binding) GetDesiredState() (*State, error) {
 	if b.Status.DesiredState != nil {
 		currentState := State{}
@@ -358,6 +348,7 @@ func (b Binding) GetDesiredState() (*State, error) {
 	}
 	return nil, nil
 }
+// GetCurrentState returns the status field CurrentState
 func (b Binding) GetCurrentState() (*State, error) {
 	if b.Status.CurrentState != nil {
 
@@ -370,4 +361,30 @@ func (b Binding) GetCurrentState() (*State, error) {
 		return &desiredState, nil
 	}
 	return nil, nil
+}
+func (b Binding) getAPIs(c client.Client) (*APIList, error) {
+	apis := &APIList{}
+	opts := &client.ListOptions{}
+	opts.InNamespace(b.Namespace)
+	opts.MatchingLabels(b.Spec.APISelector.MatchLabels)
+	err := c.List(context.TODO(), opts, apis)
+	return apis, err
+}
+func (b Binding) newInternalCredentials(c client.Client) (*internalCredentials, error) {
+
+	// GET SECRET
+	secret := &v1.Secret{}
+	// TODO: fix namespace default
+	err := c.Get(context.TODO(), types.NamespacedName{Name: b.Spec.CredentialsRef.Name, Namespace: b.Namespace}, secret)
+
+	if err != nil && errors.IsNotFound(err) {
+		return nil, fmt.Errorf("credentialsNotFound")
+	} else if err != nil {
+		return nil, fmt.Errorf("errorGettingCredentials")
+	}
+
+	return &internalCredentials{
+		AuthToken: string(secret.Data["token"]),
+		AdminURL:  string(secret.Data["adminURL"]),
+	}, nil
 }

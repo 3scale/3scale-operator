@@ -69,16 +69,16 @@ func init() {
 	SchemeBuilder.Register(&Plan{}, &PlanList{})
 }
 
-type InternalPlan struct {
+type internalPlan struct {
 	Name             string          `json:"name"`
 	Default          bool            `json:"default"`
 	TrialPeriodDays  int64           `json:"trialPeriodDays"`
 	ApprovalRequired bool            `json:"approvalRequired"`
 	Costs            PlanCost        `json:"costs"`
-	Limits           []InternalLimit `json:"limits"`
+	Limits           []internalLimit `json:"limits"`
 }
 
-func (plan *InternalPlan) Sort() {
+func (plan *internalPlan) Sort() {
 	sort.Slice(plan.Limits, func(i, j int) bool {
 		if plan.Limits[i].Name != plan.Limits[j].Name {
 			return plan.Limits[i].Name < plan.Limits[j].Name
@@ -88,18 +88,18 @@ func (plan *InternalPlan) Sort() {
 	})
 }
 
-type PlansDiff struct {
-	MissingFromA []InternalPlan
-	MissingFromB []InternalPlan
-	Equal        []InternalPlan
-	NotEqual     []PlanPair
+type plansDiff struct {
+	MissingFromA []internalPlan
+	MissingFromB []internalPlan
+	Equal        []internalPlan
+	NotEqual     []planPair
 }
-type PlanPair struct {
-	A InternalPlan
-	B InternalPlan
+type planPair struct {
+	A internalPlan
+	B internalPlan
 }
 
-func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, serviceId string, api InternalAPI) error {
+func (d *plansDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, serviceId string, api InternalAPI) error {
 
 	for _, plan := range d.MissingFromA {
 		plan3scale, err := get3scalePlanFromInternalPlan(c, serviceId, plan)
@@ -157,8 +157,8 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, service
 			_, err = c.SetDefaultPlan(serviceId, plan3scale.ID)
 		}
 
-		limitsDiff := DiffLimits(planPair.A.Limits, planPair.B.Limits)
-		err = limitsDiff.ReconcileWith3scale(c, serviceId, plan3scale.ID)
+		limitsDiff := diffLimits(planPair.A.Limits, planPair.B.Limits)
+		err = limitsDiff.reconcileWith3scale(c, serviceId, plan3scale.ID)
 		if err != nil {
 			return err
 		}
@@ -166,9 +166,9 @@ func (d *PlansDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, service
 	return nil
 
 }
-func DiffPlans(Plans1 []InternalPlan, Plans2 []InternalPlan) PlansDiff {
+func diffPlans(Plans1 []internalPlan, Plans2 []internalPlan) plansDiff {
 
-	var plansDiff PlansDiff
+	var plansDiff plansDiff
 	if len(Plans2) == 0 {
 		plansDiff.MissingFromB = Plans1
 		return plansDiff
@@ -179,10 +179,10 @@ func DiffPlans(Plans1 []InternalPlan, Plans2 []InternalPlan) PlansDiff {
 			for _, plan2 := range Plans2 {
 				if plan2.Name == plan1.Name {
 					if i == 0 {
-						if ComparePlans(plan1, plan2) {
+						if comparePlans(plan1, plan2) {
 							plansDiff.Equal = append(plansDiff.Equal, plan1)
 						} else {
-							planPair := PlanPair{
+							planPair := planPair{
 								A: plan1,
 								B: plan2,
 							}
@@ -209,7 +209,7 @@ func DiffPlans(Plans1 []InternalPlan, Plans2 []InternalPlan) PlansDiff {
 	}
 	return plansDiff
 }
-func ComparePlans(a, b InternalPlan) bool {
+func comparePlans(a, b internalPlan) bool {
 
 	if a.Name == b.Name && a.ApprovalRequired == b.ApprovalRequired &&
 		a.TrialPeriodDays == b.TrialPeriodDays && a.Costs == b.Costs &&
@@ -229,7 +229,7 @@ func ComparePlans(a, b InternalPlan) bool {
 
 	return true
 }
-func get3scalePlanFromInternalPlan(c *portaClient.ThreeScaleClient, serviceID string, plan InternalPlan) (portaClient.Plan, error) {
+func get3scalePlanFromInternalPlan(c *portaClient.ThreeScaleClient, serviceID string, plan internalPlan) (portaClient.Plan, error) {
 	plans3scale, err := c.ListAppPlanByServiceId(serviceID)
 	if err != nil {
 		return portaClient.Plan{}, err
@@ -251,10 +251,10 @@ func getPlans(namespace string, matchLabels map[string]string, c client.Client) 
 	err := c.List(context.TODO(), &opts, plans)
 	return plans, err
 }
-func NewInternalPlanFromPlan(plan Plan, c client.Client) (*InternalPlan, error) {
+func newInternalPlanFromPlan(plan Plan, c client.Client) (*internalPlan, error) {
 
 	// Fill the internal Plan with Plan and Limits.
-	internalPlan := InternalPlan{
+	internalPlan := internalPlan{
 		Name:             plan.Name,
 		Default:          plan.Spec.Default,
 		TrialPeriodDays:  plan.Spec.TrialPeriod,
@@ -274,7 +274,7 @@ func NewInternalPlanFromPlan(plan Plan, c client.Client) (*InternalPlan, error) 
 	} else {
 		// Let's do our job.
 		for _, limit := range limits.Items {
-			internalLimit, err := NewInternalLimitFromLimit(limit, c)
+			internalLimit, err := newInternalLimitFromLimit(limit, c)
 			if err != nil {
 				//TODO: UPDATE STATUS OBJECT
 				log.Printf("limit %s couldn't be converted: %s", limit.Name, err)

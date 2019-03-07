@@ -123,7 +123,7 @@ func getServiceMappingRulesFrom3scale(c *portaClient.ThreeScaleClient, service p
 	}
 	return &mappingRules, nil
 }
-func NewInternalMappingRuleFromMappingRule(mappingRule MappingRule, c client.Client) (*InternalMappingRule, error) {
+func newInternalMappingRuleFromMappingRule(mappingRule MappingRule, c client.Client) (*InternalMappingRule, error) {
 	// GET metric for mapping rule.
 	metric := &Metric{}
 	var namespace string
@@ -182,7 +182,7 @@ type MappingRulePair struct {
 	B InternalAPI
 }
 
-func DiffMappingRules(mappingRules1, mappingRules2 []InternalMappingRule) MappingRuleDiff {
+func diffMappingRules(mappingRules1, mappingRules2 []InternalMappingRule) MappingRuleDiff {
 	var mappingRuleDiff MappingRuleDiff
 
 	if len(mappingRules2) == 0 {
@@ -220,7 +220,7 @@ func DiffMappingRules(mappingRules1, mappingRules2 []InternalMappingRule) Mappin
 	return mappingRuleDiff
 }
 
-func (m MappingRuleDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, serviceId string, api InternalAPI) error {
+func (m MappingRuleDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, serviceId string, api InternalAPI) error {
 	for _, mappingRule := range m.MissingFromB {
 		metric, err := metricNametoMetric(c, serviceId, mappingRule.Metric)
 		if err != nil {
