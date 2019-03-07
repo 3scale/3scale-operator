@@ -109,7 +109,7 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 			APIBase: APIBase{
 				Description: service.Description,
 			},
-			IntegrationMethod: internalIntegration{},
+			IntegrationMethod: InternalIntegration{},
 		},
 		Metrics: nil,
 		Plans:   nil,
@@ -176,7 +176,7 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 		// This is ApicastOnPrem for us.
 		mappingRules, _ := getServiceMappingRulesFrom3scale(c, service)
 
-		internalAPI.APIBaseInternal.IntegrationMethod = internalIntegration{
+		internalAPI.APIBaseInternal.IntegrationMethod = InternalIntegration{
 			ApicastOnPrem: &InternalApicastOnPrem{
 				APIcastBaseOptions: APIcastBaseOptions{
 					PrivateBaseURL:    proxyConfig.ApiBackend,
@@ -201,7 +201,7 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 		// This is ApicastHosted for us.
 		mappingRules, _ := getServiceMappingRulesFrom3scale(c, service)
 
-		internalAPI.APIBaseInternal.IntegrationMethod = internalIntegration{
+		internalAPI.APIBaseInternal.IntegrationMethod = InternalIntegration{
 			ApicastHosted: &InternalApicastHosted{
 				APIcastBaseOptions: APIcastBaseOptions{
 					PrivateBaseURL:    proxyConfig.ApiBackend,
@@ -219,7 +219,7 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 
 	case "plugin_ruby", "plugin_python", "plugin_rest", "plugin_java", "plugin_php", "plugin_csharp":
 		// This is CodePlugin for us.
-		internalAPI.APIBaseInternal.IntegrationMethod = internalIntegration{
+		internalAPI.APIBaseInternal.IntegrationMethod = InternalIntegration{
 			CodePlugin: &InternalCodePlugin{
 				AuthenticationSettings: CodePluginAuthenticationSettings{
 					Credentials: integrationCredentials,
@@ -233,7 +233,7 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 
 	// Grab the metrics from 3scale.
 	for _, metric := range service.Metrics.Metrics {
-		internalMetric := internalMetric{
+		internalMetric := InternalMetric{
 			Name:        metric.MetricName,
 			Unit:        metric.Unit,
 			Description: metric.Description,
@@ -250,7 +250,7 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 		setupFee, _ := strconv.ParseFloat(applicationPlan.SetupFee, 64)
 		costMonth, _ := strconv.ParseFloat(applicationPlan.CostPerMonth, 64)
 
-		internalPlan := internalPlan{
+		internalPlan := InternalPlan{
 			Name:             applicationPlan.PlanName,
 			TrialPeriodDays:  trialPeriodDays,
 			ApprovalRequired: approvalRequired,
@@ -266,7 +266,7 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 		for _, limit := range limits.Limits {
 			maxValue, _ := strconv.ParseInt(limit.Value, 10, 64)
 			metric, _ := metricIDtoMetric(c, service.ID, limit.MetricID)
-			internalLimit := internalLimit{
+			internalLimit := InternalLimit{
 				Name:     limit.XMLName.Local,
 				Period:   limit.Period,
 				MaxValue: maxValue,
@@ -362,7 +362,7 @@ type InternalApicastHosted struct {
 	MappingRules []InternalMappingRule `json:"mappingRules"`
 }
 
-func (i *InternalApicastHosted) getCredentialTypeName() string {
+func (i *InternalApicastHosted) GetCredentialTypeName() string {
 	if i.AuthenticationSettings.Credentials.OpenIDConnector != nil {
 		return "OpenIDConnector"
 	} else if i.AuthenticationSettings.Credentials.APIKey != nil {
@@ -372,7 +372,7 @@ func (i *InternalApicastHosted) getCredentialTypeName() string {
 	}
 	return ""
 }
-func (i *InternalApicastHosted) getMappingRules() []InternalMappingRule {
+func (i *InternalApicastHosted) GetMappingRules() []InternalMappingRule {
 	return i.MappingRules
 }
 
@@ -402,7 +402,7 @@ type InternalApicastOnPrem struct {
 	MappingRules            []InternalMappingRule `json:"mappingRules"`
 }
 
-func (i *InternalApicastOnPrem) getCredentialTypeName() string {
+func (i *InternalApicastOnPrem) GetCredentialTypeName() string {
 	if i.AuthenticationSettings.Credentials.OpenIDConnector != nil {
 		return "OpenIDConnector"
 
@@ -414,7 +414,7 @@ func (i *InternalApicastOnPrem) getCredentialTypeName() string {
 	}
 	return ""
 }
-func (i *InternalApicastOnPrem) getMappingRules() []InternalMappingRule {
+func (i *InternalApicastOnPrem) GetMappingRules() []InternalMappingRule {
 	return i.MappingRules
 }
 
@@ -472,7 +472,7 @@ type InternalCodePlugin struct {
 	AuthenticationSettings CodePluginAuthenticationSettings `json:"authenticationSettings"`
 }
 
-func (i *InternalCodePlugin) getCredentialTypeName() string {
+func (i *InternalCodePlugin) GetCredentialTypeName() string {
 	if i.AuthenticationSettings.Credentials.OpenIDConnector != nil {
 		return "OpenIDConnector"
 	} else if i.AuthenticationSettings.Credentials.APIKey != nil {
@@ -484,7 +484,7 @@ func (i *InternalCodePlugin) getCredentialTypeName() string {
 	return ""
 
 }
-func (i *InternalCodePlugin) getMappingRules() []InternalMappingRule {
+func (i *InternalCodePlugin) GetMappingRules() []InternalMappingRule {
 	return []InternalMappingRule{}
 }
 
@@ -505,10 +505,10 @@ var IntegrationMethodToDeploymentType = map[string]string{
 }
 
 type InternalAPI struct {
-	Name string `json:"name"`
-	APIBaseInternal
-	Metrics []internalMetric `json:"metrics,omitempty"`
-	Plans   []internalPlan   `json:"Plans,omitempty"`
+	Name            string `json:"name"`
+	APIBaseInternal `json:",omitempty"`
+	Metrics         []InternalMetric `json:"metrics,omitempty"`
+	Plans           []InternalPlan   `json:"Plans,omitempty"`
 }
 
 // sort sorts an API struct.
@@ -591,7 +591,7 @@ func (api InternalAPI) createIn3scale(c *portaClient.ThreeScaleClient) error {
 
 	// Get the proper backendVersion based on the CredentialType
 
-	backendVersion := CredentialTypeToBackendVersion[api.getIntegration().getCredentialTypeName()]
+	backendVersion := CredentialTypeToBackendVersion[api.getIntegration().GetCredentialTypeName()]
 	if backendVersion == "" {
 		return fmt.Errorf("invalid credential type method")
 	}
@@ -648,7 +648,7 @@ func (api InternalAPI) createIn3scale(c *portaClient.ThreeScaleClient) error {
 
 	}
 
-	for _, mappingRule := range api.getIntegration().getMappingRules() {
+	for _, mappingRule := range api.getIntegration().GetMappingRules() {
 		metric, err := metricNametoMetric(c, service.ID, mappingRule.Metric)
 		if err != nil {
 			return err
@@ -715,28 +715,24 @@ func (api InternalAPI) DeleteFrom3scale(c *portaClient.ThreeScaleClient) error {
 }
 
 type APIBaseInternal struct {
-	APIBase
+	APIBase `json:",omitempty"`
 	// We shadow the APIBase IntegrationMethod to point to our Internal representation
-	IntegrationMethod internalIntegration `json:"integrationMethod"`
+	IntegrationMethod InternalIntegration `json:"integrationMethod"`
 }
 
-//func (api *InternalAPI) GetValidIntegrationMethod() (IntegrationMethod) {
-//
-//}
-
-type internalIntegration struct {
+type InternalIntegration struct {
 	ApicastOnPrem *InternalApicastOnPrem `json:"apicastOnPrem"`
 	CodePlugin    *InternalCodePlugin    `json:"codePlugin"`
 	ApicastHosted *InternalApicastHosted `json:"apicastHosted"`
 }
 
 type Integration interface {
-	getMappingRules() []InternalMappingRule
-	getCredentialTypeName() string
+	GetMappingRules() []InternalMappingRule
+	GetCredentialTypeName() string
 }
 
 // +k8s:openapi-gen=false
-type internalCredentials struct {
+type InternalCredentials struct {
 	AuthToken string `json:"token"`
 	AdminURL  string `json:"adminURL"`
 }
@@ -754,7 +750,7 @@ type APIPair struct {
 }
 
 // reconcileWith3scale creates/modifies/deletes APIs based on the information of the APIsDiff object.
-func (d *APIsDiff) ReconcileWith3scale(creds internalCredentials) error {
+func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 
 	c, err := NewPortaClient(creds)
 	if err != nil {
@@ -800,8 +796,8 @@ func (d *APIsDiff) ReconcileWith3scale(creds internalCredentials) error {
 		}
 
 		// Check if BackendVersion is correct
-		desiredBackendVersion := CredentialTypeToBackendVersion[apiPair.A.getIntegration().getCredentialTypeName()]
-		existingBackendVersion := CredentialTypeToBackendVersion[apiPair.B.getIntegration().getCredentialTypeName()]
+		desiredBackendVersion := CredentialTypeToBackendVersion[apiPair.A.getIntegration().GetCredentialTypeName()]
+		existingBackendVersion := CredentialTypeToBackendVersion[apiPair.B.getIntegration().GetCredentialTypeName()]
 
 		if desiredBackendVersion != existingBackendVersion {
 			serviceNeedsUpdate = true
@@ -849,7 +845,7 @@ func (d *APIsDiff) ReconcileWith3scale(creds internalCredentials) error {
 		}
 
 		// reconcileWith3scale Mapping Rules
-		mappingRulesDiff := diffMappingRules(apiPair.A.getIntegration().getMappingRules(), apiPair.B.getIntegration().getMappingRules())
+		mappingRulesDiff := diffMappingRules(apiPair.A.getIntegration().GetMappingRules(), apiPair.B.getIntegration().GetMappingRules())
 		err = mappingRulesDiff.reconcileWith3scale(c, service.ID, apiPair.A)
 		if err != nil {
 			return err
@@ -1189,7 +1185,7 @@ func getProxyParamsFromProxy(proxy portaClient.Proxy, deploymentOption, backendV
 }
 
 //TODO: Use from Helper
-func NewPortaClient(creds internalCredentials) (*portaClient.ThreeScaleClient, error) {
+func NewPortaClient(creds InternalCredentials) (*portaClient.ThreeScaleClient, error) {
 
 	systemAdminPortalURL, err := url.Parse(creds.AdminURL)
 	if err != nil {

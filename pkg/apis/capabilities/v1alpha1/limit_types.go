@@ -62,10 +62,10 @@ func init() {
 	SchemeBuilder.Register(&Limit{}, &LimitList{})
 }
 
-func newInternalLimitFromLimit(limit Limit, c client.Client) (*internalLimit, error) {
+func newInternalLimitFromLimit(limit Limit, c client.Client) (*InternalLimit, error) {
 	metric := &Metric{}
 	var namespace string
-	var il internalLimit
+	var il InternalLimit
 
 	if limit.Spec.Metric.Namespace == "" {
 		namespace = limit.Namespace
@@ -86,7 +86,7 @@ func newInternalLimitFromLimit(limit Limit, c client.Client) (*internalLimit, er
 		}
 	}
 
-	il = internalLimit{
+	il = InternalLimit{
 		Name:     limit.Name,
 		Period:   limit.Spec.Period,
 		MaxValue: limit.Spec.MaxValue,
@@ -96,18 +96,18 @@ func newInternalLimitFromLimit(limit Limit, c client.Client) (*internalLimit, er
 	return &il, nil
 }
 
-type limitsDiff struct {
-	MissingFromA []internalLimit
-	MissingFromB []internalLimit
-	Equal        []internalLimit
-	NotEqual     []limitPair
+type LimitsDiff struct {
+	MissingFromA []InternalLimit
+	MissingFromB []InternalLimit
+	Equal        []InternalLimit
+	NotEqual     []LimitPair
 }
-type limitPair struct {
-	A internalLimit
-	B internalLimit
+type LimitPair struct {
+	A InternalLimit
+	B InternalLimit
 }
 
-func (d *limitsDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, serviceId string, planID string) error {
+func (d *LimitsDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, serviceId string, planID string) error {
 
 	for _, limit := range d.MissingFromA {
 		metric, err := metricNametoMetric(c, serviceId, limit.Metric)
@@ -136,15 +136,15 @@ func (d *limitsDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, servic
 	return nil
 }
 
-type internalLimit struct {
+type InternalLimit struct {
 	Name     string `json:"name"`
 	Period   string `json:"period"`
 	MaxValue int64  `json:"maxValue"`
 	Metric   string `json:"metric"`
 }
 
-func diffLimits(aLimits []internalLimit, bLimits []internalLimit) limitsDiff {
-	limitDiff := limitsDiff{}
+func diffLimits(aLimits []InternalLimit, bLimits []InternalLimit) LimitsDiff {
+	limitDiff := LimitsDiff{}
 	for _, aLimit := range aLimits {
 		found := false
 		for _, bLimit := range bLimits {
@@ -178,7 +178,7 @@ func diffLimits(aLimits []internalLimit, bLimits []internalLimit) limitsDiff {
 	return limitDiff
 
 }
-func get3scaleLimitFromInternalLimit(c *portaClient.ThreeScaleClient, serviceID string, planID string, limit internalLimit) (portaClient.Limit, error) {
+func get3scaleLimitFromInternalLimit(c *portaClient.ThreeScaleClient, serviceID string, planID string, limit InternalLimit) (portaClient.Limit, error) {
 
 	limits3scale, err := c.ListLimitsPerAppPlan(planID)
 	if err != nil {

@@ -68,7 +68,7 @@ func init() {
 
 // State defines an snapshot of the APIs and credentials
 type State struct {
-	Credentials internalCredentials `json:"credentials"`
+	Credentials InternalCredentials `json:"credentials"`
 	APIs        []InternalAPI       `json:"apis"`
 }
 
@@ -123,16 +123,19 @@ func (b *Binding) UpdateStatus(c client.Client) error {
 
 	return nil
 }
+
 // SetLastSuccessfulSync adds a timestamp to the binding object
 func (b *Binding) SetLastSuccessfulSync() {
 	now := metav1.Now()
 	timestamp := now.ProtoTime()
 	b.Status.LastSuccessfulSync = timestamp
 }
+
 // IsTerminating checks if the objects has been marked for deletion
 func (b *Binding) IsTerminating() bool {
 	return b.HasFinalizer() && b.DeletionTimestamp != nil
 }
+
 // CleanUp remove all the objects referenced by the binding object current state.
 func (b *Binding) CleanUp(c client.Client) error {
 
@@ -158,6 +161,7 @@ func (b *Binding) CleanUp(c client.Client) error {
 	}
 	return nil
 }
+
 // AddFinalizer adds the binding finalizer to the meta of the binding object
 func (b *Binding) AddFinalizer(c client.Client) error {
 	finalizers := b.GetFinalizers()
@@ -167,6 +171,7 @@ func (b *Binding) AddFinalizer(c client.Client) error {
 	return c.Update(context.TODO(), b)
 
 }
+
 // SetDesiredState adds the referenced state to the bindingStatus object
 func (b *Binding) SetDesiredState(state State) error {
 	byteState, err := json.Marshal(state)
@@ -177,6 +182,7 @@ func (b *Binding) SetDesiredState(state State) error {
 	b.Status.DesiredState = &desiredState
 	return nil
 }
+
 // SetCurrentState adds the referenced state to the bindingStatus object
 func (b *Binding) SetCurrentState(state State) error {
 	byteState, err := json.Marshal(state)
@@ -187,6 +193,7 @@ func (b *Binding) SetCurrentState(state State) error {
 	b.Status.CurrentState = &currentState
 	return nil
 }
+
 // SetPreviousState adds the referenced state to the bindingStatus object
 func (b *Binding) SetPreviousState(state State) error {
 	byteState, err := json.Marshal(state)
@@ -197,6 +204,7 @@ func (b *Binding) SetPreviousState(state State) error {
 	b.Status.PreviousState = &previousState
 	return nil
 }
+
 // StateInSync compares the current and desired state of the binding object and returns if those are in sync
 func (b *Binding) StateInSync() bool {
 
@@ -218,6 +226,7 @@ func (b *Binding) StateInSync() bool {
 
 	return CompareStates(*desiredState, *currentState)
 }
+
 // GetLastSuccessfulSync gets the status field LastSuccessfulSync
 func (b Binding) GetLastSuccessfulSync() *metav1.Timestamp {
 	if b.Status.LastSuccessfulSync != nil {
@@ -226,6 +235,7 @@ func (b Binding) GetLastSuccessfulSync() *metav1.Timestamp {
 
 	return nil
 }
+
 // HasFinalizer checks if the binding object has the binding finalizer set
 func (b Binding) HasFinalizer() bool {
 
@@ -241,6 +251,7 @@ func (b Binding) HasFinalizer() bool {
 
 	return false
 }
+
 // NewDesiredState creates a new state from the CRDs objects
 func (b Binding) NewDesiredState(c client.Client) (*State, error) {
 
@@ -263,7 +274,6 @@ func (b Binding) NewDesiredState(c client.Client) (*State, error) {
 		return nil, err
 	}
 
-	// Add each API info to the consolidated object
 	for _, api := range apis.Items {
 		internalAPI, err := api.GetInternalAPI(c)
 		if err != nil {
@@ -277,6 +287,7 @@ func (b Binding) NewDesiredState(c client.Client) (*State, error) {
 	return &state, nil
 
 }
+
 // NewDesiredState creates a new state from the 3scale system
 func (b Binding) NewCurrentState(c client.Client) (*State, error) {
 
@@ -321,6 +332,7 @@ func (b Binding) NewCurrentState(c client.Client) (*State, error) {
 	state.sort()
 	return &state, nil
 }
+
 // GetPreviousState returns the status field PreviousState
 func (b Binding) GetPreviousState() (*State, error) {
 	if b.Status.PreviousState != nil {
@@ -334,6 +346,7 @@ func (b Binding) GetPreviousState() (*State, error) {
 	}
 	return nil, nil
 }
+
 // GetDesiredState returns the status field DesiredState
 func (b Binding) GetDesiredState() (*State, error) {
 	if b.Status.DesiredState != nil {
@@ -348,6 +361,7 @@ func (b Binding) GetDesiredState() (*State, error) {
 	}
 	return nil, nil
 }
+
 // GetCurrentState returns the status field CurrentState
 func (b Binding) GetCurrentState() (*State, error) {
 	if b.Status.CurrentState != nil {
@@ -370,7 +384,7 @@ func (b Binding) getAPIs(c client.Client) (*APIList, error) {
 	err := c.List(context.TODO(), opts, apis)
 	return apis, err
 }
-func (b Binding) newInternalCredentials(c client.Client) (*internalCredentials, error) {
+func (b Binding) newInternalCredentials(c client.Client) (*InternalCredentials, error) {
 
 	// GET SECRET
 	secret := &v1.Secret{}
@@ -383,7 +397,7 @@ func (b Binding) newInternalCredentials(c client.Client) (*internalCredentials, 
 		return nil, fmt.Errorf("errorGettingCredentials")
 	}
 
-	return &internalCredentials{
+	return &InternalCredentials{
 		AuthToken: string(secret.Data["token"]),
 		AdminURL:  string(secret.Data["adminURL"]),
 	}, nil

@@ -47,26 +47,26 @@ type MetricList struct {
 	Items           []Metric `json:"items"`
 }
 
-type internalMetric struct {
+type InternalMetric struct {
 	Name        string `json:"name"`
 	Unit        string `json:"unit"`
 	Description string `json:"description"`
 }
 
-type metricsDiff struct {
-	MissingFromA []internalMetric
-	MissingFromB []internalMetric
-	Equal        []internalMetric
-	NotEqual     []metricsPair
+type MetricsDiff struct {
+	MissingFromA []InternalMetric
+	MissingFromB []InternalMetric
+	Equal        []InternalMetric
+	NotEqual     []MetricsPair
 }
-type metricsPair struct {
-	A internalMetric
-	B internalMetric
+type MetricsPair struct {
+	A InternalMetric
+	B InternalMetric
 }
 
-func diffMetrics(metrics1, metrics2 []internalMetric) metricsDiff {
+func diffMetrics(metrics1, metrics2 []InternalMetric) MetricsDiff {
 
-	var metricsDiff metricsDiff
+	var metricsDiff MetricsDiff
 
 	if len(metrics2) == 0 {
 		metricsDiff.MissingFromB = metrics1
@@ -82,7 +82,7 @@ func diffMetrics(metrics1, metrics2 []internalMetric) metricsDiff {
 						if metric1 == metric2 {
 							metricsDiff.Equal = append(metricsDiff.Equal, metric1)
 						} else {
-							metricPair := metricsPair{
+							metricPair := MetricsPair{
 								A: metric1,
 								B: metric2,
 							}
@@ -109,7 +109,7 @@ func diffMetrics(metrics1, metrics2 []internalMetric) metricsDiff {
 	}
 	return metricsDiff
 }
-func (d *metricsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, serviceId string, api InternalAPI) error {
+func (d *MetricsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, serviceId string, api InternalAPI) error {
 
 	for _, metric := range d.MissingFromB {
 		err := createInternalMetricIn3scale(c, api, metric)
@@ -192,7 +192,7 @@ func metricIDtoMetric(c *portaClient.ThreeScaleClient, serviceID string, metricI
 	return m, nil
 
 }
-func createInternalMetricIn3scale(c *portaClient.ThreeScaleClient, api InternalAPI, metric internalMetric) error {
+func createInternalMetricIn3scale(c *portaClient.ThreeScaleClient, api InternalAPI, metric InternalMetric) error {
 
 	service, err := getServiceFromInternalAPI(c, api.Name)
 	if err != nil {
@@ -201,8 +201,8 @@ func createInternalMetricIn3scale(c *portaClient.ThreeScaleClient, api InternalA
 	_, err = c.CreateMetric(service.ID, metric.Name, metric.Description, metric.Unit)
 	return err
 }
-func newInternalMetricFromMetric(metric Metric) *internalMetric {
-	internalMetric := internalMetric{
+func newInternalMetricFromMetric(metric Metric) *InternalMetric {
+	internalMetric := InternalMetric{
 		Name:        metric.Name,
 		Unit:        metric.Spec.Unit,
 		Description: metric.Spec.Description,
@@ -210,7 +210,7 @@ func newInternalMetricFromMetric(metric Metric) *internalMetric {
 
 	return &internalMetric
 }
-func deleteInternalMetricFrom3scale(c *portaClient.ThreeScaleClient, api InternalAPI, metric internalMetric) error {
+func deleteInternalMetricFrom3scale(c *portaClient.ThreeScaleClient, api InternalAPI, metric InternalMetric) error {
 
 	service, err := getServiceFromInternalAPI(c, api.Name)
 	if err != nil {

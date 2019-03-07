@@ -56,7 +56,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// All those objects can change the outcome of the consolidated objects because the binding points to it.
 	err = c.Watch(&source.Kind{Type: &apiv1alpha1.API{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: NonBindingTriggerFunc})
 	if err != nil {
 		return err
