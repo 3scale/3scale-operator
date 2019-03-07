@@ -584,7 +584,6 @@ func (zync *Zync) buildZyncDatabaseService() *v1.Service {
 					Protocol:   v1.ProtocolTCP,
 					Port:       5432,
 					TargetPort: intstr.FromInt(5432),
-					NodePort:   0,
 				},
 			},
 			Selector: map[string]string{"deploymentConfig": "zync-database"},
