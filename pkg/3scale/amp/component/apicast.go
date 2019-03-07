@@ -175,8 +175,8 @@ func (apicast *Apicast) buildApicastStagingRoute() *routev1.Route {
 				TargetPort: intstr.FromString("gateway"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				Termination:                   routev1.TLSTerminationEdge,
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -199,13 +199,13 @@ func (apicast *Apicast) buildApicastStagingService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "gateway",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
 				},
 				v1.ServicePort{
 					Name:       "management",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8090,
 					TargetPort: intstr.FromInt(8090),
 				},
@@ -235,8 +235,8 @@ func (apicast *Apicast) buildApicastProductionRoute() *routev1.Route {
 				TargetPort: intstr.FromString("gateway"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				Termination:                   routev1.TLSTerminationEdge,
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -259,13 +259,13 @@ func (apicast *Apicast) buildApicastProductionService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "gateway",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
 				},
 				v1.ServicePort{
 					Name:       "management",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8090,
 					TargetPort: intstr.FromInt(8090),
 				},
@@ -295,11 +295,11 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					TimeoutSeconds:      &[]int64{1800}[0],
@@ -309,10 +309,10 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 			},
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				},
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
@@ -359,7 +359,7 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 							},
 							Env:             apicast.buildApicastStagingEnv(),
 							Image:           "amp-apicast:latest",
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            "apicast-staging",
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{
@@ -417,11 +417,11 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					TimeoutSeconds:      &[]int64{1800}[0],
@@ -431,10 +431,10 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 			},
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				},
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
@@ -495,7 +495,7 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 							},
 							Env:             apicast.buildApicastProductionEnv(),
 							Image:           "amp-apicast:latest",
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            "apicast-production",
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{

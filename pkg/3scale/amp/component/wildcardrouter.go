@@ -134,8 +134,8 @@ func (wr *WildcardRouter) buildWildcardRouterRoute() *routev1.Route {
 			},
 			WildcardPolicy: routev1.WildcardPolicyType(wr.Options.wildcardPolicy),
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				Termination:                   routev1.TLSTerminationEdge,
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -158,7 +158,7 @@ func (wr *WildcardRouter) buildWildcardRouterService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "http",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromString("http"),
 				},
@@ -188,11 +188,11 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					TimeoutSeconds:      &[]int64{1800}[0],
@@ -202,10 +202,10 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 			},
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				},
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
@@ -240,7 +240,7 @@ func (wr *WildcardRouter) buildWildcardRouterDeploymentConfig() *appsv1.Deployme
 							},
 							Env:             wr.buildWildcardRouterEnv(),
 							Image:           "amp-wildcard-router:latest",
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            "apicast-wildcard-router",
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{

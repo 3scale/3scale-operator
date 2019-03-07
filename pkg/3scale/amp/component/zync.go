@@ -169,27 +169,25 @@ func (zync *Zync) buildZyncCronDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Rolling"),
+				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					UpdatePeriodSeconds: &[]int64{1}[0],
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{600}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				},
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
 						ContainerNames: []string{"zync-cron"},
@@ -232,7 +230,7 @@ func (zync *Zync) buildZyncCronDeploymentConfig() *appsv1.DeploymentConfig {
 							Limits:   v1.ResourceList{"cpu": resource.MustParse("150m")},
 							Requests: v1.ResourceList{"cpu": resource.MustParse("50m")},
 						},
-						ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: v1.PullIfNotPresent,
 					},
 				},
 					ServiceAccountName: "amp",
@@ -258,10 +256,10 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 		Spec: appsv1.DeploymentConfigSpec{
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				},
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
@@ -321,7 +319,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 							Ports: []v1.ContainerPort{
 								v1.ContainerPort{
 									ContainerPort: 8080,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: []v1.EnvVar{
 								v1.EnvVar{
@@ -425,10 +423,10 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 		Spec: appsv1.DeploymentConfigSpec{
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				},
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
@@ -464,7 +462,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 							Ports: []v1.ContainerPort{
 								v1.ContainerPort{
 									ContainerPort: 5432,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
@@ -555,7 +553,7 @@ func (zync *Zync) buildZyncService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "8080-tcp",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
 				},
@@ -583,7 +581,7 @@ func (zync *Zync) buildZyncDatabaseService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "postgresql",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       5432,
 					TargetPort: intstr.FromInt(5432),
 					NodePort:   0,

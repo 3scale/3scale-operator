@@ -635,23 +635,21 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Rolling"),
+				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					UpdatePeriodSeconds: &[]int64{1}[0],
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{1200}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					Pre: &appsv1.LifecycleHook{
-						FailurePolicy: appsv1.LifecycleHookFailurePolicy("Retry"),
+						FailurePolicy: appsv1.LifecycleHookFailurePolicyRetry,
 						ExecNewPod: &appsv1.ExecNewPodHook{
 							// TODO the MASTER_ACCESS_TOKEN reference should be probably set as an envvar that gathers its value from the system-seed secret
 							// but changing that probably has some implications during an upgrade process of the product
@@ -661,7 +659,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							Volumes:       []string{"system-storage"}},
 					},
 					Post: &appsv1.LifecycleHook{
-						FailurePolicy: appsv1.LifecycleHookFailurePolicy("Abort"),
+						FailurePolicy: appsv1.LifecycleHookFailurePolicyAbort,
 						ExecNewPod: &appsv1.ExecNewPodHook{
 							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:post_deploy"},
 							ContainerName: "system-master"}}},
@@ -669,9 +667,9 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
 						ContainerNames: []string{"system-provider", "system-developer", "system-master"},
@@ -723,7 +721,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									Name:          "master",
 									HostPort:      0,
 									ContainerPort: 3002,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: system.buildSystemBaseEnv(),
 							Resources: v1.ResourceRequirements{
@@ -749,8 +747,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "master"}},
 								},
 								InitialDelaySeconds: 40,
@@ -763,11 +760,10 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "master",
 									},
-									Scheme: v1.URIScheme("HTTP"),
+									Scheme: v1.URISchemeHTTP,
 									HTTPHeaders: []v1.HTTPHeader{
 										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
@@ -779,7 +775,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								SuccessThreshold:    0,
 								FailureThreshold:    10,
 							},
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Stdin:           false,
 							StdinOnce:       false,
 							TTY:             false,
@@ -792,7 +788,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									Name:          "provider",
 									HostPort:      0,
 									ContainerPort: 3000,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: system.buildSystemBaseEnv(),
 							Resources: v1.ResourceRequirements{
@@ -818,8 +814,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "provider"}},
 								},
 								InitialDelaySeconds: 40,
@@ -832,11 +827,10 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "provider",
 									},
-									Scheme: v1.URIScheme("HTTP"),
+									Scheme: v1.URISchemeHTTP,
 									HTTPHeaders: []v1.HTTPHeader{
 										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
@@ -848,7 +842,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								SuccessThreshold:    0,
 								FailureThreshold:    10,
 							},
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 							Stdin:           false,
 							StdinOnce:       false,
 							TTY:             false,
@@ -861,7 +855,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									Name:          "developer",
 									HostPort:      0,
 									ContainerPort: 3001,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: system.buildSystemBaseEnv(),
 							Resources: v1.ResourceRequirements{
@@ -887,8 +881,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "developer"}},
 								},
 								InitialDelaySeconds: 40,
@@ -901,11 +894,10 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(1),
-										IntVal: 0,
+										Type:   intstr.Type(intstr.String),
 										StrVal: "developer",
 									},
-									Scheme: v1.URIScheme("HTTP"),
+									Scheme: v1.URISchemeHTTP,
 									HTTPHeaders: []v1.HTTPHeader{
 										v1.HTTPHeader{
 											Name:  "X-Forwarded-Proto",
@@ -917,7 +909,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 								SuccessThreshold:    0,
 								FailureThreshold:    10,
 							},
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
 					ServiceAccountName: "amp",
@@ -938,27 +930,25 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Rolling"),
+				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					UpdatePeriodSeconds: &[]int64{1}[0],
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{1200}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
 						ContainerNames: []string{"check-svc", "system-sidekiq"},
@@ -977,7 +967,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 						v1.Volume{
 							Name: "system-tmp",
 							VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{
-								Medium: v1.StorageMedium("Memory")}},
+								Medium: v1.StorageMediumMemory}},
 						}, v1.Volume{
 							Name: "system-storage",
 							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
@@ -1048,7 +1038,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 									ReadOnly:  false,
 									MountPath: "/opt/system-extra-configs"},
 							},
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
 					ServiceAccountName: "amp",
@@ -1102,7 +1092,7 @@ func (system *System) buildSystemProviderService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "http",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("provider"),
 				},
@@ -1130,7 +1120,7 @@ func (system *System) buildSystemMasterService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "http",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("master"),
 				},
@@ -1158,7 +1148,7 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "http",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("developer"),
 				},
@@ -1185,7 +1175,7 @@ func (system *System) buildSystemRedisService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "redis",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       6379,
 					TargetPort: intstr.FromInt(6379),
 				},
@@ -1213,7 +1203,7 @@ func (system *System) buildSystemSphinxService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "sphinx",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       9306,
 					TargetPort: intstr.FromInt(9306),
 				},
@@ -1241,7 +1231,7 @@ func (system *System) buildSystemMemcachedService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "memcache",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       11211,
 					TargetPort: intstr.FromInt(11211),
 				},
@@ -1284,8 +1274,8 @@ func (system *System) buildSystemProviderRoute() *routev1.Route {
 				TargetPort: intstr.FromString("http"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				Termination:                   routev1.TLSTerminationEdge,
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -1310,8 +1300,8 @@ func (system *System) buildSystemMasterRoute() *routev1.Route {
 				TargetPort: intstr.FromString("http"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				Termination:                   routev1.TLSTerminationEdge,
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -1336,8 +1326,8 @@ func (system *System) buildSystemDeveloperRoute() *routev1.Route {
 				TargetPort: intstr.FromString("http"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				Termination:                   routev1.TLSTerminationEdge,
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
@@ -1434,10 +1424,10 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 		Spec: appsv1.DeploymentConfigSpec{
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				},
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
@@ -1457,11 +1447,11 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					TimeoutSeconds:      &[]int64{1200}[0],

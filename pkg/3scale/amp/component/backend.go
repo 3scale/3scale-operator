@@ -160,27 +160,25 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Rolling"),
+				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					UpdatePeriodSeconds: &[]int64{1}[0],
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{1200}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
 						ContainerNames: []string{"backend-redis-svc", "backend-worker"},
@@ -225,7 +223,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 									v1.ResourceMemory: resource.MustParse("50Mi"),
 								},
 							},
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
 					ServiceAccountName: "amp"}},
@@ -245,27 +243,25 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Rolling"),
+				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					UpdatePeriodSeconds: &[]int64{1}[0],
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{1200}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
 						ContainerNames: []string{"backend-redis-svc", "backend-cron"},
@@ -311,7 +307,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 								},
 							},
 
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
 					ServiceAccountName: "amp",
@@ -332,27 +328,25 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Rolling"),
+				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					UpdatePeriodSeconds: &[]int64{1}[0],
 					IntervalSeconds:     &[]int64{1}[0],
 					TimeoutSeconds:      &[]int64{600}[0],
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(1),
-						IntVal: 0,
+						Type:   intstr.Type(intstr.String),
 						StrVal: "25%"}},
 			},
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange"),
+					Type: appsv1.DeploymentTriggerOnConfigChange,
 				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ImageChange"),
+					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
 						ContainerNames: []string{"backend-listener"},
@@ -374,7 +368,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 						Ports: []v1.ContainerPort{
 							v1.ContainerPort{HostPort: 0,
 								ContainerPort: 3000,
-								Protocol:      v1.Protocol("TCP")},
+								Protocol:      v1.ProtocolTCP},
 						},
 						Env: backend.buildBackendListenerEnv(),
 						Resources: v1.ResourceRequirements{
@@ -391,7 +385,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 						LivenessProbe: &v1.Probe{
 							Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 								Port: intstr.IntOrString{
-									Type:   intstr.Type(0),
+									Type:   intstr.Type(intstr.Int),
 									IntVal: 3000}},
 							},
 							InitialDelaySeconds: 30,
@@ -404,7 +398,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 							Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 								Path: "/status",
 								Port: intstr.IntOrString{
-									Type:   intstr.Type(0),
+									Type:   intstr.Type(intstr.Int),
 									IntVal: 3000}},
 							},
 							InitialDelaySeconds: 30,
@@ -413,7 +407,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 							SuccessThreshold:    0,
 							FailureThreshold:    0,
 						},
-						ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: v1.PullIfNotPresent,
 					},
 				},
 					ServiceAccountName: "amp",
@@ -440,10 +434,10 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:     "http",
-					Protocol: v1.Protocol("TCP"),
+					Protocol: v1.ProtocolTCP,
 					Port:     3000,
 					TargetPort: intstr.IntOrString{
-						Type:   intstr.Type(0),
+						Type:   intstr.Type(intstr.Int),
 						IntVal: 3000,
 					},
 				},
@@ -473,8 +467,8 @@ func (backend *Backend) buildBackendListenerRoute() *routev1.Route {
 				TargetPort: intstr.FromString("http"),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationType("edge"),
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyType("Allow")},
+				Termination:                   routev1.TLSTerminationEdge,
+				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }

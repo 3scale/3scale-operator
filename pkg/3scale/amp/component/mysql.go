@@ -165,7 +165,7 @@ func (mysql *Mysql) buildSystemMysqlService() *v1.Service {
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "system-mysql",
-					Protocol:   v1.Protocol("TCP"),
+					Protocol:   v1.ProtocolTCP,
 					Port:       3306,
 					TargetPort: intstr.FromInt(3306),
 					NodePort:   0,
@@ -231,11 +231,11 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Recreate"),
+				Type: appsv1.DeploymentStrategyTypeRecreate,
 			},
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange")},
+					Type: appsv1.DeploymentTriggerOnConfigChange},
 			},
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": "system-mysql"},
@@ -268,7 +268,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 							Ports: []v1.ContainerPort{
 								v1.ContainerPort{HostPort: 0,
 									ContainerPort: 3306,
-									Protocol:      v1.Protocol("TCP")},
+									Protocol:      v1.ProtocolTCP},
 							},
 							Env: []v1.EnvVar{
 								envVarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
@@ -307,7 +307,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(0),
+										Type:   intstr.Type(intstr.Int),
 										IntVal: 3306}},
 								},
 								InitialDelaySeconds: 30,
@@ -327,7 +327,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 								SuccessThreshold:    0,
 								FailureThreshold:    0,
 							},
-							ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
 				},

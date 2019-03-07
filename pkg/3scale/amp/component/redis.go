@@ -532,12 +532,12 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Recreate"),
+				Type: appsv1.DeploymentStrategyTypeRecreate,
 			},
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange")},
+					Type: appsv1.DeploymentTriggerOnConfigChange},
 			},
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": "system-redis"},
@@ -592,7 +592,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(0),
+										Type:   intstr.Type(intstr.Int),
 										IntVal: 6379}},
 								},
 								InitialDelaySeconds: 10,
@@ -613,7 +613,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 								FailureThreshold:    0,
 							},
 							TerminationMessagePath: "/dev/termination-log",
-							ImagePullPolicy:        v1.PullPolicy("IfNotPresent"),
+							ImagePullPolicy:        v1.PullIfNotPresent,
 						},
 					},
 				}},

@@ -130,7 +130,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyType("Rolling"),
+				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					UpdatePeriodSeconds: &[]int64{1}[0],
 					IntervalSeconds:     &[]int64{1}[0],
@@ -146,7 +146,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerType("ConfigChange")},
+					Type: appsv1.DeploymentTriggerOnConfigChange},
 			},
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": "system-memcache"},
@@ -162,7 +162,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 						Ports: []v1.ContainerPort{
 							v1.ContainerPort{HostPort: 0,
 								ContainerPort: 11211,
-								Protocol:      v1.Protocol("TCP")},
+								Protocol:      v1.ProtocolTCP},
 						},
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
@@ -197,7 +197,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 							SuccessThreshold:    0,
 							FailureThreshold:    0,
 						},
-						ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: v1.PullIfNotPresent,
 					},
 				},
 				}},
