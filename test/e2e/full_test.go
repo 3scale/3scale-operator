@@ -460,21 +460,14 @@ func TestFullHappyPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e2eutil.WaitForConsolidated(t, f.Client, namespace, binding.Name+"-consolidated", retryInterval, timeout)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	consolidated := apiv1alpha1.Consolidated{}
-
-	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: namespace, Name: binding.Name + "-consolidated"}, &consolidated)
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: namespace, Name: binding.Name}, binding)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Log("Checking the consolidated object with 3scale")
 
-	err = e2eutil.WaitForReconciliationWith3scale(t, consolidated, 30*time.Second, 240*time.Second)
+	err = e2eutil.WaitForReconciliationWith3scale(t,f.Client, *binding, 30*time.Second, 240*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}

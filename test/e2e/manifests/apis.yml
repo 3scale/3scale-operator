@@ -45,7 +45,7 @@ items:
     creationTimestamp: 2019-01-25T13:28:41Z
     generation: 1
     labels:
-      environment: staging
+      environment: production
     name: api02
   spec:
     planSelector:
@@ -86,7 +86,7 @@ items:
     creationTimestamp: 2019-01-25T13:28:41Z
     generation: 1
     labels:
-      environment: devel
+      environment: production
     name: api03
   spec:
     planSelector:
