@@ -27,7 +27,7 @@ func (u *upstream) GetSystemMySQLImage() string {
 }
 
 func (u *upstream) GetSystemPostgreSQLImage() string {
-	return "registry.access.redhat.com/rhscl/postgresql-95-rhel7:9.5"
+	return "registry.access.redhat.com/rhscl/postgresql-10-rhel7"
 }
 
 func (u *upstream) GetSystemMemcachedImage() string {
@@ -43,5 +43,5 @@ func (u *upstream) GetZyncImage() string {
 }
 
 func (u *upstream) GetZyncPostgreSQLImage() string {
-	return "registry.access.redhat.com/rhscl/postgresql-95-rhel7:9.5"
+	return "registry.access.redhat.com/rhscl/postgresql-10-rhel7"
 }

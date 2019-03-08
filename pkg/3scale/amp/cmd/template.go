@@ -164,7 +164,7 @@ func addDoubleBraceExpansionFieldsToResult(serializedResult map[string]interface
 			for _, intobjtag := range objspec["tags"].([]interface{}) {
 				objtag := intobjtag.(map[string]interface{})
 				objtagname := objtag["name"].(string)
-				if objtagname == "${AMP_RELEASE}" || objtagname == "9.5" {
+				if objtagname == "${AMP_RELEASE}" || objtagname == "9.5" || objtagname == "10" {
 					if _, ok := objtag["importPolicy"]; ok {
 						importPolicyFields := objtag["importPolicy"].(map[string]interface{})
 						importPolicyFields["insecure"] = "${{IMAGESTREAM_TAG_IMPORT_INSECURE}}"
