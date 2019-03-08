@@ -69,7 +69,6 @@ rules:
   - capabilities.3scale.net
   resources:
   - '*'
-  - consolidateds
   - bindings
   - metrics
   - plans

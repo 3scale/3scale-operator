@@ -58,7 +58,7 @@ CRD Diagram:
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
 | Spec | `spec` | [Binding](#BindingSpec) | The specification for the Binding custom resource |
-| Status | `status` | TODO | The status specification for the Binding custom resource |
+| Status | `status` | [Status](#BindingStatus) | The status specification for the Binding custom resource |
 
 ### BindingSpec
 
@@ -66,6 +66,15 @@ CRD Diagram:
 | --- | --- | --- | --- | --- |
 | Credentials Reference | `credentialsRef` | SecretRef | Reference to a Secret that contains the tenant credentials. See [Tenant Secret](#TenantSecret) for more details | Yes |
 | API Selector | `APISelector` | LabelSelector | Selects the desired APIs to be created with the previous credentials, if empty, selects all the API object in the current namespace/project. | No |
+
+### BindingStatus
+
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| Desired State | `desiredState` | string | Contains the desired state of the system serialized in json | No |
+| Current State | `currentState` | string |  Contains the current state of the system serialized in json  | No |
+| Previous State | `previousState` | string |  Contains the previous state of the system serialized in json  | No |
+| Last Successful Sync | `lastSync` | Timestamp |  Timestamp of the last successful sync | No |
 
 ### Tenant Secret
 

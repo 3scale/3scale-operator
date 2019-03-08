@@ -2,7 +2,6 @@ package e2eutil
 
 import (
 	"context"
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
 	"github.com/operator-framework/operator-sdk/pkg/test"
 	"k8s.io/apimachinery/pkg/types"
@@ -74,36 +73,20 @@ func WaitForSecret(t *testing.T, kubeClient kubernetes.Interface, namespace, nam
 	return nil
 }
 
-func WaitForConsolidated(t *testing.T, client test.FrameworkClient, namespace, name string, retryInterval, timeout time.Duration) error {
-	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
-		consolidated := v1alpha1.Consolidated{}
-		err = client.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: name,}, &consolidated)
-		if err != nil {
-			t.Logf("Waiting for consolidated object\n")
-			return false, err
-		}
-
-		return true, nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func WaitForReconciliationWith3scale(t *testing.T, existingConsolidated v1alpha1.Consolidated, retryInterval, timeout time.Duration) error {
+func WaitForReconciliationWith3scale(t *testing.T, c test.FrameworkClient, binding v1alpha1.Binding, retryInterval, timeout time.Duration) error {
 
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
+		t.Logf("Waiting for LastSuccessfulSync of binding '%s'\n", binding.Name)
 
-		desiredConsolidated, err := v1alpha1.NewConsolidatedFrom3scale(existingConsolidated.Spec.Credentials, existingConsolidated.Spec.APIs)
+		b := v1alpha1.Binding{}
+		err = c.Get(context.TODO(), types.NamespacedName{Name: binding.Name, Namespace: binding.Namespace}, &b)
 		if err != nil {
-			t.Fatal(err)
+			return true, err
 		}
-		if !v1alpha1.CompareConsolidated(existingConsolidated, *desiredConsolidated) {
-			t.Log("Consolidated object is not yet reconcile, retrying.")
-			return false, fmt.Errorf("Reconciliation is not finished")
+		if b.GetLastSuccessfulSync() != nil {
+			return true, nil
 		}
-		return true, nil
+		return false, nil
 	})
 	if err != nil {
 		return err
