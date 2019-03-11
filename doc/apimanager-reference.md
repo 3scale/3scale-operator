@@ -56,11 +56,11 @@ This resource is the resource used to deploy a 3scale API Management solution.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Image | `image` | string | No | Used to overwrite the desired container image for System |
-| RedisImage | `redisImage` | string | No | Used to overwrite the desired Redis image for the Redis used by System |
-| MemcachedImage | `memcachedImage` | string | No | Used to overwrite the desired Memcached image for the Memcached used by System |
-| FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification |
-| DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [SystemDatabaseSpec](#SystemDatabaseSpec) specification |
+| Image | `image` | string | No | nil | Used to overwrite the desired container image for System |
+| RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by System |
+| MemcachedImage | `memcachedImage` | string | No | nil | Used to overwrite the desired Memcached image for the Memcached used by System |
+| FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification | Spec of the System's File Storage part |
+| DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [SystemDatabaseSpec](#SystemDatabaseSpec) specification | Spec of the System's Database part |
 
 #### FileStorageSpec
 
