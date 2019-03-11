@@ -28,7 +28,7 @@ func (o *OperatorS3OptionsProvider) GetS3Options() (*component.S3Options, error)
 func (o *OperatorS3OptionsProvider) setSecretBasedOptions(sob *component.S3OptionsBuilder) error {
 	err := o.setAWSSecretOptions(sob)
 	if err != nil {
-		return fmt.Errorf("unable to create Zync Secret Options - %s", err)
+		return fmt.Errorf("unable to create S3 Secret Options - %s", err)
 	}
 
 	return nil
