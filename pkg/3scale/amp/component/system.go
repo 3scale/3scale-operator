@@ -1385,6 +1385,7 @@ func (system *System) getSystemRollingUpdatesConfData() string {
   published_service_plan_signup: true
   apicast_oidc: true
   policies: true
+  policy_registry: true
   proxy_private_base_path: true
 `
 }
