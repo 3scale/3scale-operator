@@ -313,7 +313,7 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 	}
 
 	if cr.Spec.SystemSpec.FileStorageSpec.S3 != nil {
-		optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec}
+		optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 		opts, err := optsProvider.GetS3Options()
 		if err != nil {
 			return nil, err
