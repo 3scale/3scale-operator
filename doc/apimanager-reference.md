@@ -33,7 +33,7 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | SystemSpec  | `system`  | \*SystemSpec  | No | See [SystemSpec](#SystemSpec) reference | Spec of the System part |
 | WildcardRouterSpec | `wildcardRouter` | \*WildcardRouterSpec | No | See [WildcardRouterSpec](#WildcardRouterSpec) reference | Spec of the WildcardRouter part |
 | ZyncSpec    | `zync`    | \*ZyncSpec    | No | See [ZyncSpec](#ZyncSpec) reference | Spec of the Zync part    |
-| HighAvailabilitySpec | `highavailability` | \*HighAvailaiblitySpec | No | See [HighAvailabilitySpec](#HighAvailabilitySpec) reference | Spec of the HighAvailability part |
+| HighAvailabilitySpec | `highAvailability` | \*HighAvailabilitySpec | No | See [HighAvailabilitySpec](#HighAvailabilitySpec) reference | Spec of the HighAvailability part |
 
 #### ApicastSpec
 
@@ -97,7 +97,7 @@ that should be set on it.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| MySQLSpec | `mysql`| \*SystemMySQLSpec | No | nil | See [SystemMySQLSpec](#SystemMySQLSpec) specification |
+| MySQLSpec | `mysql`| \*SystemMySQLSpec | No | nil | See [MySQLSpec](#MySQLSpec) specification |
 
 #### MySQLSpec
 
