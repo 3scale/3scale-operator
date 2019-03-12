@@ -57,5 +57,7 @@ func (o *OperatorS3OptionsProvider) setAWSSecretOptions(sob *component.S3Options
 	}
 	sob.AwsSecretAccessKey(*result)
 
+	sob.AWSCredentialsSecret(awsCredentialsSecretName)
+
 	return nil
 }
