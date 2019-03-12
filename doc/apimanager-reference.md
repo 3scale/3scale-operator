@@ -33,7 +33,7 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | SystemSpec  | `system`  | \*SystemSpec  | No | See [SystemSpec](#SystemSpec) reference | Spec of the System part |
 | WildcardRouterSpec | `wildcardRouter` | \*WildcardRouterSpec | No | See [WildcardRouterSpec](#WildcardRouterSpec) reference | Spec of the WildcardRouter part |
 | ZyncSpec    | `zync`    | \*ZyncSpec    | No | See [ZyncSpec](#ZyncSpec) reference | Spec of the Zync part    |
-| HighAvailabilitySpec | `highavailability` | \*HighAvailaiblitySpec | No | See [HighAvailabilitySpec](#HighAvailabilitySpec) reference | Spec of the HighAvailability part |
+| HighAvailabilitySpec | `highAvailability` | \*HighAvailabilitySpec | No | See [HighAvailabilitySpec](#HighAvailabilitySpec) reference | Spec of the HighAvailability part |
 
 #### ApicastSpec
 
@@ -56,11 +56,11 @@ This resource is the resource used to deploy a 3scale API Management solution.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Image | `image` | string | No | Used to overwrite the desired container image for System |
-| RedisImage | `redisImage` | string | No | Used to overwrite the desired Redis image for the Redis used by System |
-| MemcachedImage | `memcachedImage` | string | No | Used to overwrite the desired Memcached image for the Memcached used by System |
-| FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification |
-| DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [SystemDatabaseSpec](#SystemDatabaseSpec) specification |
+| Image | `image` | string | No | nil | Used to overwrite the desired container image for System |
+| RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by System |
+| MemcachedImage | `memcachedImage` | string | No | nil | Used to overwrite the desired Memcached image for the Memcached used by System |
+| FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification | Spec of the System's File Storage part |
+| DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [SystemDatabaseSpec](#SystemDatabaseSpec) specification | Spec of the System's Database part |
 
 #### FileStorageSpec
 
@@ -83,18 +83,21 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 | --- | --- | --- | --- | --- | --- |
 | AWSBucket | `awsBucket` | string | Yes | N/A | AWS Bucket name of the S3 bucket to be used as System's FileStorage for assets |
 | AWSRegion | `awsRegion` | string | Yes | N/A | AWS Region of the S3 bucket to be used as Sytem's FileStorage for assets |
-| AWSCredentials | `awsCredentialsSecret` | corev1.LocalObjectRreference | Yes | N/A |
+| AWSCredentials | `awsCredentialsSecret` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS credentials are stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
 | FileUploadStorage | `fileUploadStorage` | string | Yes | N/A | Define Assets Storage name |
 
-To secret name specified in the `awsCredentialsSecret` field must be
-pre-created by the user. See the
-[fileStorage S3 credentials secret](#fileStorage-S3-credentials-secret) specification.
+The secret name specified in the `awsCredentialsSecret` field must be
+pre-created by the user before creating the APIManager custom resource.
+Otherwise the operator will complain about it. See the
+[fileStorage S3 credentials secret](#fileStorage-S3-credentials-secret)
+specification to see what fields the secret should have and the values
+that should be set on it.
 
 #### DatabaseSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| MySQLSpec | `mysql`| \*SystemMySQLSpec | No | nil | See [SystemMySQLSpec](#SystemMySQLSpec) specification |
+| MySQLSpec | `mysql`| \*SystemMySQLSpec | No | nil | See [MySQLSpec](#MySQLSpec) specification |
 
 #### MySQLSpec
 
