@@ -28,7 +28,7 @@ spec:
               properties:
                 image:
                   type: string
-                mananagementAPI:
+                managementAPI:
                   type: string
                 openSSLVerify:
                   type: boolean

@@ -112,7 +112,7 @@ type APIManagerCommonSpec struct {
 
 type ApicastSpec struct {
 	// +optional
-	ApicastManagementAPI *string `json:"mananagementAPI,omitempty"`
+	ApicastManagementAPI *string `json:"managementAPI,omitempty"`
 	// +optional
 	OpenSSLVerify *bool `json:"openSSLVerify,omitempty"`
 	// +optional
