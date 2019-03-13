@@ -140,12 +140,14 @@ func (b *Binding) IsTerminating() bool {
 func (b *Binding) CleanUp(c client.Client) error {
 
 	state, err := b.GetCurrentState()
-	portaClient, err := NewPortaClient(state.Credentials)
-
-	for _, api := range state.APIs {
-		_ = api.DeleteFrom3scale(portaClient)
+	if state != nil {
+		portaClient, err := NewPortaClient(state.Credentials)
+		if err != nil {
+			for _, api := range state.APIs {
+				_ = api.DeleteFrom3scale(portaClient)
+			}
+		}
 	}
-
 	//Remove finalizer
 	finalizers := b.GetFinalizers()
 	var setFinalizers []string
