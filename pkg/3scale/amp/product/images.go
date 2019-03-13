@@ -6,14 +6,11 @@ type Version string
 
 const (
 	ProductUpstream    Version = "upstream"
-	ProductRelease_2_4 Version = "2.4"
 	ProductRelease_2_5 Version = "2.5"
 )
 
 func NewImageProvider(productVersion Version) (ImageProvider, error) {
 	switch productVersion {
-	case ProductRelease_2_4:
-		return &release_2_4{}, nil
 	case ProductRelease_2_5:
 		return &release_2_5{}, nil
 	case ProductUpstream:

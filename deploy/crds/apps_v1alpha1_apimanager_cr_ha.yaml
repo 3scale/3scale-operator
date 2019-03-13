@@ -3,7 +3,7 @@ kind: APIManager
 metadata:
   name: example-apimanager-ha
 spec:
-  productVersion: "2.4"
+  productVersion: "2.5"
   wildcardDomain: <desired-domain>
   # HA mode expects to have pre-created secrets with the desired database URL.
   # See reference documentation.
