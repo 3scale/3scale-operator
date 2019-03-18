@@ -963,7 +963,7 @@ func newInternalApicastOnPremFromApicastOnPrem(namespace string, prem ApicastOnP
 			AuthenticationSettings: prem.AuthenticationSettings,
 		},
 		StagingPublicBaseURL:    prem.StagingPublicBaseURL,
-		ProductionPublicBaseURL: prem.PrivateBaseURL,
+		ProductionPublicBaseURL: prem.ProductionPublicBaseURL,
 		MappingRules:            nil,
 	}
 	// Get Mapping Rules
