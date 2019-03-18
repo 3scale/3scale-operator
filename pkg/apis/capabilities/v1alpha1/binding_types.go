@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -141,7 +142,8 @@ func (b *Binding) CleanUp(c client.Client) error {
 
 	state, err := b.GetCurrentState()
 	if state != nil {
-		portaClient, err := NewPortaClient(state.Credentials)
+		portaClient, err := helper.PortaClientFromURLString(state.Credentials.AdminURL, state.Credentials.AuthToken)
+
 		if err != nil {
 			for _, api := range state.APIs {
 				_ = api.DeleteFrom3scale(portaClient)
@@ -313,7 +315,7 @@ func (b Binding) NewCurrentState(c client.Client) (*State, error) {
 		return nil, err
 	}
 
-	portaClient, err := NewPortaClient(state.Credentials)
+	portaClient, err := helper.PortaClientFromURLString(state.Credentials.AdminURL, state.Credentials.AuthToken)
 	if err != nil {
 		return nil, err
 	}

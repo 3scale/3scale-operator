@@ -3,6 +3,7 @@ package binding
 import (
 	"context"
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -203,7 +204,7 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 	if previousState != nil {
 		log.Info("Previous State exists, reconciling.", binding.Name, binding.Namespace)
 
-		c, err := apiv1alpha1.NewPortaClient(currentState.Credentials)
+		c, err := helper.PortaClientFromURLString(currentState.Credentials.AdminURL, currentState.Credentials.AuthToken)
 		if err != nil {
 			log.Error(err, "Failed creating client")
 		}
