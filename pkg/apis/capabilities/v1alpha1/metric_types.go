@@ -157,6 +157,7 @@ func getMetrics(namespace string, matchLabels map[string]string, c client.Client
 	err := c.List(context.TODO(), &opts, metrics)
 	return metrics, err
 }
+
 func metricNametoMetric(c *portaClient.ThreeScaleClient, serviceID string, metricName string) (portaClient.Metric, error) {
 	m := portaClient.Metric{}
 	metrics, err := c.ListMetrics(serviceID)
@@ -165,15 +166,14 @@ func metricNametoMetric(c *portaClient.ThreeScaleClient, serviceID string, metri
 	}
 
 	for _, metric := range metrics.Metrics {
-		if metricName == metric.SystemName {
+		if metricName == metric.FriendlyName {
 			m = metric
 			return m, nil
 		}
 	}
-
 	return m, fmt.Errorf("metric not found")
-
 }
+
 func metricIDtoMetric(c *portaClient.ThreeScaleClient, serviceID string, metricID string) (portaClient.Metric, error) {
 	m := portaClient.Metric{}
 
@@ -210,6 +210,7 @@ func newInternalMetricFromMetric(metric Metric) *InternalMetric {
 
 	return &internalMetric
 }
+
 func deleteInternalMetricFrom3scale(c *portaClient.ThreeScaleClient, api InternalAPI, metric InternalMetric) error {
 
 	service, err := getServiceFromInternalAPI(c, api.Name)
