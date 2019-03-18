@@ -1,15 +1,13 @@
 package v1alpha1
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	portaClient "github.com/3scale/3scale-porta-go-client/client"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
-	"net/http"
-	"net/url"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sort"
@@ -752,7 +750,8 @@ type APIPair struct {
 // reconcileWith3scale creates/modifies/deletes APIs based on the information of the APIsDiff object.
 func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 
-	c, err := NewPortaClient(creds)
+	c, err := helper.PortaClientFromURLString(creds.AdminURL, creds.AuthToken)
+
 	if err != nil {
 		return err
 	}
@@ -774,7 +773,8 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 
 	for _, apiPair := range d.NotEqual {
 
-		c, err := NewPortaClient(creds)
+		c, err := helper.PortaClientFromURLString(creds.AdminURL, creds.AuthToken)
+
 		if err != nil {
 			return err
 		}
@@ -1182,43 +1182,4 @@ func getProxyParamsFromProxy(proxy portaClient.Proxy, deploymentOption, backendV
 	}
 
 	return proxyParams
-}
-
-//TODO: Use from Helper
-func NewPortaClient(creds InternalCredentials) (*portaClient.ThreeScaleClient, error) {
-
-	systemAdminPortalURL, err := url.Parse(creds.AdminURL)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing 3scale url from crd - %s", err.Error())
-	}
-
-	port := 0
-	if systemAdminPortalURL.Port() == "" {
-		switch scheme := systemAdminPortalURL.Scheme; scheme {
-		case "http":
-			port = 80
-		case "https":
-			port = 443
-		}
-	} else {
-		port, err = strconv.Atoi(systemAdminPortalURL.Port())
-		if err != nil {
-			return nil, fmt.Errorf("admin portal URL invalid port - %s" + err.Error())
-		}
-	}
-
-	adminPortal, err := portaClient.NewAdminPortal(systemAdminPortalURL.Scheme, systemAdminPortalURL.Host, port)
-	if err != nil {
-		return nil, fmt.Errorf("invalid Admin Portal URL: %s", err.Error())
-	}
-
-	// TODO - This should be secure by default and overrideable for testing
-	// TODO - Set some sensible default here to handle timeouts
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	insecureHttp := &http.Client{Transport: tr}
-
-	c := portaClient.NewThreeScale(adminPortal, creds.AuthToken, insecureHttp)
-	return c, nil
 }

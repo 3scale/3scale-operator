@@ -467,7 +467,7 @@ func TestFullHappyPath(t *testing.T) {
 
 	t.Log("Checking for the binding object to be in sync with 3scale")
 
-	err = e2eutil.WaitForReconciliationWith3scale(t,f.Client, *binding, 30*time.Second, 240*time.Second)
+	err = e2eutil.WaitForReconciliationWith3scale(t, f.Client, *binding, 30*time.Second, 240*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
