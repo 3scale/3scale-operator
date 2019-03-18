@@ -234,11 +234,11 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 	// Grab the metrics from 3scale.
 	for _, metric := range service.Metrics.Metrics {
 		internalMetric := InternalMetric{
-			Name:        metric.MetricName,
+			Name:        metric.FriendlyName,
 			Unit:        metric.Unit,
 			Description: metric.Description,
 		}
-		if internalMetric.Name != "hits" {
+		if strings.ToLower(internalMetric.Name) != "hits" {
 			internalAPI.Metrics = append(internalAPI.Metrics, internalMetric)
 		}
 	}
@@ -270,7 +270,7 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 				Name:     limit.XMLName.Local,
 				Period:   limit.Period,
 				MaxValue: maxValue,
-				Metric:   metric.SystemName,
+				Metric:   metric.FriendlyName,
 			}
 			internalPlan.Limits = append(internalPlan.Limits, internalLimit)
 		}
@@ -773,11 +773,6 @@ func (d *APIsDiff) ReconcileWith3scale(creds InternalCredentials) error {
 	}
 
 	for _, apiPair := range d.NotEqual {
-
-		c, err := NewPortaClient(creds)
-		if err != nil {
-			return err
-		}
 
 		serviceNeedsUpdate := false
 		service, err := getServiceFromInternalAPI(c, apiPair.A.Name)

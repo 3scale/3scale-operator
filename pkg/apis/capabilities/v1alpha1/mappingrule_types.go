@@ -100,7 +100,7 @@ func getServiceMappingRulesFrom3scale(c *portaClient.ThreeScaleClient, service p
 		desiredMetricName := ""
 		for _, metric := range service.Metrics.Metrics {
 			if metric.ID == mapping.MetricID {
-				desiredMetricName = metric.SystemName
+				desiredMetricName = metric.FriendlyName
 			}
 		}
 		if desiredMetricName == "" {
