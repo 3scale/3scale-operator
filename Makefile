@@ -20,12 +20,12 @@ vendor Gopkg.lock: Gopkg.toml
 	dep ensure -v
 
 IMAGE ?= quay.io/3scale/3scale-operator
-VERSION ?= v0.0.1
+VERSION ?= master
 NAMESPACE ?= operator-test
 
-## build: Build operator
+## build: Build operator image
 build:
-	operator-sdk build $(IMAGE):$(VERSION)
+	docker build -t $(IMAGE):$(VERSION) .
 
 ## push: push operator docker image to remote repo
 push:
