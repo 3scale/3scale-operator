@@ -1007,6 +1007,14 @@ func CompareInternalAPI(APIA, APIB InternalAPI) bool {
 	} else {
 		switch APIA.getIntegrationName() {
 		case "ApicastOnPrem":
+
+			// Always set he port number, because porta adds it automatically and makes the sync fail.
+			APIA.IntegrationMethod.ApicastOnPrem.ProductionPublicBaseURL = helper.SetURLDefaultPort(APIA.IntegrationMethod.ApicastOnPrem.ProductionPublicBaseURL)
+			APIA.IntegrationMethod.ApicastOnPrem.StagingPublicBaseURL = helper.SetURLDefaultPort(APIA.IntegrationMethod.ApicastOnPrem.StagingPublicBaseURL)
+
+			APIB.IntegrationMethod.ApicastOnPrem.ProductionPublicBaseURL = helper.SetURLDefaultPort(APIB.IntegrationMethod.ApicastOnPrem.ProductionPublicBaseURL)
+			APIB.IntegrationMethod.ApicastOnPrem.StagingPublicBaseURL = helper.SetURLDefaultPort(APIB.IntegrationMethod.ApicastOnPrem.StagingPublicBaseURL)
+
 			for i := range APIA.IntegrationMethod.ApicastOnPrem.MappingRules {
 				APIA.IntegrationMethod.ApicastOnPrem.MappingRules[i].Name = "mapping_rule"
 			}
@@ -1028,6 +1036,7 @@ func CompareInternalAPI(APIA, APIB InternalAPI) bool {
 
 	return reflect.DeepEqual(A, B)
 }
+
 func get3scaleProxyFromInternalAPI(api InternalAPI) (portaClient.Proxy, error) {
 
 	//TODO: Improve get3scaleProxyFromInternalAPI.

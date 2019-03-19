@@ -50,6 +50,7 @@ func PortFromURL(url *url.URL) int {
 	return portNum
 }
 
+// SetURLDefaultPort adds the default Port if not set
 func SetURLDefaultPort(rawurl string) string {
 
 	urlObj, _ := url.Parse(rawurl)
