@@ -1,6 +1,13 @@
 version: 2.1
 
 commands:
+  docker-login:
+    steps:
+      - run:
+          name: Docker login
+          command: |
+            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+
   install-operator-sdk:
     steps:
       - run:
@@ -96,10 +103,10 @@ commands:
 
   push-3scale-images-to-quay:
     steps:
+      - docker-login
       - run:
           name: Push images to quay.io
           command: |
-            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
             oc whoami --show-token | docker login -u $(oc whoami) --password-stdin 172.30.1.1:5000
             project=$(oc project -q)
 
@@ -186,10 +193,10 @@ commands:
         default: master
         type: string
     steps:
+      - docker-login
       - run:
           name: Push 3scale-operator image
           command: |
-            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
             make push VERSION=<< parameters.version >>
 
 jobs:
@@ -210,10 +217,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run:
-          name: Docker login
-          command: |
-            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+      - docker-login
       - run:
           name: Pull origin image tag
           command: |
@@ -235,10 +239,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run:
-          name: Docker login
-          command: |
-            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+      - docker-login
       - run:
           name: Pull origin image tag
           command: |
