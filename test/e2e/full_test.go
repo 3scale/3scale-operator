@@ -309,9 +309,9 @@ func TestFullHappyPath(t *testing.T) {
 		},
 		Spec: apiv1alpha1.PlanSpec{
 			PlanBase: apiv1alpha1.PlanBase{
-				Default:         true,
-				TrialPeriod:     0,
-				AprovalRequired: false,
+				Default:          true,
+				TrialPeriod:      0,
+				ApprovalRequired: false,
 				Costs: apiv1alpha1.PlanCost{
 					SetupFee:  0,
 					CostMonth: 0,

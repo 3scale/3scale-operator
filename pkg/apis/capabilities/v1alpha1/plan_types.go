@@ -22,9 +22,9 @@ type PlanSpec struct {
 }
 
 type PlanBase struct {
-	Default         bool  `json:"default"`
-	TrialPeriod     int64 `json:"trialPeriod"`
-	AprovalRequired bool  `json:"aprovalRequired"`
+	Default          bool  `json:"default"`
+	TrialPeriod      int64 `json:"trialPeriod"`
+	ApprovalRequired bool  `json:"approvalRequired"`
 	// +optional
 	Costs PlanCost `json:"costs,omitempty"`
 }
@@ -258,7 +258,7 @@ func newInternalPlanFromPlan(plan Plan, c client.Client) (*InternalPlan, error) 
 		Name:             plan.Name,
 		Default:          plan.Spec.Default,
 		TrialPeriodDays:  plan.Spec.TrialPeriod,
-		ApprovalRequired: plan.Spec.AprovalRequired,
+		ApprovalRequired: plan.Spec.ApprovalRequired,
 		Costs:            plan.Spec.Costs,
 		Limits:           nil,
 	}
