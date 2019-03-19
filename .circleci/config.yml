@@ -154,16 +154,12 @@ commands:
       - store_artifacts:
           path: reports
 
-jobs:
-  build-operator:
-    docker:
-      - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/3scale/3scale-operator
+  build-operator-image:
+    parameters:
+      version:
+        default: master
+        type: string
     steps:
-      - setup_remote_docker:
-          reusable: true
-          exclusive: false
-
       - checkout
 
       - restore_cache:
@@ -182,13 +178,58 @@ jobs:
       - run:
           name: Build Operator
           command: |
-              make build VERSION=${CIRCLE_SHA1}
+              make build VERSION=<< parameters.version >>
 
+  push-operator-image:
+    parameters:
+      version:
+        default: master
+        type: string
+    steps:
       - run:
           name: Push 3scale-operator image
           command: |
             docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
-            make push VERSION=${CIRCLE_SHA1}
+            make push VERSION=<< parameters.version >>
+
+jobs:
+  build-deploy-operator:
+    docker:
+      - image: circleci/golang:1.11
+    working_directory: /go/src/github.com/3scale/3scale-operator
+    steps:
+      - setup_remote_docker:
+          reusable: true
+          exclusive: false
+      - build-operator-image:
+          version: ${CIRCLE_SHA1}
+      - push-operator-image:
+          version: ${CIRCLE_SHA1}
+
+  tag-operator-image-master:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Docker login
+          command: |
+            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+      - run:
+          name: Pull origin image tag
+          command: |
+            make pull VERSION=${CIRCLE_SHA1}
+      - run:
+          name: Tag image as master
+          command: |
+            make tag SOURCE_VERSION=${CIRCLE_SHA1} VERSION=master
+      - push-operator-image:
+          version: master
+      - run:
+          name: Tag image as latest
+          command: |
+            make tag SOURCE_VERSION=master VERSION=latest
+      - push-operator-image:
+          version: latest
 
   deploy_templates:
     machine:
@@ -251,13 +292,19 @@ workflows:
   version: 2
   operator:
     jobs:
-      - build-operator:
+      - build-deploy-operator:
           context: org-global
       - run-operator-e2e-test:
           context: org-global
           requires:
-            - build-operator
-
+            - build-deploy-operator
+      - tag-operator-image-master:
+          context: org-global
+          requires:
+            - run-operator-e2e-test
+          filters:
+            branches:
+              only: master
   templates:
     jobs:
       - generator
