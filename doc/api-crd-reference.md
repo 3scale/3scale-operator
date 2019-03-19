@@ -326,7 +326,7 @@ spec:
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
 | Default | `default` | boolean | Sets the Plan as the default for developers to sign-up | Yes |
-| Approval Required | `approvalRequired` | boolean | Defines if a final user requires approval from the admin to sign-up in a plan | Yes |
+| Approval Required | `approvalRequired` | boolean | Defines if a final user requires approval from the admin to sign up for a plan | Yes |
 | Costs | `costs` | Object | See [Costs](#Costs) | Yes |
 | Limit Selector | `limitSelector` | LabelSelector | Selects the desired Limit objects, if empty, selects all the Limit objects in the same namespace | No |
 | Trial Period | `trialPeriod` | int | See [Master Secret](#MasterSecret) for more details | Yes |
