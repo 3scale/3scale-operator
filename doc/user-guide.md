@@ -293,7 +293,7 @@ metadata:
     api: api01
   name: plan01
 spec:
-  aprovalRequired: false
+  approvalRequired: false
   default: true
   costs:
     costMonth: 0

@@ -24,7 +24,7 @@ spec:
           type: object
         spec:
           properties:
-            aprovalRequired:
+            approvalRequired:
               type: boolean
             costs:
               properties:
@@ -45,7 +45,7 @@ spec:
           required:
           - default
           - trialPeriod
-          - aprovalRequired
+          - approvalRequired
           - limitSelector
           type: object
         status:
