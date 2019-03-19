@@ -231,6 +231,31 @@ jobs:
       - push-operator-image:
           version: latest
 
+  tag-operator-image-release:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Docker login
+          command: |
+            docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" "${DOCKER_REGISTRY}"
+      - run:
+          name: Pull origin image tag
+          command: |
+            make pull VERSION=${CIRCLE_SHA1}
+      - run:
+          name: Tag image as release ${CIRCLE_TAG}
+          command: |
+            make tag SOURCE_VERSION=${CIRCLE_SHA1} VERSION=${CIRCLE_TAG}
+      - push-operator-image:
+          version: ${CIRCLE_TAG}
+      - run:
+          name: Tag image as latest
+          command: |
+            make tag SOURCE_VERSION=${CIRCLE_TAG} VERSION=latest
+      - push-operator-image:
+          version: latest
+
   deploy_templates:
     machine:
       docker_layer_caching: true
@@ -305,6 +330,15 @@ workflows:
           filters:
             branches:
               only: master
+      - tag-operator-image-release:
+          context: org-global
+          requires:
+            - run-operator-e2e-test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
   templates:
     jobs:
       - generator
