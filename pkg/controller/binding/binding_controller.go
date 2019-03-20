@@ -228,6 +228,7 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 	// if it's not in sync, we reconcile the APIs and mark the object for update
 	if binding.StateInSync() {
 		log.Info("State is in sync")
+
 	} else {
 		log.Info("State is not in sync, reconciling APIs")
 		apisDiff := apiv1alpha1.DiffAPIs(desiredState.APIs, currentState.APIs)
@@ -246,9 +247,12 @@ func ReconcileBindingFunc(binding apiv1alpha1.Binding, c client.Client, log logr
 			log.Error(err, "Error Reconciling APIs")
 		}
 
-		// Update the LastSync field.
-		binding.SetLastSuccessfulSync()
+		if binding.StateInSync() {
+			// Update the LastSync field.
+			binding.SetLastSuccessfulSync()
+		}
 		UpdateRequired = true
+
 		log.Info("Reconciliation finished.")
 	}
 

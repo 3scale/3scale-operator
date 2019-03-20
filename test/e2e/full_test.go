@@ -313,8 +313,8 @@ func TestFullHappyPath(t *testing.T) {
 				TrialPeriod:      0,
 				ApprovalRequired: false,
 				Costs: apiv1alpha1.PlanCost{
-					SetupFee:  0,
-					CostMonth: 0,
+					SetupFee:  1,
+					CostMonth: 1,
 				},
 			},
 			PlanSelectors: apiv1alpha1.PlanSelectors{
@@ -371,7 +371,7 @@ func TestFullHappyPath(t *testing.T) {
 			LimitObjectRef: apiv1alpha1.LimitObjectRef{
 				Metric: v1.ObjectReference{
 					Namespace: namespace,
-					Name:      "hits",
+					Name:      "Hits",
 				},
 			},
 		},
@@ -474,6 +474,23 @@ func TestFullHappyPath(t *testing.T) {
 
 	elapsed = time.Since(start)
 	t.Logf("Binding in sync took %s seconds", elapsed)
+
+	err = f.Client.Get(goctx.TODO(), types.NamespacedName{Namespace: namespace, Name: binding.Name}, binding)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	currentState, err := binding.GetCurrentState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	desiredState, err := binding.GetDesiredState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !apiv1alpha1.CompareStates(*currentState, *desiredState) {
+		t.Fatalf("States are not in sync: \n\ncurrent: %#v\n\ndesired: %#v\n\n", *currentState, *desiredState)
+	}
 
 }
 
