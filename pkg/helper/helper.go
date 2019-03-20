@@ -2,6 +2,7 @@ package helper
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -47,4 +48,17 @@ func PortFromURL(url *url.URL) int {
 		portNum = 443
 	}
 	return portNum
+}
+
+// SetURLDefaultPort adds the default Port if not set
+func SetURLDefaultPort(rawurl string) string {
+
+	urlObj, _ := url.Parse(rawurl)
+
+	if urlObj.Port() != "" {
+		return urlObj.String()
+	}
+
+	portNum := PortFromURL(urlObj)
+	return fmt.Sprintf("%s:%d", urlObj.String(), portNum)
 }
