@@ -265,7 +265,7 @@ func TestFullHappyPath(t *testing.T) {
 
 	metric01 := &apiv1alpha1.Metric{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "metric01",
+			Name:      "metric01-test",
 			Namespace: namespace,
 			Labels:    map[string]string{"environment": "testing"},
 		},
@@ -345,7 +345,7 @@ func TestFullHappyPath(t *testing.T) {
 			LimitObjectRef: apiv1alpha1.LimitObjectRef{
 				Metric: v1.ObjectReference{
 					Namespace: namespace,
-					Name:      "metric01",
+					Name:      "metric01-test",
 				},
 			},
 		},
@@ -425,7 +425,7 @@ func TestFullHappyPath(t *testing.T) {
 			MappingRuleMetricRef: apiv1alpha1.MappingRuleMetricRef{
 				MetricRef: v1.ObjectReference{
 					Namespace: namespace,
-					Name:      "metric01",
+					Name:      "metric01-test",
 				},
 			},
 		},
