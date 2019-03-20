@@ -129,6 +129,9 @@ type BackendSpec struct {
 
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
+
+	// +optional
+	MemoryLimit *string `json:"memoryLimit,omitempty"`
 }
 
 type SystemSpec struct {
@@ -153,6 +156,9 @@ type SystemSpec struct {
 	// TODO should union fields be optional?
 	// +optional
 	DatabaseSpec *SystemDatabaseSpec `json:"database,omitempty"`
+
+	// +optional
+	MemoryLimit *string `json:"memoryLimit,omitempty"`
 }
 
 type SystemFileStorageSpec struct {

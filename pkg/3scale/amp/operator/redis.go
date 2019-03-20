@@ -28,6 +28,17 @@ func (o *OperatorRedisOptionsProvider) GetRedisOptions() (*component.RedisOption
 		optProv.SystemImage(imageProvider.GetSystemRedisImage())
 	}
 
+	if o.APIManagerSpec.BackendSpec != nil && o.APIManagerSpec.BackendSpec.MemoryLimit != nil {
+		optProv.BackendMemoryLimit(*o.APIManagerSpec.BackendSpec.MemoryLimit)
+	} else {
+		optProv.BackendMemoryLimit("32Gi")
+	}
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.MemoryLimit != nil {
+		optProv.SystemMemoryLimit(*o.APIManagerSpec.SystemSpec.MemoryLimit)
+	} else {
+		optProv.SystemMemoryLimit("32Gi")
+	}
+
 	res, err := optProv.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Redis Options - %s", err)

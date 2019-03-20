@@ -26,9 +26,11 @@ type RedisOptions struct {
 }
 
 type redisRequiredOptions struct {
-	appLabel     string
-	backendImage string
-	systemImage  string
+	appLabel           string
+	backendImage       string
+	systemImage        string
+	backendMemoryLimit string
+	systemMemoryLimit  string
 }
 
 type redisNonRequiredOptions struct {
@@ -53,6 +55,8 @@ func (o *CLIRedisOptionsProvider) GetRedisOptions() (*RedisOptions, error) {
 	rob.AppLabel("${APP_LABEL}")
 	rob.BackendImage("${REDIS_IMAGE}")
 	rob.SystemImage("${REDIS_IMAGE}")
+	rob.BackendMemoryLimit("${MEMORY_LIMIT")
+	rob.SystemMemoryLimit("MEMORY_LIMIT")
 
 	res, err := rob.Build()
 	if err != nil {
@@ -101,6 +105,12 @@ func (redis *Redis) buildParameters(template *templatev1.Template) {
 			Description: "Redis image to use",
 			Required:    true,
 			Value:       "registry.access.redhat.com/rhscl/redis-32-rhel7:3.2",
+		},
+		{
+			Name:        "MEMORY_LIMIT",
+			Description: "Memory limit to use",
+			Required:    true,
+			Value:       "32Gi",
 		},
 	}
 	template.Parameters = append(template.Parameters, parameters...)
@@ -283,7 +293,7 @@ func (redis *Redis) buildPodContainerResourceLimits() v1.ResourceRequirements {
 	return v1.ResourceRequirements{ //TODO Make this configurable via an option flag.
 		Limits: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("2000m"), //another option was to use resource.Parse which would not panic and return an error if error
-			v1.ResourceMemory: resource.MustParse("32Gi"),
+			v1.ResourceMemory: resource.MustParse(redis.Options.backendMemoryLimit),
 		},
 		Requests: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("1000m"),
@@ -572,7 +582,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{
 									v1.ResourceCPU:    resource.MustParse("500m"),
-									v1.ResourceMemory: resource.MustParse("32Gi"),
+									v1.ResourceMemory: resource.MustParse(redis.Options.systemMemoryLimit),
 								},
 								Requests: v1.ResourceList{
 									v1.ResourceCPU:    resource.MustParse("150m"),

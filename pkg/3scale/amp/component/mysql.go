@@ -282,6 +282,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 							},
 							Resources: v1.ResourceRequirements{
 								Limits: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("1"),
 									v1.ResourceMemory: resource.MustParse("2Gi"),
 								},
 								Requests: v1.ResourceList{
