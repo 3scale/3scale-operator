@@ -1,5 +1,7 @@
 # 3scale-operator
 
+[![CircleCI](https://circleci.com/gh/3scale/3scale-operator/tree/master.svg?style=svg)](https://circleci.com/gh/3scale/3scale-operator/tree/master)
+
 ### Project Status: alpha
 
 The project is currently alpha which means that there are still new feautres
