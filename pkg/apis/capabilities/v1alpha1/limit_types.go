@@ -77,7 +77,7 @@ func newInternalLimitFromLimit(limit Limit, c client.Client) (*InternalLimit, er
 		Name:      limit.Spec.Metric.Name,
 	}
 	if limit.Spec.Metric.Name == "Hits" || limit.Spec.Metric.Name == "hits" {
-		metric.Name = "hits"
+		metric.Name = "Hits"
 	} else {
 		err := c.Get(context.TODO(), reference, metric)
 		if err != nil {

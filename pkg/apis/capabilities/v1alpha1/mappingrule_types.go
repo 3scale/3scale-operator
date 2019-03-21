@@ -131,7 +131,7 @@ func newInternalMappingRuleFromMappingRule(mappingRule MappingRule, c client.Cli
 	// Handle metrics Hits.
 	if mappingRule.Spec.MetricRef.Name == "Hits" ||
 		mappingRule.Spec.MetricRef.Name == "hits" {
-		metric.Name = "hits"
+		metric.Name = "Hits"
 
 		// Handle metrics Hits.
 
