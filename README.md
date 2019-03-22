@@ -2,6 +2,10 @@
 
 [![CircleCI](https://circleci.com/gh/3scale/3scale-operator/tree/master.svg?style=svg)](https://circleci.com/gh/3scale/3scale-operator/tree/master)
 
+This software is licensed under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
+
+See the LICENSE and NOTICE files that should have been provided along with this software for details.
+
 ### Project Status: alpha
 
 The project is currently alpha which means that there are still new feautres
