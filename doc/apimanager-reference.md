@@ -137,9 +137,6 @@ pre-created by the user:
 * [system-redis](#system-redis) with the `URL` field with the value pointing to the
   desired external database. The database should be configured
   in high-availability mode
-* [apicast-redis](#apicast-redis) with the `PRODUCTION_URL` and `STAGING_URL` fields
-  pointing to the  desired external databases. The databases should be configured
-  in high-availability mode
 
 #### APIManagerStatus
 
@@ -157,13 +154,6 @@ can be controlled by pre-creating some Kubernetes secrets before deploying the
 APIManager Custom Resource.
 
 The available configurable secrets are:
-
-#### apicast-redis
-
-| **Field** | **Description** | **Default value** |
-| --- | --- | --- |
-| PRODUCTION_URL | Redis database connection URL to be used by production apicast | `redis://system-redis:6379/1` |
-| STAGING_URL | Redis database connection URL to be used by staging apicast | `redis://system-redis:6379/2` |
 
 #### backend-internal-api
 

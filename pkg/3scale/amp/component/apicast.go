@@ -13,19 +13,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-const (
-	ApicastSecretRedisSecretName             = "apicast-redis"
-	ApicastSecretRedisProductionURLFieldName = "PRODUCTION_URL"
-	ApicastSecretRedisStagingURLFieldName    = "STAGING_URL"
-)
-
 type Apicast struct {
 	options []string
 	Options *ApicastOptions
 }
 
 type ApicastOptions struct {
-	nonRequiredApicastOptions
 	requiredApicastOptions
 }
 
@@ -36,11 +29,6 @@ type requiredApicastOptions struct {
 	responseCodes  string
 	tenantName     string
 	wildcardDomain string
-}
-
-type nonRequiredApicastOptions struct {
-	redisProductionURL *string
-	redisStagingURL    *string
 }
 
 func NewApicast(options []string) *Apicast {
@@ -140,7 +128,6 @@ func (apicast *Apicast) buildObjects() []runtime.RawExtension {
 	apicastStagingRoute := apicast.buildApicastStagingRoute()
 	apicastProductionRoute := apicast.buildApicastProductionRoute()
 	apicastEnvConfigMap := apicast.buildApicastEnvConfigMap()
-	apicastRedisSecret := apicast.buildApicastRedisSecrets()
 
 	objects := []runtime.RawExtension{
 		runtime.RawExtension{Object: apicastStagingDeploymentConfig},
@@ -150,7 +137,6 @@ func (apicast *Apicast) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: apicastStagingRoute},
 		runtime.RawExtension{Object: apicastProductionRoute},
 		runtime.RawExtension{Object: apicastEnvConfigMap},
-		runtime.RawExtension{Object: apicastRedisSecret},
 	}
 	return objects
 }
@@ -550,7 +536,6 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 		envVarFromValue("APICAST_CONFIGURATION_LOADER", "lazy"),
 		envVarFromValue("APICAST_CONFIGURATION_CACHE", "0"),
 		envVarFromValue("THREESCALE_DEPLOYMENT_ENV", "staging"),
-		envVarFromSecret("REDIS_URL", ApicastSecretRedisSecretName, ApicastSecretRedisStagingURLFieldName),
 	)
 	return result
 }
@@ -562,7 +547,6 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 		envVarFromValue("APICAST_CONFIGURATION_LOADER", "boot"),
 		envVarFromValue("APICAST_CONFIGURATION_CACHE", "300"),
 		envVarFromValue("THREESCALE_DEPLOYMENT_ENV", "production"),
-		envVarFromSecret("REDIS_URL", ApicastSecretRedisSecretName, ApicastSecretRedisProductionURLFieldName),
 	)
 	return result
 }
@@ -582,26 +566,5 @@ func (apicast *Apicast) buildApicastEnvConfigMap() *v1.ConfigMap {
 			"OPENSSL_VERIFY":         apicast.Options.openSSLVerify,
 			"APICAST_RESPONSE_CODES": apicast.Options.responseCodes,
 		},
-	}
-}
-
-func (apicast *Apicast) buildApicastRedisSecrets() *v1.Secret {
-	return &v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: ApicastSecretRedisSecretName,
-			Labels: map[string]string{
-				"app":                  apicast.Options.appLabel,
-				"threescale_component": "apicast",
-			},
-		},
-		StringData: map[string]string{
-			ApicastSecretRedisProductionURLFieldName: *apicast.Options.redisProductionURL,
-			ApicastSecretRedisStagingURLFieldName:    *apicast.Options.redisStagingURL,
-		},
-		Type: v1.SecretTypeOpaque,
 	}
 }

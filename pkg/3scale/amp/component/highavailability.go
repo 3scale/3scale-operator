@@ -22,8 +22,6 @@ type HighAvailabilityOptions struct {
 
 type requiredHighAvailabilityOptions struct {
 	appLabel                    string
-	apicastProductionRedisURL   string
-	apicastStagingRedisURL      string
 	backendRedisQueuesEndpoint  string
 	backendRedisStorageEndpoint string
 	systemDatabaseURL           string
@@ -59,8 +57,6 @@ type CLIHighAvailabilityOptionsProvider struct {
 func (o *CLIHighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*HighAvailabilityOptions, error) {
 	hob := HighAvailabilityOptionsBuilder{}
 	hob.AppLabel("${APP_LABEL}")
-	hob.ApicastProductionRedisURL("${APICAST_PRODUCTION_REDIS_URL}")
-	hob.ApicastStagingRedisURL("${APICAST_STAGING_REDIS_URL}")
 	hob.BackendRedisQueuesEndpoint("${BACKEND_REDIS_QUEUES_ENDPOINT}")
 	hob.BackendRedisStorageEndpoint("${BACKEND_REDIS_STORAGE_ENDPOINT}")
 	hob.SystemDatabaseURL("${SYSTEM_DATABASE_URL}")
@@ -228,9 +224,6 @@ func (ha *HighAvailability) updateDatabasesURLS(objects []runtime.RawExtension) 
 			switch secret.Name {
 			case "system-redis":
 				secret.StringData["URL"] = ha.Options.systemRedisURL
-			case "apicast-redis":
-				secret.StringData["PRODUCTION_URL"] = ha.Options.apicastProductionRedisURL
-				secret.StringData["STAGING_URL"] = ha.Options.apicastStagingRedisURL
 			case "backend-redis":
 				secret.StringData["REDIS_STORAGE_URL"] = ha.Options.backendRedisStorageEndpoint
 				secret.StringData["REDIS_QUEUES_URL"] = ha.Options.backendRedisQueuesEndpoint
@@ -254,16 +247,6 @@ func (ha *HighAvailability) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:        "SYSTEM_REDIS_URL",
 			Description: "Define the external system-redis to connect to",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "APICAST_STAGING_REDIS_URL",
-			Description: "Define the external apicast-staging redis to connect to",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "APICAST_PRODUCTION_REDIS_URL",
-			Description: "Define the external apicast-staging redis to connect to",
 			Required:    true,
 		},
 		templatev1.Parameter{

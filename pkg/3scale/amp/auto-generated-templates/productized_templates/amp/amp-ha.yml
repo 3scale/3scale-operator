@@ -2904,11 +2904,6 @@ objects:
             value: "0"
           - name: THREESCALE_DEPLOYMENT_ENV
             value: staging
-          - name: REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: STAGING_URL
-                name: apicast-redis
           image: amp-apicast:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3026,11 +3021,6 @@ objects:
             value: "300"
           - name: THREESCALE_DEPLOYMENT_ENV
             value: production
-          - name: REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: PRODUCTION_URL
-                name: apicast-redis
           image: amp-apicast:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3196,18 +3186,6 @@ objects:
       app: ${APP_LABEL}
       threescale_component: apicast
     name: apicast-environment
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: apicast
-    name: apicast-redis
-  stringData:
-    PRODUCTION_URL: ${APICAST_PRODUCTION_REDIS_URL}
-    STAGING_URL: ${APICAST_STAGING_REDIS_URL}
-  type: Opaque
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -3482,12 +3460,6 @@ parameters:
   required: true
 - description: Define the external system-redis to connect to
   name: SYSTEM_REDIS_URL
-  required: true
-- description: Define the external apicast-staging redis to connect to
-  name: APICAST_STAGING_REDIS_URL
-  required: true
-- description: Define the external apicast-staging redis to connect to
-  name: APICAST_PRODUCTION_REDIS_URL
   required: true
 - description: Define the external system-mysql to connect to
   name: SYSTEM_DATABASE_URL

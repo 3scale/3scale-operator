@@ -3389,11 +3389,6 @@ objects:
             value: "0"
           - name: THREESCALE_DEPLOYMENT_ENV
             value: staging
-          - name: REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: STAGING_URL
-                name: apicast-redis
           image: amp-apicast:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3505,11 +3500,6 @@ objects:
             value: "300"
           - name: THREESCALE_DEPLOYMENT_ENV
             value: production
-          - name: REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: PRODUCTION_URL
-                name: apicast-redis
           image: amp-apicast:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3669,18 +3659,6 @@ objects:
       app: ${APP_LABEL}
       threescale_component: apicast
     name: apicast-environment
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: apicast
-    name: apicast-redis
-  stringData:
-    PRODUCTION_URL: redis://system-redis:6379/1
-    STAGING_URL: redis://system-redis:6379/2
-  type: Opaque
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
