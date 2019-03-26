@@ -27,6 +27,7 @@ type requiredHighAvailabilityOptions struct {
 	backendRedisStorageEndpoint string
 	systemDatabaseURL           string
 	systemRedisURL              string
+	systemMessageBusRedisURL    string
 }
 
 type nonRequiredHighAvailabilityOptions struct {
@@ -62,6 +63,8 @@ func (o *CLIHighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*High
 	hob.BackendRedisStorageEndpoint("${BACKEND_REDIS_STORAGE_ENDPOINT}")
 	hob.SystemDatabaseURL("${SYSTEM_DATABASE_URL}")
 	hob.SystemRedisURL("${SYSTEM_REDIS_URL}")
+	hob.SystemMessageBusRedisURL("${SYSTEM_MESSAGE_BUS_REDIS_URL}")
+
 	res, err := hob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create High Availability Options - %s", err)
@@ -111,6 +114,7 @@ func (ha *HighAvailability) PostProcess(template *templatev1.Template, otherComp
 	res = ha.deleteInternalDatabasesObjects(res)
 	ha.updateDatabasesURLS(res)
 	ha.deleteDBRelatedParameters(template)
+	ha.unsetSystemRedisDBDefaultValues(template)
 
 	template.Objects = res
 }
@@ -200,6 +204,20 @@ func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []runtime.Raw
 	return keepObjects
 }
 
+func (ha *HighAvailability) unsetSystemRedisDBDefaultValues(template *templatev1.Template) {
+	dbParamsToUpdate := map[string]bool{
+		"SYSTEM_REDIS_URL":             true,
+		"SYSTEM_MESSAGE_BUS_REDIS_URL": true,
+	}
+
+	for paramIdx := range template.Parameters {
+		paramName := template.Parameters[paramIdx].Name
+		if _, ok := dbParamsToUpdate[paramName]; ok {
+			template.Parameters[paramIdx].Value = ""
+		}
+	}
+}
+
 func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Template) {
 	keepParams := []templatev1.Parameter{}
 	dbParamsToDelete := map[string]bool{
@@ -229,6 +247,7 @@ func (ha *HighAvailability) updateDatabasesURLS(objects []runtime.RawExtension) 
 			switch secret.Name {
 			case "system-redis":
 				secret.StringData["URL"] = ha.Options.systemRedisURL
+				secret.StringData["MESSAGE_BUS_URL"] = ha.Options.systemMessageBusRedisURL
 			case "backend-redis":
 				secret.StringData["REDIS_STORAGE_URL"] = ha.Options.backendRedisStorageEndpoint
 				secret.StringData["REDIS_QUEUES_URL"] = ha.Options.backendRedisQueuesEndpoint
@@ -247,11 +266,6 @@ func (ha *HighAvailability) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:        "BACKEND_REDIS_QUEUES_ENDPOINT",
 			Description: "Define the external backend-redis queues endpoint to connect to",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_REDIS_URL",
-			Description: "Define the external system-redis to connect to",
 			Required:    true,
 		},
 		templatev1.Parameter{

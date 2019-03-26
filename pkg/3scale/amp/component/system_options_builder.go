@@ -94,6 +94,18 @@ func (s *SystemOptionsBuilder) RedisURL(redisURL string) {
 	s.options.redisURL = &redisURL
 }
 
+func (s *SystemOptionsBuilder) MessageBusRedisURL(url string) {
+	s.options.messageBusRedisURL = &url
+}
+
+func (s *SystemOptionsBuilder) RedisNamespace(namespace string) {
+	s.options.redisNamespace = &namespace
+}
+
+func (s *SystemOptionsBuilder) MessageBusRedisNamespace(namespace string) {
+	s.options.messageBusRedisNamespace = &namespace
+}
+
 func (s *SystemOptionsBuilder) ApicastSystemMasterProxyConfigEndpoint(endpoint string) {
 	s.options.apicastSystemMasterProxyConfigEndpoint = &endpoint
 }
@@ -167,6 +179,10 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 	defaultMemcachedServers := "system-memcache:11211"
 	defaultEventHooksURL := "http://system-master:3000/master/events/import"
 	defaultRedisURL := "redis://system-redis:6379/1"
+	defaultMessageBusRedisURL := ""
+	defaultRedisNamespace := ""
+	defaultMessageBusRedisNamespace := ""
+
 	defaultApicastSystemMasterProxyConfigEndpoint := "http://" + s.options.apicastAccessToken + "@system-master:3000/master/api/proxy/configs"
 	defaultApicastSystemMasterBaseURL := "http://" + s.options.apicastAccessToken + "@system-master:3000"
 	defaultAdminEmail := ""
@@ -181,6 +197,18 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 
 	if s.options.redisURL == nil {
 		s.options.redisURL = &defaultRedisURL
+	}
+
+	if s.options.messageBusRedisURL == nil {
+		s.options.messageBusRedisURL = &defaultMessageBusRedisURL
+	}
+
+	if s.options.redisNamespace == nil {
+		s.options.redisNamespace = &defaultRedisNamespace
+	}
+
+	if s.options.messageBusRedisNamespace == nil {
+		s.options.messageBusRedisNamespace = &defaultMessageBusRedisNamespace
 	}
 
 	if s.options.apicastSystemMasterProxyConfigEndpoint == nil {

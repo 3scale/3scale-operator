@@ -143,7 +143,7 @@ func (o *OperatorSystemOptionsProvider) setSystemRedisOptions(builder *component
 
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the Memcached servers secret
+			// Do nothing because there are no required options for related to the System's Redis servers secret
 		} else {
 			return err
 		}
@@ -154,6 +154,22 @@ func (o *OperatorSystemOptionsProvider) setSystemRedisOptions(builder *component
 		if result != nil {
 			builder.RedisURL(*result)
 		}
+
+		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisURLFieldName)
+		if result != nil {
+			builder.MessageBusRedisURL(*result)
+		}
+
+		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisNamespace)
+		if result != nil {
+			builder.RedisNamespace(*result)
+		}
+
+		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisNamespace)
+		if result != nil {
+			builder.MessageBusRedisNamespace(*result)
+		}
+
 	}
 	return nil
 }
