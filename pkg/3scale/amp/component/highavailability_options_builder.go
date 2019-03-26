@@ -10,14 +10,6 @@ func (ha *HighAvailabilityOptionsBuilder) AppLabel(appLabel string) {
 	ha.options.appLabel = appLabel
 }
 
-func (ha *HighAvailabilityOptionsBuilder) ApicastProductionRedisURL(apicastProductionRedisURL string) {
-	ha.options.apicastProductionRedisURL = apicastProductionRedisURL
-}
-
-func (ha *HighAvailabilityOptionsBuilder) ApicastStagingRedisURL(apicastStagingRedisURL string) {
-	ha.options.apicastStagingRedisURL = apicastStagingRedisURL
-}
-
 func (ha *HighAvailabilityOptionsBuilder) BackendRedisQueuesEndpoint(backendRedisQueuesEndpoint string) {
 	ha.options.backendRedisQueuesEndpoint = backendRedisQueuesEndpoint
 }
@@ -47,12 +39,6 @@ func (ha *HighAvailabilityOptionsBuilder) Build() (*HighAvailabilityOptions, err
 }
 
 func (ha *HighAvailabilityOptionsBuilder) setRequiredOptions() error {
-	if ha.options.apicastProductionRedisURL == "" {
-		return fmt.Errorf("no Apicast production URL has been provided")
-	}
-	if ha.options.apicastStagingRedisURL == "" {
-		return fmt.Errorf("no Apicast staging redis URL has been provided")
-	}
 	if ha.options.backendRedisQueuesEndpoint == "" {
 		return fmt.Errorf("no Backend Redis queues endpoint option has been provided")
 	}

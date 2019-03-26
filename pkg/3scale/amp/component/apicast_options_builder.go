@@ -30,21 +30,11 @@ func (a *ApicastOptionsBuilder) WildcardDomain(wildcardDomain string) {
 	a.options.wildcardDomain = wildcardDomain
 }
 
-func (a *ApicastOptionsBuilder) RedisProductionURL(url string) {
-	a.options.redisProductionURL = &url
-}
-
-func (a *ApicastOptionsBuilder) RedisStagingURL(url string) {
-	a.options.redisStagingURL = &url
-}
-
 func (a *ApicastOptionsBuilder) Build() (*ApicastOptions, error) {
 	err := a.setRequiredOptions()
 	if err != nil {
 		return nil, err
 	}
-
-	a.setNonRequiredOptions()
 
 	return &a.options, nil
 }
@@ -70,17 +60,4 @@ func (a *ApicastOptionsBuilder) setRequiredOptions() error {
 	}
 
 	return nil
-}
-
-func (a *ApicastOptionsBuilder) setNonRequiredOptions() {
-	defaultRedisProductionURL := "redis://system-redis:6379/1"
-	defaultRedisStagingURL := "redis://system-redis:6379/2"
-
-	if a.options.redisProductionURL == nil {
-		a.options.redisProductionURL = &defaultRedisProductionURL
-	}
-
-	if a.options.redisStagingURL == nil {
-		a.options.redisStagingURL = &defaultRedisStagingURL
-	}
 }
