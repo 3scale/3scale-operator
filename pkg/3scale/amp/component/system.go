@@ -408,6 +408,19 @@ func (system *System) buildSystemSphinxEnv() []v1.EnvVar {
 		envVarFromValue("DELTA_INDEX_INTERVAL", "5"),
 		envVarFromValue("FULL_REINDEX_INTERVAL", "60"),
 	)
+	result = append(result, system.SystemRedisEnvVars()...)
+	return result
+}
+
+func (system *System) SystemRedisEnvVars() []v1.EnvVar {
+	result := []v1.EnvVar{}
+
+	result = append(result,
+		envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
+		envVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
+		envVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
+		envVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
+	)
 	return result
 }
 
@@ -440,16 +453,12 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 
 		envVarFromSecret("SECRET_KEY_BASE", SystemSecretSystemAppSecretName, SystemSecretSystemAppSecretKeyBaseFieldName),
 
-		envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
-		envVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
-		envVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
-		envVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
-
 		envVarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
 
 		envVarFromSecret("BACKEND_REDIS_URL", "backend-redis", "REDIS_STORAGE_URL"),
 	)
 
+	result = append(result, system.SystemRedisEnvVars()...)
 	bckListenerApicastRouteEnv := envVarFromSecret("APICAST_BACKEND_ROOT_ENDPOINT", "backend-listener", "route_endpoint")
 	bckListenerRouteEnv := envVarFromSecret("BACKEND_ROUTE", "backend-listener", "route_endpoint")
 	result = append(result, bckListenerApicastRouteEnv, bckListenerRouteEnv)
