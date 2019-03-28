@@ -60,8 +60,8 @@ commands:
             oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true > /dev/null
             oc set env dc/router ROUTER_ALLOW_WILDCARD_ROUTES=true -n default
 
-            oc wait --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
-            oc wait --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
+            oc wait --timeout=90s --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
+            oc wait --timeout=90s --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
 
   install-golang:
     steps:
@@ -286,7 +286,7 @@ jobs:
 
   run-operator-e2e-test:
     machine:
-      enabled: true
+      docker_layer_caching: true
     resource_class: large
     working_directory: ~/go/src/github.com/3scale/3scale-operator
     steps:
