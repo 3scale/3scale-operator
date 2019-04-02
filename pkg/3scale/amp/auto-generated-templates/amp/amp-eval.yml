@@ -1407,6 +1407,7 @@ objects:
         policies: true
         policy_registry: true
         proxy_private_base_path: true
+        service_mesh_integration: true
     service_discovery.yml: |
       production:
         enabled: <%= cluster_token_file_exists = File.exists?(cluster_token_file_path = '/var/run/secrets/kubernetes.io/serviceaccount/token') %>
