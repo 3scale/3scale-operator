@@ -1387,6 +1387,7 @@ func (system *System) getSystemRollingUpdatesConfData() string {
   policies: true
   policy_registry: true
   proxy_private_base_path: true
+  service_mesh_integration: true
 `
 }
 
