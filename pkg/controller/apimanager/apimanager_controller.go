@@ -36,12 +36,28 @@ var log = logf.Log.WithName("controller_apimanager")
 // Add creates a new APIManager Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
+	reconciler, err := newReconciler(mgr)
+	if err != nil {
+		return err
+	}
+	return add(mgr, reconciler)
+}
+
+// We create an Client Reader that directly queries the API server
+// without going to the Cache provided by the Manager's Client because
+// there are some resources that do not implement Watch (like ImageStreamTag)
+// and the Manager's Client always tries to use the Cache when reading
+func newAPIClientReader(mgr manager.Manager) (client.Client, error) {
+	return client.New(mgr.GetConfig(), client.Options{Mapper: mgr.GetRESTMapper(), Scheme: mgr.GetScheme()})
 }
 
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileAPIManager{client: mgr.GetClient(), scheme: mgr.GetScheme(), reqLogger: log}
+func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
+	apiClientReader, err := newAPIClientReader(mgr)
+	if err != nil {
+		return nil, err
+	}
+	return &ReconcileAPIManager{client: mgr.GetClient(), apiClientReader: apiClientReader, scheme: mgr.GetScheme(), reqLogger: log}, nil
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -67,9 +83,10 @@ var _ reconcile.Reconciler = &ReconcileAPIManager{}
 type ReconcileAPIManager struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client    client.Client
-	scheme    *runtime.Scheme
-	reqLogger logr.Logger
+	client          client.Client
+	scheme          *runtime.Scheme
+	reqLogger       logr.Logger
+	apiClientReader client.Reader
 }
 
 // Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
