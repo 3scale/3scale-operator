@@ -17,11 +17,6 @@ func (o *OperatorRedisOptionsProvider) GetRedisOptions() (*component.RedisOption
 
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 
-	if o.APIManagerSpec.BackendSpec != nil && o.APIManagerSpec.BackendSpec.RedisImage != nil {
-		optProv.BackendImage(*o.APIManagerSpec.BackendSpec.RedisImage)
-	} else {
-		optProv.BackendImage(imageProvider.GetBackendRedisImage())
-	}
 	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.RedisImage != nil {
 		optProv.SystemImage(*o.APIManagerSpec.SystemSpec.RedisImage)
 	} else {

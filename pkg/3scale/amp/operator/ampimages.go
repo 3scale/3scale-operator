@@ -55,6 +55,12 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 		optProv.PostgreSQLImage(imageProvider.GetZyncPostgreSQLImage())
 	}
 
+	if o.APIManagerSpec.BackendSpec != nil && o.APIManagerSpec.BackendSpec.RedisImage != nil {
+		optProv.BackendRedisImage(*o.APIManagerSpec.BackendSpec.RedisImage)
+	} else {
+		optProv.BackendRedisImage(imageProvider.GetBackendRedisImage())
+	}
+
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 	res, err := optProv.Build()
 	if err != nil {

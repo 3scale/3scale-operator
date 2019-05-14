@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	appsv1 "github.com/openshift/api/apps/v1"
+	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -185,6 +186,10 @@ func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []runtime.Raw
 		case *v1.ConfigMap:
 			if obj.ObjectMeta.Name != "mysql-main-conf" && obj.ObjectMeta.Name != "mysql-extra-conf" &&
 				obj.ObjectMeta.Name != "redis-config" {
+				keepObjects = append(keepObjects, objects[rawExtIdx])
+			}
+		case *imagev1.ImageStream:
+			if _, ok := highlyAvailableExternalDatabases[obj.ObjectMeta.Name]; !ok {
 				keepObjects = append(keepObjects, objects[rawExtIdx])
 			}
 		default:

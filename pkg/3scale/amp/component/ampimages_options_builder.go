@@ -38,6 +38,10 @@ func (ampImages *AmpImagesOptionsBuilder) PostgreSQLImage(postgreSQLImage string
 	ampImages.options.postgreSQLImage = postgreSQLImage
 }
 
+func (ampImages *AmpImagesOptionsBuilder) BackendRedisImage(image string) {
+	ampImages.options.backendRedisImage = image
+}
+
 func (ampImages *AmpImagesOptionsBuilder) InsecureImportPolicy(insecureImportPolicy bool) {
 	ampImages.options.insecureImportPolicy = insecureImportPolicy
 }
@@ -66,6 +70,9 @@ func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
 	}
 	if ampImages.options.postgreSQLImage == "" {
 		return nil, fmt.Errorf("no PostgreSQL image has been provided")
+	}
+	if ampImages.options.backendRedisImage == "" {
+		return nil, fmt.Errorf("no Backend Redis image has been provided")
 	}
 
 	return &ampImages.options, nil

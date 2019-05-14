@@ -28,6 +28,7 @@ type AmpImagesOptions struct {
 	systemImage          string
 	zyncImage            string
 	postgreSQLImage      string
+	backendRedisImage    string
 	insecureImportPolicy bool
 }
 
@@ -54,6 +55,7 @@ func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, 
 	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
 	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
 	aob.PostgreSQLImage("${POSTGRESQL_IMAGE}")
+	aob.BackendRedisImage("${REDIS_IMAGE}")
 	aob.InsecureImportPolicy(false)
 
 	res, err := aob.Build()
@@ -94,6 +96,7 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 	wildcardRouterImageStream := ampImages.buildWildcardRouterImageStream()
 	systemImageStream := ampImages.buildAmpSystemImageStream()
 	postgreSQLImageStream := ampImages.buildPostgreSQLImageStream()
+	backendRedisImageStream := ampImages.buildBackendRedisImageStream()
 
 	quayServiceAccount := ampImages.buildQuayServiceAccount()
 
@@ -104,6 +107,7 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: wildcardRouterImageStream},
 		runtime.RawExtension{Object: systemImageStream},
 		runtime.RawExtension{Object: postgreSQLImageStream},
+		runtime.RawExtension{Object: backendRedisImageStream},
 		runtime.RawExtension{Object: quayServiceAccount},
 	}
 	return objects
@@ -354,6 +358,49 @@ func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
 					ImportPolicy: imagev1.TagImportPolicy{
 						Insecure: false,
 					}}}}}
+}
+
+func (ampImages *AmpImages) buildBackendRedisImageStream() *imagev1.ImageStream {
+	return &imagev1.ImageStream{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "backend-redis",
+			Labels: map[string]string{
+				"app":                  ampImages.Options.appLabel,
+				"threescale_component": "backend",
+			},
+			Annotations: map[string]string{
+				"openshift.io/display-name": "Backend Redis",
+			},
+		},
+		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
+		Spec: imagev1.ImageStreamSpec{
+			Tags: []imagev1.TagReference{
+				imagev1.TagReference{
+					Name: "latest",
+					Annotations: map[string]string{
+						"openshift.io/display-name": "Backend Redis (latest)",
+					},
+					From: &v1.ObjectReference{
+						Kind: "ImageStreamTag",
+						Name: ampImages.Options.ampRelease,
+					},
+				},
+				imagev1.TagReference{
+					Name: ampImages.Options.ampRelease,
+					Annotations: map[string]string{
+						"openshift.io/display-name": "Backend " + ampImages.Options.ampRelease + " Redis",
+					},
+					From: &v1.ObjectReference{
+						Kind: "DockerImage",
+						Name: ampImages.Options.backendRedisImage,
+					},
+					ImportPolicy: imagev1.TagImportPolicy{
+						Insecure: insecureImportPolicy,
+					},
+				},
+			},
+		},
+	}
 }
 
 func (ampImages *AmpImages) buildQuayServiceAccount() *v1.ServiceAccount {
