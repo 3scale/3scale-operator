@@ -10,10 +10,6 @@ func (r *RedisOptionsBuilder) AppLabel(appLabel string) {
 	r.options.appLabel = appLabel
 }
 
-func (r *RedisOptionsBuilder) SystemImage(image string) {
-	r.options.systemImage = image
-}
-
 func (r *RedisOptionsBuilder) Build() (*RedisOptions, error) {
 	err := r.setRequiredOptions()
 	if err != nil {
@@ -28,10 +24,6 @@ func (r *RedisOptionsBuilder) Build() (*RedisOptions, error) {
 func (r *RedisOptionsBuilder) setRequiredOptions() error {
 	if r.options.appLabel == "" {
 		return fmt.Errorf("no AppLabel has been provided")
-	}
-
-	if r.options.systemImage == "" {
-		return fmt.Errorf("no Redis System Image has been provided")
 	}
 
 	return nil

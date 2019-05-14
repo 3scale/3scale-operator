@@ -42,6 +42,10 @@ func (ampImages *AmpImagesOptionsBuilder) BackendRedisImage(image string) {
 	ampImages.options.backendRedisImage = image
 }
 
+func (ampImages *AmpImagesOptionsBuilder) SystemRedisImage(image string) {
+	ampImages.options.systemRedisImage = image
+}
+
 func (ampImages *AmpImagesOptionsBuilder) InsecureImportPolicy(insecureImportPolicy bool) {
 	ampImages.options.insecureImportPolicy = insecureImportPolicy
 }
@@ -73,6 +77,9 @@ func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
 	}
 	if ampImages.options.backendRedisImage == "" {
 		return nil, fmt.Errorf("no Backend Redis image has been provided")
+	}
+	if ampImages.options.systemRedisImage == "" {
+		return nil, fmt.Errorf("no System Redis image has been provided")
 	}
 
 	return &ampImages.options, nil

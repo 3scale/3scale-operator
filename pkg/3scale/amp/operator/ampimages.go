@@ -61,6 +61,12 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 		optProv.BackendRedisImage(imageProvider.GetBackendRedisImage())
 	}
 
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.RedisImage != nil {
+		optProv.SystemRedisImage(*o.APIManagerSpec.SystemSpec.RedisImage)
+	} else {
+		optProv.SystemRedisImage(imageProvider.GetSystemRedisImage())
+	}
+
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 	res, err := optProv.Build()
 	if err != nil {
