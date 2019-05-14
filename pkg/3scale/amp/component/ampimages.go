@@ -30,6 +30,7 @@ type AmpImagesOptions struct {
 	postgreSQLImage      string
 	backendRedisImage    string
 	systemRedisImage     string
+	systemMemcachedImage string
 	insecureImportPolicy bool
 }
 
@@ -58,6 +59,8 @@ func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, 
 	aob.PostgreSQLImage("${POSTGRESQL_IMAGE}")
 	aob.BackendRedisImage("${REDIS_IMAGE}")
 	aob.SystemRedisImage("${REDIS_IMAGE}")
+	aob.SystemMemcachedImage("${MEMCACHED_IMAGE}")
+
 	aob.InsecureImportPolicy(false)
 
 	res, err := aob.Build()
@@ -100,6 +103,7 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 	postgreSQLImageStream := ampImages.buildPostgreSQLImageStream()
 	backendRedisImageStream := ampImages.buildBackendRedisImageStream()
 	systemRedisImageStream := ampImages.buildSystemRedisImageStream()
+	systemMemcachedImageStream := ampImages.buildSystemMemcachedImageStream()
 
 	quayServiceAccount := ampImages.buildQuayServiceAccount()
 
@@ -112,6 +116,7 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: postgreSQLImageStream},
 		runtime.RawExtension{Object: backendRedisImageStream},
 		runtime.RawExtension{Object: systemRedisImageStream},
+		runtime.RawExtension{Object: systemMemcachedImageStream},
 		runtime.RawExtension{Object: quayServiceAccount},
 	}
 	return objects
@@ -440,6 +445,49 @@ func (ampImages *AmpImages) buildSystemRedisImageStream() *imagev1.ImageStream {
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
 						Name: ampImages.Options.backendRedisImage,
+					},
+					ImportPolicy: imagev1.TagImportPolicy{
+						Insecure: insecureImportPolicy,
+					},
+				},
+			},
+		},
+	}
+}
+
+func (ampImages *AmpImages) buildSystemMemcachedImageStream() *imagev1.ImageStream {
+	return &imagev1.ImageStream{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system-memcached",
+			Labels: map[string]string{
+				"app":                  ampImages.Options.appLabel,
+				"threescale_component": "system",
+			},
+			Annotations: map[string]string{
+				"openshift.io/display-name": "System Memcached",
+			},
+		},
+		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
+		Spec: imagev1.ImageStreamSpec{
+			Tags: []imagev1.TagReference{
+				imagev1.TagReference{
+					Name: "latest",
+					Annotations: map[string]string{
+						"openshift.io/display-name": "System Memcached (latest)",
+					},
+					From: &v1.ObjectReference{
+						Kind: "ImageStreamTag",
+						Name: ampImages.Options.ampRelease,
+					},
+				},
+				imagev1.TagReference{
+					Name: ampImages.Options.ampRelease,
+					Annotations: map[string]string{
+						"openshift.io/display-name": "System " + ampImages.Options.ampRelease + " Memcached",
+					},
+					From: &v1.ObjectReference{
+						Kind: "DockerImage",
+						Name: ampImages.Options.systemMemcachedImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						Insecure: insecureImportPolicy,

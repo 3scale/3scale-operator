@@ -243,6 +243,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel, "deploymentConfig": "system-mysql"},
 				},
 				Spec: v1.PodSpec{
+					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
 						v1.Volume{
 							Name: "mysql-storage",

@@ -46,6 +46,10 @@ func (ampImages *AmpImagesOptionsBuilder) SystemRedisImage(image string) {
 	ampImages.options.systemRedisImage = image
 }
 
+func (ampImages *AmpImagesOptionsBuilder) SystemMemcachedImage(image string) {
+	ampImages.options.systemMemcachedImage = image
+}
+
 func (ampImages *AmpImagesOptionsBuilder) InsecureImportPolicy(insecureImportPolicy bool) {
 	ampImages.options.insecureImportPolicy = insecureImportPolicy
 }
@@ -80,6 +84,9 @@ func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
 	}
 	if ampImages.options.systemRedisImage == "" {
 		return nil, fmt.Errorf("no System Redis image has been provided")
+	}
+	if ampImages.options.systemMemcachedImage == "" {
+		return nil, fmt.Errorf("no System Memcached image has been provided")
 	}
 
 	return &ampImages.options, nil

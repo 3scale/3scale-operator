@@ -67,6 +67,12 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 		optProv.SystemRedisImage(imageProvider.GetSystemRedisImage())
 	}
 
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.MemcachedImage != nil {
+		optProv.SystemMemcachedImage(*o.APIManagerSpec.SystemSpec.MemcachedImage)
+	} else {
+		optProv.SystemMemcachedImage(imageProvider.GetSystemMemcachedImage())
+	}
+
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 	res, err := optProv.Build()
 	if err != nil {
