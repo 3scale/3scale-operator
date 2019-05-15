@@ -351,26 +351,45 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 
 func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ImageStream",
-			APIVersion: "image.openshift.io/v1",
-		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "postgresql",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": ampImages.Options.appLabel},
+			Name: "postgresql",
+			Labels: map[string]string{
+				"app":                  ampImages.Options.appLabel,
+				"threescale_component": "system",
+			},
+			Annotations: map[string]string{
+				"openshift.io/display-name": "Zync database",
+			},
 		},
+		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
 				imagev1.TagReference{
-					Name: "10",
+					Name: "latest",
+					Annotations: map[string]string{
+						"openshift.io/display-name": "Zync PostgreSQL (latest)",
+					},
+					From: &v1.ObjectReference{
+						Kind: "ImageStreamTag",
+						Name: ampImages.Options.ampRelease,
+					},
+				},
+				imagev1.TagReference{
+					Name: ampImages.Options.ampRelease,
+					Annotations: map[string]string{
+						"openshift.io/display-name": "Zync " + ampImages.Options.ampRelease + " PostgreSQL",
+					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
 						Name: ampImages.Options.postgreSQLImage,
 					},
-					Reference: false,
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: false,
-					}}}}}
+						Insecure: insecureImportPolicy,
+					},
+				},
+			},
+		},
+	}
 }
 
 func (ampImages *AmpImages) buildBackendRedisImageStream() *imagev1.ImageStream {
