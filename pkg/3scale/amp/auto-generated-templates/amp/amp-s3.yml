@@ -384,7 +384,7 @@ objects:
     dockerImageRepository: ""
 - apiVersion: v1
   imagePullSecrets:
-  - name: quay-auth
+  - name: threescale-registry-auth
   kind: ServiceAccount
   metadata:
     creationTimestamp: null

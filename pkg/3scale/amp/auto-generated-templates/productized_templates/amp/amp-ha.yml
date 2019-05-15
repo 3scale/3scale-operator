@@ -270,6 +270,13 @@ objects:
         type: ""
   status:
     dockerImageRepository: ""
+- apiVersion: v1
+  imagePullSecrets:
+  - name: threescale-registry-auth
+  kind: ServiceAccount
+  metadata:
+    creationTimestamp: null
+    name: amp
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -368,6 +375,7 @@ objects:
           image: amp-backend:latest
           name: backend-redis-svc
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -500,6 +508,7 @@ objects:
             requests:
               cpu: 500m
               memory: 550Mi
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -667,6 +676,7 @@ objects:
           image: amp-backend:latest
           name: backend-redis-svc
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -799,6 +809,7 @@ objects:
             requests:
               cpu: 50m
               memory: 64Mi
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -2103,6 +2114,7 @@ objects:
             readOnly: true
           - mountPath: /opt/system-extra-configs
             name: system-config
+        serviceAccountName: amp
         volumes:
         - name: system-storage
           persistentVolumeClaim:
@@ -2413,6 +2425,7 @@ objects:
           image: amp-system:latest
           name: check-svc
           resources: {}
+        serviceAccountName: amp
         volumes:
         - emptyDir:
             medium: Memory
@@ -2535,6 +2548,7 @@ objects:
           image: amp-system:latest
           name: system-master-svc
           resources: {}
+        serviceAccountName: amp
         volumes:
         - emptyDir: {}
           name: system-sphinx-database
@@ -2737,6 +2751,7 @@ objects:
           image: amp-zync:latest
           name: zync-db-svc
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -2823,6 +2838,7 @@ objects:
           - mountPath: /var/lib/pgsql/data
             name: zync-database-data
         restartPolicy: Always
+        serviceAccountName: amp
         volumes:
         - emptyDir: {}
           name: zync-database-data
@@ -2994,6 +3010,7 @@ objects:
             requests:
               cpu: 50m
               memory: 64Mi
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -3123,6 +3140,7 @@ objects:
           image: amp-apicast:latest
           name: system-master-svc
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -3301,6 +3319,7 @@ objects:
             requests:
               cpu: 120m
               memory: 32Mi
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
