@@ -28,7 +28,6 @@ type MysqlOptions struct {
 type mysqlRequiredOptions struct {
 	appLabel     string
 	databaseName string
-	image        string
 	user         string
 	password     string
 	rootPassword string
@@ -48,7 +47,6 @@ func (o *CLIMysqlOptionsProvider) GetMysqlOptions() (*MysqlOptions, error) {
 	mob := MysqlOptionsBuilder{}
 	mob.AppLabel("${APP_LABEL}")
 	mob.DatabaseName("${MYSQL_DATABASE}")
-	mob.Image("${MYSQL_IMAGE}")
 	mob.User("${MYSQL_USER}")
 	mob.Password("${MYSQL_PASSWORD}")
 	mob.RootPassword("${MYSQL_ROOT_PASSWORD}")
@@ -235,6 +233,19 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
 					Type: appsv1.DeploymentTriggerOnConfigChange},
+				appsv1.DeploymentTriggerPolicy{
+					Type: appsv1.DeploymentTriggerOnImageChange,
+					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+						Automatic: true,
+						ContainerNames: []string{
+							"system-mysql",
+						},
+						From: v1.ObjectReference{
+							Kind: "ImageStreamTag",
+							Name: "system-mysql:latest",
+						},
+					},
+				},
 			},
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": "system-mysql"},
@@ -264,7 +275,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "system-mysql",
-							Image: mysql.Options.image,
+							Image: "system-mysql:latest",
 							Ports: []v1.ContainerPort{
 								v1.ContainerPort{HostPort: 0,
 									ContainerPort: 3306,

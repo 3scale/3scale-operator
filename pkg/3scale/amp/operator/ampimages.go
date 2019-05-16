@@ -73,6 +73,14 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 		optProv.SystemMemcachedImage(imageProvider.GetSystemMemcachedImage())
 	}
 
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.DatabaseSpec != nil &&
+		o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec != nil &&
+		o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec.Image != nil {
+		optProv.SystemMySQLImage(*o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec.Image)
+	} else {
+		optProv.SystemMySQLImage(imageProvider.GetSystemMySQLImage())
+	}
+
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 	res, err := optProv.Build()
 	if err != nil {

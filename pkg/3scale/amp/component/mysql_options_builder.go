@@ -14,10 +14,6 @@ func (m *MysqlOptionsBuilder) DatabaseName(databaseName string) {
 	m.options.databaseName = databaseName
 }
 
-func (m *MysqlOptionsBuilder) Image(image string) {
-	m.options.image = image
-}
-
 func (m *MysqlOptionsBuilder) User(user string) {
 	m.options.user = user
 }
@@ -51,9 +47,6 @@ func (m *MysqlOptionsBuilder) setRequiredOptions() error {
 	}
 	if m.options.databaseName == "" {
 		return fmt.Errorf("no Database Name has been provided")
-	}
-	if m.options.image == "" {
-		return fmt.Errorf("no Database Image has been provided")
 	}
 	if m.options.user == "" {
 		return fmt.Errorf("no User has been provided")
