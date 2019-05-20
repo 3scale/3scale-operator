@@ -12,9 +12,9 @@ func (o *OperatorApicastOptionsProvider) GetApicastOptions() (*component.Apicast
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 	optProv.TenantName(*o.APIManagerSpec.TenantName)
 	optProv.WildcardDomain(o.APIManagerSpec.WildcardDomain)
-	optProv.ManagementAPI(*o.APIManagerSpec.ApicastSpec.ApicastManagementAPI)
-	optProv.OpenSSLVerify(strconv.FormatBool(*o.APIManagerSpec.ApicastSpec.OpenSSLVerify))        // TODO is this a good place to make the conversion?
-	optProv.ResponseCodes(strconv.FormatBool(*o.APIManagerSpec.ApicastSpec.IncludeResponseCodes)) // TODO is this a good place to make the conversion?
+	optProv.ManagementAPI(*o.APIManagerSpec.Apicast.ApicastManagementAPI)
+	optProv.OpenSSLVerify(strconv.FormatBool(*o.APIManagerSpec.Apicast.OpenSSLVerify))        // TODO is this a good place to make the conversion?
+	optProv.ResponseCodes(strconv.FormatBool(*o.APIManagerSpec.Apicast.IncludeResponseCodes)) // TODO is this a good place to make the conversion?
 
 	res, err := optProv.Build()
 	if err != nil {

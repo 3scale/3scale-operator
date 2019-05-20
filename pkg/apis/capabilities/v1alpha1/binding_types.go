@@ -20,20 +20,21 @@ const BINDING_FINALIZER = "binding.capabilities.3scale.net"
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 
 // BindingSpec defines the desired state of Binding
+// +k8s:openapi-gen=true
 type BindingSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	CredentialsRef v1.SecretReference `json:"credentialsRef"`
 	//+optional
-	APISelector metav1.LabelSelector `json:"APISelector,omitempty"`
+	APISelector metav1.LabelSelector `json:"apiSelector,omitempty"`
 }
 
 // BindingStatus defines the observed state of Binding
+// +k8s:openapi-gen=true
 type BindingStatus struct {
 	//+optional
-	LastSuccessfulSync *metav1.Timestamp `json:"lastSync,omitempty"`
+	LastSync *metav1.Timestamp `json:"lastSync,omitempty"`
 	//+optional
 	CurrentState *string `json:"currentState,omitempty"`
 	//+optional
@@ -46,6 +47,7 @@ type BindingStatus struct {
 
 // Binding is the Schema for the bindings API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type Binding struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -129,7 +131,7 @@ func (b *Binding) UpdateStatus(c client.Client) error {
 func (b *Binding) SetLastSuccessfulSync() {
 	now := metav1.Now()
 	timestamp := now.ProtoTime()
-	b.Status.LastSuccessfulSync = timestamp
+	b.Status.LastSync = timestamp
 }
 
 // IsTerminating checks if the objects has been marked for deletion
@@ -231,10 +233,10 @@ func (b *Binding) StateInSync() bool {
 	return CompareStates(*desiredState, *currentState)
 }
 
-// GetLastSuccessfulSync gets the status field LastSuccessfulSync
+// GetLastSuccessfulSync gets the status field LastSync
 func (b Binding) GetLastSuccessfulSync() *metav1.Timestamp {
-	if b.Status.LastSuccessfulSync != nil {
-		return b.Status.LastSuccessfulSync
+	if b.Status.LastSync != nil {
+		return b.Status.LastSync
 	}
 
 	return nil

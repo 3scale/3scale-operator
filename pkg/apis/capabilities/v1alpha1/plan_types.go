@@ -16,6 +16,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // PlanSpec defines the desired state of Plan
+// +k8s:openapi-gen=true
 type PlanSpec struct {
 	PlanBase      `json:",inline"`
 	PlanSelectors `json:",inline"`
@@ -39,6 +40,7 @@ type PlanCost struct {
 }
 
 // PlanStatus defines the observed state of Plan
+// +k8s:openapi-gen=true
 type PlanStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -48,6 +50,7 @@ type PlanStatus struct {
 
 // Plan is the Schema for the plans API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type Plan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

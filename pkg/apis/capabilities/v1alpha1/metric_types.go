@@ -12,15 +12,15 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // MetricSpec defines the desired state of Metric
+// +k8s:openapi-gen=true
 type MetricSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Unit           string `json:"unit"`
-	Description    string `json:"description"`
-	IncrementsHits bool   `json:"incrementHits"`
+	Unit          string `json:"unit"`
+	Description   string `json:"description"`
+	IncrementHits bool   `json:"incrementHits"`
 }
 
 // MetricStatus defines the observed state of Metric
+// +k8s:openapi-gen=true
 type MetricStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -30,6 +30,7 @@ type MetricStatus struct {
 
 // Metric is the Schema for the metrics API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type Metric struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

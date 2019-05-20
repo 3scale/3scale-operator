@@ -16,9 +16,8 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // MappingRuleSpec defines the desired state of MappingRule
+// +k8s:openapi-gen=true
 type MappingRuleSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	MappingRuleBase      `json:",inline"`
 	MappingRuleMetricRef `json:",inline"`
 }
@@ -34,6 +33,7 @@ type MappingRuleMetricRef struct {
 }
 
 // MappingRuleStatus defines the observed state of MappingRule
+// +k8s:openapi-gen=true
 type MappingRuleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -43,6 +43,7 @@ type MappingRuleStatus struct {
 
 // MappingRule is the Schema for the mappingrules API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type MappingRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -11,13 +11,9 @@ endif
 help: Makefile
 	@sed -n 's/^##//p' $<
 
-## dep-check: Run dep check
-dep-check:
-	dep check
-
 ## vendor: Populate vendor directory
-vendor Gopkg.lock: Gopkg.toml
-	dep ensure -v
+vendor:
+	go mod vendor
 
 IMAGE ?= quay.io/3scale/3scale-operator
 SOURCE_VERSION ?= master
@@ -47,9 +43,9 @@ local:
 e2e-setup:
 	oc new-project $(NAMESPACE)
 
-## e2e-run: operator local test
+## e2e-local-run: running operator locally with go run instead of as an image in the cluster
 e2e-local-run:
-	operator-sdk test local ./test/e2e --up-local --go-test-flags '-v -timeout 0'
+	operator-sdk test local ./test/e2e --up-local --namespace $(NAMESPACE) --go-test-flags '-v -timeout 0'
 
 ## e2e-run: operator local test
 e2e-run:

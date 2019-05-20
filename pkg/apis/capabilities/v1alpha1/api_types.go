@@ -17,11 +17,11 @@ import (
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 
 // APISpec defines the desired state of API
+// +k8s:openapi-gen=true
 type APISpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	APIBase      `json:",inline"`
 	APISelectors `json:",inline"`
 }
@@ -39,6 +39,7 @@ type APISelectors struct {
 }
 
 // APIStatus defines the observed state of API
+// +k8s:openapi-gen=true
 type APIStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -48,6 +49,7 @@ type APIStatus struct {
 
 // API is the Schema for the apis API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type API struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

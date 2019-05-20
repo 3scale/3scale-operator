@@ -1,7 +1,6 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  creationTimestamp: null
   name: apimanagers.apps.3scale.net
 spec:
   group: apps.3scale.net
@@ -17,8 +16,14 @@ spec:
     openAPIV3Schema:
       properties:
         apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
           type: string
         kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -60,14 +65,22 @@ spec:
             system:
               properties:
                 database:
+                  description: TODO should union fields be optional?
                   properties:
                     mysql:
+                      description: Union type. Only one of the fields can be set
                       properties:
                         image:
                           type: string
                       type: object
                   type: object
                 fileStorage:
+                  description: TODO should this field be optional? We have different
+                    approaches in Kubernetes. For example, in v1.Volume it is optional
+                    and there's an implied behaviour on which one is the default VolumeSource
+                    of the ones available. However, on v1.Probe the Handler field
+                    is mandatory and says that one of the available values and only
+                    one should be specified (it mandates to write something)
                   properties:
                     amazonSimpleStorageService:
                       properties:
@@ -86,6 +99,7 @@ spec:
                       - fileUploadStorage
                       type: object
                     persistentVolumeClaim:
+                      description: Union type. Only one of the fields can be set.
                       properties:
                         storageClassName:
                           type: string
