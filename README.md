@@ -32,10 +32,9 @@ that the operator is able to understand and process.
 
 ## Prerequisites
 
-* [operator-sdk] version v0.5.0.
-* [dep][dep_tool] version v0.5.0+.
+* [operator-sdk] version v0.8.0.
 * [git][git_tool]
-* [go] version 1.11+
+* [go] version 1.12.5+
 * [kubernetes] version v1.11.0+
 * [oc] version v3.11+
 * Access to a Openshift v3.11.0+ cluster.
@@ -104,6 +103,8 @@ Assuming you have already downloaded the 3scale-operator project (see
 [Getting Started](#Getting-started)), install the project dependencies:
 
 ```sh
+# Activate Go Modules
+export GO111MODULE=on
 make vendor
 ```
 
@@ -128,7 +129,6 @@ make e2e-local-run
 
 [git_tool]:https://git-scm.com/downloads
 [operator-sdk]:https://github.com/operator-framework/operator-sdk
-[dep_tool]:https://golang.github.io/dep/docs/installation.html
 [go]:https://golang.org/
 [kubernetes]:https://kubernetes.io/
 [oc]:https://docs.okd.io/3.11/cli_reference/get_started_cli.html#cli-reference-get-started-cli
