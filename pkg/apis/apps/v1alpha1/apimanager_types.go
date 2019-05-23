@@ -141,10 +141,12 @@ type SystemSpec struct {
 	// on v1.Probe the Handler field is mandatory and says that one of the
 	// available values and only one should be specified (it mandates to write
 	// something)
+
 	// +optional
 	FileStorageSpec *SystemFileStorageSpec `json:"fileStorage,omitempty"`
 
 	// TODO should union fields be optional?
+
 	// +optional
 	DatabaseSpec *SystemDatabaseSpec `json:"database,omitempty"`
 }

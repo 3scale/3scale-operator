@@ -65,7 +65,6 @@ spec:
             system:
               properties:
                 database:
-                  description: TODO should union fields be optional?
                   properties:
                     mysql:
                       description: Union type. Only one of the fields can be set
@@ -75,12 +74,6 @@ spec:
                       type: object
                   type: object
                 fileStorage:
-                  description: TODO should this field be optional? We have different
-                    approaches in Kubernetes. For example, in v1.Volume it is optional
-                    and there's an implied behaviour on which one is the default VolumeSource
-                    of the ones available. However, on v1.Probe the Handler field
-                    is mandatory and says that one of the available values and only
-                    one should be specified (it mandates to write something)
                   properties:
                     amazonSimpleStorageService:
                       properties:

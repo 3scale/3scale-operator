@@ -13,7 +13,7 @@ help: Makefile
 
 ## vendor: Populate vendor directory
 vendor:
-	go mod vendor
+	@GO111MODULE=on go mod vendor
 
 IMAGE ?= quay.io/3scale/3scale-operator
 SOURCE_VERSION ?= master
