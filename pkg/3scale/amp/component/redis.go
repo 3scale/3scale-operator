@@ -26,9 +26,7 @@ type RedisOptions struct {
 }
 
 type redisRequiredOptions struct {
-	appLabel     string
-	backendImage string
-	systemImage  string
+	appLabel string
 }
 
 type redisNonRequiredOptions struct {
@@ -51,8 +49,6 @@ type CLIRedisOptionsProvider struct {
 func (o *CLIRedisOptionsProvider) GetRedisOptions() (*RedisOptions, error) {
 	rob := RedisOptionsBuilder{}
 	rob.AppLabel("${APP_LABEL}")
-	rob.BackendImage("${REDIS_IMAGE}")
-	rob.SystemImage("${REDIS_IMAGE}")
 
 	res, err := rob.Build()
 	if err != nil {
@@ -195,6 +191,19 @@ func (redis *Redis) buildDeploymentConfigTriggers() appsv1.DeploymentTriggerPoli
 		appsv1.DeploymentTriggerPolicy{
 			Type: appsv1.DeploymentTriggerOnConfigChange,
 		},
+		appsv1.DeploymentTriggerPolicy{
+			Type: appsv1.DeploymentTriggerOnImageChange,
+			ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+				Automatic: true,
+				ContainerNames: []string{
+					"backend-redis",
+				},
+				From: v1.ObjectReference{
+					Kind: "ImageStreamTag",
+					Name: "backend-redis:latest",
+				},
+			},
+		},
 	}
 }
 
@@ -252,7 +261,7 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 func (redis *Redis) buildPodContainers() []v1.Container {
 	return []v1.Container{
 		v1.Container{
-			Image:           redis.Options.backendImage,
+			Image:           "backend-redis:latest",
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Name:            backendRedisContainerName,
 			Command:         redis.buildPodContainerCommand(),
@@ -538,6 +547,19 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
 					Type: appsv1.DeploymentTriggerOnConfigChange},
+				appsv1.DeploymentTriggerPolicy{
+					Type: appsv1.DeploymentTriggerOnImageChange,
+					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+						Automatic: true,
+						ContainerNames: []string{
+							"system-redis",
+						},
+						From: v1.ObjectReference{
+							Kind: "ImageStreamTag",
+							Name: "system-redis:latest",
+						},
+					},
+				},
 			},
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": "system-redis"},
@@ -546,6 +568,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "redis", "app": redis.Options.appLabel, "deploymentConfig": "system-redis"},
 				},
 				Spec: v1.PodSpec{
+					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
 						v1.Volume{
 							Name: "system-redis-storage",
@@ -566,7 +589,7 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 					Containers: []v1.Container{
 						v1.Container{
 							Name:    "system-redis",
-							Image:   redis.Options.systemImage,
+							Image:   "system-redis:latest",
 							Command: []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
 							Args:    []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
 							Resources: v1.ResourceRequirements{

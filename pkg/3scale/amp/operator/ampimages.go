@@ -55,6 +55,32 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 		optProv.PostgreSQLImage(imageProvider.GetZyncPostgreSQLImage())
 	}
 
+	if o.APIManagerSpec.BackendSpec != nil && o.APIManagerSpec.BackendSpec.RedisImage != nil {
+		optProv.BackendRedisImage(*o.APIManagerSpec.BackendSpec.RedisImage)
+	} else {
+		optProv.BackendRedisImage(imageProvider.GetBackendRedisImage())
+	}
+
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.RedisImage != nil {
+		optProv.SystemRedisImage(*o.APIManagerSpec.SystemSpec.RedisImage)
+	} else {
+		optProv.SystemRedisImage(imageProvider.GetSystemRedisImage())
+	}
+
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.MemcachedImage != nil {
+		optProv.SystemMemcachedImage(*o.APIManagerSpec.SystemSpec.MemcachedImage)
+	} else {
+		optProv.SystemMemcachedImage(imageProvider.GetSystemMemcachedImage())
+	}
+
+	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.DatabaseSpec != nil &&
+		o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec != nil &&
+		o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec.Image != nil {
+		optProv.SystemMySQLImage(*o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec.Image)
+	} else {
+		optProv.SystemMySQLImage(imageProvider.GetSystemMySQLImage())
+	}
+
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 	res, err := optProv.Build()
 	if err != nil {

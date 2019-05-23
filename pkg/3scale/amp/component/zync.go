@@ -434,7 +434,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "postgresql:10",
+							Name: "postgresql:latest",
 						},
 					},
 				},
@@ -454,7 +454,8 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 				},
 				Spec: v1.PodSpec{
-					RestartPolicy: v1.RestartPolicyAlways,
+					RestartPolicy:      v1.RestartPolicyAlways,
+					ServiceAccountName: "amp",
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "postgresql",

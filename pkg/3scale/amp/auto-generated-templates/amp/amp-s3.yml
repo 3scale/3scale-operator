@@ -200,24 +200,184 @@ objects:
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
+    annotations:
+      openshift.io/display-name: Zync database
     creationTimestamp: null
     labels:
       app: ${APP_LABEL}
       threescale_component: system
-      threescale_component_element: postgresql
     name: postgresql
   spec:
     lookupPolicy:
       local: false
     tags:
-    - annotations: null
+    - annotations:
+        openshift.io/display-name: Zync PostgreSQL (latest)
+      from:
+        kind: ImageStreamTag
+        name: ${AMP_RELEASE}
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+    - annotations:
+        openshift.io/display-name: Zync ${AMP_RELEASE} PostgreSQL
       from:
         kind: DockerImage
         name: ${POSTGRESQL_IMAGE}
       generation: null
       importPolicy:
         insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
-      name: "10"
+      name: ${AMP_RELEASE}
+      referencePolicy:
+        type: ""
+  status:
+    dockerImageRepository: ""
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/display-name: Backend Redis
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: backend
+    name: backend-redis
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations:
+        openshift.io/display-name: Backend Redis (latest)
+      from:
+        kind: ImageStreamTag
+        name: ${AMP_RELEASE}
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+    - annotations:
+        openshift.io/display-name: Backend ${AMP_RELEASE} Redis
+      from:
+        kind: DockerImage
+        name: ${REDIS_IMAGE}
+      generation: null
+      importPolicy:
+        insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
+      name: ${AMP_RELEASE}
+      referencePolicy:
+        type: ""
+  status:
+    dockerImageRepository: ""
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/display-name: System Redis
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: system
+    name: system-redis
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations:
+        openshift.io/display-name: System Redis (latest)
+      from:
+        kind: ImageStreamTag
+        name: ${AMP_RELEASE}
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+    - annotations:
+        openshift.io/display-name: System ${AMP_RELEASE} Redis
+      from:
+        kind: DockerImage
+        name: ${REDIS_IMAGE}
+      generation: null
+      importPolicy:
+        insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
+      name: ${AMP_RELEASE}
+      referencePolicy:
+        type: ""
+  status:
+    dockerImageRepository: ""
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/display-name: System Memcached
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: system
+    name: system-memcached
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations:
+        openshift.io/display-name: System Memcached (latest)
+      from:
+        kind: ImageStreamTag
+        name: ${AMP_RELEASE}
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+    - annotations:
+        openshift.io/display-name: System ${AMP_RELEASE} Memcached
+      from:
+        kind: DockerImage
+        name: ${MEMCACHED_IMAGE}
+      generation: null
+      importPolicy:
+        insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
+      name: ${AMP_RELEASE}
+      referencePolicy:
+        type: ""
+  status:
+    dockerImageRepository: ""
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/display-name: System MySQL
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: system
+    name: system-mysql
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations:
+        openshift.io/display-name: System MySQL (latest)
+      from:
+        kind: ImageStreamTag
+        name: ${AMP_RELEASE}
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+    - annotations:
+        openshift.io/display-name: System ${AMP_RELEASE} MySQL
+      from:
+        kind: DockerImage
+        name: ${MYSQL_IMAGE}
+      generation: null
+      importPolicy:
+        insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
+      name: ${AMP_RELEASE}
       referencePolicy:
         type: ""
   status:
@@ -261,7 +421,7 @@ objects:
           - "no"
           command:
           - /opt/rh/rh-redis32/root/usr/bin/redis-server
-          image: ${REDIS_IMAGE}
+          image: backend-redis:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 10
@@ -305,6 +465,14 @@ objects:
     test: false
     triggers:
     - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - backend-redis
+        from:
+          kind: ImageStreamTag
+          name: backend-redis:latest
+      type: ImageChange
   status:
     availableReplicas: 0
     latestVersion: 0
@@ -435,7 +603,7 @@ objects:
           - "no"
           command:
           - /opt/rh/rh-redis32/root/usr/bin/redis-server
-          image: ${REDIS_IMAGE}
+          image: system-redis:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 10
@@ -466,6 +634,7 @@ objects:
             name: system-redis-storage
           - mountPath: /etc/redis.d/
             name: redis-config
+        serviceAccountName: amp
         volumes:
         - name: system-redis-storage
           persistentVolumeClaim:
@@ -479,6 +648,14 @@ objects:
     test: false
     triggers:
     - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - system-redis
+        from:
+          kind: ImageStreamTag
+          name: system-redis:latest
+      type: ImageChange
   status:
     availableReplicas: 0
     latestVersion: 0
@@ -1017,7 +1194,7 @@ objects:
             value: "1"
           - name: MYSQL_DEFAULTS_FILE
             value: /etc/my-extra/my.cnf
-          image: ${MYSQL_IMAGE}
+          image: system-mysql:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 30
@@ -1052,6 +1229,7 @@ objects:
             name: mysql-extra-conf
           - mountPath: /etc/my-extra
             name: mysql-main-conf
+        serviceAccountName: amp
         volumes:
         - name: mysql-storage
           persistentVolumeClaim:
@@ -1065,6 +1243,14 @@ objects:
     test: false
     triggers:
     - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - system-mysql
+        from:
+          kind: ImageStreamTag
+          name: system-mysql:latest
+      type: ImageChange
   status:
     availableReplicas: 0
     latestVersion: 0
@@ -1190,7 +1376,7 @@ objects:
           - memcached
           - -m
           - "64"
-          image: ${MEMCACHED_IMAGE}
+          image: system-memcached:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 10
@@ -1217,9 +1403,18 @@ objects:
             requests:
               cpu: 50m
               memory: 64Mi
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - memcache
+        from:
+          kind: ImageStreamTag
+          name: system-memcached:latest
+      type: ImageChange
   status:
     availableReplicas: 0
     latestVersion: 0
@@ -3349,6 +3544,7 @@ objects:
           - mountPath: /var/lib/pgsql/data
             name: zync-database-data
         restartPolicy: Always
+        serviceAccountName: amp
         volumes:
         - emptyDir: {}
           name: zync-database-data
@@ -3361,7 +3557,7 @@ objects:
         - postgresql
         from:
           kind: ImageStreamTag
-          name: postgresql:10
+          name: postgresql:latest
       type: ImageChange
   status:
     availableReplicas: 0

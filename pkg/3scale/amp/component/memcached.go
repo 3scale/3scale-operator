@@ -27,7 +27,6 @@ type MemcachedOptions struct {
 
 type memcachedRequiredOptions struct {
 	appLabel string
-	image    string
 }
 
 type memcachedNonRequiredOptions struct {
@@ -49,7 +48,6 @@ type CLIMemcachedOptionsProvider struct {
 func (o *CLIMemcachedOptionsProvider) GetMemcachedOptions() (*MemcachedOptions, error) {
 	rob := MemcachedOptionsBuilder{}
 	rob.AppLabel("${APP_LABEL}")
-	rob.Image("${MEMCACHED_IMAGE}")
 	res, err := rob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Memcached Options - %s", err)
@@ -147,6 +145,19 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 			Triggers: appsv1.DeploymentTriggerPolicies{
 				appsv1.DeploymentTriggerPolicy{
 					Type: appsv1.DeploymentTriggerOnConfigChange},
+				appsv1.DeploymentTriggerPolicy{
+					Type: appsv1.DeploymentTriggerOnImageChange,
+					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+						Automatic: true,
+						ContainerNames: []string{
+							"memcache",
+						},
+						From: v1.ObjectReference{
+							Kind: "ImageStreamTag",
+							Name: "system-memcached:latest",
+						},
+					},
+				},
 			},
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": "system-memcache"},
@@ -154,52 +165,54 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.appLabel, "deploymentConfig": "system-memcache"},
 				},
-				Spec: v1.PodSpec{Containers: []v1.Container{
-					v1.Container{
-						Name:    "memcache",
-						Image:   m.Options.image,
-						Command: []string{"memcached", "-m", "64"},
-						Ports: []v1.ContainerPort{
-							v1.ContainerPort{HostPort: 0,
-								ContainerPort: 11211,
-								Protocol:      v1.ProtocolTCP},
-						},
-						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("250m"),
-								v1.ResourceMemory: resource.MustParse("96Mi"),
+				Spec: v1.PodSpec{
+					ServiceAccountName: "amp", //TODO make this configurable via flag
+					Containers: []v1.Container{
+						v1.Container{
+							Name:    "memcache",
+							Image:   "system-memcached:latest",
+							Command: []string{"memcached", "-m", "64"},
+							Ports: []v1.ContainerPort{
+								v1.ContainerPort{HostPort: 0,
+									ContainerPort: 11211,
+									Protocol:      v1.ProtocolTCP},
 							},
-							Requests: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("50m"),
-								v1.ResourceMemory: resource.MustParse("64Mi"),
+							Resources: v1.ResourceRequirements{
+								Limits: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("250m"),
+									v1.ResourceMemory: resource.MustParse("96Mi"),
+								},
+								Requests: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("50m"),
+									v1.ResourceMemory: resource.MustParse("64Mi"),
+								},
 							},
-						},
-						LivenessProbe: &v1.Probe{
-							Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
-								Port: intstr.IntOrString{
-									Type:   intstr.Type(intstr.Int),
-									IntVal: 11211}},
+							LivenessProbe: &v1.Probe{
+								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+									Port: intstr.IntOrString{
+										Type:   intstr.Type(intstr.Int),
+										IntVal: 11211}},
+								},
+								InitialDelaySeconds: 10,
+								TimeoutSeconds:      0,
+								PeriodSeconds:       10,
+								SuccessThreshold:    0,
+								FailureThreshold:    0,
 							},
-							InitialDelaySeconds: 10,
-							TimeoutSeconds:      0,
-							PeriodSeconds:       10,
-							SuccessThreshold:    0,
-							FailureThreshold:    0,
-						},
-						ReadinessProbe: &v1.Probe{
-							Handler: v1.Handler{
-								Exec: &v1.ExecAction{
-									Command: []string{"sh", "-c", "echo version | nc $HOSTNAME 11211 | grep VERSION"}},
+							ReadinessProbe: &v1.Probe{
+								Handler: v1.Handler{
+									Exec: &v1.ExecAction{
+										Command: []string{"sh", "-c", "echo version | nc $HOSTNAME 11211 | grep VERSION"}},
+								},
+								InitialDelaySeconds: 10,
+								TimeoutSeconds:      5,
+								PeriodSeconds:       30,
+								SuccessThreshold:    0,
+								FailureThreshold:    0,
 							},
-							InitialDelaySeconds: 10,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       30,
-							SuccessThreshold:    0,
-							FailureThreshold:    0,
+							ImagePullPolicy: v1.PullIfNotPresent,
 						},
-						ImagePullPolicy: v1.PullIfNotPresent,
 					},
-				},
 				}},
 		},
 	}

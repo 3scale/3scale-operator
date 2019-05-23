@@ -38,6 +38,22 @@ func (ampImages *AmpImagesOptionsBuilder) PostgreSQLImage(postgreSQLImage string
 	ampImages.options.postgreSQLImage = postgreSQLImage
 }
 
+func (ampImages *AmpImagesOptionsBuilder) BackendRedisImage(image string) {
+	ampImages.options.backendRedisImage = image
+}
+
+func (ampImages *AmpImagesOptionsBuilder) SystemRedisImage(image string) {
+	ampImages.options.systemRedisImage = image
+}
+
+func (ampImages *AmpImagesOptionsBuilder) SystemMemcachedImage(image string) {
+	ampImages.options.systemMemcachedImage = image
+}
+
+func (ampImages *AmpImagesOptionsBuilder) SystemMySQLImage(image string) {
+	ampImages.options.systemMySQLImage = image
+}
+
 func (ampImages *AmpImagesOptionsBuilder) InsecureImportPolicy(insecureImportPolicy bool) {
 	ampImages.options.insecureImportPolicy = insecureImportPolicy
 }
@@ -66,6 +82,18 @@ func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
 	}
 	if ampImages.options.postgreSQLImage == "" {
 		return nil, fmt.Errorf("no PostgreSQL image has been provided")
+	}
+	if ampImages.options.backendRedisImage == "" {
+		return nil, fmt.Errorf("no Backend Redis image has been provided")
+	}
+	if ampImages.options.systemRedisImage == "" {
+		return nil, fmt.Errorf("no System Redis image has been provided")
+	}
+	if ampImages.options.systemMemcachedImage == "" {
+		return nil, fmt.Errorf("no System Memcached image has been provided")
+	}
+	if ampImages.options.systemMySQLImage == "" {
+		return nil, fmt.Errorf("no System MySQL image has been provided")
 	}
 
 	return &ampImages.options, nil
