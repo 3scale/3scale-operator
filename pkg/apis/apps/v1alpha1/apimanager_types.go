@@ -11,43 +11,37 @@ import (
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// We use pointers in a spec field when the field is optional, to allow differentiate
-// Between an unset value from the zero value of the field.
-// This is a common convention
-// used in kubernetes: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#optional-vs-required
+// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 
 // APIManagerSpec defines the desired state of APIManager
+// +k8s:openapi-gen=true
 type APIManagerSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-
 	APIManagerCommonSpec `json:",inline"`
 	// +optional
-	ApicastSpec *ApicastSpec `json:"apicast,omitempty"`
+	Apicast *ApicastSpec `json:"apicast,omitempty"`
 	// +optional
-	BackendSpec *BackendSpec `json:"backend,omitempty"`
+	Backend *BackendSpec `json:"backend,omitempty"`
 	// +optional
-	SystemSpec *SystemSpec `json:"system,omitempty"`
+	System *SystemSpec `json:"system,omitempty"`
 	// +optional
-	ZyncSpec *ZyncSpec `json:"zync,omitempty"`
+	Zync *ZyncSpec `json:"zync,omitempty"`
 	// +optional
-	WildcardRouterSpec *WildcardRouterSpec `json:"wildcardRouter,omitempty"`
+	WildcardRouter *WildcardRouterSpec `json:"wildcardRouter,omitempty"`
 	// +optional
-	HighAvailabilitySpec *HighAvailabilitySpec `json:"highAvailability,omitempty"`
+	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
+// +k8s:openapi-gen=true
 type APIManagerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Conditions []APIManagerCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,4,rep,name=conditions"`
+	Conditions []APIManagerCondition `json:"conditions,omitempty" protobuf:"bytes,4,rep,name=conditions"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // APIManager is the Schema for the apimanagers API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type APIManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -147,10 +141,12 @@ type SystemSpec struct {
 	// on v1.Probe the Handler field is mandatory and says that one of the
 	// available values and only one should be specified (it mandates to write
 	// something)
+
 	// +optional
 	FileStorageSpec *SystemFileStorageSpec `json:"fileStorage,omitempty"`
 
 	// TODO should union fields be optional?
+
 	// +optional
 	DatabaseSpec *SystemDatabaseSpec `json:"database,omitempty"`
 }
@@ -226,27 +222,27 @@ func (apimanager *APIManager) setApicastSpecDefaults() bool {
 	defaultApicastOpenSSLVerify := false
 	defaultApicastResponseCodes := true
 	defaultApicastRegistryURL := "http://apicast-staging:8090/policies"
-	if spec.ApicastSpec == nil {
+	if spec.Apicast == nil {
 
 		changed = true
-		spec.ApicastSpec = &ApicastSpec{
+		spec.Apicast = &ApicastSpec{
 			ApicastManagementAPI: &defaultApicastManagementAPI,
 			OpenSSLVerify:        &defaultApicastOpenSSLVerify,
 			IncludeResponseCodes: &defaultApicastResponseCodes,
 			RegistryURL:          &defaultApicastRegistryURL,
 		}
 	} else {
-		if spec.ApicastSpec.ApicastManagementAPI == nil {
-			spec.ApicastSpec.ApicastManagementAPI = &defaultApicastManagementAPI
+		if spec.Apicast.ApicastManagementAPI == nil {
+			spec.Apicast.ApicastManagementAPI = &defaultApicastManagementAPI
 		}
-		if spec.ApicastSpec.OpenSSLVerify == nil {
-			spec.ApicastSpec.OpenSSLVerify = &defaultApicastOpenSSLVerify
+		if spec.Apicast.OpenSSLVerify == nil {
+			spec.Apicast.OpenSSLVerify = &defaultApicastOpenSSLVerify
 		}
-		if spec.ApicastSpec.IncludeResponseCodes == nil {
-			spec.ApicastSpec.IncludeResponseCodes = &defaultApicastResponseCodes
+		if spec.Apicast.IncludeResponseCodes == nil {
+			spec.Apicast.IncludeResponseCodes = &defaultApicastResponseCodes
 		}
-		if spec.ApicastSpec.RegistryURL == nil {
-			spec.ApicastSpec.RegistryURL = &defaultApicastRegistryURL
+		if spec.Apicast.RegistryURL == nil {
+			spec.Apicast.RegistryURL = &defaultApicastRegistryURL
 		}
 	}
 
@@ -298,8 +294,8 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 	changed := false
 	spec := &apimanager.Spec
 
-	if spec.SystemSpec == nil {
-		spec.SystemSpec = &SystemSpec{}
+	if spec.System == nil {
+		spec.System = &SystemSpec{}
 	}
 
 	changed, err := apimanager.setSystemFileStorageSpecDefaults()
@@ -317,7 +313,7 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 
 func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
 	changed := false
-	systemSpec := apimanager.Spec.SystemSpec
+	systemSpec := apimanager.Spec.System
 
 	defaultFileStorageSpec := &SystemFileStorageSpec{
 		PVC: &SystemPVCSpec{
@@ -344,7 +340,7 @@ func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
 
 func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	changed := false
-	systemSpec := apimanager.Spec.SystemSpec
+	systemSpec := apimanager.Spec.System
 	defaultDatabaseSpec := &SystemDatabaseSpec{
 		MySQLSpec: &SystemMySQLSpec{
 			Image: nil,

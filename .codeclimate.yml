@@ -1,0 +1,8 @@
+engines:
+    # ... CONFIG CONTENT ...
+    golint:
+        enabled: true
+        # ... CONFIG CONTENT ...
+        checks:
+            GoLint/Naming/Initialisms:
+                enabled: false

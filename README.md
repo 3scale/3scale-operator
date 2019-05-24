@@ -32,10 +32,9 @@ that the operator is able to understand and process.
 
 ## Prerequisites
 
-* [operator-sdk] version v0.5.0.
-* [dep][dep_tool] version v0.5.0+.
+* [operator-sdk] version v0.8.0.
 * [git][git_tool]
-* [go] version 1.11+
+* [go] version 1.12.5+
 * [kubernetes] version v1.11.0+
 * [oc] version v3.11+
 * Access to a Openshift v3.11.0+ cluster.
@@ -101,22 +100,56 @@ refer to the [User guide](doc/user-guide.md).
 ## Development
 
 Assuming you have already downloaded the 3scale-operator project (see
-[Getting Started](#Getting-started)), install the project dependencies:
+[Getting Started](#Getting-started)), and your workspace meets [prerequisites](#Prerequisites), 
+you can easily build and test the operator:
+
+### Build operator
+
+Install dependencies
 
 ```sh
+# Activate Go Modules
+export GO111MODULE=on
 make vendor
+```
+
+Build docker image with the operator installed. Docker image is not pushed to any image repository.
+
+```sh
+make build IMAGE=quay.io/myorg/3scale-operator VERSION=test
 ```
 
 After performing the desired changes in the code, the operator can be executed
 locally via the following Makefile rule:
 `make local`
 
-## Testing
+### Running locally
 
-Local tests can be executed with the following commands:
+Launch the operator on the local machine with the ability to access
+a Kubernetes cluster using a kubeconfig file
+
+```sh
+make local NAMESPACE=operator-test
 ```
-make e2e-setup
+
+### Testing
+
+Run tests locally deploying image
+```sh
+make e2e-setup NAMESPACE=operator-test
+make e2e-run
+```
+
+Run tests locally running operator with go run instead of as an image in the cluster
+```sh
+make e2e-setup NAMESPACE=operator-test
 make e2e-local-run
+```
+
+### Pushing
+
+```sh
+make push IMAGE=quay.io/myorg/3scale-operator VERSION=test
 ```
 
 ## Documentation
@@ -128,7 +161,6 @@ make e2e-local-run
 
 [git_tool]:https://git-scm.com/downloads
 [operator-sdk]:https://github.com/operator-framework/operator-sdk
-[dep_tool]:https://golang.github.io/dep/docs/installation.html
 [go]:https://golang.org/
 [kubernetes]:https://kubernetes.io/
 [oc]:https://docs.okd.io/3.11/cli_reference/get_started_cli.html#cli-reference-get-started-cli

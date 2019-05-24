@@ -164,11 +164,11 @@ func TestFullHappyPath(t *testing.T) {
 	systemMasterURL := fmt.Sprintf("https://%s.%s", masterDomain, apimanager.Spec.WildcardDomain)
 	tenant := &apiv1alpha1.Tenant{
 		Spec: apiv1alpha1.TenantSpec{
-			UserName:        "admin",
-			Email:           "admin@example.com",
-			OrgName:         "ECorp",
-			SystemMasterURL: systemMasterURL,
-			AdminPasswordRef: v1.SecretReference{
+			Username:         "admin",
+			Email:            "admin@example.com",
+			OrganizationName: "ECorp",
+			SystemMasterUrl:  systemMasterURL,
+			PasswordCredentialsRef: v1.SecretReference{
 				Name:      adminPassSecretName,
 				Namespace: namespace,
 			},
@@ -270,9 +270,9 @@ func TestFullHappyPath(t *testing.T) {
 			Labels:    map[string]string{"environment": "testing"},
 		},
 		Spec: apiv1alpha1.MetricSpec{
-			Unit:           "hits",
-			Description:    "metric 01",
-			IncrementsHits: false,
+			Unit:          "hits",
+			Description:   "metric 01",
+			IncrementHits: false,
 		},
 		Status: apiv1alpha1.MetricStatus{},
 	}
@@ -289,9 +289,9 @@ func TestFullHappyPath(t *testing.T) {
 			Labels:    map[string]string{"environment": "testing"},
 		},
 		Spec: apiv1alpha1.MetricSpec{
-			Unit:           "hits",
-			Description:    "metric 02",
-			IncrementsHits: false,
+			Unit:          "hits",
+			Description:   "metric 02",
+			IncrementHits: false,
 		},
 		Status: apiv1alpha1.MetricStatus{},
 	}

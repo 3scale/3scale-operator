@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM registry.access.redhat.com/ubi7/ubi-minimal:latest
 
 ENV OPERATOR=/usr/local/bin/3scale-operator \
     USER_UID=1001 \

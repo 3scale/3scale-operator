@@ -12,30 +12,29 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // TenantSpec defines the desired state of Tenant
+// +k8s:openapi-gen=true
 type TenantSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	UserName             string             `json:"username"`
-	Email                string             `json:"email"`
-	OrgName              string             `json:"organizationName"`
-	SystemMasterURL      string             `json:"systemMasterUrl"`
-	TenantSecretRef      v1.SecretReference `json:"tenantSecretRef"`
-	AdminPasswordRef     v1.SecretReference `json:"passwordCredentialsRef"`
-	MasterCredentialsRef v1.SecretReference `json:"masterCredentialsRef"`
+	Username               string             `json:"username"`
+	Email                  string             `json:"email"`
+	OrganizationName       string             `json:"organizationName"`
+	SystemMasterUrl        string             `json:"systemMasterUrl"`
+	TenantSecretRef        v1.SecretReference `json:"tenantSecretRef"`
+	PasswordCredentialsRef v1.SecretReference `json:"passwordCredentialsRef"`
+	MasterCredentialsRef   v1.SecretReference `json:"masterCredentialsRef"`
 }
 
 // TenantStatus defines the observed state of Tenant
+// +k8s:openapi-gen=true
 type TenantStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	TenantID    int64 `json:"tenantID"`
-	AdminUserID int64 `json:"adminID"`
+	TenantId int64 `json:"tenantId"`
+	AdminId  int64 `json:"adminId"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Tenant is the Schema for the tenants API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 type Tenant struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -49,7 +48,7 @@ func (t *Tenant) SetDefaults() bool {
 	changed := false
 	ts := &t.Spec
 	if ts.TenantSecretRef.Name == "" {
-		ts.TenantSecretRef.Name = fmt.Sprintf("%s-%s", strings.ToLower(t.Name), strings.ToLower(t.Spec.OrgName))
+		ts.TenantSecretRef.Name = fmt.Sprintf("%s-%s", strings.ToLower(t.Name), strings.ToLower(t.Spec.OrganizationName))
 		changed = true
 	}
 	if ts.TenantSecretRef.Namespace == "" {

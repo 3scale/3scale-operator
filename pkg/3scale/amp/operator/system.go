@@ -15,14 +15,14 @@ func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOpt
 
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 	optProv.AmpRelease(string(productVersion))
-	optProv.ApicastRegistryURL(*o.APIManagerSpec.ApicastSpec.RegistryURL)
+	optProv.ApicastRegistryURL(*o.APIManagerSpec.Apicast.RegistryURL)
 	optProv.TenantName(*o.APIManagerSpec.TenantName)
 	optProv.WildcardDomain(o.APIManagerSpec.WildcardDomain)
 
-	if o.APIManagerSpec.SystemSpec.FileStorageSpec.PVC == nil {
+	if o.APIManagerSpec.System.FileStorageSpec.PVC == nil {
 		optProv.StorageClassName(nil)
 	} else {
-		optProv.StorageClassName(o.APIManagerSpec.SystemSpec.FileStorageSpec.PVC.StorageClassName)
+		optProv.StorageClassName(o.APIManagerSpec.System.FileStorageSpec.PVC.StorageClassName)
 	}
 
 	err := o.setSecretBasedOptions(&optProv)

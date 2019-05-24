@@ -19,64 +19,64 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 	optProv.AMPRelease(string(productVersion))
-	if o.APIManagerSpec.ApicastSpec != nil && o.APIManagerSpec.ApicastSpec.Image != nil {
-		optProv.ApicastImage(*o.APIManagerSpec.ApicastSpec.Image)
+	if o.APIManagerSpec.Apicast != nil && o.APIManagerSpec.Apicast.Image != nil {
+		optProv.ApicastImage(*o.APIManagerSpec.Apicast.Image)
 	} else {
 		optProv.ApicastImage(imageProvider.GetApicastImage())
 	}
 
-	if o.APIManagerSpec.BackendSpec != nil && o.APIManagerSpec.BackendSpec.Image != nil {
-		optProv.BackendImage(*o.APIManagerSpec.BackendSpec.Image)
+	if o.APIManagerSpec.Backend != nil && o.APIManagerSpec.Backend.Image != nil {
+		optProv.BackendImage(*o.APIManagerSpec.Backend.Image)
 	} else {
 		optProv.BackendImage(imageProvider.GetBackendImage())
 	}
 
-	if o.APIManagerSpec.WildcardRouterSpec != nil && o.APIManagerSpec.WildcardRouterSpec.Image != nil {
-		optProv.RouterImage(*o.APIManagerSpec.WildcardRouterSpec.Image)
+	if o.APIManagerSpec.WildcardRouter != nil && o.APIManagerSpec.WildcardRouter.Image != nil {
+		optProv.RouterImage(*o.APIManagerSpec.WildcardRouter.Image)
 	} else {
 		optProv.RouterImage(imageProvider.GetWildcardRouterImage())
 	}
 
-	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.Image != nil {
-		optProv.SystemImage(*o.APIManagerSpec.SystemSpec.Image)
+	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.Image != nil {
+		optProv.SystemImage(*o.APIManagerSpec.System.Image)
 	} else {
 		optProv.SystemImage(imageProvider.GetSystemImage())
 	}
 
-	if o.APIManagerSpec.ZyncSpec != nil && o.APIManagerSpec.ZyncSpec.Image != nil {
-		optProv.ZyncImage(*o.APIManagerSpec.ZyncSpec.Image)
+	if o.APIManagerSpec.Zync != nil && o.APIManagerSpec.Zync.Image != nil {
+		optProv.ZyncImage(*o.APIManagerSpec.Zync.Image)
 	} else {
 		optProv.ZyncImage(imageProvider.GetZyncImage())
 	}
 
-	if o.APIManagerSpec.ZyncSpec != nil && o.APIManagerSpec.ZyncSpec.PostgreSQLImage != nil {
-		optProv.PostgreSQLImage(*o.APIManagerSpec.ZyncSpec.PostgreSQLImage)
+	if o.APIManagerSpec.Zync != nil && o.APIManagerSpec.Zync.PostgreSQLImage != nil {
+		optProv.PostgreSQLImage(*o.APIManagerSpec.Zync.PostgreSQLImage)
 	} else {
 		optProv.PostgreSQLImage(imageProvider.GetZyncPostgreSQLImage())
 	}
 
-	if o.APIManagerSpec.BackendSpec != nil && o.APIManagerSpec.BackendSpec.RedisImage != nil {
-		optProv.BackendRedisImage(*o.APIManagerSpec.BackendSpec.RedisImage)
+	if o.APIManagerSpec.Backend != nil && o.APIManagerSpec.Backend.RedisImage != nil {
+		optProv.BackendRedisImage(*o.APIManagerSpec.Backend.RedisImage)
 	} else {
 		optProv.BackendRedisImage(imageProvider.GetBackendRedisImage())
 	}
 
-	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.RedisImage != nil {
-		optProv.SystemRedisImage(*o.APIManagerSpec.SystemSpec.RedisImage)
+	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.RedisImage != nil {
+		optProv.SystemRedisImage(*o.APIManagerSpec.System.RedisImage)
 	} else {
 		optProv.SystemRedisImage(imageProvider.GetSystemRedisImage())
 	}
 
-	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.MemcachedImage != nil {
-		optProv.SystemMemcachedImage(*o.APIManagerSpec.SystemSpec.MemcachedImage)
+	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.MemcachedImage != nil {
+		optProv.SystemMemcachedImage(*o.APIManagerSpec.System.MemcachedImage)
 	} else {
 		optProv.SystemMemcachedImage(imageProvider.GetSystemMemcachedImage())
 	}
 
-	if o.APIManagerSpec.SystemSpec != nil && o.APIManagerSpec.SystemSpec.DatabaseSpec != nil &&
-		o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec != nil &&
-		o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec.Image != nil {
-		optProv.SystemMySQLImage(*o.APIManagerSpec.SystemSpec.DatabaseSpec.MySQLSpec.Image)
+	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.DatabaseSpec != nil &&
+		o.APIManagerSpec.System.DatabaseSpec.MySQLSpec != nil &&
+		o.APIManagerSpec.System.DatabaseSpec.MySQLSpec.Image != nil {
+		optProv.SystemMySQLImage(*o.APIManagerSpec.System.DatabaseSpec.MySQLSpec.Image)
 	} else {
 		optProv.SystemMySQLImage(imageProvider.GetSystemMySQLImage())
 	}

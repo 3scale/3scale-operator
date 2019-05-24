@@ -76,7 +76,7 @@ func WaitForSecret(t *testing.T, kubeClient kubernetes.Interface, namespace, nam
 func WaitForReconciliationWith3scale(t *testing.T, c test.FrameworkClient, binding v1alpha1.Binding, retryInterval, timeout time.Duration) error {
 
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
-		t.Logf("Waiting for LastSuccessfulSync of binding '%s'\n", binding.Name)
+		t.Logf("Waiting for LastSucessfulSync of binding '%s'\n", binding.Name)
 
 		b := v1alpha1.Binding{}
 		err = c.Get(context.TODO(), types.NamespacedName{Name: binding.Name, Namespace: binding.Namespace}, &b)

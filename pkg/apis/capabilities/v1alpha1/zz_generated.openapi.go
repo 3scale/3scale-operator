@@ -13,13 +13,27 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.API":         schema_pkg_apis_capabilities_v1alpha1_API(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Binding":     schema_pkg_apis_capabilities_v1alpha1_Binding(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Limit":       schema_pkg_apis_capabilities_v1alpha1_Limit(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.MappingRule": schema_pkg_apis_capabilities_v1alpha1_MappingRule(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Metric":      schema_pkg_apis_capabilities_v1alpha1_Metric(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Plan":        schema_pkg_apis_capabilities_v1alpha1_Plan(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Tenant":      schema_pkg_apis_capabilities_v1alpha1_Tenant(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.API":               schema_pkg_apis_capabilities_v1alpha1_API(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.APISpec":           schema_pkg_apis_capabilities_v1alpha1_APISpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.APIStatus":         schema_pkg_apis_capabilities_v1alpha1_APIStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Binding":           schema_pkg_apis_capabilities_v1alpha1_Binding(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.BindingSpec":       schema_pkg_apis_capabilities_v1alpha1_BindingSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.BindingStatus":     schema_pkg_apis_capabilities_v1alpha1_BindingStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Limit":             schema_pkg_apis_capabilities_v1alpha1_Limit(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.LimitSpec":         schema_pkg_apis_capabilities_v1alpha1_LimitSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.LimitStatus":       schema_pkg_apis_capabilities_v1alpha1_LimitStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.MappingRule":       schema_pkg_apis_capabilities_v1alpha1_MappingRule(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.MappingRuleSpec":   schema_pkg_apis_capabilities_v1alpha1_MappingRuleSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.MappingRuleStatus": schema_pkg_apis_capabilities_v1alpha1_MappingRuleStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Metric":            schema_pkg_apis_capabilities_v1alpha1_Metric(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.MetricSpec":        schema_pkg_apis_capabilities_v1alpha1_MetricSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.MetricStatus":      schema_pkg_apis_capabilities_v1alpha1_MetricStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Plan":              schema_pkg_apis_capabilities_v1alpha1_Plan(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.PlanSpec":          schema_pkg_apis_capabilities_v1alpha1_PlanSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.PlanStatus":        schema_pkg_apis_capabilities_v1alpha1_PlanStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.Tenant":            schema_pkg_apis_capabilities_v1alpha1_Tenant(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.TenantSpec":        schema_pkg_apis_capabilities_v1alpha1_TenantSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.TenantStatus":      schema_pkg_apis_capabilities_v1alpha1_TenantStatus(ref),
 	}
 }
 
@@ -66,6 +80,54 @@ func schema_pkg_apis_capabilities_v1alpha1_API(ref common.ReferenceCallback) com
 	}
 }
 
+func schema_pkg_apis_capabilities_v1alpha1_APISpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APISpec defines the desired state of API",
+				Properties: map[string]spec.Schema{
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"integrationMethod": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.IntegrationMethod"),
+						},
+					},
+					"planSelector": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+					"metricSelector": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+				},
+				Required: []string{"description", "integrationMethod"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.IntegrationMethod", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_APIStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIStatus defines the observed state of API",
+				Properties:  map[string]spec.Schema{},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
 func schema_pkg_apis_capabilities_v1alpha1_Binding(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -109,11 +171,73 @@ func schema_pkg_apis_capabilities_v1alpha1_Binding(ref common.ReferenceCallback)
 	}
 }
 
+func schema_pkg_apis_capabilities_v1alpha1_BindingSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "BindingSpec defines the desired state of Binding",
+				Properties: map[string]spec.Schema{
+					"credentialsRef": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.SecretReference"),
+						},
+					},
+					"apiSelector": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+				},
+				Required: []string{"credentialsRef"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.SecretReference", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_BindingStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "BindingStatus defines the observed state of Binding",
+				Properties: map[string]spec.Schema{
+					"lastSync": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp"),
+						},
+					},
+					"currentState": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"desiredState": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"previousState": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp"},
+	}
+}
+
 func schema_pkg_apis_capabilities_v1alpha1_Limit(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Limit is the Schema for the limits API object",
+				Description: "Limit is the Schema for the limits API",
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -149,6 +273,50 @@ func schema_pkg_apis_capabilities_v1alpha1_Limit(ref common.ReferenceCallback) c
 		},
 		Dependencies: []string{
 			"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.LimitSpec", "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.LimitStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_LimitSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "LimitSpec defines the desired state of Limit",
+				Properties: map[string]spec.Schema{
+					"period": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"maxValue": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"metricRef": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.ObjectReference"),
+						},
+					},
+				},
+				Required: []string{"period", "maxValue", "metricRef"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.ObjectReference"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_LimitStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "LimitStatus defines the observed state of Limit",
+				Properties:  map[string]spec.Schema{},
+			},
+		},
+		Dependencies: []string{},
 	}
 }
 
@@ -195,6 +363,56 @@ func schema_pkg_apis_capabilities_v1alpha1_MappingRule(ref common.ReferenceCallb
 	}
 }
 
+func schema_pkg_apis_capabilities_v1alpha1_MappingRuleSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MappingRuleSpec defines the desired state of MappingRule",
+				Properties: map[string]spec.Schema{
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"method": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"increment": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"metricRef": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.ObjectReference"),
+						},
+					},
+				},
+				Required: []string{"path", "method", "increment", "metricRef"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.ObjectReference"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_MappingRuleStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MappingRuleStatus defines the observed state of MappingRule",
+				Properties:  map[string]spec.Schema{},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
 func schema_pkg_apis_capabilities_v1alpha1_Metric(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -235,6 +453,50 @@ func schema_pkg_apis_capabilities_v1alpha1_Metric(ref common.ReferenceCallback) 
 		},
 		Dependencies: []string{
 			"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.MetricSpec", "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.MetricStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_MetricSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MetricSpec defines the desired state of Metric",
+				Properties: map[string]spec.Schema{
+					"unit": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"incrementHits": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+				},
+				Required: []string{"unit", "description", "incrementHits"},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_MetricStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MetricStatus defines the observed state of Metric",
+				Properties:  map[string]spec.Schema{},
+			},
+		},
+		Dependencies: []string{},
 	}
 }
 
@@ -281,6 +543,61 @@ func schema_pkg_apis_capabilities_v1alpha1_Plan(ref common.ReferenceCallback) co
 	}
 }
 
+func schema_pkg_apis_capabilities_v1alpha1_PlanSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PlanSpec defines the desired state of Plan",
+				Properties: map[string]spec.Schema{
+					"default": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"trialPeriod": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"approvalRequired": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"costs": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.PlanCost"),
+						},
+					},
+					"limitSelector": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+				},
+				Required: []string{"default", "trialPeriod", "approvalRequired", "limitSelector"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.PlanCost", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_PlanStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PlanStatus defines the observed state of Plan",
+				Properties:  map[string]spec.Schema{},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
 func schema_pkg_apis_capabilities_v1alpha1_Tenant(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -321,5 +638,85 @@ func schema_pkg_apis_capabilities_v1alpha1_Tenant(ref common.ReferenceCallback) 
 		},
 		Dependencies: []string{
 			"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.TenantSpec", "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1.TenantStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_TenantSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "TenantSpec defines the desired state of Tenant",
+				Properties: map[string]spec.Schema{
+					"username": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"email": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"organizationName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"systemMasterUrl": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"tenantSecretRef": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.SecretReference"),
+						},
+					},
+					"passwordCredentialsRef": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.SecretReference"),
+						},
+					},
+					"masterCredentialsRef": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.SecretReference"),
+						},
+					},
+				},
+				Required: []string{"username", "email", "organizationName", "systemMasterUrl", "tenantSecretRef", "passwordCredentialsRef", "masterCredentialsRef"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.SecretReference"},
+	}
+}
+
+func schema_pkg_apis_capabilities_v1alpha1_TenantStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "TenantStatus defines the observed state of Tenant",
+				Properties: map[string]spec.Schema{
+					"tenantId": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"adminId": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+				},
+				Required: []string{"tenantId", "adminId"},
+			},
+		},
+		Dependencies: []string{},
 	}
 }

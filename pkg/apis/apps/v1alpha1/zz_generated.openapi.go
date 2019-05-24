@@ -13,7 +13,9 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManager": schema_pkg_apis_apps_v1alpha1_APIManager(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManager":       schema_pkg_apis_apps_v1alpha1_APIManager(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec":   schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus": schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref),
 	}
 }
 
@@ -57,5 +59,118 @@ func schema_pkg_apis_apps_v1alpha1_APIManager(ref common.ReferenceCallback) comm
 		},
 		Dependencies: []string{
 			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIManagerSpec defines the desired state of APIManager",
+				Properties: map[string]spec.Schema{
+					"productVersion": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"wildcardDomain": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"appLabel": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"tenantName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"wildcardPolicy": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"imageStreamTagImportInsecure": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"resourceRequirementsEnabled": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"apicast": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ApicastSpec"),
+						},
+					},
+					"backend": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.BackendSpec"),
+						},
+					},
+					"system": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.SystemSpec"),
+						},
+					},
+					"zync": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ZyncSpec"),
+						},
+					},
+					"wildcardRouter": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.WildcardRouterSpec"),
+						},
+					},
+					"highAvailability": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.HighAvailabilitySpec"),
+						},
+					},
+				},
+				Required: []string{"productVersion", "wildcardDomain"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ApicastSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.BackendSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.HighAvailabilitySpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.SystemSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.WildcardRouterSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ZyncSpec"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIManagerStatus defines the observed state of APIManager",
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerCondition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerCondition"},
 	}
 }

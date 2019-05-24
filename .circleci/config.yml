@@ -13,13 +13,9 @@ commands:
       - run:
           name: Install operator-sdk
           command: |
-            mkdir -p ${GOPATH}/src/github.com/operator-framework
-            cd ${GOPATH}/src/github.com/operator-framework
-            git clone https://github.com/operator-framework/operator-sdk
-            cd operator-sdk
-            git checkout 99ae4aed7387dcfdc07ecf6169cf35b7bca47924
-            make dep
-            make install
+            export OPERATOR_SDK_RELEASE_VERSION=v0.8.0
+            curl -OJL https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_RELEASE_VERSION}/operator-sdk-${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu
+            chmod +x operator-sdk-${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu && sudo cp operator-sdk-${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu /usr/local/bin/operator-sdk && rm operator-sdk-${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu
 
   install-operator-dependencies:
     steps:
@@ -72,6 +68,7 @@ commands:
             echo 'export TMPDIR=~/tmp/' >> $BASH_ENV
             echo 'export GOROOT=/opt/go' >> $BASH_ENV
             echo 'export GOPATH=~/go' >> $BASH_ENV
+            echo 'export GO111MODULE=on' >> $BASH_ENV
             sudo mkdir -p /opt/go/bin
             mkdir -p ~/go/bin
             echo 'export PATH=$GOROOT/bin:$PATH' >> $BASH_ENV
@@ -79,14 +76,7 @@ commands:
       - run:
           name: Install Golang
           command: |
-            curl --fail -L https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
-
-  install-dep:
-    steps:
-      - run:
-          name: Install Golang dep
-          command: |
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sudo GOPATH=$GOPATH PATH=$GOROOT/bin:$PATH sh
+            curl --fail -L https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
 
   deploy-3scale-eval-from-template:
     steps:
@@ -171,15 +161,16 @@ commands:
 
       - restore_cache:
           keys:
-            - v1-gopkg-cache-{{ arch }}-{{ checksum "Gopkg.lock" }}
+            - v1-gopkg-cache-{{ arch }}-{{ checksum "go.sum" }}
             - v1-gopkg-cache-{{ arch }}-{{ .Branch }}
 
       - install-operator-sdk
       - install-operator-dependencies
 
       - save_cache:
-          key: v1-gopkg-cache-{{ arch }}-{{ checksum "Gopkg.lock" }}
+          key: v1-gopkg-cache-{{ arch }}-{{ checksum "go.sum" }}
           paths:
+            - "/go/src/github.com/3scale/3scale-operator/vendor"
             - "/go/pkg"
 
       - run:
@@ -202,7 +193,9 @@ commands:
 jobs:
   build-deploy-operator:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.12.5
+        environment:
+            GO111MODULE: "on"
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - setup_remote_docker:
@@ -292,7 +285,6 @@ jobs:
     steps:
       - install-openshift
       - install-golang
-      - install-dep
       - install-operator-sdk
       - checkout
       - install-operator-dependencies
@@ -308,11 +300,13 @@ jobs:
 
   generator:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.12.5
+        environment:
+            GO111MODULE: "on"
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - checkout
-      - run: dep ensure
+      - run: make vendor
       - run: make clean test -j 2 --directory pkg/3scale/amp
 workflows:
   version: 2

@@ -77,6 +77,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
+// blank assignment to verify that ReconcileAPIManager implements reconcile.Reconciler
 var _ reconcile.Reconciler = &ReconcileAPIManager{}
 
 // ReconcileAPIManager reconciles a APIManager object
@@ -302,7 +303,7 @@ func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager
 	}
 	results = append(results, wildcardRouter...)
 
-	if cr.Spec.SystemSpec.FileStorageSpec.S3 != nil {
+	if cr.Spec.System.FileStorageSpec.S3 != nil {
 		s3, err := r.createS3(cr)
 		if err != nil {
 			return nil, err
@@ -329,7 +330,7 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 		objects = p.PostProcessObjects(objects)
 	}
 
-	if cr.Spec.SystemSpec.FileStorageSpec.S3 != nil {
+	if cr.Spec.System.FileStorageSpec.S3 != nil {
 		optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 		opts, err := optsProvider.GetS3Options()
 		if err != nil {
@@ -339,7 +340,7 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 		objects = s.PostProcessObjects(objects)
 	}
 
-	if cr.Spec.HighAvailabilitySpec != nil && cr.Spec.HighAvailabilitySpec.Enabled {
+	if cr.Spec.HighAvailability != nil && cr.Spec.HighAvailability.Enabled {
 		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 		opts, err := optsProvider.GetHighAvailabilityOptions()
 		if err != nil {

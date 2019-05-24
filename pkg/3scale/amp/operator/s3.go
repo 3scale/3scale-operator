@@ -8,7 +8,7 @@ import (
 
 func (o *OperatorS3OptionsProvider) GetS3Options() (*component.S3Options, error) {
 	sob := component.S3OptionsBuilder{}
-	SystemS3Spec := *o.APIManagerSpec.SystemSpec.FileStorageSpec.S3
+	SystemS3Spec := *o.APIManagerSpec.System.FileStorageSpec.S3
 	sob.AwsRegion(SystemS3Spec.AWSRegion)
 	sob.AwsBucket(SystemS3Spec.AWSBucket)
 	sob.FileUploadStorage(SystemS3Spec.FileUploadStorage)
@@ -35,7 +35,7 @@ func (o *OperatorS3OptionsProvider) setSecretBasedOptions(sob *component.S3Optio
 }
 
 func (o *OperatorS3OptionsProvider) setAWSSecretOptions(sob *component.S3OptionsBuilder) error {
-	awsCredentialsSecretName := o.APIManagerSpec.SystemSpec.FileStorageSpec.S3.AWSCredentials.Name
+	awsCredentialsSecretName := o.APIManagerSpec.System.FileStorageSpec.S3.AWSCredentials.Name
 	currSecret, err := getSecret(awsCredentialsSecretName, o.Namespace, o.Client)
 	if err != nil {
 		return err

@@ -65,6 +65,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
+// blank assignment to verify that ReconcileTenant implements reconcile.Reconciler
 var _ reconcile.Reconciler = &ReconcileTenant{}
 
 // ReconcileTenant reconciles a Tenant object
@@ -119,7 +120,7 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	portaClient, err := helper.PortaClientFromURLString(tenantR.Spec.SystemMasterURL, masterAccessToken)
+	portaClient, err := helper.PortaClientFromURLString(tenantR.Spec.SystemMasterUrl, masterAccessToken)
 	if err != nil {
 		log.Error(err, "Error creating porta client object")
 		// Error reading the object - requeue the request.
