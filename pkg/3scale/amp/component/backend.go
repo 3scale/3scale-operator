@@ -201,10 +201,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 							"sh",
 							"-c",
 							"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
-						}, Env: []v1.EnvVar{
-							envVarFromValue("SLEEP_SECONDS", "1"),
-							envVarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
-						},
+						}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
 					},
 				},
 					Containers: []v1.Container{
@@ -284,10 +281,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 							"sh",
 							"-c",
 							"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
-						}, Env: []v1.EnvVar{
-							envVarFromValue("SLEEP_SECONDS", "1"),
-							envVarFromSecret("CONFIG_QUEUES_MASTER_NAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesURLFieldName),
-						},
+						}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
 					},
 				},
 					Containers: []v1.Container{
