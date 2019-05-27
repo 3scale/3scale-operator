@@ -1,100 +1,26 @@
 package component
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	imagev1 "github.com/openshift/api/image/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	insecureImportPolicy = false
+	InsecureImportPolicy = false
 )
 
 type AmpImages struct {
-	options []string
 	Options *AmpImagesOptions
 }
 
-type AmpImagesOptions struct {
-	appLabel                    string
-	ampRelease                  string
-	apicastImage                string
-	backendImage                string
-	systemImage                 string
-	zyncImage                   string
-	ZyncDatabasePostgreSQLImage string
-	backendRedisImage           string
-	systemRedisImage            string
-	systemMemcachedImage        string
-	insecureImportPolicy        bool
+func NewAmpImages(options *AmpImagesOptions) *AmpImages {
+	return &AmpImages{Options: options}
 }
 
-func NewAmpImages(options []string) *AmpImages {
-	ampImages := &AmpImages{
-		options: options,
-	}
-	return ampImages
-}
-
-type AmpImagesOptionsProvider interface {
-	GetAmpImagesOptions() *AmpImagesOptions
-}
-type CLIAmpImagesOptionsProvider struct {
-}
-
-func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, error) {
-	aob := AmpImagesOptionsBuilder{}
-	aob.AppLabel("${APP_LABEL}")
-	aob.AMPRelease("${AMP_RELEASE}")
-	aob.ApicastImage("${AMP_APICAST_IMAGE}")
-	aob.BackendImage("${AMP_BACKEND_IMAGE}")
-	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
-	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
-	aob.ZyncDatabasePostgreSQLImage("${ZYNC_DATABASE_IMAGE}")
-	aob.BackendRedisImage("${REDIS_IMAGE}")
-	aob.SystemRedisImage("${REDIS_IMAGE}")
-	aob.SystemMemcachedImage("${MEMCACHED_IMAGE}")
-
-	aob.InsecureImportPolicy(false)
-
-	res, err := aob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create AMPImages Options - %s", err)
-	}
-	return res, nil
-}
-
-func (ampImages *AmpImages) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLIAmpImagesOptionsProvider{}
-	ampImagesOpts, err := optionsProvider.GetAmpImagesOptions()
-	_ = err
-	ampImages.Options = ampImagesOpts
-	ampImages.buildParameters(template)
-	ampImages.addObjectsIntoTemplate(template)
-}
-
-func (ampImages *AmpImages) GetObjects() ([]common.KubernetesObject, error) {
-	objects := ampImages.buildObjects()
-	return objects, nil
-}
-
-func (ampImages *AmpImages) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := ampImages.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (ampImages *AmpImages) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (ampImages *AmpImages) buildObjects() []common.KubernetesObject {
+func (ampImages *AmpImages) Objects() []common.KubernetesObject {
 	backendImageStream := ampImages.buildAmpBackendImageStream()
 	zyncImageStream := ampImages.buildAmpZyncImageStream()
 	apicastImageStream := ampImages.buildApicastImageStream()
@@ -157,7 +83,7 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 					ImportPolicy: imagev1.TagImportPolicy{
 						// TODO this was originally a double brace expansion from a variable, that is not possible
 						// natively with kubernetes so we replaced it with a const
-						Insecure: insecureImportPolicy,
+						Insecure: InsecureImportPolicy,
 					},
 				},
 			},
@@ -202,7 +128,7 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 					ImportPolicy: imagev1.TagImportPolicy{
 						// TODO this was originally a double brace expansion from a variable, that is not possible
 						// natively with kubernetes so we replaced it with a const
-						Insecure: insecureImportPolicy,
+						Insecure: InsecureImportPolicy,
 					},
 				},
 			},
@@ -247,7 +173,7 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 					ImportPolicy: imagev1.TagImportPolicy{
 						// TODO this was originally a double brace expansion from a variable, that is not possible
 						// natively with kubernetes so we replaced it with a const
-						Insecure: insecureImportPolicy,
+						Insecure: InsecureImportPolicy,
 					},
 				},
 			},
@@ -290,7 +216,7 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 						Name: ampImages.Options.systemImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: insecureImportPolicy,
+						Insecure: InsecureImportPolicy,
 					},
 				},
 			},
@@ -333,7 +259,7 @@ func (ampImages *AmpImages) buildZyncDatabasePostgreSQLImageStream() *imagev1.Im
 						Name: ampImages.Options.ZyncDatabasePostgreSQLImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: insecureImportPolicy,
+						Insecure: InsecureImportPolicy,
 					},
 				},
 			},
@@ -376,7 +302,7 @@ func (ampImages *AmpImages) buildBackendRedisImageStream() *imagev1.ImageStream 
 						Name: ampImages.Options.backendRedisImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: insecureImportPolicy,
+						Insecure: InsecureImportPolicy,
 					},
 				},
 			},
@@ -419,7 +345,7 @@ func (ampImages *AmpImages) buildSystemRedisImageStream() *imagev1.ImageStream {
 						Name: ampImages.Options.backendRedisImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: insecureImportPolicy,
+						Insecure: InsecureImportPolicy,
 					},
 				},
 			},
@@ -462,7 +388,7 @@ func (ampImages *AmpImages) buildSystemMemcachedImageStream() *imagev1.ImageStre
 						Name: ampImages.Options.systemMemcachedImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: insecureImportPolicy,
+						Insecure: InsecureImportPolicy,
 					},
 				},
 			},
@@ -482,48 +408,4 @@ func (ampImages *AmpImages) buildDeploymentsServiceAccount() *v1.ServiceAccount 
 		ImagePullSecrets: []v1.LocalObjectReference{
 			v1.LocalObjectReference{
 				Name: "threescale-registry-auth"}}}
-}
-
-func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:     "AMP_BACKEND_IMAGE",
-			Required: true,
-			Value:    "quay.io/3scale/3scale26:apisonator-3scale-2.6.0-ER1",
-		},
-		templatev1.Parameter{
-			Name:     "AMP_ZYNC_IMAGE",
-			Value:    "quay.io/3scale/3scale26:zync-3scale-2.6.0-ER1",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "AMP_APICAST_IMAGE",
-			Value:    "quay.io/3scale/3scale26:apicast-3scale-2.6.0-ER1",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "AMP_SYSTEM_IMAGE",
-			Value:    "quay.io/3scale/3scale26:porta-3scale-2.6.0-ER1",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:        "ZYNC_DATABASE_IMAGE",
-			Description: "Zync's PostgreSQL image to use",
-			Value:       "centos/postgresql-10-centos7",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "MEMCACHED_IMAGE",
-			Description: "Memcached image to use",
-			Value:       "memcached:1.5",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "IMAGESTREAM_TAG_IMPORT_INSECURE",
-			Description: "Set to true if the server may bypass certificate verification or connect directly over HTTP during image import.",
-			Value:       "false",
-			Required:    true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
 }

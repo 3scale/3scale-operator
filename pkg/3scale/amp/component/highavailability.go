@@ -1,9 +1,7 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -13,25 +11,7 @@ import (
 )
 
 type HighAvailability struct {
-	options []string
 	Options *HighAvailabilityOptions
-}
-
-type HighAvailabilityOptions struct {
-	nonRequiredHighAvailabilityOptions
-	requiredHighAvailabilityOptions
-}
-
-type requiredHighAvailabilityOptions struct {
-	appLabel                    string
-	backendRedisQueuesEndpoint  string
-	backendRedisStorageEndpoint string
-	systemDatabaseURL           string
-	systemRedisURL              string
-	systemMessageBusRedisURL    string
-}
-
-type nonRequiredHighAvailabilityOptions struct {
 }
 
 const (
@@ -44,89 +24,17 @@ var highlyAvailableExternalDatabases = map[string]bool{
 	"system-mysql":  true,
 }
 
-func NewHighAvailability(options []string) *HighAvailability {
-	ha := &HighAvailability{
-		options: options,
-	}
-	return ha
+func NewHighAvailability(options *HighAvailabilityOptions) *HighAvailability {
+	return &HighAvailability{Options: options}
 }
 
-type HighAvailabilityOptionsProvider interface {
-	GetHighAvailabilityOptions() *HighAvailabilityOptions
-}
-type CLIHighAvailabilityOptionsProvider struct {
-}
-
-func (o *CLIHighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*HighAvailabilityOptions, error) {
-	hob := HighAvailabilityOptionsBuilder{}
-	hob.AppLabel("${APP_LABEL}")
-	hob.BackendRedisQueuesEndpoint("${BACKEND_REDIS_QUEUES_ENDPOINT}")
-	hob.BackendRedisStorageEndpoint("${BACKEND_REDIS_STORAGE_ENDPOINT}")
-	hob.SystemDatabaseURL("${SYSTEM_DATABASE_URL}")
-	hob.SystemRedisURL("${SYSTEM_REDIS_URL}")
-	hob.SystemMessageBusRedisURL("${SYSTEM_MESSAGE_BUS_REDIS_URL}")
-
-	res, err := hob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create High Availability Options - %s", err)
-	}
-	return res, nil
-}
-
-func (ha *HighAvailability) setHAOptions() {
-	// TODO move this outside this specific method
-	optionsProvider := CLIHighAvailabilityOptionsProvider{}
-	haOpts, err := optionsProvider.GetHighAvailabilityOptions()
-	_ = err
-	ha.Options = haOpts
-}
-
-func (ha *HighAvailability) GetObjects() ([]common.KubernetesObject, error) {
-	objects := ha.buildObjects()
-	return objects, nil
-}
-
-func (ha *HighAvailability) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	ha.setHAOptions() // TODO move this outside
-	ha.addObjectsIntoTemplate(template)
-
-	ha.buildParameters(template)
-}
-
-func (ha *HighAvailability) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := ha.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (ha *HighAvailability) buildObjects() []common.KubernetesObject {
+func (ha *HighAvailability) Objects() []common.KubernetesObject {
 	systemDatabaseSecrets := ha.createSystemDatabaseSecret()
 
 	objects := []common.KubernetesObject{
 		systemDatabaseSecrets,
 	}
 	return objects
-}
-
-// TODO check how to postprocess independently of templates
-func (ha *HighAvailability) PostProcess(template *templatev1.Template, otherComponents []Component) {
-	res := helper.UnwrapRawExtensions(template.Objects)
-	ha.setHAOptions() // TODO move this outside
-	ha.increaseReplicasNumber(res)
-	res = ha.deleteInternalDatabasesObjects(res)
-	ha.updateDatabasesURLS(res)
-	ha.deleteDBRelatedParameters(template)
-	ha.unsetSystemRedisDBDefaultValues(template)
-
-	template.Objects = helper.WrapRawExtensions(res)
-}
-
-func (ha *HighAvailability) PostProcessObjects(objects []common.KubernetesObject) []common.KubernetesObject {
-	res := objects
-	ha.increaseReplicasNumber(res)
-	res = ha.deleteInternalDatabasesObjects(res)
-	ha.updateDatabasesURLS(res)
-
-	return res
 }
 
 func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
@@ -149,7 +57,7 @@ func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
 	}
 }
 
-func (ha *HighAvailability) increaseReplicasNumber(objects []common.KubernetesObject) {
+func (ha *HighAvailability) IncreaseReplicasNumber(objects []common.KubernetesObject) {
 	// We do not increase the number of replicas in database DeploymentConfigs
 	excludedDeploymentConfigs := map[string]bool{
 		"system-memcache": true,
@@ -167,7 +75,7 @@ func (ha *HighAvailability) increaseReplicasNumber(objects []common.KubernetesOb
 	}
 }
 
-func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []common.KubernetesObject) []common.KubernetesObject {
+func (ha *HighAvailability) DeleteInternalDatabasesObjects(objects []common.KubernetesObject) []common.KubernetesObject {
 	keepObjects := []common.KubernetesObject{}
 
 	for objIdx, object := range objects {
@@ -204,7 +112,7 @@ func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []common.Kube
 	return keepObjects
 }
 
-func (ha *HighAvailability) unsetSystemRedisDBDefaultValues(template *templatev1.Template) {
+func (ha *HighAvailability) UnsetSystemRedisDBDefaultValues(template *templatev1.Template) {
 	dbParamsToUpdate := map[string]bool{
 		"SYSTEM_REDIS_URL":             true,
 		"SYSTEM_MESSAGE_BUS_REDIS_URL": true,
@@ -218,7 +126,7 @@ func (ha *HighAvailability) unsetSystemRedisDBDefaultValues(template *templatev1
 	}
 }
 
-func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Template) {
+func (ha *HighAvailability) DeleteDBRelatedParameters(template *templatev1.Template) {
 	keepParams := []templatev1.Parameter{}
 	dbParamsToDelete := map[string]bool{
 		"REDIS_IMAGE":                   true,
@@ -239,7 +147,7 @@ func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Templ
 	template.Parameters = keepParams
 }
 
-func (ha *HighAvailability) updateDatabasesURLS(objects []common.KubernetesObject) {
+func (ha *HighAvailability) UpdateDatabasesURLS(objects []common.KubernetesObject) {
 	for objIdx := range objects {
 		obj := objects[objIdx]
 		secret, ok := obj.(*v1.Secret)
@@ -254,25 +162,4 @@ func (ha *HighAvailability) updateDatabasesURLS(objects []common.KubernetesObjec
 			}
 		}
 	}
-}
-
-func (ha *HighAvailability) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "BACKEND_REDIS_STORAGE_ENDPOINT",
-			Description: "Define the external backend-redis storage endpoint to connect to",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "BACKEND_REDIS_QUEUES_ENDPOINT",
-			Description: "Define the external backend-redis queues endpoint to connect to",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE_URL",
-			Description: "Define the external system-mysql to connect to",
-			Required:    true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
 }

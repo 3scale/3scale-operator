@@ -2,35 +2,45 @@ package component
 
 import "fmt"
 
-type MysqlOptionsBuilder struct {
-	options MysqlOptions
+type SystemMysqlOptions struct {
+	// mysqlRequiredOptions
+	appLabel     string
+	databaseName string
+	user         string
+	password     string
+	rootPassword string
+	databaseURL  string
 }
 
-func (m *MysqlOptionsBuilder) AppLabel(appLabel string) {
+type SystemMysqlOptionsBuilder struct {
+	options SystemMysqlOptions
+}
+
+func (m *SystemMysqlOptionsBuilder) AppLabel(appLabel string) {
 	m.options.appLabel = appLabel
 }
 
-func (m *MysqlOptionsBuilder) DatabaseName(databaseName string) {
+func (m *SystemMysqlOptionsBuilder) DatabaseName(databaseName string) {
 	m.options.databaseName = databaseName
 }
 
-func (m *MysqlOptionsBuilder) User(user string) {
+func (m *SystemMysqlOptionsBuilder) User(user string) {
 	m.options.user = user
 }
 
-func (m *MysqlOptionsBuilder) Password(password string) {
+func (m *SystemMysqlOptionsBuilder) Password(password string) {
 	m.options.password = password
 }
 
-func (m *MysqlOptionsBuilder) RootPassword(rootPassword string) {
+func (m *SystemMysqlOptionsBuilder) RootPassword(rootPassword string) {
 	m.options.rootPassword = rootPassword
 }
 
-func (m *MysqlOptionsBuilder) DatabaseURL(url string) {
+func (m *SystemMysqlOptionsBuilder) DatabaseURL(url string) {
 	m.options.databaseURL = url
 }
 
-func (m *MysqlOptionsBuilder) Build() (*MysqlOptions, error) {
+func (m *SystemMysqlOptionsBuilder) Build() (*SystemMysqlOptions, error) {
 	err := m.setRequiredOptions()
 	if err != nil {
 		return nil, err
@@ -41,7 +51,7 @@ func (m *MysqlOptionsBuilder) Build() (*MysqlOptions, error) {
 	return &m.options, nil
 }
 
-func (m *MysqlOptionsBuilder) setRequiredOptions() error {
+func (m *SystemMysqlOptionsBuilder) setRequiredOptions() error {
 	if m.options.appLabel == "" {
 		return fmt.Errorf("no AppLabel has been provided")
 	}
@@ -64,5 +74,5 @@ func (m *MysqlOptionsBuilder) setRequiredOptions() error {
 	return nil
 }
 
-func (m *MysqlOptionsBuilder) setNonRequiredOptions() {
+func (m *SystemMysqlOptionsBuilder) setNonRequiredOptions() {
 }
