@@ -108,7 +108,7 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 	systemMemcachedImageStream := ampImages.buildSystemMemcachedImageStream()
 	systemMySQLImageStream := ampImages.buildSystemMySQLImageStream()
 
-	quayServiceAccount := ampImages.buildQuayServiceAccount()
+	deploymentsServiceAccount := ampImages.buildDeploymentsServiceAccount()
 
 	objects := []runtime.RawExtension{
 		runtime.RawExtension{Object: backendImageStream},
@@ -121,7 +121,7 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: systemRedisImageStream},
 		runtime.RawExtension{Object: systemMemcachedImageStream},
 		runtime.RawExtension{Object: systemMySQLImageStream},
-		runtime.RawExtension{Object: quayServiceAccount},
+		runtime.RawExtension{Object: deploymentsServiceAccount},
 	}
 	return objects
 }
@@ -564,7 +564,7 @@ func (ampImages *AmpImages) buildSystemMySQLImageStream() *imagev1.ImageStream {
 	}
 }
 
-func (ampImages *AmpImages) buildQuayServiceAccount() *v1.ServiceAccount {
+func (ampImages *AmpImages) buildDeploymentsServiceAccount() *v1.ServiceAccount {
 	return &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServiceAccount",
@@ -575,7 +575,7 @@ func (ampImages *AmpImages) buildQuayServiceAccount() *v1.ServiceAccount {
 		},
 		ImagePullSecrets: []v1.LocalObjectReference{
 			v1.LocalObjectReference{
-				Name: "quay-auth"}}}
+				Name: "threescale-registry-auth"}}}
 }
 
 func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {

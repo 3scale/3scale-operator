@@ -3,10 +3,8 @@ package component
 import (
 	"fmt"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -69,45 +67,13 @@ func (productized *Productized) PostProcess(template *templatev1.Template, other
 	_ = err
 	productized.Options = productizedOpts
 	res := template.Objects
-	res = productized.removeAmpServiceAccount(res)
-	res = productized.removeAmpServiceAccountReferences(res)
 	productized.updateAmpImagesParameters(template)
 	template.Objects = res
 }
 
 func (productized *Productized) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawExtension {
 	res := objects
-	res = productized.removeAmpServiceAccount(res)
-	res = productized.removeAmpServiceAccountReferences(res)
 	res = productized.updateAmpImagesURIs(res)
-
-	return res
-}
-
-func (productized *Productized) removeAmpServiceAccount(objects []runtime.RawExtension) []runtime.RawExtension {
-	res := objects
-	for idx, rawExtension := range res {
-		obj := rawExtension.Object
-		sa, ok := obj.(*v1.ServiceAccount)
-		if ok {
-			if sa.ObjectMeta.Name == "amp" {
-				res = append(res[:idx], res[idx+1:]...) // This deletes the element in the array
-				break
-			}
-		}
-	}
-	return res
-}
-
-func (productized *Productized) removeAmpServiceAccountReferences(objects []runtime.RawExtension) []runtime.RawExtension {
-	res := objects
-	for _, rawExtension := range res {
-		obj := rawExtension.Object
-		dc, ok := obj.(*appsv1.DeploymentConfig)
-		if ok {
-			dc.Spec.Template.Spec.ServiceAccountName = ""
-		}
-	}
 
 	return res
 }

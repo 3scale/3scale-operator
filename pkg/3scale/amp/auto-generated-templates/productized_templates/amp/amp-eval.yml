@@ -381,6 +381,13 @@ objects:
         type: ""
   status:
     dockerImageRepository: ""
+- apiVersion: v1
+  imagePullSecrets:
+  - name: threescale-registry-auth
+  kind: ServiceAccount
+  metadata:
+    creationTimestamp: null
+    name: amp
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -437,6 +444,7 @@ objects:
             name: backend-redis-storage
           - mountPath: /etc/redis.d/
             name: redis-config
+        serviceAccountName: amp
         volumes:
         - name: backend-redis-storage
           persistentVolumeClaim:
@@ -613,6 +621,7 @@ objects:
             name: system-redis-storage
           - mountPath: /etc/redis.d/
             name: redis-config
+        serviceAccountName: amp
         volumes:
         - name: system-redis-storage
           persistentVolumeClaim:
@@ -750,6 +759,7 @@ objects:
           image: amp-backend:latest
           name: backend-redis-svc
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -876,6 +886,7 @@ objects:
             initialDelaySeconds: 30
             timeoutSeconds: 5
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -1037,6 +1048,7 @@ objects:
           image: amp-backend:latest
           name: backend-redis-svc
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -1181,6 +1193,7 @@ objects:
             name: mysql-extra-conf
           - mountPath: /etc/my-extra
             name: mysql-main-conf
+        serviceAccountName: amp
         volumes:
         - name: mysql-storage
           persistentVolumeClaim:
@@ -1348,6 +1361,7 @@ objects:
             periodSeconds: 30
             timeoutSeconds: 5
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -2653,6 +2667,7 @@ objects:
             readOnly: true
           - mountPath: /opt/system-extra-configs
             name: system-config
+        serviceAccountName: amp
         volumes:
         - name: system-storage
           persistentVolumeClaim:
@@ -2957,6 +2972,7 @@ objects:
           image: amp-system:latest
           name: check-svc
           resources: {}
+        serviceAccountName: amp
         volumes:
         - emptyDir:
             medium: Memory
@@ -3073,6 +3089,7 @@ objects:
           image: amp-system:latest
           name: system-master-svc
           resources: {}
+        serviceAccountName: amp
         volumes:
         - emptyDir: {}
           name: system-sphinx-database
@@ -3269,6 +3286,7 @@ objects:
           image: amp-zync:latest
           name: zync-db-svc
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -3349,6 +3367,7 @@ objects:
           - mountPath: /var/lib/pgsql/data
             name: zync-database-data
         restartPolicy: Always
+        serviceAccountName: amp
         volumes:
         - emptyDir: {}
           name: zync-database-data
@@ -3514,6 +3533,7 @@ objects:
             periodSeconds: 30
             timeoutSeconds: 5
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -3637,6 +3657,7 @@ objects:
           image: amp-apicast:latest
           name: system-master-svc
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
@@ -3809,6 +3830,7 @@ objects:
             name: http
             protocol: TCP
           resources: {}
+        serviceAccountName: amp
     test: false
     triggers:
     - type: ConfigChange
