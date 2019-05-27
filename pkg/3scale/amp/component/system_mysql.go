@@ -1,132 +1,24 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-type Mysql struct {
-	// TemplateParameters
-	// TemplateObjects
-	// CLI Flags??? should be in this object???
-	options []string
-	Options *MysqlOptions
+type SystemMysql struct {
+	Options *SystemMysqlOptions
 }
 
-type MysqlOptions struct {
-	mysqlNonRequiredOptions
-	mysqlRequiredOptions
+func NewSystemMysql(options *SystemMysqlOptions) *SystemMysql {
+	return &SystemMysql{Options: options}
 }
 
-type mysqlRequiredOptions struct {
-	appLabel     string
-	databaseName string
-	user         string
-	password     string
-	rootPassword string
-	databaseURL  string
-}
-
-type mysqlNonRequiredOptions struct {
-}
-
-type MysqlOptionsProvider interface {
-	GetMysqlOptions() *MysqlOptions
-}
-type CLIMysqlOptionsProvider struct {
-}
-
-func (o *CLIMysqlOptionsProvider) GetMysqlOptions() (*MysqlOptions, error) {
-	mob := MysqlOptionsBuilder{}
-	mob.AppLabel("${APP_LABEL}")
-	mob.DatabaseName("${SYSTEM_DATABASE}")
-	mob.User("${SYSTEM_DATABASE_USER}")
-	mob.Password("${SYSTEM_DATABASE_PASSWORD}")
-	mob.RootPassword("${SYSTEM_DATABASE_ROOT_PASSWORD}")
-	mob.DatabaseURL("mysql2://root:" + "${SYSTEM_DATABASE_ROOT_PASSWORD}" + "@system-mysql/" + "${SYSTEM_DATABASE}")
-	res, err := mob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create MySQL Options - %s", err)
-	}
-	return res, nil
-}
-
-func NewMysql(options []string) *Mysql {
-	redis := &Mysql{
-		options: options,
-	}
-	return redis
-}
-
-func (mysql *Mysql) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLIMysqlOptionsProvider{}
-	mysqlOpts, err := optionsProvider.GetMysqlOptions()
-	_ = err
-	mysql.Options = mysqlOpts
-	mysql.buildParameters(template)
-	mysql.addObjectsIntoTemplate(template)
-}
-
-func (mysql *Mysql) GetObjects() ([]common.KubernetesObject, error) {
-	objects := mysql.buildObjects()
-	return objects, nil
-}
-
-func (mysql *Mysql) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := mysql.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (mysql *Mysql) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (mysql *Mysql) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE_USER",
-			DisplayName: "System MySQL User",
-			Description: "Username for System's MySQL user that will be used for accessing the database.",
-			Value:       "mysql",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE_PASSWORD",
-			DisplayName: "System MySQL Password",
-			Description: "Password for the System's MySQL user.",
-			Generate:    "expression",
-			From:        "[a-z0-9]{8}",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE",
-			DisplayName: "System MySQL Database Name",
-			Description: "Name of the System's MySQL database accessed.",
-			Value:       "system",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE_ROOT_PASSWORD",
-			DisplayName: "System MySQL Root password.",
-			Description: "Password for Root user.",
-			Generate:    "expression",
-			From:        "[a-z0-9]{8}",
-			Required:    true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
-}
-
-func (mysql *Mysql) buildObjects() []common.KubernetesObject {
+func (mysql *SystemMysql) Objects() []common.KubernetesObject {
 	systemMysqlDeploymentConfig := mysql.buildSystemMysqlDeploymentConfig()
 	systemMysqlService := mysql.buildSystemMysqlService()
 	systemMysqlMainConfigConfigMap := mysql.buildSystemMysqlMainConfigConfigMap()
@@ -146,7 +38,7 @@ func (mysql *Mysql) buildObjects() []common.KubernetesObject {
 	return objects
 }
 
-func (mysql *Mysql) buildSystemMysqlService() *v1.Service {
+func (mysql *SystemMysql) buildSystemMysqlService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -174,7 +66,7 @@ func (mysql *Mysql) buildSystemMysqlService() *v1.Service {
 	}
 }
 
-func (mysql *Mysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
+func (mysql *SystemMysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -187,7 +79,7 @@ func (mysql *Mysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
 		Data: map[string]string{"my.cnf": "!include /etc/my.cnf\n!includedir /etc/my-extra.d\n"}}
 }
 
-func (mysql *Mysql) buildSystemMysqlExtraConfigConfigMap() *v1.ConfigMap {
+func (mysql *SystemMysql) buildSystemMysqlExtraConfigConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -200,7 +92,7 @@ func (mysql *Mysql) buildSystemMysqlExtraConfigConfigMap() *v1.ConfigMap {
 		Data: map[string]string{"mysql-charset.cnf": "[client]\ndefault-character-set = utf8\n\n[mysql]\ndefault-character-set = utf8\n\n[mysqld]\ncharacter-set-server = utf8\ncollation-server = utf8_unicode_ci\n"}}
 }
 
-func (mysql *Mysql) buildSystemMysqlPersistentVolumeClaim() *v1.PersistentVolumeClaim {
+func (mysql *SystemMysql) buildSystemMysqlPersistentVolumeClaim() *v1.PersistentVolumeClaim {
 	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
@@ -217,7 +109,7 @@ func (mysql *Mysql) buildSystemMysqlPersistentVolumeClaim() *v1.PersistentVolume
 			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")}}}}
 }
 
-func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig {
+func (mysql *SystemMysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -349,7 +241,7 @@ func (mysql *Mysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig 
 }
 
 // Each database is responsible to create the needed secrets for the other components
-func (mysql *Mysql) buildSystemDatabaseSecrets() *v1.Secret {
+func (mysql *SystemMysql) buildSystemDatabaseSecrets() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

@@ -2,6 +2,11 @@ package component
 
 import "fmt"
 
+type MemcachedOptions struct {
+	// memcachedRequiredOptions
+	appLabel string
+}
+
 type MemcachedOptionsBuilder struct {
 	options MemcachedOptions
 }

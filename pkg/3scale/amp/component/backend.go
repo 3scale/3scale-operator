@@ -1,13 +1,10 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,93 +34,14 @@ const (
 )
 
 type Backend struct {
-	options []string
 	Options *BackendOptions
 }
 
-type backendRequiredOptions struct {
-	appLabel              string
-	systemBackendUsername string
-	systemBackendPassword string
-	tenantName            string
-	wildcardDomain        string
+func NewBackend(options *BackendOptions) *Backend {
+	return &Backend{Options: options}
 }
 
-type backendNonRequiredOptions struct {
-	serviceEndpoint      *string
-	routeEndpoint        *string
-	storageURL           *string
-	queuesURL            *string
-	storageSentinelHosts *string
-	storageSentinelRole  *string
-	queuesSentinelHosts  *string
-	queuesSentinelRole   *string
-}
-
-type BackendOptions struct {
-	backendNonRequiredOptions
-	backendRequiredOptions
-}
-
-func NewBackend(options []string) *Backend {
-	backend := &Backend{
-		options: options,
-	}
-	return backend
-}
-
-type BackendOptionsProvider interface {
-	GetBackendOptions() *BackendOptions
-}
-type CLIBackendOptionsProvider struct {
-}
-
-func (o *CLIBackendOptionsProvider) GetBackendOptions() (*BackendOptions, error) {
-	bob := BackendOptionsBuilder{}
-	bob.AppLabel("${APP_LABEL}")
-	bob.SystemBackendUsername("${SYSTEM_BACKEND_USERNAME}")
-	bob.SystemBackendPassword("${SYSTEM_BACKEND_PASSWORD}")
-	bob.TenantName("${TENANT_NAME}")
-	bob.WildcardDomain("${WILDCARD_DOMAIN}")
-	res, err := bob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create Backend Options - %s", err)
-	}
-	return res, nil
-}
-
-func (backend *Backend) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	backend.buildParameters(template)
-
-	// TODO move this outside this specific method
-	optionsProvider := CLIBackendOptionsProvider{}
-	backendOpts, err := optionsProvider.GetBackendOptions()
-	_ = err
-	backend.Options = backendOpts
-	backend.buildParameters(template)
-	backend.addObjectsIntoTemplate(template)
-}
-
-func (backend *Backend) GetObjects() ([]common.KubernetesObject, error) {
-	objects := backend.buildObjects()
-	return objects, nil
-}
-
-func (backend *Backend) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := backend.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (backend *Backend) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (backend *Backend) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{}
-	template.Parameters = append(template.Parameters, parameters...)
-}
-
-func (backend *Backend) buildObjects() []common.KubernetesObject {
+func (backend *Backend) Objects() []common.KubernetesObject {
 	backendCronDeploymentConfig := backend.buildBackendCronDeploymentConfig()
 	backendListenerDeploymentConfig := backend.buildBackendListenerDeploymentConfig()
 	backendListenerService := backend.buildBackendListenerService()
