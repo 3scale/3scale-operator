@@ -65,6 +65,7 @@ func getAvailableOrderedComponents() []component.ComponentType {
 		component.AmpEvalTemplateType,
 		component.AmpHATemplateType,
 		component.AmpEvalS3TemplateType,
+		component.AmpPostgreSQLTemplateType,
 
 		component.AmpImagesType,
 		component.RedisType,
