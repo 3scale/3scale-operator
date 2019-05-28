@@ -102,8 +102,8 @@ func (zync *Zync) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
 		templatev1.Parameter{
 			Name:        "ZYNC_DATABASE_PASSWORD",
-			DisplayName: "PostgreSQL Connection Password",
-			Description: "Password for the PostgreSQL connection user.",
+			DisplayName: "Zync Database PostgreSQL Connection Password",
+			Description: "Password for the Zync Database PostgreSQL connection user.",
 			Generate:    "expression",
 			From:        "[a-zA-Z0-9]{16}",
 			Required:    true,
