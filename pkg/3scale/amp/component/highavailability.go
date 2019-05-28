@@ -203,12 +203,12 @@ func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []runtime.Raw
 func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Template) {
 	keepParams := []templatev1.Parameter{}
 	dbParamsToDelete := map[string]bool{
-		"MYSQL_IMAGE":         true,
-		"REDIS_IMAGE":         true,
-		"MYSQL_USER":          true,
-		"MYSQL_PASSWORD":      true,
-		"MYSQL_DATABASE":      true,
-		"MYSQL_ROOT_PASSWORD": true,
+		"REDIS_IMAGE":                   true,
+		"SYSTEM_DATABASE_IMAGE":         true,
+		"SYSTEM_DATABASE_USER":          true,
+		"SYSTEM_DATABASE_PASSWORD":      true,
+		"SYSTEM_DATABASE":               true,
+		"SYSTEM_DATABASE_ROOT_PASSWORD": true,
 	}
 
 	for paramIdx := range template.Parameters {
