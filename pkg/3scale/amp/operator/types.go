@@ -29,8 +29,20 @@ type OperatorMysqlOptionsProvider struct {
 	Client         k8sclient.Client
 }
 
+type OperatorSystemPostgreSQLOptionsProvider struct {
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
+}
+
 type OperatorSystemMySQLImageOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
+}
+
+type OperatorSystemPostgreSQLImageOptionsProvider struct {
+	APIManagerSpec *appsv1alpha1.APIManagerSpec
+	Namespace      string
+	Client         k8sclient.Client
 }
 
 type OperatorMemcachedOptionsProvider struct {

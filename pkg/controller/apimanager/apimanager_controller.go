@@ -267,11 +267,11 @@ func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager
 	}
 	results = append(results, backend...)
 
-	mysql, err := r.createSystemMySQL(cr)
+	systemDB, err := r.createSystemDatabase(cr)
 	if err != nil {
 		return nil, err
 	}
-	results = append(results, mysql...)
+	results = append(results, systemDB...)
 
 	memcached, err := r.createMemcached(cr)
 	if err != nil {
@@ -401,20 +401,21 @@ func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]runt
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createMysql(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
-	opts, err := optsProvider.GetMysqlOptions()
-	if err != nil {
-		return nil, err
+func (r *ReconcileAPIManager) createSystemDatabase(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	if cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+		result, err := r.createSystemPostgreSQL(cr)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
+	} else {
+		// defaults to MySQL
+		result, err := r.createSystemMySQL(cr)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
 	}
-
-	m := component.Mysql{Options: opts}
-	result, err := m.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }
 
 func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -437,6 +438,31 @@ func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]
 	}
 
 	i := component.SystemMySQLImage{Options: imageOpts}
+	imageresult, err := i.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, imageresult...)
+	return result, nil
+}
+
+func (r *ReconcileAPIManager) createSystemPostgreSQL(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+	optsProvider := operator.OperatorSystemPostgreSQLOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	opts, err := optsProvider.GetSystemPostgreSQLOptions()
+	if err != nil {
+		return nil, err
+	}
+	p := component.SystemPostgreSQL{Options: opts}
+	result, err := p.GetObjects()
+	if err != nil {
+		return nil, err
+	}
+	imageOptsProvider := operator.OperatorSystemPostgreSQLImageOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	imageOpts, err := imageOptsProvider.GetSystemPostgreSQLImageOptions()
+	if err != nil {
+		return nil, err
+	}
+	i := component.SystemPostgreSQLImage{Options: imageOpts}
 	imageresult, err := i.GetObjects()
 	if err != nil {
 		return nil, err

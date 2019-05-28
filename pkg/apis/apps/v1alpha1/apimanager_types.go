@@ -174,11 +174,17 @@ type SystemS3Spec struct {
 type SystemDatabaseSpec struct {
 	// Union type. Only one of the fields can be set
 	// +optional
-	MySQLSpec *SystemMySQLSpec `json:"mysql,omitempty"`
-	// In the future PostgreSQL support will be added
+	MySQL *SystemMySQLSpec `json:"mysql,omitempty"`
+	// +optional
+	PostgreSQL *SystemPostgreSQLSpec `json:"postgresql,omitempty"`
 }
 
 type SystemMySQLSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+}
+
+type SystemPostgreSQLSpec struct {
 	// +optional
 	Image *string `json:"image,omitempty"`
 }
@@ -328,9 +334,7 @@ func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
 			return changed, fmt.Errorf("Only one FileStorage can be chosen at the same time")
 		}
 		if systemSpec.FileStorageSpec.PVC == nil && systemSpec.FileStorageSpec.S3 == nil {
-			systemSpec.FileStorageSpec.PVC = &SystemPVCSpec{
-				StorageClassName: nil,
-			}
+			systemSpec.FileStorageSpec.PVC = defaultFileStorageSpec.PVC
 			changed = true
 		}
 	}
@@ -342,7 +346,7 @@ func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	changed := false
 	systemSpec := apimanager.Spec.System
 	defaultDatabaseSpec := &SystemDatabaseSpec{
-		MySQLSpec: &SystemMySQLSpec{
+		MySQL: &SystemMySQLSpec{
 			Image: nil,
 		},
 	}
@@ -350,6 +354,13 @@ func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	if systemSpec.DatabaseSpec == nil {
 		systemSpec.DatabaseSpec = defaultDatabaseSpec
 		changed = true
+	} else {
+		if systemSpec.DatabaseSpec.MySQL != nil && systemSpec.DatabaseSpec.PostgreSQL != nil {
+			return changed, fmt.Errorf("Only one System Database can be chosen at the same time")
+		}
+		if systemSpec.DatabaseSpec.MySQL == nil && systemSpec.DatabaseSpec.PostgreSQL == nil {
+			systemSpec.DatabaseSpec.MySQL = defaultDatabaseSpec.MySQL
+		}
 	}
 
 	return changed, nil

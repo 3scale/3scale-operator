@@ -72,6 +72,11 @@ spec:
                         image:
                           type: string
                       type: object
+                    postgresql:
+                      properties:
+                        image:
+                          type: string
+                      type: object
                   type: object
                 fileStorage:
                   properties:
