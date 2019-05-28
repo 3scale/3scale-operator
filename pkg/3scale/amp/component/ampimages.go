@@ -31,7 +31,6 @@ type AmpImagesOptions struct {
 	backendRedisImage    string
 	systemRedisImage     string
 	systemMemcachedImage string
-	systemMySQLImage     string
 	insecureImportPolicy bool
 }
 
@@ -61,7 +60,6 @@ func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, 
 	aob.BackendRedisImage("${REDIS_IMAGE}")
 	aob.SystemRedisImage("${REDIS_IMAGE}")
 	aob.SystemMemcachedImage("${MEMCACHED_IMAGE}")
-	aob.SystemMySQLImage("${MYSQL_IMAGE}")
 
 	aob.InsecureImportPolicy(false)
 
@@ -106,7 +104,6 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 	backendRedisImageStream := ampImages.buildBackendRedisImageStream()
 	systemRedisImageStream := ampImages.buildSystemRedisImageStream()
 	systemMemcachedImageStream := ampImages.buildSystemMemcachedImageStream()
-	systemMySQLImageStream := ampImages.buildSystemMySQLImageStream()
 
 	deploymentsServiceAccount := ampImages.buildDeploymentsServiceAccount()
 
@@ -120,7 +117,6 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: backendRedisImageStream},
 		runtime.RawExtension{Object: systemRedisImageStream},
 		runtime.RawExtension{Object: systemMemcachedImageStream},
-		runtime.RawExtension{Object: systemMySQLImageStream},
 		runtime.RawExtension{Object: deploymentsServiceAccount},
 	}
 	return objects
@@ -521,49 +517,6 @@ func (ampImages *AmpImages) buildSystemMemcachedImageStream() *imagev1.ImageStre
 	}
 }
 
-func (ampImages *AmpImages) buildSystemMySQLImageStream() *imagev1.ImageStream {
-	return &imagev1.ImageStream{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-mysql",
-			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
-				"threescale_component": "system",
-			},
-			Annotations: map[string]string{
-				"openshift.io/display-name": "System MySQL",
-			},
-		},
-		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
-		Spec: imagev1.ImageStreamSpec{
-			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "System MySQL (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
-					},
-				},
-				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
-					Annotations: map[string]string{
-						"openshift.io/display-name": "System " + ampImages.Options.ampRelease + " MySQL",
-					},
-					From: &v1.ObjectReference{
-						Kind: "DockerImage",
-						Name: ampImages.Options.systemMySQLImage,
-					},
-					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: insecureImportPolicy,
-					},
-				},
-			},
-		},
-	}
-}
-
 func (ampImages *AmpImages) buildDeploymentsServiceAccount() *v1.ServiceAccount {
 	return &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
@@ -609,12 +562,6 @@ func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
 			Name:        "ZYNC_DATABASE_IMAGE",
 			Description: "Zync's PostgreSQL image to use",
 			Value:       "registry.access.redhat.com/rhscl/postgresql-10-rhel7",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "MYSQL_IMAGE",
-			Description: "Mysql image to use",
-			Value:       "registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7",
 			Required:    true,
 		},
 		templatev1.Parameter{
