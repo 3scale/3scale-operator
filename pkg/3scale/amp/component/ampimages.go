@@ -57,7 +57,7 @@ func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, 
 	aob.RouterImage("${AMP_ROUTER_IMAGE}")
 	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
 	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
-	aob.PostgreSQLImage("${POSTGRESQL_IMAGE}")
+	aob.PostgreSQLImage("${ZYNC_DATABASE_IMAGE}")
 	aob.BackendRedisImage("${REDIS_IMAGE}")
 	aob.SystemRedisImage("${REDIS_IMAGE}")
 	aob.SystemMemcachedImage("${MEMCACHED_IMAGE}")
@@ -606,8 +606,8 @@ func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
 			Required: true,
 		},
 		templatev1.Parameter{
-			Name:        "POSTGRESQL_IMAGE",
-			Description: "Postgresql image to use",
+			Name:        "ZYNC_DATABASE_IMAGE",
+			Description: "Zync's PostgreSQL image to use",
 			Value:       "registry.access.redhat.com/rhscl/postgresql-10-rhel7",
 			Required:    true,
 		},
