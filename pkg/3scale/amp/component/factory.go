@@ -46,6 +46,8 @@ func NewComponent(componentName string, componentOptions []string) Component {
 		component = NewHighAvailability(componentOptions)
 	case AmpHATemplateType:
 		component = NewAmpHATemplate(componentOptions)
+	case AmpPostgreSQLTemplateType:
+		component = NewAmpPostgreSQLTemplate(componentOptions)
 
 	default:
 		panic("Error: Component not recognized")

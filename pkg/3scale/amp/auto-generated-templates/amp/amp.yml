@@ -224,7 +224,7 @@ objects:
         openshift.io/display-name: Zync ${AMP_RELEASE} PostgreSQL
       from:
         kind: DockerImage
-        name: ${POSTGRESQL_IMAGE}
+        name: ${ZYNC_DATABASE_IMAGE}
       generation: null
       importPolicy:
         insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
@@ -344,6 +344,13 @@ objects:
         type: ""
   status:
     dockerImageRepository: ""
+- apiVersion: v1
+  imagePullSecrets:
+  - name: threescale-registry-auth
+  kind: ServiceAccount
+  metadata:
+    creationTimestamp: null
+    name: amp
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
@@ -372,7 +379,7 @@ objects:
         openshift.io/display-name: System ${AMP_RELEASE} MySQL
       from:
         kind: DockerImage
-        name: ${MYSQL_IMAGE}
+        name: ${SYSTEM_DATABASE_IMAGE}
       generation: null
       importPolicy:
         insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
@@ -381,13 +388,6 @@ objects:
         type: ""
   status:
     dockerImageRepository: ""
-- apiVersion: v1
-  imagePullSecrets:
-  - name: threescale-registry-auth
-  kind: ServiceAccount
-  metadata:
-    creationTimestamp: null
-    name: amp
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -1246,9 +1246,9 @@ objects:
                 key: DB_PASSWORD
                 name: system-database
           - name: MYSQL_DATABASE
-            value: ${MYSQL_DATABASE}
+            value: ${SYSTEM_DATABASE}
           - name: MYSQL_ROOT_PASSWORD
-            value: ${MYSQL_ROOT_PASSWORD}
+            value: ${SYSTEM_DATABASE_ROOT_PASSWORD}
           - name: MYSQL_LOWER_CASE_TABLE_NAMES
             value: "1"
           - name: MYSQL_DEFAULTS_FILE
@@ -1395,9 +1395,9 @@ objects:
       threescale_component: system
     name: system-database
   stringData:
-    DB_PASSWORD: ${MYSQL_PASSWORD}
-    DB_USER: ${MYSQL_USER}
-    URL: mysql2://root:${MYSQL_ROOT_PASSWORD}@system-mysql/${MYSQL_DATABASE}
+    DB_PASSWORD: ${SYSTEM_DATABASE_PASSWORD}
+    DB_USER: ${SYSTEM_DATABASE_USER}
+    URL: mysql2://root:${SYSTEM_DATABASE_ROOT_PASSWORD}@system-mysql/${SYSTEM_DATABASE}
   type: Opaque
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
@@ -4084,14 +4084,10 @@ parameters:
 - name: AMP_SYSTEM_IMAGE
   required: true
   value: quay.io/3scale/porta:nightly
-- description: Postgresql image to use
-  name: POSTGRESQL_IMAGE
+- description: Zync's PostgreSQL image to use
+  name: ZYNC_DATABASE_IMAGE
   required: true
   value: registry.access.redhat.com/rhscl/postgresql-10-rhel7
-- description: Mysql image to use
-  name: MYSQL_IMAGE
-  required: true
-  value: registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7
 - description: Memcached image to use
   name: MEMCACHED_IMAGE
   required: true
@@ -4101,31 +4097,36 @@ parameters:
   name: IMAGESTREAM_TAG_IMPORT_INSECURE
   required: true
   value: "false"
+- description: System MySQL image to use
+  name: SYSTEM_DATABASE_IMAGE
+  required: true
+  value: registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7
 - description: Redis image to use
   name: REDIS_IMAGE
   required: true
   value: registry.access.redhat.com/rhscl/redis-32-rhel7:3.2
-- description: Username for MySQL user that will be used for accessing the database.
-  displayName: MySQL User
-  name: MYSQL_USER
+- description: Username for System's MySQL user that will be used for accessing the
+    database.
+  displayName: System MySQL User
+  name: SYSTEM_DATABASE_USER
   required: true
   value: mysql
-- description: Password for the MySQL user.
-  displayName: MySQL Password
+- description: Password for the System's MySQL user.
+  displayName: System MySQL Password
   from: '[a-z0-9]{8}'
   generate: expression
-  name: MYSQL_PASSWORD
+  name: SYSTEM_DATABASE_PASSWORD
   required: true
-- description: Name of the MySQL database accessed.
-  displayName: MySQL Database Name
-  name: MYSQL_DATABASE
+- description: Name of the System's MySQL database accessed.
+  displayName: System MySQL Database Name
+  name: SYSTEM_DATABASE
   required: true
   value: system
 - description: Password for Root user.
-  displayName: MySQL Root password.
+  displayName: System MySQL Root password.
   from: '[a-z0-9]{8}'
   generate: expression
-  name: MYSQL_ROOT_PASSWORD
+  name: SYSTEM_DATABASE_ROOT_PASSWORD
   required: true
 - description: Internal 3scale API username for internal 3scale api auth.
   name: SYSTEM_BACKEND_USERNAME
@@ -4177,8 +4178,8 @@ parameters:
   name: RECAPTCHA_PUBLIC_KEY
 - description: reCAPTCHA secret key (used in spam protection)
   name: RECAPTCHA_PRIVATE_KEY
-- description: Password for the PostgreSQL connection user.
-  displayName: PostgreSQL Connection Password
+- description: Password for the Zync Database PostgreSQL connection user.
+  displayName: Zync Database PostgreSQL Connection Password
   from: '[a-zA-Z0-9]{16}'
   generate: expression
   name: ZYNC_DATABASE_PASSWORD

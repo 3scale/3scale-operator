@@ -224,7 +224,7 @@ objects:
         openshift.io/display-name: Zync ${AMP_RELEASE} PostgreSQL
       from:
         kind: DockerImage
-        name: ${POSTGRESQL_IMAGE}
+        name: ${ZYNC_DATABASE_IMAGE}
       generation: null
       importPolicy:
         insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
@@ -3483,8 +3483,8 @@ parameters:
 - name: AMP_SYSTEM_IMAGE
   required: true
   value: quay.io/3scale/porta:nightly
-- description: Postgresql image to use
-  name: POSTGRESQL_IMAGE
+- description: Zync's PostgreSQL image to use
+  name: ZYNC_DATABASE_IMAGE
   required: true
   value: registry.access.redhat.com/rhscl/postgresql-10-rhel7
 - description: Memcached image to use
@@ -3546,8 +3546,8 @@ parameters:
   name: RECAPTCHA_PUBLIC_KEY
 - description: reCAPTCHA secret key (used in spam protection)
   name: RECAPTCHA_PRIVATE_KEY
-- description: Password for the PostgreSQL connection user.
-  displayName: PostgreSQL Connection Password
+- description: Password for the Zync Database PostgreSQL connection user.
+  displayName: Zync Database PostgreSQL Connection Password
   from: '[a-zA-Z0-9]{16}'
   generate: expression
   name: ZYNC_DATABASE_PASSWORD

@@ -3,14 +3,13 @@ kind: Template
 message: Login on https://${TENANT_NAME}-admin.${WILDCARD_DOMAIN} as ${ADMIN_USERNAME}/${ADMIN_PASSWORD}
 metadata:
   annotations:
-    description: 3scale API Management main system with shared file storage in AWS
-      S3.
+    description: 3scale API Management main system
     iconClass: icon-3scale
     openshift.io/display-name: 3scale API Management
     openshift.io/provider-display-name: Red Hat, Inc.
     tags: integration, api management, 3scale
   creationTimestamp: null
-  name: 3scale-api-management-s3
+  name: 3scale-api-management
 objects:
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
@@ -356,18 +355,18 @@ objects:
   kind: ImageStream
   metadata:
     annotations:
-      openshift.io/display-name: System MySQL
+      openshift.io/display-name: System database
     creationTimestamp: null
     labels:
       app: ${APP_LABEL}
       threescale_component: system
-    name: system-mysql
+    name: system-postgresql
   spec:
     lookupPolicy:
       local: false
     tags:
     - annotations:
-        openshift.io/display-name: System MySQL (latest)
+        openshift.io/display-name: System PostgreSQL (latest)
       from:
         kind: ImageStreamTag
         name: ${AMP_RELEASE}
@@ -377,7 +376,7 @@ objects:
       referencePolicy:
         type: ""
     - annotations:
-        openshift.io/display-name: System ${AMP_RELEASE} MySQL
+        openshift.io/display-name: System ${AMP_RELEASE} PostgreSQL
       from:
         kind: DockerImage
         name: ${SYSTEM_DATABASE_IMAGE}
@@ -1216,12 +1215,12 @@ objects:
     labels:
       app: ${APP_LABEL}
       threescale_component: system
-      threescale_component_element: mysql
-    name: system-mysql
+      threescale_component_element: postgresql
+    name: system-postgresql
   spec:
     replicas: 1
     selector:
-      deploymentConfig: system-mysql
+      deploymentConfig: system-postgresql
     strategy:
       resources: {}
       type: Recreate
@@ -1230,40 +1229,34 @@ objects:
         creationTimestamp: null
         labels:
           app: ${APP_LABEL}
-          deploymentConfig: system-mysql
+          deploymentConfig: system-postgresql
           threescale_component: system
-          threescale_component_element: mysql
+          threescale_component_element: postgresql
       spec:
         containers:
         - env:
-          - name: MYSQL_USER
+          - name: POSTGRESQL_USER
             valueFrom:
               secretKeyRef:
                 key: DB_USER
                 name: system-database
-          - name: MYSQL_PASSWORD
+          - name: POSTGRESQL_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: DB_PASSWORD
                 name: system-database
-          - name: MYSQL_DATABASE
+          - name: POSTGRESQL_DATABASE
             value: ${SYSTEM_DATABASE}
-          - name: MYSQL_ROOT_PASSWORD
-            value: ${SYSTEM_DATABASE_ROOT_PASSWORD}
-          - name: MYSQL_LOWER_CASE_TABLE_NAMES
-            value: "1"
-          - name: MYSQL_DEFAULTS_FILE
-            value: /etc/my-extra/my.cnf
-          image: system-mysql:latest
+          image: system-postgresql:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
             initialDelaySeconds: 30
             periodSeconds: 10
             tcpSocket:
-              port: 3306
-          name: system-mysql
+              port: 5432
+          name: system-postgresql
           ports:
-          - containerPort: 3306
+          - containerPort: 5432
             protocol: TCP
           readinessProbe:
             exec:
@@ -1271,8 +1264,8 @@ objects:
               - /bin/sh
               - -i
               - -c
-              - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE
-                -e 'SELECT 1'
+              - psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c
+                'SELECT 1'
             initialDelaySeconds: 10
             periodSeconds: 30
             timeoutSeconds: 5
@@ -1283,33 +1276,23 @@ objects:
               cpu: 250m
               memory: 512Mi
           volumeMounts:
-          - mountPath: /var/lib/mysql/data
-            name: mysql-storage
-          - mountPath: /etc/my-extra.d
-            name: mysql-extra-conf
-          - mountPath: /etc/my-extra
-            name: mysql-main-conf
+          - mountPath: /var/lib/pgsql/data
+            name: postgresql-data
         serviceAccountName: amp
         volumes:
-        - name: mysql-storage
+        - name: postgresql-data
           persistentVolumeClaim:
-            claimName: mysql-storage
-        - configMap:
-            name: mysql-extra-conf
-          name: mysql-extra-conf
-        - configMap:
-            name: mysql-main-conf
-          name: mysql-main-conf
+            claimName: postgresql-data
     test: false
     triggers:
     - type: ConfigChange
     - imageChangeParams:
         automatic: true
         containerNames:
-        - system-mysql
+        - system-postgresql
         from:
           kind: ImageStreamTag
-          name: system-mysql:latest
+          name: system-postgresql:latest
       type: ImageChange
   status:
     availableReplicas: 0
@@ -1325,51 +1308,18 @@ objects:
     labels:
       app: ${APP_LABEL}
       threescale_component: system
-      threescale_component_element: mysql
-    name: system-mysql
+      threescale_component_element: postgresql
+    name: system-postgresql
   spec:
     ports:
-    - name: system-mysql
-      port: 3306
+    - name: system-postgresql
+      port: 5432
       protocol: TCP
-      targetPort: 3306
+      targetPort: 5432
     selector:
-      deploymentConfig: system-mysql
+      deploymentConfig: system-postgresql
   status:
     loadBalancer: {}
-- apiVersion: v1
-  data:
-    my.cnf: |
-      !include /etc/my.cnf
-      !includedir /etc/my-extra.d
-  kind: ConfigMap
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: system
-      threescale_component_element: mysql
-    name: mysql-main-conf
-- apiVersion: v1
-  data:
-    mysql-charset.cnf: |
-      [client]
-      default-character-set = utf8
-
-      [mysql]
-      default-character-set = utf8
-
-      [mysqld]
-      character-set-server = utf8
-      collation-server = utf8_unicode_ci
-  kind: ConfigMap
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: system
-      threescale_component_element: mysql
-    name: mysql-extra-conf
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -1377,8 +1327,8 @@ objects:
     labels:
       app: ${APP_LABEL}
       threescale_component: system
-      threescale_component_element: mysql
-    name: mysql-storage
+      threescale_component_element: postgresql
+    name: postgresql-data
   spec:
     accessModes:
     - ReadWriteOnce
@@ -1398,7 +1348,7 @@ objects:
   stringData:
     DB_PASSWORD: ${SYSTEM_DATABASE_PASSWORD}
     DB_USER: ${SYSTEM_DATABASE_USER}
-    URL: mysql2://root:${SYSTEM_DATABASE_ROOT_PASSWORD}@system-mysql/${SYSTEM_DATABASE}
+    URL: postgresql://${SYSTEM_DATABASE_USER}:${SYSTEM_DATABASE_PASSWORD}@system-postgresql/${SYSTEM_DATABASE}
   type: Opaque
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
@@ -1482,6 +1432,24 @@ objects:
     replicas: 0
     unavailableReplicas: 0
     updatedReplicas: 0
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: app
+    name: system-storage
+  spec:
+    accessModes:
+    - ReadWriteMany
+    dataSource: null
+    resources:
+      requests:
+        storage: 100Mi
+    storageClassName: ${{RWX_STORAGE_CLASS}}
+  status: {}
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1739,9 +1707,6 @@ objects:
   data:
     AMP_RELEASE: ${AMP_RELEASE}
     APICAST_REGISTRY_URL: ${APICAST_REGISTRY_URL}
-    AWS_BUCKET: ${AWS_BUCKET}
-    AWS_REGION: ${AWS_REGION}
-    FILE_UPLOAD_STORAGE: ${FILE_UPLOAD_STORAGE}
     FORCE_SSL: "true"
     PROVIDER_PLAN: enterprise
     RAILS_ENV: production
@@ -1997,31 +1962,8 @@ objects:
                 secretKeyRef:
                   key: password
                   name: backend-internal-api
-            - name: FILE_UPLOAD_STORAGE
-              valueFrom:
-                configMapKeyRef:
-                  key: FILE_UPLOAD_STORAGE
-                  name: system-environment
-            - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  key: AWS_ACCESS_KEY_ID
-                  name: aws-auth
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: AWS_SECRET_ACCESS_KEY
-                  name: aws-auth
-            - name: AWS_BUCKET
-              valueFrom:
-                configMapKeyRef:
-                  key: AWS_BUCKET
-                  name: system-environment
-            - name: AWS_REGION
-              valueFrom:
-                configMapKeyRef:
-                  key: AWS_REGION
-                  name: system-environment
+            volumes:
+            - system-storage
           failurePolicy: Retry
         timeoutSeconds: 1200
         updatePeriodSeconds: 1
@@ -2251,31 +2193,6 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
-          - name: FILE_UPLOAD_STORAGE
-            valueFrom:
-              configMapKeyRef:
-                key: FILE_UPLOAD_STORAGE
-                name: system-environment
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: AWS_ACCESS_KEY_ID
-                name: aws-auth
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: AWS_SECRET_ACCESS_KEY
-                name: aws-auth
-          - name: AWS_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_BUCKET
-                name: system-environment
-          - name: AWS_REGION
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_REGION
-                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2310,6 +2227,8 @@ objects:
               cpu: 50m
               memory: 600Mi
           volumeMounts:
+          - mountPath: /opt/system/public/system
+            name: system-storage
           - mountPath: /opt/system-extra-configs
             name: system-config
         - args:
@@ -2527,31 +2446,6 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
-          - name: FILE_UPLOAD_STORAGE
-            valueFrom:
-              configMapKeyRef:
-                key: FILE_UPLOAD_STORAGE
-                name: system-environment
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: AWS_ACCESS_KEY_ID
-                name: aws-auth
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: AWS_SECRET_ACCESS_KEY
-                name: aws-auth
-          - name: AWS_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_BUCKET
-                name: system-environment
-          - name: AWS_REGION
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_REGION
-                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2586,6 +2480,8 @@ objects:
               cpu: 50m
               memory: 600Mi
           volumeMounts:
+          - mountPath: /opt/system/public/system
+            name: system-storage
           - mountPath: /opt/system-extra-configs
             name: system-config
         - args:
@@ -2802,31 +2698,6 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
-          - name: FILE_UPLOAD_STORAGE
-            valueFrom:
-              configMapKeyRef:
-                key: FILE_UPLOAD_STORAGE
-                name: system-environment
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: AWS_ACCESS_KEY_ID
-                name: aws-auth
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: AWS_SECRET_ACCESS_KEY
-                name: aws-auth
-          - name: AWS_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_BUCKET
-                name: system-environment
-          - name: AWS_REGION
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_REGION
-                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2861,10 +2732,16 @@ objects:
               cpu: 50m
               memory: 600Mi
           volumeMounts:
+          - mountPath: /opt/system/public/system
+            name: system-storage
+            readOnly: true
           - mountPath: /opt/system-extra-configs
             name: system-config
         serviceAccountName: amp
         volumes:
+        - name: system-storage
+          persistentVolumeClaim:
+            claimName: system-storage
         - configMap:
             items:
             - key: zync.yml
@@ -3136,31 +3013,6 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
-          - name: FILE_UPLOAD_STORAGE
-            valueFrom:
-              configMapKeyRef:
-                key: FILE_UPLOAD_STORAGE
-                name: system-environment
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: AWS_ACCESS_KEY_ID
-                name: aws-auth
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: AWS_SECRET_ACCESS_KEY
-                name: aws-auth
-          - name: AWS_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_BUCKET
-                name: system-environment
-          - name: AWS_REGION
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_REGION
-                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           name: system-sidekiq
@@ -3172,6 +3024,8 @@ objects:
               cpu: 100m
               memory: 500Mi
           volumeMounts:
+          - mountPath: /opt/system/public/system
+            name: system-storage
           - mountPath: /tmp
             name: system-tmp
           - mountPath: /opt/system-extra-configs
@@ -3199,6 +3053,9 @@ objects:
         - emptyDir:
             medium: Memory
           name: system-tmp
+        - name: system-storage
+          persistentVolumeClaim:
+            claimName: system-storage
         - configMap:
             items:
             - key: zync.yml
@@ -4146,15 +4003,6 @@ objects:
     wildcardPolicy: ${WILDCARD_POLICY}
   status:
     ingress: null
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    creationTimestamp: null
-    name: aws-auth
-  stringData:
-    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-  type: Opaque
 parameters:
 - description: AMP release tag.
   name: AMP_RELEASE
@@ -4169,6 +4017,9 @@ parameters:
   name: TENANT_NAME
   required: true
   value: 3scale
+- description: The Storage Class to be used by ReadWriteMany PVCs
+  name: RWX_STORAGE_CLASS
+  value: "null"
 - name: AMP_BACKEND_IMAGE
   required: true
   value: quay.io/3scale/apisonator:nightly
@@ -4197,37 +4048,30 @@ parameters:
   name: IMAGESTREAM_TAG_IMPORT_INSECURE
   required: true
   value: "false"
-- description: System MySQL image to use
+- description: System PostgreSQL image to use
   name: SYSTEM_DATABASE_IMAGE
   required: true
-  value: registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7
+  value: registry.access.redhat.com/rhscl/postgresql-10-rhel7
 - description: Redis image to use
   name: REDIS_IMAGE
   required: true
   value: registry.access.redhat.com/rhscl/redis-32-rhel7:3.2
-- description: Username for System's MySQL user that will be used for accessing the
-    database.
-  displayName: System MySQL User
+- description: Username for PostgreSQL user that will be used for accessing the database.
+  displayName: System PostgreSQL User
   name: SYSTEM_DATABASE_USER
   required: true
-  value: mysql
-- description: Password for the System's MySQL user.
-  displayName: System MySQL Password
+  value: system
+- description: Password for the System's PostgreSQL user.
+  displayName: System PostgreSQL Password
   from: '[a-z0-9]{8}'
   generate: expression
   name: SYSTEM_DATABASE_PASSWORD
   required: true
-- description: Name of the System's MySQL database accessed.
-  displayName: System MySQL Database Name
+- description: Name of the System's PostgreSQL database accessed.
+  displayName: System PostgreSQL Database Name
   name: SYSTEM_DATABASE
   required: true
   value: system
-- description: Password for Root user.
-  displayName: System MySQL Root password.
-  from: '[a-z0-9]{8}'
-  generate: expression
-  name: SYSTEM_DATABASE_ROOT_PASSWORD
-  required: true
 - description: Internal 3scale API username for internal 3scale api auth.
   name: SYSTEM_BACKEND_USERNAME
   required: true
@@ -4321,13 +4165,3 @@ parameters:
   name: WILDCARD_POLICY
   required: true
   value: None
-- description: Define Assets Storage
-  name: FILE_UPLOAD_STORAGE
-- description: AWS Access Key ID to use in S3 Storage for assets.
-  name: AWS_ACCESS_KEY_ID
-- description: AWS Access Key Secret to use in S3 Storage for assets.
-  name: AWS_SECRET_ACCESS_KEY
-- description: AWS S3 Bucket Name to use in S3 Storage for assets.
-  name: AWS_BUCKET
-- description: AWS Region to use in S3 Storage for assets.
-  name: AWS_REGION

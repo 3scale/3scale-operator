@@ -50,10 +50,6 @@ func (ampImages *AmpImagesOptionsBuilder) SystemMemcachedImage(image string) {
 	ampImages.options.systemMemcachedImage = image
 }
 
-func (ampImages *AmpImagesOptionsBuilder) SystemMySQLImage(image string) {
-	ampImages.options.systemMySQLImage = image
-}
-
 func (ampImages *AmpImagesOptionsBuilder) InsecureImportPolicy(insecureImportPolicy bool) {
 	ampImages.options.insecureImportPolicy = insecureImportPolicy
 }
@@ -91,9 +87,6 @@ func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
 	}
 	if ampImages.options.systemMemcachedImage == "" {
 		return nil, fmt.Errorf("no System Memcached image has been provided")
-	}
-	if ampImages.options.systemMySQLImage == "" {
-		return nil, fmt.Errorf("no System MySQL image has been provided")
 	}
 
 	return &ampImages.options, nil

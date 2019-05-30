@@ -46,11 +46,11 @@ type CLIMysqlOptionsProvider struct {
 func (o *CLIMysqlOptionsProvider) GetMysqlOptions() (*MysqlOptions, error) {
 	mob := MysqlOptionsBuilder{}
 	mob.AppLabel("${APP_LABEL}")
-	mob.DatabaseName("${MYSQL_DATABASE}")
-	mob.User("${MYSQL_USER}")
-	mob.Password("${MYSQL_PASSWORD}")
-	mob.RootPassword("${MYSQL_ROOT_PASSWORD}")
-	mob.DatabaseURL("mysql2://root:" + "${MYSQL_ROOT_PASSWORD}" + "@system-mysql/" + "${MYSQL_DATABASE}")
+	mob.DatabaseName("${SYSTEM_DATABASE}")
+	mob.User("${SYSTEM_DATABASE_USER}")
+	mob.Password("${SYSTEM_DATABASE_PASSWORD}")
+	mob.RootPassword("${SYSTEM_DATABASE_ROOT_PASSWORD}")
+	mob.DatabaseURL("mysql2://root:" + "${SYSTEM_DATABASE_ROOT_PASSWORD}" + "@system-mysql/" + "${SYSTEM_DATABASE}")
 	res, err := mob.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create MySQL Options - %s", err)
@@ -92,30 +92,30 @@ func (mysql *Mysql) PostProcess(template *templatev1.Template, otherComponents [
 func (mysql *Mysql) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
 		templatev1.Parameter{
-			Name:        "MYSQL_USER",
-			DisplayName: "MySQL User",
-			Description: "Username for MySQL user that will be used for accessing the database.",
+			Name:        "SYSTEM_DATABASE_USER",
+			DisplayName: "System MySQL User",
+			Description: "Username for System's MySQL user that will be used for accessing the database.",
 			Value:       "mysql",
 			Required:    true,
 		},
 		templatev1.Parameter{
-			Name:        "MYSQL_PASSWORD",
-			DisplayName: "MySQL Password",
-			Description: "Password for the MySQL user.",
+			Name:        "SYSTEM_DATABASE_PASSWORD",
+			DisplayName: "System MySQL Password",
+			Description: "Password for the System's MySQL user.",
 			Generate:    "expression",
 			From:        "[a-z0-9]{8}",
 			Required:    true,
 		},
 		templatev1.Parameter{
-			Name:        "MYSQL_DATABASE",
-			DisplayName: "MySQL Database Name",
-			Description: "Name of the MySQL database accessed.",
+			Name:        "SYSTEM_DATABASE",
+			DisplayName: "System MySQL Database Name",
+			Description: "Name of the System's MySQL database accessed.",
 			Value:       "system",
 			Required:    true,
 		},
 		templatev1.Parameter{
-			Name:        "MYSQL_ROOT_PASSWORD",
-			DisplayName: "MySQL Root password.",
+			Name:        "SYSTEM_DATABASE_ROOT_PASSWORD",
+			DisplayName: "System MySQL Root password.",
 			Description: "Password for Root user.",
 			Generate:    "expression",
 			From:        "[a-z0-9]{8}",

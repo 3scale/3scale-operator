@@ -10,20 +10,22 @@ type AmpTemplate struct {
 }
 
 type AmpTemplateOptions struct {
-	ampImagesOptions      AmpImagesOptions
-	redisOptions          RedisOptions
-	backendOptions        BackendOptions
-	mysqlOptions          MysqlOptions
-	memcachedOptions      MemcachedOptions
-	systemOptions         SystemOptions
-	zyncOptions           ZyncOptions
-	apicastOptions        ApicastOptions
-	wildcardRouterOptions WildcardRouterOptions
+	ampImagesOptions        AmpImagesOptions
+	redisOptions            RedisOptions
+	backendOptions          BackendOptions
+	mysqlOptions            MysqlOptions
+	systemMySQLImageOptions SystemMySQLImageOptions
+	memcachedOptions        MemcachedOptions
+	systemOptions           SystemOptions
+	zyncOptions             ZyncOptions
+	apicastOptions          ApicastOptions
+	wildcardRouterOptions   WildcardRouterOptions
 }
 
 func NewAmpTemplate(options []string) *AmpTemplate {
 	components := []Component{
 		NewAmpImages(options),
+		NewSystemMySQLImage(options),
 		NewRedis(options),
 		NewBackend(options),
 		NewMysql(options),

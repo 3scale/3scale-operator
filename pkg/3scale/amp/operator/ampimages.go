@@ -3,9 +3,8 @@ package operator
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 )
 
 func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOptions, error) {
@@ -71,14 +70,6 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 		optProv.SystemMemcachedImage(*o.APIManagerSpec.System.MemcachedImage)
 	} else {
 		optProv.SystemMemcachedImage(imageProvider.GetSystemMemcachedImage())
-	}
-
-	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.DatabaseSpec != nil &&
-		o.APIManagerSpec.System.DatabaseSpec.MySQLSpec != nil &&
-		o.APIManagerSpec.System.DatabaseSpec.MySQLSpec.Image != nil {
-		optProv.SystemMySQLImage(*o.APIManagerSpec.System.DatabaseSpec.MySQLSpec.Image)
-	} else {
-		optProv.SystemMySQLImage(imageProvider.GetSystemMySQLImage())
 	}
 
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
