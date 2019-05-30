@@ -2,7 +2,24 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   name: 3scale-operator.v0.0.1
-  namespace: openshift-operator-lifecycle-manager
+  namespace: placeholder
+  annotations:
+    categories: "Integration & Delivery"
+    certified: "false"
+    description: 3scale Operator to provision 3scale AMP and publish/manage API
+    containerImage: quay.io/3scale/3scale-operator:latest
+    createdAt: 2019-05-30T22:40:00Z
+    support: Red Hat, Inc.
+    tectonic-visibility: ocs
+    alm-examples: >-
+      [{"apiVersion": "apps.3scale.net/v1alpha1","kind": "APIManager","metadata": {"name": "example-apimanager"},"spec": {"productVersion": "2.4","wildcardDomain": "<desired-domain>"}},
+       {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "API","metadata": {"name": "example-api"},"spec": {"size": 3}},
+       {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "Binding","metadata": {"name": "example-binding"},"spec": {"size": 3}},
+       {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "Limit","metadata": {"name": "example-limit"},"spec": {"size": 3}},
+       {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "MappingRule","metadata": {"name": "example-mappingrule"},"spec": {"size": 3}},
+       {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "Metric","metadata": {"name": "example-metric"},"spec": {"size": 3}},
+       {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "Plan","metadata": {"name": "example-plan"},"spec": {"size": 3}},
+       {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "Tenant","metadata": {"name": "example-tenant"},"spec": {"size": 3}}]
 spec:
   customresourcedefinitions:
     owned:
