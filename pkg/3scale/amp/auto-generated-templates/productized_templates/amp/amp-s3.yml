@@ -583,13 +583,43 @@ objects:
           - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;
             done
           env:
-          - name: SLEEP_SECONDS
-            value: "1"
+          - name: CONFIG_REDIS_PROXY
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_URL
+                name: backend-redis
+          - name: CONFIG_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_HOSTS
+                name: backend-redis
+          - name: CONFIG_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_ROLE
+                name: backend-redis
           - name: CONFIG_QUEUES_MASTER_NAME
             valueFrom:
               secretKeyRef:
                 key: REDIS_QUEUES_URL
                 name: backend-redis
+          - name: CONFIG_QUEUES_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_QUEUES_SENTINEL_HOSTS
+                name: backend-redis
+          - name: CONFIG_QUEUES_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_QUEUES_SENTINEL_ROLE
+                name: backend-redis
+          - name: RACK_ENV
+            valueFrom:
+              configMapKeyRef:
+                key: RACK_ENV
+                name: backend-environment
+          - name: SLEEP_SECONDS
+            value: "1"
           image: amp-backend:latest
           name: backend-redis-svc
           resources: {}
@@ -882,13 +912,43 @@ objects:
           - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;
             done
           env:
-          - name: SLEEP_SECONDS
-            value: "1"
+          - name: CONFIG_REDIS_PROXY
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_URL
+                name: backend-redis
+          - name: CONFIG_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_HOSTS
+                name: backend-redis
+          - name: CONFIG_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_ROLE
+                name: backend-redis
           - name: CONFIG_QUEUES_MASTER_NAME
             valueFrom:
               secretKeyRef:
                 key: REDIS_QUEUES_URL
                 name: backend-redis
+          - name: CONFIG_QUEUES_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_QUEUES_SENTINEL_HOSTS
+                name: backend-redis
+          - name: CONFIG_QUEUES_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_QUEUES_SENTINEL_ROLE
+                name: backend-redis
+          - name: RACK_ENV
+            valueFrom:
+              configMapKeyRef:
+                key: RACK_ENV
+                name: backend-environment
+          - name: SLEEP_SECONDS
+            value: "1"
           image: amp-backend:latest
           name: backend-redis-svc
           resources: {}
