@@ -296,12 +296,6 @@ func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager
 	}
 	results = append(results, apicast...)
 
-	wildcardRouter, err := r.createWildcardRouter(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, wildcardRouter...)
-
 	if cr.Spec.System.FileStorageSpec.S3 != nil {
 		s3, err := r.createS3(cr)
 		if err != nil {
@@ -516,21 +510,6 @@ func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]runt
 	}
 
 	z := component.Apicast{Options: opts}
-	result, err := z.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-func (r *ReconcileAPIManager) createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	optsProvider := operator.OperatorWildcardRouterOptionsProvider{APIManagerSpec: &cr.Spec}
-	opts, err := optsProvider.GetWildcardRouterOptions()
-	if err != nil {
-		return nil, err
-	}
-	z := component.WildcardRouter{Options: opts}
 	result, err := z.GetObjects()
 	if err != nil {
 		return nil, err

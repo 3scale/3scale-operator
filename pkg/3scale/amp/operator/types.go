@@ -67,10 +67,6 @@ type OperatorApicastOptionsProvider struct {
 	Client         k8sclient.Client
 }
 
-type OperatorWildcardRouterOptionsProvider struct {
-	APIManagerSpec *appsv1alpha1.APIManagerSpec
-}
-
 type OperatorProductizedOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }

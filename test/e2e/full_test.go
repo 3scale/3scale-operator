@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	routev1 "github.com/openshift/api/route/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -78,18 +77,15 @@ func TestFullHappyPath(t *testing.T) {
 
 	// Deploy APIManager resource
 	enableResourceRequirements := false
-	wildcardPolicy := string(routev1.WildcardPolicySubdomain)
 	apiManagerWildcardDomain := fmt.Sprintf("test1.%s.nip.io", clusterHost)
 	apicastNightlyImage := "quay.io/3scale/apicast:nightly"
 	backendNightlyImage := "quay.io/3scale/apisonator:nightly"
 	systemNightlyImage := "quay.io/3scale/porta:nightly"
-	wildcardRouterNightlyImage := "quay.io/3scale/wildcard-router:nightly"
 	zyncNightlyImage := "quay.io/3scale/zync:nightly"
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
 				WildcardDomain:              apiManagerWildcardDomain,
-				WildcardPolicy:              &wildcardPolicy,
 				ResourceRequirementsEnabled: &enableResourceRequirements,
 			},
 			Apicast: &appsv1alpha1.ApicastSpec{
@@ -100,9 +96,6 @@ func TestFullHappyPath(t *testing.T) {
 			},
 			System: &appsv1alpha1.SystemSpec{
 				Image: &systemNightlyImage,
-			},
-			WildcardRouter: &appsv1alpha1.WildcardRouterSpec{
-				Image: &wildcardRouterNightlyImage,
 			},
 			Zync: &appsv1alpha1.ZyncSpec{
 				Image: &zyncNightlyImage,

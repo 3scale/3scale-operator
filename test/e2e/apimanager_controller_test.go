@@ -91,7 +91,6 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	apicastNightlyImage := "quay.io/3scale/apicast:nightly"
 	backendNightlyImage := "quay.io/3scale/apisonator:nightly"
 	systemNightlyImage := "quay.io/3scale/porta:nightly"
-	wildcardRouterNightlyImage := "quay.io/3scale/wildcard-router:nightly"
 	zyncNightlyImage := "quay.io/3scale/zync:nightly"
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
@@ -107,9 +106,6 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 			},
 			System: &appsv1alpha1.SystemSpec{
 				Image: &systemNightlyImage,
-			},
-			WildcardRouter: &appsv1alpha1.WildcardRouterSpec{
-				Image: &wildcardRouterNightlyImage,
 			},
 			Zync: &appsv1alpha1.ZyncSpec{
 				Image: &zyncNightlyImage,
@@ -149,7 +145,6 @@ func waitForAllApiManagerStandardDeploymentConfigs(t *testing.T, kubeclient kube
 	deploymentConfigNames := []string{ // TODO gather this from constants/somewhere centralized
 		"apicast-production",
 		"apicast-staging",
-		"apicast-wildcard-router",
 		"backend-cron",
 		"backend-listener",
 		"backend-redis",
