@@ -26,6 +26,7 @@ func NewAmpTemplate(options []string) *AmpTemplate {
 	components := []Component{
 		NewAmpImages(options),
 		NewSystemMySQLImage(options),
+		NewWildcardRouterImage(options),
 		NewRedis(options),
 		NewBackend(options),
 		NewMysql(options),
