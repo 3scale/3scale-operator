@@ -126,43 +126,6 @@ objects:
   kind: ImageStream
   metadata:
     annotations:
-      openshift.io/display-name: AMP APIcast Wildcard Router
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: wildcard-router
-    name: amp-wildcard-router
-  spec:
-    lookupPolicy:
-      local: false
-    tags:
-    - annotations:
-        openshift.io/display-name: AMP APIcast Wildcard Router (latest)
-      from:
-        kind: ImageStreamTag
-        name: ${AMP_RELEASE}
-      generation: null
-      importPolicy: {}
-      name: latest
-      referencePolicy:
-        type: ""
-    - annotations:
-        openshift.io/display-name: AMP APIcast Wildcard Router ${AMP_RELEASE}
-      from:
-        kind: DockerImage
-        name: ${AMP_ROUTER_IMAGE}
-      generation: null
-      importPolicy:
-        insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
-      name: ${AMP_RELEASE}
-      referencePolicy:
-        type: ""
-  status:
-    dockerImageRepository: ""
-- apiVersion: image.openshift.io/v1
-  kind: ImageStream
-  metadata:
-    annotations:
       openshift.io/display-name: AMP System
     creationTimestamp: null
     labels:
@@ -4142,9 +4105,6 @@ parameters:
 - name: AMP_APICAST_IMAGE
   required: true
   value: quay.io/3scale/apicast:nightly
-- name: AMP_ROUTER_IMAGE
-  required: true
-  value: quay.io/3scale/wildcard-router:nightly
 - name: AMP_SYSTEM_IMAGE
   required: true
   value: quay.io/3scale/porta:nightly

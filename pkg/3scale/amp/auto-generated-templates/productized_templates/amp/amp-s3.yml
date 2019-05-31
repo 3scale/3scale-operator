@@ -127,43 +127,6 @@ objects:
   kind: ImageStream
   metadata:
     annotations:
-      openshift.io/display-name: AMP APIcast Wildcard Router
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: wildcard-router
-    name: amp-wildcard-router
-  spec:
-    lookupPolicy:
-      local: false
-    tags:
-    - annotations:
-        openshift.io/display-name: AMP APIcast Wildcard Router (latest)
-      from:
-        kind: ImageStreamTag
-        name: ${AMP_RELEASE}
-      generation: null
-      importPolicy: {}
-      name: latest
-      referencePolicy:
-        type: ""
-    - annotations:
-        openshift.io/display-name: AMP APIcast Wildcard Router ${AMP_RELEASE}
-      from:
-        kind: DockerImage
-        name: ${AMP_ROUTER_IMAGE}
-      generation: null
-      importPolicy:
-        insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
-      name: ${AMP_RELEASE}
-      referencePolicy:
-        type: ""
-  status:
-    dockerImageRepository: ""
-- apiVersion: image.openshift.io/v1
-  kind: ImageStream
-  metadata:
-    annotations:
       openshift.io/display-name: AMP System
     creationTimestamp: null
     labels:
@@ -381,6 +344,43 @@ objects:
       from:
         kind: DockerImage
         name: ${SYSTEM_DATABASE_IMAGE}
+      generation: null
+      importPolicy:
+        insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
+      name: ${AMP_RELEASE}
+      referencePolicy:
+        type: ""
+  status:
+    dockerImageRepository: ""
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/display-name: AMP APIcast Wildcard Router
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: wildcard-router
+    name: amp-wildcard-router
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations:
+        openshift.io/display-name: AMP APIcast Wildcard Router (latest)
+      from:
+        kind: ImageStreamTag
+        name: ${AMP_RELEASE}
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+    - annotations:
+        openshift.io/display-name: AMP APIcast Wildcard Router ${AMP_RELEASE}
+      from:
+        kind: DockerImage
+        name: ${AMP_ROUTER_IMAGE}
       generation: null
       importPolicy:
         insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
@@ -4291,9 +4291,6 @@ parameters:
 - name: AMP_APICAST_IMAGE
   required: true
   value: registry.access.redhat.com/3scale-amp25/apicast-gateway
-- name: AMP_ROUTER_IMAGE
-  required: true
-  value: registry.access.redhat.com/3scale-amp22/wildcard-router
 - name: AMP_SYSTEM_IMAGE
   required: true
   value: registry.access.redhat.com/3scale-amp25/system
@@ -4314,6 +4311,9 @@ parameters:
   name: SYSTEM_DATABASE_IMAGE
   required: true
   value: registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7
+- name: AMP_ROUTER_IMAGE
+  required: true
+  value: registry.access.redhat.com/3scale-amp22/wildcard-router
 - description: Redis image to use
   name: REDIS_IMAGE
   required: true
