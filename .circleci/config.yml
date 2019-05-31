@@ -54,10 +54,8 @@ commands:
             oc adm policy add-cluster-role-to-user cluster-admin developer > /dev/null
             oc adm policy add-scc-to-group hostmount-anyuid system:serviceaccounts
             oc login https://${DOCKER_HOST_IP}:8443 -u developer --insecure-skip-tls-verify=true > /dev/null
-            oc set env dc/router ROUTER_ALLOW_WILDCARD_ROUTES=true -n default
 
             oc wait --timeout=90s --for=condition=available dc/docker-registry --namespace=default || oc rollout retry dc/docker-registry --namespace=default
-            oc wait --timeout=90s --for=condition=available dc/router --namespace=default || oc rollout retry dc/router --namespace=default
 
   install-golang:
     steps:
@@ -100,7 +98,7 @@ commands:
             oc whoami --show-token | docker login -u $(oc whoami) --password-stdin 172.30.1.1:5000
             project=$(oc project -q)
 
-            oc image mirror $(for component in apicast wildcard-router zync ; do
+            oc image mirror $(for component in apicast zync ; do
               echo 172.30.1.1:5000/$project/amp-$component:latest=quay.io/3scale/$component:nightly
             done) 172.30.1.1:5000/$project/amp-backend:latest=quay.io/3scale/apisonator:nightly \
             172.30.1.1:5000/$project/amp-system:latest=quay.io/3scale/porta:nightly --insecure
