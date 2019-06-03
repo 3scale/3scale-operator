@@ -85,6 +85,9 @@ spec:
                         awsBucket:
                           type: string
                         awsCredentialsSecret:
+                          properties:
+                            name:
+                              type: string
                           type: object
                         awsRegion:
                           type: string
