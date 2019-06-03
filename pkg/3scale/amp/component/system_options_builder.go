@@ -94,8 +94,24 @@ func (s *SystemOptionsBuilder) RedisURL(redisURL string) {
 	s.options.redisURL = &redisURL
 }
 
+func (s *SystemOptionsBuilder) RedisSentinelHosts(hosts string) {
+	s.options.redisSentinelHosts = &hosts
+}
+
+func (s *SystemOptionsBuilder) RedisSentinelRole(role string) {
+	s.options.redisSentinelRole = &role
+}
+
 func (s *SystemOptionsBuilder) MessageBusRedisURL(url string) {
 	s.options.messageBusRedisURL = &url
+}
+
+func (s *SystemOptionsBuilder) MessageBusRedisSentinelHosts(hosts string) {
+	s.options.messageBusRedisSentinelHosts = &hosts
+}
+
+func (s *SystemOptionsBuilder) MessageBusRedisSentinelRole(role string) {
+	s.options.messageBusRedisSentinelRole = &role
 }
 
 func (s *SystemOptionsBuilder) RedisNamespace(namespace string) {
@@ -178,10 +194,6 @@ func (s *SystemOptionsBuilder) setRequiredOptions() error {
 func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 	defaultMemcachedServers := "system-memcache:11211"
 	defaultEventHooksURL := "http://system-master:3000/master/events/import"
-	defaultRedisURL := "redis://system-redis:6379/1"
-	defaultMessageBusRedisURL := ""
-	defaultRedisNamespace := ""
-	defaultMessageBusRedisNamespace := ""
 
 	defaultApicastSystemMasterProxyConfigEndpoint := "http://" + s.options.apicastAccessToken + "@system-master:3000/master/api/proxy/configs"
 	defaultApicastSystemMasterBaseURL := "http://" + s.options.apicastAccessToken + "@system-master:3000"
@@ -195,21 +207,7 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 		s.options.eventHooksURL = &defaultEventHooksURL
 	}
 
-	if s.options.redisURL == nil {
-		s.options.redisURL = &defaultRedisURL
-	}
-
-	if s.options.messageBusRedisURL == nil {
-		s.options.messageBusRedisURL = &defaultMessageBusRedisURL
-	}
-
-	if s.options.redisNamespace == nil {
-		s.options.redisNamespace = &defaultRedisNamespace
-	}
-
-	if s.options.messageBusRedisNamespace == nil {
-		s.options.messageBusRedisNamespace = &defaultMessageBusRedisNamespace
-	}
+	s.setRedisDefaultsOptions()
 
 	if s.options.apicastSystemMasterProxyConfigEndpoint == nil {
 		s.options.apicastSystemMasterProxyConfigEndpoint = &defaultApicastSystemMasterProxyConfigEndpoint
@@ -221,5 +219,48 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 
 	if s.options.adminEmail == nil {
 		s.options.adminEmail = &defaultAdminEmail
+	}
+}
+
+func (s *SystemOptionsBuilder) setRedisDefaultsOptions() {
+	defaultRedisURL := "redis://system-redis:6379/1"
+	defaultMessageBusRedisURL := ""
+	defaultRedisNamespace := ""
+	defaultMessageBusRedisNamespace := ""
+	defaultRedisSentinelHosts := ""
+	defaultRedisSentinelRole := ""
+	defaultMessageBusRedisSentinelHosts := ""
+	defaultMessageBusRedisSentinelRole := ""
+
+	if s.options.redisURL == nil {
+		s.options.redisURL = &defaultRedisURL
+	}
+
+	if s.options.redisSentinelHosts == nil {
+		s.options.redisSentinelHosts = &defaultRedisSentinelHosts
+	}
+
+	if s.options.redisSentinelRole == nil {
+		s.options.redisSentinelRole = &defaultRedisSentinelRole
+	}
+
+	if s.options.messageBusRedisURL == nil {
+		s.options.messageBusRedisURL = &defaultMessageBusRedisURL
+	}
+
+	if s.options.messageBusRedisSentinelHosts == nil {
+		s.options.messageBusRedisSentinelHosts = &defaultMessageBusRedisSentinelHosts
+	}
+
+	if s.options.messageBusRedisSentinelRole == nil {
+		s.options.messageBusRedisSentinelRole = &defaultMessageBusRedisSentinelRole
+	}
+
+	if s.options.redisNamespace == nil {
+		s.options.redisNamespace = &defaultRedisNamespace
+	}
+
+	if s.options.messageBusRedisNamespace == nil {
+		s.options.messageBusRedisNamespace = &defaultMessageBusRedisNamespace
 	}
 }

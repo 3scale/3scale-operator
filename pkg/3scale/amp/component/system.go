@@ -47,6 +47,10 @@ const (
 	SystemSecretSystemRedisMessageBusRedisURLFieldName = "MESSAGE_BUS_URL"
 	SystemSecretSystemRedisNamespace                   = "NAMESPACE"
 	SystemSecretSystemRedisMessageBusRedisNamespace    = "MESSAGE_BUS_NAMESPACE"
+	SystemSecretSystemRedisSentinelHosts               = "SENTINEL_HOSTS"
+	SystemSecretSystemRedisSentinelRole                = "SENTINEL_ROLE"
+	SystemSecretSystemRedisMessageBusSentinelHosts     = "MESSAGE_BUS_SENTINEL_HOSTS"
+	SystemSecretSystemRedisMessageBusSentinelRole      = "MESSAGE_BUS_SENTINEL_ROLE"
 )
 
 const (
@@ -109,9 +113,13 @@ type systemNonRequiredOptions struct {
 	memcachedServers                       *string
 	eventHooksURL                          *string
 	redisURL                               *string
+	redisSentinelHosts                     *string
+	redisSentinelRole                      *string
 	redisNamespace                         *string
-	messageBusRedisNamespace               *string
 	messageBusRedisURL                     *string
+	messageBusRedisSentinelHosts           *string
+	messageBusRedisSentinelRole            *string
+	messageBusRedisNamespace               *string
 	apicastSystemMasterProxyConfigEndpoint *string
 	apicastSystemMasterBaseURL             *string
 	adminEmail                             *string
@@ -427,6 +435,10 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 		envVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
 		envVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
 		envVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
+		envVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
+		envVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
+		envVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelHosts),
+		envVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelRole),
 	)
 	return result
 }
@@ -595,7 +607,11 @@ func (system *System) buildSystemRedisSecrets() *v1.Secret {
 		},
 		StringData: map[string]string{
 			SystemSecretSystemRedisURLFieldName:                *system.Options.redisURL,
+			SystemSecretSystemRedisSentinelHosts:               *system.Options.redisSentinelHosts,
+			SystemSecretSystemRedisSentinelRole:                *system.Options.redisSentinelRole,
 			SystemSecretSystemRedisMessageBusRedisURLFieldName: *system.Options.messageBusRedisURL,
+			SystemSecretSystemRedisMessageBusSentinelHosts:     *system.Options.messageBusRedisSentinelHosts,
+			SystemSecretSystemRedisMessageBusSentinelRole:      *system.Options.messageBusRedisSentinelRole,
 			SystemSecretSystemRedisNamespace:                   *system.Options.redisNamespace,
 			SystemSecretSystemRedisMessageBusRedisNamespace:    *system.Options.messageBusRedisNamespace,
 		},

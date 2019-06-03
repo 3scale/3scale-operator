@@ -156,6 +156,26 @@ func (o *OperatorSystemOptionsProvider) setSystemRedisOptions(builder *component
 			builder.RedisURL(*result)
 		}
 
+		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisSentinelHosts)
+		if result != nil {
+			builder.RedisSentinelHosts(*result)
+		}
+
+		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisSentinelRole)
+		if result != nil {
+			builder.RedisSentinelRole(*result)
+		}
+
+		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusSentinelHosts)
+		if result != nil {
+			builder.MessageBusRedisSentinelHosts(*result)
+		}
+
+		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusSentinelRole)
+		if result != nil {
+			builder.MessageBusRedisSentinelRole(*result)
+		}
+
 		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisURLFieldName)
 		if result != nil {
 			builder.MessageBusRedisURL(*result)
