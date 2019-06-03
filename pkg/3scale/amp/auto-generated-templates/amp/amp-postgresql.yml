@@ -1882,11 +1882,6 @@ objects:
                 secretKeyRef:
                   key: SECRET_KEY_BASE
                   name: system-app
-            - name: REDIS_URL
-              valueFrom:
-                secretKeyRef:
-                  key: URL
-                  name: system-redis
             - name: MEMCACHE_SERVERS
               valueFrom:
                 secretKeyRef:
@@ -1897,6 +1892,26 @@ objects:
                 secretKeyRef:
                   key: REDIS_STORAGE_URL
                   name: backend-redis
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  key: URL
+                  name: system-redis
+            - name: MESSAGE_BUS_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  key: MESSAGE_BUS_URL
+                  name: system-redis
+            - name: REDIS_NAMESPACE
+              valueFrom:
+                secretKeyRef:
+                  key: NAMESPACE
+                  name: system-redis
+            - name: MESSAGE_BUS_REDIS_NAMESPACE
+              valueFrom:
+                secretKeyRef:
+                  key: MESSAGE_BUS_NAMESPACE
+                  name: system-redis
             - name: APICAST_BACKEND_ROOT_ENDPOINT
               valueFrom:
                 secretKeyRef:
@@ -2113,11 +2128,6 @@ objects:
               secretKeyRef:
                 key: SECRET_KEY_BASE
                 name: system-app
-          - name: REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: URL
-                name: system-redis
           - name: MEMCACHE_SERVERS
             valueFrom:
               secretKeyRef:
@@ -2128,6 +2138,26 @@ objects:
               secretKeyRef:
                 key: REDIS_STORAGE_URL
                 name: backend-redis
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: URL
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_URL
+                name: system-redis
+          - name: REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: NAMESPACE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_NAMESPACE
+                name: system-redis
           - name: APICAST_BACKEND_ROOT_ENDPOINT
             valueFrom:
               secretKeyRef:
@@ -2366,11 +2396,6 @@ objects:
               secretKeyRef:
                 key: SECRET_KEY_BASE
                 name: system-app
-          - name: REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: URL
-                name: system-redis
           - name: MEMCACHE_SERVERS
             valueFrom:
               secretKeyRef:
@@ -2381,6 +2406,26 @@ objects:
               secretKeyRef:
                 key: REDIS_STORAGE_URL
                 name: backend-redis
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: URL
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_URL
+                name: system-redis
+          - name: REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: NAMESPACE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_NAMESPACE
+                name: system-redis
           - name: APICAST_BACKEND_ROOT_ENDPOINT
             valueFrom:
               secretKeyRef:
@@ -2618,11 +2663,6 @@ objects:
               secretKeyRef:
                 key: SECRET_KEY_BASE
                 name: system-app
-          - name: REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: URL
-                name: system-redis
           - name: MEMCACHE_SERVERS
             valueFrom:
               secretKeyRef:
@@ -2633,6 +2673,26 @@ objects:
               secretKeyRef:
                 key: REDIS_STORAGE_URL
                 name: backend-redis
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: URL
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_URL
+                name: system-redis
+          - name: REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: NAMESPACE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_NAMESPACE
+                name: system-redis
           - name: APICAST_BACKEND_ROOT_ENDPOINT
             valueFrom:
               secretKeyRef:
@@ -2933,11 +2993,6 @@ objects:
               secretKeyRef:
                 key: SECRET_KEY_BASE
                 name: system-app
-          - name: REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: URL
-                name: system-redis
           - name: MEMCACHE_SERVERS
             valueFrom:
               secretKeyRef:
@@ -2948,6 +3003,26 @@ objects:
               secretKeyRef:
                 key: REDIS_STORAGE_URL
                 name: backend-redis
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: URL
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_URL
+                name: system-redis
+          - name: REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: NAMESPACE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_NAMESPACE
+                name: system-redis
           - name: APICAST_BACKEND_ROOT_ENDPOINT
             valueFrom:
               secretKeyRef:
@@ -3045,6 +3120,21 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-redis
+          - name: MESSAGE_BUS_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_URL
+                name: system-redis
+          - name: REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: NAMESPACE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_NAMESPACE
+                name: system-redis
           image: amp-system:latest
           name: check-svc
           resources: {}
@@ -3141,6 +3231,26 @@ objects:
             value: "5"
           - name: FULL_REINDEX_INTERVAL
             value: "60"
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: URL
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_URL
+                name: system-redis
+          - name: REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: NAMESPACE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_NAMESPACE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_NAMESPACE
+                name: system-redis
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3215,7 +3325,10 @@ objects:
       threescale_component: system
     name: system-redis
   stringData:
-    URL: redis://system-redis:6379/1
+    MESSAGE_BUS_NAMESPACE: ${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}
+    MESSAGE_BUS_URL: ${SYSTEM_MESSAGE_BUS_REDIS_URL}
+    NAMESPACE: ${SYSTEM_REDIS_NAMESPACE}
+    URL: ${SYSTEM_REDIS_URL}
   type: Opaque
 - apiVersion: v1
   kind: Secret
@@ -4122,6 +4235,20 @@ parameters:
   name: RECAPTCHA_PUBLIC_KEY
 - description: reCAPTCHA secret key (used in spam protection)
   name: RECAPTCHA_PRIVATE_KEY
+- description: Define the external system-redis to connect to
+  name: SYSTEM_REDIS_URL
+  required: true
+  value: redis://system-redis:6379/1
+- description: Define the external system-redis message bus to connect to. By default
+    the same value as SYSTEM_REDIS_URL but with the logical database incremented by
+    1 and the result applied mod 16
+  name: SYSTEM_MESSAGE_BUS_REDIS_URL
+- description: Define the namespace to be used by System's Redis Database. The empty
+    value means not namespaced
+  name: SYSTEM_REDIS_NAMESPACE
+- description: Define the namespace to be used by System's Message Bus Redis Database.
+    The empty value means not namespaced
+  name: SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE
 - description: Password for the Zync Database PostgreSQL connection user.
   displayName: Zync Database PostgreSQL Connection Password
   from: '[a-zA-Z0-9]{16}'

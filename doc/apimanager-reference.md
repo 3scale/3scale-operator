@@ -131,12 +131,12 @@ pre-created by the user:
   `REDIS_QUEUES_URL` fields with values pointing to the desired external
   databases. The databases should be configured
   in high-availability mode
-* [system-database](#system-database) with the `URL` field with the value pointing to the
-  desired external database. The database should be configured
+* [system-database](#system-database) with the `URL` field with the value
+  pointing to the desired external database. The database should be configured
   in high-availability mode
-* [system-redis](#system-redis) with the `URL` field with the value pointing to the
-  desired external database. The database should be configured
-  in high-availability mode
+* [system-redis](#system-redis) with the `URL` and `MESSAGE_BUS_URL` fields
+  with the value pointing to the desired external databases. The databases
+  should be configured in high-availability mode
 
 #### APIManagerStatus
 
@@ -227,6 +227,9 @@ The available configurable secrets are:
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
 | URL | System's Redis database URL | `redis://system-redis:6379/1` |
+| MESSAGE_BUS_URL | System's Message Bus Redis database URL | `redis://system-redis:6379/8` |
+| NAMESPACE | Define the namespace to be used by System's Redis Database. The empty value means not namespaced | `""` |
+| MESSAGE_BUS_NAMESPACE | Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced | `""` |
 
 #### system-seed
 

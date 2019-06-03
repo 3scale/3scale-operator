@@ -66,6 +66,12 @@ func (o *OperatorHighAvailabilityOptionsProvider) setSystemRedisOptions(builder 
 	}
 	builder.SystemRedisURL(*result)
 
+	result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisURLFieldName)
+	if result == nil {
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.SystemSecretSystemRedisMessageBusRedisURLFieldName, component.SystemSecretSystemRedisSecretName)
+	}
+	builder.SystemMessageBusRedisURL(*result)
+
 	return nil
 }
 

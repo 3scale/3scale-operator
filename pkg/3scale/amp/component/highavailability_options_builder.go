@@ -26,6 +26,10 @@ func (ha *HighAvailabilityOptionsBuilder) SystemRedisURL(systemRedisURL string) 
 	ha.options.systemRedisURL = systemRedisURL
 }
 
+func (ha *HighAvailabilityOptionsBuilder) SystemMessageBusRedisURL(url string) {
+	ha.options.systemMessageBusRedisURL = url
+}
+
 func (ha *HighAvailabilityOptionsBuilder) Build() (*HighAvailabilityOptions, error) {
 
 	err := ha.setRequiredOptions()
@@ -50,6 +54,9 @@ func (ha *HighAvailabilityOptionsBuilder) setRequiredOptions() error {
 	}
 	if ha.options.systemRedisURL == "" {
 		return fmt.Errorf("no System redis URL has been provided")
+	}
+	if ha.options.systemMessageBusRedisURL == "" {
+		return fmt.Errorf("no System Message Bus redis URL has been provided")
 	}
 
 	return nil

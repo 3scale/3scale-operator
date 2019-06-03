@@ -41,8 +41,11 @@ const (
 )
 
 const (
-	SystemSecretSystemRedisSecretName   = "system-redis"
-	SystemSecretSystemRedisURLFieldName = "URL"
+	SystemSecretSystemRedisSecretName                  = "system-redis"
+	SystemSecretSystemRedisURLFieldName                = "URL"
+	SystemSecretSystemRedisMessageBusRedisURLFieldName = "MESSAGE_BUS_URL"
+	SystemSecretSystemRedisNamespace                   = "NAMESPACE"
+	SystemSecretSystemRedisMessageBusRedisNamespace    = "MESSAGE_BUS_NAMESPACE"
 )
 
 const (
@@ -105,6 +108,9 @@ type systemNonRequiredOptions struct {
 	memcachedServers                       *string
 	eventHooksURL                          *string
 	redisURL                               *string
+	redisNamespace                         *string
+	messageBusRedisNamespace               *string
+	messageBusRedisURL                     *string
 	apicastSystemMasterProxyConfigEndpoint *string
 	apicastSystemMasterBaseURL             *string
 	adminEmail                             *string
@@ -139,6 +145,10 @@ func (o *CLISystemOptionsProvider) GetSystemOptions() (*SystemOptions, error) {
 	sob.AppLabel("${APP_LABEL}")
 	sob.RecaptchaPublicKey("${RECAPTCHA_PUBLIC_KEY}")
 	sob.RecaptchaPrivateKey("${RECAPTCHA_PRIVATE_KEY}")
+	sob.RedisURL("${SYSTEM_REDIS_URL}")
+	sob.RedisNamespace("${SYSTEM_REDIS_NAMESPACE}")
+	sob.MessageBusRedisURL("${SYSTEM_MESSAGE_BUS_REDIS_URL}")
+	sob.MessageBusRedisNamespace("${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}")
 	sob.AppSecretKeyBase("${SYSTEM_APP_SECRET_KEY_BASE}")
 	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
 	sob.TenantName("${TENANT_NAME}")
@@ -258,6 +268,24 @@ func (system *System) buildParameters(template *templatev1.Template) {
 			Name:        "RECAPTCHA_PRIVATE_KEY",
 			Description: "reCAPTCHA secret key (used in spam protection)",
 			Required:    false,
+		},
+		templatev1.Parameter{
+			Name:        "SYSTEM_REDIS_URL",
+			Description: "Define the external system-redis to connect to",
+			Required:    true,
+			Value:       "redis://system-redis:6379/1",
+		},
+		templatev1.Parameter{
+			Name:        "SYSTEM_MESSAGE_BUS_REDIS_URL",
+			Description: "Define the external system-redis message bus to connect to. By default the same value as SYSTEM_REDIS_URL but with the logical database incremented by 1 and the result applied mod 16",
+		},
+		templatev1.Parameter{
+			Name:        "SYSTEM_REDIS_NAMESPACE",
+			Description: "Define the namespace to be used by System's Redis Database. The empty value means not namespaced",
+		},
+		templatev1.Parameter{
+			Name:        "SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE",
+			Description: "Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced",
 		},
 	}
 	template.Parameters = append(template.Parameters, parameters...)
@@ -380,6 +408,19 @@ func (system *System) buildSystemSphinxEnv() []v1.EnvVar {
 		envVarFromValue("DELTA_INDEX_INTERVAL", "5"),
 		envVarFromValue("FULL_REINDEX_INTERVAL", "60"),
 	)
+	result = append(result, system.SystemRedisEnvVars()...)
+	return result
+}
+
+func (system *System) SystemRedisEnvVars() []v1.EnvVar {
+	result := []v1.EnvVar{}
+
+	result = append(result,
+		envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
+		envVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
+		envVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
+		envVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
+	)
 	return result
 }
 
@@ -412,13 +453,12 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 
 		envVarFromSecret("SECRET_KEY_BASE", SystemSecretSystemAppSecretName, SystemSecretSystemAppSecretKeyBaseFieldName),
 
-		envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
-
 		envVarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
 
 		envVarFromSecret("BACKEND_REDIS_URL", "backend-redis", "REDIS_STORAGE_URL"),
 	)
 
+	result = append(result, system.SystemRedisEnvVars()...)
 	bckListenerApicastRouteEnv := envVarFromSecret("APICAST_BACKEND_ROOT_ENDPOINT", "backend-listener", "route_endpoint")
 	bckListenerRouteEnv := envVarFromSecret("BACKEND_ROUTE", "backend-listener", "route_endpoint")
 	result = append(result, bckListenerApicastRouteEnv, bckListenerRouteEnv)
@@ -547,7 +587,10 @@ func (system *System) buildSystemRedisSecrets() *v1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemRedisURLFieldName: *system.Options.redisURL,
+			SystemSecretSystemRedisURLFieldName:                *system.Options.redisURL,
+			SystemSecretSystemRedisMessageBusRedisURLFieldName: *system.Options.messageBusRedisURL,
+			SystemSecretSystemRedisNamespace:                   *system.Options.redisNamespace,
+			SystemSecretSystemRedisMessageBusRedisNamespace:    *system.Options.messageBusRedisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -1005,6 +1048,9 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 							Env: []v1.EnvVar{
 								envVarFromValue("SLEEP_SECONDS", "1"),
 								envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
+								envVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
+								envVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
+								envVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
 							},
 						},
 					},
