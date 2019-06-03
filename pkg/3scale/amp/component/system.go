@@ -473,11 +473,10 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 		envVarFromSecret("SECRET_KEY_BASE", SystemSecretSystemAppSecretName, SystemSecretSystemAppSecretKeyBaseFieldName),
 
 		envVarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
-
-		envVarFromSecret("BACKEND_REDIS_URL", "backend-redis", "REDIS_STORAGE_URL"),
 	)
 
 	result = append(result, system.SystemRedisEnvVars()...)
+	result = append(result, system.BackendRedisEnvVars()...)
 	bckListenerApicastRouteEnv := envVarFromSecret("APICAST_BACKEND_ROOT_ENDPOINT", "backend-listener", "route_endpoint")
 	bckListenerRouteEnv := envVarFromSecret("BACKEND_ROUTE", "backend-listener", "route_endpoint")
 	result = append(result, bckListenerApicastRouteEnv, bckListenerRouteEnv)
@@ -502,6 +501,14 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 
 func (system *System) buildSystemAppPreHookEnv() []v1.EnvVar {
 	return nil
+}
+
+func (system *System) BackendRedisEnvVars() []v1.EnvVar {
+	return []v1.EnvVar{
+		envVarFromSecret("BACKEND_REDIS_URL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
+		envVarFromSecret("BACKEND_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
+		envVarFromSecret("BACKEND_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
+	}
 }
 
 func (system *System) buildSystemEnvironmentConfigMap() *v1.ConfigMap {
@@ -1068,13 +1075,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 								"-c",
 								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
 							},
-							Env: []v1.EnvVar{
-								envVarFromValue("SLEEP_SECONDS", "1"),
-								envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
-								envVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
-								envVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
-								envVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
-							},
+							Env: append(system.SystemRedisEnvVars(), envVarFromValue("SLEEP_SECONDS", "1")),
 						},
 					},
 					Containers: []v1.Container{
