@@ -3,11 +3,13 @@ package component
 import (
 	"fmt"
 
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
+
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -78,21 +80,21 @@ func (ampImages *AmpImages) AssembleIntoTemplate(template *templatev1.Template, 
 	ampImages.addObjectsIntoTemplate(template)
 }
 
-func (ampImages *AmpImages) GetObjects() ([]runtime.RawExtension, error) {
+func (ampImages *AmpImages) GetObjects() ([]common.KubernetesObject, error) {
 	objects := ampImages.buildObjects()
 	return objects, nil
 }
 
 func (ampImages *AmpImages) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := ampImages.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (ampImages *AmpImages) PostProcess(template *templatev1.Template, otherComponents []Component) {
 
 }
 
-func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
+func (ampImages *AmpImages) buildObjects() []common.KubernetesObject {
 	backendImageStream := ampImages.buildAmpBackendImageStream()
 	zyncImageStream := ampImages.buildAmpZyncImageStream()
 	apicastImageStream := ampImages.buildApicastImageStream()
@@ -104,16 +106,16 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 
 	deploymentsServiceAccount := ampImages.buildDeploymentsServiceAccount()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: backendImageStream},
-		runtime.RawExtension{Object: zyncImageStream},
-		runtime.RawExtension{Object: apicastImageStream},
-		runtime.RawExtension{Object: systemImageStream},
-		runtime.RawExtension{Object: postgreSQLImageStream},
-		runtime.RawExtension{Object: backendRedisImageStream},
-		runtime.RawExtension{Object: systemRedisImageStream},
-		runtime.RawExtension{Object: systemMemcachedImageStream},
-		runtime.RawExtension{Object: deploymentsServiceAccount},
+	objects := []common.KubernetesObject{
+		backendImageStream,
+		zyncImageStream,
+		apicastImageStream,
+		systemImageStream,
+		postgreSQLImageStream,
+		backendRedisImageStream,
+		systemRedisImageStream,
+		systemMemcachedImageStream,
+		deploymentsServiceAccount,
 	}
 	return objects
 }

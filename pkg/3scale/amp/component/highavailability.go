@@ -2,13 +2,14 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type HighAvailability struct {
@@ -80,7 +81,7 @@ func (ha *HighAvailability) setHAOptions() {
 	ha.Options = haOpts
 }
 
-func (ha *HighAvailability) GetObjects() ([]runtime.RawExtension, error) {
+func (ha *HighAvailability) GetObjects() ([]common.KubernetesObject, error) {
 	objects := ha.buildObjects()
 	return objects, nil
 }
@@ -94,21 +95,21 @@ func (ha *HighAvailability) AssembleIntoTemplate(template *templatev1.Template, 
 
 func (ha *HighAvailability) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := ha.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
-func (ha *HighAvailability) buildObjects() []runtime.RawExtension {
+func (ha *HighAvailability) buildObjects() []common.KubernetesObject {
 	systemDatabaseSecrets := ha.createSystemDatabaseSecret()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: systemDatabaseSecrets},
+	objects := []common.KubernetesObject{
+		systemDatabaseSecrets,
 	}
 	return objects
 }
 
 // TODO check how to postprocess independently of templates
 func (ha *HighAvailability) PostProcess(template *templatev1.Template, otherComponents []Component) {
-	res := template.Objects
+	res := helper.UnwrapRawExtensions(template.Objects)
 	ha.setHAOptions() // TODO move this outside
 	ha.increaseReplicasNumber(res)
 	res = ha.deleteInternalDatabasesObjects(res)
@@ -116,10 +117,10 @@ func (ha *HighAvailability) PostProcess(template *templatev1.Template, otherComp
 	ha.deleteDBRelatedParameters(template)
 	ha.unsetSystemRedisDBDefaultValues(template)
 
-	template.Objects = res
+	template.Objects = helper.WrapRawExtensions(res)
 }
 
-func (ha *HighAvailability) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawExtension {
+func (ha *HighAvailability) PostProcessObjects(objects []common.KubernetesObject) []common.KubernetesObject {
 	res := objects
 	ha.increaseReplicasNumber(res)
 	res = ha.deleteInternalDatabasesObjects(res)
@@ -148,7 +149,7 @@ func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
 	}
 }
 
-func (ha *HighAvailability) increaseReplicasNumber(objects []runtime.RawExtension) {
+func (ha *HighAvailability) increaseReplicasNumber(objects []common.KubernetesObject) {
 	// We do not increase the number of replicas in database DeploymentConfigs
 	excludedDeploymentConfigs := map[string]bool{
 		"system-memcache": true,
@@ -156,8 +157,7 @@ func (ha *HighAvailability) increaseReplicasNumber(objects []runtime.RawExtensio
 		"zync-database":   true,
 	}
 
-	for _, rawExtension := range objects {
-		obj := rawExtension.Object
+	for _, obj := range objects {
 		dc, ok := obj.(*appsv1.DeploymentConfig)
 		if ok {
 			if _, isExcluded := excludedDeploymentConfigs[dc.Name]; !isExcluded {
@@ -167,37 +167,37 @@ func (ha *HighAvailability) increaseReplicasNumber(objects []runtime.RawExtensio
 	}
 }
 
-func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []runtime.RawExtension) []runtime.RawExtension {
-	keepObjects := []runtime.RawExtension{}
+func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []common.KubernetesObject) []common.KubernetesObject {
+	keepObjects := []common.KubernetesObject{}
 
-	for rawExtIdx, rawExtension := range objects {
-		switch obj := (rawExtension.Object).(type) {
+	for objIdx, object := range objects {
+		switch obj := (object).(type) {
 		case *appsv1.DeploymentConfig:
 			if _, ok := highlyAvailableExternalDatabases[obj.ObjectMeta.Name]; !ok {
 				// We create a new array and add to it the elements that will
 				//NOT have to be deleted
-				keepObjects = append(keepObjects, objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[objIdx])
 			}
 		case *v1.Service:
 			if _, ok := highlyAvailableExternalDatabases[obj.ObjectMeta.Name]; !ok {
-				keepObjects = append(keepObjects, objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[objIdx])
 			}
 		case *v1.PersistentVolumeClaim:
 			if obj.ObjectMeta.Name != "backend-redis-storage" && obj.ObjectMeta.Name != "system-redis-storage" &&
 				obj.ObjectMeta.Name != "mysql-storage" {
-				keepObjects = append(keepObjects, objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[objIdx])
 			}
 		case *v1.ConfigMap:
 			if obj.ObjectMeta.Name != "mysql-main-conf" && obj.ObjectMeta.Name != "mysql-extra-conf" &&
 				obj.ObjectMeta.Name != "redis-config" {
-				keepObjects = append(keepObjects, objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[objIdx])
 			}
 		case *imagev1.ImageStream:
 			if _, ok := highlyAvailableExternalDatabases[obj.ObjectMeta.Name]; !ok {
-				keepObjects = append(keepObjects, objects[rawExtIdx])
+				keepObjects = append(keepObjects, objects[objIdx])
 			}
 		default:
-			keepObjects = append(keepObjects, objects[rawExtIdx])
+			keepObjects = append(keepObjects, objects[objIdx])
 		}
 	}
 
@@ -239,9 +239,9 @@ func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Templ
 	template.Parameters = keepParams
 }
 
-func (ha *HighAvailability) updateDatabasesURLS(objects []runtime.RawExtension) {
-	for rawExtIdx := range objects {
-		obj := objects[rawExtIdx].Object
+func (ha *HighAvailability) updateDatabasesURLS(objects []common.KubernetesObject) {
+	for objIdx := range objects {
+		obj := objects[objIdx]
 		secret, ok := obj.(*v1.Secret)
 		if ok {
 			switch secret.Name {
