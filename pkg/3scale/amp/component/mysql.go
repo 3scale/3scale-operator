@@ -2,13 +2,14 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -75,14 +76,14 @@ func (mysql *Mysql) AssembleIntoTemplate(template *templatev1.Template, otherCom
 	mysql.addObjectsIntoTemplate(template)
 }
 
-func (mysql *Mysql) GetObjects() ([]runtime.RawExtension, error) {
+func (mysql *Mysql) GetObjects() ([]common.KubernetesObject, error) {
 	objects := mysql.buildObjects()
 	return objects, nil
 }
 
 func (mysql *Mysql) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := mysql.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (mysql *Mysql) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -125,7 +126,7 @@ func (mysql *Mysql) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (mysql *Mysql) buildObjects() []runtime.RawExtension {
+func (mysql *Mysql) buildObjects() []common.KubernetesObject {
 	systemMysqlDeploymentConfig := mysql.buildSystemMysqlDeploymentConfig()
 	systemMysqlService := mysql.buildSystemMysqlService()
 	systemMysqlMainConfigConfigMap := mysql.buildSystemMysqlMainConfigConfigMap()
@@ -133,13 +134,13 @@ func (mysql *Mysql) buildObjects() []runtime.RawExtension {
 	systemMysqlPersistentVolumeClaim := mysql.buildSystemMysqlPersistentVolumeClaim()
 	systemDatabaseSecret := mysql.buildSystemDatabaseSecrets()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: systemMysqlDeploymentConfig},
-		runtime.RawExtension{Object: systemMysqlService},
-		runtime.RawExtension{Object: systemMysqlMainConfigConfigMap},
-		runtime.RawExtension{Object: systemMysqlExtraConfigConfigMap},
-		runtime.RawExtension{Object: systemMysqlPersistentVolumeClaim},
-		runtime.RawExtension{Object: systemDatabaseSecret},
+	objects := []common.KubernetesObject{
+		systemMysqlDeploymentConfig,
+		systemMysqlService,
+		systemMysqlMainConfigConfigMap,
+		systemMysqlExtraConfigConfigMap,
+		systemMysqlPersistentVolumeClaim,
+		systemDatabaseSecret,
 	}
 
 	return objects

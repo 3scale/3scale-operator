@@ -2,10 +2,10 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
 
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Productized struct {
@@ -71,7 +71,7 @@ func (productized *Productized) PostProcess(template *templatev1.Template, other
 	template.Objects = res
 }
 
-func (productized *Productized) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawExtension {
+func (productized *Productized) PostProcessObjects(objects []common.KubernetesObject) []common.KubernetesObject {
 	res := objects
 	res = productized.updateAmpImagesURIs(res)
 
@@ -96,11 +96,10 @@ func (productized *Productized) updateAmpImagesParameters(template *templatev1.T
 	}
 }
 
-func (productized *Productized) updateAmpImagesURIs(objects []runtime.RawExtension) []runtime.RawExtension {
+func (productized *Productized) updateAmpImagesURIs(objects []common.KubernetesObject) []common.KubernetesObject {
 	res := objects
 
-	for _, rawExtension := range res {
-		obj := rawExtension.Object
+	for _, obj := range res {
 		is, ok := obj.(*imagev1.ImageStream)
 		if ok {
 			for tagIdx := range is.Spec.Tags {

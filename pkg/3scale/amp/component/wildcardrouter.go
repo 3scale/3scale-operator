@@ -2,6 +2,8 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -9,7 +11,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -70,10 +71,10 @@ func (wr *WildcardRouter) AssembleIntoTemplate(template *templatev1.Template, ot
 
 func (wr *WildcardRouter) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := wr.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
-func (wr *WildcardRouter) GetObjects() ([]runtime.RawExtension, error) {
+func (wr *WildcardRouter) GetObjects() ([]common.KubernetesObject, error) {
 	objects := wr.buildObjects()
 	return objects, nil
 }
@@ -99,15 +100,15 @@ func (wr *WildcardRouter) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (wr *WildcardRouter) buildObjects() []runtime.RawExtension {
+func (wr *WildcardRouter) buildObjects() []common.KubernetesObject {
 	wildcardRouterDeploymentConfig := wr.buildWildcardRouterDeploymentConfig()
 	wildcardRouterService := wr.buildWildcardRouterService()
 	wildcardRouterRoute := wr.buildWildcardRouterRoute()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: wildcardRouterDeploymentConfig},
-		runtime.RawExtension{Object: wildcardRouterService},
-		runtime.RawExtension{Object: wildcardRouterRoute},
+	objects := []common.KubernetesObject{
+		wildcardRouterDeploymentConfig,
+		wildcardRouterService,
+		wildcardRouterRoute,
 	}
 
 	return objects

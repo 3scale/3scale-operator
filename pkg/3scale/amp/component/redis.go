@@ -2,13 +2,14 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -62,7 +63,7 @@ func (redis *Redis) AssembleIntoTemplate(template *templatev1.Template, otherCom
 	redis.addObjectsIntoTemplate(template)
 }
 
-func (redis *Redis) GetObjects() ([]runtime.RawExtension, error) {
+func (redis *Redis) GetObjects() ([]common.KubernetesObject, error) {
 	objects := redis.buildObjects()
 	return objects, nil
 }
@@ -74,10 +75,10 @@ func (redis *Redis) addObjectsIntoTemplate(template *templatev1.Template) {
 	_ = err
 	redis.Options = redisOpts
 	objects := redis.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
-func (redis *Redis) buildObjects() []runtime.RawExtension {
+func (redis *Redis) buildObjects() []common.KubernetesObject {
 	backendRedisObjects := redis.buildBackendRedisObjects()
 	systemRedisObjects := redis.buildSystemRedisObjects()
 
@@ -102,16 +103,16 @@ func (redis *Redis) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (redis *Redis) buildBackendRedisObjects() []runtime.RawExtension {
+func (redis *Redis) buildBackendRedisObjects() []common.KubernetesObject {
 	dc := redis.buildBackendDeploymentConfig()
 	bs := redis.buildBackendService()
 	cm := redis.buildBackendConfigMap()
 	bpvc := redis.buildBackendRedisPVC()
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: dc},
-		runtime.RawExtension{Object: bs},
-		runtime.RawExtension{Object: cm},
-		runtime.RawExtension{Object: bpvc},
+	objects := []common.KubernetesObject{
+		dc,
+		bs,
+		cm,
+		bpvc,
 	}
 	return objects
 }
@@ -528,7 +529,7 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 
 ////// Begin System Redis
 
-func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
+func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
 
 	systemRedisDC := &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
@@ -662,9 +663,9 @@ func (redis *Redis) buildSystemRedisObjects() []runtime.RawExtension {
 			},
 			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")}}}}
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: systemRedisDC},
-		runtime.RawExtension{Object: systemRedisPVC},
+	objects := []common.KubernetesObject{
+		systemRedisDC,
+		systemRedisPVC,
 	}
 
 	return objects

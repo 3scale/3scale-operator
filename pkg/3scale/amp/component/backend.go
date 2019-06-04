@@ -2,6 +2,8 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -9,7 +11,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -103,14 +104,14 @@ func (backend *Backend) AssembleIntoTemplate(template *templatev1.Template, othe
 	backend.addObjectsIntoTemplate(template)
 }
 
-func (backend *Backend) GetObjects() ([]runtime.RawExtension, error) {
+func (backend *Backend) GetObjects() ([]common.KubernetesObject, error) {
 	objects := backend.buildObjects()
 	return objects, nil
 }
 
 func (backend *Backend) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := backend.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (backend *Backend) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -122,7 +123,7 @@ func (backend *Backend) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (backend *Backend) buildObjects() []runtime.RawExtension {
+func (backend *Backend) buildObjects() []common.KubernetesObject {
 	backendCronDeploymentConfig := backend.buildBackendCronDeploymentConfig()
 	backendListenerDeploymentConfig := backend.buildBackendListenerDeploymentConfig()
 	backendListenerService := backend.buildBackendListenerService()
@@ -134,16 +135,16 @@ func (backend *Backend) buildObjects() []runtime.RawExtension {
 	backendRedisSecrets := backend.buildBackendRedisSecrets()
 	backendListenerSecrets := backend.buildBackendListenerSecrets()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: backendCronDeploymentConfig},
-		runtime.RawExtension{Object: backendListenerDeploymentConfig},
-		runtime.RawExtension{Object: backendListenerService},
-		runtime.RawExtension{Object: backendListenerRoute},
-		runtime.RawExtension{Object: backendWorkerDeploymentConfig},
-		runtime.RawExtension{Object: backendEnvConfigMap},
-		runtime.RawExtension{Object: backendInternalApiCredsForSystem},
-		runtime.RawExtension{Object: backendRedisSecrets},
-		runtime.RawExtension{Object: backendListenerSecrets},
+	objects := []common.KubernetesObject{
+		backendCronDeploymentConfig,
+		backendListenerDeploymentConfig,
+		backendListenerService,
+		backendListenerRoute,
+		backendWorkerDeploymentConfig,
+		backendEnvConfigMap,
+		backendInternalApiCredsForSystem,
+		backendRedisSecrets,
+		backendListenerSecrets,
 	}
 	return objects
 }

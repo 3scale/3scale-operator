@@ -2,12 +2,13 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type SystemMySQLImage struct {
@@ -59,25 +60,25 @@ func (s *SystemMySQLImage) AssembleIntoTemplate(template *templatev1.Template, o
 	s.addObjectsIntoTemplate(template)
 }
 
-func (s *SystemMySQLImage) GetObjects() ([]runtime.RawExtension, error) {
+func (s *SystemMySQLImage) GetObjects() ([]common.KubernetesObject, error) {
 	objects := s.buildObjects()
 	return objects, nil
 }
 
 func (s *SystemMySQLImage) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := s.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (s *SystemMySQLImage) PostProcess(template *templatev1.Template, otherComponents []Component) {
 
 }
 
-func (s *SystemMySQLImage) buildObjects() []runtime.RawExtension {
+func (s *SystemMySQLImage) buildObjects() []common.KubernetesObject {
 	systemMySQLImageStream := s.buildSystemMySQLImageStream()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: systemMySQLImageStream},
+	objects := []common.KubernetesObject{
+		systemMySQLImageStream,
 	}
 
 	return objects

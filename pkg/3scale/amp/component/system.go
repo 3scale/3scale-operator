@@ -2,6 +2,8 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"sort"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -10,7 +12,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -171,14 +172,14 @@ func (system *System) AssembleIntoTemplate(template *templatev1.Template, otherC
 	system.addObjectsIntoTemplate(template)
 }
 
-func (system *System) GetObjects() ([]runtime.RawExtension, error) {
+func (system *System) GetObjects() ([]common.KubernetesObject, error) {
 	objects := system.buildObjects()
 	return objects, nil
 }
 
 func (system *System) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := system.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (system *System) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -291,7 +292,7 @@ func (system *System) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (system *System) buildObjects() []runtime.RawExtension {
+func (system *System) buildObjects() []common.KubernetesObject {
 	systemSharedStorage := system.buildSystemSharedPVC()
 	systemProviderService := system.buildSystemProviderService()
 	systemMasterService := system.buildSystemMasterService()
@@ -321,30 +322,30 @@ func (system *System) buildObjects() []runtime.RawExtension {
 	systemAppSecret := system.buildSystemAppSecrets()
 	systemMemcachedSecret := system.buildSystemMemcachedSecrets()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: systemSharedStorage},
-		runtime.RawExtension{Object: systemProviderService},
-		runtime.RawExtension{Object: systemMasterService},
-		runtime.RawExtension{Object: systemDeveloperService},
-		runtime.RawExtension{Object: systemProviderRoute},
-		runtime.RawExtension{Object: systemMasterRoute},
-		runtime.RawExtension{Object: systemDeveloperRoute},
-		runtime.RawExtension{Object: systemRedisService},
-		runtime.RawExtension{Object: systemSphinxService},
-		runtime.RawExtension{Object: systemMemcachedService},
-		runtime.RawExtension{Object: systemConfigMap},
-		runtime.RawExtension{Object: systemSmtpConfigMap},
-		runtime.RawExtension{Object: systemEnvironmentConfigMap},
-		runtime.RawExtension{Object: systemAppDeploymentConfig},
-		runtime.RawExtension{Object: systemSidekiqDeploymentConfig},
-		runtime.RawExtension{Object: systemSphinxDeploymentConfig},
-		runtime.RawExtension{Object: systemEventsHookSecret},
-		runtime.RawExtension{Object: systemRedisSecret},
-		runtime.RawExtension{Object: systemMasterApicastSecret},
-		runtime.RawExtension{Object: systemSeedSecret},
-		runtime.RawExtension{Object: systemRecaptchaSecret},
-		runtime.RawExtension{Object: systemAppSecret},
-		runtime.RawExtension{Object: systemMemcachedSecret},
+	objects := []common.KubernetesObject{
+		systemSharedStorage,
+		systemProviderService,
+		systemMasterService,
+		systemDeveloperService,
+		systemProviderRoute,
+		systemMasterRoute,
+		systemDeveloperRoute,
+		systemRedisService,
+		systemSphinxService,
+		systemMemcachedService,
+		systemConfigMap,
+		systemSmtpConfigMap,
+		systemEnvironmentConfigMap,
+		systemAppDeploymentConfig,
+		systemSidekiqDeploymentConfig,
+		systemSphinxDeploymentConfig,
+		systemEventsHookSecret,
+		systemRedisSecret,
+		systemMasterApicastSecret,
+		systemSeedSecret,
+		systemRecaptchaSecret,
+		systemAppSecret,
+		systemMemcachedSecret,
 	}
 	return objects
 }

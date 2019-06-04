@@ -3,6 +3,7 @@ package apimanager
 import (
 	"context"
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
 	"reflect"
 
 	"github.com/go-logr/logr"
@@ -13,7 +14,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -145,15 +145,14 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 
 	// Set APIManager instance as the owner and controller
 	for idx := range objs {
-		obj := objs[idx].Object
-		objectMeta := obj.(metav1.Object)
-		objectMeta.SetNamespace(instance.Namespace)
-		err = controllerutil.SetControllerReference(instance, objectMeta, r.scheme)
+		obj := objs[idx]
+		obj.SetNamespace(instance.Namespace)
+		err = controllerutil.SetControllerReference(instance, obj, r.scheme)
 		if err != nil {
 			r.reqLogger.Error(err, "Error setting OwnerReference on object. Requeuing request...",
 				"Kind", obj.GetObjectKind(),
-				"Namespace", objectMeta.GetNamespace(),
-				"Name", objectMeta.GetName(),
+				"Namespace", obj.GetNamespace(),
+				"Name", obj.GetName(),
 			)
 			return reconcile.Result{}, err
 		}
@@ -161,14 +160,12 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 
 	// Create APIManager Objects
 	for idx := range objs {
-		obj := objs[idx].Object
-		objCopy := obj.DeepCopyObject() // We create a copy because the r.client.Create method removes TypeMeta for some reason
-		objectMeta := objCopy.(metav1.Object)
-		objectInfo := fmt.Sprintf("%s/%s", objCopy.GetObjectKind().GroupVersionKind().Kind, objectMeta.GetName())
+		obj := objs[idx]
+		objectInfo := fmt.Sprintf("%s/%s", obj.GetObjectKind().GroupVersionKind().Kind, obj.GetName())
 
 		newobj := reflect.New(reflect.TypeOf(obj).Elem()).Interface()
 		found := newobj.(runtime.Object)
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: objectMeta.GetName(), Namespace: objectMeta.GetNamespace()}, found)
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, found)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
@@ -184,7 +181,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 			}
 		} else {
 			r.reqLogger.Info(fmt.Sprintf("Object %s already exists", objectInfo))
-			if secret, ok := objCopy.(*v1.Secret); ok {
+			if secret, ok := obj.(*v1.Secret); ok {
 				r.reqLogger.Info(fmt.Sprintf("Object %s is a secret. Reconciling it...", objectInfo))
 				// We get copy to avoid modifying possibly obtained object
 				// from the cache
@@ -232,7 +229,7 @@ func (r *ReconcileAPIManager) reconcileSecret(desired, current *v1.Secret, cr *a
 	return nil
 }
 
-func (r *ReconcileAPIManager) apiManagerObjects(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) apiManagerObjects(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	results, err := r.apiManagerObjectsGroup(cr)
 	if err != nil {
 		return nil, err
@@ -246,8 +243,8 @@ func (r *ReconcileAPIManager) apiManagerObjects(cr *appsv1alpha1.APIManager) ([]
 	return results, nil
 }
 
-func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
-	results := []runtime.RawExtension{}
+func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
+	results := []common.KubernetesObject{}
 
 	images, err := r.createImages(cr)
 	if err != nil {
@@ -314,7 +311,7 @@ func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager
 	return results, nil
 }
 
-func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1.APIManager, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1.APIManager, objects []common.KubernetesObject) ([]common.KubernetesObject, error) {
 	if !*cr.Spec.ResourceRequirementsEnabled {
 		e := component.Evaluation{}
 		e.PostProcessObjects(objects)
@@ -353,7 +350,7 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 	return objects, nil
 }
 
-func (r *ReconcileAPIManager) createImages(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createImages(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorAmpImagesOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetAmpImagesOptions()
 	if err != nil {
@@ -369,7 +366,7 @@ func (r *ReconcileAPIManager) createImages(cr *appsv1alpha1.APIManager) ([]runti
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorRedisOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetRedisOptions()
 	if err != nil {
@@ -385,7 +382,7 @@ func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]runtim
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetBackendOptions()
 	if err != nil {
@@ -401,7 +398,7 @@ func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]runt
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createSystemDatabase(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createSystemDatabase(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	if cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
 		result, err := r.createSystemPostgreSQL(cr)
 		if err != nil {
@@ -418,7 +415,7 @@ func (r *ReconcileAPIManager) createSystemDatabase(cr *appsv1alpha1.APIManager) 
 	}
 }
 
-func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetMysqlOptions()
 	if err != nil {
@@ -446,7 +443,7 @@ func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createSystemPostgreSQL(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createSystemPostgreSQL(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorSystemPostgreSQLOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetSystemPostgreSQLOptions()
 	if err != nil {
@@ -471,7 +468,7 @@ func (r *ReconcileAPIManager) createSystemPostgreSQL(cr *appsv1alpha1.APIManager
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorMemcachedOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetMemcachedOptions()
 	if err != nil {
@@ -487,7 +484,7 @@ func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]ru
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetSystemOptions()
 	if err != nil {
@@ -503,7 +500,7 @@ func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]runti
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetZyncOptions()
 	if err != nil {
@@ -519,7 +516,7 @@ func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]runtime
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {
@@ -535,7 +532,7 @@ func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]runt
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createWildcardRouter(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorWildcardRouterOptionsProvider{APIManagerSpec: &cr.Spec}
 	opts, err := optsProvider.GetWildcardRouterOptions()
 	if err != nil {
@@ -550,7 +547,7 @@ func (r *ReconcileAPIManager) createWildcardRouter(cr *appsv1alpha1.APIManager) 
 	return result, nil
 }
 
-func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
+func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
 	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	opts, err := optsProvider.GetS3Options()
 	if err != nil {

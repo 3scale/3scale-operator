@@ -2,13 +2,14 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -77,14 +78,14 @@ func (p *SystemPostgreSQL) AssembleIntoTemplate(template *templatev1.Template, o
 	p.addObjectsIntoTemplate(template)
 }
 
-func (p *SystemPostgreSQL) GetObjects() ([]runtime.RawExtension, error) {
+func (p *SystemPostgreSQL) GetObjects() ([]common.KubernetesObject, error) {
 	objects := p.buildObjects()
 	return objects, nil
 }
 
 func (p *SystemPostgreSQL) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := p.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (p *SystemPostgreSQL) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -119,17 +120,17 @@ func (p *SystemPostgreSQL) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (p *SystemPostgreSQL) buildObjects() []runtime.RawExtension {
+func (p *SystemPostgreSQL) buildObjects() []common.KubernetesObject {
 	postgreSQLDeploymentConfig := p.DeploymentConfig()
 	postgreSQLService := p.Service()
 	postgreSQLPersistentVolumeClaim := p.DataPersistentVolumeClaim()
 	systemDatabaseSecret := p.buildSystemDatabaseSecrets()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: postgreSQLDeploymentConfig},
-		runtime.RawExtension{Object: postgreSQLService},
-		runtime.RawExtension{Object: postgreSQLPersistentVolumeClaim},
-		runtime.RawExtension{Object: systemDatabaseSecret},
+	objects := []common.KubernetesObject{
+		postgreSQLDeploymentConfig,
+		postgreSQLService,
+		postgreSQLPersistentVolumeClaim,
+		systemDatabaseSecret,
 	}
 
 	return objects

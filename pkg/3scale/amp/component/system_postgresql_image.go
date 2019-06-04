@@ -2,12 +2,13 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type SystemPostgreSQLImage struct {
@@ -59,25 +60,25 @@ func (s *SystemPostgreSQLImage) AssembleIntoTemplate(template *templatev1.Templa
 	s.addObjectsIntoTemplate(template)
 }
 
-func (s *SystemPostgreSQLImage) GetObjects() ([]runtime.RawExtension, error) {
+func (s *SystemPostgreSQLImage) GetObjects() ([]common.KubernetesObject, error) {
 	objects := s.buildObjects()
 	return objects, nil
 }
 
 func (s *SystemPostgreSQLImage) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := s.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (s *SystemPostgreSQLImage) PostProcess(template *templatev1.Template, otherComponents []Component) {
 
 }
 
-func (s *SystemPostgreSQLImage) buildObjects() []runtime.RawExtension {
+func (s *SystemPostgreSQLImage) buildObjects() []common.KubernetesObject {
 	systemPostgreSQLImageStream := s.buildSystemPostgreSQLImageStream()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: systemPostgreSQLImageStream},
+	objects := []common.KubernetesObject{
+		systemPostgreSQLImageStream,
 	}
 
 	return objects

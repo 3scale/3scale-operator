@@ -2,12 +2,13 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -79,19 +80,18 @@ func (s3 *S3) AssembleIntoTemplate(template *templatev1.Template, otherComponent
 	s3.addObjectsIntoTemplate(template)
 }
 
-func (s3 *S3) GetObjects() ([]runtime.RawExtension, error) {
+func (s3 *S3) GetObjects() ([]common.KubernetesObject, error) {
 	objects := s3.buildObjects()
 	return objects, nil
 }
 
 func (s3 *S3) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := s3.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
-func (s3 *S3) removeSystemStorageReferences(objects []runtime.RawExtension) {
-	for _, rawExtension := range objects {
-		obj := rawExtension.Object
+func (s3 *S3) removeSystemStorageReferences(objects []common.KubernetesObject) {
+	for _, obj := range objects {
 		dc, ok := obj.(*appsv1.DeploymentConfig)
 		if ok {
 			if dc.ObjectMeta.Name == "system-app" || dc.ObjectMeta.Name == "system-sidekiq" {
@@ -163,10 +163,9 @@ func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 	}
 }
 
-func (s3 *S3) addCfgMapElemsToSystemBaseEnv(objects []runtime.RawExtension) {
+func (s3 *S3) addCfgMapElemsToSystemBaseEnv(objects []common.KubernetesObject) {
 	newCfgMapElements := s3.getNewCfgMapElements()
-	for _, rawExtension := range objects {
-		obj := rawExtension.Object
+	for _, obj := range objects {
 		dc, ok := obj.(*appsv1.DeploymentConfig)
 		if ok {
 			if dc.ObjectMeta.Name == "system-app" || dc.ObjectMeta.Name == "system-sidekiq" {
@@ -183,11 +182,11 @@ func (s3 *S3) addCfgMapElemsToSystemBaseEnv(objects []runtime.RawExtension) {
 	}
 }
 
-func (s3 *S3) addS3PostprocessOptionsToSystemEnvironmentCfgMap(objects []runtime.RawExtension) {
+func (s3 *S3) addS3PostprocessOptionsToSystemEnvironmentCfgMap(objects []common.KubernetesObject) {
 	var systemEnvCfgMap *v1.ConfigMap
 
-	for rawExtIdx := range objects {
-		obj := objects[rawExtIdx].Object
+	for objIdx := range objects {
+		obj := objects[objIdx]
 		cfgmap, ok := obj.(*v1.ConfigMap)
 		if ok {
 			if cfgmap.Name == "system-environment" {
@@ -202,11 +201,10 @@ func (s3 *S3) addS3PostprocessOptionsToSystemEnvironmentCfgMap(objects []runtime
 	systemEnvCfgMap.Data["AWS_REGION"] = s3.Options.awsRegion
 }
 
-func (s3 *S3) removeSystemStoragePVC(objects []runtime.RawExtension) []runtime.RawExtension {
+func (s3 *S3) removeSystemStoragePVC(objects []common.KubernetesObject) []common.KubernetesObject {
 	res := objects
 
-	for idx, rawExtension := range res {
-		obj := rawExtension.Object
+	for idx, obj := range res {
 		pvc, ok := obj.(*v1.PersistentVolumeClaim)
 		if ok {
 			if pvc.ObjectMeta.Name == "system-storage" {
@@ -222,16 +220,16 @@ func (s3 *S3) removeSystemStoragePVC(objects []runtime.RawExtension) []runtime.R
 func (s3 *S3) PostProcess(template *templatev1.Template, otherComponents []Component) {
 	s3.setS3Options() // TODO move this outside
 
-	res := template.Objects
+	res := helper.UnwrapRawExtensions(template.Objects)
 	res = s3.removeSystemStoragePVC(res)
 	s3.removeSystemStorageReferences(res)
-	s3.addS3PostprocessOptionsToSystemEnvironmentCfgMap(template.Objects)
-	s3.addCfgMapElemsToSystemBaseEnv(template.Objects)
+	s3.addS3PostprocessOptionsToSystemEnvironmentCfgMap(helper.UnwrapRawExtensions(template.Objects))
+	s3.addCfgMapElemsToSystemBaseEnv(helper.UnwrapRawExtensions(template.Objects))
 	s3.removeRWXStorageClassParameter(template)
-	template.Objects = res
+	template.Objects = helper.WrapRawExtensions(res)
 }
 
-func (s3 *S3) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawExtension {
+func (s3 *S3) PostProcessObjects(objects []common.KubernetesObject) []common.KubernetesObject {
 	res := objects
 	res = s3.removeSystemStoragePVC(res)
 	s3.removeSystemStorageReferences(res)
@@ -272,11 +270,11 @@ func (s3 *S3) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (s3 *S3) buildObjects() []runtime.RawExtension {
+func (s3 *S3) buildObjects() []common.KubernetesObject {
 	s3AWSSecret := s3.buildS3AWSSecret()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: s3AWSSecret},
+	objects := []common.KubernetesObject{
+		s3AWSSecret,
 	}
 	return objects
 }

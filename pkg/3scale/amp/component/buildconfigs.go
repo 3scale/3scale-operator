@@ -2,13 +2,14 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type BuildConfigs struct {
@@ -55,21 +56,21 @@ func (bcs *BuildConfigs) AssembleIntoTemplate(template *templatev1.Template, oth
 	bcs.addObjectsIntoTemplate(template)
 }
 
-func (bcs *BuildConfigs) GetObjects() ([]runtime.RawExtension, error) {
+func (bcs *BuildConfigs) GetObjects() ([]common.KubernetesObject, error) {
 	objects := bcs.buildObjects()
 	return objects, nil
 }
 
 func (bcs *BuildConfigs) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := bcs.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (bcs *BuildConfigs) PostProcess(template *templatev1.Template, otherComponents []Component) {
 
 }
 
-func (bcs *BuildConfigs) buildObjects() []runtime.RawExtension {
+func (bcs *BuildConfigs) buildObjects() []common.KubernetesObject {
 	backendBuildConfig := bcs.buildBackendBuildConfig()
 	zyncBuildConfig := bcs.buildZyncBuildConfig()
 	apicastBuildConfig := bcs.buildApicastBuildConfig()
@@ -79,14 +80,14 @@ func (bcs *BuildConfigs) buildObjects() []runtime.RawExtension {
 	buildRubyCentosSevenImageStream := bcs.buildRubyCentosSevenImageStream()
 	buildOpenrestyCentosSevenImageStream := bcs.buildOpenrestyCentosSevenImageStream()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: backendBuildConfig},
-		runtime.RawExtension{Object: zyncBuildConfig},
-		runtime.RawExtension{Object: apicastBuildConfig},
-		runtime.RawExtension{Object: wildcardRouterBuildConfig},
-		runtime.RawExtension{Object: systemBuildConfig},
-		runtime.RawExtension{Object: buildRubyCentosSevenImageStream},
-		runtime.RawExtension{Object: buildOpenrestyCentosSevenImageStream},
+	objects := []common.KubernetesObject{
+		backendBuildConfig,
+		zyncBuildConfig,
+		apicastBuildConfig,
+		wildcardRouterBuildConfig,
+		systemBuildConfig,
+		buildRubyCentosSevenImageStream,
+		buildOpenrestyCentosSevenImageStream,
 	}
 	return objects
 }

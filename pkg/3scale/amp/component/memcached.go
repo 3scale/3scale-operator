@@ -2,13 +2,14 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -65,14 +66,14 @@ func (m *Memcached) AssembleIntoTemplate(template *templatev1.Template, otherCom
 	m.addObjectsIntoTemplate(template)
 }
 
-func (m *Memcached) GetObjects() ([]runtime.RawExtension, error) {
+func (m *Memcached) GetObjects() ([]common.KubernetesObject, error) {
 	objects := m.buildObjects()
 	return objects, nil
 }
 
 func (m *Memcached) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := m.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (m *Memcached) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -107,11 +108,11 @@ func (m *Memcached) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (m *Memcached) buildObjects() []runtime.RawExtension {
+func (m *Memcached) buildObjects() []common.KubernetesObject {
 	systemMemcachedDeploymentConfig := m.buildSystemMemcachedDeploymentConfig()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: systemMemcachedDeploymentConfig},
+	objects := []common.KubernetesObject{
+		systemMemcachedDeploymentConfig,
 	}
 	return objects
 }
