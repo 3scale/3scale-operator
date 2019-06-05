@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: build e2e
+.PHONY: build e2e clean
 UNAME := $(shell uname)
 
 ifeq (${UNAME}, Linux)
@@ -14,6 +14,9 @@ help: Makefile
 ## vendor: Populate vendor directory
 vendor:
 	@GO111MODULE=on go mod vendor
+
+clean:
+	rm -rf vendor
 
 IMAGE ?= quay.io/3scale/3scale-operator
 SOURCE_VERSION ?= master
