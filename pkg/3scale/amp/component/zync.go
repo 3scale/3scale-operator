@@ -2,6 +2,7 @@ package component
 
 import (
 	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/apis/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -80,6 +81,7 @@ func (zync *Zync) AssembleIntoTemplate(template *templatev1.Template, otherCompo
 
 func (zync *Zync) buildObjects() []common.KubernetesObject {
 	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
+	zyncQueDeploymentConfig := zync.buildZyncQueDeploymentConfig()
 	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
 	zyncService := zync.buildZyncService()
 	zyncDatabaseService := zync.buildZyncDatabaseService()
@@ -87,6 +89,7 @@ func (zync *Zync) buildObjects() []common.KubernetesObject {
 
 	objects := []common.KubernetesObject{
 		zyncDeploymentConfig,
+		zyncQueDeploymentConfig,
 		zyncDatabaseDeploymentConfig,
 		zyncService,
 		zyncDatabaseService,
@@ -253,6 +256,10 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 				"app":                  zync.Options.appLabel,
 				"threescale_component": "zync",
 			},
+			Annotations: map[string]string{
+				"prometheus.io/port":   "9393",
+				"prometheus.io/scrape": "true",
+			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Triggers: appsv1.DeploymentTriggerPolicies{
@@ -322,45 +329,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 8080,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env: []v1.EnvVar{
-								v1.EnvVar{
-									Name:  "RAILS_LOG_TO_STDOUT",
-									Value: "true",
-								}, v1.EnvVar{
-									Name:  "RAILS_ENV",
-									Value: "production",
-								}, v1.EnvVar{
-									Name: "DATABASE_URL",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: "zync",
-											},
-											Key: "DATABASE_URL",
-										},
-									},
-								}, v1.EnvVar{
-									Name: "SECRET_KEY_BASE",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: "zync",
-											},
-											Key: "SECRET_KEY_BASE",
-										},
-									},
-								}, v1.EnvVar{
-									Name: "ZYNC_AUTHENTICATION_TOKEN",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: "zync",
-											},
-											Key: "ZYNC_AUTHENTICATION_TOKEN",
-										},
-									},
-								},
-							},
+							Env: zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
@@ -399,6 +368,134 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 									v1.ResourceMemory: resource.MustParse("250M"),
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
+	return []v1.EnvVar{
+		envVarFromValue("RAILS_LOG_TO_STDOUT", "true"),
+		envVarFromValue("RAILS_ENV", "production"),
+		envVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
+		envVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
+		envVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
+		// +              - name: BUGSNAG_API_KEY
+		// +                valueFrom:
+		// +                  secretKeyRef:
+		// +                    key: BUGSNAG_API_KEY
+		// +                    name: zync
+		// +              - name: SKYLIGHT_AUTHENTICATION
+		// +                valueFrom:
+		// +                  secretKeyRef:
+		// +                    key: SKYLIGHT_AUTHENTICATION
+		// +                    name: zync
+		// this two keys are used in both zync and zync-que in the zync repository but they are not present into
+		// the templates. What TODO?
+	}
+}
+func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
+	return &appsv1.DeploymentConfig{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "DeploymentConfig",
+			APIVersion: "apps.openshift.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync-que",
+			Labels: map[string]string{
+				"app":                  zync.Options.appLabel,
+				"threescale_component": "zync",
+			},
+		},
+		Spec: appsv1.DeploymentConfigSpec{
+			Replicas: 1,
+			Selector: map[string]string{"deploymentConfig": "zync-que"},
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.DeploymentStrategyTypeRolling,
+				RollingParams: &appsv1.RollingDeploymentStrategyParams{
+					UpdatePeriodSeconds: &[]int64{1}[0],
+					IntervalSeconds:     &[]int64{1}[0],
+					TimeoutSeconds:      &[]int64{600}[0],
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.Type(intstr.String),
+						StrVal: "25%",
+					},
+					MaxSurge: &intstr.IntOrString{
+						Type:   intstr.Type(intstr.String),
+						StrVal: "25%",
+					},
+				},
+			},
+			Triggers: appsv1.DeploymentTriggerPolicies{
+				appsv1.DeploymentTriggerPolicy{
+					Type: appsv1.DeploymentTriggerOnConfigChange,
+				},
+				appsv1.DeploymentTriggerPolicy{
+					Type: appsv1.DeploymentTriggerOnImageChange,
+					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+						Automatic: true,
+						ContainerNames: []string{
+							"que",
+						},
+						From: v1.ObjectReference{
+							Kind: "ImageStreamTag",
+							Name: "amp-zync:latest",
+						},
+					},
+				},
+			},
+			Template: &v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"prometheus.io/port":   "9394",
+						"prometheus.io/scrape": "true",
+					},
+					Labels: map[string]string{
+						"app":              zync.Options.appLabel,
+						"deploymentConfig": "zync",
+					},
+				},
+				Spec: v1.PodSpec{
+					RestartPolicy:                 v1.RestartPolicyAlways,
+					TerminationGracePeriodSeconds: &[]int64{30}[0],
+					Containers: []v1.Container{
+						v1.Container{
+							Name:            "que",
+							Command:         []string{"/usr/bin/bash"},
+							Args:            []string{"-c", "bundle exec rake 'que[--worker-count 10]'"},
+							Image:           "amp-zync:latest",
+							ImagePullPolicy: v1.PullAlways,
+							LivenessProbe: &v1.Probe{
+								FailureThreshold:    3,
+								InitialDelaySeconds: 10,
+								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								TimeoutSeconds:      60,
+								Handler: v1.Handler{
+									HTTPGet: &v1.HTTPGetAction{
+										Port:   intstr.FromInt(9394),
+										Path:   "/metrics",
+										Scheme: v1.URISchemeHTTP,
+									},
+								},
+							},
+							Ports: []v1.ContainerPort{
+								v1.ContainerPort{Name: "metrics", ContainerPort: 9394, Protocol: v1.ProtocolTCP},
+							},
+							Resources: v1.ResourceRequirements{
+								Limits: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("1"),
+									v1.ResourceMemory: resource.MustParse("512Mi"),
+								},
+								Requests: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("250m"),
+									v1.ResourceMemory: resource.MustParse("250M"),
+								},
+							},
+							Env: zync.commonZyncEnvVars(),
 						},
 					},
 				},

@@ -156,6 +156,7 @@ func waitForAllApiManagerStandardDeploymentConfigs(t *testing.T, kubeclient kube
 		"system-sidekiq",
 		"system-sphinx",
 		"zync",
+		"zync-que",
 		"zync-database",
 	}
 
