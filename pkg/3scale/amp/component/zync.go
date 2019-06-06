@@ -9,6 +9,7 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -80,6 +81,9 @@ func (zync *Zync) AssembleIntoTemplate(template *templatev1.Template, otherCompo
 }
 
 func (zync *Zync) buildObjects() []common.KubernetesObject {
+	zyncQueRole := zync.buildZyncQueRole()
+	zyncQueServiceAccount := zync.buildZyncQueServiceAccount()
+	zyncQueRoleBinding := zync.buildZyncQueRoleBinding()
 	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
 	zyncQueDeploymentConfig := zync.buildZyncQueDeploymentConfig()
 	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
@@ -88,6 +92,9 @@ func (zync *Zync) buildObjects() []common.KubernetesObject {
 	zyncSecret := zync.buildZyncSecret()
 
 	objects := []common.KubernetesObject{
+		zyncQueRole,
+		zyncQueServiceAccount,
+		zyncQueRoleBinding,
 		zyncDeploymentConfig,
 		zyncQueDeploymentConfig,
 		zyncDatabaseDeploymentConfig,
@@ -244,6 +251,95 @@ func (zync *Zync) buildZyncCronDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
+func (zync *Zync) buildZyncQueServiceAccount() *v1.ServiceAccount {
+	return &v1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ServiceAccount",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync-que-sa",
+		},
+		ImagePullSecrets: []v1.LocalObjectReference{
+			v1.LocalObjectReference{
+				Name: "threescale-registry-auth",
+			},
+		},
+	}
+}
+
+func (zync *Zync) buildZyncQueRoleBinding() *rbacv1.RoleBinding {
+	return &rbacv1.RoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "RoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync-que-rolebinding",
+		},
+		Subjects: []rbacv1.Subject{
+			rbacv1.Subject{
+				Kind: "ServiceAccount",
+				Name: "zync-que-sa",
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     "zync-que-role",
+		},
+	}
+}
+
+func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
+	return &rbacv1.Role{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "Role",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync-que-role",
+		},
+		Rules: []rbacv1.PolicyRule{
+			rbacv1.PolicyRule{
+				APIGroups: []string{"apps.openshift.io"},
+				Resources: []string{
+					"deploymentconfigs",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+				},
+			},
+			rbacv1.PolicyRule{
+				APIGroups: []string{""},
+				Resources: []string{
+					"pods",
+					"replicationcontrollers",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+				},
+			},
+			rbacv1.PolicyRule{
+				APIGroups: []string{"route.openshift.io"},
+				Resources: []string{
+					"routes",
+					"routes/status",
+					"routes/custom-host",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"create",
+					"delete",
+				},
+			},
+		},
+	}
+}
+
 func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
@@ -383,18 +479,22 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		envVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
 		envVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
 		envVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
-		// +              - name: BUGSNAG_API_KEY
-		// +                valueFrom:
-		// +                  secretKeyRef:
-		// +                    key: BUGSNAG_API_KEY
-		// +                    name: zync
-		// +              - name: SKYLIGHT_AUTHENTICATION
-		// +                valueFrom:
-		// +                  secretKeyRef:
-		// +                    key: SKYLIGHT_AUTHENTICATION
-		// +                    name: zync
-		// this two keys are used in both zync and zync-que in the zync repository but they are not present into
-		// the templates. What TODO?
+		v1.EnvVar{
+			Name: "POD_NAME",
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		},
+		v1.EnvVar{
+			Name: "POD_NAMESPACE",
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "metadata.namespace",
+				},
+			},
+		},
 	}
 }
 func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
@@ -455,10 +555,11 @@ func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					Labels: map[string]string{
 						"app":              zync.Options.appLabel,
-						"deploymentConfig": "zync",
+						"deploymentConfig": "zync-que",
 					},
 				},
 				Spec: v1.PodSpec{
+					ServiceAccountName:            "zync-que-sa",
 					RestartPolicy:                 v1.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &[]int64{30}[0],
 					Containers: []v1.Container{

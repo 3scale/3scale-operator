@@ -40,6 +40,13 @@ rules:
   verbs:
   - "update"
 - apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - '*'
+- apiGroups:
   - image.openshift.io
   resources:
   - imagestreams
