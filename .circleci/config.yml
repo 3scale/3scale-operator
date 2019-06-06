@@ -125,7 +125,18 @@ commands:
             set -x
             oc cancel-build $(oc get bc --output=name)
             for bc in $(oc get bc --output=name); do oc start-build $bc --wait --follow & done
-            wait
+            echo "List of build image processes:"
+            for job in $(jobs -p); do
+              ps aux | grep $job
+            done
+            echo "Waiting for the build processes to finish"
+            for job in $(jobs -p); do
+              if ! wait ${job} ; then
+                echo "Build image process ${job} exited with non-zero exit code"
+                exit 1
+              fi
+            done
+            echo "Finished waiting for the processes"
             oc delete events --all
   oc-observe:
     steps:
