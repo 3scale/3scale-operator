@@ -37,11 +37,11 @@ objects:
         ref: "${GIT_REF}"
       type: Git
     strategy:
-      sourceStrategy:
+      dockerStrategy:
         from:
           kind: ImageStreamTag
           name: ruby-24-centos7:latest
-      type: Source
+      type: Docker
     triggers:
     - type: ConfigChange
 
