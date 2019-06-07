@@ -158,13 +158,13 @@ To install this operator on OpenShift 4 for end-to-end testing, make sure you ha
 Push the operator bundle to your quay application repository as follows:
 
 ```bash
-operator-courier push deploy/olm-catalog/3scale-operator/0.0.1 3scale 3scale-operator 0.0.1 "basic XXXXXXXXX"
+operator-courier push deploy/olm-catalog/3scale-operator/ 3scale 3scale-operator 0.3.0 "basic XXXXXXXXX"
 ```
 
 If pushing to another quay repository, replace _3scale_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
 
 ```bash
-deploy/olm-catalog/3scale-operator/3scale-operatorsource.yaml
+deploy/olm-catalog/3scale-operatorsource.yaml
 ```
 
 Remember to replace _registryNamespace_ with your quay namespace. The name, display name and publisher of the operator are the only other attributes that may be modified.
