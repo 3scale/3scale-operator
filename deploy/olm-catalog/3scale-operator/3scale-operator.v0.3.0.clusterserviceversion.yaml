@@ -28,27 +28,43 @@ spec:
     - kind: APIManager
       name: apimanagers.apps.3scale.net
       version: v1alpha1
+      description: API Manager
+      displayName: API Manager
     - kind: API
       name: apis.capabilities.3scale.net
       version: v1alpha1
+      description: API
+      displayName: API
     - kind: Binding
       name: bindings.capabilities.3scale.net
       version: v1alpha1
+      description: Binding
+      displayName: Binding
     - kind: Limit
       name: limits.capabilities.3scale.net
       version: v1alpha1
+      description: Limit
+      displayName: Limit
     - kind: MappingRule
       name: mappingrules.capabilities.3scale.net
       version: v1alpha1
+      description: MappingRule
+      displayName: MappingRule
     - kind: Metric
       name: metrics.capabilities.3scale.net
       version: v1alpha1
+      description: Metric
+      displayName: Metric
     - kind: Plan
       name: plans.capabilities.3scale.net
       version: v1alpha1
+      description: Plan
+      displayName: Plan
     - kind: Tenant
       name: tenants.capabilities.3scale.net
       version: v1alpha1
+      description: Tenant
+      displayName: Tenant
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 
