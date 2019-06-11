@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/apis"
 	appsgroup "github.com/3scale/3scale-operator/pkg/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -89,12 +88,31 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	t.Log("operator Deployment is ready")
 
 	enableResourceRequirements := false
+	apicastNightlyImage := "quay.io/3scale/apicast:nightly"
+	backendNightlyImage := "quay.io/3scale/apisonator:nightly"
+	systemNightlyImage := "quay.io/3scale/porta:nightly"
+	wildcardRouterNightlyImage := "quay.io/3scale/wildcard-router:nightly"
+	zyncNightlyImage := "quay.io/3scale/zync:nightly"
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				ProductVersion:              product.ProductUpstream,
 				WildcardDomain:              "test1.127.0.0.1.nip.io",
 				ResourceRequirementsEnabled: &enableResourceRequirements,
+			},
+			Apicast: &appsv1alpha1.ApicastSpec{
+				Image: &apicastNightlyImage,
+			},
+			Backend: &appsv1alpha1.BackendSpec{
+				Image: &backendNightlyImage,
+			},
+			System: &appsv1alpha1.SystemSpec{
+				Image: &systemNightlyImage,
+			},
+			WildcardRouter: &appsv1alpha1.WildcardRouterSpec{
+				Image: &wildcardRouterNightlyImage,
+			},
+			Zync: &appsv1alpha1.ZyncSpec{
+				Image: &zyncNightlyImage,
 			},
 		},
 		ObjectMeta: metav1.ObjectMeta{

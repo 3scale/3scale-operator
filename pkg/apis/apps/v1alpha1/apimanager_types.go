@@ -5,8 +5,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -90,8 +88,7 @@ type APIManagerList struct {
 }
 
 type APIManagerCommonSpec struct {
-	ProductVersion product.Version `json:"productVersion"`
-	WildcardDomain string          `json:"wildcardDomain"`
+	WildcardDomain string `json:"wildcardDomain"`
 	// +optional
 	AppLabel *string `json:"appLabel,omitempty"`
 	// +optional

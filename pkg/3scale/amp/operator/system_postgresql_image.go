@@ -9,7 +9,7 @@ import (
 
 func (o *OperatorSystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageOptions() (*component.SystemPostgreSQLImageOptions, error) {
 	optProv := component.SystemPostgreSQLImageOptionsBuilder{}
-	productVersion := o.APIManagerSpec.ProductVersion
+	productVersion := product.CurrentProductVersion()
 	imageProvider, err := product.NewImageProvider(productVersion)
 	if err != nil {
 		return nil, err

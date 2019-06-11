@@ -9,7 +9,7 @@ import (
 
 func (o *OperatorSystemMySQLImageOptionsProvider) GetSystemMySQLImageOptions() (*component.SystemMySQLImageOptions, error) {
 	optProv := component.SystemMySQLImageOptionsBuilder{}
-	productVersion := o.APIManagerSpec.ProductVersion
+	productVersion := product.CurrentProductVersion()
 	imageProvider, err := product.NewImageProvider(productVersion)
 	if err != nil {
 		return nil, err
