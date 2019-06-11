@@ -352,43 +352,6 @@ objects:
         type: ""
   status:
     dockerImageRepository: ""
-- apiVersion: image.openshift.io/v1
-  kind: ImageStream
-  metadata:
-    annotations:
-      openshift.io/display-name: AMP APIcast Wildcard Router
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: wildcard-router
-    name: amp-wildcard-router
-  spec:
-    lookupPolicy:
-      local: false
-    tags:
-    - annotations:
-        openshift.io/display-name: AMP APIcast Wildcard Router (latest)
-      from:
-        kind: ImageStreamTag
-        name: ${AMP_RELEASE}
-      generation: null
-      importPolicy: {}
-      name: latest
-      referencePolicy:
-        type: ""
-    - annotations:
-        openshift.io/display-name: AMP APIcast Wildcard Router ${AMP_RELEASE}
-      from:
-        kind: DockerImage
-        name: ${AMP_ROUTER_IMAGE}
-      generation: null
-      importPolicy:
-        insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
-      name: ${AMP_RELEASE}
-      referencePolicy:
-        type: ""
-  status:
-    dockerImageRepository: ""
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -4141,124 +4104,6 @@ objects:
       app: ${APP_LABEL}
       threescale_component: apicast
     name: apicast-environment
-- apiVersion: apps.openshift.io/v1
-  kind: DeploymentConfig
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: apicast
-      threescale_component_element: wildcard-router
-    name: apicast-wildcard-router
-  spec:
-    replicas: 1
-    selector:
-      deploymentConfig: apicast-wildcard-router
-    strategy:
-      resources: {}
-      rollingParams:
-        intervalSeconds: 1
-        maxSurge: 25%
-        maxUnavailable: 25%
-        timeoutSeconds: 1800
-        updatePeriodSeconds: 1
-      type: Rolling
-    template:
-      metadata:
-        creationTimestamp: null
-        labels:
-          app: ${APP_LABEL}
-          deploymentConfig: apicast-wildcard-router
-          threescale_component: apicast
-          threescale_component_element: wildcard-router
-      spec:
-        containers:
-        - env:
-          - name: API_HOST
-            valueFrom:
-              secretKeyRef:
-                key: BASE_URL
-                name: system-master-apicast
-          image: amp-wildcard-router:latest
-          imagePullPolicy: IfNotPresent
-          livenessProbe:
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            tcpSocket:
-              port: http
-          name: apicast-wildcard-router
-          ports:
-          - containerPort: 8080
-            name: http
-            protocol: TCP
-          resources:
-            limits:
-              cpu: 500m
-              memory: 64Mi
-            requests:
-              cpu: 120m
-              memory: 32Mi
-        serviceAccountName: amp
-    test: false
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - apicast-wildcard-router
-        from:
-          kind: ImageStreamTag
-          name: amp-wildcard-router:latest
-      type: ImageChange
-  status:
-    availableReplicas: 0
-    latestVersion: 0
-    observedGeneration: 0
-    replicas: 0
-    unavailableReplicas: 0
-    updatedReplicas: 0
-- apiVersion: v1
-  kind: Service
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: apicast
-      threescale_component_element: wildcard-router
-    name: apicast-wildcard-router
-  spec:
-    ports:
-    - name: http
-      port: 8080
-      protocol: TCP
-      targetPort: http
-    selector:
-      deploymentConfig: apicast-wildcard-router
-  status:
-    loadBalancer: {}
-- apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: apicast
-      threescale_component_element: wildcard-router
-    name: apicast-wildcard-router
-  spec:
-    host: apicast-wildcard.${WILDCARD_DOMAIN}
-    port:
-      targetPort: http
-    tls:
-      insecureEdgeTerminationPolicy: Allow
-      termination: edge
-    to:
-      kind: Service
-      name: apicast-wildcard-router
-      weight: null
-    wildcardPolicy: ${WILDCARD_POLICY}
-  status:
-    ingress: null
 - apiVersion: v1
   kind: Secret
   metadata:
@@ -4311,9 +4156,6 @@ parameters:
   name: SYSTEM_DATABASE_IMAGE
   required: true
   value: registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7
-- name: AMP_ROUTER_IMAGE
-  required: true
-  value: quay.io/3scale/wildcard-router:nightly
 - description: Redis image to use
   name: REDIS_IMAGE
   required: true
@@ -4340,6 +4182,10 @@ parameters:
   from: '[a-z0-9]{8}'
   generate: expression
   name: SYSTEM_DATABASE_ROOT_PASSWORD
+  required: true
+- description: Root domain for the wildcard routes. Eg. example.com will generate
+    3scale-admin.example.com.
+  name: WILDCARD_DOMAIN
   required: true
 - description: Internal 3scale API username for internal 3scale api auth.
   name: SYSTEM_BACKEND_USERNAME
@@ -4440,14 +4286,6 @@ parameters:
   name: APICAST_REGISTRY_URL
   required: true
   value: http://apicast-staging:8090/policies
-- description: Root domain for the wildcard routes. Eg. example.com will generate
-    3scale-admin.example.com.
-  name: WILDCARD_DOMAIN
-  required: true
-- description: Use "Subdomain" to create a wildcard route for apicast wildcard router
-  name: WILDCARD_POLICY
-  required: true
-  value: None
 - description: Define Assets Storage
   name: FILE_UPLOAD_STORAGE
 - description: AWS Access Key ID to use in S3 Storage for assets.
