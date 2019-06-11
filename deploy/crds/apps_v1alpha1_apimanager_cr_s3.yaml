@@ -12,4 +12,3 @@ spec:
         awsBucket: <bucket-name>
         awsCredentialsSecret:
           name: <credentials-secret-name>
-        fileUploadStorage: <file-upload-storage-name>

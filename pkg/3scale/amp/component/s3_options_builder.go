@@ -22,10 +22,6 @@ func (s3 *S3OptionsBuilder) AwsBucket(awsBucket string) {
 	s3.options.awsBucket = awsBucket
 }
 
-func (s3 *S3OptionsBuilder) FileUploadStorage(fileUploadStorage string) {
-	s3.options.fileUploadStorage = fileUploadStorage
-}
-
 func (s3 *S3OptionsBuilder) AWSCredentialsSecret(awsCredentials string) {
 	s3.options.awsCredentialsSecret = awsCredentials
 }
@@ -54,9 +50,6 @@ func (s3 *S3OptionsBuilder) setRequiredOptions() error {
 	}
 	if s3.options.awsBucket == "" {
 		return fmt.Errorf("no AWS bucket has been provided")
-	}
-	if s3.options.fileUploadStorage == "" {
-		return fmt.Errorf("no file upload storage has been provided")
 	}
 	if s3.options.awsCredentialsSecret == "" {
 		return fmt.Errorf("no AWS credentials secret has been provided")
