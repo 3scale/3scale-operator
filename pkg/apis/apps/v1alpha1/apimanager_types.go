@@ -158,10 +158,9 @@ type SystemPVCSpec struct {
 }
 
 type SystemS3Spec struct {
-	AWSBucket         string                  `json:"awsBucket"`
-	AWSRegion         string                  `json:"awsRegion"`
-	AWSCredentials    v1.LocalObjectReference `json:"awsCredentialsSecret"`
-	FileUploadStorage string                  `json:"fileUploadStorage"`
+	AWSBucket      string                  `json:"awsBucket"`
+	AWSRegion      string                  `json:"awsRegion"`
+	AWSCredentials v1.LocalObjectReference `json:"awsCredentialsSecret"`
 }
 
 type SystemDatabaseSpec struct {

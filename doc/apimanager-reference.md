@@ -81,7 +81,6 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 | AWSBucket | `awsBucket` | string | Yes | N/A | AWS Bucket name of the S3 bucket to be used as System's FileStorage for assets |
 | AWSRegion | `awsRegion` | string | Yes | N/A | AWS Region of the S3 bucket to be used as Sytem's FileStorage for assets |
 | AWSCredentials | `awsCredentialsSecret` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS credentials are stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
-| FileUploadStorage | `fileUploadStorage` | string | Yes | N/A | Define Assets Storage name |
 
 The secret name specified in the `awsCredentialsSecret` field must be
 pre-created by the user before creating the APIManager custom resource.
