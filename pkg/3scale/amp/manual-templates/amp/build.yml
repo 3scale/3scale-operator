@@ -98,32 +98,6 @@ objects:
     - type: ConfigChange
 
 - apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    labels:
-      app: wildcard-router
-    name: wildcard-router
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: amp-wildcard-router:latest
-    source:
-      git:
-        uri: https://github.com/3scale/wildcard-router-service.git
-        ref: "${GIT_REF}"
-      type: Git
-    strategy:
-      type: Source
-      sourceStrategy:
-        forcePull: true
-        from:
-          kind: ImageStreamTag
-          name: s2i-openresty-centos7:builder
-    triggers:
-    - type: ConfigChange
-
-- apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
