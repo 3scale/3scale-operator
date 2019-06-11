@@ -27,7 +27,6 @@ type productizedRequiredOptions struct {
 	ampRelease   string
 	apicastImage string
 	backendImage string
-	routerImage  string
 	systemImage  string
 	zyncImage    string
 }
@@ -45,7 +44,6 @@ func (o *CLIProductizedOptionsProvider) GetProductizedOptions() (*ProductizedOpt
 	pob := ProductizedOptionsBuilder{}
 	pob.ApicastImage("${AMP_APICAST_IMAGE}")
 	pob.BackendImage("${AMP_BACKEND_IMAGE}")
-	pob.RouterImage("${AMP_ROUTER_IMAGE}")
 	pob.SystemImage("${AMP_SYSTEM_IMAGE}")
 	pob.ZyncImage("${AMP_ZYNC_IMAGE}")
 	res, err := pob.Build()
@@ -79,8 +77,6 @@ func (productized *Productized) updateAmpImagesParameters(template *templatev1.T
 			param.Value = "registry.access.redhat.com/3scale-amp25/backend"
 		case "AMP_APICAST_IMAGE":
 			param.Value = "registry.access.redhat.com/3scale-amp25/apicast-gateway"
-		case "AMP_ROUTER_IMAGE":
-			param.Value = "registry.access.redhat.com/3scale-amp22/wildcard-router"
 		case "AMP_ZYNC_IMAGE":
 			param.Value = "registry.access.redhat.com/3scale-amp25/zync"
 		}

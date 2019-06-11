@@ -73,7 +73,6 @@ func (bcs *BuildConfigs) buildObjects() []runtime.RawExtension {
 	backendBuildConfig := bcs.buildBackendBuildConfig()
 	zyncBuildConfig := bcs.buildZyncBuildConfig()
 	apicastBuildConfig := bcs.buildApicastBuildConfig()
-	wildcardRouterBuildConfig := bcs.buildWildcardRouterBuildConfig()
 	systemBuildConfig := bcs.buildSystemBuildConfig()
 
 	buildRubyCentosSevenImageStream := bcs.buildRubyCentosSevenImageStream()
@@ -83,7 +82,6 @@ func (bcs *BuildConfigs) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: backendBuildConfig},
 		runtime.RawExtension{Object: zyncBuildConfig},
 		runtime.RawExtension{Object: apicastBuildConfig},
-		runtime.RawExtension{Object: wildcardRouterBuildConfig},
 		runtime.RawExtension{Object: systemBuildConfig},
 		runtime.RawExtension{Object: buildRubyCentosSevenImageStream},
 		runtime.RawExtension{Object: buildOpenrestyCentosSevenImageStream},
@@ -216,58 +214,6 @@ func (bcs *BuildConfigs) buildApicastBuildConfig() *buildv1.BuildConfig {
 					ContextDir: "gateway",
 					Git: &buildv1.GitBuildSource{
 						URI: "https://github.com/3scale/apicast.git",
-						Ref: bcs.Options.gitRef,
-					},
-					Type: buildv1.BuildSourceGit,
-				},
-				Strategy: buildv1.BuildStrategy{
-					Type: buildv1.SourceBuildStrategyType,
-					SourceStrategy: &buildv1.SourceBuildStrategy{
-						// TODO it seems RuntimeImage field has been deprecated and says: Deprecated: This feature will be removed in a future release. Use ImageSource to copy binary artifacts created from one build into a separate runtime image
-						ForcePull: true,
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: "s2i-openresty-centos7:builder",
-						},
-					},
-				},
-			},
-			Triggers: []buildv1.BuildTriggerPolicy{
-				buildv1.BuildTriggerPolicy{
-					Type: buildv1.ImageChangeBuildTriggerType,
-				},
-				buildv1.BuildTriggerPolicy{
-					Type: buildv1.ConfigChangeBuildTriggerType,
-				},
-			},
-		},
-	}
-}
-
-func (bcs *BuildConfigs) buildWildcardRouterBuildConfig() *buildv1.BuildConfig {
-	return &buildv1.BuildConfig{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "build.openshift.io/v1",
-			Kind:       "BuildConfig",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "wildcard-router",
-			Labels: map[string]string{
-				"app":                  bcs.Options.appLabel,
-				"threescale_component": "wildcard-router",
-			},
-		},
-		Spec: buildv1.BuildConfigSpec{
-			CommonSpec: buildv1.CommonSpec{
-				Output: buildv1.BuildOutput{
-					To: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: "amp-wildcard-router:latest",
-					},
-				},
-				Source: buildv1.BuildSource{
-					Git: &buildv1.GitBuildSource{
-						URI: "https://github.com/3scale/wildcard-router-service.git",
 						Ref: bcs.Options.gitRef,
 					},
 					Type: buildv1.BuildSourceGit,

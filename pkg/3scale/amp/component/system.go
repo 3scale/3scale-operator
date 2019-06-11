@@ -153,6 +153,7 @@ func (o *CLISystemOptionsProvider) GetSystemOptions() (*SystemOptions, error) {
 	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
 	sob.TenantName("${TENANT_NAME}")
 	sob.WildcardDomain("${WILDCARD_DOMAIN}")
+
 	sob.StorageClassName(nil)
 	res, err := sob.Build()
 	if err != nil {
@@ -187,6 +188,11 @@ func (system *System) PostProcess(template *templatev1.Template, otherComponents
 
 func (system *System) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
+		templatev1.Parameter{
+			Name:        "WILDCARD_DOMAIN",
+			Description: "Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com.",
+			Required:    true,
+		},
 		templatev1.Parameter{
 			Name:        "SYSTEM_BACKEND_USERNAME",
 			Description: "Internal 3scale API username for internal 3scale api auth.",

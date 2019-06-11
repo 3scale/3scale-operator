@@ -18,10 +18,6 @@ func (productized *ProductizedOptionsBuilder) BackendImage(backendImage string) 
 	productized.options.backendImage = backendImage
 }
 
-func (productized *ProductizedOptionsBuilder) RouterImage(routerImage string) {
-	productized.options.routerImage = routerImage
-}
-
 func (productized *ProductizedOptionsBuilder) SystemImage(systemImage string) {
 	productized.options.systemImage = systemImage
 }
@@ -50,9 +46,6 @@ func (productized *ProductizedOptionsBuilder) setRequiredOptions() error {
 	}
 	if productized.options.backendImage == "" {
 		return fmt.Errorf("no Backend image has been provided")
-	}
-	if productized.options.routerImage == "" {
-		return fmt.Errorf("no Router image has been provided")
 	}
 	if productized.options.systemImage == "" {
 		return fmt.Errorf("no System image has been provided")

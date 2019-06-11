@@ -75,7 +75,6 @@ func getAvailableOrderedComponents() []component.ComponentType {
 		component.SystemType,
 		component.ZyncType,
 		component.ApicastType,
-		component.WildcardRouterType,
 		component.S3Type,
 		component.ProductizedType,
 		component.EvaluationType,

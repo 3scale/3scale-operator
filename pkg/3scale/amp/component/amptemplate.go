@@ -19,14 +19,12 @@ type AmpTemplateOptions struct {
 	systemOptions           SystemOptions
 	zyncOptions             ZyncOptions
 	apicastOptions          ApicastOptions
-	wildcardRouterOptions   WildcardRouterOptions
 }
 
 func NewAmpTemplate(options []string) *AmpTemplate {
 	components := []Component{
 		NewAmpImages(options),
 		NewSystemMySQLImage(options),
-		NewWildcardRouterImage(options),
 		NewRedis(options),
 		NewBackend(options),
 		NewMysql(options),
@@ -34,7 +32,6 @@ func NewAmpTemplate(options []string) *AmpTemplate {
 		NewSystem(options),
 		NewZync(options),
 		NewApicast(options),
-		NewWildcardRouter(options),
 	}
 
 	ampTemplate := &AmpTemplate{

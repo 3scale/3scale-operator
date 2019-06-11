@@ -30,10 +30,6 @@ func (o *OperatorProductizedOptionsProvider) GetProductizedOptions() (*component
 		pob.BackendImage(imageProvider.GetBackendImage())
 	}
 
-	// Temporary until we can remove WildcardRouter from the templates
-	// side
-	pob.RouterImage(imageProvider.GetWildcardRouterImage())
-
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.Image != nil {
 		pob.SystemImage(*o.APIManagerSpec.System.Image)
 	} else {
