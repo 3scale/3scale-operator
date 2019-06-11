@@ -8,6 +8,7 @@ rules:
   - ""
   resources:
   - pods
+  - replicationcontrollers
   - services
   - endpoints
   - persistentvolumeclaims
