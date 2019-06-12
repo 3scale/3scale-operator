@@ -22,7 +22,7 @@ type AmpPostgreSQLTemplateOptions struct {
 	wildcardRouterOptions        WildcardRouterOptions
 }
 
-func NewAmpPostgreSQLTemplate(options []string) *AmpTemplate {
+func NewAmpPostgreSQLTemplate(options []string) *AmpPostgreSQLTemplate {
 	components := []Component{
 		NewAmpImages(options),
 		NewSystemPostgreSQLImage(options),
@@ -36,7 +36,7 @@ func NewAmpPostgreSQLTemplate(options []string) *AmpTemplate {
 		NewWildcardRouter(options),
 	}
 
-	ampTemplate := &AmpTemplate{
+	ampTemplate := &AmpPostgreSQLTemplate{
 		options:    options,
 		components: components,
 	}
