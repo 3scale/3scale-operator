@@ -21,7 +21,6 @@ This resource is the resource used to deploy a 3scale API Management solution.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| ProductVersion | `productVersion` | ProductVersion | Yes | N/A | 3Scale API Management solution release version. Currently the values "2.5" and "upstream" are supported. **Warning**, "upstream" uses 3scale unstable nightly images and it is intended only for development purposes and to be used in non-productive environments |
 | WildcardDomain | `wildcardDomain` | string | Yes | N/A | Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com. |
 | AppLabel | `appLabel` | string | No | `3scale-api-management` | The value of the `app` label that will be applied to the API management solution
 | TenantName | `tenantName` | string | No | `3scale` | Tenant name under the root that Admin UI will be available with -admin suffix.

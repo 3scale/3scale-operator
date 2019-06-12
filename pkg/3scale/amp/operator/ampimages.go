@@ -10,7 +10,7 @@ import (
 func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOptions, error) {
 	optProv := component.AmpImagesOptionsBuilder{}
 
-	productVersion := o.APIManagerSpec.ProductVersion
+	productVersion := product.CurrentProductVersion()
 	imageProvider, err := product.NewImageProvider(productVersion)
 	if err != nil {
 		return nil, err

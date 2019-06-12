@@ -9,7 +9,6 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -318,16 +317,6 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 	if !*cr.Spec.ResourceRequirementsEnabled {
 		e := component.Evaluation{}
 		e.PostProcessObjects(objects)
-	}
-
-	if product.IsProductizedVersion(cr.Spec.ProductVersion) {
-		optsProvider := operator.OperatorProductizedOptionsProvider{APIManagerSpec: &cr.Spec}
-		opts, err := optsProvider.GetProductizedOptions()
-		if err != nil {
-			return nil, err
-		}
-		p := component.Productized{Options: opts}
-		objects = p.PostProcessObjects(objects)
 	}
 
 	if cr.Spec.System.FileStorageSpec.S3 != nil {

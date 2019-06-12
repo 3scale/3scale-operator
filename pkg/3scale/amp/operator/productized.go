@@ -10,7 +10,7 @@ import (
 func (o *OperatorProductizedOptionsProvider) GetProductizedOptions() (*component.ProductizedOptions, error) {
 	pob := component.ProductizedOptionsBuilder{}
 
-	productVersion := o.APIManagerSpec.ProductVersion
+	productVersion := product.CurrentProductVersion()
 	imageProvider, err := product.NewImageProvider(productVersion)
 	if err != nil {
 		return nil, err

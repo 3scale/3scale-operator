@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
@@ -11,7 +12,7 @@ import (
 func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, error) {
 	optProv := component.SystemOptionsBuilder{}
 
-	productVersion := o.APIManagerSpec.ProductVersion
+	productVersion := product.CurrentProductVersion()
 
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 	optProv.AmpRelease(string(productVersion))

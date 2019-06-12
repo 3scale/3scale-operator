@@ -58,8 +58,6 @@ spec:
               type: object
             imageStreamTagImportInsecure:
               type: boolean
-            productVersion:
-              type: string
             resourceRequirementsEnabled:
               type: boolean
             system:
@@ -129,7 +127,6 @@ spec:
                   type: string
               type: object
           required:
-          - productVersion
           - wildcardDomain
           type: object
         status:

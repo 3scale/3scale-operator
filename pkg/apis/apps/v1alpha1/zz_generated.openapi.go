@@ -68,12 +68,6 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref common.ReferenceCallback) 
 			SchemaProps: spec.SchemaProps{
 				Description: "APIManagerSpec defines the desired state of APIManager",
 				Properties: map[string]spec.Schema{
-					"productVersion": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"wildcardDomain": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -141,7 +135,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref common.ReferenceCallback) 
 						},
 					},
 				},
-				Required: []string{"productVersion", "wildcardDomain"},
+				Required: []string{"wildcardDomain"},
 			},
 		},
 		Dependencies: []string{
