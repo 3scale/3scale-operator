@@ -22,10 +22,6 @@ func (ampImages *AmpImagesOptionsBuilder) BackendImage(backendImage string) {
 	ampImages.options.backendImage = backendImage
 }
 
-func (ampImages *AmpImagesOptionsBuilder) RouterImage(routerImage string) {
-	ampImages.options.routerImage = routerImage
-}
-
 func (ampImages *AmpImagesOptionsBuilder) SystemImage(systemImage string) {
 	ampImages.options.systemImage = systemImage
 }
@@ -66,9 +62,6 @@ func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
 	}
 	if ampImages.options.backendImage == "" {
 		return nil, fmt.Errorf("no Backend image has been provided")
-	}
-	if ampImages.options.routerImage == "" {
-		return nil, fmt.Errorf("no Router image been provided")
 	}
 	if ampImages.options.systemImage == "" {
 		return nil, fmt.Errorf("no System image has been provided")

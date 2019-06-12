@@ -112,13 +112,6 @@ spec:
               type: string
             wildcardDomain:
               type: string
-            wildcardPolicy:
-              type: string
-            wildcardRouter:
-              properties:
-                image:
-                  type: string
-              type: object
             zync:
               properties:
                 image:

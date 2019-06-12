@@ -29,7 +29,6 @@ type ImageProvider interface {
 	GetSystemMySQLImage() string
 	GetSystemPostgreSQLImage() string
 	GetSystemMemcachedImage() string
-	GetWildcardRouterImage() string
 	GetZyncImage() string
 	GetZyncPostgreSQLImage() string
 }

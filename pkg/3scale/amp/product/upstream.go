@@ -34,10 +34,6 @@ func (u *upstream) GetSystemMemcachedImage() string {
 	return "registry.access.redhat.com/3scale-amp20/memcached"
 }
 
-func (u *upstream) GetWildcardRouterImage() string {
-	return "quay.io/3scale/wildcard-router:nightly"
-}
-
 func (u *upstream) GetZyncImage() string {
 	return "quay.io/3scale/zync:nightly"
 }

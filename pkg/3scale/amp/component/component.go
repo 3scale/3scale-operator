@@ -12,7 +12,6 @@ type ComponentType string
 const (
 	RedisType                 ComponentType = "redis"
 	ApicastType               ComponentType = "apicast"
-	WildcardRouterType        ComponentType = "wildcardrouter"
 	BackendType               ComponentType = "backend"
 	SystemType                ComponentType = "system"
 	ZyncType                  ComponentType = "zync"

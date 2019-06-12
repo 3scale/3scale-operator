@@ -14,8 +14,6 @@ func NewComponent(componentName string, componentOptions []string) Component {
 		//return NewRedis(componentOptions)
 	case ApicastType:
 		component = NewApicast(componentOptions)
-	case WildcardRouterType:
-		component = NewWildcardRouter(componentOptions)
 	case BackendType:
 		component = NewBackend(componentOptions)
 	case SystemType:

@@ -19,7 +19,6 @@ type AmpPostgreSQLTemplateOptions struct {
 	systemOptions                SystemOptions
 	zyncOptions                  ZyncOptions
 	apicastOptions               ApicastOptions
-	wildcardRouterOptions        WildcardRouterOptions
 }
 
 func NewAmpPostgreSQLTemplate(options []string) *AmpPostgreSQLTemplate {
@@ -33,7 +32,6 @@ func NewAmpPostgreSQLTemplate(options []string) *AmpPostgreSQLTemplate {
 		NewSystem(options),
 		NewZync(options),
 		NewApicast(options),
-		NewWildcardRouter(options),
 	}
 
 	ampTemplate := &AmpPostgreSQLTemplate{

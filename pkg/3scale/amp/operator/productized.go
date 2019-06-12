@@ -30,12 +30,6 @@ func (o *OperatorProductizedOptionsProvider) GetProductizedOptions() (*component
 		pob.BackendImage(imageProvider.GetBackendImage())
 	}
 
-	if o.APIManagerSpec.WildcardRouter != nil && o.APIManagerSpec.WildcardRouter.Image != nil {
-		pob.RouterImage(*o.APIManagerSpec.WildcardRouter.Image)
-	} else {
-		pob.RouterImage(imageProvider.GetWildcardRouterImage())
-	}
-
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.Image != nil {
 		pob.SystemImage(*o.APIManagerSpec.System.Image)
 	} else {

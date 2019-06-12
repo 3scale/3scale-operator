@@ -24,7 +24,6 @@ type AmpImagesOptions struct {
 	ampRelease           string
 	apicastImage         string
 	backendImage         string
-	routerImage          string
 	systemImage          string
 	zyncImage            string
 	postgreSQLImage      string
@@ -53,7 +52,6 @@ func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, 
 	aob.AMPRelease("${AMP_RELEASE}")
 	aob.ApicastImage("${AMP_APICAST_IMAGE}")
 	aob.BackendImage("${AMP_BACKEND_IMAGE}")
-	aob.RouterImage("${AMP_ROUTER_IMAGE}")
 	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
 	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
 	aob.PostgreSQLImage("${ZYNC_DATABASE_IMAGE}")
@@ -98,7 +96,6 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 	backendImageStream := ampImages.buildAmpBackendImageStream()
 	zyncImageStream := ampImages.buildAmpZyncImageStream()
 	apicastImageStream := ampImages.buildApicastImageStream()
-	wildcardRouterImageStream := ampImages.buildWildcardRouterImageStream()
 	systemImageStream := ampImages.buildAmpSystemImageStream()
 	postgreSQLImageStream := ampImages.buildPostgreSQLImageStream()
 	backendRedisImageStream := ampImages.buildBackendRedisImageStream()
@@ -111,7 +108,6 @@ func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: backendImageStream},
 		runtime.RawExtension{Object: zyncImageStream},
 		runtime.RawExtension{Object: apicastImageStream},
-		runtime.RawExtension{Object: wildcardRouterImageStream},
 		runtime.RawExtension{Object: systemImageStream},
 		runtime.RawExtension{Object: postgreSQLImageStream},
 		runtime.RawExtension{Object: backendRedisImageStream},
@@ -245,51 +241,6 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
 						Name: ampImages.Options.apicastImage,
-					},
-					ImportPolicy: imagev1.TagImportPolicy{
-						// TODO this was originally a double brace expansion from a variable, that is not possible
-						// natively with kubernetes so we replaced it with a const
-						Insecure: insecureImportPolicy,
-					},
-				},
-			},
-		},
-	}
-}
-
-func (ampImages *AmpImages) buildWildcardRouterImageStream() *imagev1.ImageStream {
-	return &imagev1.ImageStream{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "amp-wildcard-router",
-			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
-				"threescale_component": "wildcard-router",
-			},
-			Annotations: map[string]string{
-				"openshift.io/display-name": "AMP APIcast Wildcard Router",
-			},
-		},
-		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
-		Spec: imagev1.ImageStreamSpec{
-			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP APIcast Wildcard Router (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
-					},
-				},
-				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
-					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP APIcast Wildcard Router " + ampImages.Options.ampRelease,
-					},
-					From: &v1.ObjectReference{
-						Kind: "DockerImage",
-						Name: ampImages.Options.routerImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						// TODO this was originally a double brace expansion from a variable, that is not possible
@@ -546,11 +497,6 @@ func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:     "AMP_APICAST_IMAGE",
 			Value:    "quay.io/3scale/apicast:nightly",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "AMP_ROUTER_IMAGE",
-			Value:    "quay.io/3scale/wildcard-router:nightly",
 			Required: true,
 		},
 		templatev1.Parameter{

@@ -30,12 +30,6 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 		optProv.BackendImage(imageProvider.GetBackendImage())
 	}
 
-	if o.APIManagerSpec.WildcardRouter != nil && o.APIManagerSpec.WildcardRouter.Image != nil {
-		optProv.RouterImage(*o.APIManagerSpec.WildcardRouter.Image)
-	} else {
-		optProv.RouterImage(imageProvider.GetWildcardRouterImage())
-	}
-
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.Image != nil {
 		optProv.SystemImage(*o.APIManagerSpec.System.Image)
 	} else {

@@ -34,10 +34,6 @@ func (p *release_2_5) GetSystemMemcachedImage() string {
 	return "registry.access.redhat.com/3scale-amp20/memcached"
 }
 
-func (p *release_2_5) GetWildcardRouterImage() string {
-	return "registry.access.redhat.com/3scale-amp22/wildcard-router"
-}
-
 func (p *release_2_5) GetZyncImage() string {
 	return "registry.access.redhat.com/3scale-amp25/zync"
 }

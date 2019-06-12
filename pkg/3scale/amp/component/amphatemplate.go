@@ -23,7 +23,6 @@ func NewAmpHATemplate(options []string) *AmpHATemplate {
 		NewSystem(options),
 		NewZync(options),
 		NewApicast(options),
-		NewWildcardRouter(options),
 		NewHighAvailability(options),
 	}
 
