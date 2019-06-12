@@ -24,13 +24,11 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | WildcardDomain | `wildcardDomain` | string | Yes | N/A | Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com. |
 | AppLabel | `appLabel` | string | No | `3scale-api-management` | The value of the `app` label that will be applied to the API management solution
 | TenantName | `tenantName` | string | No | `3scale` | Tenant name under the root that Admin UI will be available with -admin suffix.
-| WildcardPolicy | `wildcardPolicy` | string | No | `None` | Use `Subdomain` to create a wildcard route for apicast wildcard router. If `Subdomain` is used, wildcard routes at the OpenShift router level need to be enabled. You can do so by executing `oc set env dc/router ROUTER_ALLOW_WILDCARD_ROUTES=true -n default` |
 | ImageStreamTagImportInsecure | `imageStreamTagImportInsecure` | bool | No | `false` | Set to true if the server may bypass certificate verification or connect directly over HTTP during image import |
 | ResourceRequirementsEnabled | `resourceRequirementsEnabled` | bool | No | `true` | When true, 3Scale API management solution is deployed with the optimal resource requirements and limits. Setting this to false removes those resource requirements. ***Warning*** Only set it to false for development and evaluation environments |
 | ApicastSpec | `apicast` | \*ApicastSpec | No | See [ApicastSpec](#ApicastSpec) | Spec of the Apicast part |
 | BackendSpec | `backend` | \*BackendSpec | No | See [BackendSpec](#BackendSpec) reference | Spec of the Backend part |
 | SystemSpec  | `system`  | \*SystemSpec  | No | See [SystemSpec](#SystemSpec) reference | Spec of the System part |
-| WildcardRouterSpec | `wildcardRouter` | \*WildcardRouterSpec | No | See [WildcardRouterSpec](#WildcardRouterSpec) reference | Spec of the WildcardRouter part |
 | ZyncSpec    | `zync`    | \*ZyncSpec    | No | See [ZyncSpec](#ZyncSpec) reference | Spec of the Zync part    |
 | HighAvailabilitySpec | `highAvailability` | \*HighAvailabilitySpec | No | See [HighAvailabilitySpec](#HighAvailabilitySpec) reference | Spec of the HighAvailability part |
 
@@ -103,12 +101,6 @@ that should be set on it.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's MySQL database |
-
-#### WildcardRouterSpec
-
-| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
-| --- | --- | --- | --- | --- | --- |
-| Image | `image` | string | No | nil | Used to overwrite the desired container image for WildcardRouter |
 
 #### ZyncSpec
 
