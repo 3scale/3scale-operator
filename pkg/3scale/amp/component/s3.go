@@ -242,11 +242,6 @@ func (s3 *S3) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawEx
 func (s3 *S3) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
 		templatev1.Parameter{
-			Name:        "FILE_UPLOAD_STORAGE",
-			Description: "Define Assets Storage",
-			Required:    false,
-		},
-		templatev1.Parameter{
 			Name:        "AWS_ACCESS_KEY_ID",
 			Description: "AWS Access Key ID to use in S3 Storage for assets.",
 			Required:    false,
