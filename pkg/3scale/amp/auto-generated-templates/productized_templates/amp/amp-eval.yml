@@ -1469,8 +1469,8 @@ objects:
     name: system-provider
   spec:
     ports:
-    - name: http
-      port: 3000
+    - name: provider
+      port: 80
       protocol: TCP
       targetPort: provider
     selector:
@@ -1488,8 +1488,8 @@ objects:
     name: system-master
   spec:
     ports:
-    - name: http
-      port: 3000
+    - name: master
+      port: 80
       protocol: TCP
       targetPort: master
     selector:
@@ -1507,8 +1507,8 @@ objects:
     name: system-developer
   spec:
     ports:
-    - name: http
-      port: 3000
+    - name: developer
+      port: 80
       protocol: TCP
       targetPort: developer
     selector:
@@ -3094,8 +3094,7 @@ objects:
           - bash
           - -c
           - bundle exec sh -c "until rake boot:redis && curl --output /dev/null --silent
-            --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS;
-            done"
+            --fail --head http://system-master/status; do sleep $SLEEP_SECONDS; done"
           env:
           - name: SLEEP_SECONDS
             value: "1"
@@ -3251,7 +3250,7 @@ objects:
         - command:
           - sh
           - -c
-          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
+          - until $(curl --output /dev/null --silent --fail --head http://system-master/status);
             do sleep $SLEEP_SECONDS; done
           env:
           - name: SLEEP_SECONDS
@@ -3292,7 +3291,7 @@ objects:
     name: system-events-hook
   stringData:
     PASSWORD: ${SYSTEM_BACKEND_SHARED_SECRET}
-    URL: http://system-master:3000/master/events/import
+    URL: http://system-master/master/events/import
   type: Opaque
 - apiVersion: v1
   kind: Secret
@@ -3318,8 +3317,8 @@ objects:
     name: system-master-apicast
   stringData:
     ACCESS_TOKEN: ${APICAST_ACCESS_TOKEN}
-    BASE_URL: http://${APICAST_ACCESS_TOKEN}@system-master:3000
-    PROXY_CONFIGS_ENDPOINT: http://${APICAST_ACCESS_TOKEN}@system-master:3000/master/api/proxy/configs
+    BASE_URL: http://${APICAST_ACCESS_TOKEN}@system-master
+    PROXY_CONFIGS_ENDPOINT: http://${APICAST_ACCESS_TOKEN}@system-master/master/api/proxy/configs
   type: Opaque
 - apiVersion: v1
   kind: Secret
@@ -3822,7 +3821,7 @@ objects:
         - command:
           - sh
           - -c
-          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
+          - until $(curl --output /dev/null --silent --fail --head http://system-master/status);
             do sleep $SLEEP_SECONDS; done
           env:
           - name: SLEEP_SECONDS
