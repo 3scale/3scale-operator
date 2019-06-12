@@ -19,6 +19,7 @@ IMAGE ?= quay.io/3scale/3scale-operator
 SOURCE_VERSION ?= master
 VERSION ?= v0.0.1
 NAMESPACE ?= operator-test
+OPERATOR_NAME ?= threescale-operator
 
 ## build: Build operator
 build:
@@ -37,7 +38,7 @@ tag:
 
 ## local: push operator docker image to remote repo
 local:
-	operator-sdk up local --namespace $(NAMESPACE)
+	OPERATOR_NAME=$(OPERATOR_NAME) operator-sdk up local --namespace $(NAMESPACE)
 
 ## e2e-setup: create OCP project for the operator
 e2e-setup:
@@ -45,7 +46,7 @@ e2e-setup:
 
 ## e2e-local-run: running operator locally with go run instead of as an image in the cluster
 e2e-local-run:
-	operator-sdk test local ./test/e2e --up-local --namespace $(NAMESPACE) --go-test-flags '-v -timeout 0'
+	OPERATOR_NAME=$(OPERATOR_NAME) operator-sdk test local ./test/e2e --up-local --namespace $(NAMESPACE) --go-test-flags '-v -timeout 0'
 
 ## e2e-run: operator local test
 e2e-run:
