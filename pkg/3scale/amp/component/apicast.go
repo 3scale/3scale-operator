@@ -453,7 +453,7 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 						v1.Container{
 							Name:    "system-master-svc",
 							Image:   "amp-apicast:latest",
-							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
+							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master/status); do sleep $SLEEP_SECONDS; done"},
 							Env: []v1.EnvVar{
 								v1.EnvVar{
 									Name:  "SLEEP_SECONDS",

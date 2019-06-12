@@ -1043,7 +1043,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 							Command: []string{
 								"bash",
 								"-c",
-								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master/status; do sleep $SLEEP_SECONDS; done\"",
 							},
 							Env: []v1.EnvVar{
 								envVarFromValue("SLEEP_SECONDS", "1"),
@@ -1139,7 +1139,7 @@ func (system *System) buildSystemProviderService() *v1.Service {
 				v1.ServicePort{
 					Name:       "provider",
 					Protocol:   v1.ProtocolTCP,
-					Port:       3000,
+					Port:       80,
 					TargetPort: intstr.FromString("provider"),
 				},
 			},
@@ -1167,7 +1167,7 @@ func (system *System) buildSystemMasterService() *v1.Service {
 				v1.ServicePort{
 					Name:       "master",
 					Protocol:   v1.ProtocolTCP,
-					Port:       3000,
+					Port:       80,
 					TargetPort: intstr.FromString("master"),
 				},
 			},
@@ -1195,7 +1195,7 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 				v1.ServicePort{
 					Name:       "developer",
 					Protocol:   v1.ProtocolTCP,
-					Port:       3000,
+					Port:       80,
 					TargetPort: intstr.FromString("developer"),
 				},
 			},
@@ -1522,7 +1522,7 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 						v1.Container{
 							Name:    "system-master-svc",
 							Image:   "amp-system:latest",
-							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
+							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master/status); do sleep $SLEEP_SECONDS; done"},
 							Env: []v1.EnvVar{
 								envVarFromValue("SLEEP_SECONDS", "1"),
 							},

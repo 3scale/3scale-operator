@@ -177,14 +177,14 @@ func (s *SystemOptionsBuilder) setRequiredOptions() error {
 
 func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 	defaultMemcachedServers := "system-memcache:11211"
-	defaultEventHooksURL := "http://system-master:3000/master/events/import"
+	defaultEventHooksURL := "http://system-master/master/events/import"
 	defaultRedisURL := "redis://system-redis:6379/1"
 	defaultMessageBusRedisURL := ""
 	defaultRedisNamespace := ""
 	defaultMessageBusRedisNamespace := ""
 
-	defaultApicastSystemMasterProxyConfigEndpoint := "http://" + s.options.apicastAccessToken + "@system-master:3000/master/api/proxy/configs"
-	defaultApicastSystemMasterBaseURL := "http://" + s.options.apicastAccessToken + "@system-master:3000"
+	defaultApicastSystemMasterProxyConfigEndpoint := "http://" + s.options.apicastAccessToken + "@system-master/master/api/proxy/configs"
+	defaultApicastSystemMasterBaseURL := "http://" + s.options.apicastAccessToken + "@system-master"
 	defaultAdminEmail := ""
 
 	if s.options.memcachedServers == nil {
