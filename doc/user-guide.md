@@ -150,7 +150,6 @@ kind: APIManager
 metadata:
   name: example-apimanager
 spec:
-  productVersion: <productVersion>
   wildcardDomain: <wildcardDomain>
   wildcardPolicy: <None|Subdomain>
   resourceRequirementsEnabled: true
