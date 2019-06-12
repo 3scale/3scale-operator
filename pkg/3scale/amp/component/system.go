@@ -1137,7 +1137,7 @@ func (system *System) buildSystemProviderService() *v1.Service {
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
-					Name:       "http",
+					Name:       "provider",
 					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("provider"),
@@ -1165,7 +1165,7 @@ func (system *System) buildSystemMasterService() *v1.Service {
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
-					Name:       "http",
+					Name:       "master",
 					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("master"),
@@ -1193,7 +1193,7 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
-					Name:       "http",
+					Name:       "developer",
 					Protocol:   v1.ProtocolTCP,
 					Port:       3000,
 					TargetPort: intstr.FromString("developer"),
