@@ -2,6 +2,8 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -9,7 +11,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -69,14 +70,14 @@ func (apicast *Apicast) AssembleIntoTemplate(template *templatev1.Template, othe
 	apicast.addObjectsIntoTemplate(template)
 }
 
-func (apicast *Apicast) GetObjects() ([]runtime.RawExtension, error) {
+func (apicast *Apicast) GetObjects() ([]common.KubernetesObject, error) {
 	objects := apicast.buildObjects()
 	return objects, nil
 }
 
 func (apicast *Apicast) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := apicast.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (apicast *Apicast) PostProcess(template *templatev1.Template, otherComponents []Component) {
@@ -120,7 +121,7 @@ func (apicast *Apicast) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (apicast *Apicast) buildObjects() []runtime.RawExtension {
+func (apicast *Apicast) buildObjects() []common.KubernetesObject {
 	apicastStagingDeploymentConfig := apicast.buildApicastStagingDeploymentConfig()
 	apicastProductionDeploymentConfig := apicast.buildApicastProductionDeploymentConfig()
 	apicastStagingService := apicast.buildApicastStagingService()
@@ -129,14 +130,14 @@ func (apicast *Apicast) buildObjects() []runtime.RawExtension {
 	apicastProductionRoute := apicast.buildApicastProductionRoute()
 	apicastEnvConfigMap := apicast.buildApicastEnvConfigMap()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: apicastStagingDeploymentConfig},
-		runtime.RawExtension{Object: apicastProductionDeploymentConfig},
-		runtime.RawExtension{Object: apicastStagingService},
-		runtime.RawExtension{Object: apicastProductionService},
-		runtime.RawExtension{Object: apicastStagingRoute},
-		runtime.RawExtension{Object: apicastProductionRoute},
-		runtime.RawExtension{Object: apicastEnvConfigMap},
+	objects := []common.KubernetesObject{
+		apicastStagingDeploymentConfig,
+		apicastProductionDeploymentConfig,
+		apicastStagingService,
+		apicastProductionService,
+		apicastStagingRoute,
+		apicastProductionRoute,
+		apicastEnvConfigMap,
 	}
 	return objects
 }

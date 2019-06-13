@@ -3,6 +3,8 @@ package helper
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"k8s.io/apimachinery/pkg/runtime"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -61,4 +63,30 @@ func SetURLDefaultPort(rawurl string) string {
 
 	portNum := PortFromURL(urlObj)
 	return fmt.Sprintf("%s:%d", urlObj.String(), portNum)
+}
+
+func WrapRawExtensions(objects []common.KubernetesObject) []runtime.RawExtension {
+	var rawExtensions []runtime.RawExtension
+	for index := range objects {
+		rawExtensions = append(rawExtensions, WrapRawExtension(objects[index]))
+	}
+	return rawExtensions
+}
+
+func WrapRawExtension(object runtime.Object) runtime.RawExtension {
+	return runtime.RawExtension{Object: object}
+}
+
+func UnwrapRawExtensions(rawExts []runtime.RawExtension) []common.KubernetesObject {
+	var objects []common.KubernetesObject
+	for index := range rawExts {
+		rawObject := rawExts[index].Object
+		obj, ok := rawObject.(common.KubernetesObject)
+		if ok {
+			objects = append(objects, obj)
+		} else {
+			panic(fmt.Sprintf("Expected RawExtension to wrap a KubernetesObject, but instead found %v", rawObject))
+		}
+	}
+	return objects
 }

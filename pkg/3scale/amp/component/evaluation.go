@@ -1,10 +1,11 @@
 package component
 
 import (
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Evaluation struct {
@@ -25,16 +26,16 @@ func (evaluation *Evaluation) AssembleIntoTemplate(template *templatev1.Template
 }
 
 func (evaluation *Evaluation) PostProcess(template *templatev1.Template, otherComponents []Component) {
-	evaluation.removeContainersResourceRequestsAndLimits(template.Objects)
-}
-
-func (evaluation *Evaluation) PostProcessObjects(objects []runtime.RawExtension) {
+	objects := helper.UnwrapRawExtensions(template.Objects)
 	evaluation.removeContainersResourceRequestsAndLimits(objects)
 }
 
-func (evaluation *Evaluation) removeContainersResourceRequestsAndLimits(objects []runtime.RawExtension) {
-	for _, rawExtension := range objects {
-		obj := rawExtension.Object
+func (evaluation *Evaluation) PostProcessObjects(objects []common.KubernetesObject) {
+	evaluation.removeContainersResourceRequestsAndLimits(objects)
+}
+
+func (evaluation *Evaluation) removeContainersResourceRequestsAndLimits(objects []common.KubernetesObject) {
+	for _, obj := range objects {
 		dc, ok := obj.(*appsv1.DeploymentConfig)
 		if ok {
 			for containerIdx := range dc.Spec.Template.Spec.Containers {

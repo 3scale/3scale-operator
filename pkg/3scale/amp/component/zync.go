@@ -2,13 +2,14 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -77,19 +78,19 @@ func (zync *Zync) AssembleIntoTemplate(template *templatev1.Template, otherCompo
 	zync.addObjectsIntoTemplate(template)
 }
 
-func (zync *Zync) buildObjects() []runtime.RawExtension {
+func (zync *Zync) buildObjects() []common.KubernetesObject {
 	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
 	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
 	zyncService := zync.buildZyncService()
 	zyncDatabaseService := zync.buildZyncDatabaseService()
 	zyncSecret := zync.buildZyncSecret()
 
-	objects := []runtime.RawExtension{
-		runtime.RawExtension{Object: zyncDeploymentConfig},
-		runtime.RawExtension{Object: zyncDatabaseDeploymentConfig},
-		runtime.RawExtension{Object: zyncService},
-		runtime.RawExtension{Object: zyncDatabaseService},
-		runtime.RawExtension{Object: zyncSecret},
+	objects := []common.KubernetesObject{
+		zyncDeploymentConfig,
+		zyncDatabaseDeploymentConfig,
+		zyncService,
+		zyncDatabaseService,
+		zyncSecret,
 	}
 	return objects
 }
@@ -124,14 +125,14 @@ func (zync *Zync) buildParameters(template *templatev1.Template) {
 	template.Parameters = append(template.Parameters, parameters...)
 }
 
-func (zync *Zync) GetObjects() ([]runtime.RawExtension, error) {
+func (zync *Zync) GetObjects() ([]common.KubernetesObject, error) {
 	objects := zync.buildObjects()
 	return objects, nil
 }
 
 func (zync *Zync) addObjectsIntoTemplate(template *templatev1.Template) {
 	objects := zync.buildObjects()
-	template.Objects = append(template.Objects, objects...)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
 }
 
 func (zync *Zync) buildZyncSecret() *v1.Secret {
