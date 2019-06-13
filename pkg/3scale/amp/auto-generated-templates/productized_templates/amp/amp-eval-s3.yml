@@ -1663,7 +1663,7 @@ objects:
     APICAST_REGISTRY_URL: ${APICAST_REGISTRY_URL}
     AWS_BUCKET: ${AWS_BUCKET}
     AWS_REGION: ${AWS_REGION}
-    FILE_UPLOAD_STORAGE: ${FILE_UPLOAD_STORAGE}
+    FILE_UPLOAD_STORAGE: s3
     FORCE_SSL: "true"
     PROVIDER_PLAN: enterprise
     RAILS_ENV: production
@@ -4191,8 +4191,6 @@ parameters:
   name: APICAST_REGISTRY_URL
   required: true
   value: http://apicast-staging:8090/policies
-- description: Define Assets Storage
-  name: FILE_UPLOAD_STORAGE
 - description: AWS Access Key ID to use in S3 Storage for assets.
   name: AWS_ACCESS_KEY_ID
 - description: AWS Access Key Secret to use in S3 Storage for assets.

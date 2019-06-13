@@ -11,7 +11,6 @@ func (o *OperatorS3OptionsProvider) GetS3Options() (*component.S3Options, error)
 	SystemS3Spec := *o.APIManagerSpec.System.FileStorageSpec.S3
 	sob.AwsRegion(SystemS3Spec.AWSRegion)
 	sob.AwsBucket(SystemS3Spec.AWSBucket)
-	sob.FileUploadStorage(SystemS3Spec.FileUploadStorage)
 
 	err := o.setSecretBasedOptions(&sob)
 	if err != nil {

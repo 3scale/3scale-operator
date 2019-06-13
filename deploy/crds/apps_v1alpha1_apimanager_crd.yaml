@@ -86,13 +86,10 @@ spec:
                           type: object
                         awsRegion:
                           type: string
-                        fileUploadStorage:
-                          type: string
                       required:
                       - awsBucket
                       - awsRegion
                       - awsCredentialsSecret
-                      - fileUploadStorage
                       type: object
                     persistentVolumeClaim:
                       description: Union type. Only one of the fields can be set.

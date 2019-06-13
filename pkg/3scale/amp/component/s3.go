@@ -30,7 +30,6 @@ type s3RequiredOptions struct {
 	awsSecretAccessKey   string
 	awsRegion            string
 	awsBucket            string
-	fileUploadStorage    string
 	awsCredentialsSecret string
 }
 
@@ -56,7 +55,6 @@ func (o *CLIS3OptionsProvider) GetS3Options() (*S3Options, error) {
 	sob.AwsSecretAccessKey("${AWS_SECRET_ACCESS_KEY}")
 	sob.AwsRegion("${AWS_REGION}")
 	sob.AwsBucket("${AWS_BUCKET}")
-	sob.FileUploadStorage("${FILE_UPLOAD_STORAGE}")
 	sob.AWSCredentialsSecret("aws-auth")
 	res, err := sob.Build()
 	if err != nil {
@@ -197,7 +195,7 @@ func (s3 *S3) addS3PostprocessOptionsToSystemEnvironmentCfgMap(objects []runtime
 		}
 	}
 
-	systemEnvCfgMap.Data["FILE_UPLOAD_STORAGE"] = s3.Options.fileUploadStorage
+	systemEnvCfgMap.Data["FILE_UPLOAD_STORAGE"] = "s3"
 	systemEnvCfgMap.Data["AWS_BUCKET"] = s3.Options.awsBucket
 	systemEnvCfgMap.Data["AWS_REGION"] = s3.Options.awsRegion
 }
@@ -243,11 +241,6 @@ func (s3 *S3) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawEx
 
 func (s3 *S3) buildParameters(template *templatev1.Template) {
 	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "FILE_UPLOAD_STORAGE",
-			Description: "Define Assets Storage",
-			Required:    false,
-		},
 		templatev1.Parameter{
 			Name:        "AWS_ACCESS_KEY_ID",
 			Description: "AWS Access Key ID to use in S3 Storage for assets.",
