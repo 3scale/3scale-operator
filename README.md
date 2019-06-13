@@ -151,6 +151,19 @@ make e2e-local-run
 ```sh
 make push IMAGE=quay.io/myorg/3scale-operator VERSION=test
 ```
+## Auto-generated OpenShift templates
+
+As an alternative to using the 3scale-operator we currently are auto-generating
+OpenShift templates with some predefined 3scale deployment solution scenarios.
+The auto-generated template files generated in this repository are not
+supported and might change or be removed at any time without further notice.
+The location of the templates in this repository is at:
+```
+pkg/3scale/amp/auto-generated-templates
+```
+
+If you want to use supported and stable templates you should go to the
+[official repository for them](https://github.com/3scale/3scale-amp-openshift-templates)
 
 ## Documentation
 
