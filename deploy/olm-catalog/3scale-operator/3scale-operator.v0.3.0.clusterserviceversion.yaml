@@ -154,6 +154,14 @@ spec:
           verbs:
           - '*'
         - apiGroups:
+          - apps
+          resourceNames:
+          - 3scale-operator
+          resources:
+          - deployments/finalizers
+          verbs:
+          - update
+        - apiGroups:
           - image.openshift.io
           resources:
           - imagestreams
