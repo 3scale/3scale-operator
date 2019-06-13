@@ -14,7 +14,7 @@ metadata:
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
-      [{"apiVersion": "apps.3scale.net/v1alpha1","kind": "APIManager","metadata": {"name": "example-apimanager"},"spec": {"productVersion": "2.5"}},
+       [{"apiVersion": "apps.3scale.net/v1alpha1","kind": "APIManager","metadata": {"name": "example-apimanager"},"spec": { "wildcardDomain": "example-apimanager.example.com"}},
        {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "API","metadata": {"name": "example-api"},"spec": {"size": 3}},
        {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "Binding","metadata": {"name": "example-binding"},"spec": {"size": 3}},
        {"apiVersion": "capabilities.3scale.net/v1alpha1","kind": "Limit","metadata": {"name": "example-limit"},"spec": {"size": 3}},
