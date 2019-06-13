@@ -6,11 +6,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      name: 3scale-operator
+      name: threescale-operator
   template:
     metadata:
       labels:
-        name: 3scale-operator
+        name: threescale-operator
     spec:
       serviceAccountName: 3scale-operator
       containers:
@@ -29,4 +29,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "3scale-operator"
+              value: "threescale-operator"

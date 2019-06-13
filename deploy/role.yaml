@@ -32,6 +32,14 @@ rules:
   verbs:
   - '*'
 - apiGroups:
+  - apps
+  resources:
+  - deployments/finalizers
+  resourceNames:
+  - 3scale-operator
+  verbs:
+  - "update"
+- apiGroups:
   - image.openshift.io
   resources:
   - imagestreams
