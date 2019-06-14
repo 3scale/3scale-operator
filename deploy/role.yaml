@@ -8,6 +8,7 @@ rules:
   - ""
   resources:
   - pods
+  - replicationcontrollers
   - services
   - endpoints
   - persistentvolumeclaims
@@ -39,6 +40,13 @@ rules:
   - 3scale-operator
   verbs:
   - "update"
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - '*'
 - apiGroups:
   - image.openshift.io
   resources:

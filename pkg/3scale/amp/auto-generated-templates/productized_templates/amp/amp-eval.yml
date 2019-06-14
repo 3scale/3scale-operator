@@ -1478,72 +1478,6 @@ objects:
       deploymentConfig: system-app
   status:
     loadBalancer: {}
-- apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: system
-      threescale_component_element: provider-ui
-    name: system-provider-admin
-  spec:
-    host: ${TENANT_NAME}-admin.${WILDCARD_DOMAIN}
-    port:
-      targetPort: http
-    tls:
-      insecureEdgeTerminationPolicy: Allow
-      termination: edge
-    to:
-      kind: Service
-      name: system-provider
-      weight: null
-  status:
-    ingress: null
-- apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: system
-      threescale_component_element: master-ui
-    name: system-master
-  spec:
-    host: ${MASTER_NAME}.${WILDCARD_DOMAIN}
-    port:
-      targetPort: http
-    tls:
-      insecureEdgeTerminationPolicy: Allow
-      termination: edge
-    to:
-      kind: Service
-      name: system-master
-      weight: null
-  status:
-    ingress: null
-- apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: system
-      threescale_component_element: developer-ui
-    name: system-developer
-  spec:
-    host: ${TENANT_NAME}.${WILDCARD_DOMAIN}
-    port:
-      targetPort: http
-    tls:
-      insecureEdgeTerminationPolicy: Allow
-      termination: edge
-    to:
-      kind: Service
-      name: system-developer
-      weight: null
-  status:
-    ingress: null
 - apiVersion: v1
   kind: Service
   metadata:
@@ -3531,9 +3465,63 @@ objects:
   stringData:
     SERVERS: system-memcache:11211
   type: Opaque
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    creationTimestamp: null
+    name: zync-que-role
+  rules:
+  - apiGroups:
+    - apps.openshift.io
+    resources:
+    - deploymentconfigs
+    verbs:
+    - get
+    - list
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    - replicationcontrollers
+    verbs:
+    - get
+    - list
+  - apiGroups:
+    - route.openshift.io
+    resources:
+    - routes
+    - routes/status
+    - routes/custom-host
+    verbs:
+    - get
+    - list
+    - create
+    - delete
+- apiVersion: v1
+  imagePullSecrets:
+  - name: threescale-registry-auth
+  kind: ServiceAccount
+  metadata:
+    creationTimestamp: null
+    name: zync-que-sa
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    creationTimestamp: null
+    name: zync-que-rolebinding
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: zync-que-role
+  subjects:
+  - kind: ServiceAccount
+    name: zync-que-sa
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
+    annotations:
+      prometheus.io/port: "9393"
+      prometheus.io/scrape: "true"
     creationTimestamp: null
     labels:
       app: ${APP_LABEL}
@@ -3574,6 +3562,14 @@ objects:
               secretKeyRef:
                 key: ZYNC_AUTHENTICATION_TOKEN
                 name: zync
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
           image: amp-zync:latest
           livenessProbe:
             failureThreshold: 10
@@ -3625,6 +3621,110 @@ objects:
         containerNames:
         - zync-db-svc
         - zync
+        from:
+          kind: ImageStreamTag
+          name: amp-zync:latest
+      type: ImageChange
+  status:
+    availableReplicas: 0
+    latestVersion: 0
+    observedGeneration: 0
+    replicas: 0
+    unavailableReplicas: 0
+    updatedReplicas: 0
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: zync
+    name: zync-que
+  spec:
+    replicas: 1
+    selector:
+      deploymentConfig: zync-que
+    strategy:
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        annotations:
+          prometheus.io/port: "9394"
+          prometheus.io/scrape: "true"
+        creationTimestamp: null
+        labels:
+          app: ${APP_LABEL}
+          deploymentConfig: zync-que
+      spec:
+        containers:
+        - args:
+          - -c
+          - bundle exec rake 'que[--worker-count 10]'
+          command:
+          - /usr/bin/bash
+          env:
+          - name: RAILS_LOG_TO_STDOUT
+            value: "true"
+          - name: RAILS_ENV
+            value: production
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                key: DATABASE_URL
+                name: zync
+          - name: SECRET_KEY_BASE
+            valueFrom:
+              secretKeyRef:
+                key: SECRET_KEY_BASE
+                name: zync
+          - name: ZYNC_AUTHENTICATION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: ZYNC_AUTHENTICATION_TOKEN
+                name: zync
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          image: amp-zync:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /metrics
+              port: 9394
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 60
+          name: que
+          ports:
+          - containerPort: 9394
+            name: metrics
+            protocol: TCP
+          resources: {}
+        restartPolicy: Always
+        serviceAccountName: zync-que-sa
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - que
         from:
           kind: ImageStreamTag
           name: amp-zync:latest
@@ -4053,50 +4153,6 @@ objects:
       deploymentConfig: apicast-production
   status:
     loadBalancer: {}
-- apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: apicast
-      threescale_component_element: staging
-    name: api-apicast-staging
-  spec:
-    host: api-${TENANT_NAME}-apicast-staging.${WILDCARD_DOMAIN}
-    port:
-      targetPort: gateway
-    tls:
-      insecureEdgeTerminationPolicy: Allow
-      termination: edge
-    to:
-      kind: Service
-      name: apicast-staging
-      weight: null
-  status:
-    ingress: null
-- apiVersion: route.openshift.io/v1
-  kind: Route
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: apicast
-      threescale_component_element: production
-    name: api-apicast-production
-  spec:
-    host: api-${TENANT_NAME}-apicast-production.${WILDCARD_DOMAIN}
-    port:
-      targetPort: gateway
-    tls:
-      insecureEdgeTerminationPolicy: Allow
-      termination: edge
-    to:
-      kind: Service
-      name: apicast-production
-      weight: null
-  status:
-    ingress: null
 - apiVersion: v1
   data:
     APICAST_MANAGEMENT_API: ${APICAST_MANAGEMENT_API}

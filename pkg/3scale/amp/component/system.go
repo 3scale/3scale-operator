@@ -2,12 +2,12 @@ package component
 
 import (
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/apis/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"sort"
 
+	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
+
 	appsv1 "github.com/openshift/api/apps/v1"
-	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -311,9 +311,6 @@ func (system *System) buildObjects() []common.KubernetesObject {
 	systemProviderService := system.buildSystemProviderService()
 	systemMasterService := system.buildSystemMasterService()
 	systemDeveloperService := system.buildSystemDeveloperService()
-	systemProviderRoute := system.buildSystemProviderRoute()
-	systemMasterRoute := system.buildSystemMasterRoute()
-	systemDeveloperRoute := system.buildSystemDeveloperRoute()
 	systemRedisService := system.buildSystemRedisService()
 	systemSphinxService := system.buildSystemSphinxService()
 	systemMemcachedService := system.buildSystemMemcachedService()
@@ -341,9 +338,6 @@ func (system *System) buildObjects() []common.KubernetesObject {
 		systemProviderService,
 		systemMasterService,
 		systemDeveloperService,
-		systemProviderRoute,
-		systemMasterRoute,
-		systemDeveloperRoute,
 		systemRedisService,
 		systemSphinxService,
 		systemMemcachedService,
@@ -1322,84 +1316,6 @@ func (system *System) buildSystemSmtpConfigMap() *v1.ConfigMap {
 			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "smtp", "app": system.Options.appLabel},
 		},
 		Data: map[string]string{"address": "", "authentication": "", "domain": "", "openssl.verify.mode": "", "password": "", "port": "", "username": ""}}
-}
-
-func (system *System) buildSystemProviderRoute() *routev1.Route {
-	return &routev1.Route{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Route",
-			APIVersion: "route.openshift.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-provider-admin",
-			Labels: map[string]string{"app": system.Options.appLabel, "threescale_component": "system", "threescale_component_element": "provider-ui"},
-		},
-		Spec: routev1.RouteSpec{
-			Host: system.Options.tenantName + "-admin." + system.Options.wildcardDomain,
-			To: routev1.RouteTargetReference{
-				Kind: "Service",
-				Name: "system-provider",
-			},
-			Port: &routev1.RoutePort{
-				TargetPort: intstr.FromString("http"),
-			},
-			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
-		},
-	}
-}
-
-func (system *System) buildSystemMasterRoute() *routev1.Route {
-	return &routev1.Route{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Route",
-			APIVersion: "route.openshift.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-master",
-			Labels: map[string]string{"app": system.Options.appLabel, "threescale_component": "system", "threescale_component_element": "master-ui"},
-		},
-		Spec: routev1.RouteSpec{
-			Host: system.Options.masterName + "." + system.Options.wildcardDomain,
-			To: routev1.RouteTargetReference{
-				Kind: "Service",
-				Name: "system-master",
-			},
-			Port: &routev1.RoutePort{
-				TargetPort: intstr.FromString("http"),
-			},
-			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
-		},
-	}
-}
-
-func (system *System) buildSystemDeveloperRoute() *routev1.Route {
-	return &routev1.Route{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Route",
-			APIVersion: "route.openshift.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-developer",
-			Labels: map[string]string{"app": system.Options.appLabel, "threescale_component": "system", "threescale_component_element": "developer-ui"},
-		},
-		Spec: routev1.RouteSpec{
-			Host: system.Options.tenantName + "." + system.Options.wildcardDomain,
-			To: routev1.RouteTargetReference{
-				Kind: "Service",
-				Name: "system-developer",
-			},
-			Port: &routev1.RoutePort{
-				TargetPort: intstr.FromString("http"),
-			},
-			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
-		},
-	}
 }
 
 func (system *System) buildSystemConfigMap() *v1.ConfigMap {

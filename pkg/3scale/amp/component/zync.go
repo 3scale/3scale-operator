@@ -2,12 +2,14 @@ package component
 
 import (
 	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/apis/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -79,14 +81,22 @@ func (zync *Zync) AssembleIntoTemplate(template *templatev1.Template, otherCompo
 }
 
 func (zync *Zync) buildObjects() []common.KubernetesObject {
+	zyncQueRole := zync.buildZyncQueRole()
+	zyncQueServiceAccount := zync.buildZyncQueServiceAccount()
+	zyncQueRoleBinding := zync.buildZyncQueRoleBinding()
 	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
+	zyncQueDeploymentConfig := zync.buildZyncQueDeploymentConfig()
 	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
 	zyncService := zync.buildZyncService()
 	zyncDatabaseService := zync.buildZyncDatabaseService()
 	zyncSecret := zync.buildZyncSecret()
 
 	objects := []common.KubernetesObject{
+		zyncQueRole,
+		zyncQueServiceAccount,
+		zyncQueRoleBinding,
 		zyncDeploymentConfig,
+		zyncQueDeploymentConfig,
 		zyncDatabaseDeploymentConfig,
 		zyncService,
 		zyncDatabaseService,
@@ -158,83 +168,89 @@ func (zync *Zync) buildZyncSecret() *v1.Secret {
 	}
 }
 
-func (zync *Zync) buildZyncCronDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
+func (zync *Zync) buildZyncQueServiceAccount() *v1.ServiceAccount {
+	return &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
+			Kind:       "ServiceAccount",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "zync-cron",
-			Labels: map[string]string{"app": "Zync"},
+			Name: "zync-que-sa",
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRolling,
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					UpdatePeriodSeconds: &[]int64{1}[0],
-					IntervalSeconds:     &[]int64{1}[0],
-					TimeoutSeconds:      &[]int64{600}[0],
-					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%",
-					},
-					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%"}},
+		ImagePullSecrets: []v1.LocalObjectReference{
+			v1.LocalObjectReference{
+				Name: "threescale-registry-auth",
 			},
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic:      true,
-						ContainerNames: []string{"zync-cron"},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: "amp-zync:latest"}}}, // TODO decide what to do with references to ImageStreams
+		},
+	}
+}
+
+func (zync *Zync) buildZyncQueRoleBinding() *rbacv1.RoleBinding {
+	return &rbacv1.RoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "RoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync-que-rolebinding",
+		},
+		Subjects: []rbacv1.Subject{
+			rbacv1.Subject{
+				Kind: "ServiceAccount",
+				Name: "zync-que-sa",
 			},
-			Replicas: 1,
-			Selector: map[string]string{"name": "zync-cron"},
-			Template: &v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"name": "zync-cron"},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     "zync-que-role",
+		},
+	}
+}
+
+func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
+	return &rbacv1.Role{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "Role",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync-que-role",
+		},
+		Rules: []rbacv1.PolicyRule{
+			rbacv1.PolicyRule{
+				APIGroups: []string{"apps.openshift.io"},
+				Resources: []string{
+					"deploymentconfigs",
 				},
-				Spec: v1.PodSpec{Containers: []v1.Container{
-					v1.Container{
-						Name:  "zync-cron",
-						Image: "amp-zync:latest", // TODO decide what to do with references to ImageStreams
-						Args:  []string{"zync-cron"},
-						Env: []v1.EnvVar{
-							v1.EnvVar{
-								Name:  "CONFIG_REDIS_PROXY",
-								Value: "redis://zync-redis:6379/0", // TODO decide what to do with references to the 'zync-redis' service
-							}, v1.EnvVar{
-								Name: "CONFIG_REDIS_SENTINEL_HOSTS",
-							}, v1.EnvVar{
-								Name: "CONFIG_REDIS_SENTINEL_ROLE",
-							}, v1.EnvVar{
-								Name:  "CONFIG_QUEUES_MASTER_NAME",
-								Value: "redis://zync-redis:6379/1", // TODO decide what to do with references to the 'zync-redis' service
-							}, v1.EnvVar{
-								Name: "CONFIG_QUEUES_SENTINEL_HOSTS",
-							}, v1.EnvVar{
-								Name: "CONFIG_QUEUES_SENTINEL_ROLE",
-							}, v1.EnvVar{
-								Name:  "RACK_ENV",
-								Value: "production",
-							},
-						},
-						Resources: v1.ResourceRequirements{
-							Limits:   v1.ResourceList{"cpu": resource.MustParse("150m")},
-							Requests: v1.ResourceList{"cpu": resource.MustParse("50m")},
-						},
-						ImagePullPolicy: v1.PullIfNotPresent,
-					},
+				Verbs: []string{
+					"get",
+					"list",
 				},
-					ServiceAccountName: "amp",
+			},
+			rbacv1.PolicyRule{
+				APIGroups: []string{""},
+				Resources: []string{
+					"pods",
+					"replicationcontrollers",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+				},
+			},
+			rbacv1.PolicyRule{
+				APIGroups: []string{"route.openshift.io"},
+				Resources: []string{
+					"routes",
+					"routes/status",
+					"routes/custom-host",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"create",
+					"delete",
 				},
 			},
 		},
@@ -252,6 +268,10 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 			Labels: map[string]string{
 				"app":                  zync.Options.appLabel,
 				"threescale_component": "zync",
+			},
+			Annotations: map[string]string{
+				"prometheus.io/port":   "9393",
+				"prometheus.io/scrape": "true",
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -322,45 +342,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 8080,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env: []v1.EnvVar{
-								v1.EnvVar{
-									Name:  "RAILS_LOG_TO_STDOUT",
-									Value: "true",
-								}, v1.EnvVar{
-									Name:  "RAILS_ENV",
-									Value: "production",
-								}, v1.EnvVar{
-									Name: "DATABASE_URL",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: "zync",
-											},
-											Key: "DATABASE_URL",
-										},
-									},
-								}, v1.EnvVar{
-									Name: "SECRET_KEY_BASE",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: "zync",
-											},
-											Key: "SECRET_KEY_BASE",
-										},
-									},
-								}, v1.EnvVar{
-									Name: "ZYNC_AUTHENTICATION_TOKEN",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: "zync",
-											},
-											Key: "ZYNC_AUTHENTICATION_TOKEN",
-										},
-									},
-								},
-							},
+							Env: zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
@@ -399,6 +381,139 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 									v1.ResourceMemory: resource.MustParse("250M"),
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
+	return []v1.EnvVar{
+		envVarFromValue("RAILS_LOG_TO_STDOUT", "true"),
+		envVarFromValue("RAILS_ENV", "production"),
+		envVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
+		envVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
+		envVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
+		v1.EnvVar{
+			Name: "POD_NAME",
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		},
+		v1.EnvVar{
+			Name: "POD_NAMESPACE",
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "metadata.namespace",
+				},
+			},
+		},
+	}
+}
+func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
+	return &appsv1.DeploymentConfig{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "DeploymentConfig",
+			APIVersion: "apps.openshift.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync-que",
+			Labels: map[string]string{
+				"app":                  zync.Options.appLabel,
+				"threescale_component": "zync",
+			},
+		},
+		Spec: appsv1.DeploymentConfigSpec{
+			Replicas: 1,
+			Selector: map[string]string{"deploymentConfig": "zync-que"},
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.DeploymentStrategyTypeRolling,
+				RollingParams: &appsv1.RollingDeploymentStrategyParams{
+					UpdatePeriodSeconds: &[]int64{1}[0],
+					IntervalSeconds:     &[]int64{1}[0],
+					TimeoutSeconds:      &[]int64{600}[0],
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.Type(intstr.String),
+						StrVal: "25%",
+					},
+					MaxSurge: &intstr.IntOrString{
+						Type:   intstr.Type(intstr.String),
+						StrVal: "25%",
+					},
+				},
+			},
+			Triggers: appsv1.DeploymentTriggerPolicies{
+				appsv1.DeploymentTriggerPolicy{
+					Type: appsv1.DeploymentTriggerOnConfigChange,
+				},
+				appsv1.DeploymentTriggerPolicy{
+					Type: appsv1.DeploymentTriggerOnImageChange,
+					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+						Automatic: true,
+						ContainerNames: []string{
+							"que",
+						},
+						From: v1.ObjectReference{
+							Kind: "ImageStreamTag",
+							Name: "amp-zync:latest",
+						},
+					},
+				},
+			},
+			Template: &v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"prometheus.io/port":   "9394",
+						"prometheus.io/scrape": "true",
+					},
+					Labels: map[string]string{
+						"app":              zync.Options.appLabel,
+						"deploymentConfig": "zync-que",
+					},
+				},
+				Spec: v1.PodSpec{
+					ServiceAccountName:            "zync-que-sa",
+					RestartPolicy:                 v1.RestartPolicyAlways,
+					TerminationGracePeriodSeconds: &[]int64{30}[0],
+					Containers: []v1.Container{
+						v1.Container{
+							Name:            "que",
+							Command:         []string{"/usr/bin/bash"},
+							Args:            []string{"-c", "bundle exec rake 'que[--worker-count 10]'"},
+							Image:           "amp-zync:latest",
+							ImagePullPolicy: v1.PullAlways,
+							LivenessProbe: &v1.Probe{
+								FailureThreshold:    3,
+								InitialDelaySeconds: 10,
+								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								TimeoutSeconds:      60,
+								Handler: v1.Handler{
+									HTTPGet: &v1.HTTPGetAction{
+										Port:   intstr.FromInt(9394),
+										Path:   "/metrics",
+										Scheme: v1.URISchemeHTTP,
+									},
+								},
+							},
+							Ports: []v1.ContainerPort{
+								v1.ContainerPort{Name: "metrics", ContainerPort: 9394, Protocol: v1.ProtocolTCP},
+							},
+							Resources: v1.ResourceRequirements{
+								Limits: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("1"),
+									v1.ResourceMemory: resource.MustParse("512Mi"),
+								},
+								Requests: v1.ResourceList{
+									v1.ResourceCPU:    resource.MustParse("250m"),
+									v1.ResourceMemory: resource.MustParse("250M"),
+								},
+							},
+							Env: zync.commonZyncEnvVars(),
 						},
 					},
 				},
