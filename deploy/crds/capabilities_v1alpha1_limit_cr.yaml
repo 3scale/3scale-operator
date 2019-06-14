@@ -1,7 +1,12 @@
 apiVersion: capabilities.3scale.net/v1alpha1
 kind: Limit
 metadata:
-  name: example-limit
+  labels:
+    api: api01
+  name: plan01-metric01-day-10
 spec:
-  # Add fields here
-  size: 3
+  description: Limit for metric01 in plan01
+  maxValue: 10
+  metricRef:
+    name: metric01
+  period: day

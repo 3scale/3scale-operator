@@ -1,7 +1,16 @@
 apiVersion: capabilities.3scale.net/v1alpha1
 kind: Plan
 metadata:
+  labels:
+    api: api01
   name: example-plan
 spec:
-  # Add fields here
-  size: 3
+  default: true
+  approvalRequired: false
+  costs:
+    costMonth: 0
+    setupFee: 0
+  limitSelector:
+    matchLabels:
+      plan: plan01
+  trialPeriod: 0

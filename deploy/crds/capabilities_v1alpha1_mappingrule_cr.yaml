@@ -1,7 +1,12 @@
 apiVersion: capabilities.3scale.net/v1alpha1
 kind: MappingRule
 metadata:
-  name: example-mappingrule
+  labels:
+    api: api01
+  name: metric01-get-path01
 spec:
-  # Add fields here
-  size: 3
+  increment: 1
+  method: GET
+  metricRef:
+    name: metric01
+  path: /path01

@@ -3,5 +3,8 @@ kind: Binding
 metadata:
   name: example-binding
 spec:
-  # Add fields here
-  size: 3
+  credentialsRef:
+    name: ecorp-tenant-secret
+  APISelector:
+    matchLabels:
+      environment: testing

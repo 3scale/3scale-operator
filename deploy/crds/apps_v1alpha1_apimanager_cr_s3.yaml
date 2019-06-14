@@ -3,7 +3,6 @@ kind: APIManager
 metadata:
   name: example-apimanager-s3
 spec:
-  productVersion: "2.5"
   wildcardDomain: <desired-domain>
   system:
     fileStorage:

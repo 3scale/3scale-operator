@@ -1,7 +1,31 @@
 apiVersion: capabilities.3scale.net/v1alpha1
 kind: API
 metadata:
+  labels:
+    environment: testing
   name: example-api
 spec:
-  # Add fields here
-  size: 3
+  description: api01
+  integrationMethod:
+    apicastHosted:
+      apiTestGetRequest: /
+      authenticationSettings:
+        credentials:
+          apiKey:
+            authParameterName: user-key
+            credentialsLocation: headers
+        errors:
+          authenticationFailed:
+            contentType: text/plain; charset=us-ascii
+            responseBody: Authentication failed
+            responseCode: 403
+          authenticationMissing:
+            contentType: text/plain; charset=us-ascii
+            responseBody: Authentication Missing
+            responseCode: 403
+        hostHeader: ""
+        secretToken: MySecretTokenBetweenApicastAndMyBackend_1237120312
+      mappingRulesSelector:
+        matchLabels:
+          api: api01
+      privateBaseURL: https://echo-api.3scale.net:443
