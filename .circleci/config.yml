@@ -327,6 +327,14 @@ jobs:
       - run: make vendor
       - run: make test-crds
 
+  verify-manifest:
+    docker:
+      - image: circleci/python:3.6.4
+    steps:
+      - checkout
+      - run: sudo pip3 install operator-courier
+      - run: make verify-manifest
+
 workflows:
   version: 2
   operator:
@@ -334,6 +342,7 @@ workflows:
       - build-deploy-operator:
           context: org-global
       - test-crds
+      - verify-manifest
       - run-operator-e2e-test:
           context: org-global
           requires:
