@@ -317,12 +317,23 @@ jobs:
       - checkout
       - run: make vendor
       - run: make clean test -j 2 --directory pkg/3scale/amp
+
+  test-crds:
+    docker:
+      - image: circleci/golang:1.12.5
+    working_directory: /go/src/github.com/3scale/3scale-operator
+    steps:
+      - checkout
+      - run: make vendor
+      - run: make test-crds
+
 workflows:
   version: 2
   operator:
     jobs:
       - build-deploy-operator:
           context: org-global
+      - test-crds
       - run-operator-e2e-test:
           context: org-global
           requires:

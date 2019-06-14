@@ -3,5 +3,12 @@ kind: APIManager
 metadata:
   name: example-apimanager
 spec:
-  productVersion: "upstream"
-  wildcardDomain: <desired-domain>
+  wildcardDomain: example.com
+  apicast:
+    image: "quay.io/3scale/apicast:nightly"
+  backend:
+    image: "quay.io/3scale/apisonator:nightly"
+  system:
+    image: "quay.io/3scale/porta:nightly"
+  zync:
+    image: "quay.io/3scale/zync:nightly"

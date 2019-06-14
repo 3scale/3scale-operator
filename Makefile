@@ -1,5 +1,7 @@
+MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 .DEFAULT_GOAL := help
-.PHONY: build e2e
+.PHONY: build e2e test-crds
 UNAME := $(shell uname)
 
 ifeq (${UNAME}, Linux)
@@ -58,3 +60,6 @@ e2e-clean:
 
 ## e2e: e2e-clean e2e-setup e2e-run
 e2e: e2e-clean e2e-setup e2e-run
+
+test-crds:
+	cd $(PROJECT_PATH)/test/crds && go test -v

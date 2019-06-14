@@ -1,7 +1,10 @@
 apiVersion: capabilities.3scale.net/v1alpha1
 kind: Metric
 metadata:
-  name: example-metric
+  labels:
+    api: api01
+  name: metric01
 spec:
-  # Add fields here
-  size: 3
+  description: metric01
+  unit: hit
+  incrementHits: false
