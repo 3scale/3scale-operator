@@ -243,14 +243,30 @@ func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
 				APIGroups: []string{"route.openshift.io"},
 				Resources: []string{
 					"routes",
-					"routes/status",
-					"routes/custom-host",
 				},
 				Verbs: []string{
 					"get",
 					"list",
 					"create",
 					"delete",
+				},
+			},
+			rbacv1.PolicyRule{
+				APIGroups: []string{"route.openshift.io"},
+				Resources: []string{
+					"routes/status",
+				},
+				Verbs: []string{
+					"get",
+				},
+			},
+			rbacv1.PolicyRule{
+				APIGroups: []string{"route.openshift.io"},
+				Resources: []string{
+					"routes/custom-host",
+				},
+				Verbs: []string{
+					"create",
 				},
 			},
 		},
