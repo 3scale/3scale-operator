@@ -30,8 +30,8 @@ func (ampImages *AmpImagesOptionsBuilder) ZyncImage(zyncImage string) {
 	ampImages.options.zyncImage = zyncImage
 }
 
-func (ampImages *AmpImagesOptionsBuilder) PostgreSQLImage(postgreSQLImage string) {
-	ampImages.options.postgreSQLImage = postgreSQLImage
+func (ampImages *AmpImagesOptionsBuilder) ZyncDatabasePostgreSQLImage(zyncDatabaseImage string) {
+	ampImages.options.ZyncDatabasePostgreSQLImage = zyncDatabaseImage
 }
 
 func (ampImages *AmpImagesOptionsBuilder) BackendRedisImage(image string) {
@@ -69,8 +69,8 @@ func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
 	if ampImages.options.zyncImage == "" {
 		return nil, fmt.Errorf("no Zync image has been provided")
 	}
-	if ampImages.options.postgreSQLImage == "" {
-		return nil, fmt.Errorf("no PostgreSQL image has been provided")
+	if ampImages.options.ZyncDatabasePostgreSQLImage == "" {
+		return nil, fmt.Errorf("no Zync database PostgreSQL image has been provided")
 	}
 	if ampImages.options.backendRedisImage == "" {
 		return nil, fmt.Errorf("no Backend Redis image has been provided")

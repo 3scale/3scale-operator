@@ -43,9 +43,9 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 	}
 
 	if o.APIManagerSpec.Zync != nil && o.APIManagerSpec.Zync.PostgreSQLImage != nil {
-		optProv.PostgreSQLImage(*o.APIManagerSpec.Zync.PostgreSQLImage)
+		optProv.ZyncDatabasePostgreSQLImage(*o.APIManagerSpec.Zync.PostgreSQLImage)
 	} else {
-		optProv.PostgreSQLImage(imageProvider.GetZyncPostgreSQLImage())
+		optProv.ZyncDatabasePostgreSQLImage(imageProvider.GetZyncPostgreSQLImage())
 	}
 
 	if o.APIManagerSpec.Backend != nil && o.APIManagerSpec.Backend.RedisImage != nil {
