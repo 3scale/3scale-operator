@@ -2949,13 +2949,23 @@ objects:
     - route.openshift.io
     resources:
     - routes
-    - routes/status
-    - routes/custom-host
     verbs:
     - get
     - list
     - create
     - delete
+  - apiGroups:
+    - route.openshift.io
+    resources:
+    - routes/status
+    verbs:
+    - get
+  - apiGroups:
+    - route.openshift.io
+    resources:
+    - routes/custom-host
+    verbs:
+    - create
 - apiVersion: v1
   imagePullSecrets:
   - name: threescale-registry-auth
