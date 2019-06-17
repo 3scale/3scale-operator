@@ -32,6 +32,29 @@ spec:
       version: v1alpha1
       description: API Manager
       displayName: API Manager
+      resources:
+        - kind: DeploymentConfig
+          version: apps.openshift.io/v1
+        - kind: PersistentVolumeClaim
+          version: v1
+        - kind: Service
+          version: v1
+        - kind: Route
+          version: route.openshift.io/v1
+        - kind: ImageStream
+          version: image.openshift.io/v1
+      specDescriptors:
+        - displayName: Wildcard Domain
+          description: Wildcard domain as configured in the API Manager object
+          path: wildcardDomain
+          x-descriptors:
+            - "urn:alm:descriptor:com.tectonic.ui:label"
+      statusDescriptors:
+        - displayName: Deployments
+          description: API Manager Deployment Configs
+          path: deployments
+          x-descriptors:
+            - "urn:alm:descriptor:com.tectonic.ui:podStatuses"
     - kind: API
       name: apis.capabilities.3scale.net
       version: v1alpha1

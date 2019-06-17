@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/3scale/3scale-operator/pkg/apis/common"
+	appsv1 "github.com/openshift/api/apps/v1"
 	"reflect"
 
 	"github.com/go-logr/logr"
@@ -11,6 +12,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/RHsyseng/operator-utils/pkg/olm"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -69,6 +71,16 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to primary resource APIManager
 	err = c.Watch(&source.Kind{Type: &appsv1alpha1.APIManager{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to DeploymentConfigs to update deployment status
+	ownerHandler := &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &appsv1alpha1.APIManager{},
+	}
+	err = c.Watch(&source.Kind{Type: &appsv1.DeploymentConfig{}}, ownerHandler)
 	if err != nil {
 		return err
 	}
@@ -192,6 +204,12 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 				}
 			}
 		}
+	}
+
+	err = r.setDeploymentStatus(instance)
+	if err != nil {
+		r.reqLogger.Error(err, "Failed to set deployment status")
+		return reconcile.Result{}, err
 	}
 
 	r.reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
@@ -528,4 +546,35 @@ func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]common.Ku
 	}
 
 	return result, nil
+}
+
+func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {
+	listOps := &client.ListOptions{Namespace: instance.Namespace}
+	dcList := &appsv1.DeploymentConfigList{}
+	err := r.client.List(context.TODO(), listOps, dcList)
+	if err != nil {
+		r.reqLogger.Error(err, "Failed to list deployment configs")
+		return err
+	}
+	var dcs []appsv1.DeploymentConfig
+	for _, dc := range dcList.Items {
+		for _, ownerRef := range dc.GetOwnerReferences() {
+			if ownerRef.UID == instance.UID {
+				dcs = append(dcs, dc)
+				break
+			}
+		}
+	}
+
+	deploymentStatus := olm.GetDeploymentConfigStatus(dcs)
+	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {
+		r.reqLogger.Info("Deployment status will be updated")
+		instance.Status.Deployments = deploymentStatus
+		err = r.client.Status().Update(context.TODO(), instance)
+		if err != nil {
+			r.reqLogger.Error(err, "Failed to update API Manager deployment status")
+			return err
+		}
+	}
+	return nil
 }
