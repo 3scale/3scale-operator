@@ -182,10 +182,20 @@ spec:
           - route.openshift.io
           resources:
           - routes
-          - routes/custom-host
-          - routes/status
           verbs:
           - '*'
+        - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes/custom-host
+          verbs:
+          - create
+        - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes/status
+          verbs:
+          - get
         - apiGroups:
           - apps.openshift.io
           resources:
