@@ -163,12 +163,12 @@ objects:
   kind: ImageStream
   metadata:
     annotations:
-      openshift.io/display-name: Zync database
+      openshift.io/display-name: Zync database PostgreSQL
     creationTimestamp: null
     labels:
       app: ${APP_LABEL}
       threescale_component: system
-    name: postgresql
+    name: zync-database-postgresql
   spec:
     lookupPolicy:
       local: false
@@ -3909,7 +3909,7 @@ objects:
         - postgresql
         from:
           kind: ImageStreamTag
-          name: postgresql:latest
+          name: zync-database-postgresql:latest
       type: ImageChange
   status:
     availableReplicas: 0

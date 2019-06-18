@@ -566,7 +566,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "postgresql:latest",
+							Name: "zync-database-postgresql:latest",
 						},
 					},
 				},

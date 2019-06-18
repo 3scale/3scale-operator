@@ -22,17 +22,17 @@ type AmpImages struct {
 }
 
 type AmpImagesOptions struct {
-	appLabel             string
-	ampRelease           string
-	apicastImage         string
-	backendImage         string
-	systemImage          string
-	zyncImage            string
-	postgreSQLImage      string
-	backendRedisImage    string
-	systemRedisImage     string
-	systemMemcachedImage string
-	insecureImportPolicy bool
+	appLabel                    string
+	ampRelease                  string
+	apicastImage                string
+	backendImage                string
+	systemImage                 string
+	zyncImage                   string
+	ZyncDatabasePostgreSQLImage string
+	backendRedisImage           string
+	systemRedisImage            string
+	systemMemcachedImage        string
+	insecureImportPolicy        bool
 }
 
 func NewAmpImages(options []string) *AmpImages {
@@ -56,7 +56,7 @@ func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, 
 	aob.BackendImage("${AMP_BACKEND_IMAGE}")
 	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
 	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
-	aob.PostgreSQLImage("${ZYNC_DATABASE_IMAGE}")
+	aob.ZyncDatabasePostgreSQLImage("${ZYNC_DATABASE_IMAGE}")
 	aob.BackendRedisImage("${REDIS_IMAGE}")
 	aob.SystemRedisImage("${REDIS_IMAGE}")
 	aob.SystemMemcachedImage("${MEMCACHED_IMAGE}")
@@ -99,7 +99,7 @@ func (ampImages *AmpImages) buildObjects() []common.KubernetesObject {
 	zyncImageStream := ampImages.buildAmpZyncImageStream()
 	apicastImageStream := ampImages.buildApicastImageStream()
 	systemImageStream := ampImages.buildAmpSystemImageStream()
-	postgreSQLImageStream := ampImages.buildPostgreSQLImageStream()
+	zyncDatabasePostgreSQL := ampImages.buildZyncDatabasePostgreSQLImageStream()
 	backendRedisImageStream := ampImages.buildBackendRedisImageStream()
 	systemRedisImageStream := ampImages.buildSystemRedisImageStream()
 	systemMemcachedImageStream := ampImages.buildSystemMemcachedImageStream()
@@ -111,7 +111,7 @@ func (ampImages *AmpImages) buildObjects() []common.KubernetesObject {
 		zyncImageStream,
 		apicastImageStream,
 		systemImageStream,
-		postgreSQLImageStream,
+		zyncDatabasePostgreSQL,
 		backendRedisImageStream,
 		systemRedisImageStream,
 		systemMemcachedImageStream,
@@ -298,16 +298,16 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 	}
 }
 
-func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) buildZyncDatabasePostgreSQLImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "postgresql",
+			Name: "zync-database-postgresql",
 			Labels: map[string]string{
 				"app":                  ampImages.Options.appLabel,
 				"threescale_component": "system",
 			},
 			Annotations: map[string]string{
-				"openshift.io/display-name": "Zync database",
+				"openshift.io/display-name": "Zync database PostgreSQL",
 			},
 		},
 		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
@@ -330,7 +330,7 @@ func (ampImages *AmpImages) buildPostgreSQLImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: ampImages.Options.postgreSQLImage,
+						Name: ampImages.Options.ZyncDatabasePostgreSQLImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						Insecure: insecureImportPolicy,
