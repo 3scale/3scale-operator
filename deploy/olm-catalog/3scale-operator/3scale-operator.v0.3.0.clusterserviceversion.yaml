@@ -232,8 +232,10 @@ spec:
   provider:
     name: Red Hat
   links:
-    - name: 3scale Operator
+    - name: GitHub
       url: https://github.com/3scale/3scale-operator
+    - name: Documentation
+      url: https://github.com/3scale/3scale-operator/blob/v0.3.0/doc/user-guide.md
   maintainers:
     - email: openshift-operators@redhat.com
       name: Red Hat
