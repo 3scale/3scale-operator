@@ -1,7 +1,7 @@
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 .DEFAULT_GOAL := help
-.PHONY: build e2e test-crds
+.PHONY: build e2e test-crds verify-manifest
 UNAME := $(shell uname)
 
 ifeq (${UNAME}, Linux)
@@ -9,6 +9,8 @@ ifeq (${UNAME}, Linux)
 else ifeq (${UNAME}, Darwin)
   SED=gsed
 endif
+
+OPERATORCOURIER := $(shell command -v operator-courier 2> /dev/null)
 
 help: Makefile
 	@sed -n 's/^##//p' $<
@@ -63,3 +65,9 @@ e2e: e2e-clean e2e-setup e2e-run
 
 test-crds:
 	cd $(PROJECT_PATH)/test/crds && go test -v
+
+verify-manifest:
+ifndef OPERATORCOURIER
+	$(error "operator-courier is not available please install pip3 install operator-courier")
+endif
+	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier verify --ui_validate_io 3scale-operator/
