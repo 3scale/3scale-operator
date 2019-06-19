@@ -81,13 +81,20 @@ spec:
     Currently upgrading feature is not available.
 
     ### Documentation
-    Documentation to the current _master_ branch as well as all releases can be found on our [website](https://github.com/3scale/3scale-operator).
+    Documentation can be found on our [website](https://github.com/3scale/3scale-operator/blob/v0.3.0/doc/user-guide.md).
 
     ### Getting help
-    TBD
+    If you encounter any issues while using 3scale operator, you can create an issue on our [website](https://github.com/3scale/3scale-operator) for bugs, enhancements, or other requests.
 
     ### Contributing
-    TBD
+    You can contribute by:
+
+    * Raising any issues you find using 3scale Operator
+    * Fixing issues by opening [Pull Requests](https://github.com/3scale/3scale-operator/pulls)
+    * Improving [documentation](https://github.com/3scale/3scale-operator/blob/v0.3.0/doc/user-guide.md)
+    * Talking about 3scale Operator
+
+    All bugs, tasks or enhancements are tracked as [GitHub issues](https://github.com/3scale/3scale-operator/issues).
 
     ### License
     3scale Operator is licensed under the [Apache 2.0 license](https://github.com/3scale/3scale-operator/blob/master/LICENSE)
