@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: system
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: amp-system:latest
+  source:
+    git:
+      uri: "https://github.com/3scale/porta.git"
+      ref: "zync-domain-events"
+    type: "Git"
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: openshift/system/Dockerfile.on_prem
+      forcePull: true
+  triggers:
+    - type: ConfigChange

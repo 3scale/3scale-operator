@@ -1,0 +1,3744 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: df8725c64067db401b2af22c004cedd5cf881bb588332d93a9c0b131cfcebd6b
+      checksum/probe-config: 516a6da181100e40c4487dd28c033e543f1e8c86aa315a52abd65275d419b68b
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: redistest-fullpasswd-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: redistest-fullpasswd-redis-ha-server-798fc69bb5
+      release: redistest-fullpasswd
+      statefulset.kubernetes.io/pod-name: redistest-fullpasswd-redis-ha-server-0
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: redistest-fullpasswd-redis-ha-server
+      uid: ec69dca6-8d14-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: redistest-fullpasswd
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: redistest-fullpasswd
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: redistest-fullpasswd-redis-ha-server-0
+    imagePullSecrets:
+    - name: redistest-fullpasswd-redis-ha-dockercfg-svp4j
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: 594aadc8eb3a4109a8b391b5c12e6593c5fbdebb
+      - name: SENTINEL_ID_1
+        value: fcb0ee4498521f99b125ad8514178c24be9f0a79
+      - name: SENTINEL_ID_2
+        value: 391bdeae49b0d3d3a7f60c4d831559287c4a7d2d
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    nodeName: ip-10-0-102-87.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: redistest-fullpasswd-redis-ha
+    serviceAccountName: redistest-fullpasswd-redis-ha
+    subdomain: redistest-fullpasswd-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-redistest-fullpasswd-redis-ha-server-0
+    - configMap:
+        defaultMode: 420
+        name: redistest-fullpasswd-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: redistest-fullpasswd-redis-ha-probes
+      name: probes
+    - name: redistest-fullpasswd-redis-ha-token-vbxql
+      secret:
+        defaultMode: 420
+        secretName: redistest-fullpasswd-redis-ha-token-vbxql
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: df8725c64067db401b2af22c004cedd5cf881bb588332d93a9c0b131cfcebd6b
+      checksum/probe-config: 516a6da181100e40c4487dd28c033e543f1e8c86aa315a52abd65275d419b68b
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: redistest-fullpasswd-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: redistest-fullpasswd-redis-ha-server-798fc69bb5
+      release: redistest-fullpasswd
+      statefulset.kubernetes.io/pod-name: redistest-fullpasswd-redis-ha-server-1
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: redistest-fullpasswd-redis-ha-server
+      uid: ec69dca6-8d14-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: redistest-fullpasswd
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: redistest-fullpasswd
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: redistest-fullpasswd-redis-ha-server-1
+    imagePullSecrets:
+    - name: redistest-fullpasswd-redis-ha-dockercfg-svp4j
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: 594aadc8eb3a4109a8b391b5c12e6593c5fbdebb
+      - name: SENTINEL_ID_1
+        value: fcb0ee4498521f99b125ad8514178c24be9f0a79
+      - name: SENTINEL_ID_2
+        value: 391bdeae49b0d3d3a7f60c4d831559287c4a7d2d
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    nodeName: ip-10-0-103-195.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: redistest-fullpasswd-redis-ha
+    serviceAccountName: redistest-fullpasswd-redis-ha
+    subdomain: redistest-fullpasswd-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-redistest-fullpasswd-redis-ha-server-1
+    - configMap:
+        defaultMode: 420
+        name: redistest-fullpasswd-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: redistest-fullpasswd-redis-ha-probes
+      name: probes
+    - name: redistest-fullpasswd-redis-ha-token-vbxql
+      secret:
+        defaultMode: 420
+        secretName: redistest-fullpasswd-redis-ha-token-vbxql
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: df8725c64067db401b2af22c004cedd5cf881bb588332d93a9c0b131cfcebd6b
+      checksum/probe-config: 516a6da181100e40c4487dd28c033e543f1e8c86aa315a52abd65275d419b68b
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: redistest-fullpasswd-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: redistest-fullpasswd-redis-ha-server-798fc69bb5
+      release: redistest-fullpasswd
+      statefulset.kubernetes.io/pod-name: redistest-fullpasswd-redis-ha-server-2
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: redistest-fullpasswd-redis-ha-server
+      uid: ec69dca6-8d14-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: redistest-fullpasswd
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: redistest-fullpasswd
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: redistest-fullpasswd-redis-ha-server-2
+    imagePullSecrets:
+    - name: redistest-fullpasswd-redis-ha-dockercfg-svp4j
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: 594aadc8eb3a4109a8b391b5c12e6593c5fbdebb
+      - name: SENTINEL_ID_1
+        value: fcb0ee4498521f99b125ad8514178c24be9f0a79
+      - name: SENTINEL_ID_2
+        value: 391bdeae49b0d3d3a7f60c4d831559287c4a7d2d
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-fullpasswd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-fullpasswd-redis-ha-token-vbxql
+        readOnly: true
+    nodeName: ip-10-0-101-107.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: redistest-fullpasswd-redis-ha
+    serviceAccountName: redistest-fullpasswd-redis-ha
+    subdomain: redistest-fullpasswd-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-redistest-fullpasswd-redis-ha-server-2
+    - configMap:
+        defaultMode: 420
+        name: redistest-fullpasswd-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: redistest-fullpasswd-redis-ha-probes
+      name: probes
+    - name: redistest-fullpasswd-redis-ha-token-vbxql
+      secret:
+        defaultMode: 420
+        secretName: redistest-fullpasswd-redis-ha-token-vbxql
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: cd4e590236a1ef2f7c6ba2b5bae42be772bc05b677b483c0a464bcbcb101a0c4
+      checksum/probe-config: e89b20d770ce05f5146b5352028828046985b6572db3ee17b6b291a0e98fb536
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: redistest-passwd-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: redistest-passwd-redis-ha-server-dccd4cc49
+      release: redistest-passwd
+      statefulset.kubernetes.io/pod-name: redistest-passwd-redis-ha-server-0
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: redistest-passwd-redis-ha-server
+      uid: 0be0380d-8cfd-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: redistest-passwd
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: redistest-passwd
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: redistest-passwd-redis-ha-server-0
+    imagePullSecrets:
+    - name: redistest-passwd-redis-ha-dockercfg-w2pkz
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: e313caa9c489499a9b32dbda36c97749bda99b16
+      - name: SENTINEL_ID_1
+        value: 29bddad1f9c0690551a607e93fb963535d7a8309
+      - name: SENTINEL_ID_2
+        value: 3a905b11a53b3a18f10712201c8e7d56fe156745
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    nodeName: ip-10-0-102-102.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: redistest-passwd-redis-ha
+    serviceAccountName: redistest-passwd-redis-ha
+    subdomain: redistest-passwd-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-redistest-passwd-redis-ha-server-0
+    - configMap:
+        defaultMode: 420
+        name: redistest-passwd-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: redistest-passwd-redis-ha-probes
+      name: probes
+    - name: redistest-passwd-redis-ha-token-r7wk4
+      secret:
+        defaultMode: 420
+        secretName: redistest-passwd-redis-ha-token-r7wk4
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: cd4e590236a1ef2f7c6ba2b5bae42be772bc05b677b483c0a464bcbcb101a0c4
+      checksum/probe-config: e89b20d770ce05f5146b5352028828046985b6572db3ee17b6b291a0e98fb536
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: redistest-passwd-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: redistest-passwd-redis-ha-server-dccd4cc49
+      release: redistest-passwd
+      statefulset.kubernetes.io/pod-name: redistest-passwd-redis-ha-server-1
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: redistest-passwd-redis-ha-server
+      uid: 0be0380d-8cfd-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: redistest-passwd
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: redistest-passwd
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: redistest-passwd-redis-ha-server-1
+    imagePullSecrets:
+    - name: redistest-passwd-redis-ha-dockercfg-w2pkz
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: e313caa9c489499a9b32dbda36c97749bda99b16
+      - name: SENTINEL_ID_1
+        value: 29bddad1f9c0690551a607e93fb963535d7a8309
+      - name: SENTINEL_ID_2
+        value: 3a905b11a53b3a18f10712201c8e7d56fe156745
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    nodeName: ip-10-0-103-205.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: redistest-passwd-redis-ha
+    serviceAccountName: redistest-passwd-redis-ha
+    subdomain: redistest-passwd-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-redistest-passwd-redis-ha-server-1
+    - configMap:
+        defaultMode: 420
+        name: redistest-passwd-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: redistest-passwd-redis-ha-probes
+      name: probes
+    - name: redistest-passwd-redis-ha-token-r7wk4
+      secret:
+        defaultMode: 420
+        secretName: redistest-passwd-redis-ha-token-r7wk4
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: cd4e590236a1ef2f7c6ba2b5bae42be772bc05b677b483c0a464bcbcb101a0c4
+      checksum/probe-config: e89b20d770ce05f5146b5352028828046985b6572db3ee17b6b291a0e98fb536
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: redistest-passwd-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: redistest-passwd-redis-ha-server-dccd4cc49
+      release: redistest-passwd
+      statefulset.kubernetes.io/pod-name: redistest-passwd-redis-ha-server-2
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: redistest-passwd-redis-ha-server
+      uid: 0be0380d-8cfd-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: redistest-passwd
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: redistest-passwd
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      env:
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: redistest-passwd-redis-ha-server-2
+    imagePullSecrets:
+    - name: redistest-passwd-redis-ha-dockercfg-w2pkz
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: e313caa9c489499a9b32dbda36c97749bda99b16
+      - name: SENTINEL_ID_1
+        value: 29bddad1f9c0690551a607e93fb963535d7a8309
+      - name: SENTINEL_ID_2
+        value: 3a905b11a53b3a18f10712201c8e7d56fe156745
+      - name: AUTH
+        valueFrom:
+          secretKeyRef:
+            key: auth
+            name: redistest-passwd-redis-ha
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: redistest-passwd-redis-ha-token-r7wk4
+        readOnly: true
+    nodeName: ip-10-0-101-107.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: redistest-passwd-redis-ha
+    serviceAccountName: redistest-passwd-redis-ha
+    subdomain: redistest-passwd-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-redistest-passwd-redis-ha-server-2
+    - configMap:
+        defaultMode: 420
+        name: redistest-passwd-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: redistest-passwd-redis-ha-probes
+      name: probes
+    - name: redistest-passwd-redis-ha-token-r7wk4
+      secret:
+        defaultMode: 420
+        secretName: redistest-passwd-redis-ha-token-r7wk4
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: tiller-5ffb5cc69f-
+    labels:
+      app: helm
+      name: tiller
+      pod-template-hash: "1996177259"
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: tiller-5ffb5cc69f
+      uid: 1317e00d-8cf8-11e9-921e-0653e4b68d64
+  spec:
+    containers:
+    - env:
+      - name: TILLER_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      image: gcr.io/kubernetes-helm/tiller:v2.9.1
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /liveness
+          port: 44135
+          scheme: HTTP
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: tiller
+      ports:
+      - containerPort: 44134
+        name: tiller
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /readiness
+          port: 44135
+          scheme: HTTP
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: tiller-token-jvq26
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    imagePullSecrets:
+    - name: tiller-dockercfg-qt94w
+    nodeName: ip-10-0-101-107.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: tiller
+    serviceAccountName: tiller
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: tiller-token-jvq26
+      secret:
+        defaultMode: 420
+        secretName: tiller-token-jvq26
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: a319b7ca82faa33e5864e71944459c9a461f4ce55988722565fefcbed0c01d6b
+      checksum/probe-config: f3058b8a8ca779a6e221386b806d1019a81fc5251492fadea8f05dc574c425d7
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: wishing-otter-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: wishing-otter-redis-ha-server-f4cf555b4
+      release: wishing-otter
+      statefulset.kubernetes.io/pod-name: wishing-otter-redis-ha-server-0
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: wishing-otter-redis-ha-server
+      uid: 17b72228-8cfb-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: wishing-otter
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: wishing-otter
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: wishing-otter-redis-ha-server-0
+    imagePullSecrets:
+    - name: wishing-otter-redis-ha-dockercfg-zfdzf
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: 96b74e79f488ae5264161e63a022c75018d2b280
+      - name: SENTINEL_ID_1
+        value: 4693d9a8a4fa2ffbad938d0c87d561cc73d8d4e2
+      - name: SENTINEL_ID_2
+        value: 59d8d5b018db1163bc17bcf9e056f7578232089a
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    nodeName: ip-10-0-102-102.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: wishing-otter-redis-ha
+    serviceAccountName: wishing-otter-redis-ha
+    subdomain: wishing-otter-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-wishing-otter-redis-ha-server-0
+    - configMap:
+        defaultMode: 420
+        name: wishing-otter-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: wishing-otter-redis-ha-probes
+      name: probes
+    - name: wishing-otter-redis-ha-token-bwfxw
+      secret:
+        defaultMode: 420
+        secretName: wishing-otter-redis-ha-token-bwfxw
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: a319b7ca82faa33e5864e71944459c9a461f4ce55988722565fefcbed0c01d6b
+      checksum/probe-config: f3058b8a8ca779a6e221386b806d1019a81fc5251492fadea8f05dc574c425d7
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: wishing-otter-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: wishing-otter-redis-ha-server-f4cf555b4
+      release: wishing-otter
+      statefulset.kubernetes.io/pod-name: wishing-otter-redis-ha-server-1
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: wishing-otter-redis-ha-server
+      uid: 17b72228-8cfb-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: wishing-otter
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: wishing-otter
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: wishing-otter-redis-ha-server-1
+    imagePullSecrets:
+    - name: wishing-otter-redis-ha-dockercfg-zfdzf
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: 96b74e79f488ae5264161e63a022c75018d2b280
+      - name: SENTINEL_ID_1
+        value: 4693d9a8a4fa2ffbad938d0c87d561cc73d8d4e2
+      - name: SENTINEL_ID_2
+        value: 59d8d5b018db1163bc17bcf9e056f7578232089a
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    nodeName: ip-10-0-103-195.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: wishing-otter-redis-ha
+    serviceAccountName: wishing-otter-redis-ha
+    subdomain: wishing-otter-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-wishing-otter-redis-ha-server-1
+    - configMap:
+        defaultMode: 420
+        name: wishing-otter-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: wishing-otter-redis-ha-probes
+      name: probes
+    - name: wishing-otter-redis-ha-token-bwfxw
+      secret:
+        defaultMode: 420
+        secretName: wishing-otter-redis-ha-token-bwfxw
+  status: {}
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      checksum/init-config: a319b7ca82faa33e5864e71944459c9a461f4ce55988722565fefcbed0c01d6b
+      checksum/probe-config: f3058b8a8ca779a6e221386b806d1019a81fc5251492fadea8f05dc574c425d7
+      openshift.io/scc: restricted
+    creationTimestamp: null
+    generateName: wishing-otter-redis-ha-server-
+    labels:
+      app: redis-ha
+      controller-revision-hash: wishing-otter-redis-ha-server-f4cf555b4
+      release: wishing-otter
+      statefulset.kubernetes.io/pod-name: wishing-otter-redis-ha-server-2
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: wishing-otter-redis-ha-server
+      uid: 17b72228-8cfb-11e9-921e-0653e4b68d64
+  spec:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: redis-ha
+                release: wishing-otter
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: redis-ha
+              release: wishing-otter
+          topologyKey: kubernetes.io/hostname
+    containers:
+    - args:
+      - /data/conf/redis.conf
+      command:
+      - redis-server
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: redis
+      ports:
+      - containerPort: 6379
+        name: redis
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "6379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    - args:
+      - /data/conf/sentinel.conf
+      command:
+      - redis-sentinel
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: sentinel
+      ports:
+      - containerPort: 26379
+        name: sentinel
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - /probes/readiness.sh
+          - "26379"
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: data
+      - mountPath: /probes
+        name: probes
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    hostname: wishing-otter-redis-ha-server-2
+    imagePullSecrets:
+    - name: wishing-otter-redis-ha-dockercfg-zfdzf
+    initContainers:
+    - args:
+      - /readonly-config/init.sh
+      command:
+      - sh
+      env:
+      - name: SENTINEL_ID_0
+        value: 96b74e79f488ae5264161e63a022c75018d2b280
+      - name: SENTINEL_ID_1
+        value: 4693d9a8a4fa2ffbad938d0c87d561cc73d8d4e2
+      - name: SENTINEL_ID_2
+        value: 59d8d5b018db1163bc17bcf9e056f7578232089a
+      image: redis:5.0.3-alpine
+      imagePullPolicy: IfNotPresent
+      name: config-init
+      resources: {}
+      securityContext:
+        capabilities:
+          drop:
+          - KILL
+          - MKNOD
+          - SETGID
+          - SETUID
+        runAsUser: 1002010000
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /readonly-config
+        name: config
+        readOnly: true
+      - mountPath: /data
+        name: data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: wishing-otter-redis-ha-token-bwfxw
+        readOnly: true
+    nodeName: ip-10-0-101-107.eu-west-1.compute.internal
+    nodeSelector:
+      region: default
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext:
+      fsGroup: 1002010000
+      seLinuxOptions:
+        level: s0:c45,c15
+    serviceAccount: wishing-otter-redis-ha
+    serviceAccountName: wishing-otter-redis-ha
+    subdomain: wishing-otter-redis-ha
+    terminationGracePeriodSeconds: 30
+    volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-wishing-otter-redis-ha-server-2
+    - configMap:
+        defaultMode: 420
+        name: wishing-otter-redis-ha-configmap
+      name: config
+    - configMap:
+        defaultMode: 420
+        name: wishing-otter-redis-ha-probes
+      name: probes
+    - name: wishing-otter-redis-ha-token-bwfxw
+      secret:
+        defaultMode: 420
+        secretName: wishing-otter-redis-ha-token-bwfxw
+  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-fullpasswd
+    name: redistest-fullpasswd-redis-ha
+  spec:
+    clusterIP: None
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    selector:
+      app: redis-ha
+      release: redistest-fullpasswd
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-fullpasswd
+    name: redistest-fullpasswd-redis-ha-announce-0
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: redistest-fullpasswd
+      statefulset.kubernetes.io/pod-name: redistest-fullpasswd-redis-ha-server-0
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-fullpasswd
+    name: redistest-fullpasswd-redis-ha-announce-1
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: redistest-fullpasswd
+      statefulset.kubernetes.io/pod-name: redistest-fullpasswd-redis-ha-server-1
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-fullpasswd
+    name: redistest-fullpasswd-redis-ha-announce-2
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: redistest-fullpasswd
+      statefulset.kubernetes.io/pod-name: redistest-fullpasswd-redis-ha-server-2
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-passwd
+    name: redistest-passwd-redis-ha
+  spec:
+    clusterIP: None
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    selector:
+      app: redis-ha
+      release: redistest-passwd
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-passwd
+    name: redistest-passwd-redis-ha-announce-0
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: redistest-passwd
+      statefulset.kubernetes.io/pod-name: redistest-passwd-redis-ha-server-0
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-passwd
+    name: redistest-passwd-redis-ha-announce-1
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: redistest-passwd
+      statefulset.kubernetes.io/pod-name: redistest-passwd-redis-ha-server-1
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-passwd
+    name: redistest-passwd-redis-ha-announce-2
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: redistest-passwd
+      statefulset.kubernetes.io/pod-name: redistest-passwd-redis-ha-server-2
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: wishing-otter
+    name: wishing-otter-redis-ha
+  spec:
+    clusterIP: None
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    selector:
+      app: redis-ha
+      release: wishing-otter
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: wishing-otter
+    name: wishing-otter-redis-ha-announce-0
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: wishing-otter
+      statefulset.kubernetes.io/pod-name: wishing-otter-redis-ha-server-0
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: wishing-otter
+    name: wishing-otter-redis-ha-announce-1
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: wishing-otter
+      statefulset.kubernetes.io/pod-name: wishing-otter-redis-ha-server-1
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    creationTimestamp: null
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: wishing-otter
+    name: wishing-otter-redis-ha-announce-2
+  spec:
+    ports:
+    - name: server
+      port: 6379
+      protocol: TCP
+      targetPort: redis
+    - name: sentinel
+      port: 26379
+      protocol: TCP
+      targetPort: sentinel
+    publishNotReadyAddresses: true
+    selector:
+      app: redis-ha
+      release: wishing-otter
+      statefulset.kubernetes.io/pod-name: wishing-otter-redis-ha-server-2
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: null
+    generation: 1
+    labels:
+      app: helm
+      name: tiller
+    name: tiller
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: helm
+        name: tiller
+    strategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: helm
+          name: tiller
+      spec:
+        containers:
+        - env:
+          - name: TILLER_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          image: gcr.io/kubernetes-helm/tiller:v2.9.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /liveness
+              port: 44135
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: tiller
+          ports:
+          - containerPort: 44134
+            name: tiller
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readiness
+              port: 44135
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: tiller
+        serviceAccountName: tiller
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: 2019-06-12T09:54:31Z
+      lastUpdateTime: 2019-06-12T09:54:31Z
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: 2019-06-12T09:54:31Z
+      lastUpdateTime: 2019-06-12T09:54:44Z
+      message: ReplicaSet "tiller-5ffb5cc69f" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: null
+    generation: 1
+    labels:
+      app: helm
+      name: tiller
+      pod-template-hash: "1996177259"
+    name: tiller-5ffb5cc69f
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: tiller
+      uid: 1316a194-8cf8-11e9-921e-0653e4b68d64
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: helm
+        name: tiller
+        pod-template-hash: "1996177259"
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: helm
+          name: tiller
+          pod-template-hash: "1996177259"
+      spec:
+        containers:
+        - env:
+          - name: TILLER_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          image: gcr.io/kubernetes-helm/tiller:v2.9.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /liveness
+              port: 44135
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: tiller
+          ports:
+          - containerPort: 44134
+            name: tiller
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readiness
+              port: 44135
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: tiller
+        serviceAccountName: tiller
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    creationTimestamp: null
+    generation: 2
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-fullpasswd
+    name: redistest-fullpasswd-redis-ha-server
+  spec:
+    podManagementPolicy: OrderedReady
+    replicas: 3
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: redis-ha
+        release: redistest-fullpasswd
+    serviceName: redistest-fullpasswd-redis-ha
+    template:
+      metadata:
+        annotations:
+          checksum/init-config: df8725c64067db401b2af22c004cedd5cf881bb588332d93a9c0b131cfcebd6b
+          checksum/probe-config: 516a6da181100e40c4487dd28c033e543f1e8c86aa315a52abd65275d419b68b
+        creationTimestamp: null
+        labels:
+          app: redis-ha
+          release: redistest-fullpasswd
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: redis-ha
+                    release: redistest-fullpasswd
+                topologyKey: failure-domain.beta.kubernetes.io/zone
+              weight: 100
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: redis-ha
+                  release: redistest-fullpasswd
+              topologyKey: kubernetes.io/hostname
+        containers:
+        - args:
+          - /data/conf/redis.conf
+          command:
+          - redis-server
+          env:
+          - name: AUTH
+            valueFrom:
+              secretKeyRef:
+                key: auth
+                name: redistest-fullpasswd-redis-ha
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "6379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: redis
+          ports:
+          - containerPort: 6379
+            name: redis
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "6379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: data
+          - mountPath: /probes
+            name: probes
+        - args:
+          - /data/conf/sentinel.conf
+          command:
+          - redis-sentinel
+          env:
+          - name: AUTH
+            valueFrom:
+              secretKeyRef:
+                key: auth
+                name: redistest-fullpasswd-redis-ha
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "26379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: sentinel
+          ports:
+          - containerPort: 26379
+            name: sentinel
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "26379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: data
+          - mountPath: /probes
+            name: probes
+        dnsPolicy: ClusterFirst
+        initContainers:
+        - args:
+          - /readonly-config/init.sh
+          command:
+          - sh
+          env:
+          - name: SENTINEL_ID_0
+            value: 594aadc8eb3a4109a8b391b5c12e6593c5fbdebb
+          - name: SENTINEL_ID_1
+            value: fcb0ee4498521f99b125ad8514178c24be9f0a79
+          - name: SENTINEL_ID_2
+            value: 391bdeae49b0d3d3a7f60c4d831559287c4a7d2d
+          - name: AUTH
+            valueFrom:
+              secretKeyRef:
+                key: auth
+                name: redistest-fullpasswd-redis-ha
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          name: config-init
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /readonly-config
+            name: config
+            readOnly: true
+          - mountPath: /data
+            name: data
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: redistest-fullpasswd-redis-ha
+        serviceAccountName: redistest-fullpasswd-redis-ha
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: redistest-fullpasswd-redis-ha-configmap
+          name: config
+        - configMap:
+            defaultMode: 420
+            name: redistest-fullpasswd-redis-ha-probes
+          name: probes
+    updateStrategy:
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - metadata:
+        creationTimestamp: null
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+      status:
+        phase: Pending
+  status:
+    collisionCount: 0
+    currentReplicas: 3
+    currentRevision: redistest-fullpasswd-redis-ha-server-798fc69bb5
+    observedGeneration: 2
+    readyReplicas: 3
+    replicas: 3
+    updateRevision: redistest-fullpasswd-redis-ha-server-798fc69bb5
+    updatedReplicas: 3
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    creationTimestamp: null
+    generation: 2
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: redistest-passwd
+    name: redistest-passwd-redis-ha-server
+  spec:
+    podManagementPolicy: OrderedReady
+    replicas: 3
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: redis-ha
+        release: redistest-passwd
+    serviceName: redistest-passwd-redis-ha
+    template:
+      metadata:
+        annotations:
+          checksum/init-config: cd4e590236a1ef2f7c6ba2b5bae42be772bc05b677b483c0a464bcbcb101a0c4
+          checksum/probe-config: e89b20d770ce05f5146b5352028828046985b6572db3ee17b6b291a0e98fb536
+        creationTimestamp: null
+        labels:
+          app: redis-ha
+          release: redistest-passwd
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: redis-ha
+                    release: redistest-passwd
+                topologyKey: failure-domain.beta.kubernetes.io/zone
+              weight: 100
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: redis-ha
+                  release: redistest-passwd
+              topologyKey: kubernetes.io/hostname
+        containers:
+        - args:
+          - /data/conf/redis.conf
+          command:
+          - redis-server
+          env:
+          - name: AUTH
+            valueFrom:
+              secretKeyRef:
+                key: auth
+                name: redistest-passwd-redis-ha
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "6379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: redis
+          ports:
+          - containerPort: 6379
+            name: redis
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "6379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: data
+          - mountPath: /probes
+            name: probes
+        - args:
+          - /data/conf/sentinel.conf
+          command:
+          - redis-sentinel
+          env:
+          - name: AUTH
+            valueFrom:
+              secretKeyRef:
+                key: auth
+                name: redistest-passwd-redis-ha
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "26379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: sentinel
+          ports:
+          - containerPort: 26379
+            name: sentinel
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "26379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: data
+          - mountPath: /probes
+            name: probes
+        dnsPolicy: ClusterFirst
+        initContainers:
+        - args:
+          - /readonly-config/init.sh
+          command:
+          - sh
+          env:
+          - name: SENTINEL_ID_0
+            value: e313caa9c489499a9b32dbda36c97749bda99b16
+          - name: SENTINEL_ID_1
+            value: 29bddad1f9c0690551a607e93fb963535d7a8309
+          - name: SENTINEL_ID_2
+            value: 3a905b11a53b3a18f10712201c8e7d56fe156745
+          - name: AUTH
+            valueFrom:
+              secretKeyRef:
+                key: auth
+                name: redistest-passwd-redis-ha
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          name: config-init
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /readonly-config
+            name: config
+            readOnly: true
+          - mountPath: /data
+            name: data
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: redistest-passwd-redis-ha
+        serviceAccountName: redistest-passwd-redis-ha
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: redistest-passwd-redis-ha-configmap
+          name: config
+        - configMap:
+            defaultMode: 420
+            name: redistest-passwd-redis-ha-probes
+          name: probes
+    updateStrategy:
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - metadata:
+        creationTimestamp: null
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+      status:
+        phase: Pending
+  status:
+    collisionCount: 0
+    currentReplicas: 3
+    currentRevision: redistest-passwd-redis-ha-server-dccd4cc49
+    observedGeneration: 2
+    readyReplicas: 3
+    replicas: 3
+    updateRevision: redistest-passwd-redis-ha-server-dccd4cc49
+    updatedReplicas: 3
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    creationTimestamp: null
+    generation: 2
+    labels:
+      app: redis-ha
+      chart: redis-ha-3.5.0
+      heritage: Tiller
+      release: wishing-otter
+    name: wishing-otter-redis-ha-server
+  spec:
+    podManagementPolicy: OrderedReady
+    replicas: 3
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: redis-ha
+        release: wishing-otter
+    serviceName: wishing-otter-redis-ha
+    template:
+      metadata:
+        annotations:
+          checksum/init-config: a319b7ca82faa33e5864e71944459c9a461f4ce55988722565fefcbed0c01d6b
+          checksum/probe-config: f3058b8a8ca779a6e221386b806d1019a81fc5251492fadea8f05dc574c425d7
+        creationTimestamp: null
+        labels:
+          app: redis-ha
+          release: wishing-otter
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: redis-ha
+                    release: wishing-otter
+                topologyKey: failure-domain.beta.kubernetes.io/zone
+              weight: 100
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: redis-ha
+                  release: wishing-otter
+              topologyKey: kubernetes.io/hostname
+        containers:
+        - args:
+          - /data/conf/redis.conf
+          command:
+          - redis-server
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "6379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: redis
+          ports:
+          - containerPort: 6379
+            name: redis
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "6379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: data
+          - mountPath: /probes
+            name: probes
+        - args:
+          - /data/conf/sentinel.conf
+          command:
+          - redis-sentinel
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "26379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: sentinel
+          ports:
+          - containerPort: 26379
+            name: sentinel
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - /probes/readiness.sh
+              - "26379"
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: data
+          - mountPath: /probes
+            name: probes
+        dnsPolicy: ClusterFirst
+        initContainers:
+        - args:
+          - /readonly-config/init.sh
+          command:
+          - sh
+          env:
+          - name: SENTINEL_ID_0
+            value: 96b74e79f488ae5264161e63a022c75018d2b280
+          - name: SENTINEL_ID_1
+            value: 4693d9a8a4fa2ffbad938d0c87d561cc73d8d4e2
+          - name: SENTINEL_ID_2
+            value: 59d8d5b018db1163bc17bcf9e056f7578232089a
+          image: redis:5.0.3-alpine
+          imagePullPolicy: IfNotPresent
+          name: config-init
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /readonly-config
+            name: config
+            readOnly: true
+          - mountPath: /data
+            name: data
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: wishing-otter-redis-ha
+        serviceAccountName: wishing-otter-redis-ha
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: wishing-otter-redis-ha-configmap
+          name: config
+        - configMap:
+            defaultMode: 420
+            name: wishing-otter-redis-ha-probes
+          name: probes
+    updateStrategy:
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - metadata:
+        creationTimestamp: null
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+      status:
+        phase: Pending
+  status:
+    collisionCount: 0
+    currentReplicas: 3
+    currentRevision: wishing-otter-redis-ha-server-f4cf555b4
+    observedGeneration: 2
+    readyReplicas: 3
+    replicas: 3
+    updateRevision: wishing-otter-redis-ha-server-f4cf555b4
+    updatedReplicas: 3
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    creationTimestamp: null
+    name: system
+  spec:
+    failedBuildsHistoryLimit: 5
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: amp-system:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      git:
+        ref: THREESCALE-1132-redis-sentinels
+        uri: https://github.com/3scale/porta.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: openshift/system/Dockerfile.on_prem
+        forcePull: true
+      type: Docker
+    successfulBuildsHistoryLimit: 5
+    triggers:
+    - type: ConfigChange
+  status:
+    lastVersion: 0
+- apiVersion: build.openshift.io/v1
+  kind: Build
+  metadata:
+    annotations:
+      openshift.io/build-config.name: system
+      openshift.io/build.number: "1"
+      openshift.io/build.pod-name: system-1-build
+    creationTimestamp: null
+    labels:
+      buildconfig: system
+      openshift.io/build-config.name: system
+      openshift.io/build.start-policy: Serial
+    name: system-1
+    ownerReferences:
+    - apiVersion: build.openshift.io/v1
+      controller: true
+      kind: BuildConfig
+      name: system
+      uid: 15dfd5af-8d41-11e9-921e-0653e4b68d64
+  spec:
+    nodeSelector: null
+    output:
+      pushSecret:
+        name: builder-dockercfg-8wskz
+      to:
+        kind: ImageStreamTag
+        name: amp-system:latest
+    postCommit: {}
+    resources: {}
+    revision:
+      git:
+        author:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        commit: ed70825d4a7f0a7164781604c3b1a406ee612c9d
+        committer:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        message: Using RedisConfig wrapper in boot:redis task
+      type: Git
+    serviceAccount: builder
+    source:
+      git:
+        ref: THREESCALE-1132-redis-sentinels
+        uri: https://github.com/3scale/porta.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: openshift/system/Dockerfile.on_prem
+        forcePull: true
+      type: Docker
+    triggeredBy:
+    - message: Build configuration change
+  status:
+    config:
+      name: system
+    output:
+      to:
+        imageDigest: sha256:1394d2b4cbdaa4c253e67ef5b88eb95625f8d4d3030bf77d04195acf3d1056e8
+    outputDockerImageReference: docker-registry.default.svc:5000/tiller/amp-system:latest
+    phase: New
+    stages:
+    - durationMilliseconds: 4704
+      name: FetchInputs
+      startTime: 2019-06-12T18:37:26Z
+      steps:
+      - durationMilliseconds: 4704
+        name: FetchGitSource
+        startTime: 2019-06-12T18:37:26Z
+    - durationMilliseconds: 1683
+      name: PullImages
+      startTime: 2019-06-12T18:37:39Z
+      steps:
+      - durationMilliseconds: 1683
+        name: PullBaseImage
+        startTime: 2019-06-12T18:37:39Z
+    - durationMilliseconds: 646091
+      name: Build
+      startTime: 2019-06-12T18:37:41Z
+      steps:
+      - durationMilliseconds: 646091
+        name: DockerBuild
+        startTime: 2019-06-12T18:37:41Z
+    - durationMilliseconds: 99431
+      name: PushImage
+      startTime: 2019-06-12T18:48:27Z
+      steps:
+      - durationMilliseconds: 99431
+        name: PushDockerImage
+        startTime: 2019-06-12T18:48:27Z
+- apiVersion: build.openshift.io/v1
+  kind: Build
+  metadata:
+    annotations:
+      openshift.io/build-config.name: system
+      openshift.io/build.number: "2"
+      openshift.io/build.pod-name: system-2-build
+    creationTimestamp: null
+    labels:
+      buildconfig: system
+      openshift.io/build-config.name: system
+      openshift.io/build.start-policy: Serial
+    name: system-2
+    ownerReferences:
+    - apiVersion: build.openshift.io/v1
+      controller: true
+      kind: BuildConfig
+      name: system
+      uid: 15dfd5af-8d41-11e9-921e-0653e4b68d64
+  spec:
+    nodeSelector: null
+    output:
+      pushSecret:
+        name: builder-dockercfg-8wskz
+      to:
+        kind: ImageStreamTag
+        name: amp-system:latest
+    postCommit: {}
+    resources: {}
+    revision:
+      git:
+        author:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        commit: 29ffd6976ebaa3f147eae39523edfc9f8b30e187
+        committer:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        message: Monkey redis-rb to support sentinel passwords prior to v4.1.2 of
+          the gem
+      type: Git
+    serviceAccount: builder
+    source:
+      git:
+        ref: THREESCALE-1132-redis-sentinels
+        uri: https://github.com/3scale/porta.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: openshift/system/Dockerfile.on_prem
+        forcePull: true
+      type: Docker
+    triggeredBy:
+    - message: Manually triggered
+  status:
+    config:
+      name: system
+    output:
+      to:
+        imageDigest: sha256:8d423abe0226f2ccac845bc16ad9bf23c1ea0feb511a92fd37ce74406dd77224
+    outputDockerImageReference: docker-registry.default.svc:5000/tiller/amp-system:latest
+    phase: New
+    stages:
+    - durationMilliseconds: 4487
+      name: FetchInputs
+      startTime: 2019-06-13T08:50:36Z
+      steps:
+      - durationMilliseconds: 4487
+        name: FetchGitSource
+        startTime: 2019-06-13T08:50:36Z
+    - durationMilliseconds: 1771
+      name: PullImages
+      startTime: 2019-06-13T08:50:48Z
+      steps:
+      - durationMilliseconds: 1771
+        name: PullBaseImage
+        startTime: 2019-06-13T08:50:48Z
+    - durationMilliseconds: 436653
+      name: Build
+      startTime: 2019-06-13T08:50:50Z
+      steps:
+      - durationMilliseconds: 436653
+        name: DockerBuild
+        startTime: 2019-06-13T08:50:50Z
+    - durationMilliseconds: 78591
+      name: PushImage
+      startTime: 2019-06-13T08:58:07Z
+      steps:
+      - durationMilliseconds: 78591
+        name: PushDockerImage
+        startTime: 2019-06-13T08:58:07Z
+- apiVersion: build.openshift.io/v1
+  kind: Build
+  metadata:
+    annotations:
+      openshift.io/build-config.name: system
+      openshift.io/build.number: "3"
+      openshift.io/build.pod-name: system-3-build
+    creationTimestamp: null
+    labels:
+      buildconfig: system
+      openshift.io/build-config.name: system
+      openshift.io/build.start-policy: Serial
+    name: system-3
+    ownerReferences:
+    - apiVersion: build.openshift.io/v1
+      controller: true
+      kind: BuildConfig
+      name: system
+      uid: 15dfd5af-8d41-11e9-921e-0653e4b68d64
+  spec:
+    nodeSelector: null
+    output:
+      pushSecret:
+        name: builder-dockercfg-8wskz
+      to:
+        kind: ImageStreamTag
+        name: amp-system:latest
+    postCommit: {}
+    resources: {}
+    revision:
+      git:
+        author:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        commit: 41613bc241a0228d1e458807e5effc08e84ad454
+        committer:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        message: Monkey redis-rb to support sentinel passwords prior to v4.1.2 of
+          the gem
+      type: Git
+    serviceAccount: builder
+    source:
+      git:
+        ref: THREESCALE-1132-redis-sentinels
+        uri: https://github.com/3scale/porta.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: openshift/system/Dockerfile.on_prem
+        forcePull: true
+      type: Docker
+    triggeredBy:
+    - message: Manually triggered
+  status:
+    config:
+      name: system
+    output:
+      to:
+        imageDigest: sha256:e4307b910e18c92d6ac6e170edd9b27cecb6fb930885505559b170c4ac23fb8e
+    outputDockerImageReference: docker-registry.default.svc:5000/tiller/amp-system:latest
+    phase: New
+    stages:
+    - durationMilliseconds: 4872
+      name: FetchInputs
+      startTime: 2019-06-13T09:23:19Z
+      steps:
+      - durationMilliseconds: 4872
+        name: FetchGitSource
+        startTime: 2019-06-13T09:23:19Z
+    - durationMilliseconds: 1686
+      name: PullImages
+      startTime: 2019-06-13T09:23:31Z
+      steps:
+      - durationMilliseconds: 1686
+        name: PullBaseImage
+        startTime: 2019-06-13T09:23:31Z
+    - durationMilliseconds: 678546
+      name: Build
+      startTime: 2019-06-13T09:23:33Z
+      steps:
+      - durationMilliseconds: 678546
+        name: DockerBuild
+        startTime: 2019-06-13T09:23:33Z
+    - durationMilliseconds: 84755
+      name: PushImage
+      startTime: 2019-06-13T09:34:52Z
+      steps:
+      - durationMilliseconds: 84755
+        name: PushDockerImage
+        startTime: 2019-06-13T09:34:52Z
+- apiVersion: build.openshift.io/v1
+  kind: Build
+  metadata:
+    annotations:
+      openshift.io/build-config.name: system
+      openshift.io/build.number: "4"
+      openshift.io/build.pod-name: system-4-build
+    creationTimestamp: null
+    labels:
+      buildconfig: system
+      openshift.io/build-config.name: system
+      openshift.io/build.start-policy: Serial
+    name: system-4
+    ownerReferences:
+    - apiVersion: build.openshift.io/v1
+      controller: true
+      kind: BuildConfig
+      name: system
+      uid: 15dfd5af-8d41-11e9-921e-0653e4b68d64
+  spec:
+    nodeSelector: null
+    output:
+      pushSecret:
+        name: builder-dockercfg-8wskz
+      to:
+        kind: ImageStreamTag
+        name: amp-system:latest
+    postCommit: {}
+    resources: {}
+    revision:
+      git:
+        author:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        commit: 96c4ba422eb5a19cfc59ccdfb9ebfda79c828d28
+        committer:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        message: Monkey redis-rb to support sentinel passwords prior to v4.1.2 of
+          the gem
+      type: Git
+    serviceAccount: builder
+    source:
+      git:
+        ref: THREESCALE-1132-redis-sentinels
+        uri: https://github.com/3scale/porta.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: openshift/system/Dockerfile.on_prem
+        forcePull: true
+      type: Docker
+    triggeredBy:
+    - message: Manually triggered
+  status:
+    config:
+      name: system
+    output:
+      to:
+        imageDigest: sha256:8775e84215fb564c9218c2a876068a4fdcc86facecbca0f23d0b41411f38d5b2
+    outputDockerImageReference: docker-registry.default.svc:5000/tiller/amp-system:latest
+    phase: New
+    stages:
+    - durationMilliseconds: 4609
+      name: FetchInputs
+      startTime: 2019-06-13T09:47:50Z
+      steps:
+      - durationMilliseconds: 4609
+        name: FetchGitSource
+        startTime: 2019-06-13T09:47:50Z
+    - durationMilliseconds: 2033
+      name: PullImages
+      startTime: 2019-06-13T09:48:02Z
+      steps:
+      - durationMilliseconds: 2033
+        name: PullBaseImage
+        startTime: 2019-06-13T09:48:02Z
+    - durationMilliseconds: 438227
+      name: Build
+      startTime: 2019-06-13T09:48:04Z
+      steps:
+      - durationMilliseconds: 438227
+        name: DockerBuild
+        startTime: 2019-06-13T09:48:04Z
+    - durationMilliseconds: 75346
+      name: PushImage
+      startTime: 2019-06-13T09:55:22Z
+      steps:
+      - durationMilliseconds: 75346
+        name: PushDockerImage
+        startTime: 2019-06-13T09:55:22Z
+- apiVersion: build.openshift.io/v1
+  kind: Build
+  metadata:
+    annotations:
+      openshift.io/build-config.name: system
+      openshift.io/build.number: "5"
+      openshift.io/build.pod-name: system-5-build
+    creationTimestamp: null
+    labels:
+      buildconfig: system
+      openshift.io/build-config.name: system
+      openshift.io/build.start-policy: Serial
+    name: system-5
+    ownerReferences:
+    - apiVersion: build.openshift.io/v1
+      controller: true
+      kind: BuildConfig
+      name: system
+      uid: 15dfd5af-8d41-11e9-921e-0653e4b68d64
+  spec:
+    nodeSelector: null
+    output:
+      pushSecret:
+        name: builder-dockercfg-8wskz
+      to:
+        kind: ImageStreamTag
+        name: amp-system:latest
+    postCommit: {}
+    resources: {}
+    revision:
+      git:
+        author:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        commit: fb7a2833f9fcaa6d4ba33a3c57f37313b8d3bccb
+        committer:
+          email: guicassolato@gmail.com
+          name: Guilherme Cassolato
+        message: Monkey redis-rb to support sentinel passwords prior to v4.1.2 of
+          the gem
+      type: Git
+    serviceAccount: builder
+    source:
+      git:
+        ref: THREESCALE-1132-redis-sentinels
+        uri: https://github.com/3scale/porta.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: openshift/system/Dockerfile.on_prem
+        forcePull: true
+      type: Docker
+    triggeredBy:
+    - message: Manually triggered
+  status:
+    config:
+      name: system
+    output:
+      to:
+        imageDigest: sha256:22a73d9e0532abace6c4e580b7f7f229170be5f67d13c797fa53c785914c0dc0
+    outputDockerImageReference: docker-registry.default.svc:5000/tiller/amp-system:latest
+    phase: New
+    stages:
+    - durationMilliseconds: 4971
+      name: FetchInputs
+      startTime: 2019-06-13T10:01:08Z
+      steps:
+      - durationMilliseconds: 4971
+        name: FetchGitSource
+        startTime: 2019-06-13T10:01:08Z
+    - durationMilliseconds: 1813
+      name: PullImages
+      startTime: 2019-06-13T10:01:21Z
+      steps:
+      - durationMilliseconds: 1813
+        name: PullBaseImage
+        startTime: 2019-06-13T10:01:21Z
+    - durationMilliseconds: 436767
+      name: Build
+      startTime: 2019-06-13T10:01:23Z
+      steps:
+      - durationMilliseconds: 436767
+        name: DockerBuild
+        startTime: 2019-06-13T10:01:23Z
+    - durationMilliseconds: 75590
+      name: PushImage
+      startTime: 2019-06-13T10:08:40Z
+      steps:
+      - durationMilliseconds: 75590
+        name: PushDockerImage
+        startTime: 2019-06-13T10:08:40Z
+kind: List
+metadata: {}

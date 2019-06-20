@@ -1,0 +1,92 @@
+[
+	{
+		"name": "MESSAGE_BUS_REDIS_URL",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "MESSAGE_BUS_URL",
+				"name": "system-redis"
+			}
+		}
+	},
+	{
+		"name": "REDIS_NAMESPACE",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "NAMESPACE",
+				"name": "system-redis"
+			}
+		}
+	},
+	{
+		"name": "MESSAGE_BUS_REDIS_NAMESPACE",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "MESSAGE_BUS_NAMESPACE",
+				"name": "system-redis"
+			}
+		}
+	},
+	{
+		"name": "REDIS_SENTINEL_HOSTS",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "SENTINEL_HOSTS",
+				"name": "system-redis"
+			}
+		}
+	},
+	{
+		"name": "REDIS_SENTINEL_ROLE",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "SENTINEL_ROLE",
+				"name": "system-redis"
+			}
+		}
+	},
+	{
+		"name": "MESSAGE_BUS_REDIS_SENTINEL_HOSTS",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "MESSAGE_BUS_SENTINEL_HOSTS",
+				"name": "system-redis"
+			}
+		}
+	},
+	{
+		"name": "MESSAGE_BUS_REDIS_SENTINEL_ROLE",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "MESSAGE_BUS_SENTINEL_ROLE",
+				"name": "system-redis"
+			}
+		}
+	},
+	{
+		"name": "BACKEND_REDIS_URL",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "REDIS_STORAGE_URL",
+				"name": "backend-redis"
+			}
+		}
+	},
+	{
+		"name": "BACKEND_REDIS_SENTINEL_HOSTS",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "REDIS_STORAGE_SENTINEL_HOSTS",
+				"name": "backend-redis"
+			}
+		}
+	},
+	{
+		"name": "BACKEND_REDIS_SENTINEL_ROLE",
+		"valueFrom": {
+			"secretKeyRef": {
+				"key": "REDIS_STORAGE_SENTINEL_ROLE",
+				"name": "backend-redis"
+			}
+		}
+	}
+]

@@ -1,0 +1,169 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  annotations:
+    openshift.io/generated-by: OpenShiftNewApp
+  creationTimestamp: 2019-06-17T11:22:10Z
+  generation: 2
+  labels:
+    app: 3scale-api-management
+    threescale_component: apicast
+    threescale_component_element: production
+  name: apicast-production
+  namespace: msoriano-test
+  resourceVersion: "2861847"
+  selfLink: /apis/apps.openshift.io/v1/namespaces/msoriano-test/deploymentconfigs/apicast-production
+  uid: 25ad7f32-90f2-11e9-871d-08002798dcfd
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    deploymentConfig: apicast-production
+  strategy:
+    activeDeadlineSeconds: 21600
+    resources: {}
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 1800
+      updatePeriodSeconds: 1
+    type: Rolling
+  template:
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+        prometheus.io/port: "9421"
+        prometheus.io/scrape: "true"
+      creationTimestamp: null
+      labels:
+        app: 3scale-api-management
+        deploymentConfig: apicast-production
+        threescale_component: apicast
+        threescale_component_element: production
+    spec:
+      containers:
+      - env:
+        - name: THREESCALE_PORTAL_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: PROXY_CONFIGS_ENDPOINT
+              name: system-master-apicast
+        - name: BACKEND_ENDPOINT_OVERRIDE
+          valueFrom:
+            secretKeyRef:
+              key: service_endpoint
+              name: backend-listener
+        - name: APICAST_MANAGEMENT_API
+          valueFrom:
+            configMapKeyRef:
+              key: APICAST_MANAGEMENT_API
+              name: apicast-environment
+        - name: OPENSSL_VERIFY
+          valueFrom:
+            configMapKeyRef:
+              key: OPENSSL_VERIFY
+              name: apicast-environment
+        - name: APICAST_RESPONSE_CODES
+          valueFrom:
+            configMapKeyRef:
+              key: APICAST_RESPONSE_CODES
+              name: apicast-environment
+        - name: APICAST_CONFIGURATION_LOADER
+          value: boot
+        - name: APICAST_CONFIGURATION_CACHE
+          value: "300"
+        - name: THREESCALE_DEPLOYMENT_ENV
+          value: production
+        image: registry.access.redhat.com/3scale-amp25/apicast-gateway@sha256:a2deb838444a7d36b90b0c9ea50df225da46ad41f4986824d69babfda743f3fc
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /status/live
+            port: 8090
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: apicast-production
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 8090
+          protocol: TCP
+        - containerPort: 9421
+          name: metrics
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /status/ready
+            port: 8090
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
+          do sleep $SLEEP_SECONDS; done
+        env:
+        - name: SLEEP_SECONDS
+          value: "1"
+        image: registry.access.redhat.com/3scale-amp25/apicast-gateway@sha256:a2deb838444a7d36b90b0c9ea50df225da46ad41f4986824d69babfda743f3fc
+        imagePullPolicy: Always
+        name: system-master-svc
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+  test: false
+  triggers:
+  - type: ConfigChange
+  - imageChangeParams:
+      automatic: true
+      containerNames:
+      - system-master-svc
+      - apicast-production
+      from:
+        kind: ImageStreamTag
+        name: amp-apicast:latest
+        namespace: msoriano-test
+      lastTriggeredImage: registry.access.redhat.com/3scale-amp25/apicast-gateway@sha256:a2deb838444a7d36b90b0c9ea50df225da46ad41f4986824d69babfda743f3fc
+    type: ImageChange
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: 2019-06-17T11:26:47Z
+    lastUpdateTime: 2019-06-17T11:26:47Z
+    message: Deployment config has minimum availability.
+    status: "True"
+    type: Available
+  - lastTransitionTime: 2019-06-17T11:26:48Z
+    lastUpdateTime: 2019-06-17T11:26:48Z
+    message: replication controller "apicast-production-1" successfully rolled out
+    reason: NewReplicationControllerAvailable
+    status: "True"
+    type: Progressing
+  details:
+    causes:
+    - type: ConfigChange
+    message: config change
+  latestVersion: 1
+  observedGeneration: 2
+  readyReplicas: 1
+  replicas: 1
+  unavailableReplicas: 0
+  updatedReplicas: 1
