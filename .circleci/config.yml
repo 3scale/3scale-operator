@@ -112,6 +112,17 @@ commands:
               --docker-password="${DOCKER_PASSWORD}" \
               --docker-username="${DOCKER_USERNAME}" \
               --docker-server="${DOCKER_REGISTRY}"
+
+  create-redhat-registry-io-secret:
+    steps:
+      - run:
+          name: Create registry.redhat.io secret
+          command: |
+            # oc create secret docker-registry threescale-registry-auth \
+            #   --docker-password="${REDHAT_REGISTRY_IO_PASSWORD}" \
+            #   --docker-username="${REDHAT_REGISTRY_IO_USERNAME}" \
+            #   --docker-server="${REDHAT_REGISTRY_IO_SERVER}"
+            echo "${REDHAT_REGISTRY_IO_SERVER}"
   build-amp:
     steps:
       - run:
@@ -267,6 +278,7 @@ jobs:
       - checkout
       - install-openshift
       - create-secrets
+      - create-redhat-registry-io-secret
       - build-amp
       - oc-observe
       - deploy-3scale-eval-from-template
@@ -280,6 +292,7 @@ jobs:
       - checkout
       - install-openshift
       - create-secrets
+      - create-redhat-registry-io-secret
       - build-amp
       - oc-observe
       - deploy-3scale-eval-from-template
@@ -293,6 +306,7 @@ jobs:
     working_directory: ~/go/src/github.com/3scale/3scale-operator
     steps:
       - install-openshift
+      - create-redhat-registry-io-secret
       - install-golang
       - install-operator-sdk
       - checkout
