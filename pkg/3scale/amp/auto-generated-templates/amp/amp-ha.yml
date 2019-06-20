@@ -3707,11 +3707,11 @@ parameters:
 - description: Zync's PostgreSQL image to use
   name: ZYNC_DATABASE_IMAGE
   required: true
-  value: registry.access.redhat.com/rhscl/postgresql-10-rhel7
+  value: registry.redhat.io/rhscl/postgresql-10-rhel7
 - description: Memcached image to use
   name: MEMCACHED_IMAGE
   required: true
-  value: registry.access.redhat.com/3scale-amp20/memcached
+  value: registry.redhat.io/3scale-amp20/memcached
 - description: Set to true if the server may bypass certificate verification or connect
     directly over HTTP during image import.
   name: IMAGESTREAM_TAG_IMPORT_INSECURE

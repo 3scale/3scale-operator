@@ -2,6 +2,7 @@ package component
 
 import (
 	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -133,7 +134,7 @@ func (s *SystemPostgreSQLImage) buildParameters(template *templatev1.Template) {
 			Name:        "SYSTEM_DATABASE_IMAGE",
 			Description: "System PostgreSQL image to use",
 			Required:    true,
-			Value:       "registry.access.redhat.com/rhscl/postgresql-10-rhel7",
+			Value:       "registry.redhat.io/rhscl/postgresql-10-rhel7",
 		},
 	}
 	template.Parameters = append(template.Parameters, parameters...)

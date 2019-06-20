@@ -72,13 +72,13 @@ func (productized *Productized) updateAmpImagesParameters(template *templatev1.T
 		param := &template.Parameters[paramIdx]
 		switch param.Name {
 		case "AMP_SYSTEM_IMAGE":
-			param.Value = "registry.access.redhat.com/3scale-amp25/system"
+			param.Value = "registry.redhat.io/3scale-amp25/system"
 		case "AMP_BACKEND_IMAGE":
-			param.Value = "registry.access.redhat.com/3scale-amp25/backend"
+			param.Value = "registry.redhat.io/3scale-amp25/backend"
 		case "AMP_APICAST_IMAGE":
-			param.Value = "registry.access.redhat.com/3scale-amp25/apicast-gateway"
+			param.Value = "registry.redhat.io/3scale-amp25/apicast-gateway"
 		case "AMP_ZYNC_IMAGE":
-			param.Value = "registry.access.redhat.com/3scale-amp25/zync"
+			param.Value = "registry.redhat.io/3scale-amp25/zync"
 		}
 	}
 }

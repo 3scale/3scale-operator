@@ -2,6 +2,7 @@ package component
 
 import (
 	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -97,7 +98,7 @@ func (redis *Redis) buildParameters(template *templatev1.Template) {
 			Name:        "REDIS_IMAGE",
 			Description: "Redis image to use",
 			Required:    true,
-			Value:       "registry.access.redhat.com/rhscl/redis-32-rhel7:3.2",
+			Value:       "registry.redhat.io/rhscl/redis-32-rhel7:3.2",
 		},
 	}
 	template.Parameters = append(template.Parameters, parameters...)
