@@ -3,7 +3,7 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	imagev1 "github.com/openshift/api/image/v1"

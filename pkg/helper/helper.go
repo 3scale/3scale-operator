@@ -3,7 +3,7 @@ package helper
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/apimachinery/pkg/runtime"
 	"net/http"
 	"net/url"
