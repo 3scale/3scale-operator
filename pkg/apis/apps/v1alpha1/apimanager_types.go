@@ -200,9 +200,13 @@ func init() {
 func (apimanager *APIManager) SetDefaults() (bool, error) {
 	var err error
 	changed := false
-	changed = apimanager.setAPIManagerCommonSpecDefaults()
-	changed = apimanager.setApicastSpecDefaults()
-	changed, err = apimanager.setSystemSpecDefaults()
+	commonChanged := apimanager.setAPIManagerCommonSpecDefaults()
+	apicastChanged := apimanager.setApicastSpecDefaults()
+	systemChanged, err := apimanager.setSystemSpecDefaults()
+
+	if commonChanged || apicastChanged || systemChanged {
+		changed = true
+	}
 
 	return changed, err
 }
