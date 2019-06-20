@@ -123,7 +123,8 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	changed, err := instance.SetDefaults() // TODO check where to put this
 	if err != nil {
 		// Error setting defaults - Stop reconciliation
-		return reconcile.Result{}, nil
+		r.reqLogger.Error(err, "Error setting defaults. Requeuing request...")
+		return reconcile.Result{}, err
 	}
 	if changed {
 		r.reqLogger.Info("Updating defaults for APIManager resource")
