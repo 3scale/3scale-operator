@@ -3,7 +3,7 @@ package apimanager
 import (
 	"context"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/apis/common"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"reflect"
 
 	"github.com/go-logr/logr"
