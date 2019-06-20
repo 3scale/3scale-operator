@@ -150,10 +150,16 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref common.ReferenceCallback
 							},
 						},
 					},
+					"deployments": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/RHsyseng/operator-utils/pkg/olm.DeploymentStatus"),
+						},
+					},
 				},
+				Required: []string{"deployments"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerCondition"},
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerCondition", "github.com/RHsyseng/operator-utils/pkg/olm.DeploymentStatus"},
 	}
 }
