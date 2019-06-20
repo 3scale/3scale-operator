@@ -171,6 +171,7 @@ func (in *APIManagerStatus) DeepCopyInto(out *APIManagerStatus) {
 		*out = make([]APIManagerCondition, len(*in))
 		copy(*out, *in)
 	}
+	in.Deployments.DeepCopyInto(&out.Deployments)
 	return
 }
 

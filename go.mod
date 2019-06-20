@@ -4,7 +4,7 @@ require (
 	contrib.go.opencensus.io/exporter/ocagent v0.4.9 // indirect
 	github.com/3scale/3scale-porta-go-client v0.0.3
 	github.com/Azure/go-autorest v11.5.2+incompatible // indirect
-	github.com/RHsyseng/operator-utils v0.0.0-20190616014937-557e58cee892
+	github.com/RHsyseng/operator-utils v0.0.0-20190617184533-a633dc5f85a3
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30 // indirect
 	github.com/coreos/prometheus-operator v0.26.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
