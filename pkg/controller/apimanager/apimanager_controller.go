@@ -3,8 +3,9 @@ package apimanager
 import (
 	"context"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"reflect"
+
+	"github.com/3scale/3scale-operator/pkg/common"
 
 	"github.com/go-logr/logr"
 
@@ -113,7 +114,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 			r.reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted")
 			return reconcile.Result{}, nil
 		}
-		r.reqLogger.Error(err, "APIManager Resource cannot be created. Requeuing request...")
+		r.reqLogger.Error(err, "APIManager Resource cannot be retrieved. Requeuing request...")
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
@@ -123,7 +124,8 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	changed, err := instance.SetDefaults() // TODO check where to put this
 	if err != nil {
 		// Error setting defaults - Stop reconciliation
-		return reconcile.Result{}, nil
+		r.reqLogger.Error(err, "Error setting defaults. Requeuing request...")
+		return reconcile.Result{}, err
 	}
 	if changed {
 		r.reqLogger.Info("Updating defaults for APIManager resource")
