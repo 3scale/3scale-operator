@@ -4231,7 +4231,7 @@ parameters:
 - description: AMP release tag.
   name: AMP_RELEASE
   required: true
-  value: 2.5.0
+  value: 2.6.0
 - description: Used for object app labels
   name: APP_LABEL
   required: true
