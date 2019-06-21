@@ -67,6 +67,15 @@ export NAMESPACE="operator-test"
 oc new-project $NAMESPACE
 oc project $NAMESPACE
 
+# An OpenShift secret with the name "threescale-registry-auth" has to be created
+# in the new project. This secret is used to be able to
+# retrieve images from the registry.redhat.io container registry.
+# This secret must have the credentials of a Service Account
+# created in the registry.redhat.io container registry. The secret
+# contents and more information about the registry can be found here:
+# https://access.redhat.com/RegistryAuthentication
+oc create -f threescale-registry-auth-secret.yml
+
 # Create the 3scale-operator ServiceAccount
 oc create -f deploy/service_account.yaml
 
