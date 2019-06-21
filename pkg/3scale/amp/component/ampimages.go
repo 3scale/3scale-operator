@@ -509,13 +509,13 @@ func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:        "ZYNC_DATABASE_IMAGE",
 			Description: "Zync's PostgreSQL image to use",
-			Value:       "registry.access.redhat.com/rhscl/postgresql-10-rhel7",
+			Value:       "registry.redhat.io/rhscl/postgresql-10-rhel7",
 			Required:    true,
 		},
 		templatev1.Parameter{
 			Name:        "MEMCACHED_IMAGE",
 			Description: "Memcached image to use",
-			Value:       "registry.access.redhat.com/3scale-amp20/memcached",
+			Value:       "registry.redhat.io/3scale-amp20/memcached",
 			Required:    true,
 		},
 		templatev1.Parameter{

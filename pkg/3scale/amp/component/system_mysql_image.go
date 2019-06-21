@@ -2,6 +2,7 @@ package component
 
 import (
 	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -132,7 +133,7 @@ func (s *SystemMySQLImage) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:        "SYSTEM_DATABASE_IMAGE",
 			Description: "System MySQL image to use",
-			Value:       "registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7",
+			Value:       "registry.redhat.io/rhscl/mysql-57-rhel7:5.7",
 			Required:    true,
 		},
 	}

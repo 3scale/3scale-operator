@@ -3679,7 +3679,7 @@ parameters:
 - description: AMP release tag.
   name: AMP_RELEASE
   required: true
-  value: 2.5.0
+  value: 2.6.0
 - description: Used for object app labels
   name: APP_LABEL
   required: true
@@ -3694,24 +3694,24 @@ parameters:
   value: "null"
 - name: AMP_BACKEND_IMAGE
   required: true
-  value: registry.access.redhat.com/3scale-amp25/backend
+  value: registry.redhat.io/3scale-amp25/backend
 - name: AMP_ZYNC_IMAGE
   required: true
-  value: registry.access.redhat.com/3scale-amp25/zync
+  value: registry.redhat.io/3scale-amp25/zync
 - name: AMP_APICAST_IMAGE
   required: true
-  value: registry.access.redhat.com/3scale-amp25/apicast-gateway
+  value: registry.redhat.io/3scale-amp25/apicast-gateway
 - name: AMP_SYSTEM_IMAGE
   required: true
-  value: registry.access.redhat.com/3scale-amp25/system
+  value: registry.redhat.io/3scale-amp25/system
 - description: Zync's PostgreSQL image to use
   name: ZYNC_DATABASE_IMAGE
   required: true
-  value: registry.access.redhat.com/rhscl/postgresql-10-rhel7
+  value: registry.redhat.io/rhscl/postgresql-10-rhel7
 - description: Memcached image to use
   name: MEMCACHED_IMAGE
   required: true
-  value: registry.access.redhat.com/3scale-amp20/memcached
+  value: registry.redhat.io/3scale-amp20/memcached
 - description: Set to true if the server may bypass certificate verification or connect
     directly over HTTP during image import.
   name: IMAGESTREAM_TAG_IMPORT_INSECURE

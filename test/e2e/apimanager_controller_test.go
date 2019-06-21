@@ -2,6 +2,9 @@ package e2e
 
 import (
 	goctx "context"
+	"encoding/base64"
+	"encoding/json"
+	"os"
 	"testing"
 	"time"
 
@@ -11,6 +14,7 @@ import (
 	e2eutil "github.com/3scale/3scale-operator/test/e2e/e2eutil"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	frameworke2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -63,6 +67,46 @@ func newAPIManagerCluster(t *testing.T) (*framework.Framework, *framework.TestCt
 	return f, ctx
 }
 
+func registryRedhatIoSecret(t *testing.T, namespace string) *v1.Secret {
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "threescale-registry-auth",
+			Namespace: namespace,
+		},
+		Type: v1.SecretTypeDockerConfigJson,
+		Data: map[string][]byte{
+			v1.DockerConfigJsonKey: []byte(encodedDockerConfigJSON(t)),
+		},
+	}
+}
+
+func encodedDockerConfigJSON(t *testing.T) string {
+	redHatRegistryIOServer := os.Getenv("REGISTRY_REDHAT_IO_SERVER")
+	redHatRegistryIOUser := os.Getenv("REGISTRY_REDHAT_IO_USERNAME")
+	redHatRegistryIOPass := os.Getenv("REGISTRY_REDHAT_IO_PASSWORD")
+
+	result := map[string]map[string]map[string]string{
+		"auths": map[string]map[string]string{
+			redHatRegistryIOServer: map[string]string{
+				"username": redHatRegistryIOUser,
+				"password": redHatRegistryIOPass,
+				"auth":     base64.StdEncoding.EncodeToString([]byte(redHatRegistryIOUser + ":" + redHatRegistryIOPass)),
+			},
+		},
+	}
+
+	encodedres, err := json.Marshal(result)
+	if err != nil {
+		t.Fatal("Error marshaling JSON")
+	}
+	return string(encodedres)
+
+}
+
 func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	t.Parallel()
 	ctx := framework.NewTestCtx(t)
@@ -79,6 +123,16 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 		t.Fatal(err)
 	}
 	f := framework.Global
+
+	t.Log("Creating registry.redhat.io secret")
+	imagesSecret := registryRedhatIoSecret(t, namespace)
+	err = f.Client.Create(goctx.TODO(), imagesSecret, &framework.CleanupOptions{TestContext: ctx, Timeout: 5 * time.Minute, RetryInterval: retryInterval})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("registry.redhat.io secret created")
+
+	return
 	t.Log("waiting until operator Deployment is ready...")
 
 	err = frameworke2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "3scale-operator", 1, retryInterval, timeout)
