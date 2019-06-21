@@ -9,7 +9,7 @@ metadata:
     categories: "Integration & Delivery"
     certified: "false"
     description: 3scale Operator to provision 3scale and publish/manage API
-    containerImage: quay.io/3scale/3scale-operator:v0.3.0
+    containerImage: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/3scale-amp26/3scale-operator
     createdAt: 2019-05-30T22:40:00Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
@@ -155,7 +155,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: threescale-operator
-                image: quay.io/3scale/3scale-operator:v0.3.0
+                image: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/3scale-amp26/3scale-operator
                 imagePullPolicy: Always
                 name: 3scale-operator
                 resources: {}
