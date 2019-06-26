@@ -258,7 +258,7 @@ func buildTemplateParameters() []templatev1.Parameter {
 			Name:        "AMP_RELEASE",
 			Description: "AMP release tag.",
 			Required:    true,
-			Value:       "2.5.0",
+			Value:       "2.6.0",
 		},
 		templatev1.Parameter{
 			Name:        "APP_LABEL",
