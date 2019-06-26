@@ -489,33 +489,33 @@ func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:     "AMP_BACKEND_IMAGE",
 			Required: true,
-			Value:    "quay.io/3scale/apisonator:nightly",
+			Value:    "quay.io/3scale/3scale26:apisonator-3scale-2.6.0-ER1",
 		},
 		templatev1.Parameter{
 			Name:     "AMP_ZYNC_IMAGE",
-			Value:    "quay.io/3scale/zync:nightly",
+			Value:    "quay.io/3scale/3scale26:zync-3scale-2.6.0-ER1",
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_APICAST_IMAGE",
-			Value:    "quay.io/3scale/apicast:nightly",
+			Value:    "quay.io/3scale/3scale26:apicast-3scale-2.6.0-ER1",
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_SYSTEM_IMAGE",
-			Value:    "quay.io/3scale/porta:nightly",
+			Value:    "quay.io/3scale/3scale26:porta-3scale-2.6.0-ER1",
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:        "ZYNC_DATABASE_IMAGE",
 			Description: "Zync's PostgreSQL image to use",
-			Value:       "registry.access.redhat.com/rhscl/postgresql-10-rhel7",
+			Value:       "centos/postgresql-10-centos7",
 			Required:    true,
 		},
 		templatev1.Parameter{
 			Name:        "MEMCACHED_IMAGE",
 			Description: "Memcached image to use",
-			Value:       "registry.access.redhat.com/3scale-amp20/memcached",
+			Value:       "memcached:1.5",
 			Required:    true,
 		},
 		templatev1.Parameter{

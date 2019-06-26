@@ -132,7 +132,7 @@ func (s *SystemMySQLImage) buildParameters(template *templatev1.Template) {
 		templatev1.Parameter{
 			Name:        "SYSTEM_DATABASE_IMAGE",
 			Description: "System MySQL image to use",
-			Value:       "registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7",
+			Value:       "centos/mysql-57-centos7",
 			Required:    true,
 		},
 	}
