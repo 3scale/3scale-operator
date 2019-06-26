@@ -3495,6 +3495,7 @@ objects:
     - list
     - create
     - delete
+    - patch
   - apiGroups:
     - route.openshift.io
     resources:
