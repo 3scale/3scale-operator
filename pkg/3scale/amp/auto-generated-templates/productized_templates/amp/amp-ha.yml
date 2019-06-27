@@ -817,13 +817,10 @@ objects:
           - containerPort: 11211
             protocol: TCP
           readinessProbe:
-            exec:
-              command:
-              - sh
-              - -c
-              - echo version | nc $HOSTNAME 11211 | grep VERSION
             initialDelaySeconds: 10
             periodSeconds: 30
+            tcpSocket:
+              port: 11211
             timeoutSeconds: 5
           resources:
             limits:
@@ -3680,7 +3677,7 @@ parameters:
 - description: AMP release tag.
   name: AMP_RELEASE
   required: true
-  value: 2.5.0
+  value: 2.6.0
 - description: Used for object app labels
   name: APP_LABEL
   required: true
@@ -3708,11 +3705,11 @@ parameters:
 - description: Zync's PostgreSQL image to use
   name: ZYNC_DATABASE_IMAGE
   required: true
-  value: registry.access.redhat.com/rhscl/postgresql-10-rhel7
+  value: centos/postgresql-10-centos7
 - description: Memcached image to use
   name: MEMCACHED_IMAGE
   required: true
-  value: registry.access.redhat.com/3scale-amp20/memcached
+  value: memcached:1.5
 - description: Set to true if the server may bypass certificate verification or connect
     directly over HTTP during image import.
   name: IMAGESTREAM_TAG_IMPORT_INSECURE

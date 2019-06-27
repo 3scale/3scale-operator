@@ -133,7 +133,7 @@ func (s *SystemPostgreSQLImage) buildParameters(template *templatev1.Template) {
 			Name:        "SYSTEM_DATABASE_IMAGE",
 			Description: "System PostgreSQL image to use",
 			Required:    true,
-			Value:       "registry.access.redhat.com/rhscl/postgresql-10-rhel7",
+			Value:       "centos/postgresql-10-centos7",
 		},
 	}
 	template.Parameters = append(template.Parameters, parameters...)
