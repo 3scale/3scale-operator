@@ -97,7 +97,7 @@ func (redis *Redis) buildParameters(template *templatev1.Template) {
 			Name:        "REDIS_IMAGE",
 			Description: "Redis image to use",
 			Required:    true,
-			Value:       "registry.access.redhat.com/rhscl/redis-32-rhel7:3.2",
+			Value:       "centos/redis-32-centos7",
 		},
 	}
 	template.Parameters = append(template.Parameters, parameters...)
