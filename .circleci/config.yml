@@ -66,7 +66,6 @@ commands:
             echo 'export TMPDIR=~/tmp/' >> $BASH_ENV
             echo 'export GOROOT=/opt/go' >> $BASH_ENV
             echo 'export GOPATH=~/go' >> $BASH_ENV
-            echo 'export GO111MODULE=on' >> $BASH_ENV
             sudo mkdir -p /opt/go/bin
             mkdir -p ~/go/bin
             echo 'export PATH=$GOROOT/bin:$PATH' >> $BASH_ENV
@@ -76,13 +75,30 @@ commands:
           command: |
             curl --fail -L https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
 
-  deploy-3scale-eval-from-template:
+  deploy-3scale-eval-from-template-imagestreamsless:
     steps:
       - run:
-          name: Deploy 3scale
+          name: Deploy 3scale from amp-eval template without imagestreams
           command: |
             ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
               oc new-app -f- --param WILDCARD_DOMAIN=lvh.me --param AMP_RELEASE=master
+            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
+
+            oc get events | egrep ' Failed ' || :
+            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+          no_output_timeout: 1800
+
+  deploy-3scale-eval-from-template:
+    steps:
+      - run:
+          name: Deploy 3scale from amp-eval template with nightly images
+          command: |
+            oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
+              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:nightly \
+              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
+              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
+              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
+              --param WILDCARD_DOMAIN=lvh.me --param TENANT_NAME=3scale
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
             oc get events | egrep ' Failed ' || :
@@ -117,8 +133,14 @@ commands:
       - run:
           name: Build images
           command: |
-            oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml -o json --param WILDCARD_DOMAIN=lvh/me --param AMP_RELEASE=master | jq -j '.items[] | select(.kind == "ImageStream")' | oc create -f -
-
+            oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
+              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:nightly \
+              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
+              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
+              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
+              -o json --param WILDCARD_DOMAIN=lvh/me --param AMP_RELEASE=master | \
+              jq -j '.items[] | select(.kind == "ImageStream")' | \
+              oc create -f -
             oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml --allow-missing-imagestream-tags
             set -x
             oc cancel-build $(oc get bc --output=name)
@@ -203,8 +225,6 @@ jobs:
   build-deploy-operator:
     docker:
       - image: circleci/golang:1.12.5
-        environment:
-            GO111MODULE: "on"
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - setup_remote_docker:
@@ -266,13 +286,10 @@ jobs:
     steps:
       - checkout
       - install-openshift
-      - create-secrets
-      - build-amp
-      - oc-observe
       - deploy-3scale-eval-from-template
       - oc-status
 
-  deploy:
+  build-push-3scale-nightly-images:
     machine:
       docker_layer_caching: true
     resource_class: large
@@ -282,7 +299,7 @@ jobs:
       - create-secrets
       - build-amp
       - oc-observe
-      - deploy-3scale-eval-from-template
+      - deploy-3scale-eval-from-template-imagestreamsless
       - oc-status
       - push-3scale-images-to-quay
 
@@ -310,8 +327,6 @@ jobs:
   generator:
     docker:
       - image: circleci/golang:1.12.5
-        environment:
-            GO111MODULE: "on"
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - checkout
@@ -339,10 +354,10 @@ workflows:
   version: 2
   operator:
     jobs:
-      - build-deploy-operator:
-          context: org-global
       - test-crds
       - verify-manifest
+      - build-deploy-operator:
+          context: org-global
       - run-operator-e2e-test:
           context: org-global
           requires:
@@ -372,7 +387,7 @@ workflows:
             - generator
   nightly:
     jobs:
-      - deploy:
+      - build-push-3scale-nightly-images:
           context: org-global
     triggers:
       - schedule:
