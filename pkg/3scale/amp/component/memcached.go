@@ -19,15 +19,15 @@ func NewMemcached(options *MemcachedOptions) *Memcached {
 }
 
 func (m *Memcached) Objects() []common.KubernetesObject {
-	systemMemcachedDeploymentConfig := m.buildSystemMemcachedDeploymentConfig()
+	deploymentConfig := m.DeploymentConfig()
 
 	objects := []common.KubernetesObject{
-		systemMemcachedDeploymentConfig,
+		deploymentConfig,
 	}
 	return objects
 }
 
-func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentConfig {
+func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",

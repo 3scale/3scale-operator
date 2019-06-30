@@ -29,15 +29,15 @@ func NewHighAvailability(options *HighAvailabilityOptions) *HighAvailability {
 }
 
 func (ha *HighAvailability) Objects() []common.KubernetesObject {
-	systemDatabaseSecrets := ha.createSystemDatabaseSecret()
+	systemDatabaseSecret := ha.SystemDatabaseSecret()
 
 	objects := []common.KubernetesObject{
-		systemDatabaseSecrets,
+		systemDatabaseSecret,
 	}
 	return objects
 }
 
-func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
+func (ha *HighAvailability) SystemDatabaseSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

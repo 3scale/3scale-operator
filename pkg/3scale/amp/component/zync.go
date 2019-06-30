@@ -33,31 +33,31 @@ func NewZync(options *ZyncOptions) *Zync {
 }
 
 func (zync *Zync) Objects() []common.KubernetesObject {
-	zyncQueRole := zync.buildZyncQueRole()
-	zyncQueServiceAccount := zync.buildZyncQueServiceAccount()
-	zyncQueRoleBinding := zync.buildZyncQueRoleBinding()
-	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
-	zyncQueDeploymentConfig := zync.buildZyncQueDeploymentConfig()
-	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
-	zyncService := zync.buildZyncService()
-	zyncDatabaseService := zync.buildZyncDatabaseService()
-	zyncSecret := zync.buildZyncSecret()
+	queRole := zync.QueRole()
+	queServiceAccount := zync.QueServiceAccount()
+	queRoleBinding := zync.QueRoleBinding()
+	deploymentConfig := zync.DeploymentConfig()
+	queDeploymentConfig := zync.QueDeploymentConfig()
+	databaseDeploymentConfig := zync.DatabaseDeploymentConfig()
+	service := zync.Service()
+	databaseService := zync.DatabaseService()
+	secret := zync.Secret()
 
 	objects := []common.KubernetesObject{
-		zyncQueRole,
-		zyncQueServiceAccount,
-		zyncQueRoleBinding,
-		zyncDeploymentConfig,
-		zyncQueDeploymentConfig,
-		zyncDatabaseDeploymentConfig,
-		zyncService,
-		zyncDatabaseService,
-		zyncSecret,
+		queRole,
+		queServiceAccount,
+		queRoleBinding,
+		deploymentConfig,
+		queDeploymentConfig,
+		databaseDeploymentConfig,
+		service,
+		databaseService,
+		secret,
 	}
 	return objects
 }
 
-func (zync *Zync) buildZyncSecret() *v1.Secret {
+func (zync *Zync) Secret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -80,7 +80,7 @@ func (zync *Zync) buildZyncSecret() *v1.Secret {
 	}
 }
 
-func (zync *Zync) buildZyncQueServiceAccount() *v1.ServiceAccount {
+func (zync *Zync) QueServiceAccount() *v1.ServiceAccount {
 	return &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServiceAccount",
@@ -97,7 +97,7 @@ func (zync *Zync) buildZyncQueServiceAccount() *v1.ServiceAccount {
 	}
 }
 
-func (zync *Zync) buildZyncQueRoleBinding() *rbacv1.RoleBinding {
+func (zync *Zync) QueRoleBinding() *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -120,7 +120,7 @@ func (zync *Zync) buildZyncQueRoleBinding() *rbacv1.RoleBinding {
 	}
 }
 
-func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
+func (zync *Zync) QueRole() *rbacv1.Role {
 	return &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -187,7 +187,7 @@ func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
 	}
 }
 
-func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
+func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -344,7 +344,7 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		},
 	}
 }
-func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
+func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -452,7 +452,7 @@ func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
+func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -583,7 +583,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (zync *Zync) buildZyncService() *v1.Service {
+func (zync *Zync) Service() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -610,7 +610,7 @@ func (zync *Zync) buildZyncService() *v1.Service {
 	}
 }
 
-func (zync *Zync) buildZyncDatabaseService() *v1.Service {
+func (zync *Zync) DatabaseService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",

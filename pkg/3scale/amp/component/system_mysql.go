@@ -19,26 +19,26 @@ func NewSystemMysql(options *SystemMysqlOptions) *SystemMysql {
 }
 
 func (mysql *SystemMysql) Objects() []common.KubernetesObject {
-	systemMysqlDeploymentConfig := mysql.buildSystemMysqlDeploymentConfig()
-	systemMysqlService := mysql.buildSystemMysqlService()
-	systemMysqlMainConfigConfigMap := mysql.buildSystemMysqlMainConfigConfigMap()
-	systemMysqlExtraConfigConfigMap := mysql.buildSystemMysqlExtraConfigConfigMap()
-	systemMysqlPersistentVolumeClaim := mysql.buildSystemMysqlPersistentVolumeClaim()
-	systemDatabaseSecret := mysql.buildSystemDatabaseSecrets()
+	deploymentConfig := mysql.DeploymentConfig()
+	service := mysql.Service()
+	mainConfigConfigMap := mysql.MainConfigConfigMap()
+	extraConfigconfigMap := mysql.ExtraConfigConfigMap()
+	persistentVolumeClaim := mysql.PersistentVolumeClaim()
+	systemDatabaseSecret := mysql.SystemDatabaseSecret()
 
 	objects := []common.KubernetesObject{
-		systemMysqlDeploymentConfig,
-		systemMysqlService,
-		systemMysqlMainConfigConfigMap,
-		systemMysqlExtraConfigConfigMap,
-		systemMysqlPersistentVolumeClaim,
+		deploymentConfig,
+		service,
+		mainConfigConfigMap,
+		extraConfigconfigMap,
+		persistentVolumeClaim,
 		systemDatabaseSecret,
 	}
 
 	return objects
 }
 
-func (mysql *SystemMysql) buildSystemMysqlService() *v1.Service {
+func (mysql *SystemMysql) Service() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -66,7 +66,7 @@ func (mysql *SystemMysql) buildSystemMysqlService() *v1.Service {
 	}
 }
 
-func (mysql *SystemMysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
+func (mysql *SystemMysql) MainConfigConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -79,7 +79,7 @@ func (mysql *SystemMysql) buildSystemMysqlMainConfigConfigMap() *v1.ConfigMap {
 		Data: map[string]string{"my.cnf": "!include /etc/my.cnf\n!includedir /etc/my-extra.d\n"}}
 }
 
-func (mysql *SystemMysql) buildSystemMysqlExtraConfigConfigMap() *v1.ConfigMap {
+func (mysql *SystemMysql) ExtraConfigConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -92,7 +92,7 @@ func (mysql *SystemMysql) buildSystemMysqlExtraConfigConfigMap() *v1.ConfigMap {
 		Data: map[string]string{"mysql-charset.cnf": "[client]\ndefault-character-set = utf8\n\n[mysql]\ndefault-character-set = utf8\n\n[mysqld]\ncharacter-set-server = utf8\ncollation-server = utf8_unicode_ci\n"}}
 }
 
-func (mysql *SystemMysql) buildSystemMysqlPersistentVolumeClaim() *v1.PersistentVolumeClaim {
+func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
 	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
@@ -109,7 +109,7 @@ func (mysql *SystemMysql) buildSystemMysqlPersistentVolumeClaim() *v1.Persistent
 			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")}}}}
 }
 
-func (mysql *SystemMysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentConfig {
+func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -241,7 +241,7 @@ func (mysql *SystemMysql) buildSystemMysqlDeploymentConfig() *appsv1.DeploymentC
 }
 
 // Each database is responsible to create the needed secrets for the other components
-func (mysql *SystemMysql) buildSystemDatabaseSecrets() *v1.Secret {
+func (mysql *SystemMysql) SystemDatabaseSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

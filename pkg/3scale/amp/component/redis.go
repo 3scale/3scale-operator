@@ -28,10 +28,10 @@ func (redis *Redis) Objects() []common.KubernetesObject {
 }
 
 func (redis *Redis) buildBackendRedisObjects() []common.KubernetesObject {
-	dc := redis.buildBackendDeploymentConfig()
-	bs := redis.buildBackendService()
-	cm := redis.buildBackendConfigMap()
-	bpvc := redis.buildBackendRedisPVC()
+	dc := redis.BackendDeploymentConfig()
+	bs := redis.BackendService()
+	cm := redis.BackendConfigMap()
+	bpvc := redis.BackendPVC()
 	objects := []common.KubernetesObject{
 		dc,
 		bs,
@@ -41,7 +41,7 @@ func (redis *Redis) buildBackendRedisObjects() []common.KubernetesObject {
 	return objects
 }
 
-func (redis *Redis) buildBackendDeploymentConfig() *appsv1.DeploymentConfig {
+func (redis *Redis) BackendDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta:   redis.buildDeploymentConfigTypeMeta(),
 		ObjectMeta: redis.buildDeploymentConfigObjectMeta(),
@@ -269,7 +269,7 @@ func (redis *Redis) buildPodContainerVolumeMounts() []v1.VolumeMount {
 	}
 }
 
-func (redis *Redis) buildBackendService() *v1.Service {
+func (redis *Redis) BackendService() *v1.Service {
 	return &v1.Service{
 		ObjectMeta: redis.buildServiceObjectMeta(),
 		TypeMeta:   redis.buildServiceTypeMeta(),
@@ -322,7 +322,7 @@ func (redis *Redis) buildServiceSelector() map[string]string {
 	}
 }
 
-func (redis *Redis) buildBackendConfigMap() *v1.ConfigMap {
+func (redis *Redis) BackendConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		ObjectMeta: redis.buildConfigMapObjectMeta(),
 		TypeMeta:   redis.buildConfigMapTypeMeta(),
@@ -407,7 +407,7 @@ dir /var/lib/redis/data
 `
 }
 
-func (redis *Redis) buildBackendRedisPVC() *v1.PersistentVolumeClaim {
+func (redis *Redis) BackendPVC() *v1.PersistentVolumeClaim {
 	return &v1.PersistentVolumeClaim{
 		ObjectMeta: redis.buildPVCObjectMeta(),
 		TypeMeta:   redis.buildPVCTypeMeta(),
@@ -452,10 +452,20 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 }
 
 ////// Begin System Redis
-
 func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
+	systemRedisDC := redis.SystemDeploymentConfig()
+	systemRedisPVC := redis.SystemPVC()
 
-	systemRedisDC := &appsv1.DeploymentConfig{
+	objects := []common.KubernetesObject{
+		systemRedisDC,
+		systemRedisPVC,
+	}
+
+	return objects
+}
+
+func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
+	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
 			APIVersion: "apps.openshift.io/v1",
@@ -567,8 +577,10 @@ func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
 				}},
 		},
 	}
+}
 
-	systemRedisPVC := &v1.PersistentVolumeClaim{
+func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
+	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
 			APIVersion: "v1",
@@ -585,14 +597,11 @@ func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
 			},
-			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")}}}}
-
-	objects := []common.KubernetesObject{
-		systemRedisDC,
-		systemRedisPVC,
+			Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")},
+			},
+		},
 	}
-
-	return objects
 }
 
 ////// End System Redis
