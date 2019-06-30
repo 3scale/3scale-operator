@@ -84,53 +84,53 @@ func NewSystem(options *SystemOptions) *System {
 }
 
 func (system *System) Objects() []common.KubernetesObject {
-	systemSharedStorage := system.buildSystemSharedPVC()
-	systemProviderService := system.buildSystemProviderService()
-	systemMasterService := system.buildSystemMasterService()
-	systemDeveloperService := system.buildSystemDeveloperService()
-	systemRedisService := system.buildSystemRedisService()
-	systemSphinxService := system.buildSystemSphinxService()
-	systemMemcachedService := system.buildSystemMemcachedService()
+	sharedStorage := system.SharedStorage()
+	providerService := system.ProviderService()
+	masterService := system.MasterService()
+	developerService := system.DeveloperService()
+	redisService := system.RedisService()
+	sphinxService := system.SphinxService()
+	memcachedService := system.MemcachedService()
 
-	systemAppDeploymentConfig := system.buildSystemAppDeploymentConfig()
-	systemSidekiqDeploymentConfig := system.buildSystemSidekiqDeploymentConfig()
-	systemSphinxDeploymentConfig := system.buildSystemSphinxDeploymentConfig()
+	appDeploymentConfig := system.AppDeploymentConfig()
+	sidekiqDeploymentConfig := system.SidekiqDeploymentConfig()
+	sphinxDeploymentConfig := system.SphinxDeploymentConfig()
 
-	systemConfigMap := system.buildSystemConfigMap()
-	systemEnvironmentConfigMap := system.buildSystemEnvironmentConfigMap()
-	systemSmtpConfigMap := system.buildSystemSmtpConfigMap()
+	systemConfigMap := system.SystemConfigMap()
+	environmentConfigMap := system.EnvironmentConfigMap()
+	smtpConfigMap := system.SMTPConfigMap()
 
-	systemEventsHookSecret := system.buildSystemEventsHookSecrets()
+	eventsHookSecret := system.EventsHookSecret()
 
-	systemRedisSecret := system.buildSystemRedisSecrets()
-	systemMasterApicastSecret := system.buildSystemMasterApicastSecrets()
+	redisSecret := system.RedisSecret()
+	masterApicastSecret := system.MasterApicastSecret()
 
-	systemSeedSecret := system.buildSystemSeedSecrets()
-	systemRecaptchaSecret := system.buildSystemRecaptchaSecrets()
-	systemAppSecret := system.buildSystemAppSecrets()
-	systemMemcachedSecret := system.buildSystemMemcachedSecrets()
+	seedSecret := system.SeedSecret()
+	recaptchaSecret := system.RecaptchaSecret()
+	appSecret := system.AppSecret()
+	memcachedSecret := system.MemcachedSecret()
 
 	objects := []common.KubernetesObject{
-		systemSharedStorage,
-		systemProviderService,
-		systemMasterService,
-		systemDeveloperService,
-		systemRedisService,
-		systemSphinxService,
-		systemMemcachedService,
+		sharedStorage,
+		providerService,
+		masterService,
+		developerService,
+		redisService,
+		sphinxService,
+		memcachedService,
 		systemConfigMap,
-		systemSmtpConfigMap,
-		systemEnvironmentConfigMap,
-		systemAppDeploymentConfig,
-		systemSidekiqDeploymentConfig,
-		systemSphinxDeploymentConfig,
-		systemEventsHookSecret,
-		systemRedisSecret,
-		systemMasterApicastSecret,
-		systemSeedSecret,
-		systemRecaptchaSecret,
-		systemAppSecret,
-		systemMemcachedSecret,
+		smtpConfigMap,
+		environmentConfigMap,
+		appDeploymentConfig,
+		sidekiqDeploymentConfig,
+		sphinxDeploymentConfig,
+		eventsHookSecret,
+		redisSecret,
+		masterApicastSecret,
+		seedSecret,
+		recaptchaSecret,
+		appSecret,
+		memcachedSecret,
 	}
 	return objects
 }
@@ -139,7 +139,7 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 	result := []v1.EnvVar{}
 
 	// Add system-base-env ConfigMap values to envvar sources
-	cfg := system.buildSystemEnvironmentConfigMap()
+	cfg := system.EnvironmentConfigMap()
 	cfgmapkeys := make([]string, 0, len(cfg.Data))
 	for key := range cfg.Data {
 		cfgmapkeys = append(cfgmapkeys, key)
@@ -155,7 +155,7 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 
 func (system *System) getSystemSmtpEnvsFromSMTPConfigMap() []v1.EnvVar {
 	// Add smtp configmap to sources
-	cfg := system.buildSystemSmtpConfigMap()
+	cfg := system.SMTPConfigMap()
 	cfgmapkeys := make([]string, 0, len(cfg.Data))
 	for key := range cfg.Data {
 		cfgmapkeys = append(cfgmapkeys, key)
@@ -282,7 +282,7 @@ func (system *System) BackendRedisEnvVars() []v1.EnvVar {
 	}
 }
 
-func (system *System) buildSystemEnvironmentConfigMap() *v1.ConfigMap {
+func (system *System) EnvironmentConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -308,7 +308,7 @@ func (system *System) buildSystemEnvironmentConfigMap() *v1.ConfigMap {
 	}
 }
 
-func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
+func (system *System) MemcachedSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -328,7 +328,7 @@ func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemRecaptchaSecrets() *v1.Secret {
+func (system *System) RecaptchaSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -349,7 +349,7 @@ func (system *System) buildSystemRecaptchaSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemEventsHookSecrets() *v1.Secret {
+func (system *System) EventsHookSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -370,7 +370,7 @@ func (system *System) buildSystemEventsHookSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemRedisSecrets() *v1.Secret {
+func (system *System) RedisSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -397,7 +397,7 @@ func (system *System) buildSystemRedisSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemAppSecrets() *v1.Secret {
+func (system *System) AppSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -417,7 +417,7 @@ func (system *System) buildSystemAppSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemSeedSecrets() *v1.Secret {
+func (system *System) SeedSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -445,7 +445,7 @@ func (system *System) buildSystemSeedSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
+func (system *System) MasterApicastSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -467,7 +467,7 @@ func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig {
+func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -762,7 +762,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 	}
 }
 
-func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentConfig {
+func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -888,7 +888,7 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 	}
 }
 
-func (system *System) buildSystemSharedPVC() *v1.PersistentVolumeClaim {
+func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
 	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -916,7 +916,7 @@ func (system *System) buildSystemSharedPVC() *v1.PersistentVolumeClaim {
 	}
 }
 
-func (system *System) buildSystemProviderService() *v1.Service {
+func (system *System) ProviderService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -944,7 +944,7 @@ func (system *System) buildSystemProviderService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemMasterService() *v1.Service {
+func (system *System) MasterService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -972,7 +972,7 @@ func (system *System) buildSystemMasterService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemDeveloperService() *v1.Service {
+func (system *System) DeveloperService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -999,7 +999,7 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 		},
 	}
 }
-func (system *System) buildSystemRedisService() *v1.Service {
+func (system *System) RedisService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -1027,7 +1027,7 @@ func (system *System) buildSystemRedisService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemSphinxService() *v1.Service {
+func (system *System) SphinxService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -1055,7 +1055,7 @@ func (system *System) buildSystemSphinxService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemMemcachedService() *v1.Service {
+func (system *System) MemcachedService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -1083,7 +1083,7 @@ func (system *System) buildSystemMemcachedService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemSmtpConfigMap() *v1.ConfigMap {
+func (system *System) SMTPConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -1096,7 +1096,7 @@ func (system *System) buildSystemSmtpConfigMap() *v1.ConfigMap {
 		Data: map[string]string{"address": "", "authentication": "", "domain": "", "openssl.verify.mode": "", "password": "", "port": "", "username": ""}}
 }
 
-func (system *System) buildSystemConfigMap() *v1.ConfigMap {
+func (system *System) SystemConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system",
@@ -1173,7 +1173,7 @@ func (system *System) getSystemServiceDiscoveryData() string {
 `
 }
 
-func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConfig {
+func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",

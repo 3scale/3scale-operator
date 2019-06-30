@@ -19,23 +19,23 @@ func NewApicast(options *ApicastOptions) *Apicast {
 }
 
 func (apicast *Apicast) Objects() []common.KubernetesObject {
-	apicastStagingDeploymentConfig := apicast.buildApicastStagingDeploymentConfig()
-	apicastProductionDeploymentConfig := apicast.buildApicastProductionDeploymentConfig()
-	apicastStagingService := apicast.buildApicastStagingService()
-	apicastProductionService := apicast.buildApicastProductionService()
-	apicastEnvConfigMap := apicast.buildApicastEnvConfigMap()
+	stagingDeploymentConfig := apicast.StagingDeploymentConfig()
+	productionDeploymentConfig := apicast.ProductionDeploymentConfig()
+	stagingService := apicast.StagingService()
+	productionService := apicast.ProductionService()
+	environmentConfigMap := apicast.EnvironmentConfigMap()
 
 	objects := []common.KubernetesObject{
-		apicastStagingDeploymentConfig,
-		apicastProductionDeploymentConfig,
-		apicastStagingService,
-		apicastProductionService,
-		apicastEnvConfigMap,
+		stagingDeploymentConfig,
+		productionDeploymentConfig,
+		stagingService,
+		productionService,
+		environmentConfigMap,
 	}
 	return objects
 }
 
-func (apicast *Apicast) buildApicastStagingService() *v1.Service {
+func (apicast *Apicast) StagingService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -69,7 +69,7 @@ func (apicast *Apicast) buildApicastStagingService() *v1.Service {
 	}
 }
 
-func (apicast *Apicast) buildApicastProductionService() *v1.Service {
+func (apicast *Apicast) ProductionService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -103,7 +103,7 @@ func (apicast *Apicast) buildApicastProductionService() *v1.Service {
 	}
 }
 
-func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.DeploymentConfig {
+func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
@@ -225,7 +225,7 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 	}
 }
 
-func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.DeploymentConfig {
+func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
@@ -393,7 +393,7 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 	return result
 }
 
-func (apicast *Apicast) buildApicastEnvConfigMap() *v1.ConfigMap {
+func (apicast *Apicast) EnvironmentConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
