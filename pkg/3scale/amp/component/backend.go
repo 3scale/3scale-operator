@@ -42,32 +42,32 @@ func NewBackend(options *BackendOptions) *Backend {
 }
 
 func (backend *Backend) Objects() []common.KubernetesObject {
-	backendCronDeploymentConfig := backend.buildBackendCronDeploymentConfig()
-	backendListenerDeploymentConfig := backend.buildBackendListenerDeploymentConfig()
-	backendListenerService := backend.buildBackendListenerService()
-	backendListenerRoute := backend.buildBackendListenerRoute()
-	backendWorkerDeploymentConfig := backend.buildBackendWorkerDeploymentConfig()
-	backendEnvConfigMap := backend.buildBackendEnvConfigMap()
+	cronDeploymentConfig := backend.CronDeploymentConfig()
+	listenerDeploymentConfig := backend.ListenerDeploymentConfig()
+	listenerService := backend.ListenerService()
+	listenerRoute := backend.ListenerRoute()
+	workerDeploymentConfig := backend.WorkerDeploymentConfig()
+	environmentConfigMap := backend.EnvironmentConfigMap()
 
-	backendInternalApiCredsForSystem := backend.buildBackendInternalApiCredsForSystem()
-	backendRedisSecrets := backend.buildBackendRedisSecrets()
-	backendListenerSecrets := backend.buildBackendListenerSecrets()
+	internalAPISecretForSystem := backend.InternalAPISecretForSystem()
+	redisSecret := backend.RedisSecret()
+	listenerSecret := backend.ListenerSecret()
 
 	objects := []common.KubernetesObject{
-		backendCronDeploymentConfig,
-		backendListenerDeploymentConfig,
-		backendListenerService,
-		backendListenerRoute,
-		backendWorkerDeploymentConfig,
-		backendEnvConfigMap,
-		backendInternalApiCredsForSystem,
-		backendRedisSecrets,
-		backendListenerSecrets,
+		cronDeploymentConfig,
+		listenerDeploymentConfig,
+		listenerService,
+		listenerRoute,
+		workerDeploymentConfig,
+		environmentConfigMap,
+		internalAPISecretForSystem,
+		redisSecret,
+		listenerSecret,
 	}
 	return objects
 }
 
-func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentConfig {
+func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -147,7 +147,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 	}
 }
 
-func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentConfig {
+func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -229,7 +229,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 	}
 }
 
-func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.DeploymentConfig {
+func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -329,7 +329,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 	}
 }
 
-func (backend *Backend) buildBackendListenerService() *v1.Service {
+func (backend *Backend) ListenerService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -360,7 +360,7 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 	}
 }
 
-func (backend *Backend) buildBackendListenerRoute() *routev1.Route {
+func (backend *Backend) ListenerRoute() *routev1.Route {
 	return &routev1.Route{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Route",
@@ -386,7 +386,7 @@ func (backend *Backend) buildBackendListenerRoute() *routev1.Route {
 	}
 }
 
-func (backend *Backend) buildBackendEnvConfigMap() *v1.ConfigMap {
+func (backend *Backend) EnvironmentConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -402,7 +402,7 @@ func (backend *Backend) buildBackendEnvConfigMap() *v1.ConfigMap {
 	}
 }
 
-func (backend *Backend) buildBackendRedisSecrets() *v1.Secret {
+func (backend *Backend) RedisSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -466,7 +466,7 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 	return result
 }
 
-func (backend *Backend) buildBackendInternalApiCredsForSystem() *v1.Secret {
+func (backend *Backend) InternalAPISecretForSystem() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -487,7 +487,7 @@ func (backend *Backend) buildBackendInternalApiCredsForSystem() *v1.Secret {
 	}
 }
 
-func (backend *Backend) buildBackendListenerSecrets() *v1.Secret {
+func (backend *Backend) ListenerSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

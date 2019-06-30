@@ -17,16 +17,16 @@ func NewSystemMySQLImage(options *SystemMySQLImageOptions) *SystemMySQLImage {
 }
 
 func (s *SystemMySQLImage) Objects() []common.KubernetesObject {
-	systemMySQLImageStream := s.buildSystemMySQLImageStream()
+	imageStream := s.ImageStream()
 
 	objects := []common.KubernetesObject{
-		systemMySQLImageStream,
+		imageStream,
 	}
 
 	return objects
 }
 
-func (s *SystemMySQLImage) buildSystemMySQLImageStream() *imagev1.ImageStream {
+func (s *SystemMySQLImage) ImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-mysql",

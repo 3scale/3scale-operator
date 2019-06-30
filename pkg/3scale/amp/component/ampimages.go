@@ -21,23 +21,23 @@ func NewAmpImages(options *AmpImagesOptions) *AmpImages {
 }
 
 func (ampImages *AmpImages) Objects() []common.KubernetesObject {
-	backendImageStream := ampImages.buildAmpBackendImageStream()
-	zyncImageStream := ampImages.buildAmpZyncImageStream()
-	apicastImageStream := ampImages.buildApicastImageStream()
-	systemImageStream := ampImages.buildAmpSystemImageStream()
-	zyncDatabasePostgreSQL := ampImages.buildZyncDatabasePostgreSQLImageStream()
-	backendRedisImageStream := ampImages.buildBackendRedisImageStream()
-	systemRedisImageStream := ampImages.buildSystemRedisImageStream()
-	systemMemcachedImageStream := ampImages.buildSystemMemcachedImageStream()
+	backendImageStream := ampImages.BackendImageStream()
+	zyncImageStream := ampImages.ZyncImageStream()
+	apicastImageStream := ampImages.APICastImageStream()
+	systemImageStream := ampImages.SystemImageStream()
+	zyncDatabasePostgreSQLImageStream := ampImages.ZyncDatabasePostgreSQLImageStream()
+	backendRedisImageStream := ampImages.BackendRedisImageStream()
+	systemRedisImageStream := ampImages.SystemRedisImageStream()
+	systemMemcachedImageStream := ampImages.SystemMemcachedImageStream()
 
-	deploymentsServiceAccount := ampImages.buildDeploymentsServiceAccount()
+	deploymentsServiceAccount := ampImages.DeploymentsServiceAccount()
 
 	objects := []common.KubernetesObject{
 		backendImageStream,
 		zyncImageStream,
 		apicastImageStream,
 		systemImageStream,
-		zyncDatabasePostgreSQL,
+		zyncDatabasePostgreSQLImageStream,
 		backendRedisImageStream,
 		systemRedisImageStream,
 		systemMemcachedImageStream,
@@ -46,7 +46,7 @@ func (ampImages *AmpImages) Objects() []common.KubernetesObject {
 	return objects
 }
 
-func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) BackendImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-backend",
@@ -89,7 +89,7 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 	}
 }
 
-func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) ZyncImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-zync",
@@ -132,7 +132,7 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 	}
 }
 
-func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) APICastImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-apicast",
@@ -175,7 +175,7 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 	}
 }
 
-func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) SystemImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-system",
@@ -218,7 +218,7 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 	}
 }
 
-func (ampImages *AmpImages) buildZyncDatabasePostgreSQLImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) ZyncDatabasePostgreSQLImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync-database-postgresql",
@@ -261,7 +261,7 @@ func (ampImages *AmpImages) buildZyncDatabasePostgreSQLImageStream() *imagev1.Im
 	}
 }
 
-func (ampImages *AmpImages) buildBackendRedisImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) BackendRedisImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-redis",
@@ -304,7 +304,7 @@ func (ampImages *AmpImages) buildBackendRedisImageStream() *imagev1.ImageStream 
 	}
 }
 
-func (ampImages *AmpImages) buildSystemRedisImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) SystemRedisImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-redis",
@@ -347,7 +347,7 @@ func (ampImages *AmpImages) buildSystemRedisImageStream() *imagev1.ImageStream {
 	}
 }
 
-func (ampImages *AmpImages) buildSystemMemcachedImageStream() *imagev1.ImageStream {
+func (ampImages *AmpImages) SystemMemcachedImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-memcached",
@@ -390,7 +390,7 @@ func (ampImages *AmpImages) buildSystemMemcachedImageStream() *imagev1.ImageStre
 	}
 }
 
-func (ampImages *AmpImages) buildDeploymentsServiceAccount() *v1.ServiceAccount {
+func (ampImages *AmpImages) DeploymentsServiceAccount() *v1.ServiceAccount {
 	return &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServiceAccount",
