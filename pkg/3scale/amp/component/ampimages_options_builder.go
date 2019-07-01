@@ -2,6 +2,22 @@ package component
 
 import "fmt"
 
+type AmpImagesOptions struct {
+	appLabel                    string
+	ampRelease                  string
+	apicastImage                string
+	backendImage                string
+	routerImage                 string
+	systemImage                 string
+	zyncImage                   string
+	ZyncDatabasePostgreSQLImage string
+	backendRedisImage           string
+	systemRedisImage            string
+	systemMemcachedImage        string
+	systemMySQLImage            string
+	insecureImportPolicy        bool
+}
+
 type AmpImagesOptionsBuilder struct {
 	options AmpImagesOptions
 }

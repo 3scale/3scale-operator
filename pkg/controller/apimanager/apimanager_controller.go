@@ -326,8 +326,8 @@ func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager
 
 func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1.APIManager, objects []common.KubernetesObject) ([]common.KubernetesObject, error) {
 	if !*cr.Spec.ResourceRequirementsEnabled {
-		e := component.Evaluation{}
-		e.PostProcessObjects(objects)
+		e := component.NewEvaluation()
+		e.RemoveContainersResourceRequestsAndLimits(objects)
 	}
 
 	if cr.Spec.System.FileStorageSpec.S3 != nil {
@@ -336,8 +336,12 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 		if err != nil {
 			return nil, err
 		}
-		s := component.S3{Options: opts}
-		objects = s.PostProcessObjects(objects)
+		s := component.NewS3(opts)
+		res := s.RemoveSystemStoragePVC(objects)
+		s.RemoveSystemStorageReferences(res)
+		s.AddS3PostprocessOptionsToSystemEnvironmentCfgMap(res)
+		s.AddCfgMapElemsToSystemBaseEnv(res)
+		objects = res
 	}
 
 	if cr.Spec.HighAvailability != nil && cr.Spec.HighAvailability.Enabled {
@@ -346,8 +350,12 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 		if err != nil {
 			return nil, err
 		}
-		h := component.HighAvailability{Options: opts}
-		objects = h.PostProcessObjects(objects)
+		h := component.NewHighAvailability(opts)
+		res := objects
+		h.IncreaseReplicasNumber(res)
+		res = h.DeleteInternalDatabasesObjects(res)
+		h.UpdateDatabasesURLS(res)
+		objects = res
 	}
 
 	return objects, nil
@@ -360,13 +368,8 @@ func (r *ReconcileAPIManager) createImages(cr *appsv1alpha1.APIManager) ([]commo
 		return nil, err
 	}
 
-	i := component.AmpImages{Options: opts}
-	result, err := i.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	i := component.NewAmpImages(opts)
+	return i.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
@@ -376,13 +379,8 @@ func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]common
 		return nil, err
 	}
 
-	redis := component.Redis{Options: opts}
-	result, err := redis.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	redis := component.NewRedis(opts)
+	return redis.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
@@ -392,13 +390,8 @@ func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]comm
 		return nil, err
 	}
 
-	b := component.Backend{Options: opts}
-	result, err := b.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	b := component.NewBackend(opts)
+	return b.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createSystemDatabase(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
@@ -425,11 +418,8 @@ func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]
 		return nil, err
 	}
 
-	m := component.Mysql{Options: opts}
-	result, err := m.GetObjects()
-	if err != nil {
-		return nil, err
-	}
+	m := component.NewSystemMysql(opts)
+	result := m.Objects()
 
 	imageOptsProvider := operator.OperatorSystemMySQLImageOptionsProvider{APIManagerSpec: &cr.Spec}
 	imageOpts, err := imageOptsProvider.GetSystemMySQLImageOptions()
@@ -437,11 +427,8 @@ func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]
 		return nil, err
 	}
 
-	i := component.SystemMySQLImage{Options: imageOpts}
-	imageresult, err := i.GetObjects()
-	if err != nil {
-		return nil, err
-	}
+	i := component.NewSystemMySQLImage(imageOpts)
+	imageresult := i.Objects()
 	result = append(result, imageresult...)
 	return result, nil
 }
@@ -452,21 +439,16 @@ func (r *ReconcileAPIManager) createSystemPostgreSQL(cr *appsv1alpha1.APIManager
 	if err != nil {
 		return nil, err
 	}
-	p := component.SystemPostgreSQL{Options: opts}
-	result, err := p.GetObjects()
-	if err != nil {
-		return nil, err
-	}
+	p := component.NewSystemPostgreSQL(opts)
+	result := p.Objects()
+
 	imageOptsProvider := operator.OperatorSystemPostgreSQLImageOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
 	imageOpts, err := imageOptsProvider.GetSystemPostgreSQLImageOptions()
 	if err != nil {
 		return nil, err
 	}
-	i := component.SystemPostgreSQLImage{Options: imageOpts}
-	imageresult, err := i.GetObjects()
-	if err != nil {
-		return nil, err
-	}
+	i := component.NewSystemPostgreSQLImage(imageOpts)
+	imageresult := i.Objects()
 	result = append(result, imageresult...)
 	return result, nil
 }
@@ -478,13 +460,8 @@ func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]co
 		return nil, err
 	}
 
-	i := component.Memcached{Options: opts}
-	result, err := i.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	i := component.NewMemcached(opts)
+	return i.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
@@ -494,13 +471,8 @@ func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]commo
 		return nil, err
 	}
 
-	i := component.System{Options: opts}
-	result, err := i.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	i := component.NewSystem(opts)
+	return i.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
@@ -510,13 +482,8 @@ func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]common.
 		return nil, err
 	}
 
-	z := component.Zync{Options: opts}
-	result, err := z.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	z := component.NewZync(opts)
+	return z.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
@@ -526,13 +493,8 @@ func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]comm
 		return nil, err
 	}
 
-	z := component.Apicast{Options: opts}
-	result, err := z.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	z := component.NewApicast(opts)
+	return z.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
@@ -541,13 +503,8 @@ func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]common.Ku
 	if err != nil {
 		return nil, err
 	}
-	s := component.S3{Options: opts}
-	result, err := s.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	s := component.NewS3(opts)
+	return s.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {

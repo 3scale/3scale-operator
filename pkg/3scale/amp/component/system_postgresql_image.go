@@ -1,80 +1,22 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	imagev1 "github.com/openshift/api/image/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type SystemPostgreSQLImage struct {
-	options []string
 	Options *SystemPostgreSQLImageOptions
 }
 
-type SystemPostgreSQLImageOptions struct {
-	appLabel             string
-	ampRelease           string
-	image                string
-	insecureImportPolicy bool
+func NewSystemPostgreSQLImage(options *SystemPostgreSQLImageOptions) *SystemPostgreSQLImage {
+	return &SystemPostgreSQLImage{Options: options}
 }
 
-func NewSystemPostgreSQLImage(options []string) *SystemPostgreSQLImage {
-	systemPostgreSQLImage := &SystemPostgreSQLImage{
-		options: options,
-	}
-	return systemPostgreSQLImage
-}
-
-type SystemPostgreSQLImageOptionsProvider interface {
-	GetSystemPostgreSQLImageOptions() *AmpImagesOptions
-}
-type CLISystemPostgreSQLImageOptionsProvider struct {
-}
-
-func (o *CLISystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageOptions() (*SystemPostgreSQLImageOptions, error) {
-	aob := SystemPostgreSQLImageOptionsBuilder{}
-	aob.AppLabel("${APP_LABEL}")
-	aob.AmpRelease("${AMP_RELEASE}")
-	aob.Image("${SYSTEM_DATABASE_IMAGE}")
-	aob.InsecureImportPolicy(insecureImportPolicy)
-
-	res, err := aob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create SystemPostgreSQLImage Options - %s", err)
-	}
-	return res, nil
-}
-
-func (s *SystemPostgreSQLImage) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLISystemPostgreSQLImageOptionsProvider{}
-	imagesOpts, err := optionsProvider.GetSystemPostgreSQLImageOptions()
-	_ = err
-	s.Options = imagesOpts
-	s.buildParameters(template)
-	s.addObjectsIntoTemplate(template)
-}
-
-func (s *SystemPostgreSQLImage) GetObjects() ([]common.KubernetesObject, error) {
-	objects := s.buildObjects()
-	return objects, nil
-}
-
-func (s *SystemPostgreSQLImage) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := s.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (s *SystemPostgreSQLImage) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (s *SystemPostgreSQLImage) buildObjects() []common.KubernetesObject {
+func (s *SystemPostgreSQLImage) Objects() []common.KubernetesObject {
 	systemPostgreSQLImageStream := s.buildSystemPostgreSQLImageStream()
 
 	objects := []common.KubernetesObject{
@@ -125,16 +67,4 @@ func (s *SystemPostgreSQLImage) buildSystemPostgreSQLImageStream() *imagev1.Imag
 			},
 		},
 	}
-}
-
-func (s *SystemPostgreSQLImage) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE_IMAGE",
-			Description: "System PostgreSQL image to use",
-			Required:    true,
-			Value:       "centos/postgresql-10-centos7",
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
 }

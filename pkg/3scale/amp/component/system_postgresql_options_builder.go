@@ -2,6 +2,19 @@ package component
 
 import "fmt"
 
+type SystemPostgreSQLOptions struct {
+	//systemPostgreSQLNonRequiredOptions
+
+	//systemPostgreSQLRequiredOptions
+	ampRelease   string
+	appLabel     string
+	image        string
+	user         string
+	password     string
+	databaseName string
+	databaseURL  string
+}
+
 type SystemPostgreSQLOptionsBuilder struct {
 	options SystemPostgreSQLOptions
 }

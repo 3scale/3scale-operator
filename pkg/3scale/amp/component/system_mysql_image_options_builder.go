@@ -2,6 +2,13 @@ package component
 
 import "fmt"
 
+type SystemMySQLImageOptions struct {
+	appLabel             string
+	ampRelease           string
+	image                string
+	insecureImportPolicy bool
+}
+
 type SystemMySQLImageOptionsBuilder struct {
 	options SystemMySQLImageOptions
 }
