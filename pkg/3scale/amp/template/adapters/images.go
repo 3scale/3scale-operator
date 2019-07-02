@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/common"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -14,37 +15,42 @@ func NewImagesAdapter(options []string) Adapter {
 }
 
 func (i *ImagesAdapter) Parameters() []templatev1.Parameter {
+	productVersion := product.CurrentProductVersion()
+	imageProvider, err := product.NewImageProvider(productVersion)
+	if err != nil {
+		panic(err)
+	}
 	return []templatev1.Parameter{
 		templatev1.Parameter{
 			Name:     "AMP_BACKEND_IMAGE",
 			Required: true,
-			Value:    "quay.io/3scale/3scale26:apisonator-3scale-2.6.0-ER1",
+			Value:    imageProvider.GetBackendImage(),
 		},
 		templatev1.Parameter{
 			Name:     "AMP_ZYNC_IMAGE",
-			Value:    "quay.io/3scale/3scale26:zync-3scale-2.6.0-ER1",
+			Value:    imageProvider.GetZyncImage(),
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_APICAST_IMAGE",
-			Value:    "quay.io/3scale/3scale26:apicast-3scale-2.6.0-ER1",
+			Value:    imageProvider.GetApicastImage(),
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_SYSTEM_IMAGE",
-			Value:    "quay.io/3scale/3scale26:porta-3scale-2.6.0-ER1",
+			Value:    imageProvider.GetSystemImage(),
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:        "ZYNC_DATABASE_IMAGE",
 			Description: "Zync's PostgreSQL image to use",
-			Value:       "centos/postgresql-10-centos7",
+			Value:       imageProvider.GetZyncPostgreSQLImage(),
 			Required:    true,
 		},
 		templatev1.Parameter{
 			Name:        "MEMCACHED_IMAGE",
 			Description: "Memcached image to use",
-			Value:       "memcached:1.5",
+			Value:       imageProvider.GetSystemMemcachedImage(),
 			Required:    true,
 		},
 		templatev1.Parameter{
