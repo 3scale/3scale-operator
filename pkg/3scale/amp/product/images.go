@@ -36,10 +36,6 @@ type ImageProvider interface {
 	GetZyncPostgreSQLImage() string
 }
 
-func IsProductizedVersion(productVersion Version) bool {
-	return productVersion != ProductUpstream
-}
-
 func CurrentProductVersion() Version {
 	return ProductRelease_2_6
 }
