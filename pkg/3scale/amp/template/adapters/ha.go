@@ -9,7 +9,7 @@ import (
 type HAAdapter struct {
 }
 
-func NewHAAdapter(options []string) Adapter {
+func NewHAAdapter() Adapter {
 	return &HAAdapter{}
 }
 

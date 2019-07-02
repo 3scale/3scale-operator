@@ -5,6 +5,11 @@ import (
 	templatev1 "github.com/openshift/api/template/v1"
 )
 
+func init() {
+	// TemplateFactories is a list of template factories
+	TemplateFactories = append(TemplateFactories, NewAmpPostgresqlTemplateFactory)
+}
+
 type AmpPostgresqlTemplateAdapter struct {
 }
 
@@ -26,18 +31,28 @@ func (a *AmpPostgresqlTemplateAdapter) buildAmpTemplateMetaAnnotations() map[str
 	return annotations
 }
 
-// AmpPostgresqlTemplateAdapters defines the list of adapters to build the template
-func AmpPostgresqlTemplateAdapters(options []string) []adapters.Adapter {
+type AmpPostgresqlTemplateFactory struct {
+}
+
+func (f *AmpPostgresqlTemplateFactory) Adapters() []adapters.Adapter {
 	return []adapters.Adapter{
-		adapters.NewImagesAdapter(options),
-		adapters.NewSystemPostgreSQLImageAdapter(options),
-		adapters.NewRedisAdapter(options),
-		adapters.NewBackendAdapter(options),
-		adapters.NewSystemPostgreSQLAdapter(options),
-		adapters.NewMemcachedAdapter(options),
-		adapters.NewSystemAdapter(options),
-		adapters.NewZyncAdapter(options),
-		adapters.NewApicastAdapter(options),
+		adapters.NewImagesAdapter(),
+		adapters.NewSystemPostgreSQLImageAdapter(),
+		adapters.NewRedisAdapter(),
+		adapters.NewBackendAdapter(),
+		adapters.NewSystemPostgreSQLAdapter(),
+		adapters.NewMemcachedAdapter(),
+		adapters.NewSystemAdapter(),
+		adapters.NewZyncAdapter(),
+		adapters.NewApicastAdapter(),
 		&AmpPostgresqlTemplateAdapter{},
 	}
+}
+
+func (f *AmpPostgresqlTemplateFactory) Type() TemplateType {
+	return "amp-postgresql-template"
+}
+
+func NewAmpPostgresqlTemplateFactory() TemplateFactory {
+	return &AmpPostgresqlTemplateFactory{}
 }

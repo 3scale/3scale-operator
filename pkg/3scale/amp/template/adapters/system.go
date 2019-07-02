@@ -9,7 +9,7 @@ import (
 type System struct {
 }
 
-func NewSystemAdapter(options []string) Adapter {
+func NewSystemAdapter() Adapter {
 	return NewAppenderAdapter(&System{})
 }
 

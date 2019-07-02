@@ -5,6 +5,11 @@ import (
 	templatev1 "github.com/openshift/api/template/v1"
 )
 
+func init() {
+	// TemplateFactories is a list of template factories
+	TemplateFactories = append(TemplateFactories, NewAmpTemplateFactory)
+}
+
 type AmpTemplateAdapter struct {
 }
 
@@ -13,18 +18,28 @@ func (a *AmpTemplateAdapter) Adapt(template *templatev1.Template) {
 	template.Message = "Login on https://${TENANT_NAME}-admin.${WILDCARD_DOMAIN} as ${ADMIN_USERNAME}/${ADMIN_PASSWORD}"
 }
 
-// AmpTemplateAdapters defines the list of adapters to build the template
-func AmpTemplateAdapters(options []string) []adapters.Adapter {
+type AmpTemplateFactory struct {
+}
+
+func (f *AmpTemplateFactory) Adapters() []adapters.Adapter {
 	return []adapters.Adapter{
-		adapters.NewImagesAdapter(options),
-		adapters.NewSystemMysqlImageAdapter(options),
-		adapters.NewRedisAdapter(options),
-		adapters.NewBackendAdapter(options),
-		adapters.NewMysqlAdapter(options),
-		adapters.NewMemcachedAdapter(options),
-		adapters.NewSystemAdapter(options),
-		adapters.NewZyncAdapter(options),
-		adapters.NewApicastAdapter(options),
+		adapters.NewImagesAdapter(),
+		adapters.NewSystemMysqlImageAdapter(),
+		adapters.NewRedisAdapter(),
+		adapters.NewBackendAdapter(),
+		adapters.NewMysqlAdapter(),
+		adapters.NewMemcachedAdapter(),
+		adapters.NewSystemAdapter(),
+		adapters.NewZyncAdapter(),
+		adapters.NewApicastAdapter(),
 		&AmpTemplateAdapter{},
 	}
+}
+
+func (f *AmpTemplateFactory) Type() TemplateType {
+	return "amp-template"
+}
+
+func NewAmpTemplateFactory() TemplateFactory {
+	return &AmpTemplateFactory{}
 }

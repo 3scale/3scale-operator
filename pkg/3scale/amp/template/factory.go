@@ -1,46 +1,43 @@
 package template
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/template/adapters"
 	templatev1 "github.com/openshift/api/template/v1"
 )
 
 type TemplateType string
 
-const (
-	AmpType           TemplateType = "amp-template"
-	AmpS3Type         TemplateType = "amp-s3-template"
-	AmpEvalType       TemplateType = "amp-eval-template"
-	AmpEvalS3Type     TemplateType = "amp-eval-s3-template"
-	AmpHAType         TemplateType = "amp-ha-template"
-	AmpPostgresqlType TemplateType = "amp-postgresql-template"
-)
+type TemplateFactory interface {
+	Adapters() []adapters.Adapter
+	Type() TemplateType
+}
+
+type TemplateFactoryBuilder = func() TemplateFactory
+
+// TemplateFactories is a list of template factories
+var TemplateFactories []TemplateFactoryBuilder
 
 // NewTemplate implements the main loop of adapters to generate template object
-func NewTemplate(templateName string, componentOptions []string) *templatev1.Template {
-	adapterList := FindTemplateAdapterList(templateName, componentOptions)
+func NewTemplate(templateName string) *templatev1.Template {
+	templateFactoryIndex := map[TemplateType]TemplateFactory{}
+	for _, factoryBuilder := range TemplateFactories {
+		factory := factoryBuilder()
+		if _, ok := templateFactoryIndex[factory.Type()]; ok {
+			panic(fmt.Errorf("Template %s already exists", factory.Type()))
+		}
+		templateFactoryIndex[factory.Type()] = factory
+	}
+
+	factory, ok := templateFactoryIndex[TemplateType(templateName)]
+	if !ok {
+		panic(fmt.Errorf("Template %s not found", templateName))
+	}
+
 	tpl := Basic3scaleTemplate()
-	for _, adapter := range adapterList {
+	for _, adapter := range factory.Adapters() {
 		adapter.Adapt(tpl)
 	}
 	return tpl
-}
-
-func FindTemplateAdapterList(templateName string, componentOptions []string) []adapters.Adapter {
-	switch TemplateType(templateName) {
-	case AmpType:
-		return AmpTemplateAdapters(componentOptions)
-	case AmpS3Type:
-		return AmpS3TemplateAdapters(componentOptions)
-	case AmpEvalType:
-		return AmpEvalTemplateAdapters(componentOptions)
-	case AmpEvalS3Type:
-		return AmpEvalS3TemplateAdapters(componentOptions)
-	case AmpHAType:
-		return AmpHATemplateAdapters(componentOptions)
-	case AmpPostgresqlType:
-		return AmpPostgresqlTemplateAdapters(componentOptions)
-	}
-
-	panic("Error: Template not recognized")
 }
