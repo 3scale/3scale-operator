@@ -2,16 +2,31 @@ package template
 
 import "github.com/3scale/3scale-operator/pkg/3scale/amp/template/adapters"
 
-// AmpHATemplateAdapters defines the list of adapters to build the template
-func AmpHATemplateAdapters(options []string) []adapters.Adapter {
+func init() {
+	// TemplateFactories is a list of template factories
+	TemplateFactories = append(TemplateFactories, NewAmpHATemplateFactory)
+}
+
+type AmpHATemplateFactory struct {
+}
+
+func (f *AmpHATemplateFactory) Adapters() []adapters.Adapter {
 	return []adapters.Adapter{
-		adapters.NewImagesAdapter(options),
-		adapters.NewRedisAdapter(options),
-		adapters.NewBackendAdapter(options),
-		adapters.NewMemcachedAdapter(options),
-		adapters.NewSystemAdapter(options),
-		adapters.NewZyncAdapter(options),
-		adapters.NewApicastAdapter(options),
-		adapters.NewHAAdapter(options),
+		adapters.NewImagesAdapter(),
+		adapters.NewRedisAdapter(),
+		adapters.NewBackendAdapter(),
+		adapters.NewMemcachedAdapter(),
+		adapters.NewSystemAdapter(),
+		adapters.NewZyncAdapter(),
+		adapters.NewApicastAdapter(),
+		adapters.NewHAAdapter(),
 	}
+}
+
+func (f *AmpHATemplateFactory) Type() TemplateType {
+	return "amp-ha-template"
+}
+
+func NewAmpHATemplateFactory() TemplateFactory {
+	return &AmpHATemplateFactory{}
 }

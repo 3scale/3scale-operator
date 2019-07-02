@@ -9,7 +9,7 @@ import (
 type S3 struct {
 }
 
-func NewS3Adapter(options []string) Adapter {
+func NewS3Adapter() Adapter {
 	return &S3{}
 }
 

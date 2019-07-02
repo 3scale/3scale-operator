@@ -10,7 +10,7 @@ import (
 type SystemMysqlImageAdapter struct {
 }
 
-func NewSystemMysqlImageAdapter(options []string) Adapter {
+func NewSystemMysqlImageAdapter() Adapter {
 	return NewAppenderAdapter(&SystemMysqlImageAdapter{})
 }
 

@@ -10,7 +10,7 @@ import (
 type RedisAdapter struct {
 }
 
-func NewRedisAdapter(options []string) Adapter {
+func NewRedisAdapter() Adapter {
 	return NewAppenderAdapter(&RedisAdapter{})
 }
 

@@ -10,7 +10,7 @@ import (
 type SystemPostgreSQLImageAdapter struct {
 }
 
-func NewSystemPostgreSQLImageAdapter(options []string) Adapter {
+func NewSystemPostgreSQLImageAdapter() Adapter {
 	return NewAppenderAdapter(&SystemPostgreSQLImageAdapter{})
 }
 
