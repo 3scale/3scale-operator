@@ -9,7 +9,7 @@ import (
 type Zync struct {
 }
 
-func NewZyncAdapter(options []string) Adapter {
+func NewZyncAdapter() Adapter {
 	return NewAppenderAdapter(&Zync{})
 }
 

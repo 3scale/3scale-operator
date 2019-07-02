@@ -9,7 +9,7 @@ import (
 type SystemPostgreSQLAdapter struct {
 }
 
-func NewSystemPostgreSQLAdapter(options []string) Adapter {
+func NewSystemPostgreSQLAdapter() Adapter {
 	return NewAppenderAdapter(&SystemPostgreSQLAdapter{})
 }
 
