@@ -2,9 +2,23 @@ package template
 
 import "github.com/3scale/3scale-operator/pkg/3scale/amp/template/adapters"
 
-// AmpS3TemplateAdapters defines the list of adapters to build the template
-func AmpS3TemplateAdapters(options []string) []adapters.Adapter {
-	adapterList := AmpTemplateAdapters(options)
+func init() {
+	// TemplateFactories is a list of template factories
+	TemplateFactories = append(TemplateFactories, NewAmpS3TemplateFactory)
+}
 
-	return append(adapterList, adapters.NewS3Adapter(options))
+type AmpS3TemplateFactory struct {
+}
+
+func (f *AmpS3TemplateFactory) Adapters() []adapters.Adapter {
+	ampFactory := NewAmpTemplateFactory()
+	return append(ampFactory.Adapters(), adapters.NewS3Adapter())
+}
+
+func (f *AmpS3TemplateFactory) Type() TemplateType {
+	return "amp-s3-template"
+}
+
+func NewAmpS3TemplateFactory() TemplateFactory {
+	return &AmpS3TemplateFactory{}
 }
