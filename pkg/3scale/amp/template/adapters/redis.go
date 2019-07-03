@@ -15,11 +15,8 @@ func NewRedisAdapter(options []string) Adapter {
 }
 
 func (a *RedisAdapter) Parameters() []templatev1.Parameter {
-	productVersion := product.CurrentProductVersion()
-	imageProvider, err := product.NewImageProvider(productVersion)
-	if err != nil {
-		panic(err)
-	}
+	imageProvider := product.CurrentImageProvider()
+
 	return []templatev1.Parameter{
 		{
 			Name:        "REDIS_IMAGE",

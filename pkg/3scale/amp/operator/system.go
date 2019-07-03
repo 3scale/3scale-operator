@@ -12,10 +12,8 @@ import (
 func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, error) {
 	optProv := component.SystemOptionsBuilder{}
 
-	productVersion := product.CurrentProductVersion()
-
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	optProv.AmpRelease(string(productVersion))
+	optProv.AmpRelease(product.ThreescaleRelease)
 	optProv.ApicastRegistryURL(*o.APIManagerSpec.Apicast.RegistryURL)
 	optProv.TenantName(*o.APIManagerSpec.TenantName)
 	optProv.WildcardDomain(o.APIManagerSpec.WildcardDomain)
