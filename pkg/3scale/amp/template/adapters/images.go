@@ -10,7 +10,7 @@ import (
 type ImagesAdapter struct {
 }
 
-func NewImagesAdapter(options []string) Adapter {
+func NewImagesAdapter() Adapter {
 	return NewAppenderAdapter(&ImagesAdapter{})
 }
 

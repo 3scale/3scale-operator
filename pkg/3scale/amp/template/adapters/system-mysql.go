@@ -9,7 +9,7 @@ import (
 type SystemMysqlAdapter struct {
 }
 
-func NewMysqlAdapter(options []string) Adapter {
+func NewMysqlAdapter() Adapter {
 	return NewAppenderAdapter(&SystemMysqlAdapter{})
 }
 

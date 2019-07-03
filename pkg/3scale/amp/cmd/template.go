@@ -58,9 +58,8 @@ to quickly create a Cobra application.`
 // is the one needed by the Cobra library
 func runCommand(cmd *cobra.Command, args []string) {
 	templateName := args[0]
-	componentOptions := []string{}
 
-	template := amptemplate.NewTemplate(templateName, componentOptions)
+	template := amptemplate.NewTemplate(templateName)
 
 	serializedResult, err := runtime.DefaultUnstructuredConverter.ToUnstructured(template)
 	if err != nil {

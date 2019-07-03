@@ -9,7 +9,7 @@ import (
 type EvalAdapter struct {
 }
 
-func NewEvalAdapter(options []string) Adapter {
+func NewEvalAdapter() Adapter {
 	return &EvalAdapter{}
 }
 

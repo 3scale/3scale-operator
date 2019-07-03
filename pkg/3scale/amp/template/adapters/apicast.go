@@ -9,7 +9,7 @@ import (
 type Apicast struct {
 }
 
-func NewApicastAdapter(options []string) Adapter {
+func NewApicastAdapter() Adapter {
 	return NewAppenderAdapter(&Apicast{})
 }
 
