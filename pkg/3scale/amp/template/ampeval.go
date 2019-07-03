@@ -2,9 +2,23 @@ package template
 
 import "github.com/3scale/3scale-operator/pkg/3scale/amp/template/adapters"
 
-// AmpEvalTemplateAdapters defines the list of adapters to build the template
-func AmpEvalTemplateAdapters(options []string) []adapters.Adapter {
-	adapterList := AmpTemplateAdapters(options)
+func init() {
+	// TemplateFactories is a list of template factories
+	TemplateFactories = append(TemplateFactories, NewAmpEvalTemplateFactory)
+}
 
-	return append(adapterList, adapters.NewEvalAdapter(options))
+type AmpEvalTemplateFactory struct {
+}
+
+func (f *AmpEvalTemplateFactory) Adapters() []adapters.Adapter {
+	ampFactory := NewAmpTemplateFactory()
+	return append(ampFactory.Adapters(), adapters.NewEvalAdapter())
+}
+
+func (f *AmpEvalTemplateFactory) Type() TemplateType {
+	return "amp-eval-template"
+}
+
+func NewAmpEvalTemplateFactory() TemplateFactory {
+	return &AmpEvalTemplateFactory{}
 }

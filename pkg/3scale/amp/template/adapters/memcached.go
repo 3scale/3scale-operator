@@ -9,7 +9,7 @@ import (
 type MemcachedAdapter struct {
 }
 
-func NewMemcachedAdapter(options []string) Adapter {
+func NewMemcachedAdapter() Adapter {
 	return NewAppenderAdapter(&MemcachedAdapter{})
 }
 

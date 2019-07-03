@@ -9,7 +9,7 @@ import (
 type Backend struct {
 }
 
-func NewBackendAdapter(options []string) Adapter {
+func NewBackendAdapter() Adapter {
 	return NewAppenderAdapter(&Backend{})
 }
 
