@@ -8,6 +8,7 @@ const (
 	ProductUpstream    Version = "upstream"
 	ProductRelease_2_5 Version = "2.5"
 	ProductRelease_2_6 Version = "2.6"
+	ThreescaleRelease  string  = string(ProductRelease_2_6)
 )
 
 func NewImageProvider(productVersion Version) (ImageProvider, error) {
@@ -38,4 +39,10 @@ type ImageProvider interface {
 
 func CurrentProductVersion() Version {
 	return ProductRelease_2_6
+}
+
+func CurrentImageProvider() ImageProvider {
+	// it is safe to discard error
+	imageProvider, _ := NewImageProvider(CurrentProductVersion())
+	return imageProvider
 }
