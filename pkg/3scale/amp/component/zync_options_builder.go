@@ -2,6 +2,16 @@ package component
 
 import "fmt"
 
+type ZyncOptions struct {
+	// zyncNonRequiredOptions
+	databaseURL *string
+	// zyncRequiredOptions
+	appLabel            string
+	authenticationToken string
+	databasePassword    string
+	secretKeyBase       string
+}
+
 type ZyncOptionsBuilder struct {
 	options ZyncOptions
 }

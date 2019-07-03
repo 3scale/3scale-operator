@@ -2,6 +2,15 @@ package component
 
 import "fmt"
 
+type ApicastOptions struct {
+	appLabel       string
+	managementAPI  string
+	openSSLVerify  string
+	responseCodes  string
+	tenantName     string
+	wildcardDomain string
+}
+
 type ApicastOptionsBuilder struct {
 	options ApicastOptions
 }

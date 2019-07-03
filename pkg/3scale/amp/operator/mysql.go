@@ -10,8 +10,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
-func (o *OperatorMysqlOptionsProvider) GetMysqlOptions() (*component.MysqlOptions, error) {
-	optProv := component.MysqlOptionsBuilder{}
+func (o *OperatorMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOptions, error) {
+	optProv := component.SystemMysqlOptionsBuilder{}
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 
 	err := o.setSecretBasedOptions(&optProv)
@@ -26,7 +26,7 @@ func (o *OperatorMysqlOptionsProvider) GetMysqlOptions() (*component.MysqlOption
 	return res, nil
 }
 
-func (o *OperatorMysqlOptionsProvider) setSecretBasedOptions(builder *component.MysqlOptionsBuilder) error {
+func (o *OperatorMysqlOptionsProvider) setSecretBasedOptions(builder *component.SystemMysqlOptionsBuilder) error {
 	err := o.setSystemDatabaseOptions(builder)
 	if err != nil {
 		return fmt.Errorf("unable to create System Database secret options - %s", err)
@@ -35,7 +35,7 @@ func (o *OperatorMysqlOptionsProvider) setSecretBasedOptions(builder *component.
 	return nil
 }
 
-func (o *OperatorMysqlOptionsProvider) setSystemDatabaseOptions(builder *component.MysqlOptionsBuilder) error {
+func (o *OperatorMysqlOptionsProvider) setSystemDatabaseOptions(builder *component.SystemMysqlOptionsBuilder) error {
 	currSecret, err := getSecret(component.SystemSecretSystemDatabaseSecretName, o.Namespace, o.Client)
 	defaultDatabaseName := "system"
 	defaultDatabaseRootPassword := oprand.String(8)
@@ -69,7 +69,7 @@ func (o *OperatorMysqlOptionsProvider) setSystemDatabaseOptions(builder *compone
 	return nil
 }
 
-func (o *OperatorMysqlOptionsProvider) parseAndSetDatabaseURLAndParts(builder *component.MysqlOptionsBuilder, secretData map[string][]byte, defaultDatabaseURL string) error {
+func (o *OperatorMysqlOptionsProvider) parseAndSetDatabaseURLAndParts(builder *component.SystemMysqlOptionsBuilder, secretData map[string][]byte, defaultDatabaseURL string) error {
 	resultURLStr := getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseURLFieldName, defaultDatabaseURL)
 	resultURL, err := o.systemDatabaseURLIsValid(resultURLStr)
 	if err != nil {

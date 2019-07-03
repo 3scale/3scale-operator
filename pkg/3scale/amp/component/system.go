@@ -1,14 +1,11 @@
 package component
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,234 +76,14 @@ const (
 )
 
 type System struct {
-	options []string
 	Options *SystemOptions
 }
 
-type SystemOptions struct {
-	systemNonRequiredOptions
-	systemRequiredOptions
+func NewSystem(options *SystemOptions) *System {
+	return &System{Options: options}
 }
 
-type systemRequiredOptions struct {
-	adminAccessToken    string
-	adminPassword       string
-	adminUsername       string
-	ampRelease          string
-	apicastAccessToken  string
-	apicastRegistryURL  string
-	appLabel            string
-	masterAccessToken   string
-	masterName          string
-	masterUsername      string
-	masterPassword      string
-	recaptchaPublicKey  string
-	recaptchaPrivateKey string
-	appSecretKeyBase    string
-	backendSharedSecret string
-	tenantName          string
-	wildcardDomain      string
-	storageClassName    *string // should this be a string or *string? check what would be the difference between passing a "" and a nil pointer in the PersistentVolumeClaim corresponding field
-}
-
-type systemNonRequiredOptions struct {
-	memcachedServers                       *string
-	eventHooksURL                          *string
-	redisURL                               *string
-	redisSentinelHosts                     *string
-	redisSentinelRole                      *string
-	redisNamespace                         *string
-	messageBusRedisURL                     *string
-	messageBusRedisSentinelHosts           *string
-	messageBusRedisSentinelRole            *string
-	messageBusRedisNamespace               *string
-	apicastSystemMasterProxyConfigEndpoint *string
-	apicastSystemMasterBaseURL             *string
-	adminEmail                             *string
-}
-
-func NewSystem(options []string) *System {
-	system := &System{
-		options: options,
-	}
-	return system
-}
-
-type SystemOptionsProvider interface {
-	GetSystemOptions() *SystemOptions
-}
-type CLISystemOptionsProvider struct {
-}
-
-func (o *CLISystemOptionsProvider) GetSystemOptions() (*SystemOptions, error) {
-	sob := SystemOptionsBuilder{}
-	sob.AdminAccessToken("${ADMIN_ACCESS_TOKEN}")
-	sob.AdminPassword("${ADMIN_PASSWORD}")
-	sob.AdminUsername("${ADMIN_USERNAME}")
-	sob.AdminEmail("${ADMIN_EMAIL}")
-	sob.AmpRelease("${AMP_RELEASE}")
-	sob.ApicastAccessToken("${APICAST_ACCESS_TOKEN}")
-	sob.ApicastRegistryURL("${APICAST_REGISTRY_URL}")
-	sob.MasterAccessToken("${MASTER_ACCESS_TOKEN}")
-	sob.MasterName("${MASTER_NAME}")
-	sob.MasterUsername("${MASTER_USER}")
-	sob.MasterPassword("${MASTER_PASSWORD}")
-	sob.AppLabel("${APP_LABEL}")
-	sob.RecaptchaPublicKey("${RECAPTCHA_PUBLIC_KEY}")
-	sob.RecaptchaPrivateKey("${RECAPTCHA_PRIVATE_KEY}")
-	sob.RedisURL("${SYSTEM_REDIS_URL}")
-	sob.RedisNamespace("${SYSTEM_REDIS_NAMESPACE}")
-	sob.MessageBusRedisURL("${SYSTEM_MESSAGE_BUS_REDIS_URL}")
-	sob.MessageBusRedisNamespace("${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}")
-	sob.AppSecretKeyBase("${SYSTEM_APP_SECRET_KEY_BASE}")
-	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
-	sob.TenantName("${TENANT_NAME}")
-	sob.WildcardDomain("${WILDCARD_DOMAIN}")
-
-	sob.StorageClassName(nil)
-	res, err := sob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create System Options - %s", err)
-	}
-	return res, nil
-}
-
-func (system *System) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLISystemOptionsProvider{}
-	systemOpts, err := optionsProvider.GetSystemOptions()
-	_ = err
-	system.Options = systemOpts
-	system.buildParameters(template)
-	system.addObjectsIntoTemplate(template)
-}
-
-func (system *System) GetObjects() ([]common.KubernetesObject, error) {
-	objects := system.buildObjects()
-	return objects, nil
-}
-
-func (system *System) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := system.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (system *System) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (system *System) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "WILDCARD_DOMAIN",
-			Description: "Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com.",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_BACKEND_USERNAME",
-			Description: "Internal 3scale API username for internal 3scale api auth.",
-			Value:       "3scale_api_user",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_BACKEND_PASSWORD",
-			Description: "Internal 3scale API password for internal 3scale api auth.",
-			Generate:    "expression",
-			From:        "[a-z0-9]{8}",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_BACKEND_SHARED_SECRET",
-			Description: "Shared secret to import events from backend to system.",
-			Generate:    "expression",
-			From:        "[a-z0-9]{8}",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_APP_SECRET_KEY_BASE",
-			Description: "System application secret key base",
-			Generate:    "expression",
-			From:        "[a-f0-9]{128}",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:     "ADMIN_PASSWORD",
-			Generate: "expression",
-			From:     "[a-z0-9]{8}",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "ADMIN_USERNAME",
-			Value:    "admin",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "ADMIN_EMAIL",
-			Required: false,
-		},
-		templatev1.Parameter{
-			Name:        "ADMIN_ACCESS_TOKEN",
-			Description: "Admin Access Token with all scopes and write permissions for API access.",
-			Generate:    "expression",
-			From:        "[a-z0-9]{16}",
-			Required:    false,
-		},
-		templatev1.Parameter{
-			Name:        "MASTER_NAME",
-			Description: "The root name which Master Admin UI will be available at.",
-			Value:       "master",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:     "MASTER_USER",
-			Value:    "master",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "MASTER_PASSWORD",
-			Generate: "expression",
-			From:     "[a-z0-9]{8}",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "MASTER_ACCESS_TOKEN",
-			Generate: "expression",
-			From:     "[a-z0-9]{8}",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:        "RECAPTCHA_PUBLIC_KEY",
-			Description: "reCAPTCHA site key (used in spam protection)",
-			Required:    false,
-		},
-		templatev1.Parameter{
-			Name:        "RECAPTCHA_PRIVATE_KEY",
-			Description: "reCAPTCHA secret key (used in spam protection)",
-			Required:    false,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_REDIS_URL",
-			Description: "Define the external system-redis to connect to",
-			Required:    true,
-			Value:       "redis://system-redis:6379/1",
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_MESSAGE_BUS_REDIS_URL",
-			Description: "Define the external system-redis message bus to connect to. By default the same value as SYSTEM_REDIS_URL but with the logical database incremented by 1 and the result applied mod 16",
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_REDIS_NAMESPACE",
-			Description: "Define the namespace to be used by System's Redis Database. The empty value means not namespaced",
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE",
-			Description: "Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced",
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
-}
-
-func (system *System) buildObjects() []common.KubernetesObject {
+func (system *System) Objects() []common.KubernetesObject {
 	systemSharedStorage := system.buildSystemSharedPVC()
 	systemProviderService := system.buildSystemProviderService()
 	systemMasterService := system.buildSystemMasterService()

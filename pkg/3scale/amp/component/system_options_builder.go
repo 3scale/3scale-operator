@@ -2,6 +2,43 @@ package component
 
 import "fmt"
 
+type SystemOptions struct {
+	// systemNonRequiredOptions
+	memcachedServers                       *string
+	eventHooksURL                          *string
+	redisURL                               *string
+	redisSentinelHosts                     *string
+	redisSentinelRole                      *string
+	redisNamespace                         *string
+	messageBusRedisURL                     *string
+	messageBusRedisSentinelHosts           *string
+	messageBusRedisSentinelRole            *string
+	messageBusRedisNamespace               *string
+	apicastSystemMasterProxyConfigEndpoint *string
+	apicastSystemMasterBaseURL             *string
+	adminEmail                             *string
+
+	// systemRequiredOptions
+	adminAccessToken    string
+	adminPassword       string
+	adminUsername       string
+	ampRelease          string
+	apicastAccessToken  string
+	apicastRegistryURL  string
+	appLabel            string
+	masterAccessToken   string
+	masterName          string
+	masterUsername      string
+	masterPassword      string
+	recaptchaPublicKey  string
+	recaptchaPrivateKey string
+	appSecretKeyBase    string
+	backendSharedSecret string
+	tenantName          string
+	wildcardDomain      string
+	storageClassName    *string // should this be a string or *string? check what would be the difference between passing a "" and a nil pointer in the PersistentVolumeClaim corresponding field
+}
+
 type SystemOptionsBuilder struct {
 	options SystemOptions
 }

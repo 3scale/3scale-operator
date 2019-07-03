@@ -2,6 +2,10 @@ package component
 
 import "fmt"
 
+type RedisOptions struct {
+	appLabel string
+}
+
 type RedisOptionsBuilder struct {
 	options RedisOptions
 }
