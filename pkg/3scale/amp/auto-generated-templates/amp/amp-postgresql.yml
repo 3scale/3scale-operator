@@ -4244,16 +4244,16 @@ parameters:
   value: "null"
 - name: AMP_BACKEND_IMAGE
   required: true
-  value: quay.io/3scale/3scale26:apisonator-3scale-2.6.0-ER1
+  value: quay.io/3scale/apisonator:nightly
 - name: AMP_ZYNC_IMAGE
   required: true
-  value: quay.io/3scale/3scale26:zync-3scale-2.6.0-ER1
+  value: quay.io/3scale/zync:nightly
 - name: AMP_APICAST_IMAGE
   required: true
-  value: quay.io/3scale/3scale26:apicast-3scale-2.6.0-ER1
+  value: quay.io/3scale/apicast:nightly
 - name: AMP_SYSTEM_IMAGE
   required: true
-  value: quay.io/3scale/3scale26:porta-3scale-2.6.0-ER1
+  value: quay.io/3scale/porta:nightly
 - description: Zync's PostgreSQL image to use
   name: ZYNC_DATABASE_IMAGE
   required: true
