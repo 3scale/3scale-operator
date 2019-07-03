@@ -2,6 +2,18 @@ package component
 
 import "fmt"
 
+type ProductizedOptions struct {
+	// productizedNonRequiredOptions
+
+	// productizedRequiredOptions
+	ampRelease   string
+	apicastImage string
+	backendImage string
+	routerImage  string
+	systemImage  string
+	zyncImage    string
+}
+
 type ProductizedOptionsBuilder struct {
 	options ProductizedOptions
 }

@@ -1,12 +1,9 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,113 +11,14 @@ import (
 )
 
 type SystemPostgreSQL struct {
-	// TemplateParameters
-	// TemplateObjects
-	// CLI Flags??? should be in this object???
-	options []string
 	Options *SystemPostgreSQLOptions
 }
 
-type SystemPostgreSQLOptions struct {
-	systemPostgreSQLNonRequiredOptions
-	systemPostgreSQLRequiredOptions
+func NewSystemPostgreSQL(options *SystemPostgreSQLOptions) *SystemPostgreSQL {
+	return &SystemPostgreSQL{Options: options}
 }
 
-type systemPostgreSQLRequiredOptions struct {
-	ampRelease   string
-	appLabel     string
-	image        string
-	user         string
-	password     string
-	databaseName string
-	databaseURL  string
-}
-
-type systemPostgreSQLNonRequiredOptions struct {
-}
-
-type SystemPostgreSQLOptionsProvider interface {
-	GetPostgreSQLOptions() *SystemPostgreSQLOptions
-}
-type CLISystemPostgreSQLOptionsProvider struct {
-}
-
-func (o *CLISystemPostgreSQLOptionsProvider) GetPostgreSQLOptions() (*SystemPostgreSQLOptions, error) {
-	mob := SystemPostgreSQLOptionsBuilder{}
-	mob.AppLabel("${APP_LABEL}")
-	mob.DatabaseName("${SYSTEM_DATABASE}")
-	mob.User("${SYSTEM_DATABASE_USER}")
-	mob.Password("${SYSTEM_DATABASE_PASSWORD}")
-	mob.DatabaseURL("postgresql://${SYSTEM_DATABASE_USER}:" + "${SYSTEM_DATABASE_PASSWORD}" + "@system-postgresql/" + "${SYSTEM_DATABASE}")
-
-	res, err := mob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create PostgreSQL Options - %s", err)
-	}
-
-	return res, nil
-}
-
-func NewSystemPostgreSQL(options []string) *SystemPostgreSQL {
-	systemPostgreSQL := &SystemPostgreSQL{
-		options: options,
-	}
-	return systemPostgreSQL
-}
-
-func (p *SystemPostgreSQL) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLISystemPostgreSQLOptionsProvider{}
-	postgreSQLOpts, err := optionsProvider.GetPostgreSQLOptions()
-	_ = err
-	p.Options = postgreSQLOpts
-	p.buildParameters(template)
-	p.addObjectsIntoTemplate(template)
-}
-
-func (p *SystemPostgreSQL) GetObjects() ([]common.KubernetesObject, error) {
-	objects := p.buildObjects()
-	return objects, nil
-}
-
-func (p *SystemPostgreSQL) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := p.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (p *SystemPostgreSQL) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (p *SystemPostgreSQL) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE_USER",
-			DisplayName: "System PostgreSQL User",
-			Description: "Username for PostgreSQL user that will be used for accessing the database.",
-			Value:       "system",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE_PASSWORD",
-			DisplayName: "System PostgreSQL Password",
-			Description: "Password for the System's PostgreSQL user.",
-			Generate:    "expression",
-			From:        "[a-z0-9]{8}",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE",
-			DisplayName: "System PostgreSQL Database Name",
-			Description: "Name of the System's PostgreSQL database accessed.",
-			Value:       "system",
-			Required:    true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
-}
-
-func (p *SystemPostgreSQL) buildObjects() []common.KubernetesObject {
+func (p *SystemPostgreSQL) Objects() []common.KubernetesObject {
 	postgreSQLDeploymentConfig := p.DeploymentConfig()
 	postgreSQLService := p.Service()
 	postgreSQLPersistentVolumeClaim := p.DataPersistentVolumeClaim()

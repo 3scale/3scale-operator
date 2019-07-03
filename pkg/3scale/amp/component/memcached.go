@@ -1,12 +1,9 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,101 +11,14 @@ import (
 )
 
 type Memcached struct {
-	// TemplateParameters
-	// TemplateObjects
-	// CLI Flags??? should be in this object???
-	options []string
 	Options *MemcachedOptions
 }
 
-type MemcachedOptions struct {
-	memcachedNonRequiredOptions
-	memcachedRequiredOptions
+func NewMemcached(options *MemcachedOptions) *Memcached {
+	return &Memcached{Options: options}
 }
 
-type memcachedRequiredOptions struct {
-	appLabel string
-}
-
-type memcachedNonRequiredOptions struct {
-}
-
-func NewMemcached(options []string) *Memcached {
-	redis := &Memcached{
-		options: options,
-	}
-	return redis
-}
-
-type MemcachedOptionsProvider interface {
-	GetMemcachedOptions() *MemcachedOptions
-}
-type CLIMemcachedOptionsProvider struct {
-}
-
-func (o *CLIMemcachedOptionsProvider) GetMemcachedOptions() (*MemcachedOptions, error) {
-	rob := MemcachedOptionsBuilder{}
-	rob.AppLabel("${APP_LABEL}")
-	res, err := rob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create Memcached Options - %s", err)
-	}
-	return res, nil
-}
-
-func (m *Memcached) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLIMemcachedOptionsProvider{}
-	memcachedOpts, err := optionsProvider.GetMemcachedOptions()
-	_ = err
-	m.Options = memcachedOpts
-	m.buildParameters(template)
-	m.addObjectsIntoTemplate(template)
-}
-
-func (m *Memcached) GetObjects() ([]common.KubernetesObject, error) {
-	objects := m.buildObjects()
-	return objects, nil
-}
-
-func (m *Memcached) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := m.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (m *Memcached) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (m *Memcached) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		// 	- name: Memcached_USER
-		// 	displayName: Memcached User
-		// 	description: Username for Memcached user that will be used for accessing the database.
-		// 	value: "Memcached"
-		// 	required: true
-		// - name: Memcached_PASSWORD
-		// 	displayName: Memcached Password
-		// 	description: Password for the Memcached usem.
-		// 	generate: expression
-		// 	from: "[a-z0-9]{8}"
-		// 	required: true
-		// - name: Memcached_DATABASE
-		// 	displayName: Memcached Database Name
-		// 	description: Name of the Memcached database accessed.
-		// 	value: "system"
-		// 	required: true
-		// - name: Memcached_ROOT_PASSWORD
-		// 	displayName: Memcached Root password.
-		// 	description: Password for Root usem.
-		// 	generate: expression
-		// 	from: "[a-z0-9]{8}"
-		// 	required: true
-	}
-	template.Parameters = append(template.Parameters, parameters...)
-}
-
-func (m *Memcached) buildObjects() []common.KubernetesObject {
+func (m *Memcached) Objects() []common.KubernetesObject {
 	systemMemcachedDeploymentConfig := m.buildSystemMemcachedDeploymentConfig()
 
 	objects := []common.KubernetesObject{

@@ -2,6 +2,13 @@ package component
 
 import "fmt"
 
+type SystemPostgreSQLImageOptions struct {
+	appLabel             string
+	ampRelease           string
+	image                string
+	insecureImportPolicy bool
+}
+
 type SystemPostgreSQLImageOptionsBuilder struct {
 	options SystemPostgreSQLImageOptions
 }
