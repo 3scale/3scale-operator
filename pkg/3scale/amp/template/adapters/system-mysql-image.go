@@ -15,11 +15,8 @@ func NewSystemMysqlImageAdapter(options []string) Adapter {
 }
 
 func (a *SystemMysqlImageAdapter) Parameters() []templatev1.Parameter {
-	productVersion := product.CurrentProductVersion()
-	imageProvider, err := product.NewImageProvider(productVersion)
-	if err != nil {
-		panic(err)
-	}
+	imageProvider := product.CurrentImageProvider()
+
 	return []templatev1.Parameter{
 		{
 			Name:        "SYSTEM_DATABASE_IMAGE",

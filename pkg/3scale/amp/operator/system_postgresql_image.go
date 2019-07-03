@@ -9,14 +9,9 @@ import (
 
 func (o *OperatorSystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageOptions() (*component.SystemPostgreSQLImageOptions, error) {
 	optProv := component.SystemPostgreSQLImageOptionsBuilder{}
-	productVersion := product.CurrentProductVersion()
-	imageProvider, err := product.NewImageProvider(productVersion)
-	if err != nil {
-		return nil, err
-	}
-
+	imageProvider := product.CurrentImageProvider()
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	optProv.AmpRelease(string(productVersion))
+	optProv.AmpRelease(product.ThreescaleRelease)
 	if o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image != nil {
 		optProv.Image(*o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image)
 	} else {

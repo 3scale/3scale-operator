@@ -15,11 +15,8 @@ func NewImagesAdapter(options []string) Adapter {
 }
 
 func (i *ImagesAdapter) Parameters() []templatev1.Parameter {
-	productVersion := product.CurrentProductVersion()
-	imageProvider, err := product.NewImageProvider(productVersion)
-	if err != nil {
-		panic(err)
-	}
+	imageProvider := product.CurrentImageProvider()
+
 	return []templatev1.Parameter{
 		templatev1.Parameter{
 			Name:     "AMP_BACKEND_IMAGE",
