@@ -38,7 +38,7 @@ type ImageProvider interface {
 }
 
 func CurrentProductVersion() Version {
-	return ProductRelease_2_6
+	return ProductUpstream
 }
 
 func CurrentImageProvider() ImageProvider {
