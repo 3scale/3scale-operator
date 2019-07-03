@@ -9,14 +9,10 @@ import (
 
 func (o *OperatorSystemMySQLImageOptionsProvider) GetSystemMySQLImageOptions() (*component.SystemMySQLImageOptions, error) {
 	optProv := component.SystemMySQLImageOptionsBuilder{}
-	productVersion := product.CurrentProductVersion()
-	imageProvider, err := product.NewImageProvider(productVersion)
-	if err != nil {
-		return nil, err
-	}
+	imageProvider := product.CurrentImageProvider()
 
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	optProv.AmpRelease(string(productVersion))
+	optProv.AmpRelease(product.ThreescaleRelease)
 	if o.APIManagerSpec.System.DatabaseSpec.MySQL.Image != nil {
 		optProv.Image(*o.APIManagerSpec.System.DatabaseSpec.MySQL.Image)
 	} else {

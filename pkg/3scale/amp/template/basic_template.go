@@ -1,6 +1,7 @@
 package template
 
 import (
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	templatev1 "github.com/openshift/api/template/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -56,7 +57,7 @@ func buildTemplateParameters() []templatev1.Parameter {
 			Name:        "AMP_RELEASE",
 			Description: "AMP release tag.",
 			Required:    true,
-			Value:       "2.6.0",
+			Value:       product.ThreescaleRelease,
 		},
 		templatev1.Parameter{
 			Name:        "APP_LABEL",

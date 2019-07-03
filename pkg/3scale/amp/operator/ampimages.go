@@ -10,14 +10,10 @@ import (
 func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOptions, error) {
 	optProv := component.AmpImagesOptionsBuilder{}
 
-	productVersion := product.CurrentProductVersion()
-	imageProvider, err := product.NewImageProvider(productVersion)
-	if err != nil {
-		return nil, err
-	}
+	imageProvider := product.CurrentImageProvider()
 
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	optProv.AMPRelease(string(productVersion))
+	optProv.AMPRelease(product.ThreescaleRelease)
 	if o.APIManagerSpec.Apicast != nil && o.APIManagerSpec.Apicast.Image != nil {
 		optProv.ApicastImage(*o.APIManagerSpec.Apicast.Image)
 	} else {
