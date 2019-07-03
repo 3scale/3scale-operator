@@ -2,6 +2,24 @@ package component
 
 import "fmt"
 
+type BackendOptions struct {
+	// Non required Options
+	serviceEndpoint      *string
+	routeEndpoint        *string
+	storageURL           *string
+	queuesURL            *string
+	storageSentinelHosts *string
+	storageSentinelRole  *string
+	queuesSentinelHosts  *string
+	queuesSentinelRole   *string
+	// required Options
+	appLabel              string
+	systemBackendUsername string
+	systemBackendPassword string
+	tenantName            string
+	wildcardDomain        string
+}
+
 type BackendOptionsBuilder struct {
 	options BackendOptions
 }

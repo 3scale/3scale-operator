@@ -1,13 +1,9 @@
 package component
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,113 +11,14 @@ import (
 )
 
 type Apicast struct {
-	options []string
 	Options *ApicastOptions
 }
 
-type ApicastOptions struct {
-	requiredApicastOptions
+func NewApicast(options *ApicastOptions) *Apicast {
+	return &Apicast{Options: options}
 }
 
-type requiredApicastOptions struct {
-	appLabel       string
-	managementAPI  string
-	openSSLVerify  string
-	responseCodes  string
-	tenantName     string
-	wildcardDomain string
-}
-
-func NewApicast(options []string) *Apicast {
-	apicast := &Apicast{
-		options: options,
-	}
-	return apicast
-}
-
-type ApicastOptionsProvider interface {
-	GetApicastOptions() *ApicastOptions
-}
-type CLIApicastOptionsProvider struct {
-}
-
-func (o *CLIApicastOptionsProvider) GetApicastOptions() (*ApicastOptions, error) {
-	aob := ApicastOptionsBuilder{}
-	aob.AppLabel("${APP_LABEL}")
-	aob.ManagementAPI("${APICAST_MANAGEMENT_API}")
-	aob.OpenSSLVerify("${APICAST_OPENSSL_VERIFY}")
-	aob.ResponseCodes("${APICAST_RESPONSE_CODES}")
-	aob.TenantName("${TENANT_NAME}")
-	aob.WildcardDomain("${WILDCARD_DOMAIN}")
-	res, err := aob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create Apicast Options - %s", err)
-	}
-	return res, nil
-}
-
-func (apicast *Apicast) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLIApicastOptionsProvider{}
-	apicastOpts, err := optionsProvider.GetApicastOptions()
-	_ = err
-	apicast.Options = apicastOpts
-	apicast.buildParameters(template)
-	apicast.addObjectsIntoTemplate(template)
-}
-
-func (apicast *Apicast) GetObjects() ([]common.KubernetesObject, error) {
-	objects := apicast.buildObjects()
-	return objects, nil
-}
-
-func (apicast *Apicast) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := apicast.buildObjects()
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(objects)...)
-}
-
-func (apicast *Apicast) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (apicast *Apicast) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "APICAST_ACCESS_TOKEN",
-			Description: "Read Only Access Token that is APIcast going to use to download its configuration.",
-			Generate:    "expression",
-			From:        "[a-z0-9]{8}",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "APICAST_MANAGEMENT_API",
-			Description: "Scope of the APIcast Management API. Can be disabled, status or debug. At least status required for health checks.",
-			Value:       "status",
-			Required:    false,
-		},
-		templatev1.Parameter{
-			Name:        "APICAST_OPENSSL_VERIFY",
-			Description: "Turn on/off the OpenSSL peer verification when downloading the configuration. Can be set to true/false.",
-			Value:       "false",
-			Required:    false,
-		},
-		templatev1.Parameter{
-			Name:        "APICAST_RESPONSE_CODES",
-			Description: "Enable logging response codes in APIcast.",
-			Value:       "true",
-			Required:    false,
-		},
-		templatev1.Parameter{
-			Name:        "APICAST_REGISTRY_URL",
-			Description: "The URL to point to APIcast policies registry management",
-			Value:       "http://apicast-staging:8090/policies",
-			Required:    true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
-}
-
-func (apicast *Apicast) buildObjects() []common.KubernetesObject {
+func (apicast *Apicast) Objects() []common.KubernetesObject {
 	apicastStagingDeploymentConfig := apicast.buildApicastStagingDeploymentConfig()
 	apicastProductionDeploymentConfig := apicast.buildApicastProductionDeploymentConfig()
 	apicastStagingService := apicast.buildApicastStagingService()
