@@ -1,7 +1,7 @@
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 .DEFAULT_GOAL := help
-.PHONY: build e2e test-crds verify-manifest
+.PHONY: build e2e test-crds verify-manifest licenses-check
 UNAME := $(shell uname)
 
 ifeq (${UNAME}, Linux)
@@ -11,6 +11,8 @@ else ifeq (${UNAME}, Darwin)
 endif
 
 OPERATORCOURIER := $(shell command -v operator-courier 2> /dev/null)
+LICENSEFINDERBINARY := $(shell command -v license_finder 2> /dev/null)
+DEPENDENCY_DECISION_FILE = $(PROJECT_PATH)/doc/dependency_decisions.yml
 
 help: Makefile
 	@sed -n 's/^##//p' $<
@@ -63,11 +65,28 @@ e2e-clean:
 ## e2e: e2e-clean e2e-setup e2e-run
 e2e: e2e-clean e2e-setup e2e-run
 
+## test-crds: Run CRD unittests
 test-crds:
 	cd $(PROJECT_PATH)/test/crds && go test -v
 
+## verify-manifest: Test manifests have expected format
 verify-manifest:
 ifndef OPERATORCOURIER
 	$(error "operator-courier is not available please install pip3 install operator-courier")
 endif
 	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier verify --ui_validate_io 3scale-operator/
+
+## licenses.xml: Generate licenses.xml file
+licenses.xml:
+ifndef LICENSEFINDERBINARY
+	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
+endif
+	license_finder report --decisions-file=$(DEPENDENCY_DECISION_FILE) --quiet --format=xml > licenses.xml
+
+## licenses-check: Check license compliance of dependencies
+licenses-check:
+ifndef LICENSEFINDERBINARY
+	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
+endif
+	@echo "Checking license compliance"
+	license_finder --decisions-file=$(DEPENDENCY_DECISION_FILE)
