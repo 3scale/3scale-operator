@@ -185,6 +185,40 @@ pkg/3scale/amp/auto-generated-templates
 If you want to use supported and stable templates you should go to the
 [official repository for them](https://github.com/3scale/3scale-amp-openshift-templates)
 
+## Licenses
+
+It is a requirement that we include a file describing all the licenses used in the product, so that users can examine it.
+
+Run `make licenses-check` to check licenses when dependencies change.
+
+Run `make licenses.xml` to update licenses file.
+
+When licenses check does not parse correctly licensing information, it will complain. In that case, you can either specify dependency license (recommended) or add exception for that dependency.
+
+Adding license information for a dependency:
+
+```
+license_finder dependencies add YOURLIBRARY --decisions-file=doc/dependency_decisions.yml LICENSE --project-path "PROJECT URL"
+```
+
+For instance
+
+```
+license_finder dependencies add k8s.io/klog --decisions-file=doc/dependency_decisions.yml "Apache 2.0" --project-path "https://github.com/kubernetes/klog"
+```
+
+Adding exception, i.e. manual approval, to a specific dependency:
+
+```
+license_finder approval add YOURLIBRARY --decisions-file=doc/dependency_decisions.yml --why "LICENSE_TYPE LINK_TO_LICENSE"
+```
+
+For instance
+
+```
+license_finder approval add github.com/golang/glog --decisions-file=doc/dependency_decisions.yml --why "Apache 2.0 License https://github.com/golang/glog/blob/master/LICENSE"
+```
+
 ## Documentation
 
 * [User guide](doc/user-guide.md)
