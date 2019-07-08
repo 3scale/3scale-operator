@@ -235,6 +235,11 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		return result, err
 	}
 
+	result, err = r.reconcileBackendLogic(cr)
+	if err != nil || result.Requeue {
+		return result, err
+	}
+
 	// TODO reconcile more components
 
 	return reconcile.Result{}, nil
@@ -243,6 +248,12 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 func (r *ReconcileAPIManager) reconcileAMPImagesLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
 	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
 	reconciler := operator.NewAMPImagesReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
+	return reconciler.Reconcile()
+}
+
+func (r *ReconcileAPIManager) reconcileBackendLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
+	reconciler := operator.NewBackendReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
 	return reconciler.Reconcile()
 }
 
