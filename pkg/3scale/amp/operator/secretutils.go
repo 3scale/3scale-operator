@@ -39,6 +39,22 @@ func getSecretDataValue(secretData map[string][]byte, fieldName string) *string 
 	}
 }
 
+func getSecretDataFromStringData(secretStringData map[string]string) map[string][]byte {
+	result := map[string][]byte{}
+	for k, v := range secretStringData {
+		result[k] = []byte(v)
+	}
+	return result
+}
+
+func getSecretStringDataFromData(secretData map[string][]byte) map[string]string {
+	result := map[string]string{}
+	for k, v := range secretData {
+		result[k] = string(v)
+	}
+	return result
+}
+
 // Returns a new map containing the contents of `from` and the
 // contents of `to`. The value for entries with duplicated keys
 // will be that of `from`
