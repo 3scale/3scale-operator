@@ -354,6 +354,14 @@ jobs:
       - run: make vendor
       - run: make test-crds
 
+  license-check:
+    docker:
+      - image: circleci/ruby:2.5
+    steps:
+      - checkout
+      - run: sudo gem install license_finder --version 5.7.1
+      - run: make licenses-check
+
   verify-manifest:
     docker:
       - image: circleci/python:3.6.4
@@ -366,6 +374,7 @@ workflows:
   version: 2
   operator:
     jobs:
+      - license-check
       - test-crds
       - verify-manifest
       - build-deploy-operator:
