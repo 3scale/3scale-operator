@@ -8,8 +8,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	appsv1 "github.com/openshift/api/apps/v1"
 
-	"github.com/go-logr/logr"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -59,7 +57,12 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ReconcileAPIManager{client: mgr.GetClient(), apiClientReader: apiClientReader, scheme: mgr.GetScheme(), reqLogger: log}, nil
+
+	BaseReconciler := operator.NewBaseReconciler(mgr.GetClient(), apiClientReader, mgr.GetScheme(), log)
+	return &ReconcileAPIManager{
+		BaseControllerReconciler: operator.NewBaseControllerReconciler(BaseReconciler),
+	}, nil
+
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -94,12 +97,7 @@ var _ reconcile.Reconciler = &ReconcileAPIManager{}
 
 // ReconcileAPIManager reconciles a APIManager object
 type ReconcileAPIManager struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
-	client          client.Client
-	scheme          *runtime.Scheme
-	reqLogger       logr.Logger
-	apiClientReader client.Reader
+	operator.BaseControllerReconciler
 }
 
 // Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
@@ -110,49 +108,49 @@ type ReconcileAPIManager struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	r.reqLogger = log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	r.reqLogger.Info("Reconciling APIManager")
+	r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	r.Logger().Info("Reconciling APIManager")
 
 	// Fetch the APIManager instance
 	instance := &appsv1alpha1.APIManager{}
 
-	r.reqLogger.Info("Trying to get APIManager resource")
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	r.Logger().Info("Trying to get APIManager resource")
+	err := r.Client().Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			r.reqLogger.Info("APIManager Resource not found. Ignoring since object must have been deleted")
+			r.Logger().Info("APIManager Resource not found. Ignoring since object must have been deleted")
 			return reconcile.Result{}, nil
 		}
-		r.reqLogger.Error(err, "APIManager Resource cannot be retrieved. Requeuing request...")
+		r.Logger().Error(err, "APIManager Resource cannot be retrieved. Requeuing request...")
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	r.reqLogger.Info("Successfully retreived APIManager resource")
+	r.Logger().Info("Successfully retreived APIManager resource")
 
-	r.reqLogger.Info("Setting defaults for APIManager resource")
+	r.Logger().Info("Setting defaults for APIManager resource")
 	changed, err := instance.SetDefaults() // TODO check where to put this
 	if err != nil {
 		// Error setting defaults - Stop reconciliation
-		r.reqLogger.Error(err, "Error setting defaults. Requeuing request...")
+		r.Logger().Error(err, "Error setting defaults. Requeuing request...")
 		return reconcile.Result{}, err
 	}
 	if changed {
-		r.reqLogger.Info("Updating defaults for APIManager resource")
-		err = r.client.Update(context.TODO(), instance)
+		r.Logger().Info("Updating defaults for APIManager resource")
+		err = r.Client().Update(context.TODO(), instance)
 		if err != nil {
-			r.reqLogger.Error(err, "APIManager Resource cannot be updated. Requeuing request...")
+			r.Logger().Error(err, "APIManager Resource cannot be updated. Requeuing request...")
 			return reconcile.Result{}, err
 		}
-		r.reqLogger.Info("Successfully updated defaults for APIManager resource")
+		r.Logger().Info("Successfully updated defaults for APIManager resource")
 		return reconcile.Result{}, nil
 	}
 
 	objs, err := r.apiManagerObjects(instance)
 	if err != nil {
-		r.reqLogger.Error(err, "Error creating APIManager objects. Requeuing request...")
+		r.Logger().Error(err, "Error creating APIManager objects. Requeuing request...")
 		return reconcile.Result{}, err
 	}
 
@@ -160,9 +158,9 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	for idx := range objs {
 		obj := objs[idx]
 		obj.SetNamespace(instance.Namespace)
-		err = controllerutil.SetControllerReference(instance, obj, r.scheme)
+		err = controllerutil.SetControllerReference(instance, obj, r.Scheme())
 		if err != nil {
-			r.reqLogger.Error(err, "Error setting OwnerReference on object. Requeuing request...",
+			r.Logger().Error(err, "Error setting OwnerReference on object. Requeuing request...",
 				"Kind", obj.GetObjectKind(),
 				"Namespace", obj.GetNamespace(),
 				"Name", obj.GetName(),
@@ -178,30 +176,30 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 
 		newobj := reflect.New(reflect.TypeOf(obj).Elem()).Interface()
 		found := newobj.(runtime.Object)
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, found)
+		err = r.Client().Get(context.TODO(), types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, found)
 		if err != nil {
 			if errors.IsNotFound(err) {
-				// TODO for some reason r.client.Create modifies the original object and removes the TypeMeta. Figure why is this???
-				createErr := r.client.Create(context.TODO(), obj)
+				// TODO for some reason r.Client().Create modifies the original object and removes the TypeMeta. Figure why is this???
+				createErr := r.Client().Create(context.TODO(), obj)
 				if createErr != nil {
-					r.reqLogger.Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
+					r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 					return reconcile.Result{}, createErr
 				}
-				r.reqLogger.Info(fmt.Sprintf("Created object %s", objectInfo))
+				r.Logger().Info(fmt.Sprintf("Created object %s", objectInfo))
 			} else {
-				r.reqLogger.Error(err, fmt.Sprintf("Failed to get %s.  Requeuing request...", objectInfo))
+				r.Logger().Error(err, fmt.Sprintf("Failed to get %s.  Requeuing request...", objectInfo))
 				return reconcile.Result{}, err
 			}
 		} else {
-			r.reqLogger.Info(fmt.Sprintf("Object %s already exists", objectInfo))
+			r.Logger().Info(fmt.Sprintf("Object %s already exists", objectInfo))
 			if secret, ok := obj.(*v1.Secret); ok {
-				r.reqLogger.Info(fmt.Sprintf("Object %s is a secret. Reconciling it...", objectInfo))
+				r.Logger().Info(fmt.Sprintf("Object %s is a secret. Reconciling it...", objectInfo))
 				// We get copy to avoid modifying possibly obtained object
 				// from the cache
 				foundSecret := found.(*v1.Secret)
 				r.reconcileSecret(secret, foundSecret, instance)
 				if err != nil {
-					r.reqLogger.Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
+					r.Logger().Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
 					return reconcile.Result{}, err
 				}
 			}
@@ -210,11 +208,11 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 
 	err = r.setDeploymentStatus(instance)
 	if err != nil {
-		r.reqLogger.Error(err, "Failed to set deployment status")
+		r.Logger().Error(err, "Failed to set deployment status")
 		return reconcile.Result{}, err
 	}
 
-	r.reqLogger.Info("Finished Current reconcile request successfully. Skipping requeue of the request")
+	r.Logger().Info("Finished Current reconcile request successfully. Skipping requeue of the request")
 	return reconcile.Result{}, nil
 }
 
@@ -229,20 +227,20 @@ func (r *ReconcileAPIManager) reconcileSecret(desired, current *v1.Secret, cr *a
 	// data
 	desiredCopy.Data = secretStringDataToData(desiredCopy.StringData)
 	if secretsEqual(currentCopy, desiredCopy) {
-		r.reqLogger.Info(fmt.Sprintf("Secret %s is already reconciled. Update skipped", currentCopy.Name))
+		r.Logger().Info(fmt.Sprintf("Secret %s is already reconciled. Update skipped", currentCopy.Name))
 		return nil
 	}
 	currentCopy.StringData = desiredCopy.StringData
 	currentCopy.Annotations = desiredCopy.Annotations
 	currentCopy.Labels = desiredCopy.Labels
 	currentCopy.Finalizers = desiredCopy.Finalizers
-	err := controllerutil.SetControllerReference(cr, currentCopy, r.scheme)
+	err := controllerutil.SetControllerReference(cr, currentCopy, r.Scheme())
 	if err != nil {
 		return err
 	}
 
-	r.reqLogger.Info(fmt.Sprintf("Secret %s is not equal to the expected secret. Updating ...", currentCopy.Name))
-	if err = r.client.Update(context.TODO(), currentCopy); err != nil {
+	r.Logger().Info(fmt.Sprintf("Secret %s is not equal to the expected secret. Updating ...", currentCopy.Name))
+	if err = r.Client().Update(context.TODO(), currentCopy); err != nil {
 		return err
 	}
 	return nil
@@ -331,7 +329,7 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 	}
 
 	if cr.Spec.System.FileStorageSpec.S3 != nil {
-		optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+		optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 		opts, err := optsProvider.GetS3Options()
 		if err != nil {
 			return nil, err
@@ -345,7 +343,7 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 	}
 
 	if cr.Spec.HighAvailability != nil && cr.Spec.HighAvailability.Enabled {
-		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 		opts, err := optsProvider.GetHighAvailabilityOptions()
 		if err != nil {
 			return nil, err
@@ -384,7 +382,7 @@ func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]common
 }
 
 func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 	opts, err := optsProvider.GetBackendOptions()
 	if err != nil {
 		return nil, err
@@ -412,7 +410,7 @@ func (r *ReconcileAPIManager) createSystemDatabase(cr *appsv1alpha1.APIManager) 
 }
 
 func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 	opts, err := optsProvider.GetMysqlOptions()
 	if err != nil {
 		return nil, err
@@ -434,7 +432,7 @@ func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]
 }
 
 func (r *ReconcileAPIManager) createSystemPostgreSQL(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorSystemPostgreSQLOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	optsProvider := operator.OperatorSystemPostgreSQLOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 	opts, err := optsProvider.GetSystemPostgreSQLOptions()
 	if err != nil {
 		return nil, err
@@ -442,7 +440,7 @@ func (r *ReconcileAPIManager) createSystemPostgreSQL(cr *appsv1alpha1.APIManager
 	p := component.NewSystemPostgreSQL(opts)
 	result := p.Objects()
 
-	imageOptsProvider := operator.OperatorSystemPostgreSQLImageOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	imageOptsProvider := operator.OperatorSystemPostgreSQLImageOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 	imageOpts, err := imageOptsProvider.GetSystemPostgreSQLImageOptions()
 	if err != nil {
 		return nil, err
@@ -465,7 +463,7 @@ func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]co
 }
 
 func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 	opts, err := optsProvider.GetSystemOptions()
 	if err != nil {
 		return nil, err
@@ -476,7 +474,7 @@ func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]commo
 }
 
 func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 	opts, err := optsProvider.GetZyncOptions()
 	if err != nil {
 		return nil, err
@@ -487,7 +485,7 @@ func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]common.
 }
 
 func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {
 		return nil, err
@@ -498,7 +496,7 @@ func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]comm
 }
 
 func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.client}
+	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
 	opts, err := optsProvider.GetS3Options()
 	if err != nil {
 		return nil, err
@@ -510,9 +508,9 @@ func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]common.Ku
 func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {
 	listOps := &client.ListOptions{Namespace: instance.Namespace}
 	dcList := &appsv1.DeploymentConfigList{}
-	err := r.client.List(context.TODO(), listOps, dcList)
+	err := r.Client().List(context.TODO(), listOps, dcList)
 	if err != nil {
-		r.reqLogger.Error(err, "Failed to list deployment configs")
+		r.Logger().Error(err, "Failed to list deployment configs")
 		return err
 	}
 	var dcs []appsv1.DeploymentConfig
@@ -527,11 +525,11 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 
 	deploymentStatus := olm.GetDeploymentConfigStatus(dcs)
 	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {
-		r.reqLogger.Info("Deployment status will be updated")
+		r.Logger().Info("Deployment status will be updated")
 		instance.Status.Deployments = deploymentStatus
-		err = r.client.Status().Update(context.TODO(), instance)
+		err = r.Client().Status().Update(context.TODO(), instance)
 		if err != nil {
-			r.reqLogger.Error(err, "Failed to update API Manager deployment status")
+			r.Logger().Error(err, "Failed to update API Manager deployment status")
 			return err
 		}
 	}
