@@ -135,23 +135,31 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 	r.Logger().Info("Defaults for APIManager already set")
 
-	objs, err := r.apiManagerObjects(instance)
-	if err != nil {
-		r.Logger().Error(err, "Error creating APIManager objects. Requeuing request...")
-		return reconcile.Result{}, err
-	}
+	// objs, err := r.apiManagerObjects(instance)
+	// if err != nil {
+	// 	r.Logger().Error(err, "Error creating APIManager objects. Requeuing request...")
+	// 	return reconcile.Result{}, err
+	// }
+	//
+	// err = r.setAPIManagerObjectsOwnerReferences(instance, objs)
+	// if err != nil {
+	// 	r.Logger().Error(err, "Requeuing request...")
+	// 	return reconcile.Result{}, err
+	// }
 
-	err = r.setAPIManagerObjectsOwnerReferences(instance, objs)
-	if err != nil {
+	r.Logger().Info("Reconciling APIManager logic")
+	result, err := r.reconcileAPIManagerLogic(instance)
+	if err != nil || result.Requeue {
 		r.Logger().Error(err, "Requeuing request...")
-		return reconcile.Result{}, err
+		return result, err
 	}
+	r.Logger().Info("APIManager logic reconciled")
 
-	err = r.reconcileAPIManagerObjects(instance, objs)
-	if err != nil {
-		r.Logger().Error(err, "Requeuing request...")
-		return reconcile.Result{}, err
-	}
+	// err = r.reconcileAPIManagerObjects(instance, objs)
+	// if err != nil {
+	// 	r.Logger().Error(err, "Requeuing request...")
+	// 	return reconcile.Result{}, err
+	// }
 
 	err = r.reconcileAPIManagerStatus(instance)
 	if err != nil {
@@ -219,6 +227,12 @@ func (r *ReconcileAPIManager) setAPIManagerObjectsOwnerReferences(cr *appsv1alph
 		}
 	}
 	return nil
+}
+
+func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	// TODO reconcile more components
+
+	return reconcile.Result{}, nil
 }
 
 func (r *ReconcileAPIManager) reconcileAPIManagerObjects(cr *appsv1alpha1.APIManager, objs []common.KubernetesObject) error {
