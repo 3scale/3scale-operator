@@ -230,9 +230,20 @@ func (r *ReconcileAPIManager) setAPIManagerObjectsOwnerReferences(cr *appsv1alph
 }
 
 func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	result, err := r.reconcileAMPImagesLogic(cr)
+	if err != nil || result.Requeue {
+		return result, err
+	}
+
 	// TODO reconcile more components
 
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileAPIManager) reconcileAMPImagesLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
+	reconciler := operator.NewAMPImagesReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
+	return reconciler.Reconcile()
 }
 
 func (r *ReconcileAPIManager) reconcileAPIManagerObjects(cr *appsv1alpha1.APIManager, objs []common.KubernetesObject) error {
