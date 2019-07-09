@@ -3505,6 +3505,7 @@ objects:
     - routes/custom-host
     verbs:
     - create
+    - update
 - apiVersion: v1
   imagePullSecrets:
   - name: threescale-registry-auth
