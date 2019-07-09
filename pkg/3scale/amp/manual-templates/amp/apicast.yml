@@ -123,7 +123,7 @@ parameters:
   value: "2.6.0"
   required: true
 - name: AMP_APICAST_IMAGE
-  value: "quay.io/3scale/amp:apicast-master"
+  value: "quay.io/3scale/3scale26:apicast-3scale-2.6.0-ER1"
   required: true
 - description: "Name of the secret containing the THREESCALE_PORTAL_ENDPOINT with the access-token or provider key"
   value: apicast-configuration-url-secret
