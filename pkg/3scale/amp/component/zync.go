@@ -180,6 +180,7 @@ func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
 				},
 				Verbs: []string{
 					"create",
+					"update",
 				},
 			},
 		},
