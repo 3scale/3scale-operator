@@ -32,8 +32,6 @@ objects:
           prometheus.io/scrape: 'true'
           prometheus.io/port: '9421'
       spec:
-        imagePullSecrets: # PRD: remove
-          - name: quay-auth
         containers:
         - env:
           - name: THREESCALE_PORTAL_ENDPOINT
