@@ -34,7 +34,7 @@ objects:
     source:
       git:
         uri: https://github.com/3scale/zync.git
-        ref: "${GIT_REF}"
+        ref: "${ZYNC_GIT_REF}"
       type: Git
     strategy:
       dockerStrategy:
@@ -57,7 +57,7 @@ objects:
     source:
       git:
         uri: "https://github.com/3scale/porta.git"
-        ref: "${GIT_REF}"
+        ref: "${PORTA_GIT_REF}"
       type: "Git"
     strategy:
       type: Docker
@@ -82,7 +82,7 @@ objects:
       contextDir: gateway
       git:
         uri: https://github.com/3scale/apicast.git
-        ref: "${GIT_REF}"
+        ref: "${APICAST_GIT_REF}"
       type: Git
     strategy:
       sourceStrategy:
@@ -130,7 +130,7 @@ objects:
       source:
           git:
               uri: "https://github.com/3scale/apisonator.git"
-              ref: "${GIT_REF}"
+              ref: "${APISONATOR_GIT_REF}"
           type: Git
       strategy:
           type: Docker
@@ -141,7 +141,19 @@ objects:
         - type: ConfigChange
 
 parameters:
-- name: GIT_REF
-  description: "Git Reference to use. Can be a tag or branch."
+- name: ZYNC_GIT_REF
+  description: "Zync git reference to use. Can be a tag or branch."
+  value: "master"
+  required: true
+- name: PORTA_GIT_REF
+  description: "Porta git reference to use. Can be a tag or branch."
+  value: "master"
+  required: true
+- name: APICAST_GIT_REF
+  description: "Apicast git reference to use. Can be a tag or branch."
+  value: "master"
+  required: true
+- name: APISONATOR_GIT_REF
+  description: "Apisonator git reference to use. Can be a tag or branch."
   value: "master"
   required: true
