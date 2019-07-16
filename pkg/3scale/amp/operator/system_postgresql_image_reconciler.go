@@ -1,0 +1,56 @@
+package operator
+
+import (
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	imagev1 "github.com/openshift/api/image/v1"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+)
+
+type SystemPostgreSQLImageReconciler struct {
+	BaseAPIManagerLogicReconciler
+}
+
+// blank assignment to verify that BaseReconciler implements reconcile.Reconciler
+var _ LogicReconciler = &SystemPostgreSQLImageReconciler{}
+
+func NewSystemPostgreSQLImageReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) SystemPostgreSQLImageReconciler {
+	return SystemPostgreSQLImageReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+	}
+}
+
+func (r *SystemPostgreSQLImageReconciler) Reconcile() (reconcile.Result, error) {
+	systemPostgreSQLImage, err := r.systemPostgreSQLImage()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	r.reconcileSystemPostgreSQLImageStream(systemPostgreSQLImage.ImageStream())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (r *SystemPostgreSQLImageReconciler) systemPostgreSQLImage() (*component.SystemPostgreSQLImage, error) {
+	optsProvider := OperatorSystemPostgreSQLImageOptionsProvider{APIManagerSpec: &r.apiManager.Spec}
+	opts, err := optsProvider.GetSystemPostgreSQLImageOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewSystemPostgreSQLImage(opts), nil
+}
+
+func (r *SystemPostgreSQLImageReconciler) reconcileImageStream(desiredImageStream *imagev1.ImageStream) error {
+	err := r.InitializeAsAPIManagerObject(desiredImageStream)
+	if err != nil {
+		return err
+	}
+
+	return r.imagestreamReconciler.Reconcile(desiredImageStream)
+}
+
+func (r *SystemPostgreSQLImageReconciler) reconcileSystemPostgreSQLImageStream(desiredImageStream *imagev1.ImageStream) error {
+	return r.reconcileImageStream(desiredImageStream)
+}
