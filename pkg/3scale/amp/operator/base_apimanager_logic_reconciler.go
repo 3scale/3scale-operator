@@ -11,16 +11,48 @@ import (
 
 type BaseAPIManagerLogicReconciler struct {
 	BaseLogicReconciler
-	apiManager *appsv1alpha1.APIManager
+	apiManager                      *appsv1alpha1.APIManager
+	deploymentConfigReconciler      DeploymentConfigReconciler
+	imagestreamReconciler           ImageStreamReconciler
+	serviceAccountReconciler        ServiceAccountReconciler
+	secretReconciler                SecretReconciler
+	serviceReconciler               ServiceReconciler
+	configMapReconciler             ConfigMapReconciler
+	routeReconciler                 RouteReconciler
+	persistentVolumeClaimReconciler PersistentVolumeClaimReconciler
+	roleReconciler                  RoleReconciler
+	roleBindingReconciler           RoleBindingReconciler
 }
 
 // blank assignment to verify that BaseReconciler implements reconcile.Reconciler
 var _ LogicReconciler = &BaseAPIManagerLogicReconciler{}
 
 func NewBaseAPIManagerLogicReconciler(b BaseLogicReconciler, apiManager *appsv1alpha1.APIManager) BaseAPIManagerLogicReconciler {
+	objectMetaMerger := NewObjectMetaMerger(b.BaseReconciler, apiManager)
+	deploymentConfigReconciler := NewDeploymentConfigReconciler(b.BaseReconciler, objectMetaMerger)
+	imageStreamReconciler := NewImageStreamReconciler(b.BaseReconciler, objectMetaMerger)
+	serviceAccountReconciler := NewServiceAccountReconciler(b.BaseReconciler, objectMetaMerger)
+	secretReconciler := NewSecretReconciler(b.BaseReconciler, objectMetaMerger)
+	serviceReconciler := NewServiceReconciler(b.BaseReconciler, objectMetaMerger)
+	configMapReconciler := NewConfigMapReconciler(b.BaseReconciler, objectMetaMerger)
+	routeReconciler := NewRouteReconciler(b.BaseReconciler, objectMetaMerger)
+	persistentVolumeClaimReconciler := NewPersistentVolumeClaimReconciler(b.BaseReconciler, objectMetaMerger)
+	roleReconciler := NewRoleReconciler(b.BaseReconciler, objectMetaMerger)
+	roleBindingReconciler := NewRoleBindingReconciler(b.BaseReconciler, objectMetaMerger)
+
 	return BaseAPIManagerLogicReconciler{
-		BaseLogicReconciler: b,
-		apiManager:          apiManager,
+		BaseLogicReconciler:             b,
+		apiManager:                      apiManager,
+		deploymentConfigReconciler:      deploymentConfigReconciler,
+		imagestreamReconciler:           imageStreamReconciler,
+		serviceAccountReconciler:        serviceAccountReconciler,
+		secretReconciler:                secretReconciler,
+		serviceReconciler:               serviceReconciler,
+		configMapReconciler:             configMapReconciler,
+		routeReconciler:                 routeReconciler,
+		persistentVolumeClaimReconciler: persistentVolumeClaimReconciler,
+		roleReconciler:                  roleReconciler,
+		roleBindingReconciler:           roleBindingReconciler,
 	}
 }
 
