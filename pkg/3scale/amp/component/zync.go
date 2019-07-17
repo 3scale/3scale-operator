@@ -330,7 +330,8 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 			Name: "POD_NAME",
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{
-					FieldPath: "metadata.name",
+					FieldPath:  "metadata.name",
+					APIVersion: "v1",
 				},
 			},
 		},
@@ -338,7 +339,8 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 			Name: "POD_NAMESPACE",
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{
-					FieldPath: "metadata.namespace",
+					FieldPath:  "metadata.namespace",
+					APIVersion: "v1",
 				},
 			},
 		},
