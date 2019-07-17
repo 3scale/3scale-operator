@@ -192,14 +192,14 @@ commands:
 
       - restore_cache:
           keys:
-            - v1-gopkg-cache-{{ arch }}-{{ checksum "go.sum" }}
-            - v1-gopkg-cache-{{ arch }}-{{ .Branch }}
+            - v2-gopkg-cache-{{ arch }}-{{ checksum "go.sum" }}
+            - v2-gopkg-cache-{{ arch }}-{{ .Branch }}
 
       - install-operator-sdk
       - install-operator-dependencies
 
       - save_cache:
-          key: v1-gopkg-cache-{{ arch }}-{{ checksum "go.sum" }}
+          key: v2-gopkg-cache-{{ arch }}-{{ checksum "go.sum" }}
           paths:
             - "/go/src/github.com/3scale/3scale-operator/vendor"
             - "/go/pkg"
