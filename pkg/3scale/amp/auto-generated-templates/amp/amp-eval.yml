@@ -3493,6 +3493,7 @@ objects:
     - create
     - delete
     - patch
+    - update
   - apiGroups:
     - route.openshift.io
     resources:

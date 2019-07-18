@@ -162,6 +162,7 @@ func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
 					"create",
 					"delete",
 					"patch",
+					"update",
 				},
 			},
 			rbacv1.PolicyRule{
