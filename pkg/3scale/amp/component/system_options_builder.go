@@ -7,6 +7,18 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+type S3FileStorageOptions struct {
+	AWSAccessKeyId       string
+	AWSSecretAccessKey   string
+	AWSRegion            string
+	AWSBucket            string
+	AWSCredentialsSecret string
+}
+
+type PVCFileStorageOptions struct {
+	StorageClass *string
+}
+
 type SystemOptions struct {
 	// systemNonRequiredOptions
 	memcachedServers                       *string
@@ -28,6 +40,9 @@ type SystemOptions struct {
 	appDeveloperContainerResourceRequirements *v1.ResourceRequirements
 	sidekiqContainerResourceRequirements      *v1.ResourceRequirements
 	sphinxContainerResourceRequirements       *v1.ResourceRequirements
+
+	s3FileStorageOptions  *S3FileStorageOptions
+	pvcFileStorageOptions *PVCFileStorageOptions
 
 	// systemRequiredOptions
 	adminAccessToken    string
@@ -198,6 +213,14 @@ func (s *SystemOptionsBuilder) SphinxContainerResourceRequirements(resourceRequi
 	s.options.sphinxContainerResourceRequirements = &resourceRequirements
 }
 
+func (s *SystemOptionsBuilder) S3FileStorageOptions(options S3FileStorageOptions) {
+	s.options.s3FileStorageOptions = &options
+}
+
+func (s *SystemOptionsBuilder) PVCFileStorageOptions(options PVCFileStorageOptions) {
+	s.options.pvcFileStorageOptions = &options
+}
+
 func (s *SystemOptionsBuilder) Build() (*SystemOptions, error) {
 	err := s.setRequiredOptions()
 	if err != nil {
@@ -254,6 +277,10 @@ func (s *SystemOptionsBuilder) setRequiredOptions() error {
 	}
 	if s.options.wildcardDomain == "" {
 		return fmt.Errorf("no wildcard domain has been provided")
+	}
+
+	if s.options.s3FileStorageOptions == nil && s.options.pvcFileStorageOptions == nil {
+		s.options.pvcFileStorageOptions = &PVCFileStorageOptions{}
 	}
 
 	return nil

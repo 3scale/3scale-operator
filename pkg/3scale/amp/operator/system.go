@@ -31,6 +31,7 @@ func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOpt
 	}
 
 	o.setResourceRequirementsOptions(&optProv)
+	o.setFileStorageOptions(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -73,6 +74,13 @@ func (o *OperatorSystemOptionsProvider) setSecretBasedOptions(builder *component
 	err = o.setSystemMasterApicastOptions(builder)
 	if err != nil {
 		return fmt.Errorf("unable to create System Master Apicast secret options - %s", err)
+	}
+
+	if o.APIManagerSpec.System.FileStorageSpec != nil && o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
+		err = o.setAWSSecretOptions(builder)
+		if err != nil {
+			return fmt.Errorf("unable to create AWS S3 secret options - %s", err)
+		}
 	}
 
 	return nil
@@ -289,4 +297,56 @@ func (o *OperatorSystemOptionsProvider) setResourceRequirementsOptions(b *compon
 		b.SidekiqContainerResourceRequirements(v1.ResourceRequirements{})
 		b.SphinxContainerResourceRequirements(v1.ResourceRequirements{})
 	}
+}
+
+func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.SystemOptionsBuilder) {
+	s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
+	if s3FileStorageSpec != nil {
+		b.S3FileStorageOptions(component.S3FileStorageOptions{
+			AWSAccessKeyId:       "",
+			AWSSecretAccessKey:   "",
+			AWSRegion:            s3FileStorageSpec.AWSRegion,
+			AWSBucket:            s3FileStorageSpec.AWSBucket,
+			AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
+		})
+	} else { // PVC by default
+		b.PVCFileStorageOptions(component.PVCFileStorageOptions{
+			StorageClass: o.APIManagerSpec.System.FileStorageSpec.PVC.StorageClassName,
+		})
+	}
+}
+
+func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.SystemOptionsBuilder) error {
+	awsCredentialsSecretName := o.APIManagerSpec.System.FileStorageSpec.S3.AWSCredentials.Name
+	currSecret, err := getSecret(awsCredentialsSecretName, o.Namespace, o.Client)
+	if err != nil {
+		return err
+	}
+
+	// If a field of a secret already exists in the deployed secret then
+	// We do not modify it. Otherwise we set a default value
+	secretData := currSecret.Data
+	var result *string
+	result = getSecretDataValue(secretData, component.S3SecretAWSAccessKeyIdFieldName)
+	if result == nil {
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSAccessKeyIdFieldName, awsCredentialsSecretName)
+	}
+	awsAccessKeyID := *result
+
+	result = getSecretDataValue(secretData, component.S3SecretAWSSecretAccessKeyFieldName)
+	if result == nil {
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSSecretAccessKeyFieldName, awsCredentialsSecretName)
+	}
+	awsSecretAccessKeyID := *result
+
+	s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
+	sob.S3FileStorageOptions(component.S3FileStorageOptions{
+		AWSAccessKeyId:       awsAccessKeyID,
+		AWSSecretAccessKey:   awsSecretAccessKeyID,
+		AWSRegion:            s3FileStorageSpec.AWSRegion,
+		AWSBucket:            s3FileStorageSpec.AWSBucket,
+		AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
+	})
+
+	return nil
 }
