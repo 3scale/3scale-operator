@@ -26,27 +26,27 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileStagingDeploymentConfig(apicast.StagingDeploymentConfig())
+	err = r.reconcileStagingDeploymentConfig(apicast.StagingDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileProductionDeploymentConfig(apicast.ProductionDeploymentConfig())
+	err = r.reconcileProductionDeploymentConfig(apicast.ProductionDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileStagingService(apicast.StagingService())
+	err = r.reconcileStagingService(apicast.StagingService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileProductionService(apicast.ProductionService())
+	err = r.reconcileProductionService(apicast.ProductionService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileEnvironmentConfigMap(apicast.EnvironmentConfigMap())
+	err = r.reconcileEnvironmentConfigMap(apicast.EnvironmentConfigMap())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

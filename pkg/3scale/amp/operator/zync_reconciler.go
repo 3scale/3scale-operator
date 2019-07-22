@@ -27,47 +27,47 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileQueRole(zync.QueRole())
+	err = r.reconcileQueRole(zync.QueRole())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileQueServiceAccount(zync.QueServiceAccount())
+	err = r.reconcileQueServiceAccount(zync.QueServiceAccount())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileQueRoleBinding(zync.QueRoleBinding())
+	err = r.reconcileQueRoleBinding(zync.QueRoleBinding())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileZyncDeploymentConfig(zync.DeploymentConfig())
+	err = r.reconcileZyncDeploymentConfig(zync.DeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileZyncQueDeploymentConfig(zync.QueDeploymentConfig())
+	err = r.reconcileZyncQueDeploymentConfig(zync.QueDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileZyncDatabaseDeploymentConfig(zync.DatabaseDeploymentConfig())
+	err = r.reconcileZyncDatabaseDeploymentConfig(zync.DatabaseDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileZyncService(zync.Service())
+	err = r.reconcileZyncService(zync.Service())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileZyncDatabaseService(zync.DatabaseService())
+	err = r.reconcileZyncDatabaseService(zync.DatabaseService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileZyncSecret(zync.Secret())
+	err = r.reconcileZyncSecret(zync.Secret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

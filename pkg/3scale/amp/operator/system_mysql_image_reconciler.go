@@ -25,7 +25,7 @@ func (r *SystemMySQLImageReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemMySQLImageStream(systemMySQLImage.ImageStream())
+	err = r.reconcileSystemMySQLImageStream(systemMySQLImage.ImageStream())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

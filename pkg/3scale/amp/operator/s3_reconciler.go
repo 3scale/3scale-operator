@@ -25,7 +25,7 @@ func (r *S3Reconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileAWSSecret(S3.S3AWSSecret())
+	err = r.reconcileAWSSecret(S3.S3AWSSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

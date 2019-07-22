@@ -25,7 +25,7 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileMemcachedDeploymentConfig(memcached.DeploymentConfig())
+	err = r.reconcileMemcachedDeploymentConfig(memcached.DeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

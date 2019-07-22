@@ -26,102 +26,102 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSharedStorage(system.SharedStorage())
+	err = r.reconcileSharedStorage(system.SharedStorage())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileProviderService(system.ProviderService())
+	err = r.reconcileProviderService(system.ProviderService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileMasterService(system.MasterService())
+	err = r.reconcileMasterService(system.MasterService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileDeveloperService(system.DeveloperService())
+	err = r.reconcileDeveloperService(system.DeveloperService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileRedisService(system.RedisService())
+	err = r.reconcileRedisService(system.RedisService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSphinxService(system.SphinxService())
+	err = r.reconcileSphinxService(system.SphinxService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileMemcachedService(system.MemcachedService())
+	err = r.reconcileMemcachedService(system.MemcachedService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileAppDeploymentConfig(system.AppDeploymentConfig())
+	err = r.reconcileAppDeploymentConfig(system.AppDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSidekiqDeploymentConfig(system.SidekiqDeploymentConfig())
+	err = r.reconcileSidekiqDeploymentConfig(system.SidekiqDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSphinxDeploymentConfig(system.SphinxDeploymentConfig())
+	err = r.reconcileSphinxDeploymentConfig(system.SphinxDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemConfigMap(system.SystemConfigMap())
+	err = r.reconcileSystemConfigMap(system.SystemConfigMap())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileEnvironmentConfigMap(system.EnvironmentConfigMap())
+	err = r.reconcileEnvironmentConfigMap(system.EnvironmentConfigMap())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSMTPConfigMap(system.SMTPConfigMap())
+	err = r.reconcileSMTPConfigMap(system.SMTPConfigMap())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileEventsHookSecret(system.EventsHookSecret())
+	err = r.reconcileEventsHookSecret(system.EventsHookSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileRedisSecret(system.RedisSecret())
+	err = r.reconcileRedisSecret(system.RedisSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileMasterApicastSecret(system.MasterApicastSecret())
+	err = r.reconcileMasterApicastSecret(system.MasterApicastSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSeedSecret(system.SeedSecret())
+	err = r.reconcileSeedSecret(system.SeedSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileRecaptchaSecret(system.RecaptchaSecret())
+	err = r.reconcileRecaptchaSecret(system.RecaptchaSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileAppSecret(system.AppSecret())
+	err = r.reconcileAppSecret(system.AppSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileMemcachedSecret(system.MemcachedSecret())
+	err = r.reconcileMemcachedSecret(system.MemcachedSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
