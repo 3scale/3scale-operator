@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -20,13 +22,30 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconc
 	}
 }
 
+func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
+	if r.apiManager.Spec.System != nil && r.apiManager.Spec.System.FileStorageSpec != nil {
+		if r.apiManager.Spec.System.FileStorageSpec.PVC != nil {
+			return r.reconcileSharedStorage(system.SharedStorage())
+		} else if r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
+			return r.reconcileS3AWSSecret(system.S3AWSSecret())
+		} else {
+			return fmt.Errorf("No FileStorage spec specified. FileStorage is mandatory")
+		}
+	}
+	return nil
+}
+
+func (r *SystemReconciler) reconcileS3AWSSecret(desiredSecret *v1.Secret) error {
+	return r.reconcileSecret(desiredSecret)
+}
+
 func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	system, err := r.system()
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSharedStorage(system.SharedStorage())
+	err = r.reconcileFileStorage(system)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

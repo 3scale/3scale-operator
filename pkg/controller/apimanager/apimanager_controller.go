@@ -270,14 +270,6 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		return result, err
 	}
 
-	if cr.Spec.System.FileStorageSpec.S3 != nil {
-		// TODO what to do with PostProcess???
-		result, err = r.reconcileS3(cr)
-		if err != nil || result.Requeue {
-			return result, err
-		}
-	}
-
 	// TODO reconcile more components
 
 	return reconcile.Result{}, nil
