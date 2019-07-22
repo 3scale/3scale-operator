@@ -6,7 +6,6 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -301,16 +300,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 								SuccessThreshold:    1,
 								FailureThreshold:    3,
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1"),
-									v1.ResourceMemory: resource.MustParse("512Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("150m"),
-									v1.ResourceMemory: resource.MustParse("250M"),
-								},
-							},
+							Resources: *zync.Options.containerResourceRequirements,
 						},
 					},
 				},
@@ -435,17 +425,8 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 							Ports: []v1.ContainerPort{
 								v1.ContainerPort{Name: "metrics", ContainerPort: 9394, Protocol: v1.ProtocolTCP},
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1"),
-									v1.ResourceMemory: resource.MustParse("512Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("250m"),
-									v1.ResourceMemory: resource.MustParse("250M"),
-								},
-							},
-							Env: zync.commonZyncEnvVars(),
+							Resources: *zync.Options.queContainerResourceRequirements,
+							Env:       zync.commonZyncEnvVars(),
 						},
 					},
 				},
@@ -557,16 +538,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 									},
 								},
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("250m"),
-									v1.ResourceMemory: resource.MustParse("2G"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("250M"),
-								},
-							},
+							Resources: *zync.Options.databaseContainerResourceRequirements,
 						},
 					},
 					Volumes: []v1.Volume{

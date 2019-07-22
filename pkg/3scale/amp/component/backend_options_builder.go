@@ -1,17 +1,26 @@
 package component
 
-import "fmt"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+)
 
 type BackendOptions struct {
 	// Non required Options
-	serviceEndpoint      *string
-	routeEndpoint        *string
-	storageURL           *string
-	queuesURL            *string
-	storageSentinelHosts *string
-	storageSentinelRole  *string
-	queuesSentinelHosts  *string
-	queuesSentinelRole   *string
+	serviceEndpoint              *string
+	routeEndpoint                *string
+	storageURL                   *string
+	queuesURL                    *string
+	storageSentinelHosts         *string
+	storageSentinelRole          *string
+	queuesSentinelHosts          *string
+	queuesSentinelRole           *string
+	listenerResourceRequirements *v1.ResourceRequirements
+	workerResourceRequirements   *v1.ResourceRequirements
+	cronResourceRequirements     *v1.ResourceRequirements
+
 	// required Options
 	appLabel              string
 	systemBackendUsername string
@@ -74,6 +83,18 @@ func (m *BackendOptionsBuilder) RedisQueuesSentinelHosts(hosts string) {
 
 func (m *BackendOptionsBuilder) RedisQueuesSentinelRole(role string) {
 	m.options.queuesSentinelRole = &role
+}
+
+func (m *BackendOptionsBuilder) ListenerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	m.options.listenerResourceRequirements = &resourceRequirements
+}
+
+func (m *BackendOptionsBuilder) WorkerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	m.options.workerResourceRequirements = &resourceRequirements
+}
+
+func (m *BackendOptionsBuilder) CronResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	m.options.cronResourceRequirements = &resourceRequirements
 }
 
 func (m *BackendOptionsBuilder) Build() (*BackendOptions, error) {
@@ -142,5 +163,56 @@ func (m *BackendOptionsBuilder) setNonRequiredOptions() {
 	}
 	if m.options.queuesSentinelRole == nil {
 		m.options.queuesSentinelRole = &defaultQueuesSentinelRole
+	}
+
+	if m.options.listenerResourceRequirements == nil {
+		m.options.listenerResourceRequirements = m.defaultListenerResourceRequirements()
+	}
+
+	if m.options.workerResourceRequirements == nil {
+		m.options.workerResourceRequirements = m.defaultWorkerResourceRequirements()
+	}
+
+	if m.options.cronResourceRequirements == nil {
+		m.options.cronResourceRequirements = m.defaultCronResourceRequirements()
+	}
+}
+
+func (m *BackendOptionsBuilder) defaultListenerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("700Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("500m"),
+			v1.ResourceMemory: resource.MustParse("550Mi"),
+		},
+	}
+}
+
+func (m *BackendOptionsBuilder) defaultWorkerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("300Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("150m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+	}
+}
+
+func (m *BackendOptionsBuilder) defaultCronResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("150m"),
+			v1.ResourceMemory: resource.MustParse("80Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("40Mi"),
+		},
 	}
 }

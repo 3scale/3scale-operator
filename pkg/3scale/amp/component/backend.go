@@ -6,7 +6,6 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -125,20 +124,11 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 				},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "backend-worker",
-							Image: "amp-backend:latest",
-							Args:  []string{"bin/3scale_backend_worker", "run"},
-							Env:   backend.buildBackendWorkerEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("300Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("150m"),
-									v1.ResourceMemory: resource.MustParse("50Mi"),
-								},
-							},
+							Name:            "backend-worker",
+							Image:           "amp-backend:latest",
+							Args:            []string{"bin/3scale_backend_worker", "run"},
+							Env:             backend.buildBackendWorkerEnv(),
+							Resources:       *backend.Options.workerResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
@@ -205,21 +195,11 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 				},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "backend-cron",
-							Image: "amp-backend:latest",
-							Args:  []string{"backend-cron"},
-							Env:   backend.buildBackendCronEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("150m"),
-									v1.ResourceMemory: resource.MustParse("80Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("40Mi"),
-								},
-							},
-
+							Name:            "backend-cron",
+							Image:           "amp-backend:latest",
+							Args:            []string{"backend-cron"},
+							Env:             backend.buildBackendCronEnv(),
+							Resources:       *backend.Options.cronResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
@@ -283,18 +263,8 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 								ContainerPort: 3000,
 								Protocol:      v1.ProtocolTCP},
 						},
-						Env: backend.buildBackendListenerEnv(),
-						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("1000m"),
-								v1.ResourceMemory: resource.MustParse("700Mi"),
-							},
-							Requests: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("500m"),
-								v1.ResourceMemory: resource.MustParse("550Mi"),
-							},
-						},
-
+						Env:       backend.buildBackendListenerEnv(),
+						Resources: *backend.Options.listenerResourceRequirements,
 						LivenessProbe: &v1.Probe{
 							Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 								Port: intstr.IntOrString{

@@ -1,9 +1,15 @@
 package component
 
-import "fmt"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+)
 
 type SystemPostgreSQLOptions struct {
 	//systemPostgreSQLNonRequiredOptions
+	containerResourceRequirements *v1.ResourceRequirements
 
 	//systemPostgreSQLRequiredOptions
 	ampRelease   string
@@ -39,6 +45,10 @@ func (b *SystemPostgreSQLOptionsBuilder) Password(password string) {
 	b.options.password = password
 }
 
+func (b *SystemPostgreSQLOptionsBuilder) ContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	b.options.containerResourceRequirements = &resourceRequirements
+}
+
 func (b *SystemPostgreSQLOptionsBuilder) Build() (*SystemPostgreSQLOptions, error) {
 	err := b.setRequiredOptions()
 	if err != nil {
@@ -71,4 +81,19 @@ func (b *SystemPostgreSQLOptionsBuilder) setRequiredOptions() error {
 }
 
 func (b *SystemPostgreSQLOptionsBuilder) setNonRequiredOptions() {
+	if b.options.containerResourceRequirements == nil {
+		b.options.containerResourceRequirements = b.defaultContainerResourceRequirements()
+	}
+}
+
+func (m *SystemPostgreSQLOptionsBuilder) defaultContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("2Gi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("250m"),
+			v1.ResourceMemory: resource.MustParse("512Mi"),
+		},
+	}
 }

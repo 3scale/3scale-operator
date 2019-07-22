@@ -5,6 +5,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -16,6 +17,8 @@ func (o *OperatorZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, 
 	if err != nil {
 		return nil, err
 	}
+
+	o.setResourceRequirementsOptions(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -57,4 +60,12 @@ func (o *OperatorZyncOptionsProvider) setZyncSecretOptions(zob *component.ZyncOp
 		zob.AuthenticationToken(getSecretDataValueOrDefault(secretData, component.ZyncSecretAuthenticationTokenFieldName, defaultZyncAuthenticationToken))
 	}
 	return nil
+}
+
+func (o *OperatorZyncOptionsProvider) setResourceRequirementsOptions(b *component.ZyncOptionsBuilder) {
+	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
+		b.ContainerResourceRequirements(v1.ResourceRequirements{})
+		b.QueContainerResourceRequirements(v1.ResourceRequirements{})
+		b.DatabaseContainerResourceRequirements(v1.ResourceRequirements{})
+	}
 }

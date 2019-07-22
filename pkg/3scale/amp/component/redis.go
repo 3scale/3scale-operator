@@ -214,16 +214,7 @@ func (redis *Redis) buildPodContainerCommandArgs() []string {
 }
 
 func (redis *Redis) buildPodContainerResourceLimits() v1.ResourceRequirements {
-	return v1.ResourceRequirements{ //TODO Make this configurable via an option flag.
-		Limits: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("2000m"), //another option was to use resource.Parse which would not panic and return an error if error
-			v1.ResourceMemory: resource.MustParse("32Gi"),
-		},
-		Requests: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("1000m"),
-			v1.ResourceMemory: resource.MustParse("1024Mi"),
-		},
-	}
+	return *redis.Options.backendRedisContainerResourceRequirements
 }
 
 func (redis *Redis) buildPodContainerReadinessProbe() *v1.Probe {
@@ -523,20 +514,11 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:    "system-redis",
-							Image:   "system-redis:latest",
-							Command: []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
-							Args:    []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("500m"),
-									v1.ResourceMemory: resource.MustParse("32Gi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("150m"),
-									v1.ResourceMemory: resource.MustParse("256Mi"),
-								},
-							},
+							Name:      "system-redis",
+							Image:     "system-redis:latest",
+							Command:   []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
+							Args:      []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
+							Resources: *redis.Options.systemRedisContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "system-redis-storage",

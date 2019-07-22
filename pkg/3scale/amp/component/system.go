@@ -567,17 +567,8 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 3002,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env: system.buildSystemBaseEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("800Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("600Mi"),
-								},
-							},
+							Env:       system.buildSystemBaseEnv(),
+							Resources: *system.Options.appMasterContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "system-storage",
@@ -634,17 +625,8 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 3000,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env: system.buildSystemBaseEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("800Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("600Mi"),
-								},
-							},
+							Env:       system.buildSystemBaseEnv(),
+							Resources: *system.Options.appProviderContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "system-storage",
@@ -701,17 +683,8 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 3001,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env: system.buildSystemBaseEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("800Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("600Mi"),
-								},
-							},
+							Env:       system.buildSystemBaseEnv(),
+							Resources: *system.Options.appDeveloperContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "system-storage",
@@ -851,20 +824,11 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "system-sidekiq",
-							Image: "amp-system:latest",
-							Args:  []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
-							Env:   system.buildSystemBaseEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("2Gi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("100m"),
-									v1.ResourceMemory: resource.MustParse("500Mi"),
-								},
-							},
+							Name:      "system-sidekiq",
+							Image:     "amp-system:latest",
+							Args:      []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
+							Env:       system.buildSystemBaseEnv(),
+							Resources: *system.Options.sidekiqContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "system-storage",
@@ -1278,16 +1242,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 								InitialDelaySeconds: 60,
 								PeriodSeconds:       10,
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("512Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("80m"),
-									v1.ResourceMemory: resource.MustParse("250Mi"),
-								},
-							},
+							Resources: *system.Options.sphinxContainerResourceRequirements,
 						},
 					},
 				},

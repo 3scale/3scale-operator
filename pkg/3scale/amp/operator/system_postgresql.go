@@ -7,6 +7,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -18,6 +19,8 @@ func (o *OperatorSystemPostgreSQLOptionsProvider) GetSystemPostgreSQLOptions() (
 	if err != nil {
 		return nil, err
 	}
+
+	o.setResourceRequirementsOptions(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -106,4 +109,10 @@ func (o *OperatorSystemPostgreSQLOptionsProvider) systemDatabaseURLIsValid(rawUR
 	}
 
 	return resultURL, nil
+}
+
+func (o *OperatorSystemPostgreSQLOptionsProvider) setResourceRequirementsOptions(b *component.SystemPostgreSQLOptionsBuilder) {
+	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
+		b.ContainerResourceRequirements(v1.ResourceRequirements{})
+	}
 }
