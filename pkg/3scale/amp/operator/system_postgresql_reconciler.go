@@ -26,22 +26,22 @@ func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemPostgreSQLDeploymentConfig(systemPostgreSQL.DeploymentConfig())
+	err = r.reconcileSystemPostgreSQLDeploymentConfig(systemPostgreSQL.DeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemPostgreSQLService(systemPostgreSQL.Service())
+	err = r.reconcileSystemPostgreSQLService(systemPostgreSQL.Service())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemPostgreSQLDataPersistentVolumeClaim(systemPostgreSQL.DataPersistentVolumeClaim())
+	err = r.reconcileSystemPostgreSQLDataPersistentVolumeClaim(systemPostgreSQL.DataPersistentVolumeClaim())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemPostgreSQLSystemDatabaseSecret(systemPostgreSQL.SystemDatabaseSecret())
+	err = r.reconcileSystemPostgreSQLSystemDatabaseSecret(systemPostgreSQL.SystemDatabaseSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

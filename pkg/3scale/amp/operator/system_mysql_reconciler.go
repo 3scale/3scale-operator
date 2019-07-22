@@ -26,32 +26,32 @@ func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemMySQLDeploymentConfig(systemMySQL.DeploymentConfig())
+	err = r.reconcileSystemMySQLDeploymentConfig(systemMySQL.DeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemMySQLService(systemMySQL.Service())
+	err = r.reconcileSystemMySQLService(systemMySQL.Service())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemMySQLMainConfigMap(systemMySQL.MainConfigConfigMap())
+	err = r.reconcileSystemMySQLMainConfigMap(systemMySQL.MainConfigConfigMap())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemMySQLExtraConfigMap(systemMySQL.ExtraConfigConfigMap())
+	err = r.reconcileSystemMySQLExtraConfigMap(systemMySQL.ExtraConfigConfigMap())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemMySQLPersistentVolumeClaim(systemMySQL.PersistentVolumeClaim())
+	err = r.reconcileSystemMySQLPersistentVolumeClaim(systemMySQL.PersistentVolumeClaim())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemMySQLSystemDatabaseSecret(systemMySQL.SystemDatabaseSecret())
+	err = r.reconcileSystemMySQLSystemDatabaseSecret(systemMySQL.SystemDatabaseSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
