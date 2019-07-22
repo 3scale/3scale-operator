@@ -6,6 +6,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 	"k8s.io/apimachinery/pkg/api/errors"
+
+	v1 "k8s.io/api/core/v1"
 )
 
 func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.BackendOptions, error) {
@@ -18,6 +20,8 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	if err != nil {
 		return nil, err
 	}
+
+	o.setResourceRequirementsOptions(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -41,6 +45,14 @@ func (o *OperatorBackendOptionsProvider) setSecretBasedOptions(b *component.Back
 	}
 
 	return nil
+}
+
+func (o *OperatorBackendOptionsProvider) setResourceRequirementsOptions(b *component.BackendOptionsBuilder) {
+	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
+		b.ListenerResourceRequirements(v1.ResourceRequirements{})
+		b.WorkerResourceRequirements(v1.ResourceRequirements{})
+		b.CronResourceRequirements(v1.ResourceRequirements{})
+	}
 }
 
 func (o *OperatorBackendOptionsProvider) setBackendInternalApiOptions(b *component.BackendOptionsBuilder) error {

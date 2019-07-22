@@ -7,6 +7,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -18,6 +19,8 @@ func (o *OperatorMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysql
 	if err != nil {
 		return nil, err
 	}
+
+	o.setResourceRequirementsOptions(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -112,4 +115,10 @@ func (o *OperatorMysqlOptionsProvider) systemDatabaseURLIsValid(rawURL string) (
 	}
 
 	return resultURL, nil
+}
+
+func (o *OperatorMysqlOptionsProvider) setResourceRequirementsOptions(b *component.SystemMysqlOptionsBuilder) {
+	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
+		b.ContainerResourceRequirements(v1.ResourceRequirements{})
+	}
 }

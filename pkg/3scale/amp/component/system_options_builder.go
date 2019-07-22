@@ -1,6 +1,11 @@
 package component
 
-import "fmt"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+)
 
 type SystemOptions struct {
 	// systemNonRequiredOptions
@@ -17,6 +22,12 @@ type SystemOptions struct {
 	apicastSystemMasterProxyConfigEndpoint *string
 	apicastSystemMasterBaseURL             *string
 	adminEmail                             *string
+
+	appMasterContainerResourceRequirements    *v1.ResourceRequirements
+	appProviderContainerResourceRequirements  *v1.ResourceRequirements
+	appDeveloperContainerResourceRequirements *v1.ResourceRequirements
+	sidekiqContainerResourceRequirements      *v1.ResourceRequirements
+	sphinxContainerResourceRequirements       *v1.ResourceRequirements
 
 	// systemRequiredOptions
 	adminAccessToken    string
@@ -167,6 +178,26 @@ func (s *SystemOptionsBuilder) ApicastSystemMasterBaseURL(url string) {
 	s.options.apicastSystemMasterBaseURL = &url
 }
 
+func (s *SystemOptionsBuilder) AppMasterContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.appMasterContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) AppProviderContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.appProviderContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) AppDeveloperContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.appDeveloperContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) SidekiqContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.sidekiqContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) SphinxContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.sphinxContainerResourceRequirements = &resourceRequirements
+}
+
 func (s *SystemOptionsBuilder) Build() (*SystemOptions, error) {
 	err := s.setRequiredOptions()
 	if err != nil {
@@ -257,6 +288,26 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 	if s.options.adminEmail == nil {
 		s.options.adminEmail = &defaultAdminEmail
 	}
+
+	if s.options.appMasterContainerResourceRequirements == nil {
+		s.options.appMasterContainerResourceRequirements = s.defaultAppMasterContainerResourceRequirements()
+	}
+
+	if s.options.appProviderContainerResourceRequirements == nil {
+		s.options.appProviderContainerResourceRequirements = s.defaultAppProviderContainerResourceRequirements()
+	}
+
+	if s.options.appDeveloperContainerResourceRequirements == nil {
+		s.options.appDeveloperContainerResourceRequirements = s.defaultAppDeveloperContainerResourceRequirements()
+	}
+
+	if s.options.sidekiqContainerResourceRequirements == nil {
+		s.options.sidekiqContainerResourceRequirements = s.defaultSidekiqContainerResourceRequirements()
+	}
+
+	if s.options.sphinxContainerResourceRequirements == nil {
+		s.options.sphinxContainerResourceRequirements = s.defaultSphinxContainerResourceRequirements()
+	}
 }
 
 func (s *SystemOptionsBuilder) setRedisDefaultsOptions() {
@@ -299,5 +350,70 @@ func (s *SystemOptionsBuilder) setRedisDefaultsOptions() {
 
 	if s.options.messageBusRedisNamespace == nil {
 		s.options.messageBusRedisNamespace = &defaultMessageBusRedisNamespace
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultAppMasterContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("800Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("600Mi"),
+		},
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultAppProviderContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("800Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("600Mi"),
+		},
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultAppDeveloperContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("800Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("600Mi"),
+		},
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultSidekiqContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("2Gi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("500Mi"),
+		},
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultSphinxContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("512Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("80m"),
+			v1.ResourceMemory: resource.MustParse("250Mi"),
+		},
 	}
 }

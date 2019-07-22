@@ -6,6 +6,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -28,6 +29,8 @@ func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOpt
 	if err != nil {
 		return nil, err
 	}
+
+	o.setResourceRequirementsOptions(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -276,4 +279,14 @@ func (o *OperatorSystemOptionsProvider) setSystemMasterApicastOptions(builder *c
 		builder.ApicastAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemMasterApicastAccessToken, defaultSystemMasterApicastAccessToken))
 	}
 	return nil
+}
+
+func (o *OperatorSystemOptionsProvider) setResourceRequirementsOptions(b *component.SystemOptionsBuilder) {
+	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
+		b.AppMasterContainerResourceRequirements(v1.ResourceRequirements{})
+		b.AppProviderContainerResourceRequirements(v1.ResourceRequirements{})
+		b.AppDeveloperContainerResourceRequirements(v1.ResourceRequirements{})
+		b.SidekiqContainerResourceRequirements(v1.ResourceRequirements{})
+		b.SphinxContainerResourceRequirements(v1.ResourceRequirements{})
+	}
 }
