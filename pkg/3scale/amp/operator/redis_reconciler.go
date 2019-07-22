@@ -26,32 +26,32 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileBackendDeploymentConfig(redis.BackendDeploymentConfig())
+	err = r.reconcileBackendDeploymentConfig(redis.BackendDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileBackendService(redis.BackendService())
+	err = r.reconcileBackendService(redis.BackendService())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileBackendConfigMap(redis.BackendConfigMap())
+	err = r.reconcileBackendConfigMap(redis.BackendConfigMap())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileBackendPVC(redis.BackendPVC())
+	err = r.reconcileBackendPVC(redis.BackendPVC())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemDeploymentConfig(redis.SystemDeploymentConfig())
+	err = r.reconcileSystemDeploymentConfig(redis.SystemDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileSystemPVC(redis.SystemPVC())
+	err = r.reconcileSystemPVC(redis.SystemPVC())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

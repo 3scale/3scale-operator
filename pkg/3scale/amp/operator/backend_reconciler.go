@@ -28,12 +28,12 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// // TODO finish reconciliations
-	r.reconcileCronDeploymentConfig(backend.CronDeploymentConfig())
+	err = r.reconcileCronDeploymentConfig(backend.CronDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileListenerDeploymentConfig(backend.ListenerDeploymentConfig())
+	err = r.reconcileListenerDeploymentConfig(backend.ListenerDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -48,27 +48,27 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileWorkerDeploymentConfig(backend.WorkerDeploymentConfig())
+	err = r.reconcileWorkerDeploymentConfig(backend.WorkerDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileEnvironmentConfigMap(backend.EnvironmentConfigMap())
+	err = r.reconcileEnvironmentConfigMap(backend.EnvironmentConfigMap())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileInternalAPISecretForSystem(backend.InternalAPISecretForSystem())
+	err = r.reconcileInternalAPISecretForSystem(backend.InternalAPISecretForSystem())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileRedisSecret(backend.RedisSecret())
+	err = r.reconcileRedisSecret(backend.RedisSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	r.reconcileListenerSecret(backend.ListenerSecret())
+	err = r.reconcileListenerSecret(backend.ListenerSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
