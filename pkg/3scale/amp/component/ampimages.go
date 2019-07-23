@@ -26,8 +26,6 @@ func (ampImages *AmpImages) Objects() []common.KubernetesObject {
 	apicastImageStream := ampImages.APICastImageStream()
 	systemImageStream := ampImages.SystemImageStream()
 	zyncDatabasePostgreSQLImageStream := ampImages.ZyncDatabasePostgreSQLImageStream()
-	backendRedisImageStream := ampImages.BackendRedisImageStream()
-	systemRedisImageStream := ampImages.SystemRedisImageStream()
 	systemMemcachedImageStream := ampImages.SystemMemcachedImageStream()
 
 	deploymentsServiceAccount := ampImages.DeploymentsServiceAccount()
@@ -38,8 +36,6 @@ func (ampImages *AmpImages) Objects() []common.KubernetesObject {
 		apicastImageStream,
 		systemImageStream,
 		zyncDatabasePostgreSQLImageStream,
-		backendRedisImageStream,
-		systemRedisImageStream,
 		systemMemcachedImageStream,
 		deploymentsServiceAccount,
 	}
@@ -251,92 +247,6 @@ func (ampImages *AmpImages) ZyncDatabasePostgreSQLImageStream() *imagev1.ImageSt
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
 						Name: ampImages.Options.ZyncDatabasePostgreSQLImage,
-					},
-					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: ampImages.Options.insecureImportPolicy,
-					},
-				},
-			},
-		},
-	}
-}
-
-func (ampImages *AmpImages) BackendRedisImageStream() *imagev1.ImageStream {
-	return &imagev1.ImageStream{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-redis",
-			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
-				"threescale_component": "backend",
-			},
-			Annotations: map[string]string{
-				"openshift.io/display-name": "Backend Redis",
-			},
-		},
-		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
-		Spec: imagev1.ImageStreamSpec{
-			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "Backend Redis (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
-					},
-				},
-				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
-					Annotations: map[string]string{
-						"openshift.io/display-name": "Backend " + ampImages.Options.ampRelease + " Redis",
-					},
-					From: &v1.ObjectReference{
-						Kind: "DockerImage",
-						Name: ampImages.Options.backendRedisImage,
-					},
-					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: ampImages.Options.insecureImportPolicy,
-					},
-				},
-			},
-		},
-	}
-}
-
-func (ampImages *AmpImages) SystemRedisImageStream() *imagev1.ImageStream {
-	return &imagev1.ImageStream{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-redis",
-			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
-				"threescale_component": "system",
-			},
-			Annotations: map[string]string{
-				"openshift.io/display-name": "System Redis",
-			},
-		},
-		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
-		Spec: imagev1.ImageStreamSpec{
-			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "System Redis (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
-					},
-				},
-				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
-					Annotations: map[string]string{
-						"openshift.io/display-name": "System " + ampImages.Options.ampRelease + " Redis",
-					},
-					From: &v1.ObjectReference{
-						Kind: "DockerImage",
-						Name: ampImages.Options.systemRedisImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						Insecure: ampImages.Options.insecureImportPolicy,

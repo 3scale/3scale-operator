@@ -44,18 +44,6 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 		optProv.ZyncDatabasePostgreSQLImage(imageProvider.GetZyncPostgreSQLImage())
 	}
 
-	if o.APIManagerSpec.Backend != nil && o.APIManagerSpec.Backend.RedisImage != nil {
-		optProv.BackendRedisImage(*o.APIManagerSpec.Backend.RedisImage)
-	} else {
-		optProv.BackendRedisImage(imageProvider.GetBackendRedisImage())
-	}
-
-	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.RedisImage != nil {
-		optProv.SystemRedisImage(*o.APIManagerSpec.System.RedisImage)
-	} else {
-		optProv.SystemRedisImage(imageProvider.GetSystemRedisImage())
-	}
-
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.MemcachedImage != nil {
 		optProv.SystemMemcachedImage(*o.APIManagerSpec.System.MemcachedImage)
 	} else {
