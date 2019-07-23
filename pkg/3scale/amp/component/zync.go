@@ -223,7 +223,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 					},
 				},
 			},
-			Replicas: 1,
+			Replicas: *zync.Options.zyncReplicas,
 			Selector: map[string]string{"deploymentConfig": "zync"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -350,7 +350,7 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: 1,
+			Replicas: *zync.Options.zyncQueReplicas,
 			Selector: map[string]string{"deploymentConfig": "zync-que"},
 			Strategy: appsv1.DeploymentStrategy{
 				Type: appsv1.DeploymentStrategyTypeRolling,

@@ -21,6 +21,10 @@ func NewSystemMySQLReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicR
 }
 
 func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
+	if r.apiManager.Spec.HighAvailability != nil && r.apiManager.Spec.HighAvailability.Enabled {
+		return reconcile.Result{}, nil
+	}
+
 	systemMySQL, err := r.systemMySQL()
 	if err != nil {
 		return reconcile.Result{}, err

@@ -114,7 +114,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: 1,
+			Replicas: *apicast.Options.stagingReplicas,
 			Selector: map[string]string{
 				"deploymentConfig": "apicast-staging",
 			},
@@ -227,7 +227,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: 1,
+			Replicas: *apicast.Options.productionReplicas,
 			Selector: map[string]string{
 				"deploymentConfig": "apicast-production",
 			},

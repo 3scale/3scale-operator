@@ -104,7 +104,7 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: 1,
+			Replicas: *backend.Options.workerReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-worker"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -175,7 +175,7 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: 1,
+			Replicas: *backend.Options.cronReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-cron"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -247,7 +247,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: 1,
+			Replicas: *backend.Options.listenerReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-listener"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{

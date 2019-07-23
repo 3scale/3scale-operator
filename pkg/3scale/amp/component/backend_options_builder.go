@@ -20,6 +20,9 @@ type BackendOptions struct {
 	listenerResourceRequirements *v1.ResourceRequirements
 	workerResourceRequirements   *v1.ResourceRequirements
 	cronResourceRequirements     *v1.ResourceRequirements
+	listenerReplicas             *int32
+	workerReplicas               *int32
+	cronReplicas                 *int32
 
 	// required Options
 	appLabel              string
@@ -95,6 +98,18 @@ func (m *BackendOptionsBuilder) WorkerResourceRequirements(resourceRequirements 
 
 func (m *BackendOptionsBuilder) CronResourceRequirements(resourceRequirements v1.ResourceRequirements) {
 	m.options.cronResourceRequirements = &resourceRequirements
+}
+
+func (m *BackendOptionsBuilder) ListenerReplicas(replicas int32) {
+	m.options.listenerReplicas = &replicas
+}
+
+func (m *BackendOptionsBuilder) WorkerReplicas(replicas int32) {
+	m.options.workerReplicas = &replicas
+}
+
+func (m *BackendOptionsBuilder) CronReplicas(replicas int32) {
+	m.options.cronReplicas = &replicas
 }
 
 func (m *BackendOptionsBuilder) Build() (*BackendOptions, error) {
@@ -175,6 +190,21 @@ func (m *BackendOptionsBuilder) setNonRequiredOptions() {
 
 	if m.options.cronResourceRequirements == nil {
 		m.options.cronResourceRequirements = m.defaultCronResourceRequirements()
+	}
+
+	if m.options.listenerReplicas == nil {
+		var listenerDefaultReplicas int32 = 1
+		m.options.listenerReplicas = &listenerDefaultReplicas
+	}
+
+	if m.options.workerReplicas == nil {
+		var workerDefaultReplicas int32 = 1
+		m.options.workerReplicas = &workerDefaultReplicas
+	}
+
+	if m.options.cronReplicas == nil {
+		var cronDefaultReplicas int32 = 1
+		m.options.cronReplicas = &cronDefaultReplicas
 	}
 }
 

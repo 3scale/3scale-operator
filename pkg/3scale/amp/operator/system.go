@@ -32,6 +32,7 @@ func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOpt
 
 	o.setResourceRequirementsOptions(&optProv)
 	o.setFileStorageOptions(&optProv)
+	o.setReplicas(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -349,4 +350,11 @@ func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.Syste
 	})
 
 	return nil
+}
+
+func (o *OperatorSystemOptionsProvider) setReplicas(sob *component.SystemOptionsBuilder) {
+	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
+		sob.AppReplicas(2)
+		sob.SidekiqReplicas(2)
+	}
 }
