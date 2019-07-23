@@ -67,6 +67,11 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcileSystemService(redis.SystemService())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -145,6 +150,10 @@ func (r *RedisReconciler) reconcileSystemDeploymentConfig(desiredDeploymentConfi
 
 func (r *RedisReconciler) reconcileSystemPVC(desiredPVC *v1.PersistentVolumeClaim) error {
 	return r.reconcilePersistentVolumeClaim(desiredPVC)
+}
+
+func (r *RedisReconciler) reconcileSystemService(desiredService *v1.Service) error {
+	return r.reconcileService(desiredService)
 }
 
 func (r *RedisReconciler) reconcileBackendImageStream(desiredImageStream *imagev1.ImageStream) error {

@@ -92,7 +92,6 @@ func (system *System) Objects() []common.KubernetesObject {
 	providerService := system.ProviderService()
 	masterService := system.MasterService()
 	developerService := system.DeveloperService()
-	redisService := system.RedisService()
 	sphinxService := system.SphinxService()
 	memcachedService := system.MemcachedService()
 
@@ -119,7 +118,6 @@ func (system *System) Objects() []common.KubernetesObject {
 		providerService,
 		masterService,
 		developerService,
-		redisService,
 		sphinxService,
 		memcachedService,
 		systemConfigMap,
@@ -1047,33 +1045,6 @@ func (system *System) DeveloperService() *v1.Service {
 				},
 			},
 			Selector: map[string]string{"deploymentConfig": "system-app"},
-		},
-	}
-}
-func (system *System) RedisService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-redis",
-			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
-				"threescale_component":         "system",
-				"threescale_component_element": "redis",
-			},
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "redis",
-					Protocol:   v1.ProtocolTCP,
-					Port:       6379,
-					TargetPort: intstr.FromInt(6379),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "system-redis"},
 		},
 	}
 }

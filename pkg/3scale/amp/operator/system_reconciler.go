@@ -65,11 +65,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileRedisService(system.RedisService())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	err = r.reconcileSphinxService(system.SphinxService())
 	if err != nil {
 		return reconcile.Result{}, err
