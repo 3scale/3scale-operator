@@ -492,11 +492,13 @@ func (redis *Redis) BackendImageStream() *imagev1.ImageStream {
 func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
 	systemRedisDC := redis.SystemDeploymentConfig()
 	systemRedisPVC := redis.SystemPVC()
+	systemRedisService := redis.SystemService()
 	systemRedisImageStream := redis.SystemImageStream()
 
 	objects := []common.KubernetesObject{
 		systemRedisDC,
 		systemRedisPVC,
+		systemRedisService,
 		systemRedisImageStream,
 	}
 
@@ -605,6 +607,34 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 				}},
+		},
+	}
+}
+
+func (redis *Redis) SystemService() *v1.Service {
+	return &v1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system-redis",
+			Labels: map[string]string{
+				"app":                          redis.Options.appLabel,
+				"threescale_component":         "system",
+				"threescale_component_element": "redis",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:       "redis",
+					Protocol:   v1.ProtocolTCP,
+					Port:       6379,
+					TargetPort: intstr.FromInt(6379),
+				},
+			},
+			Selector: map[string]string{"deploymentConfig": "system-redis"},
 		},
 	}
 }
