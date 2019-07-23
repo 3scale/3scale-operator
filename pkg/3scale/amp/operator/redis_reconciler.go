@@ -3,6 +3,7 @@ package operator
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
+	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -46,12 +47,22 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcileBackendImageStream(redis.BackendImageStream())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	err = r.reconcileSystemDeploymentConfig(redis.SystemDeploymentConfig())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	err = r.reconcileSystemPVC(redis.SystemPVC())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileSystemImageStream(redis.SystemImageStream())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -103,6 +114,15 @@ func (r *RedisReconciler) reconcileService(desiredService *v1.Service) error {
 	return r.serviceReconciler.Reconcile(desiredService)
 }
 
+func (r *RedisReconciler) reconcileImageStream(desiredImageStream *imagev1.ImageStream) error {
+	err := r.InitializeAsAPIManagerObject(desiredImageStream)
+	if err != nil {
+		return err
+	}
+
+	return r.imagestreamReconciler.Reconcile(desiredImageStream)
+}
+
 func (r *RedisReconciler) reconcileBackendDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	return r.reconcileDeploymentConfig(desiredDeploymentConfig)
 }
@@ -125,4 +145,12 @@ func (r *RedisReconciler) reconcileSystemDeploymentConfig(desiredDeploymentConfi
 
 func (r *RedisReconciler) reconcileSystemPVC(desiredPVC *v1.PersistentVolumeClaim) error {
 	return r.reconcilePersistentVolumeClaim(desiredPVC)
+}
+
+func (r *RedisReconciler) reconcileBackendImageStream(desiredImageStream *imagev1.ImageStream) error {
+	return r.reconcileImageStream(desiredImageStream)
+}
+
+func (r *RedisReconciler) reconcileSystemImageStream(desiredImageStream *imagev1.ImageStream) error {
+	return r.reconcileImageStream(desiredImageStream)
 }

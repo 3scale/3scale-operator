@@ -11,8 +11,6 @@ type AmpImagesOptions struct {
 	systemImage                 string
 	zyncImage                   string
 	ZyncDatabasePostgreSQLImage string
-	backendRedisImage           string
-	systemRedisImage            string
 	systemMemcachedImage        string
 	systemMySQLImage            string
 	insecureImportPolicy        bool
@@ -50,14 +48,6 @@ func (ampImages *AmpImagesOptionsBuilder) ZyncDatabasePostgreSQLImage(zyncDataba
 	ampImages.options.ZyncDatabasePostgreSQLImage = zyncDatabaseImage
 }
 
-func (ampImages *AmpImagesOptionsBuilder) BackendRedisImage(image string) {
-	ampImages.options.backendRedisImage = image
-}
-
-func (ampImages *AmpImagesOptionsBuilder) SystemRedisImage(image string) {
-	ampImages.options.systemRedisImage = image
-}
-
 func (ampImages *AmpImagesOptionsBuilder) SystemMemcachedImage(image string) {
 	ampImages.options.systemMemcachedImage = image
 }
@@ -87,12 +77,6 @@ func (ampImages *AmpImagesOptionsBuilder) Build() (*AmpImagesOptions, error) {
 	}
 	if ampImages.options.ZyncDatabasePostgreSQLImage == "" {
 		return nil, fmt.Errorf("no Zync database PostgreSQL image has been provided")
-	}
-	if ampImages.options.backendRedisImage == "" {
-		return nil, fmt.Errorf("no Backend Redis image has been provided")
-	}
-	if ampImages.options.systemRedisImage == "" {
-		return nil, fmt.Errorf("no System Redis image has been provided")
 	}
 	if ampImages.options.systemMemcachedImage == "" {
 		return nil, fmt.Errorf("no System Memcached image has been provided")

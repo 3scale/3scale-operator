@@ -52,16 +52,6 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileBackendRedisImageStream(ampImages.BackendRedisImageStream())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	err = r.reconcileSystemRedisImageStream(ampImages.SystemRedisImageStream())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	err = r.reconcileSystemMemcachedImageStream(ampImages.SystemMemcachedImageStream())
 	if err != nil {
 		return reconcile.Result{}, err
@@ -120,14 +110,6 @@ func (r *AMPImagesReconciler) reconcileSystemImageStream(desiredImageStream *ima
 }
 
 func (r *AMPImagesReconciler) reconcileZyncDatabasePostgreSQLImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
-}
-
-func (r *AMPImagesReconciler) reconcileBackendRedisImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
-}
-
-func (r *AMPImagesReconciler) reconcileSystemRedisImageStream(desiredImageStream *imagev1.ImageStream) error {
 	return r.reconcileImageStream(desiredImageStream)
 }
 
