@@ -13,6 +13,8 @@ type ZyncOptions struct {
 	containerResourceRequirements         *v1.ResourceRequirements
 	queContainerResourceRequirements      *v1.ResourceRequirements
 	databaseContainerResourceRequirements *v1.ResourceRequirements
+	zyncReplicas                          *int32
+	zyncQueReplicas                       *int32
 
 	// zyncRequiredOptions
 	appLabel            string
@@ -55,6 +57,14 @@ func (z *ZyncOptionsBuilder) QueContainerResourceRequirements(resourceRequiremen
 
 func (z *ZyncOptionsBuilder) DatabaseContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
 	z.options.databaseContainerResourceRequirements = &resourceRequirements
+}
+
+func (z *ZyncOptionsBuilder) ZyncReplicas(replicas int32) {
+	z.options.zyncReplicas = &replicas
+}
+
+func (z *ZyncOptionsBuilder) ZyncQueReplicas(replicas int32) {
+	z.options.zyncQueReplicas = &replicas
 }
 
 func (z *ZyncOptionsBuilder) Build() (*ZyncOptions, error) {
@@ -101,6 +111,16 @@ func (z *ZyncOptionsBuilder) setNonRequiredOptions() {
 
 	if z.options.databaseContainerResourceRequirements == nil {
 		z.options.databaseContainerResourceRequirements = z.defaultDatabaseContainerResourceRequirements()
+	}
+
+	if z.options.zyncReplicas == nil {
+		var defaultZyncReplicas int32 = 1
+		z.options.zyncReplicas = &defaultZyncReplicas
+	}
+
+	if z.options.zyncQueReplicas == nil {
+		var defaultZyncQueReplicas int32 = 1
+		z.options.zyncQueReplicas = &defaultZyncQueReplicas
 	}
 }
 

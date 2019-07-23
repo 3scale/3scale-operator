@@ -140,6 +140,19 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// TODO rethink where to create the system-database secret
+	if r.apiManager.Spec.HighAvailability != nil && r.apiManager.Spec.HighAvailability.Enabled {
+		ha, err := r.highAvailability()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		err = r.reconcileDatabaseHASecret(ha.SystemDatabaseSecret())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -150,6 +163,15 @@ func (r *SystemReconciler) system() (*component.System, error) {
 		return nil, err
 	}
 	return component.NewSystem(opts), nil
+}
+
+func (r *SystemReconciler) highAvailability() (*component.HighAvailability, error) {
+	optsProvider := OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &r.apiManager.Spec, Namespace: r.apiManager.Namespace, Client: r.Client()}
+	opts, err := optsProvider.GetHighAvailabilityOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewHighAvailability(opts), nil
 }
 
 func (r *SystemReconciler) reconcileDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
@@ -272,5 +294,9 @@ func (r *SystemReconciler) reconcileAppSecret(desiredSecret *v1.Secret) error {
 }
 
 func (r *SystemReconciler) reconcileMemcachedSecret(desiredSecret *v1.Secret) error {
+	return r.reconcileSecret(desiredSecret)
+}
+
+func (r *SystemReconciler) reconcileDatabaseHASecret(desiredSecret *v1.Secret) error {
 	return r.reconcileSecret(desiredSecret)
 }

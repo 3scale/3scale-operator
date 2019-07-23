@@ -19,6 +19,7 @@ func (o *OperatorZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, 
 	}
 
 	o.setResourceRequirementsOptions(&optProv)
+	o.setReplicas(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -67,5 +68,12 @@ func (o *OperatorZyncOptionsProvider) setResourceRequirementsOptions(b *componen
 		b.ContainerResourceRequirements(v1.ResourceRequirements{})
 		b.QueContainerResourceRequirements(v1.ResourceRequirements{})
 		b.DatabaseContainerResourceRequirements(v1.ResourceRequirements{})
+	}
+}
+
+func (o *OperatorZyncOptionsProvider) setReplicas(zob *component.ZyncOptionsBuilder) {
+	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
+		zob.ZyncReplicas(2)
+		zob.ZyncQueReplicas(2)
 	}
 }

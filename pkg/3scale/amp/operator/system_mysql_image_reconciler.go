@@ -20,6 +20,10 @@ func NewSystemMySQLImageReconciler(baseAPIManagerLogicReconciler BaseAPIManagerL
 }
 
 func (r *SystemMySQLImageReconciler) Reconcile() (reconcile.Result, error) {
+	if r.apiManager.Spec.HighAvailability != nil && r.apiManager.Spec.HighAvailability.Enabled {
+		return reconcile.Result{}, nil
+	}
+
 	systemMySQLImage, err := r.systemMySQLImage()
 	if err != nil {
 		return reconcile.Result{}, err

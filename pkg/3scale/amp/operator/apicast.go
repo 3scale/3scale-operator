@@ -18,6 +18,7 @@ func (o *OperatorApicastOptionsProvider) GetApicastOptions() (*component.Apicast
 	optProv.ResponseCodes(strconv.FormatBool(*o.APIManagerSpec.Apicast.IncludeResponseCodes)) // TODO is this a good place to make the conversion?
 
 	o.setResourceRequirementsOptions(&optProv)
+	o.setReplicas(&optProv)
 	res, err := optProv.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Apicast Options - %s", err)
@@ -29,5 +30,12 @@ func (o *OperatorApicastOptionsProvider) setResourceRequirementsOptions(b *compo
 	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
 		b.StagingResourceRequirements(v1.ResourceRequirements{})
 		b.ProductionResourceRequirements(v1.ResourceRequirements{})
+	}
+}
+
+func (o *OperatorApicastOptionsProvider) setReplicas(b *component.ApicastOptionsBuilder) {
+	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
+		b.StagingReplicas(2)
+		b.ProductionReplicas(2)
 	}
 }

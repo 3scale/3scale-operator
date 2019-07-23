@@ -44,6 +44,9 @@ type SystemOptions struct {
 	s3FileStorageOptions  *S3FileStorageOptions
 	pvcFileStorageOptions *PVCFileStorageOptions
 
+	appReplicas     *int32
+	sidekiqReplicas *int32
+
 	// systemRequiredOptions
 	adminAccessToken    string
 	adminPassword       string
@@ -221,6 +224,14 @@ func (s *SystemOptionsBuilder) PVCFileStorageOptions(options PVCFileStorageOptio
 	s.options.pvcFileStorageOptions = &options
 }
 
+func (s *SystemOptionsBuilder) AppReplicas(replicas int32) {
+	s.options.appReplicas = &replicas
+}
+
+func (s *SystemOptionsBuilder) SidekiqReplicas(replicas int32) {
+	s.options.sidekiqReplicas = &replicas
+}
+
 func (s *SystemOptionsBuilder) Build() (*SystemOptions, error) {
 	err := s.setRequiredOptions()
 	if err != nil {
@@ -334,6 +345,16 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 
 	if s.options.sphinxContainerResourceRequirements == nil {
 		s.options.sphinxContainerResourceRequirements = s.defaultSphinxContainerResourceRequirements()
+	}
+
+	if s.options.appReplicas == nil {
+		var defaultAppReplicas int32 = 1
+		s.options.appReplicas = &defaultAppReplicas
+	}
+
+	if s.options.sidekiqReplicas == nil {
+		var defaultSidekiqReplicas int32 = 1
+		s.options.sidekiqReplicas = &defaultSidekiqReplicas
 	}
 }
 

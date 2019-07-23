@@ -19,6 +19,8 @@ type ApicastOptions struct {
 	// non required options
 	productionResourceRequirements *v1.ResourceRequirements
 	stagingResourceRequirements    *v1.ResourceRequirements
+	productionReplicas             *int32
+	stagingReplicas                *int32
 }
 
 type ApicastOptionsBuilder struct {
@@ -55,6 +57,14 @@ func (a *ApicastOptionsBuilder) ProductionResourceRequirements(resourceRequireme
 
 func (a *ApicastOptionsBuilder) StagingResourceRequirements(resourceRequirements v1.ResourceRequirements) {
 	a.options.stagingResourceRequirements = &resourceRequirements
+}
+
+func (a *ApicastOptionsBuilder) StagingReplicas(replicas int32) {
+	a.options.stagingReplicas = &replicas
+}
+
+func (a *ApicastOptionsBuilder) ProductionReplicas(replicas int32) {
+	a.options.productionReplicas = &replicas
 }
 
 func (a *ApicastOptionsBuilder) Build() (*ApicastOptions, error) {
@@ -98,6 +108,16 @@ func (a *ApicastOptionsBuilder) setNonRequiredOptions() {
 
 	if a.options.stagingResourceRequirements == nil {
 		a.options.stagingResourceRequirements = a.defaultStagingResourceRequirements()
+	}
+
+	if a.options.stagingReplicas == nil {
+		var defaultStagingReplicas int32 = 1
+		a.options.stagingReplicas = &defaultStagingReplicas
+	}
+
+	if a.options.productionReplicas == nil {
+		var defaultProductionReplicas int32 = 1
+		a.options.productionReplicas = &defaultProductionReplicas
 	}
 }
 

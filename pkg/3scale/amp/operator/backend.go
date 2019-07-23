@@ -22,6 +22,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	}
 
 	o.setResourceRequirementsOptions(&optProv)
+	o.setReplicas(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -141,4 +142,12 @@ func (o *OperatorBackendOptionsProvider) setBackendRedisOptions(b *component.Bac
 	}
 
 	return nil
+}
+
+func (o *OperatorBackendOptionsProvider) setReplicas(b *component.BackendOptionsBuilder) {
+	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
+		b.ListenerReplicas(2)
+		b.WorkerReplicas(2)
+		b.CronReplicas(2)
+	}
 }
