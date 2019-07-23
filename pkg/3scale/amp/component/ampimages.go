@@ -342,7 +342,7 @@ func (ampImages *AmpImages) buildSystemRedisImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: ampImages.Options.backendRedisImage,
+						Name: ampImages.Options.systemRedisImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
 						Insecure: InsecureImportPolicy,
