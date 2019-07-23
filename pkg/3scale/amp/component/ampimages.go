@@ -81,9 +81,7 @@ func (ampImages *AmpImages) buildAmpBackendImageStream() *imagev1.ImageStream {
 						Name: ampImages.Options.backendImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						// TODO this was originally a double brace expansion from a variable, that is not possible
-						// natively with kubernetes so we replaced it with a const
-						Insecure: InsecureImportPolicy,
+						Insecure: ampImages.Options.insecureImportPolicy,
 					},
 				},
 			},
@@ -126,9 +124,7 @@ func (ampImages *AmpImages) buildAmpZyncImageStream() *imagev1.ImageStream {
 						Name: ampImages.Options.zyncImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						// TODO this was originally a double brace expansion from a variable, that is not possible
-						// natively with kubernetes so we replaced it with a const
-						Insecure: InsecureImportPolicy,
+						Insecure: ampImages.Options.insecureImportPolicy,
 					},
 				},
 			},
@@ -171,9 +167,7 @@ func (ampImages *AmpImages) buildApicastImageStream() *imagev1.ImageStream {
 						Name: ampImages.Options.apicastImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						// TODO this was originally a double brace expansion from a variable, that is not possible
-						// natively with kubernetes so we replaced it with a const
-						Insecure: InsecureImportPolicy,
+						Insecure: ampImages.Options.insecureImportPolicy,
 					},
 				},
 			},
@@ -216,7 +210,7 @@ func (ampImages *AmpImages) buildAmpSystemImageStream() *imagev1.ImageStream {
 						Name: ampImages.Options.systemImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: InsecureImportPolicy,
+						Insecure: ampImages.Options.insecureImportPolicy,
 					},
 				},
 			},
@@ -259,7 +253,7 @@ func (ampImages *AmpImages) buildZyncDatabasePostgreSQLImageStream() *imagev1.Im
 						Name: ampImages.Options.ZyncDatabasePostgreSQLImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: InsecureImportPolicy,
+						Insecure: ampImages.Options.insecureImportPolicy,
 					},
 				},
 			},
@@ -302,7 +296,7 @@ func (ampImages *AmpImages) buildBackendRedisImageStream() *imagev1.ImageStream 
 						Name: ampImages.Options.backendRedisImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: InsecureImportPolicy,
+						Insecure: ampImages.Options.insecureImportPolicy,
 					},
 				},
 			},
@@ -345,7 +339,7 @@ func (ampImages *AmpImages) buildSystemRedisImageStream() *imagev1.ImageStream {
 						Name: ampImages.Options.systemRedisImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: InsecureImportPolicy,
+						Insecure: ampImages.Options.insecureImportPolicy,
 					},
 				},
 			},
@@ -388,7 +382,7 @@ func (ampImages *AmpImages) buildSystemMemcachedImageStream() *imagev1.ImageStre
 						Name: ampImages.Options.systemMemcachedImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: InsecureImportPolicy,
+						Insecure: ampImages.Options.insecureImportPolicy,
 					},
 				},
 			},

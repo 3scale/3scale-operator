@@ -61,7 +61,7 @@ func (s *SystemMySQLImage) buildSystemMySQLImageStream() *imagev1.ImageStream {
 						Name: s.Options.image,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: InsecureImportPolicy,
+						Insecure: s.Options.insecureImportPolicy,
 					},
 				},
 			},
