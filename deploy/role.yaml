@@ -16,10 +16,6 @@ rules:
   - configmaps
   - secrets
   - serviceaccounts
-  # For some reason there's an error creating serviceaccounts
-  # if you do not include permissions to bindings/finalizers.
-  # A related PR to this problem is:
-  # https://github.com/openshift/origin/pull/16253
   - bindings/finalizers
   verbs:
   - '*'
@@ -89,6 +85,7 @@ rules:
   - apps.3scale.net
   resources:
   - '*'
+  - apicasts
   verbs:
   - '*'
 - apiGroups:

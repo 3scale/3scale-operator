@@ -1,0 +1,109 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: apicasts.apps.3scale.net
+spec:
+  group: apps.3scale.net
+  names:
+    kind: APIcast
+    listKind: APIcastList
+    plural: apicasts
+    singular: apicast
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            adminPortal:
+              properties:
+                accessTokenSecretKeyRef:
+                  type: object
+                urlSecretKeyRef:
+                  type: object
+              required:
+              - urlSecretKeyRef
+              - accessTokenSecretKeyRef
+              type: object
+            environmentConfigurationSecretRef:
+              type: object
+            exposedHostname:
+              type: string
+            image:
+              type: string
+            replicas:
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "operator-sdk generate k8s" to regenerate code after
+                modifying this file Add custom validation using kubebuilder tags:
+                https://book.kubebuilder.io/beyond_basics/generating_crd.html'
+              format: int64
+              type: integer
+            serviceAccount:
+              type: string
+          required:
+          - replicas
+          - adminPortal
+          type: object
+        status:
+          properties:
+            conditions:
+              description: Represents the latest available observations of a replica
+                set's current state. +patchMergeKey=type +patchStrategy=merge
+              items:
+                properties:
+                  lastTransitionTime:
+                    description: The last time the condition transitioned from one
+                      status to another.
+                    format: date-time
+                    type: string
+                  message:
+                    description: A human readable message indicating details about
+                      the transition.
+                    type: string
+                  reason:
+                    description: The reason for the condition's last transition.
+                    type: string
+                  status:
+                    description: Status of the condition, one of True, False, Unknown.
+                    type: string
+                  type:
+                    description: Type of replica set condition.
+                    type: string
+                required:
+                - type
+                - status
+                type: object
+              type: array
+            deployed:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "operator-sdk generate k8s" to regenerate
+                code after modifying this file Add custom validation using kubebuilder
+                tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html'
+              type: boolean
+            observedGeneration:
+              description: ObservedGeneration reflects the generation of the most
+                recently observed ReplicaSet.
+              format: int64
+              type: integer
+          required:
+          - deployed
+          type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

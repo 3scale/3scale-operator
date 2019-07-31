@@ -16,6 +16,9 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManager":       schema_pkg_apis_apps_v1alpha1_APIManager(ref),
 		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec":   schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref),
 		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus": schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcast":          schema_pkg_apis_apps_v1alpha1_APIcast(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastSpec":      schema_pkg_apis_apps_v1alpha1_APIcastSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastStatus":    schema_pkg_apis_apps_v1alpha1_APIcastStatus(ref),
 	}
 }
 
@@ -161,5 +164,146 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref common.ReferenceCallback
 		},
 		Dependencies: []string{
 			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerCondition", "github.com/RHsyseng/operator-utils/pkg/olm.DeploymentStatus"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIcast(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIcast is the Schema for the apicasts API",
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIcastSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIcastSpec defines the desired state of APIcast",
+				Properties: map[string]spec.Schema{
+					"replicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"adminPortal": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastThreescaleAdminPortal"),
+						},
+					},
+					"environmentConfigurationSecretRef": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.SecretEnvSource"),
+						},
+					},
+					"serviceAccount": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"image": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"exposedHostname": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+				Required: []string{"replicas", "adminPortal"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastThreescaleAdminPortal", "k8s.io/api/core/v1.SecretEnvSource"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIcastStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIcastStatus defines the observed state of APIcast",
+				Properties: map[string]spec.Schema{
+					"deployed": {
+						SchemaProps: spec.SchemaProps{
+							Description: "INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ObservedGeneration reflects the generation of the most recently observed ReplicaSet.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-patch-merge-key": "type",
+								"x-kubernetes-patch-strategy":  "merge",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Represents the latest available observations of a replica set's current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastCondition"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"deployed"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIcastCondition"},
 	}
 }

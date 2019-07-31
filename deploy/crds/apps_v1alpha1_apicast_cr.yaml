@@ -1,0 +1,14 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIcast
+metadata:
+  name: example-apicast
+spec:
+  # Add fields here
+  replicas: 1
+  adminPortal:
+    urlSecretKeyRef:
+      name: url-secret
+      key: url
+    accessTokenSecretKeyRef:
+      name: accesstoken-secret
+      key: accesstoken

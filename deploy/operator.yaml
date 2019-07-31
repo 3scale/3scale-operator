@@ -15,7 +15,7 @@ spec:
       serviceAccountName: 3scale-operator
       containers:
         - name: 3scale-operator
-          image: REPLACE_IMAGE
+          image: quay.io/3scale/3scale-operator:msoriano-test
           command:
             - 3scale-operator
           imagePullPolicy: Always
