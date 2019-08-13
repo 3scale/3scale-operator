@@ -903,6 +903,7 @@ func (system *System) buildSystemSharedPVC() *v1.PersistentVolumeClaim {
 			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
+			StorageClassName: system.Options.storageClassName,
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteMany,
 			},
