@@ -120,7 +120,7 @@ func (o *OperatorBackendOptionsProvider) setBackendRedisOptions(b *component.Bac
 		}
 		result = getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelHostsFieldName)
 		if result != nil {
-			b.RedisStorageSentinelHosts(*result)
+			b.RedisQueuesSentinelHosts(*result)
 		}
 		result = getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelRoleFieldName)
 		if result != nil {
