@@ -3,11 +3,11 @@ package product
 type release_2_6 struct{}
 
 func (p *release_2_6) GetApicastImage() string {
-	return "quay.io/3scale/3scale26:apicast-3scale-2.6.0-ER1"
+	return "quay.io/3scale/3scale26:apicast-3scale-2.6.0-GA"
 }
 
 func (p *release_2_6) GetBackendImage() string {
-	return "quay.io/3scale/3scale26:apisonator-3scale-2.6.0-ER1"
+	return "quay.io/3scale/3scale26:apisonator-3scale-2.6.0-GA"
 }
 
 func (p *release_2_6) GetBackendRedisImage() string {
@@ -15,7 +15,7 @@ func (p *release_2_6) GetBackendRedisImage() string {
 }
 
 func (p *release_2_6) GetSystemImage() string {
-	return "quay.io/3scale/3scale26:porta-3scale-2.6.0-ER1"
+	return "quay.io/3scale/3scale26:porta-3scale-2.6.0-GA"
 }
 
 func (p *release_2_6) GetSystemRedisImage() string {
@@ -35,7 +35,7 @@ func (p *release_2_6) GetSystemMemcachedImage() string {
 }
 
 func (p *release_2_6) GetZyncImage() string {
-	return "quay.io/3scale/3scale26:zync-3scale-2.6.0-ER1"
+	return "quay.io/3scale/3scale26:zync-3scale-2.6.0-GA"
 }
 
 func (p *release_2_6) GetZyncPostgreSQLImage() string {
