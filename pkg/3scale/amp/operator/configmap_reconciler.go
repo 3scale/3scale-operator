@@ -3,77 +3,98 @@ package operator
 import (
 	"context"
 	"fmt"
-	"reflect"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type ConfigMapReconciler struct {
-	BaseReconciler
-	ObjectMetaMerger ObjectMetaMerger
+type ConfigMapReconciler interface {
+	IsUpdateNeeded(desired, existing *v1.ConfigMap) bool
 }
 
-func NewConfigMapReconciler(baseReconciler BaseReconciler, objectMetaMerger ObjectMetaMerger) ConfigMapReconciler {
-	return ConfigMapReconciler{
-		BaseReconciler:   baseReconciler,
-		ObjectMetaMerger: objectMetaMerger,
+type ConfigMapBaseReconciler struct {
+	BaseAPIManagerLogicReconciler
+	reconciler ConfigMapReconciler
+}
+
+func NewConfigMapBaseReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler, reconciler ConfigMapReconciler) *ConfigMapBaseReconciler {
+	return &ConfigMapBaseReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+		reconciler:                    reconciler,
 	}
 }
 
-func (r *ConfigMapReconciler) Reconcile(desiredConfigMap *v1.ConfigMap) error {
-	objectInfo := ObjectInfo(desiredConfigMap)
-	existingConfigMap := &v1.ConfigMap{}
-	err := r.Client().Get(context.TODO(), types.NamespacedName{Name: desiredConfigMap.Name, Namespace: desiredConfigMap.Namespace}, existingConfigMap)
+func (r *ConfigMapBaseReconciler) Reconcile(desired *v1.ConfigMap) error {
+	objectInfo := ObjectInfo(desired)
+	existing := &v1.ConfigMap{}
+	err := r.Client().Get(
+		context.TODO(),
+		types.NamespacedName{Name: desired.Name, Namespace: r.apiManager.GetNamespace()},
+		existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			createErr := r.Client().Create(context.TODO(), desiredConfigMap)
+			createErr := r.createResource(desired)
 			if createErr != nil {
 				r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 				return createErr
 			}
-			r.Logger().Info(fmt.Sprintf("Created object %s", objectInfo))
 			return nil
 		}
 		return err
 	}
 
-	needsUpdate, err := r.ensureConfigMap(existingConfigMap, desiredConfigMap)
+	update, err := r.isUpdateNeeded(desired, existing)
 	if err != nil {
 		return err
 	}
 
-	if needsUpdate {
-		r.Logger().Info(fmt.Sprintf("Updating ConfigMap %s", objectInfo))
-		err := r.Client().Update(context.TODO(), existingConfigMap)
-		if err != nil {
-			r.Logger().Error(err, fmt.Sprintf("error updating Service %s", objectInfo))
-			return err
-		}
+	if update {
+		return r.updateResource(existing)
 	}
 
 	return nil
 }
 
-func (r *ConfigMapReconciler) ensureConfigMap(updated, desired *v1.ConfigMap) (bool, error) {
-	changed := false
+func (r *ConfigMapBaseReconciler) isUpdateNeeded(desired, existing *v1.ConfigMap) (bool, error) {
+	updated := helper.EnsureObjectMeta(&existing.ObjectMeta, &desired.ObjectMeta)
 
-	objectMetaChanged, err := r.ObjectMetaMerger.EnsureObjectMeta(&updated.ObjectMeta, &desired.ObjectMeta)
+	updatedTmp, err := r.ensureOwnerReference(existing)
 	if err != nil {
-		return false, err
-	}
-	if objectMetaChanged {
-		changed = true
+		return false, nil
 	}
 
-	// TODO should be the reconciliation of ConfigMap data a merge behavior
-	// instead of a replace one?
-	// TODO should we reconcile BinaryData too???
-	if !reflect.DeepEqual(updated.Data, desired.Data) {
-		updated.Data = desired.Data
-		changed = true
-	}
+	updated = updated || updatedTmp
 
-	return changed, nil
+	updatedTmp = r.reconciler.IsUpdateNeeded(desired, existing)
+	updated = updated || updatedTmp
+
+	return updated, nil
+}
+
+type CreateOnlyConfigMapReconciler struct {
+}
+
+func NewCreateOnlyConfigMapReconciler() *CreateOnlyConfigMapReconciler {
+	return &CreateOnlyConfigMapReconciler{}
+}
+
+func (r *CreateOnlyConfigMapReconciler) IsUpdateNeeded(desired, existing *v1.ConfigMap) bool {
+	return false
+}
+
+func ConfigMapReconcileField(desired, existing *v1.ConfigMap, fieldName string) bool {
+	updated := false
+
+	if existingVal, ok := existing.Data[fieldName]; !ok {
+		existing.Data[fieldName] = desired.Data[fieldName]
+		updated = true
+	} else {
+		if desired.Data[fieldName] != existingVal {
+			existing.Data[fieldName] = desired.Data[fieldName]
+			updated = true
+		}
+	}
+	return updated
 }
