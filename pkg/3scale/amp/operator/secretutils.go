@@ -24,7 +24,7 @@ func getSecret(name string, namespace string, client k8sclient.Client) (*v1.Secr
 
 	err := client.Get(context.TODO(), objKey, secret)
 	if err != nil {
-		return nil, err
+		return secret, err
 	}
 
 	return secret, nil
