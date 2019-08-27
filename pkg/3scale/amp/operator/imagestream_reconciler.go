@@ -4,137 +4,126 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sort"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	imagev1 "github.com/openshift/api/image/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type ImageStreamReconciler struct {
-	BaseReconciler
-	ObjectMetaMerger ObjectMetaMerger
+type ImageStreamReconciler interface {
+	IsUpdateNeeded(desired, existing *imagev1.ImageStream) bool
 }
 
-func NewImageStreamReconciler(baseReconciler BaseReconciler, objectMetaMerger ObjectMetaMerger) ImageStreamReconciler {
-	return ImageStreamReconciler{
-		BaseReconciler:   baseReconciler,
-		ObjectMetaMerger: objectMetaMerger,
+type ImageStreamBaseReconciler struct {
+	BaseAPIManagerLogicReconciler
+	reconciler ImageStreamReconciler
+}
+
+func NewImageStreamBaseReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler, reconciler ImageStreamReconciler) *ImageStreamBaseReconciler {
+	return &ImageStreamBaseReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+		reconciler:                    reconciler,
 	}
 }
 
-func (r *ImageStreamReconciler) Reconcile(desiredImageStream *imagev1.ImageStream) error {
-	objectInfo := ObjectInfo(desiredImageStream)
-	existingImageStream := &imagev1.ImageStream{}
-	err := r.Client().Get(context.TODO(), types.NamespacedName{Name: desiredImageStream.Name, Namespace: desiredImageStream.Namespace}, existingImageStream)
+func (r *ImageStreamBaseReconciler) Reconcile(desired *imagev1.ImageStream) error {
+	objectInfo := ObjectInfo(desired)
+	existing := &imagev1.ImageStream{}
+	err := r.Client().Get(
+		context.TODO(),
+		types.NamespacedName{Name: desired.Name, Namespace: r.apiManager.GetNamespace()},
+		existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			createErr := r.Client().Create(context.TODO(), desiredImageStream)
+			createErr := r.createResource(desired)
 			if createErr != nil {
 				r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 				return createErr
 			}
-			r.Logger().Info(fmt.Sprintf("Created object %s", objectInfo))
 			return nil
 		}
 		return err
 	}
 
-	needsUpdate, err := r.ensureImageStream(existingImageStream, desiredImageStream)
+	update, err := r.isUpdateNeeded(desired, existing)
 	if err != nil {
 		return err
 	}
 
-	if needsUpdate {
-		r.Logger().Info(fmt.Sprintf("Updating ImageStream %s", objectInfo))
-		err := r.Client().Update(context.TODO(), existingImageStream)
-		if err != nil {
-			r.Logger().Error(err, fmt.Sprintf("error updating ImageStream %s", objectInfo))
-			return err
-		}
+	if update {
+		return r.updateResource(existing)
 	}
 
 	return nil
 }
 
-func (r *ImageStreamReconciler) ensureImageStream(updated, desired *imagev1.ImageStream) (bool, error) {
-	changed := false
+func (r *ImageStreamBaseReconciler) isUpdateNeeded(desired, existing *imagev1.ImageStream) (bool, error) {
+	updated := helper.EnsureObjectMeta(&existing.ObjectMeta, &desired.ObjectMeta)
 
-	objectMetaChanged, err := r.ObjectMetaMerger.EnsureObjectMeta(&updated.ObjectMeta, &desired.ObjectMeta)
+	updatedTmp, err := r.ensureOwnerReference(existing)
 	if err != nil {
-		return false, err
+		return false, nil
 	}
-	if objectMetaChanged {
-		changed = true
-	}
+	updated = updated || updatedTmp
 
-	r.ensureImageTagReferences(updated, desired)
-	if !reflect.DeepEqual(updated.Spec, desired.Spec) {
-		updated.Spec = desired.Spec
-		changed = true
-	}
+	updatedTmp = r.reconciler.IsUpdateNeeded(desired, existing)
+	updated = updated || updatedTmp
 
-	return changed, nil
+	return updated, nil
 }
 
-// Sets the generation field of the desired ImageStreamTags with the value
-// of the equivalent ImageStreamTag in the existing ImageStreamTag
-// That's because the Generation field in the ImageStream TagReferences
-// is filled by OpenShift after deploying so that would
-// make the comparison on that field always with a result of being
-// unequal when comparing the generation field between existing and
-// desired
-// It also sets the ReferencePolicyType in the desired in case it is empty
-// because OpenShift fills it with a value when not defined
-// The arrays are sorted because there could be the same tags
-// but in different order and the comparison should be performed
-// independently of the order of the arrays
-func (r *ImageStreamReconciler) ensureImageTagReferences(updated, desired *imagev1.ImageStream) {
-	updatedImageStreamTagReferenceMap := map[string]*imagev1.TagReference{}
-	for idx := range updated.Spec.Tags {
-		tagref := &updated.Spec.Tags[idx]
-		updatedImageStreamTagReferenceMap[tagref.Name] = tagref
-	}
+type ImageStreamGenericReconciler struct {
+}
 
-	for idx := range desired.Spec.Tags {
-		desiredTagRef := &desired.Spec.Tags[idx]
-		if updatedTagRef, ok := updatedImageStreamTagReferenceMap[desiredTagRef.Name]; ok {
-			desiredTagRef.Generation = updatedTagRef.Generation
+func NewImageStreamGenericReconciler() *ImageStreamGenericReconciler {
+	return &ImageStreamGenericReconciler{}
+}
 
-			if desiredTagRef.ReferencePolicy.Type == "" {
-				desiredTagRef.ReferencePolicy.Type = updatedTagRef.ReferencePolicy.Type
+func (r *ImageStreamGenericReconciler) IsUpdateNeeded(desired, existing *imagev1.ImageStream) bool {
+	// merging approach will be implemented
+	// spec.tags tagrefences in desired must exist in existing.
+	// If element does not exist, append
+	// If exists (by name), ensure From field and ImportPolicy fields are equal.
+	updated := false
+
+	findTagReference := func(tagRefName string, tagRefS []imagev1.TagReference) int {
+		for i, _ := range tagRefS {
+			if tagRefS[i].Name == tagRefName {
+				return i
 			}
 		}
+		return -1
 	}
 
-	sort.Slice(updated.Spec.Tags, func(i, j int) bool { return updated.Spec.Tags[i].Name < updated.Spec.Tags[j].Name })
-	sort.Slice(desired.Spec.Tags, func(i, j int) bool { return desired.Spec.Tags[i].Name < desired.Spec.Tags[j].Name })
-
-	// if len(updated.Spec.Tags) != len(desired.Spec.Tags) {
-	// 	updated.Spec.Tags = desired.Spec.Tags
-	// 	return
-	// }
-
-	// for idx := range desired.Spec.Tags {
-	// 	if desired.Spec.Tags[idx].Name != updated.Spec.Tags[idx].Name {
-	// 		updated.Spec.Tags = desired.Spec.Tags
-	// 		return
-	// 	}
-	// }
-
-}
-
-func (r *ImageStreamReconciler) reconcileImageStreamTagReferencesGeneration(existingImageStream, desiredImageStream *imagev1.ImageStream) {
-	existingImageStreamTagReferenceMap := map[string]*imagev1.TagReference{}
-	for idx := range existingImageStream.Spec.Tags {
-		tagref := &existingImageStream.Spec.Tags[idx]
-		existingImageStreamTagReferenceMap[tagref.Name] = tagref
-	}
-
-	for idx := range desiredImageStream.Spec.Tags {
-		desiredTagRef := &desiredImageStream.Spec.Tags[idx]
-		if existingTagRef, ok := existingImageStreamTagReferenceMap[desiredTagRef.Name]; ok {
-			desiredTagRef.Generation = existingTagRef.Generation
+	for idx, _ := range desired.Spec.Tags {
+		if existingIdx := findTagReference(desired.Spec.Tags[idx].Name, existing.Spec.Tags); existingIdx < 0 {
+			// does not exist, append
+			existing.Spec.Tags = append(existing.Spec.Tags, desired.Spec.Tags[idx])
+			updated = true
+		} else {
+			// exists, reconcile
+			tmpUpdated := imageStreamReconcile(existing.Spec.Tags, existingIdx, desired.Spec.Tags, idx)
+			updated = updated || tmpUpdated
 		}
 	}
+
+	return updated
+}
+
+func imageStreamReconcile(existingTags []imagev1.TagReference, existingIdx int, desiredTags []imagev1.TagReference, desiredIdx int) bool {
+	// From and ImportPolicy fields are equal.
+	updated := false
+
+	if !reflect.DeepEqual(existingTags[existingIdx].From, desiredTags[desiredIdx].From) {
+		existingTags[existingIdx].From = desiredTags[desiredIdx].From
+		updated = true
+	}
+
+	if !reflect.DeepEqual(existingTags[existingIdx].ImportPolicy, desiredTags[desiredIdx].ImportPolicy) {
+		existingTags[existingIdx].ImportPolicy = desiredTags[desiredIdx].ImportPolicy
+		updated = true
+	}
+
+	return updated
 }
