@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	imagev1 "github.com/openshift/api/image/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -75,48 +77,72 @@ func (r *AMPImagesReconciler) ampImages() (*component.AmpImages, error) {
 	return component.NewAmpImages(opts), nil
 }
 
-func (r *AMPImagesReconciler) reconcileImageStream(desiredImageStream *imagev1.ImageStream) error {
-	err := r.InitializeAsAPIManagerObject(desiredImageStream)
-	if err != nil {
-		return err
-	}
-
-	return r.imagestreamReconciler.Reconcile(desiredImageStream)
-}
-
-func (r *AMPImagesReconciler) reconcileServiceAccount(desiredServiceAccount *v1.ServiceAccount) error {
-	err := r.InitializeAsAPIManagerObject(desiredServiceAccount)
-	if err != nil {
-		return err
-	}
-
-	return r.serviceAccountReconciler.Reconcile(desiredServiceAccount)
-}
-
 func (r *AMPImagesReconciler) reconcileBackendImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
+	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
+	err := reconciler.Reconcile(desiredImageStream)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
+	return nil
 }
 
 func (r *AMPImagesReconciler) reconcileZyncImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
+	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
+	err := reconciler.Reconcile(desiredImageStream)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
+	return nil
 }
 
 func (r *AMPImagesReconciler) reconcileApicastImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
+	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
+	err := reconciler.Reconcile(desiredImageStream)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info("apicast imagestream reconciled")
+	return nil
 }
 
 func (r *AMPImagesReconciler) reconcileSystemImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
+	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
+	err := reconciler.Reconcile(desiredImageStream)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
+	return nil
 }
 
 func (r *AMPImagesReconciler) reconcileZyncDatabasePostgreSQLImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
+	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
+	err := reconciler.Reconcile(desiredImageStream)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
+	return nil
 }
 
 func (r *AMPImagesReconciler) reconcileSystemMemcachedImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
+	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
+	err := reconciler.Reconcile(desiredImageStream)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
+	return nil
 }
 
 func (r *AMPImagesReconciler) reconcileDeploymentsServiceAccount(desiredServiceAccount *v1.ServiceAccount) error {
-	return r.reconcileServiceAccount(desiredServiceAccount)
+	reconciler := NewServiceAccountBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyServiceAccountReconciler())
+	err := reconciler.Reconcile(desiredServiceAccount)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredServiceAccount)))
+	return nil
 }
