@@ -3,108 +3,83 @@ package operator
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"sort"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type ServiceAccountReconciler struct {
-	BaseReconciler
-	ObjectMetaMerger ObjectMetaMerger
+type ServiceAccountReconciler interface {
+	IsUpdateNeeded(desired, existing *v1.ServiceAccount) bool
 }
 
-func NewServiceAccountReconciler(baseReconciler BaseReconciler, objectMetaMerger ObjectMetaMerger) ServiceAccountReconciler {
-	return ServiceAccountReconciler{
-		BaseReconciler:   baseReconciler,
-		ObjectMetaMerger: objectMetaMerger,
+type ServiceAccountBaseReconciler struct {
+	BaseAPIManagerLogicReconciler
+	reconciler ServiceAccountReconciler
+}
+
+func NewServiceAccountBaseReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler, reconciler ServiceAccountReconciler) *ServiceAccountBaseReconciler {
+	return &ServiceAccountBaseReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+		reconciler:                    reconciler,
 	}
 }
 
-func (r *ServiceAccountReconciler) Reconcile(desiredServiceAccount *v1.ServiceAccount) error {
-	objectInfo := ObjectInfo(desiredServiceAccount)
-	existingServiceAccount := &v1.ServiceAccount{}
-	err := r.Client().Get(context.TODO(), types.NamespacedName{Name: desiredServiceAccount.Name, Namespace: desiredServiceAccount.Namespace}, existingServiceAccount)
+func (r *ServiceAccountBaseReconciler) Reconcile(desired *v1.ServiceAccount) error {
+	objectInfo := ObjectInfo(desired)
+	existing := &v1.ServiceAccount{}
+	err := r.Client().Get(
+		context.TODO(),
+		types.NamespacedName{Name: desired.Name, Namespace: r.apiManager.GetNamespace()},
+		existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			createErr := r.Client().Create(context.TODO(), desiredServiceAccount)
+			createErr := r.createResource(desired)
 			if createErr != nil {
 				r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 				return createErr
 			}
-			r.Logger().Info(fmt.Sprintf("Created object %s", objectInfo))
 			return nil
 		}
 		return err
 	}
 
-	needsUpdate, err := r.ensureDeploymentsServiceAccount(existingServiceAccount, desiredServiceAccount)
+	update, err := r.isUpdateNeeded(desired, existing)
 	if err != nil {
 		return err
 	}
 
-	if needsUpdate {
-		r.Logger().Info(fmt.Sprintf("Updating ServiceAccount %s", objectInfo))
-		err := r.Client().Update(context.TODO(), existingServiceAccount)
-		if err != nil {
-			r.Logger().Error(err, fmt.Sprintf("error updating ServiceAccount %s", objectInfo))
-			return err
-		}
+	if update {
+		return r.updateResource(existing)
 	}
 
 	return nil
 }
 
-func (r *ServiceAccountReconciler) ensureDeploymentsServiceAccount(updated, desired *v1.ServiceAccount) (bool, error) {
-	changed := false
+func (r *ServiceAccountBaseReconciler) isUpdateNeeded(desired, existing *v1.ServiceAccount) (bool, error) {
+	updated := helper.EnsureObjectMeta(&existing.ObjectMeta, &desired.ObjectMeta)
 
-	objectMetaChanged, err := r.ObjectMetaMerger.EnsureObjectMeta(&updated.ObjectMeta, &desired.ObjectMeta)
+	updatedTmp, err := r.ensureOwnerReference(existing)
 	if err != nil {
-		return false, err
-	}
-	if objectMetaChanged {
-		changed = true
+		return false, nil
 	}
 
-	// We only reconcile ImagePullSecrets
-	r.ensureServiceAccountImagePullSecrets(updated, desired)
-	if !reflect.DeepEqual(updated.ImagePullSecrets, desired.ImagePullSecrets) {
-		updated.ImagePullSecrets = desired.ImagePullSecrets
-		changed = true
-	}
+	updated = updated || updatedTmp
 
-	return changed, nil
+	updatedTmp = r.reconciler.IsUpdateNeeded(desired, existing)
+	updated = updated || updatedTmp
+
+	return updated, nil
 }
 
-// Merges existing serviceaccounts pullsecrets into the desired serviceaccounts
-// This is because OpenShift creates additional ImagePullSecrets and we
-// don't want to lose them
-// TODO would it be better to just update the "updated" variable and just
-// communicate that is has changed directly? This
-func (r *ServiceAccountReconciler) ensureServiceAccountImagePullSecrets(updated, desired *v1.ServiceAccount) {
-	desiredServiceAccountImagePullSecretsMap := map[string]*v1.LocalObjectReference{}
-	for idx := range desired.ImagePullSecrets {
-		imagePullSecret := &desired.ImagePullSecrets[idx]
-		desiredServiceAccountImagePullSecretsMap[imagePullSecret.Name] = imagePullSecret
-	}
+type CreateOnlyServiceAccountReconciler struct {
+}
 
-	newDesiredImagePullSecrets := []v1.LocalObjectReference{}
-	for _, val := range desired.ImagePullSecrets {
-		newDesiredImagePullSecrets = append(newDesiredImagePullSecrets, val)
-	}
+func NewCreateOnlyServiceAccountReconciler() *CreateOnlyServiceAccountReconciler {
+	return &CreateOnlyServiceAccountReconciler{}
+}
 
-	for idx := range updated.ImagePullSecrets {
-		updatedImagePullSecret := &updated.ImagePullSecrets[idx]
-		if _, ok := desiredServiceAccountImagePullSecretsMap[updatedImagePullSecret.Name]; !ok {
-			desiredServiceAccountImagePullSecretsMap[updatedImagePullSecret.Name] = updatedImagePullSecret
-			newDesiredImagePullSecrets = append(newDesiredImagePullSecrets, *updatedImagePullSecret)
-		}
-	}
-
-	desired.ImagePullSecrets = newDesiredImagePullSecrets
-
-	sort.Slice(updated.ImagePullSecrets, func(i, j int) bool { return updated.ImagePullSecrets[i].Name < updated.ImagePullSecrets[j].Name })
-	sort.Slice(desired.ImagePullSecrets, func(i, j int) bool { return desired.ImagePullSecrets[i].Name < desired.ImagePullSecrets[j].Name })
+func (r *CreateOnlyServiceAccountReconciler) IsUpdateNeeded(desired, existing *v1.ServiceAccount) bool {
+	return false
 }
