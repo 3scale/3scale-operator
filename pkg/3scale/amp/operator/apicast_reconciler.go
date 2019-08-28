@@ -1,11 +1,82 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+type ApicastEnvCMReconciler struct {
+}
+
+func NewApicastEnvCMReconciler() *ApicastEnvCMReconciler {
+	return &ApicastEnvCMReconciler{}
+}
+
+func (r *ApicastEnvCMReconciler) IsUpdateNeeded(desiredCM, existingCM *v1.ConfigMap) bool {
+	update := false
+
+	//	Check APICAST_MANAGEMENT_API
+	fieldUpdated := ConfigMapReconcileField(desiredCM, existingCM, "APICAST_MANAGEMENT_API")
+	update = update || fieldUpdated
+
+	//	Check OPENSSL_VERIFY
+	fieldUpdated = ConfigMapReconcileField(desiredCM, existingCM, "OPENSSL_VERIFY")
+	update = update || fieldUpdated
+
+	//	Check APICAST_RESPONSE_CODES
+	fieldUpdated = ConfigMapReconcileField(desiredCM, existingCM, "APICAST_RESPONSE_CODES")
+	update = update || fieldUpdated
+
+	return update
+}
+
+type ApicastProdDCReconciler struct {
+	BaseAPIManagerLogicReconciler
+}
+
+func NewApicastProdDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *ApicastProdDCReconciler {
+	return &ApicastProdDCReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+	}
+}
+
+func (r *ApicastProdDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
+	update := false
+
+	tmpUpdate := DeploymentConfigReconcileReplicas(desired, existing, r.Logger())
+	update = update || tmpUpdate
+
+	tmpUpdate = DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
+	update = update || tmpUpdate
+
+	return update
+}
+
+type ApicastStagingDCReconciler struct {
+	BaseAPIManagerLogicReconciler
+}
+
+func NewApicastDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *ApicastStagingDCReconciler {
+	return &ApicastStagingDCReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+	}
+}
+
+func (r *ApicastStagingDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
+	update := false
+
+	tmpUpdate := DeploymentConfigReconcileReplicas(desired, existing, r.Logger())
+	update = update || tmpUpdate
+
+	tmpUpdate = DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
+	update = update || tmpUpdate
+
+	return update
+}
 
 type ApicastReconciler struct {
 	BaseAPIManagerLogicReconciler
@@ -63,48 +134,52 @@ func (r *ApicastReconciler) apicast() (*component.Apicast, error) {
 	return component.NewApicast(opts), nil
 }
 
-func (r *ApicastReconciler) reconcileDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	err := r.InitializeAsAPIManagerObject(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-
-	return r.deploymentConfigReconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *ApicastReconciler) reconcileConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	err := r.InitializeAsAPIManagerObject(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-
-	return r.configMapReconciler.Reconcile(desiredConfigMap)
-}
-
-func (r *ApicastReconciler) reconcileService(desiredService *v1.Service) error {
-	err := r.InitializeAsAPIManagerObject(desiredService)
-	if err != nil {
-		return err
-	}
-	return r.serviceReconciler.Reconcile(desiredService)
-}
-
 func (r *ApicastReconciler) reconcileStagingDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	return r.reconcileDeploymentConfig(desiredDeploymentConfig)
+	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewApicastDCReconciler(r.BaseAPIManagerLogicReconciler))
+	err := reconciler.Reconcile(desiredDeploymentConfig)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
+	return nil
 }
 
 func (r *ApicastReconciler) reconcileProductionDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	return r.reconcileDeploymentConfig(desiredDeploymentConfig)
+	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewApicastDCReconciler(r.BaseAPIManagerLogicReconciler))
+	err := reconciler.Reconcile(desiredDeploymentConfig)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
+	return nil
 }
 
 func (r *ApicastReconciler) reconcileStagingService(desiredService *v1.Service) error {
-	return r.reconcileService(desiredService)
+	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
+	err := reconciler.Reconcile(desiredService)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
+	return nil
 }
 
 func (r *ApicastReconciler) reconcileProductionService(desiredService *v1.Service) error {
-	return r.reconcileService(desiredService)
+	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
+	err := reconciler.Reconcile(desiredService)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
+	return nil
 }
 
 func (r *ApicastReconciler) reconcileEnvironmentConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	return r.reconcileConfigMap(desiredConfigMap)
+	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewApicastEnvCMReconciler())
+	err := reconciler.Reconcile(desiredConfigMap)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
+	return nil
 }
