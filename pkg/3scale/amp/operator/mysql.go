@@ -47,27 +47,19 @@ func (o *OperatorMysqlOptionsProvider) setSystemDatabaseOptions(builder *compone
 	// TODO is this correct?? in templates the user provides dbname and rootpassword
 	// but the secret is only the URL.
 	defaultDatabaseURL := "mysql2://root:" + defaultDatabaseRootPassword + "@system-mysql/" + defaultDatabaseName
+
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	// If a field of a secret already exists in the deployed secret then
+	// We do not modify it. Otherwise we set a default value
+	secretData := currSecret.Data
+	builder.User(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseUserFieldName, defaultDatabaseUsername))
+	builder.Password(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabasePasswordFieldName, defaultDatabasePassword))
+	err = o.parseAndSetDatabaseURLAndParts(builder, secretData, defaultDatabaseURL)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			// Set options defaults
-			builder.DatabaseName(defaultDatabaseName)
-			builder.User(defaultDatabaseUsername)
-			builder.Password(defaultDatabasePassword)
-			builder.RootPassword(defaultDatabaseRootPassword)
-			builder.DatabaseURL(defaultDatabaseURL)
-		} else {
-			return err
-		}
-	} else {
-		// If a field of a secret already exists in the deployed secret then
-		// We do not modify it. Otherwise we set a default value
-		secretData := currSecret.Data
-		builder.User(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseUserFieldName, defaultDatabaseUsername))
-		builder.Password(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabasePasswordFieldName, defaultDatabasePassword))
-		err := o.parseAndSetDatabaseURLAndParts(builder, secretData, defaultDatabaseURL)
-		if err != nil {
-			return err
-		}
+		return err
 	}
 	return nil
 }
