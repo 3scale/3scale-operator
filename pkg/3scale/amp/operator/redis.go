@@ -29,6 +29,8 @@ func (o *OperatorRedisOptionsProvider) GetRedisOptions() (*component.RedisOption
 		optProv.SystemImage(imageProvider.GetSystemRedisImage())
 	}
 
+	o.setResourceRequirementsOptions(&optProv)
+
 	res, err := optProv.Build()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Redis Options - %s", err)
