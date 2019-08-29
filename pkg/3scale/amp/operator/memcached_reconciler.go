@@ -1,10 +1,31 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+type MemcachedDCReconciler struct {
+	BaseAPIManagerLogicReconciler
+}
+
+func NewMemcachedDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *MemcachedDCReconciler {
+	return &MemcachedDCReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+	}
+}
+
+func (r *MemcachedDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
+	update := false
+
+	tmpUpdate := DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
+	update = update || tmpUpdate
+
+	return update
+}
 
 type MemcachedReconciler struct {
 	BaseAPIManagerLogicReconciler
@@ -42,15 +63,12 @@ func (r *MemcachedReconciler) memcached() (*component.Memcached, error) {
 	return component.NewMemcached(opts), nil
 }
 
-func (r *MemcachedReconciler) reconcileDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	err := r.InitializeAsAPIManagerObject(desiredDeploymentConfig)
+func (r *MemcachedReconciler) reconcileMemcachedDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
+	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewMemcachedDCReconciler(r.BaseAPIManagerLogicReconciler))
+	err := reconciler.Reconcile(desiredDeploymentConfig)
 	if err != nil {
 		return err
 	}
-
-	return r.deploymentConfigReconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *MemcachedReconciler) reconcileMemcachedDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	return r.reconcileDeploymentConfig(desiredDeploymentConfig)
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
+	return nil
 }
