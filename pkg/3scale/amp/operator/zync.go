@@ -12,7 +12,7 @@ import (
 func (o *OperatorZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	optProv := component.ZyncOptionsBuilder{}
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	
+
 	err := o.setSecretBasedOptions(&optProv)
 	if err != nil {
 		return nil, err
@@ -43,23 +43,18 @@ func (o *OperatorZyncOptionsProvider) setZyncSecretOptions(zob *component.ZyncOp
 	defaultZyncAuthenticationToken := oprand.String(16)
 
 	currSecret, err := getSecret(component.ZyncSecretName, o.Namespace, o.Client)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Set options defaults
-			zob.SecretKeyBase(defaultZyncSecretKeyBase)
-			zob.DatabasePassword(defaultZyncDatabasePassword)
-			zob.AuthenticationToken(defaultZyncAuthenticationToken)
-		} else {
-			return err
-		}
-	} else {
-		// If a field of a secret already exists in the deployed secret then
-		// We do not modify it. Otherwise we set a default value
-		secretData := currSecret.Data
-		zob.SecretKeyBase(getSecretDataValueOrDefault(secretData, component.ZyncSecretKeyBaseFieldName, defaultZyncSecretKeyBase))
-		zob.DatabasePassword(getSecretDataValueOrDefault(secretData, component.ZyncSecretDatabasePasswordFieldName, defaultZyncDatabasePassword))
-		zob.AuthenticationToken(getSecretDataValueOrDefault(secretData, component.ZyncSecretAuthenticationTokenFieldName, defaultZyncAuthenticationToken))
+
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	// If a field of a secret already exists in the deployed secret then
+	// We do not modify it. Otherwise we set a default value
+	secretData := currSecret.Data
+	zob.SecretKeyBase(getSecretDataValueOrDefault(secretData, component.ZyncSecretKeyBaseFieldName, defaultZyncSecretKeyBase))
+	zob.DatabasePassword(getSecretDataValueOrDefault(secretData, component.ZyncSecretDatabasePasswordFieldName, defaultZyncDatabasePassword))
+	zob.AuthenticationToken(getSecretDataValueOrDefault(secretData, component.ZyncSecretAuthenticationTokenFieldName, defaultZyncAuthenticationToken))
+
 	return nil
 }
 
