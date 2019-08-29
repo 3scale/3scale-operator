@@ -3,73 +3,82 @@ package operator
 import (
 	"context"
 	"fmt"
-	"reflect"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type RoleReconciler struct {
-	BaseReconciler
-	ObjectMetaMerger ObjectMetaMerger
+type RoleReconciler interface {
+	IsUpdateNeeded(desired, existing *rbacv1.Role) bool
 }
 
-func NewRoleReconciler(baseReconciler BaseReconciler, objectMetaMerger ObjectMetaMerger) RoleReconciler {
-	return RoleReconciler{
-		BaseReconciler:   baseReconciler,
-		ObjectMetaMerger: objectMetaMerger,
+type RoleBaseReconciler struct {
+	BaseAPIManagerLogicReconciler
+	reconciler RoleReconciler
+}
+
+func NewRoleBaseReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler, reconciler RoleReconciler) *RoleBaseReconciler {
+	return &RoleBaseReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+		reconciler:                    reconciler,
 	}
 }
 
-func (r *RoleReconciler) Reconcile(desiredRole *rbacv1.Role) error {
-	objectInfo := ObjectInfo(desiredRole)
-	existingRole := &rbacv1.Role{}
-	err := r.Client().Get(context.TODO(), types.NamespacedName{Name: desiredRole.Name, Namespace: desiredRole.Namespace}, existingRole)
+func (r *RoleBaseReconciler) Reconcile(desired *rbacv1.Role) error {
+	objectInfo := ObjectInfo(desired)
+	existing := &rbacv1.Role{}
+	err := r.Client().Get(
+		context.TODO(),
+		types.NamespacedName{Name: desired.Name, Namespace: r.apiManager.GetNamespace()},
+		existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			createErr := r.Client().Create(context.TODO(), desiredRole)
+			createErr := r.createResource(desired)
 			if createErr != nil {
 				r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 				return createErr
 			}
-			r.Logger().Info(fmt.Sprintf("Created object %s", objectInfo))
 			return nil
 		}
 		return err
 	}
 
-	needsUpdate, err := r.ensureRole(existingRole, desiredRole)
+	update, err := r.isUpdateNeeded(desired, existing)
 	if err != nil {
 		return err
 	}
 
-	if needsUpdate {
-		r.Logger().Info(fmt.Sprintf("Updating Role %s", objectInfo))
-		err := r.Client().Update(context.TODO(), existingRole)
-		if err != nil {
-			r.Logger().Error(err, fmt.Sprintf("error updating Role %s", objectInfo))
-			return err
-		}
+	if update {
+		return r.updateResource(existing)
 	}
 
 	return nil
 }
 
-func (r *RoleReconciler) ensureRole(updated, desired *rbacv1.Role) (bool, error) {
-	changed := false
+func (r *RoleBaseReconciler) isUpdateNeeded(desired, existing *rbacv1.Role) (bool, error) {
+	updated := helper.EnsureObjectMeta(&existing.ObjectMeta, &desired.ObjectMeta)
 
-	objectMetaChanged, err := r.ObjectMetaMerger.EnsureObjectMeta(&updated.ObjectMeta, &desired.ObjectMeta)
+	updatedTmp, err := r.ensureOwnerReference(existing)
 	if err != nil {
-		return false, err
+		return false, nil
 	}
-	if objectMetaChanged {
-		changed = true
-	}
+	updated = updated || updatedTmp
 
-	if !reflect.DeepEqual(updated.Rules, desired.Rules) {
-		updated.Rules = desired.Rules
-	}
+	updatedTmp = r.reconciler.IsUpdateNeeded(desired, existing)
+	updated = updated || updatedTmp
 
-	return changed, nil
+	return updated, nil
+}
+
+type CreateOnlyRoleReconciler struct {
+}
+
+func NewCreateOnlyRoleReconciler() *CreateOnlyRoleReconciler {
+	return &CreateOnlyRoleReconciler{}
+}
+
+func (r *CreateOnlyRoleReconciler) IsUpdateNeeded(desired, existing *rbacv1.Role) bool {
+	return false
 }
