@@ -409,12 +409,6 @@ func (r *ReconcileAPIManager) reconcileApicast(cr *appsv1alpha1.APIManager) (rec
 	return reconciler.Reconcile()
 }
 
-func (r *ReconcileAPIManager) reconcileS3(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewS3Reconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
-}
-
 func (r *ReconcileAPIManager) reconcileAPIManagerObjects(cr *appsv1alpha1.APIManager, objs []common.KubernetesObject) error {
 	// Create APIManager Objects
 	for idx := range objs {
