@@ -90,20 +90,12 @@ func (o *OperatorSystemOptionsProvider) setSecretBasedOptions(builder *component
 func (o *OperatorSystemOptionsProvider) setSystemMemcachedOptions(builder *component.SystemOptionsBuilder) error {
 	currSecret, err := getSecret(component.SystemSecretSystemMemcachedSecretName, o.Namespace, o.Client)
 
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the Memcached servers secret
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		var result *string
-		result = getSecretDataValue(secretData, component.SystemSecretSystemMemcachedServersFieldName)
-		if result != nil {
-			builder.MemcachedServers(*result)
-		}
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	secretData := currSecret.Data
+	builder.MemcachedServers(getSecretDataValue(secretData, component.SystemSecretSystemMemcachedServersFieldName))
 	return nil
 }
 
@@ -112,18 +104,14 @@ func (o *OperatorSystemOptionsProvider) setSystemRecaptchaOptions(builder *compo
 	defaultRecaptchaPublicKey := ""
 	defaultRecaptchaPrivateKey := ""
 
-	if err != nil {
-		if errors.IsNotFound(err) {
-			builder.RecaptchaPublicKey(defaultRecaptchaPublicKey)
-			builder.RecaptchaPrivateKey(defaultRecaptchaPrivateKey)
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		builder.RecaptchaPublicKey(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemRecaptchaPublicKeyFieldName, defaultRecaptchaPublicKey))
-		builder.RecaptchaPublicKey(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemRecaptchaPrivateKeyFieldName, defaultRecaptchaPrivateKey))
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	secretData := currSecret.Data
+	builder.RecaptchaPublicKey(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemRecaptchaPublicKeyFieldName, defaultRecaptchaPublicKey))
+	builder.RecaptchaPublicKey(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemRecaptchaPrivateKeyFieldName, defaultRecaptchaPrivateKey))
+
 	return nil
 }
 
@@ -131,77 +119,33 @@ func (o *OperatorSystemOptionsProvider) setSystemEventHookOptions(builder *compo
 	currSecret, err := getSecret(component.SystemSecretSystemEventsHookSecretName, o.Namespace, o.Client)
 	defaultBackendSharedSecret := oprand.String(8)
 
-	if err != nil {
-		if errors.IsNotFound(err) {
-			builder.BackendSharedSecret(defaultBackendSharedSecret)
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		builder.BackendSharedSecret(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemEventsHookPasswordFieldName, defaultBackendSharedSecret))
-		var result *string
-		result = getSecretDataValue(secretData, component.SystemSecretSystemEventsHookURLFieldName)
-		if result != nil {
-			builder.EventHooksURL(*result)
-		}
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	secretData := currSecret.Data
+	builder.BackendSharedSecret(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemEventsHookPasswordFieldName, defaultBackendSharedSecret))
+	builder.EventHooksURL(getSecretDataValue(secretData, component.SystemSecretSystemEventsHookURLFieldName))
 	return nil
 }
 
 func (o *OperatorSystemOptionsProvider) setSystemRedisOptions(builder *component.SystemOptionsBuilder) error {
 	currSecret, err := getSecret(component.SystemSecretSystemRedisSecretName, o.Namespace, o.Client)
 
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the System's Redis servers secret
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		var result *string
-		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisURLFieldName)
-		if result != nil {
-			builder.RedisURL(*result)
-		}
-
-		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisSentinelHosts)
-		if result != nil {
-			builder.RedisSentinelHosts(*result)
-		}
-
-		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisSentinelRole)
-		if result != nil {
-			builder.RedisSentinelRole(*result)
-		}
-
-		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusSentinelHosts)
-		if result != nil {
-			builder.MessageBusRedisSentinelHosts(*result)
-		}
-
-		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusSentinelRole)
-		if result != nil {
-			builder.MessageBusRedisSentinelRole(*result)
-		}
-
-		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisURLFieldName)
-		if result != nil {
-			builder.MessageBusRedisURL(*result)
-		}
-
-		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisNamespace)
-		if result != nil {
-			builder.RedisNamespace(*result)
-		}
-
-		result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisNamespace)
-		if result != nil {
-			builder.MessageBusRedisNamespace(*result)
-		}
-
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	secretData := currSecret.Data
+	builder.RedisURL(getSecretDataValue(secretData, component.SystemSecretSystemRedisURLFieldName))
+	builder.RedisSentinelHosts(getSecretDataValue(secretData, component.SystemSecretSystemRedisSentinelHosts))
+	builder.RedisSentinelRole(getSecretDataValue(secretData, component.SystemSecretSystemRedisSentinelRole))
+	builder.MessageBusRedisSentinelHosts(getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusSentinelHosts))
+	builder.MessageBusRedisSentinelRole(getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusSentinelRole))
+	builder.MessageBusRedisURL(getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisURLFieldName))
+	builder.RedisNamespace(getSecretDataValue(secretData, component.SystemSecretSystemRedisNamespace))
+	builder.MessageBusRedisNamespace(getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisNamespace))
+
 	return nil
 }
 
@@ -215,18 +159,13 @@ func (o *OperatorSystemOptionsProvider) setSystemAppOptions(builder *component.S
 	// hexadecimal lowercase string output
 	defaultSecretKeyBase := oprand.String(128)
 
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the Memcached servers secret
-			builder.AppSecretKeyBase(defaultSecretKeyBase)
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		builder.AppSecretKeyBase(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemAppSecretKeyBaseFieldName, defaultSecretKeyBase))
-
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	secretData := currSecret.Data
+	builder.AppSecretKeyBase(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemAppSecretKeyBaseFieldName, defaultSecretKeyBase))
+
 	return nil
 }
 
@@ -240,34 +179,20 @@ func (o *OperatorSystemOptionsProvider) setSystemSeedOptions(builder *component.
 	defaultAdminAccessToken := oprand.String(16)
 	//defaultSeedTenantName := *o.APIManagerSpec.TenantName // Fix this. Why is TENANT_NAME a secret in system seed? Does not seem a secret so should be directly gathered from the value
 	defaultMasterAccessToken := oprand.String(8)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the Memcached servers secret
-			builder.MasterName(defaultMasterDomain)
-			builder.MasterUsername(defaultMasterUser)
-			builder.MasterPassword(defaultMasterPassword)
-			builder.AdminUsername(defaultAdminUser)
-			builder.AdminPassword(defaultAdminPassword)
-			builder.AdminAccessToken(defaultAdminAccessToken)
-			builder.MasterAccessToken(defaultMasterAccessToken)
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		builder.MasterName(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterDomainFieldName, defaultMasterDomain))
-		builder.MasterUsername(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterUserFieldName, defaultMasterUser))
-		builder.MasterPassword(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterPasswordFieldName, defaultMasterPassword))
-		builder.AdminUsername(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminUserFieldName, defaultAdminUser))
-		builder.AdminPassword(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminPasswordFieldName, defaultAdminPassword))
-		builder.AdminAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminAccessTokenFieldName, defaultAdminAccessToken))
-		builder.MasterAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterAccessTokenFieldName, defaultMasterAccessToken))
-
-		result := getSecretDataValue(secretData, component.SystemSecretSystemSeedAdminEmailFieldName)
-		if result != nil {
-			builder.AdminEmail(*result)
-		}
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	secretData := currSecret.Data
+	builder.MasterName(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterDomainFieldName, defaultMasterDomain))
+	builder.MasterUsername(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterUserFieldName, defaultMasterUser))
+	builder.MasterPassword(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterPasswordFieldName, defaultMasterPassword))
+	builder.AdminUsername(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminUserFieldName, defaultAdminUser))
+	builder.AdminPassword(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminPasswordFieldName, defaultAdminPassword))
+	builder.AdminAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedAdminAccessTokenFieldName, defaultAdminAccessToken))
+	builder.MasterAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSeedMasterAccessTokenFieldName, defaultMasterAccessToken))
+	builder.AdminEmail(getSecretDataValue(secretData, component.SystemSecretSystemSeedAdminEmailFieldName))
+
 	return nil
 }
 
@@ -275,18 +200,14 @@ func (o *OperatorSystemOptionsProvider) setSystemMasterApicastOptions(builder *c
 	currSecret, err := getSecret(component.SystemSecretSystemMasterApicastSecretName, o.Namespace, o.Client)
 	defaultSystemMasterApicastAccessToken := oprand.String(8)
 
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the secret
-			builder.ApicastAccessToken(defaultSystemMasterApicastAccessToken)
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		// TODO we do not reconcile ProxyConfigEndpoint nor BaseURL fields because they are dependant on the TenantName
-		builder.ApicastAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemMasterApicastAccessToken, defaultSystemMasterApicastAccessToken))
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	secretData := currSecret.Data
+	// TODO we do not reconcile ProxyConfigEndpoint nor BaseURL fields because they are dependant on the TenantName
+	builder.ApicastAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemMasterApicastAccessToken, defaultSystemMasterApicastAccessToken))
+
 	return nil
 }
 
