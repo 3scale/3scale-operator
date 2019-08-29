@@ -206,31 +206,17 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	r.Logger().Info("Current version is desired version")
-	// objs, err := r.apiManagerObjects(instance)
-	// if err != nil {
-	// 	r.Logger().Error(err, "Error creating APIManager objects. Requeuing request...")
-	// 	return reconcile.Result{}, err
-	// }
-	//
-	// err = r.setAPIManagerObjectsOwnerReferences(instance, objs)
-	// if err != nil {
-	// 	r.Logger().Error(err, "Requeuing request...")
-	// 	return reconcile.Result{}, err
-	// }
 
 	r.Logger().Info("Reconciling APIManager logic")
 	result, err := r.reconcileAPIManagerLogic(instance)
-	if err != nil || result.Requeue {
+	if err != nil {
 		r.Logger().Error(err, "Requeuing request...")
 		return result, err
 	}
+	if result.Requeue {
+		return reconcile.Result{Requeue: true}, nil
+	}
 	r.Logger().Info("APIManager logic reconciled")
-
-	// err = r.reconcileAPIManagerObjects(instance, objs)
-	// if err != nil {
-	// 	r.Logger().Error(err, "Requeuing request...")
-	// 	return reconcile.Result{}, err
-	// }
 
 	err = r.reconcileAPIManagerStatus(instance)
 	if err != nil {

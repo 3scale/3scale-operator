@@ -1,6 +1,9 @@
 package operator
 
 import (
+	"context"
+	"fmt"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -84,4 +87,40 @@ func (r BaseAPIManagerLogicReconciler) setOwnerReference(obj common.KubernetesOb
 		)
 	}
 	return err
+}
+
+func (r BaseAPIManagerLogicReconciler) ensureOwnerReference(obj common.KubernetesObject) (bool, error) {
+	changed := false
+
+	originalSize := len(obj.GetOwnerReferences())
+	err := r.setOwnerReference(obj)
+	if err != nil {
+		return false, err
+	}
+
+	newSize := len(obj.GetOwnerReferences())
+	if originalSize != newSize {
+		changed = true
+	}
+
+	return changed, nil
+}
+
+func (r *BaseAPIManagerLogicReconciler) createResource(obj common.KubernetesObject) error {
+	obj.SetNamespace(r.apiManager.GetNamespace())
+	if err := r.setOwnerReference(obj); err != nil {
+		return err
+	}
+
+	r.Logger().Info(fmt.Sprintf("Created object %s", ObjectInfo(obj)))
+	return r.Client().Create(context.TODO(), obj) // don't wrap error
+}
+
+func (r *BaseAPIManagerLogicReconciler) updateResource(obj common.KubernetesObject) error {
+	if err := r.setOwnerReference(obj); err != nil {
+		return err
+	}
+
+	r.Logger().Info(fmt.Sprintf("Updated object %s", ObjectInfo(obj)))
+	return r.Client().Update(context.TODO(), obj) // don't wrap error
 }
