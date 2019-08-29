@@ -3,81 +3,82 @@ package operator
 import (
 	"context"
 	"fmt"
-	"reflect"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	routev1 "github.com/openshift/api/route/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type RouteReconciler struct {
-	BaseReconciler
-	ObjectMetaMerger ObjectMetaMerger
+type RoutesReconciler interface {
+	IsUpdateNeeded(desired, existing *routev1.Route) bool
 }
 
-func NewRouteReconciler(baseReconciler BaseReconciler, objectMetaMerger ObjectMetaMerger) RouteReconciler {
-	return RouteReconciler{
-		BaseReconciler:   baseReconciler,
-		ObjectMetaMerger: objectMetaMerger,
+type RouteBaseReconciler struct {
+	BaseAPIManagerLogicReconciler
+	reconciler RoutesReconciler
+}
+
+func NewRouteBaseReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler, reconciler RoutesReconciler) *RouteBaseReconciler {
+	return &RouteBaseReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+		reconciler:                    reconciler,
 	}
 }
 
-func (r *RouteReconciler) Reconcile(desiredRoute *routev1.Route) error {
-	objectInfo := ObjectInfo(desiredRoute)
-
-	existingRoute := &routev1.Route{}
-	err := r.Client().Get(context.TODO(), types.NamespacedName{Name: desiredRoute.Name, Namespace: desiredRoute.Namespace}, existingRoute)
+func (r *RouteBaseReconciler) Reconcile(desired *routev1.Route) error {
+	objectInfo := ObjectInfo(desired)
+	existing := &routev1.Route{}
+	err := r.Client().Get(
+		context.TODO(),
+		types.NamespacedName{Name: desired.Name, Namespace: r.apiManager.GetNamespace()},
+		existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			createErr := r.Client().Create(context.TODO(), desiredRoute)
+			createErr := r.createResource(desired)
 			if createErr != nil {
 				r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 				return createErr
 			}
-			r.Logger().Info(fmt.Sprintf("Created object %s", objectInfo))
 			return nil
 		}
 		return err
 	}
 
-	needsUpdate, err := r.ensureRoute(existingRoute, desiredRoute)
+	update, err := r.isUpdateNeeded(desired, existing)
 	if err != nil {
 		return err
 	}
 
-	if needsUpdate {
-		r.Logger().Info(fmt.Sprintf("Updating Route %s", objectInfo))
-		err := r.Client().Update(context.TODO(), existingRoute)
-		if err != nil {
-			r.Logger().Error(err, fmt.Sprintf("error updating Service %s", objectInfo))
-			return err
-		}
+	if update {
+		return r.updateResource(existing)
 	}
 
 	return nil
 }
 
-func (r *RouteReconciler) ensureRoute(updated, desired *routev1.Route) (bool, error) {
-	changed := false
+func (r *RouteBaseReconciler) isUpdateNeeded(desired, existing *routev1.Route) (bool, error) {
+	updated := helper.EnsureObjectMeta(&existing.ObjectMeta, &desired.ObjectMeta)
 
-	objectMetaChanged, err := r.ObjectMetaMerger.EnsureObjectMeta(&updated.ObjectMeta, &desired.ObjectMeta)
+	updatedTmp, err := r.ensureOwnerReference(existing)
 	if err != nil {
-		return false, err
+		return false, nil
 	}
-	if objectMetaChanged {
-		changed = true
-	}
+	updated = updated || updatedTmp
 
-	// Set in the desired some fields that are automatically set
-	// by Kubernetes controllers as defaults that are not defined in
-	// our logic
-	desired.Spec.WildcardPolicy = updated.Spec.WildcardPolicy
-	desired.Spec.To.Weight = updated.Spec.To.Weight
+	updatedTmp = r.reconciler.IsUpdateNeeded(desired, existing)
+	updated = updated || updatedTmp
 
-	if !reflect.DeepEqual(updated.Spec, desired.Spec) {
-		updated.Spec = desired.Spec
-		changed = true
-	}
+	return updated, nil
+}
 
-	return changed, nil
+type CreateOnlyRouteReconciler struct {
+}
+
+func NewCreateOnlyRouteReconciler() *CreateOnlyRouteReconciler {
+	return &CreateOnlyRouteReconciler{}
+}
+
+func (r *CreateOnlyRouteReconciler) IsUpdateNeeded(desired, existing *routev1.Route) bool {
+	return false
 }
