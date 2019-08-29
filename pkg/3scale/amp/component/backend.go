@@ -110,18 +110,19 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "worker", "app": backend.Options.appLabel, "deploymentConfig": "backend-worker"},
 				},
-				Spec: v1.PodSpec{InitContainers: []v1.Container{
-					v1.Container{
-						Name:  "backend-redis-svc",
-						Image: "amp-backend:latest",
-						Command: []string{
-							"/opt/app/entrypoint.sh",
-							"sh",
-							"-c",
-							"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
-						}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
+				Spec: v1.PodSpec{
+					InitContainers: []v1.Container{
+						v1.Container{
+							Name:  "backend-redis-svc",
+							Image: "amp-backend:latest",
+							Command: []string{
+								"/opt/app/entrypoint.sh",
+								"sh",
+								"-c",
+								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
+							}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
+						},
 					},
-				},
 					Containers: []v1.Container{
 						v1.Container{
 							Name:            "backend-worker",
@@ -181,18 +182,19 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "cron", "app": backend.Options.appLabel, "deploymentConfig": "backend-cron"},
 				},
-				Spec: v1.PodSpec{InitContainers: []v1.Container{
-					v1.Container{
-						Name:  "backend-redis-svc",
-						Image: "amp-backend:latest",
-						Command: []string{
-							"/opt/app/entrypoint.sh",
-							"sh",
-							"-c",
-							"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
-						}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
+				Spec: v1.PodSpec{
+					InitContainers: []v1.Container{
+						v1.Container{
+							Name:  "backend-redis-svc",
+							Image: "amp-backend:latest",
+							Command: []string{
+								"/opt/app/entrypoint.sh",
+								"sh",
+								"-c",
+								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
+							}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
+						},
 					},
-				},
 					Containers: []v1.Container{
 						v1.Container{
 							Name:            "backend-cron",
