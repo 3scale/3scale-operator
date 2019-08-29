@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	imagev1 "github.com/openshift/api/image/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -46,15 +48,12 @@ func (r *SystemMySQLImageReconciler) systemMySQLImage() (*component.SystemMySQLI
 	return component.NewSystemMySQLImage(opts), nil
 }
 
-func (r *SystemMySQLImageReconciler) reconcileImageStream(desiredImageStream *imagev1.ImageStream) error {
-	err := r.InitializeAsAPIManagerObject(desiredImageStream)
+func (r *SystemMySQLImageReconciler) reconcileSystemMySQLImageStream(desiredImageStream *imagev1.ImageStream) error {
+	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
+	err := reconciler.Reconcile(desiredImageStream)
 	if err != nil {
 		return err
 	}
-
-	return r.imagestreamReconciler.Reconcile(desiredImageStream)
-}
-
-func (r *SystemMySQLImageReconciler) reconcileSystemMySQLImageStream(desiredImageStream *imagev1.ImageStream) error {
-	return r.reconcileImageStream(desiredImageStream)
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
+	return nil
 }

@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -72,71 +74,63 @@ func (r *SystemMySQLReconciler) systemMySQL() (*component.SystemMysql, error) {
 	return component.NewSystemMysql(opts), nil
 }
 
-func (r *SystemMySQLReconciler) reconcileDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	err := r.InitializeAsAPIManagerObject(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-
-	return r.deploymentConfigReconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *SystemMySQLReconciler) reconcileService(desiredService *v1.Service) error {
-	err := r.InitializeAsAPIManagerObject(desiredService)
-	if err != nil {
-		return err
-	}
-
-	return r.serviceReconciler.Reconcile(desiredService)
-}
-
-func (r *SystemMySQLReconciler) reconcileSecret(desiredSecret *v1.Secret) error {
-	err := r.InitializeAsAPIManagerObject(desiredSecret)
-	if err != nil {
-		return err
-	}
-
-	return r.secretReconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemMySQLReconciler) reconcilePersistentVolumeClaim(desiredPVC *v1.PersistentVolumeClaim) error {
-	err := r.InitializeAsAPIManagerObject(desiredPVC)
-	if err != nil {
-		return err
-	}
-
-	return r.persistentVolumeClaimReconciler.Reconcile(desiredPVC)
-}
-
-func (r *SystemMySQLReconciler) reconcileConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	err := r.InitializeAsAPIManagerObject(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-
-	return r.configMapReconciler.Reconcile(desiredConfigMap)
-}
-
 func (r *SystemMySQLReconciler) reconcileSystemMySQLDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	return r.reconcileDeploymentConfig(desiredDeploymentConfig)
+	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyDCReconciler())
+	err := reconciler.Reconcile(desiredDeploymentConfig)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
+	return nil
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLService(desiredService *v1.Service) error {
-	return r.reconcileService(desiredService)
+	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
+	err := reconciler.Reconcile(desiredService)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
+	return nil
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLMainConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	return r.reconcileConfigMap(desiredConfigMap)
+	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
+	err := reconciler.Reconcile(desiredConfigMap)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
+	return nil
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLExtraConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	return r.reconcileConfigMap(desiredConfigMap)
+	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
+	err := reconciler.Reconcile(desiredConfigMap)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
+	return nil
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLSystemDatabaseSecret(desiredSecret *v1.Secret) error {
-	return r.reconcileSecret(desiredSecret)
+	// Secret values are not affected by CR field values
+	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
+	err := reconciler.Reconcile(desiredSecret)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
+	return nil
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLPersistentVolumeClaim(desiredPVC *v1.PersistentVolumeClaim) error {
-	return r.reconcilePersistentVolumeClaim(desiredPVC)
+	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
+	err := reconciler.Reconcile(desiredPVC)
+	if err != nil {
+		return err
+	}
+	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredPVC)))
+	return nil
 }
