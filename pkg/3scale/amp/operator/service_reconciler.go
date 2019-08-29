@@ -3,79 +3,83 @@ package operator
 import (
 	"context"
 	"fmt"
-	"reflect"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-type ServiceReconciler struct {
-	BaseReconciler
-	ObjectMetaMerger ObjectMetaMerger
+type ServiceReconciler interface {
+	IsUpdateNeeded(desired, existing *v1.Service) bool
 }
 
-func NewServiceReconciler(baseReconciler BaseReconciler, objectMetaMerger ObjectMetaMerger) ServiceReconciler {
-	return ServiceReconciler{
-		BaseReconciler:   baseReconciler,
-		ObjectMetaMerger: objectMetaMerger,
+type ServiceBaseReconciler struct {
+	BaseAPIManagerLogicReconciler
+	reconciler ServiceReconciler
+}
+
+func NewServiceBaseReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler, reconciler ServiceReconciler) *ServiceBaseReconciler {
+	return &ServiceBaseReconciler{
+		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+		reconciler:                    reconciler,
 	}
 }
 
-func (r *ServiceReconciler) Reconcile(desiredService *v1.Service) error {
-	objectInfo := ObjectInfo(desiredService)
-
-	existingService := &v1.Service{}
-	err := r.Client().Get(context.TODO(), types.NamespacedName{Name: desiredService.Name, Namespace: desiredService.Namespace}, existingService)
+func (r *ServiceBaseReconciler) Reconcile(desired *v1.Service) error {
+	objectInfo := ObjectInfo(desired)
+	existing := &v1.Service{}
+	err := r.Client().Get(
+		context.TODO(),
+		types.NamespacedName{Name: desired.Name, Namespace: r.apiManager.GetNamespace()},
+		existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			createErr := r.Client().Create(context.TODO(), desiredService)
+			createErr := r.createResource(desired)
 			if createErr != nil {
 				r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
 				return createErr
 			}
-			r.Logger().Info(fmt.Sprintf("Created object %s", objectInfo))
 			return nil
 		}
 		return err
 	}
 
-	needsUpdate, err := r.ensureService(existingService, desiredService)
+	update, err := r.isUpdateNeeded(desired, existing)
 	if err != nil {
 		return err
 	}
 
-	if needsUpdate {
-		r.Logger().Info(fmt.Sprintf("Updating Service %s", objectInfo))
-		err := r.Client().Update(context.TODO(), existingService)
-		if err != nil {
-			r.Logger().Error(err, fmt.Sprintf("error updating Service %s", objectInfo))
-			return err
-		}
+	if update {
+		return r.updateResource(existing)
 	}
 
 	return nil
 }
 
-func (r *ServiceReconciler) ensureService(updated, desired *v1.Service) (bool, error) {
-	changed := false
+func (r *ServiceBaseReconciler) isUpdateNeeded(desired, existing *v1.Service) (bool, error) {
+	updated := helper.EnsureObjectMeta(&existing.ObjectMeta, &desired.ObjectMeta)
 
-	objectMetaChanged, err := r.ObjectMetaMerger.EnsureObjectMeta(&updated.ObjectMeta, &desired.ObjectMeta)
+	updatedTmp, err := r.ensureOwnerReference(existing)
 	if err != nil {
-		return false, err
-	}
-	if objectMetaChanged {
-		changed = true
+		return false, nil
 	}
 
-	desired.Spec.ClusterIP = updated.Spec.ClusterIP
-	desired.Spec.Type = updated.Spec.Type
-	desired.Spec.SessionAffinity = updated.Spec.SessionAffinity
+	updated = updated || updatedTmp
 
-	if !reflect.DeepEqual(updated.Spec, desired.Spec) {
-		updated.Spec = desired.Spec
-		changed = true
-	}
+	updatedTmp = r.reconciler.IsUpdateNeeded(desired, existing)
+	updated = updated || updatedTmp
 
-	return changed, nil
+	return updated, nil
+}
+
+type CreateOnlySvcReconciler struct {
+}
+
+func NewCreateOnlySvcReconciler() *CreateOnlySvcReconciler {
+	return &CreateOnlySvcReconciler{}
+}
+
+func (r *CreateOnlySvcReconciler) IsUpdateNeeded(desired, existing *v1.Service) bool {
+	return false
 }
