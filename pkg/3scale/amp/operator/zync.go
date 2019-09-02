@@ -11,9 +11,8 @@ import (
 func (o *OperatorZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	optProv := component.ZyncOptionsBuilder{}
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	o.setSecretBasedOptions(&optProv)
-
-	err := o.setZyncSecretOptions(&optProv)
+	
+	err := o.setSecretBasedOptions(&optProv)
 	if err != nil {
 		return nil, err
 	}
