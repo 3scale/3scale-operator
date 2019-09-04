@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/3scale/3scale-operator/version"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	appsv1 "github.com/openshift/api/apps/v1"
 
@@ -100,11 +104,52 @@ type ReconcileAPIManager struct {
 	operator.BaseControllerReconciler
 }
 
+const (
+	ThreescaleVersionAnnotation = "apps.3scale.net/apimanager-threescale-version"
+	OperatorVersionAnnotation   = "apps.3scale.net/threescale-operator-version"
+)
+
+func (r *ReconcileAPIManager) updateVersionAnnotations(cr *appsv1alpha1.APIManager) error {
+	if cr.Annotations == nil {
+		cr.Annotations = map[string]string{}
+	}
+	cr.Annotations[ThreescaleVersionAnnotation] = product.ThreescaleRelease
+	cr.Annotations[OperatorVersionAnnotation] = version.Version
+	r.Logger().Info("Updating version annotations")
+	err := r.Client().Update(context.TODO(), cr)
+	return err
+}
+
+func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	// The object to instantiate would change in every release of the operator
+	// that upgrades the threescale version
+	upgrade := Upgrade26_to_27{
+		BaseUpgrade{
+			client:      r.Client(),
+			cr:          cr,
+			fromVersion: cr.Annotations[OperatorVersionAnnotation],
+			toVersion:   version.Version,
+			logger:      r.Logger(),
+		},
+	}
+
+	res, err := upgrade.Upgrade()
+
+	if err != nil || res.Requeue {
+		return res, err
+	}
+
+	err = r.updateVersionAnnotations(cr)
+	return reconcile.Result{}, err
+
+}
+
 // Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
 // and what is in the APIManager.Spec
 // TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
 // a Pod as an example
 // Note:
+
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
@@ -135,6 +180,32 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 	r.Logger().Info("Defaults for APIManager already set")
 
+	// TODO Should this be placed before setting the CR defaults/validation?
+	currentOperatorVersion := instance.Annotations[OperatorVersionAnnotation]
+	currentThreescaleversion := instance.Annotations[ThreescaleVersionAnnotation]
+	if currentOperatorVersion == "" || currentThreescaleversion == "" {
+		r.Logger().Info("Version not currently set in the CR. Trying to set installed version")
+		err := r.updateVersionAnnotations(instance)
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	if currentOperatorVersion != version.Version {
+		r.Logger().Info("Installed version differs from desired version. Performing upgrade procedure")
+		// TODO add logic to check that only immediate consecutive installs
+		// are possible?
+		res, err := r.upgradeAPIManager(instance)
+		if err != nil || res.Requeue {
+			if err != nil {
+				r.Logger().Error(err, "Error upgrading APIManager")
+			}
+			r.Logger().Info("Requeuing request")
+			return res, err
+		}
+		r.Logger().Info("Upgrade procedure performed")
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	r.Logger().Info("Current version is desired version")
 	// objs, err := r.apiManagerObjects(instance)
 	// if err != nil {
 	// 	r.Logger().Error(err, "Error creating APIManager objects. Requeuing request...")
