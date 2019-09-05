@@ -56,36 +56,36 @@ func (m *BackendOptionsBuilder) WildcardDomain(wildcardDomain string) {
 	m.options.wildcardDomain = wildcardDomain
 }
 
-func (m *BackendOptionsBuilder) ListenerServiceEndpoint(serviceEndpoint string) {
-	m.options.serviceEndpoint = &serviceEndpoint
+func (m *BackendOptionsBuilder) ListenerServiceEndpoint(serviceEndpoint *string) {
+	m.options.serviceEndpoint = serviceEndpoint
 }
 
-func (m *BackendOptionsBuilder) ListenerRouteEndpoint(routeEndpoint string) {
-	m.options.routeEndpoint = &routeEndpoint
+func (m *BackendOptionsBuilder) ListenerRouteEndpoint(routeEndpoint *string) {
+	m.options.routeEndpoint = routeEndpoint
 }
 
-func (m *BackendOptionsBuilder) RedisStorageURL(url string) {
-	m.options.storageURL = &url
+func (m *BackendOptionsBuilder) RedisStorageURL(url *string) {
+	m.options.storageURL = url
 }
 
-func (m *BackendOptionsBuilder) RedisQueuesURL(url string) {
-	m.options.queuesURL = &url
+func (m *BackendOptionsBuilder) RedisQueuesURL(url *string) {
+	m.options.queuesURL = url
 }
 
-func (m *BackendOptionsBuilder) RedisStorageSentinelHosts(hosts string) {
-	m.options.storageSentinelHosts = &hosts
+func (m *BackendOptionsBuilder) RedisStorageSentinelHosts(hosts *string) {
+	m.options.storageSentinelHosts = hosts
 }
 
-func (m *BackendOptionsBuilder) RedisStorageSentinelRole(role string) {
-	m.options.storageSentinelRole = &role
+func (m *BackendOptionsBuilder) RedisStorageSentinelRole(role *string) {
+	m.options.storageSentinelRole = role
 }
 
-func (m *BackendOptionsBuilder) RedisQueuesSentinelHosts(hosts string) {
-	m.options.queuesSentinelHosts = &hosts
+func (m *BackendOptionsBuilder) RedisQueuesSentinelHosts(hosts *string) {
+	m.options.queuesSentinelHosts = hosts
 }
 
-func (m *BackendOptionsBuilder) RedisQueuesSentinelRole(role string) {
-	m.options.queuesSentinelRole = &role
+func (m *BackendOptionsBuilder) RedisQueuesSentinelRole(role *string) {
+	m.options.queuesSentinelRole = role
 }
 
 func (m *BackendOptionsBuilder) ListenerResourceRequirements(resourceRequirements v1.ResourceRequirements) {

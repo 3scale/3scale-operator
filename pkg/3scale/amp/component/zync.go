@@ -253,9 +253,9 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
 											LocalObjectReference: v1.LocalObjectReference{
-												Name: "zync",
+												Name: ZyncSecretName,
 											},
-											Key: "DATABASE_URL",
+											Key: ZyncSecretDatabaseURLFieldName,
 										},
 									},
 								},

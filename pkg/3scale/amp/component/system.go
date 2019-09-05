@@ -257,7 +257,7 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	smtpEnvConfigMapEnvs := system.getSystemSmtpEnvsFromSMTPConfigMap()
 	result = append(result, smtpEnvConfigMapEnvs...)
 
-	apicastAccessToken := envVarFromSecret("APICAST_ACCESS_TOKEN", "system-master-apicast", "ACCESS_TOKEN")
+	apicastAccessToken := envVarFromSecret("APICAST_ACCESS_TOKEN", SystemSecretSystemMasterApicastSecretName, "ACCESS_TOKEN")
 	result = append(result, apicastAccessToken)
 
 	// Add zync secret to envvars sources
