@@ -2,27 +2,21 @@ package apimanager
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/3scale/3scale-operator/version"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	appsv1 "github.com/openshift/api/apps/v1"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -268,24 +262,6 @@ func (r *ReconcileAPIManager) setAPIManagerDefaults(cr *appsv1alpha1.APIManager)
 	return changed, nil
 }
 
-func (r *ReconcileAPIManager) setAPIManagerObjectsOwnerReferences(cr *appsv1alpha1.APIManager, objs []common.KubernetesObject) error {
-	// Set APIManager instance as the owner and controller
-	for idx := range objs {
-		obj := objs[idx]
-		obj.SetNamespace(cr.Namespace)
-		err := controllerutil.SetControllerReference(cr, obj, r.Scheme())
-		if err != nil {
-			r.Logger().Error(err, "Error setting OwnerReference on object. Requeuing request...",
-				"Kind", obj.GetObjectKind(),
-				"Namespace", obj.GetNamespace(),
-				"Name", obj.GetName(),
-			)
-			return err
-		}
-	}
-	return nil
-}
-
 func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
 	result, err := r.reconcileAMPImagesLogic(cr)
 	if err != nil || result.Requeue {
@@ -409,341 +385,12 @@ func (r *ReconcileAPIManager) reconcileApicast(cr *appsv1alpha1.APIManager) (rec
 	return reconciler.Reconcile()
 }
 
-func (r *ReconcileAPIManager) reconcileAPIManagerObjects(cr *appsv1alpha1.APIManager, objs []common.KubernetesObject) error {
-	// Create APIManager Objects
-	for idx := range objs {
-		obj := objs[idx]
-		objectInfo := fmt.Sprintf("%s/%s", obj.GetObjectKind().GroupVersionKind().Kind, obj.GetName())
-
-		newobj := reflect.New(reflect.TypeOf(obj).Elem()).Interface()
-		found := newobj.(runtime.Object)
-		err := r.Client().Get(context.TODO(), types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, found)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				// TODO for some reason r.Client().Create modifies the original object and removes the TypeMeta. Figure why is this???
-				createErr := r.Client().Create(context.TODO(), obj)
-				if createErr != nil {
-					r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
-					return createErr
-				}
-				r.Logger().Info(fmt.Sprintf("Created object %s", objectInfo))
-			} else {
-				r.Logger().Error(err, fmt.Sprintf("Failed to get %s.  Requeuing request...", objectInfo))
-				return err
-			}
-		} else {
-			r.Logger().Info(fmt.Sprintf("Object %s already exists", objectInfo))
-			if secret, ok := obj.(*v1.Secret); ok {
-				r.Logger().Info(fmt.Sprintf("Object %s is a secret. Reconciling it...", objectInfo))
-				// We get copy to avoid modifying possibly obtained object
-				// from the cache
-				foundSecret := found.(*v1.Secret)
-				r.reconcileSecret(secret, foundSecret, cr)
-				if err != nil {
-					r.Logger().Error(err, fmt.Sprintf("Failed to update secret secret/%s. Requeuing request...", secret.Name))
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
 func (r *ReconcileAPIManager) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager) error {
 	err := r.setDeploymentStatus(cr)
 	if err != nil {
 		r.Logger().Error(err, "Failed to set deployment status")
 	}
 	return err
-}
-
-func (r *ReconcileAPIManager) reconcileSecret(desired, current *v1.Secret, cr *appsv1alpha1.APIManager) error {
-	// We copy the secrets because we don't know the source of them. Might
-	// come from the Cache
-	currentCopy := current.DeepCopy()
-	desiredCopy := desired.DeepCopy()
-
-	// We convert StringData to Data because stringData cannot be read when
-	// obtained from the Kubernetes API and we need to compare the secret
-	// data
-	desiredCopy.Data = secretStringDataToData(desiredCopy.StringData)
-	if secretsEqual(currentCopy, desiredCopy) {
-		r.Logger().Info(fmt.Sprintf("Secret %s is already reconciled. Update skipped", currentCopy.Name))
-		return nil
-	}
-	currentCopy.StringData = desiredCopy.StringData
-	currentCopy.Annotations = desiredCopy.Annotations
-	currentCopy.Labels = desiredCopy.Labels
-	currentCopy.Finalizers = desiredCopy.Finalizers
-	err := controllerutil.SetControllerReference(cr, currentCopy, r.Scheme())
-	if err != nil {
-		return err
-	}
-
-	r.Logger().Info(fmt.Sprintf("Secret %s is not equal to the expected secret. Updating ...", currentCopy.Name))
-	if err = r.Client().Update(context.TODO(), currentCopy); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *ReconcileAPIManager) apiManagerObjects(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	results, err := r.apiManagerObjectsGroup(cr)
-	if err != nil {
-		return nil, err
-	}
-
-	results, err = r.postProcessAPIManagerObjectsGroup(cr, results)
-	if err != nil {
-		return nil, err
-	}
-
-	return results, nil
-}
-
-func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	results := []common.KubernetesObject{}
-
-	images, err := r.createImages(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, images...)
-
-	redis, err := r.createRedis(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, redis...)
-
-	backend, err := r.createBackend(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, backend...)
-
-	systemDB, err := r.createSystemDatabase(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, systemDB...)
-
-	memcached, err := r.createMemcached(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, memcached...)
-
-	system, err := r.createSystem(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, system...)
-
-	zync, err := r.createZync(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, zync...)
-
-	apicast, err := r.createApicast(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, apicast...)
-
-	if cr.Spec.System.FileStorageSpec.S3 != nil {
-		s3, err := r.createS3(cr)
-		if err != nil {
-			return nil, err
-		}
-		results = append(results, s3...)
-	}
-
-	return results, nil
-}
-
-func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1.APIManager, objects []common.KubernetesObject) ([]common.KubernetesObject, error) {
-	if !*cr.Spec.ResourceRequirementsEnabled {
-		e := component.NewEvaluation()
-		e.RemoveContainersResourceRequestsAndLimits(objects)
-	}
-
-	if cr.Spec.System.FileStorageSpec.S3 != nil {
-		optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-		opts, err := optsProvider.GetS3Options()
-		if err != nil {
-			return nil, err
-		}
-		s := component.NewS3(opts)
-		res := s.RemoveSystemStoragePVC(objects)
-		s.RemoveSystemStorageReferences(res)
-		s.AddS3PostprocessOptionsToSystemEnvironmentCfgMap(res)
-		s.AddCfgMapElemsToSystemBaseEnv(res)
-		objects = res
-	}
-
-	if cr.Spec.HighAvailability != nil && cr.Spec.HighAvailability.Enabled {
-		optsProvider := operator.OperatorHighAvailabilityOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-		opts, err := optsProvider.GetHighAvailabilityOptions()
-		if err != nil {
-			return nil, err
-		}
-		h := component.NewHighAvailability(opts)
-		res := objects
-		h.IncreaseReplicasNumber(res)
-		res = h.DeleteInternalDatabasesObjects(res)
-		h.UpdateDatabasesURLS(res)
-		objects = res
-	}
-
-	return objects, nil
-}
-
-func (r *ReconcileAPIManager) createImages(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorAmpImagesOptionsProvider{APIManagerSpec: &cr.Spec}
-	opts, err := optsProvider.GetAmpImagesOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	i := component.NewAmpImages(opts)
-	return i.Objects(), nil
-}
-
-func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorRedisOptionsProvider{APIManagerSpec: &cr.Spec}
-	opts, err := optsProvider.GetRedisOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	redis := component.NewRedis(opts)
-	return redis.Objects(), nil
-}
-
-func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorBackendOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-	opts, err := optsProvider.GetBackendOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	b := component.NewBackend(opts)
-	return b.Objects(), nil
-}
-
-func (r *ReconcileAPIManager) createSystemDatabase(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	if cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
-		result, err := r.createSystemPostgreSQL(cr)
-		if err != nil {
-			return nil, err
-		}
-		return result, nil
-	} else {
-		// defaults to MySQL
-		result, err := r.createSystemMySQL(cr)
-		if err != nil {
-			return nil, err
-		}
-		return result, nil
-	}
-}
-
-func (r *ReconcileAPIManager) createSystemMySQL(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorMysqlOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-	opts, err := optsProvider.GetMysqlOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	m := component.NewSystemMysql(opts)
-	result := m.Objects()
-
-	imageOptsProvider := operator.OperatorSystemMySQLImageOptionsProvider{APIManagerSpec: &cr.Spec}
-	imageOpts, err := imageOptsProvider.GetSystemMySQLImageOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	i := component.NewSystemMySQLImage(imageOpts)
-	imageresult := i.Objects()
-	result = append(result, imageresult...)
-	return result, nil
-}
-
-func (r *ReconcileAPIManager) createSystemPostgreSQL(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorSystemPostgreSQLOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-	opts, err := optsProvider.GetSystemPostgreSQLOptions()
-	if err != nil {
-		return nil, err
-	}
-	p := component.NewSystemPostgreSQL(opts)
-	result := p.Objects()
-
-	imageOptsProvider := operator.OperatorSystemPostgreSQLImageOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-	imageOpts, err := imageOptsProvider.GetSystemPostgreSQLImageOptions()
-	if err != nil {
-		return nil, err
-	}
-	i := component.NewSystemPostgreSQLImage(imageOpts)
-	imageresult := i.Objects()
-	result = append(result, imageresult...)
-	return result, nil
-}
-
-func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorMemcachedOptionsProvider{APIManagerSpec: &cr.Spec}
-	opts, err := optsProvider.GetMemcachedOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	i := component.NewMemcached(opts)
-	return i.Objects(), nil
-}
-
-func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-	opts, err := optsProvider.GetSystemOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	i := component.NewSystem(opts)
-	return i.Objects(), nil
-}
-
-func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorZyncOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-	opts, err := optsProvider.GetZyncOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	z := component.NewZync(opts)
-	return z.Objects(), nil
-}
-
-func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorApicastOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-	opts, err := optsProvider.GetApicastOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	z := component.NewApicast(opts)
-	return z.Objects(), nil
-}
-
-func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]common.KubernetesObject, error) {
-	optsProvider := operator.OperatorS3OptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: r.Client()}
-	opts, err := optsProvider.GetS3Options()
-	if err != nil {
-		return nil, err
-	}
-	s := component.NewS3(opts)
-	return s.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {
