@@ -84,8 +84,8 @@ func (s *SystemOptionsBuilder) AdminUsername(adminUsername string) {
 	s.options.adminUsername = adminUsername
 }
 
-func (s *SystemOptionsBuilder) AdminEmail(adminEmail string) {
-	s.options.adminEmail = &adminEmail
+func (s *SystemOptionsBuilder) AdminEmail(adminEmail *string) {
+	s.options.adminEmail = adminEmail
 }
 
 func (s *SystemOptionsBuilder) AmpRelease(ampRelease string) {
@@ -148,52 +148,52 @@ func (s *SystemOptionsBuilder) StorageClassName(storageClassName *string) {
 	s.options.storageClassName = storageClassName
 }
 
-func (s *SystemOptionsBuilder) MemcachedServers(servers string) {
-	s.options.memcachedServers = &servers
+func (s *SystemOptionsBuilder) MemcachedServers(servers *string) {
+	s.options.memcachedServers = servers
 }
 
-func (s *SystemOptionsBuilder) EventHooksURL(eventHooksURL string) {
-	s.options.eventHooksURL = &eventHooksURL
+func (s *SystemOptionsBuilder) EventHooksURL(eventHooksURL *string) {
+	s.options.eventHooksURL = eventHooksURL
 }
 
-func (s *SystemOptionsBuilder) RedisURL(redisURL string) {
-	s.options.redisURL = &redisURL
+func (s *SystemOptionsBuilder) RedisURL(redisURL *string) {
+	s.options.redisURL = redisURL
 }
 
-func (s *SystemOptionsBuilder) RedisSentinelHosts(hosts string) {
-	s.options.redisSentinelHosts = &hosts
+func (s *SystemOptionsBuilder) RedisSentinelHosts(hosts *string) {
+	s.options.redisSentinelHosts = hosts
 }
 
-func (s *SystemOptionsBuilder) RedisSentinelRole(role string) {
-	s.options.redisSentinelRole = &role
+func (s *SystemOptionsBuilder) RedisSentinelRole(role *string) {
+	s.options.redisSentinelRole = role
 }
 
-func (s *SystemOptionsBuilder) MessageBusRedisURL(url string) {
-	s.options.messageBusRedisURL = &url
+func (s *SystemOptionsBuilder) MessageBusRedisURL(url *string) {
+	s.options.messageBusRedisURL = url
 }
 
-func (s *SystemOptionsBuilder) MessageBusRedisSentinelHosts(hosts string) {
-	s.options.messageBusRedisSentinelHosts = &hosts
+func (s *SystemOptionsBuilder) MessageBusRedisSentinelHosts(hosts *string) {
+	s.options.messageBusRedisSentinelHosts = hosts
 }
 
-func (s *SystemOptionsBuilder) MessageBusRedisSentinelRole(role string) {
-	s.options.messageBusRedisSentinelRole = &role
+func (s *SystemOptionsBuilder) MessageBusRedisSentinelRole(role *string) {
+	s.options.messageBusRedisSentinelRole = role
 }
 
-func (s *SystemOptionsBuilder) RedisNamespace(namespace string) {
-	s.options.redisNamespace = &namespace
+func (s *SystemOptionsBuilder) RedisNamespace(namespace *string) {
+	s.options.redisNamespace = namespace
 }
 
-func (s *SystemOptionsBuilder) MessageBusRedisNamespace(namespace string) {
-	s.options.messageBusRedisNamespace = &namespace
+func (s *SystemOptionsBuilder) MessageBusRedisNamespace(namespace *string) {
+	s.options.messageBusRedisNamespace = namespace
 }
 
-func (s *SystemOptionsBuilder) ApicastSystemMasterProxyConfigEndpoint(endpoint string) {
-	s.options.apicastSystemMasterProxyConfigEndpoint = &endpoint
+func (s *SystemOptionsBuilder) ApicastSystemMasterProxyConfigEndpoint(endpoint *string) {
+	s.options.apicastSystemMasterProxyConfigEndpoint = endpoint
 }
 
-func (s *SystemOptionsBuilder) ApicastSystemMasterBaseURL(url string) {
-	s.options.apicastSystemMasterBaseURL = &url
+func (s *SystemOptionsBuilder) ApicastSystemMasterBaseURL(url *string) {
+	s.options.apicastSystemMasterBaseURL = url
 }
 
 func (s *SystemOptionsBuilder) AppMasterContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
