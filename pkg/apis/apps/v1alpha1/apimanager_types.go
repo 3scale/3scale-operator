@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"fmt"
+
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 
 	v1 "k8s.io/api/core/v1"
@@ -202,13 +203,15 @@ func init() {
 func (apimanager *APIManager) SetDefaults() (bool, error) {
 	var err error
 	changed := false
-	commonChanged := apimanager.setAPIManagerCommonSpecDefaults()
-	apicastChanged := apimanager.setApicastSpecDefaults()
-	systemChanged, err := apimanager.setSystemSpecDefaults()
 
-	if commonChanged || apicastChanged || systemChanged {
-		changed = true
-	}
+	tmpChanged := apimanager.setAPIManagerCommonSpecDefaults()
+	changed = changed || tmpChanged
+
+	tmpChanged = apimanager.setApicastSpecDefaults()
+	changed = changed || tmpChanged
+
+	tmpChanged, err = apimanager.setSystemSpecDefaults()
+	changed = changed || tmpChanged
 
 	return changed, err
 }
@@ -222,27 +225,25 @@ func (apimanager *APIManager) setApicastSpecDefaults() bool {
 	defaultApicastResponseCodes := true
 	defaultApicastRegistryURL := "http://apicast-staging:8090/policies"
 	if spec.Apicast == nil {
-
+		spec.Apicast = &ApicastSpec{}
 		changed = true
-		spec.Apicast = &ApicastSpec{
-			ApicastManagementAPI: &defaultApicastManagementAPI,
-			OpenSSLVerify:        &defaultApicastOpenSSLVerify,
-			IncludeResponseCodes: &defaultApicastResponseCodes,
-			RegistryURL:          &defaultApicastRegistryURL,
-		}
-	} else {
-		if spec.Apicast.ApicastManagementAPI == nil {
-			spec.Apicast.ApicastManagementAPI = &defaultApicastManagementAPI
-		}
-		if spec.Apicast.OpenSSLVerify == nil {
-			spec.Apicast.OpenSSLVerify = &defaultApicastOpenSSLVerify
-		}
-		if spec.Apicast.IncludeResponseCodes == nil {
-			spec.Apicast.IncludeResponseCodes = &defaultApicastResponseCodes
-		}
-		if spec.Apicast.RegistryURL == nil {
-			spec.Apicast.RegistryURL = &defaultApicastRegistryURL
-		}
+	}
+
+	if spec.Apicast.ApicastManagementAPI == nil {
+		spec.Apicast.ApicastManagementAPI = &defaultApicastManagementAPI
+		changed = true
+	}
+	if spec.Apicast.OpenSSLVerify == nil {
+		spec.Apicast.OpenSSLVerify = &defaultApicastOpenSSLVerify
+		changed = true
+	}
+	if spec.Apicast.IncludeResponseCodes == nil {
+		spec.Apicast.IncludeResponseCodes = &defaultApicastResponseCodes
+		changed = true
+	}
+	if spec.Apicast.RegistryURL == nil {
+		spec.Apicast.RegistryURL = &defaultApicastRegistryURL
+		changed = true
 	}
 
 	return changed
@@ -252,26 +253,27 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
 
+	defaultAppLabel := "3scale-api-management"
+	defaultTenantName := "3scale"
+	defaultImageStreamTagImportInsecure := false
+	defaultResourceRequirementsEnabled := true
+
 	if spec.AppLabel == nil {
-		defaultAppLabel := "3scale-api-management"
 		spec.AppLabel = &defaultAppLabel
 		changed = true
 	}
 
 	if spec.TenantName == nil {
-		defaultTenantName := "3scale"
 		spec.TenantName = &defaultTenantName
 		changed = true
 	}
 
 	if spec.ImageStreamTagImportInsecure == nil {
-		defaultImageStreamTagImportInsecure := false
 		spec.ImageStreamTagImportInsecure = &defaultImageStreamTagImportInsecure
 		changed = true
 	}
 
 	if spec.ResourceRequirementsEnabled == nil {
-		defaultResourceRequirementsEnabled := true
 		spec.ResourceRequirementsEnabled = &defaultResourceRequirementsEnabled
 		changed = true
 	}
@@ -289,6 +291,7 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 
 	if spec.System == nil {
 		spec.System = &SystemSpec{}
+		changed = true
 	}
 
 	tmpChanged, err := apimanager.setSystemFileStorageSpecDefaults()
@@ -315,17 +318,20 @@ func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
 			StorageClassName: nil,
 		},
 	}
+
 	if systemSpec.FileStorageSpec == nil {
 		systemSpec.FileStorageSpec = defaultFileStorageSpec
 		changed = true
-	} else {
-		if systemSpec.FileStorageSpec.PVC != nil && systemSpec.FileStorageSpec.S3 != nil {
-			return changed, fmt.Errorf("Only one FileStorage can be chosen at the same time")
-		}
-		if systemSpec.FileStorageSpec.PVC == nil && systemSpec.FileStorageSpec.S3 == nil {
-			systemSpec.FileStorageSpec.PVC = defaultFileStorageSpec.PVC
-			changed = true
-		}
+		return changed, nil
+	}
+
+	if systemSpec.FileStorageSpec.PVC != nil && systemSpec.FileStorageSpec.S3 != nil {
+		return changed, fmt.Errorf("Only one FileStorage can be chosen at the same time")
+	}
+
+	if systemSpec.FileStorageSpec.PVC == nil && systemSpec.FileStorageSpec.S3 == nil {
+		systemSpec.FileStorageSpec.PVC = defaultFileStorageSpec.PVC
+		changed = true
 	}
 
 	return changed, nil
@@ -334,6 +340,7 @@ func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
 func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	changed := false
 	systemSpec := apimanager.Spec.System
+
 	defaultDatabaseSpec := &SystemDatabaseSpec{
 		MySQL: &SystemMySQLSpec{
 			Image: nil,
@@ -343,13 +350,15 @@ func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	if systemSpec.DatabaseSpec == nil {
 		systemSpec.DatabaseSpec = defaultDatabaseSpec
 		changed = true
-	} else {
-		if systemSpec.DatabaseSpec.MySQL != nil && systemSpec.DatabaseSpec.PostgreSQL != nil {
-			return changed, fmt.Errorf("Only one System Database can be chosen at the same time")
-		}
-		if systemSpec.DatabaseSpec.MySQL == nil && systemSpec.DatabaseSpec.PostgreSQL == nil {
-			systemSpec.DatabaseSpec.MySQL = defaultDatabaseSpec.MySQL
-		}
+		return changed, nil
+	}
+
+	if systemSpec.DatabaseSpec.MySQL != nil && systemSpec.DatabaseSpec.PostgreSQL != nil {
+		return changed, fmt.Errorf("Only one System Database can be chosen at the same time")
+	}
+
+	if systemSpec.DatabaseSpec.MySQL == nil && systemSpec.DatabaseSpec.PostgreSQL == nil {
+		systemSpec.DatabaseSpec.MySQL = defaultDatabaseSpec.MySQL
 	}
 
 	return changed, nil
