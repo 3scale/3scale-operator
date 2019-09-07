@@ -67,8 +67,6 @@ func (o *OperatorZyncOptionsProvider) setResourceRequirementsOptions(b *componen
 }
 
 func (o *OperatorZyncOptionsProvider) setReplicas(zob *component.ZyncOptionsBuilder) {
-	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
-		zob.ZyncReplicas(2)
-		zob.ZyncQueReplicas(2)
-	}
+	zob.ZyncReplicas(int32(*o.APIManagerSpec.Zync.AppSpec.Replicas))
+	zob.ZyncQueReplicas(int32(*o.APIManagerSpec.Zync.QueSpec.Replicas))
 }

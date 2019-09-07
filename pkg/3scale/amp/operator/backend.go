@@ -104,9 +104,7 @@ func (o *OperatorBackendOptionsProvider) setBackendRedisOptions(b *component.Bac
 }
 
 func (o *OperatorBackendOptionsProvider) setReplicas(b *component.BackendOptionsBuilder) {
-	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
-		b.ListenerReplicas(2)
-		b.WorkerReplicas(2)
-		b.CronReplicas(2)
-	}
+	b.ListenerReplicas(int32(*o.APIManagerSpec.Backend.ListenerSpec.Replicas))
+	b.WorkerReplicas(int32(*o.APIManagerSpec.Backend.WorkerSpec.Replicas))
+	b.CronReplicas(int32(*o.APIManagerSpec.Backend.CronSpec.Replicas))
 }
