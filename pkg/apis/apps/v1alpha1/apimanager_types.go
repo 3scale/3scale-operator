@@ -291,12 +291,14 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 		spec.System = &SystemSpec{}
 	}
 
-	changed, err := apimanager.setSystemFileStorageSpecDefaults()
+	tmpChanged, err := apimanager.setSystemFileStorageSpecDefaults()
+	changed = changed || tmpChanged
 	if err != nil {
 		return changed, err
 	}
 
-	changed, err = apimanager.setSystemDatabaseSpecDefaults()
+	tmpChanged, err = apimanager.setSystemDatabaseSpecDefaults()
+	changed = changed || tmpChanged
 	if err != nil {
 		return changed, err
 	}
