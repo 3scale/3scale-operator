@@ -2,13 +2,13 @@
 - - :whitelist
   - MIT
   - :who: 3scale Engineering
-    :why:
+    :why: 
     :versions: []
     :when: 2016-08-16 09:25:15.635515271 Z
 - - :whitelist
   - Apache 2.0
   - :who: 3scale Engineering
-    :why:
+    :why: 
     :versions: []
     :when: 2016-08-16 09:26:31.814319646 Z
 - - :whitelist
@@ -20,145 +20,159 @@
 - - :whitelist
   - BSD
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
-    :why:
+    :why: 
     :versions: []
     :when: 2016-11-23 11:02:51.564502000 Z
 - - :whitelist
   - New BSD
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
-    :why:
+    :why: 
     :versions: []
     :when: 2016-11-23 11:03:04.247155000 Z
 - - :whitelist
   - Simplified BSD
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
-    :why:
+    :why: 
     :versions: []
     :when: 2016-11-23 11:03:33.341497000 Z
 - - :whitelist
   - LGPLv2+
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
-    :why:
+    :why: 
     :versions: []
     :when: 2016-11-23 11:04:13.584885000 Z
 - - :whitelist
   - 2-clause BSDL
   - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
-    :why:
+    :why: 
     :versions: []
     :when: 2016-11-23 11:04:37.776089000 Z
 - - :whitelist
   - ISC
   - :who: Red Hat Legal
-    :why:
+    :why: 
     :versions: []
     :when: 2019-07-08 11:21:47.572394330 Z
 - - :whitelist
   - Mozilla Public License 2.0
   - :who: Red Hat Legal
-    :why:
+    :why: 
     :versions: []
     :when: 2019-07-08 11:22:39.984050478 Z
 - - :whitelist
   - OSI MIT
   - :who: Red Hat Legal
-    :why:
+    :why: 
     :versions: []
     :when: 2019-07-08 11:35:10.347334185 Z
 - - :whitelist
   - 3-clause BSD License
   - :who: Red Hat Legal
-    :why:
+    :why: 
     :versions: []
     :when: 2019-07-08 11:40:38.041513977 Z
 - - :license
   - github.com/golang/glog
   - Apache 2.0
-  - :who:
+  - :who: 
     :why: Apache 2.0 License https://github.com/golang/glog/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 09:33:18.739277197 Z
 - - :license
   - github.com/golang/groupcache
   - Apache 2.0
-  - :who:
+  - :who: 
     :why: Apache 2.0 License https://github.com/golang/groupcache/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 09:38:49.046141375 Z
 - - :license
   - github.com/gregjones/httpcache
   - MIT
-  - :who:
+  - :who: 
     :why: MIT License https://github.com/gregjones/httpcache/blob/master/LICENSE.txt
     :versions: []
     :when: 2019-07-08 09:41:29.859902349 Z
 - - :license
   - github.com/inconshreveable/mousetrap
   - Apache 2.0
-  - :who:
+  - :who: 
     :why: Apache 2.0 License https://github.com/inconshreveable/mousetrap/blob/master/LICENS
     :versions: []
     :when: 2019-07-08 09:43:03.131191743 Z
 - - :license
   - github.com/pkg/errors
   - Simplified BSD
-  - :who:
+  - :who: 
     :why: Simplified BSD https://github.com/pkg/errors/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 10:12:21.198603369 Z
 - - :license
   - github.com/spf13/afero
   - Apache 2.0
-  - :who:
+  - :who: 
     :why: Apache 2.0 License https://github.com/spf13/afero/blob/master/LICENSE.txt
     :versions: []
     :when: 2019-07-08 10:14:02.052227362 Z
 - - :license
   - github.com/spf13/cobra
   - Apache 2.0
-  - :who:
+  - :who: 
     :why: Apache 2.0 License https://github.com/spf13/cobra/blob/master/LICENSE.txt
     :versions: []
     :when: 2019-07-08 10:15:28.645961995 Z
 - - :license
   - k8s.io/klog
   - Apache 2.0
-  - :who:
+  - :who: 
     :why: Apache 2.0 License https://github.com/kubernetes/klog/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 10:17:16.054520851 Z
 - - :license
   - sigs.k8s.io/testing_frameworks
   - Apache 2.0
-  - :who:
+  - :who: 
     :why: Apache 2.0 License https://github.com/kubernetes-sigs/testing_frameworks/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 10:18:11.783685033 Z
 - - :license
   - github.com/magiconair/properties
   - 2-clause BSDL
-  - :who:
+  - :who: 
     :why: 2-clause BSD License https://github.com/magiconair/properties/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 11:32:00.632316302 Z
 - - :license
   - github.com/sergi/go-diff
   - OSI MIT
-  - :who:
+  - :who: 
     :why: OSI MIT License https://github.com/sergi/go-diff/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 11:36:21.695776537 Z
 - - :license
   - github.com/luci/go-render
   - 3-clause BSD License
-  - :who:
+  - :who: 
     :why: 3-clause BSD License https://github.com/luci/go-render/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 11:42:16.576469012 Z
 - - :license
   - github.com/pmezard/go-difflib
   - 3-clause BSD License
-  - :who:
+  - :who: 
     :why: 3-clause BSD License https://github.com/pmezard/go-difflib/blob/master/LICENSE
     :versions: []
     :when: 2019-07-08 11:49:45.316335108 Z
+- - :license
+  - github.com/onsi/ginkgo
+  - MIT
+  - :who: 
+    :why: MIT License https://github.com/onsi/ginkgo/blob/master/LICENSE
+    :versions: []
+    :when: 2019-09-09 16:15:20.036260704 Z
+- - :license
+  - github.com/onsi/gomega
+  - MIT
+  - :who: 
+    :why: MIT License https://github.com/onsi/gomega/blob/master/LICENSE
+    :versions: []
+    :when: 2019-09-09 16:19:43.097866630 Z

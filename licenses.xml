@@ -13,7 +13,7 @@
       </dependency>
           <dependency>
         <packageName>contrib.go.opencensus.io/exporter/ocagent</packageName>
-        <version>v0.4.9</version>
+        <version>v0.6.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -372,6 +372,16 @@
                   </licenses>
       </dependency>
           <dependency>
+        <packageName>github.com/google/go-cmp</packageName>
+        <version>v0.2.0</version>
+        <licenses>
+                      <license>
+              <name>New BSD</name>
+              <url>http://opensource.org/licenses/BSD-3-Clause</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
         <packageName>github.com/google/gofuzz</packageName>
         <version>v0.0.0-20170612174753-24818f796faf</version>
         <licenses>
@@ -433,7 +443,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/hashicorp/golang-lru</packageName>
-        <version>v0.5.0</version>
+        <version>v0.5.3</version>
         <licenses>
                       <license>
               <name>Mozilla Public License 2.0</name>
@@ -592,6 +602,26 @@
                   </licenses>
       </dependency>
           <dependency>
+        <packageName>github.com/onsi/ginkgo</packageName>
+        <version>v1.10.1</version>
+        <licenses>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/onsi/gomega</packageName>
+        <version>v1.7.0</version>
+        <licenses>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
         <packageName>github.com/openshift/api</packageName>
         <version>v3.9.1-0.20180830153656-5ad8479f64f1+incompatible</version>
         <licenses>
@@ -673,7 +703,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/prometheus/client_golang</packageName>
-        <version>v0.9.3-0.20190127221311-3c4408c8b829</version>
+        <version>v1.1.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -683,7 +713,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/prometheus/client_model</packageName>
-        <version>v0.0.0-20190115171406-56726106282f</version>
+        <version>v0.0.0-20190812154241-14fe0d1b01d4</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -733,7 +763,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/sirupsen/logrus</packageName>
-        <version>v1.2.0</version>
+        <version>v1.4.2</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -986,12 +1016,12 @@
         <version>v2.2.2</version>
         <licenses>
                       <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
-            </license>
-                      <license>
               <name>Apache 2.0</name>
               <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
             </license>
                   </licenses>
       </dependency>
