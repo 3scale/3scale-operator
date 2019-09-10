@@ -5,7 +5,6 @@ import (
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -19,15 +18,15 @@ func NewMemcached(options *MemcachedOptions) *Memcached {
 }
 
 func (m *Memcached) Objects() []common.KubernetesObject {
-	systemMemcachedDeploymentConfig := m.buildSystemMemcachedDeploymentConfig()
+	deploymentConfig := m.DeploymentConfig()
 
 	objects := []common.KubernetesObject{
-		systemMemcachedDeploymentConfig,
+		deploymentConfig,
 	}
 	return objects
 }
 
-func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentConfig {
+func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -88,16 +87,7 @@ func (m *Memcached) buildSystemMemcachedDeploymentConfig() *appsv1.DeploymentCon
 									ContainerPort: 11211,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("250m"),
-									v1.ResourceMemory: resource.MustParse("96Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("64Mi"),
-								},
-							},
+							Resources: *m.Options.resourceRequirements,
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{

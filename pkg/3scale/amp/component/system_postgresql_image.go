@@ -17,16 +17,16 @@ func NewSystemPostgreSQLImage(options *SystemPostgreSQLImageOptions) *SystemPost
 }
 
 func (s *SystemPostgreSQLImage) Objects() []common.KubernetesObject {
-	systemPostgreSQLImageStream := s.buildSystemPostgreSQLImageStream()
+	imageStream := s.ImageStream()
 
 	objects := []common.KubernetesObject{
-		systemPostgreSQLImageStream,
+		imageStream,
 	}
 
 	return objects
 }
 
-func (s *SystemPostgreSQLImage) buildSystemPostgreSQLImageStream() *imagev1.ImageStream {
+func (s *SystemPostgreSQLImage) ImageStream() *imagev1.ImageStream {
 	return &imagev1.ImageStream{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-postgresql",

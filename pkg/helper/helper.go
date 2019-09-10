@@ -3,11 +3,13 @@ package helper
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/common"
-	"k8s.io/apimachinery/pkg/runtime"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/3scale/3scale-operator/pkg/common"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/3scale/3scale-porta-go-client/client"
 )
@@ -89,4 +91,17 @@ func UnwrapRawExtensions(rawExts []runtime.RawExtension) []common.KubernetesObje
 		}
 	}
 	return objects
+}
+
+// CmpResources returns true if the resource requirements a is equal to b,
+func CmpResources(a, b *v1.ResourceRequirements) bool {
+	return CmpResourceList(&a.Limits, &b.Limits) && CmpResourceList(&a.Requests, &b.Requests)
+}
+
+// CmpResourceList returns true if the resourceList a is equal to b,
+func CmpResourceList(a, b *v1.ResourceList) bool {
+	return a.Cpu().Cmp(*b.Cpu()) == 0 &&
+		a.Memory().Cmp(*b.Memory()) == 0 &&
+		b.Pods().Cmp(*b.Pods()) == 0 &&
+		b.StorageEphemeral().Cmp(*b.StorageEphemeral()) == 0
 }

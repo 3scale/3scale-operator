@@ -7,6 +7,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -18,6 +19,8 @@ func (o *OperatorSystemPostgreSQLOptionsProvider) GetSystemPostgreSQLOptions() (
 	if err != nil {
 		return nil, err
 	}
+
+	o.setResourceRequirementsOptions(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -43,27 +46,21 @@ func (o *OperatorSystemPostgreSQLOptionsProvider) setSystemDatabaseOptions(build
 	// TODO is this correct?? in templates the user provides dbname and rootpassword
 	// but the secret is only the URL.
 	defaultDatabaseURL := "postgresql://" + defaultDatabaseUsername + ":" + defaultDatabasePassword + "@system-postgresql/" + defaultDatabaseName
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Set options defaults
-			builder.DatabaseName(defaultDatabaseName)
-			builder.User(defaultDatabaseUsername)
-			builder.Password(defaultDatabasePassword)
-			builder.DatabaseURL(defaultDatabaseURL)
-		} else {
-			return err
-		}
-	} else {
-		// If a field of a secret already exists in the deployed secret then
-		// We do not modify it. Otherwise we set a default value
-		secretData := currSecret.Data
-		builder.User(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseUserFieldName, defaultDatabaseUsername))
-		builder.Password(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabasePasswordFieldName, defaultDatabasePassword))
-		err := o.parseAndSetDatabaseURLAndParts(builder, secretData, defaultDatabaseURL)
-		if err != nil {
-			return err
-		}
+
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	// If a field of a secret already exists in the deployed secret then
+	// We do not modify it. Otherwise we set a default value
+	secretData := currSecret.Data
+	builder.User(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseUserFieldName, defaultDatabaseUsername))
+	builder.Password(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabasePasswordFieldName, defaultDatabasePassword))
+	err = o.parseAndSetDatabaseURLAndParts(builder, secretData, defaultDatabaseURL)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -106,4 +103,10 @@ func (o *OperatorSystemPostgreSQLOptionsProvider) systemDatabaseURLIsValid(rawUR
 	}
 
 	return resultURL, nil
+}
+
+func (o *OperatorSystemPostgreSQLOptionsProvider) setResourceRequirementsOptions(b *component.SystemPostgreSQLOptionsBuilder) {
+	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
+		b.ContainerResourceRequirements(v1.ResourceRequirements{})
+	}
 }

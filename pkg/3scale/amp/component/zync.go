@@ -6,7 +6,6 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -33,31 +32,31 @@ func NewZync(options *ZyncOptions) *Zync {
 }
 
 func (zync *Zync) Objects() []common.KubernetesObject {
-	zyncQueRole := zync.buildZyncQueRole()
-	zyncQueServiceAccount := zync.buildZyncQueServiceAccount()
-	zyncQueRoleBinding := zync.buildZyncQueRoleBinding()
-	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
-	zyncQueDeploymentConfig := zync.buildZyncQueDeploymentConfig()
-	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
-	zyncService := zync.buildZyncService()
-	zyncDatabaseService := zync.buildZyncDatabaseService()
-	zyncSecret := zync.buildZyncSecret()
+	queRole := zync.QueRole()
+	queServiceAccount := zync.QueServiceAccount()
+	queRoleBinding := zync.QueRoleBinding()
+	deploymentConfig := zync.DeploymentConfig()
+	queDeploymentConfig := zync.QueDeploymentConfig()
+	databaseDeploymentConfig := zync.DatabaseDeploymentConfig()
+	service := zync.Service()
+	databaseService := zync.DatabaseService()
+	secret := zync.Secret()
 
 	objects := []common.KubernetesObject{
-		zyncQueRole,
-		zyncQueServiceAccount,
-		zyncQueRoleBinding,
-		zyncDeploymentConfig,
-		zyncQueDeploymentConfig,
-		zyncDatabaseDeploymentConfig,
-		zyncService,
-		zyncDatabaseService,
-		zyncSecret,
+		queRole,
+		queServiceAccount,
+		queRoleBinding,
+		deploymentConfig,
+		queDeploymentConfig,
+		databaseDeploymentConfig,
+		service,
+		databaseService,
+		secret,
 	}
 	return objects
 }
 
-func (zync *Zync) buildZyncSecret() *v1.Secret {
+func (zync *Zync) Secret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -80,7 +79,7 @@ func (zync *Zync) buildZyncSecret() *v1.Secret {
 	}
 }
 
-func (zync *Zync) buildZyncQueServiceAccount() *v1.ServiceAccount {
+func (zync *Zync) QueServiceAccount() *v1.ServiceAccount {
 	return &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServiceAccount",
@@ -97,7 +96,7 @@ func (zync *Zync) buildZyncQueServiceAccount() *v1.ServiceAccount {
 	}
 }
 
-func (zync *Zync) buildZyncQueRoleBinding() *rbacv1.RoleBinding {
+func (zync *Zync) QueRoleBinding() *rbacv1.RoleBinding {
 	return &rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -120,7 +119,7 @@ func (zync *Zync) buildZyncQueRoleBinding() *rbacv1.RoleBinding {
 	}
 }
 
-func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
+func (zync *Zync) QueRole() *rbacv1.Role {
 	return &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -187,7 +186,7 @@ func (zync *Zync) buildZyncQueRole() *rbacv1.Role {
 	}
 }
 
-func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
+func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -224,7 +223,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 				},
 			},
-			Replicas: 1,
+			Replicas: *zync.Options.zyncReplicas,
 			Selector: map[string]string{"deploymentConfig": "zync"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -254,9 +253,9 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
 											LocalObjectReference: v1.LocalObjectReference{
-												Name: "zync",
+												Name: ZyncSecretName,
 											},
-											Key: "DATABASE_URL",
+											Key: ZyncSecretDatabaseURLFieldName,
 										},
 									},
 								},
@@ -301,16 +300,7 @@ func (zync *Zync) buildZyncDeploymentConfig() *appsv1.DeploymentConfig {
 								SuccessThreshold:    1,
 								FailureThreshold:    3,
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1"),
-									v1.ResourceMemory: resource.MustParse("512Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("150m"),
-									v1.ResourceMemory: resource.MustParse("250M"),
-								},
-							},
+							Resources: *zync.Options.containerResourceRequirements,
 						},
 					},
 				},
@@ -330,7 +320,8 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 			Name: "POD_NAME",
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{
-					FieldPath: "metadata.name",
+					FieldPath:  "metadata.name",
+					APIVersion: "v1",
 				},
 			},
 		},
@@ -338,13 +329,14 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 			Name: "POD_NAMESPACE",
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{
-					FieldPath: "metadata.namespace",
+					FieldPath:  "metadata.namespace",
+					APIVersion: "v1",
 				},
 			},
 		},
 	}
 }
-func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
+func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -358,7 +350,7 @@ func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: 1,
+			Replicas: *zync.Options.zyncQueReplicas,
 			Selector: map[string]string{"deploymentConfig": "zync-que"},
 			Strategy: appsv1.DeploymentStrategy{
 				Type: appsv1.DeploymentStrategyTypeRolling,
@@ -433,17 +425,8 @@ func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
 							Ports: []v1.ContainerPort{
 								v1.ContainerPort{Name: "metrics", ContainerPort: 9394, Protocol: v1.ProtocolTCP},
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1"),
-									v1.ResourceMemory: resource.MustParse("512Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("250m"),
-									v1.ResourceMemory: resource.MustParse("250M"),
-								},
-							},
-							Env: zync.commonZyncEnvVars(),
+							Resources: *zync.Options.queContainerResourceRequirements,
+							Env:       zync.commonZyncEnvVars(),
 						},
 					},
 				},
@@ -452,7 +435,7 @@ func (zync *Zync) buildZyncQueDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
+func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -555,16 +538,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 									},
 								},
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("250m"),
-									v1.ResourceMemory: resource.MustParse("2G"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("250M"),
-								},
-							},
+							Resources: *zync.Options.databaseContainerResourceRequirements,
 						},
 					},
 					Volumes: []v1.Volume{
@@ -583,7 +557,7 @@ func (zync *Zync) buildZyncDatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (zync *Zync) buildZyncService() *v1.Service {
+func (zync *Zync) Service() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -610,7 +584,7 @@ func (zync *Zync) buildZyncService() *v1.Service {
 	}
 }
 
-func (zync *Zync) buildZyncDatabaseService() *v1.Service {
+func (zync *Zync) DatabaseService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",

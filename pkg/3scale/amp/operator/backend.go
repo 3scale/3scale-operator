@@ -6,6 +6,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 	"k8s.io/apimachinery/pkg/api/errors"
+
+	v1 "k8s.io/api/core/v1"
 )
 
 func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.BackendOptions, error) {
@@ -18,6 +20,9 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	if err != nil {
 		return nil, err
 	}
+
+	o.setResourceRequirementsOptions(&optProv)
+	o.setReplicas(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -43,90 +48,65 @@ func (o *OperatorBackendOptionsProvider) setSecretBasedOptions(b *component.Back
 	return nil
 }
 
+func (o *OperatorBackendOptionsProvider) setResourceRequirementsOptions(b *component.BackendOptionsBuilder) {
+	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
+		b.ListenerResourceRequirements(v1.ResourceRequirements{})
+		b.WorkerResourceRequirements(v1.ResourceRequirements{})
+		b.CronResourceRequirements(v1.ResourceRequirements{})
+	}
+}
+
 func (o *OperatorBackendOptionsProvider) setBackendInternalApiOptions(b *component.BackendOptionsBuilder) error {
 	defaultSystemBackendUsername := "3scale_api_user"
 	defaultSystemBackendPassword := oprand.String(8)
 
 	currSecret, err := getSecret(component.BackendSecretInternalApiSecretName, o.Namespace, o.Client)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Set options defaults
-			b.SystemBackendUsername(defaultSystemBackendUsername)
-			b.SystemBackendPassword(defaultSystemBackendPassword)
-		} else {
-			return err
-		}
-	} else {
-		// If a field of a secret already exists in the deployed secret then
-		// We do not modify it. Otherwise we set a default value
-		secretData := currSecret.Data
-		b.SystemBackendUsername(getSecretDataValueOrDefault(secretData, component.BackendSecretInternalApiUsernameFieldName, defaultSystemBackendUsername))
-		b.SystemBackendPassword(getSecretDataValueOrDefault(secretData, component.BackendSecretInternalApiPasswordFieldName, defaultSystemBackendPassword))
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	// when secret is not found, it behaves like an empty secret
+	secretData := currSecret.Data
+	b.SystemBackendUsername(getSecretDataValueOrDefault(secretData, component.BackendSecretInternalApiUsernameFieldName, defaultSystemBackendUsername))
+	b.SystemBackendPassword(getSecretDataValueOrDefault(secretData, component.BackendSecretInternalApiPasswordFieldName, defaultSystemBackendPassword))
 
 	return nil
 }
 
 func (o *OperatorBackendOptionsProvider) setBackendListenerOptions(b *component.BackendOptionsBuilder) error {
 	currSecret, err := getSecret(component.BackendSecretBackendListenerSecretName, o.Namespace, o.Client)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the Backend Secret Listener
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		var result *string
-		result = getSecretDataValue(secretData, component.BackendSecretBackendListenerServiceEndpointFieldName)
-		if result != nil {
-			b.ListenerServiceEndpoint(*result)
-		}
-		result = getSecretDataValue(secretData, component.BackendSecretBackendListenerRouteEndpointFieldName)
-		if result != nil {
-			b.ListenerRouteEndpoint(*result)
-		}
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	secretData := currSecret.Data
+	b.ListenerServiceEndpoint(getSecretDataValue(secretData, component.BackendSecretBackendListenerServiceEndpointFieldName))
+	b.ListenerRouteEndpoint(getSecretDataValue(secretData, component.BackendSecretBackendListenerRouteEndpointFieldName))
 
 	return nil
 }
 
 func (o *OperatorBackendOptionsProvider) setBackendRedisOptions(b *component.BackendOptionsBuilder) error {
 	currSecret, err := getSecret(component.BackendSecretBackendRedisSecretName, o.Namespace, o.Client)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Do nothing because there are no required options for related to the Backend Secret Listener
-		} else {
-			return err
-		}
-	} else {
-		secretData := currSecret.Data
-		var result *string
-		result = getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageURLFieldName)
-		if result != nil {
-			b.RedisStorageURL(*result)
-		}
-		result = getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesURLFieldName)
-		if result != nil {
-			b.RedisQueuesURL(*result)
-		}
-		result = getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageSentinelHostsFieldName)
-		if result != nil {
-			b.RedisStorageSentinelHosts(*result)
-		}
-		result = getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageSentinelRoleFieldName)
-		if result != nil {
-			b.RedisStorageSentinelRole(*result)
-		}
-		result = getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelHostsFieldName)
-		if result != nil {
-			b.RedisQueuesSentinelHosts(*result)
-		}
-		result = getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelRoleFieldName)
-		if result != nil {
-			b.RedisQueuesSentinelRole(*result)
-		}
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
 
+	secretData := currSecret.Data
+	b.RedisStorageURL(getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageURLFieldName))
+	b.RedisQueuesURL(getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesURLFieldName))
+	b.RedisStorageSentinelHosts(getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageSentinelHostsFieldName))
+	b.RedisStorageSentinelRole(getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageSentinelRoleFieldName))
+	b.RedisQueuesSentinelHosts(getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelHostsFieldName))
+	b.RedisQueuesSentinelRole(getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelRoleFieldName))
+
 	return nil
+}
+
+func (o *OperatorBackendOptionsProvider) setReplicas(b *component.BackendOptionsBuilder) {
+	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
+		b.ListenerReplicas(2)
+		b.WorkerReplicas(2)
+		b.CronReplicas(2)
+	}
 }

@@ -5,17 +5,21 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 func (o *OperatorZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	optProv := component.ZyncOptionsBuilder{}
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
-	
+
 	err := o.setSecretBasedOptions(&optProv)
 	if err != nil {
 		return nil, err
 	}
+
+	o.setResourceRequirementsOptions(&optProv)
+	o.setReplicas(&optProv)
 
 	res, err := optProv.Build()
 	if err != nil {
@@ -39,22 +43,32 @@ func (o *OperatorZyncOptionsProvider) setZyncSecretOptions(zob *component.ZyncOp
 	defaultZyncAuthenticationToken := oprand.String(16)
 
 	currSecret, err := getSecret(component.ZyncSecretName, o.Namespace, o.Client)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Set options defaults
-			zob.SecretKeyBase(defaultZyncSecretKeyBase)
-			zob.DatabasePassword(defaultZyncDatabasePassword)
-			zob.AuthenticationToken(defaultZyncAuthenticationToken)
-		} else {
-			return err
-		}
-	} else {
-		// If a field of a secret already exists in the deployed secret then
-		// We do not modify it. Otherwise we set a default value
-		secretData := currSecret.Data
-		zob.SecretKeyBase(getSecretDataValueOrDefault(secretData, component.ZyncSecretKeyBaseFieldName, defaultZyncSecretKeyBase))
-		zob.DatabasePassword(getSecretDataValueOrDefault(secretData, component.ZyncSecretDatabasePasswordFieldName, defaultZyncDatabasePassword))
-		zob.AuthenticationToken(getSecretDataValueOrDefault(secretData, component.ZyncSecretAuthenticationTokenFieldName, defaultZyncAuthenticationToken))
+
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
+
+	// If a field of a secret already exists in the deployed secret then
+	// We do not modify it. Otherwise we set a default value
+	secretData := currSecret.Data
+	zob.SecretKeyBase(getSecretDataValueOrDefault(secretData, component.ZyncSecretKeyBaseFieldName, defaultZyncSecretKeyBase))
+	zob.DatabasePassword(getSecretDataValueOrDefault(secretData, component.ZyncSecretDatabasePasswordFieldName, defaultZyncDatabasePassword))
+	zob.AuthenticationToken(getSecretDataValueOrDefault(secretData, component.ZyncSecretAuthenticationTokenFieldName, defaultZyncAuthenticationToken))
+
 	return nil
+}
+
+func (o *OperatorZyncOptionsProvider) setResourceRequirementsOptions(b *component.ZyncOptionsBuilder) {
+	if !*o.APIManagerSpec.ResourceRequirementsEnabled {
+		b.ContainerResourceRequirements(v1.ResourceRequirements{})
+		b.QueContainerResourceRequirements(v1.ResourceRequirements{})
+		b.DatabaseContainerResourceRequirements(v1.ResourceRequirements{})
+	}
+}
+
+func (o *OperatorZyncOptionsProvider) setReplicas(zob *component.ZyncOptionsBuilder) {
+	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
+		zob.ZyncReplicas(2)
+		zob.ZyncQueReplicas(2)
+	}
 }

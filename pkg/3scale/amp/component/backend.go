@@ -6,7 +6,6 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -42,32 +41,32 @@ func NewBackend(options *BackendOptions) *Backend {
 }
 
 func (backend *Backend) Objects() []common.KubernetesObject {
-	backendCronDeploymentConfig := backend.buildBackendCronDeploymentConfig()
-	backendListenerDeploymentConfig := backend.buildBackendListenerDeploymentConfig()
-	backendListenerService := backend.buildBackendListenerService()
-	backendListenerRoute := backend.buildBackendListenerRoute()
-	backendWorkerDeploymentConfig := backend.buildBackendWorkerDeploymentConfig()
-	backendEnvConfigMap := backend.buildBackendEnvConfigMap()
+	cronDeploymentConfig := backend.CronDeploymentConfig()
+	listenerDeploymentConfig := backend.ListenerDeploymentConfig()
+	listenerService := backend.ListenerService()
+	listenerRoute := backend.ListenerRoute()
+	workerDeploymentConfig := backend.WorkerDeploymentConfig()
+	environmentConfigMap := backend.EnvironmentConfigMap()
 
-	backendInternalApiCredsForSystem := backend.buildBackendInternalApiCredsForSystem()
-	backendRedisSecrets := backend.buildBackendRedisSecrets()
-	backendListenerSecrets := backend.buildBackendListenerSecrets()
+	internalAPISecretForSystem := backend.InternalAPISecretForSystem()
+	redisSecret := backend.RedisSecret()
+	listenerSecret := backend.ListenerSecret()
 
 	objects := []common.KubernetesObject{
-		backendCronDeploymentConfig,
-		backendListenerDeploymentConfig,
-		backendListenerService,
-		backendListenerRoute,
-		backendWorkerDeploymentConfig,
-		backendEnvConfigMap,
-		backendInternalApiCredsForSystem,
-		backendRedisSecrets,
-		backendListenerSecrets,
+		cronDeploymentConfig,
+		listenerDeploymentConfig,
+		listenerService,
+		listenerRoute,
+		workerDeploymentConfig,
+		environmentConfigMap,
+		internalAPISecretForSystem,
+		redisSecret,
+		listenerSecret,
 	}
 	return objects
 }
 
-func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentConfig {
+func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -105,40 +104,32 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: 1,
+			Replicas: *backend.Options.workerReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-worker"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "worker", "app": backend.Options.appLabel, "deploymentConfig": "backend-worker"},
 				},
-				Spec: v1.PodSpec{InitContainers: []v1.Container{
-					v1.Container{
-						Name:  "backend-redis-svc",
-						Image: "amp-backend:latest",
-						Command: []string{
-							"/opt/app/entrypoint.sh",
-							"sh",
-							"-c",
-							"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
-						}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
+				Spec: v1.PodSpec{
+					InitContainers: []v1.Container{
+						v1.Container{
+							Name:  "backend-redis-svc",
+							Image: "amp-backend:latest",
+							Command: []string{
+								"/opt/app/entrypoint.sh",
+								"sh",
+								"-c",
+								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
+							}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
+						},
 					},
-				},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "backend-worker",
-							Image: "amp-backend:latest",
-							Args:  []string{"bin/3scale_backend_worker", "run"},
-							Env:   backend.buildBackendWorkerEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("300Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("150m"),
-									v1.ResourceMemory: resource.MustParse("50Mi"),
-								},
-							},
+							Name:            "backend-worker",
+							Image:           "amp-backend:latest",
+							Args:            []string{"bin/3scale_backend_worker", "run"},
+							Env:             backend.buildBackendWorkerEnv(),
+							Resources:       *backend.Options.workerResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
@@ -147,7 +138,7 @@ func (backend *Backend) buildBackendWorkerDeploymentConfig() *appsv1.DeploymentC
 	}
 }
 
-func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentConfig {
+func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -185,41 +176,32 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: 1,
+			Replicas: *backend.Options.cronReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-cron"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "cron", "app": backend.Options.appLabel, "deploymentConfig": "backend-cron"},
 				},
-				Spec: v1.PodSpec{InitContainers: []v1.Container{
-					v1.Container{
-						Name:  "backend-redis-svc",
-						Image: "amp-backend:latest",
-						Command: []string{
-							"/opt/app/entrypoint.sh",
-							"sh",
-							"-c",
-							"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
-						}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
+				Spec: v1.PodSpec{
+					InitContainers: []v1.Container{
+						v1.Container{
+							Name:  "backend-redis-svc",
+							Image: "amp-backend:latest",
+							Command: []string{
+								"/opt/app/entrypoint.sh",
+								"sh",
+								"-c",
+								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
+							}, Env: append(backend.buildBackendCommonEnv(), envVarFromValue("SLEEP_SECONDS", "1")),
+						},
 					},
-				},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "backend-cron",
-							Image: "amp-backend:latest",
-							Args:  []string{"backend-cron"},
-							Env:   backend.buildBackendCronEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("150m"),
-									v1.ResourceMemory: resource.MustParse("80Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("40Mi"),
-								},
-							},
-
+							Name:            "backend-cron",
+							Image:           "amp-backend:latest",
+							Args:            []string{"backend-cron"},
+							Env:             backend.buildBackendCronEnv(),
+							Resources:       *backend.Options.cronResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
@@ -229,7 +211,7 @@ func (backend *Backend) buildBackendCronDeploymentConfig() *appsv1.DeploymentCon
 	}
 }
 
-func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.DeploymentConfig {
+func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -267,7 +249,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: 1,
+			Replicas: *backend.Options.listenerReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-listener"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -283,18 +265,8 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 								ContainerPort: 3000,
 								Protocol:      v1.ProtocolTCP},
 						},
-						Env: backend.buildBackendListenerEnv(),
-						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("1000m"),
-								v1.ResourceMemory: resource.MustParse("700Mi"),
-							},
-							Requests: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("500m"),
-								v1.ResourceMemory: resource.MustParse("550Mi"),
-							},
-						},
-
+						Env:       backend.buildBackendListenerEnv(),
+						Resources: *backend.Options.listenerResourceRequirements,
 						LivenessProbe: &v1.Probe{
 							Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 								Port: intstr.IntOrString{
@@ -329,7 +301,7 @@ func (backend *Backend) buildBackendListenerDeploymentConfig() *appsv1.Deploymen
 	}
 }
 
-func (backend *Backend) buildBackendListenerService() *v1.Service {
+func (backend *Backend) ListenerService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -360,7 +332,7 @@ func (backend *Backend) buildBackendListenerService() *v1.Service {
 	}
 }
 
-func (backend *Backend) buildBackendListenerRoute() *routev1.Route {
+func (backend *Backend) ListenerRoute() *routev1.Route {
 	return &routev1.Route{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Route",
@@ -386,7 +358,7 @@ func (backend *Backend) buildBackendListenerRoute() *routev1.Route {
 	}
 }
 
-func (backend *Backend) buildBackendEnvConfigMap() *v1.ConfigMap {
+func (backend *Backend) EnvironmentConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -402,7 +374,7 @@ func (backend *Backend) buildBackendEnvConfigMap() *v1.ConfigMap {
 	}
 }
 
-func (backend *Backend) buildBackendRedisSecrets() *v1.Secret {
+func (backend *Backend) RedisSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -466,7 +438,7 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 	return result
 }
 
-func (backend *Backend) buildBackendInternalApiCredsForSystem() *v1.Secret {
+func (backend *Backend) InternalAPISecretForSystem() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -487,7 +459,7 @@ func (backend *Backend) buildBackendInternalApiCredsForSystem() *v1.Secret {
 	}
 }
 
-func (backend *Backend) buildBackendListenerSecrets() *v1.Secret {
+func (backend *Backend) ListenerSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

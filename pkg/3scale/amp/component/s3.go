@@ -23,7 +23,7 @@ func NewS3(options *S3Options) *S3 {
 }
 
 func (s3 *S3) Objects() []common.KubernetesObject {
-	s3AWSSecret := s3.buildS3AWSSecret()
+	s3AWSSecret := s3.S3AWSSecret()
 
 	objects := []common.KubernetesObject{
 		s3AWSSecret,
@@ -158,7 +158,7 @@ func (s3 *S3) RemoveSystemStoragePVC(objects []common.KubernetesObject) []common
 	return res
 }
 
-func (s3 *S3) buildS3AWSSecret() *v1.Secret {
+func (s3 *S3) S3AWSSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

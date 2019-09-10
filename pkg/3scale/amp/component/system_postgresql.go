@@ -19,15 +19,15 @@ func NewSystemPostgreSQL(options *SystemPostgreSQLOptions) *SystemPostgreSQL {
 }
 
 func (p *SystemPostgreSQL) Objects() []common.KubernetesObject {
-	postgreSQLDeploymentConfig := p.DeploymentConfig()
-	postgreSQLService := p.Service()
-	postgreSQLPersistentVolumeClaim := p.DataPersistentVolumeClaim()
-	systemDatabaseSecret := p.buildSystemDatabaseSecrets()
+	deploymentConfig := p.DeploymentConfig()
+	service := p.Service()
+	persistentVolumeClaim := p.DataPersistentVolumeClaim()
+	systemDatabaseSecret := p.SystemDatabaseSecret()
 
 	objects := []common.KubernetesObject{
-		postgreSQLDeploymentConfig,
-		postgreSQLService,
-		postgreSQLPersistentVolumeClaim,
+		deploymentConfig,
+		service,
+		persistentVolumeClaim,
 		systemDatabaseSecret,
 	}
 
@@ -152,15 +152,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 								// are deprecated we should be able to change this.
 								envVarFromValue("POSTGRESQL_DATABASE", p.Options.databaseName),
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceMemory: resource.MustParse("2Gi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("250m"),
-									v1.ResourceMemory: resource.MustParse("512Mi"),
-								},
-							},
+							Resources: *p.Options.containerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "postgresql-data",
@@ -203,7 +195,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 }
 
 // Each database is responsible to create the needed secrets for the other components
-func (p *SystemPostgreSQL) buildSystemDatabaseSecrets() *v1.Secret {
+func (p *SystemPostgreSQL) SystemDatabaseSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

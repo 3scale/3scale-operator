@@ -1,14 +1,26 @@
 package component
 
-import "fmt"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+)
 
 type ApicastOptions struct {
+	// required options
 	appLabel       string
 	managementAPI  string
 	openSSLVerify  string
 	responseCodes  string
 	tenantName     string
 	wildcardDomain string
+
+	// non required options
+	productionResourceRequirements *v1.ResourceRequirements
+	stagingResourceRequirements    *v1.ResourceRequirements
+	productionReplicas             *int32
+	stagingReplicas                *int32
 }
 
 type ApicastOptionsBuilder struct {
@@ -39,11 +51,29 @@ func (a *ApicastOptionsBuilder) WildcardDomain(wildcardDomain string) {
 	a.options.wildcardDomain = wildcardDomain
 }
 
+func (a *ApicastOptionsBuilder) ProductionResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	a.options.productionResourceRequirements = &resourceRequirements
+}
+
+func (a *ApicastOptionsBuilder) StagingResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	a.options.stagingResourceRequirements = &resourceRequirements
+}
+
+func (a *ApicastOptionsBuilder) StagingReplicas(replicas int32) {
+	a.options.stagingReplicas = &replicas
+}
+
+func (a *ApicastOptionsBuilder) ProductionReplicas(replicas int32) {
+	a.options.productionReplicas = &replicas
+}
+
 func (a *ApicastOptionsBuilder) Build() (*ApicastOptions, error) {
 	err := a.setRequiredOptions()
 	if err != nil {
 		return nil, err
 	}
+
+	a.setNonRequiredOptions()
 
 	return &a.options, nil
 }
@@ -69,4 +99,50 @@ func (a *ApicastOptionsBuilder) setRequiredOptions() error {
 	}
 
 	return nil
+}
+
+func (a *ApicastOptionsBuilder) setNonRequiredOptions() {
+	if a.options.productionResourceRequirements == nil {
+		a.options.productionResourceRequirements = a.defaultProductionResourceRequirements()
+	}
+
+	if a.options.stagingResourceRequirements == nil {
+		a.options.stagingResourceRequirements = a.defaultStagingResourceRequirements()
+	}
+
+	if a.options.stagingReplicas == nil {
+		var defaultStagingReplicas int32 = 1
+		a.options.stagingReplicas = &defaultStagingReplicas
+	}
+
+	if a.options.productionReplicas == nil {
+		var defaultProductionReplicas int32 = 1
+		a.options.productionReplicas = &defaultProductionReplicas
+	}
+}
+
+func (a *ApicastOptionsBuilder) defaultProductionResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("128Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("500m"),
+			v1.ResourceMemory: resource.MustParse("64Mi"),
+		},
+	}
+}
+
+func (a *ApicastOptionsBuilder) defaultStagingResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("128Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("64Mi"),
+		},
+	}
 }

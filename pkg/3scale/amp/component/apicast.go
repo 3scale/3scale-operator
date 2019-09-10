@@ -5,7 +5,6 @@ import (
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -19,23 +18,23 @@ func NewApicast(options *ApicastOptions) *Apicast {
 }
 
 func (apicast *Apicast) Objects() []common.KubernetesObject {
-	apicastStagingDeploymentConfig := apicast.buildApicastStagingDeploymentConfig()
-	apicastProductionDeploymentConfig := apicast.buildApicastProductionDeploymentConfig()
-	apicastStagingService := apicast.buildApicastStagingService()
-	apicastProductionService := apicast.buildApicastProductionService()
-	apicastEnvConfigMap := apicast.buildApicastEnvConfigMap()
+	stagingDeploymentConfig := apicast.StagingDeploymentConfig()
+	productionDeploymentConfig := apicast.ProductionDeploymentConfig()
+	stagingService := apicast.StagingService()
+	productionService := apicast.ProductionService()
+	environmentConfigMap := apicast.EnvironmentConfigMap()
 
 	objects := []common.KubernetesObject{
-		apicastStagingDeploymentConfig,
-		apicastProductionDeploymentConfig,
-		apicastStagingService,
-		apicastProductionService,
-		apicastEnvConfigMap,
+		stagingDeploymentConfig,
+		productionDeploymentConfig,
+		stagingService,
+		productionService,
+		environmentConfigMap,
 	}
 	return objects
 }
 
-func (apicast *Apicast) buildApicastStagingService() *v1.Service {
+func (apicast *Apicast) StagingService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -69,7 +68,7 @@ func (apicast *Apicast) buildApicastStagingService() *v1.Service {
 	}
 }
 
-func (apicast *Apicast) buildApicastProductionService() *v1.Service {
+func (apicast *Apicast) ProductionService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -103,7 +102,7 @@ func (apicast *Apicast) buildApicastProductionService() *v1.Service {
 	}
 }
 
-func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.DeploymentConfig {
+func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
@@ -115,7 +114,7 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: 1,
+			Replicas: *apicast.Options.stagingReplicas,
 			Selector: map[string]string{
 				"deploymentConfig": "apicast-staging",
 			},
@@ -189,16 +188,7 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 							Image:           "amp-apicast:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            "apicast-staging",
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("100m"),
-									v1.ResourceMemory: resource.MustParse("128Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("64Mi"),
-								},
-							},
+							Resources:       *apicast.Options.stagingResourceRequirements,
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/live",
@@ -225,7 +215,7 @@ func (apicast *Apicast) buildApicastStagingDeploymentConfig() *appsv1.Deployment
 	}
 }
 
-func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.DeploymentConfig {
+func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
@@ -237,7 +227,7 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: 1,
+			Replicas: *apicast.Options.productionReplicas,
 			Selector: map[string]string{
 				"deploymentConfig": "apicast-production",
 			},
@@ -325,16 +315,7 @@ func (apicast *Apicast) buildApicastProductionDeploymentConfig() *appsv1.Deploym
 							Image:           "amp-apicast:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            "apicast-production",
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("128Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("500m"),
-									v1.ResourceMemory: resource.MustParse("64Mi"),
-								},
-							},
+							Resources:       *apicast.Options.productionResourceRequirements,
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/live",
@@ -393,7 +374,7 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 	return result
 }
 
-func (apicast *Apicast) buildApicastEnvConfigMap() *v1.ConfigMap {
+func (apicast *Apicast) EnvironmentConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",

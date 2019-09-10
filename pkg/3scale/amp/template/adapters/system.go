@@ -137,7 +137,8 @@ func (s *System) options() (*component.SystemOptions, error) {
 	sob.AdminAccessToken("${ADMIN_ACCESS_TOKEN}")
 	sob.AdminPassword("${ADMIN_PASSWORD}")
 	sob.AdminUsername("${ADMIN_USERNAME}")
-	sob.AdminEmail("${ADMIN_EMAIL}")
+	adminEmail := "${ADMIN_EMAIL}"
+	sob.AdminEmail(&adminEmail)
 	sob.AmpRelease("${AMP_RELEASE}")
 	sob.ApicastAccessToken("${APICAST_ACCESS_TOKEN}")
 	sob.ApicastRegistryURL("${APICAST_REGISTRY_URL}")
@@ -148,10 +149,14 @@ func (s *System) options() (*component.SystemOptions, error) {
 	sob.AppLabel("${APP_LABEL}")
 	sob.RecaptchaPublicKey("${RECAPTCHA_PUBLIC_KEY}")
 	sob.RecaptchaPrivateKey("${RECAPTCHA_PRIVATE_KEY}")
-	sob.RedisURL("${SYSTEM_REDIS_URL}")
-	sob.RedisNamespace("${SYSTEM_REDIS_NAMESPACE}")
-	sob.MessageBusRedisURL("${SYSTEM_MESSAGE_BUS_REDIS_URL}")
-	sob.MessageBusRedisNamespace("${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}")
+	redisUrl := "${SYSTEM_REDIS_URL}"
+	sob.RedisURL(&redisUrl)
+	redisNamespace := "${SYSTEM_REDIS_NAMESPACE}"
+	sob.RedisNamespace(&redisNamespace)
+	messageBusRedisURL := "${SYSTEM_MESSAGE_BUS_REDIS_URL}"
+	sob.MessageBusRedisURL(&messageBusRedisURL)
+	messageBusRedisNamespace := "${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}"
+	sob.MessageBusRedisNamespace(&messageBusRedisNamespace)
 	sob.AppSecretKeyBase("${SYSTEM_APP_SECRET_KEY_BASE}")
 	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
 	sob.TenantName("${TENANT_NAME}")

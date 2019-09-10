@@ -1,6 +1,11 @@
 package component
 
-import "fmt"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+)
 
 type SystemMysqlOptions struct {
 	// mysqlRequiredOptions
@@ -10,6 +15,9 @@ type SystemMysqlOptions struct {
 	password     string
 	rootPassword string
 	databaseURL  string
+
+	// non-required options
+	containerResourceRequirements *v1.ResourceRequirements
 }
 
 type SystemMysqlOptionsBuilder struct {
@@ -38,6 +46,10 @@ func (m *SystemMysqlOptionsBuilder) RootPassword(rootPassword string) {
 
 func (m *SystemMysqlOptionsBuilder) DatabaseURL(url string) {
 	m.options.databaseURL = url
+}
+
+func (m *SystemMysqlOptionsBuilder) ContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	m.options.containerResourceRequirements = &resourceRequirements
 }
 
 func (m *SystemMysqlOptionsBuilder) Build() (*SystemMysqlOptions, error) {
@@ -75,4 +87,19 @@ func (m *SystemMysqlOptionsBuilder) setRequiredOptions() error {
 }
 
 func (m *SystemMysqlOptionsBuilder) setNonRequiredOptions() {
+	if m.options.containerResourceRequirements == nil {
+		m.options.containerResourceRequirements = m.defaultContainerResourceRequirements()
+	}
+}
+
+func (m *SystemMysqlOptionsBuilder) defaultContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("2Gi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("250m"),
+			v1.ResourceMemory: resource.MustParse("512Mi"),
+		},
+	}
 }

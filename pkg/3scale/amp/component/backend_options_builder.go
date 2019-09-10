@@ -1,17 +1,29 @@
 package component
 
-import "fmt"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+)
 
 type BackendOptions struct {
 	// Non required Options
-	serviceEndpoint      *string
-	routeEndpoint        *string
-	storageURL           *string
-	queuesURL            *string
-	storageSentinelHosts *string
-	storageSentinelRole  *string
-	queuesSentinelHosts  *string
-	queuesSentinelRole   *string
+	serviceEndpoint              *string
+	routeEndpoint                *string
+	storageURL                   *string
+	queuesURL                    *string
+	storageSentinelHosts         *string
+	storageSentinelRole          *string
+	queuesSentinelHosts          *string
+	queuesSentinelRole           *string
+	listenerResourceRequirements *v1.ResourceRequirements
+	workerResourceRequirements   *v1.ResourceRequirements
+	cronResourceRequirements     *v1.ResourceRequirements
+	listenerReplicas             *int32
+	workerReplicas               *int32
+	cronReplicas                 *int32
+
 	// required Options
 	appLabel              string
 	systemBackendUsername string
@@ -44,36 +56,60 @@ func (m *BackendOptionsBuilder) WildcardDomain(wildcardDomain string) {
 	m.options.wildcardDomain = wildcardDomain
 }
 
-func (m *BackendOptionsBuilder) ListenerServiceEndpoint(serviceEndpoint string) {
-	m.options.serviceEndpoint = &serviceEndpoint
+func (m *BackendOptionsBuilder) ListenerServiceEndpoint(serviceEndpoint *string) {
+	m.options.serviceEndpoint = serviceEndpoint
 }
 
-func (m *BackendOptionsBuilder) ListenerRouteEndpoint(routeEndpoint string) {
-	m.options.routeEndpoint = &routeEndpoint
+func (m *BackendOptionsBuilder) ListenerRouteEndpoint(routeEndpoint *string) {
+	m.options.routeEndpoint = routeEndpoint
 }
 
-func (m *BackendOptionsBuilder) RedisStorageURL(url string) {
-	m.options.storageURL = &url
+func (m *BackendOptionsBuilder) RedisStorageURL(url *string) {
+	m.options.storageURL = url
 }
 
-func (m *BackendOptionsBuilder) RedisQueuesURL(url string) {
-	m.options.queuesURL = &url
+func (m *BackendOptionsBuilder) RedisQueuesURL(url *string) {
+	m.options.queuesURL = url
 }
 
-func (m *BackendOptionsBuilder) RedisStorageSentinelHosts(hosts string) {
-	m.options.storageSentinelHosts = &hosts
+func (m *BackendOptionsBuilder) RedisStorageSentinelHosts(hosts *string) {
+	m.options.storageSentinelHosts = hosts
 }
 
-func (m *BackendOptionsBuilder) RedisStorageSentinelRole(role string) {
-	m.options.storageSentinelRole = &role
+func (m *BackendOptionsBuilder) RedisStorageSentinelRole(role *string) {
+	m.options.storageSentinelRole = role
 }
 
-func (m *BackendOptionsBuilder) RedisQueuesSentinelHosts(hosts string) {
-	m.options.queuesSentinelHosts = &hosts
+func (m *BackendOptionsBuilder) RedisQueuesSentinelHosts(hosts *string) {
+	m.options.queuesSentinelHosts = hosts
 }
 
-func (m *BackendOptionsBuilder) RedisQueuesSentinelRole(role string) {
-	m.options.queuesSentinelRole = &role
+func (m *BackendOptionsBuilder) RedisQueuesSentinelRole(role *string) {
+	m.options.queuesSentinelRole = role
+}
+
+func (m *BackendOptionsBuilder) ListenerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	m.options.listenerResourceRequirements = &resourceRequirements
+}
+
+func (m *BackendOptionsBuilder) WorkerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	m.options.workerResourceRequirements = &resourceRequirements
+}
+
+func (m *BackendOptionsBuilder) CronResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	m.options.cronResourceRequirements = &resourceRequirements
+}
+
+func (m *BackendOptionsBuilder) ListenerReplicas(replicas int32) {
+	m.options.listenerReplicas = &replicas
+}
+
+func (m *BackendOptionsBuilder) WorkerReplicas(replicas int32) {
+	m.options.workerReplicas = &replicas
+}
+
+func (m *BackendOptionsBuilder) CronReplicas(replicas int32) {
+	m.options.cronReplicas = &replicas
 }
 
 func (m *BackendOptionsBuilder) Build() (*BackendOptions, error) {
@@ -142,5 +178,71 @@ func (m *BackendOptionsBuilder) setNonRequiredOptions() {
 	}
 	if m.options.queuesSentinelRole == nil {
 		m.options.queuesSentinelRole = &defaultQueuesSentinelRole
+	}
+
+	if m.options.listenerResourceRequirements == nil {
+		m.options.listenerResourceRequirements = m.defaultListenerResourceRequirements()
+	}
+
+	if m.options.workerResourceRequirements == nil {
+		m.options.workerResourceRequirements = m.defaultWorkerResourceRequirements()
+	}
+
+	if m.options.cronResourceRequirements == nil {
+		m.options.cronResourceRequirements = m.defaultCronResourceRequirements()
+	}
+
+	if m.options.listenerReplicas == nil {
+		var listenerDefaultReplicas int32 = 1
+		m.options.listenerReplicas = &listenerDefaultReplicas
+	}
+
+	if m.options.workerReplicas == nil {
+		var workerDefaultReplicas int32 = 1
+		m.options.workerReplicas = &workerDefaultReplicas
+	}
+
+	if m.options.cronReplicas == nil {
+		var cronDefaultReplicas int32 = 1
+		m.options.cronReplicas = &cronDefaultReplicas
+	}
+}
+
+func (m *BackendOptionsBuilder) defaultListenerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("700Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("500m"),
+			v1.ResourceMemory: resource.MustParse("550Mi"),
+		},
+	}
+}
+
+func (m *BackendOptionsBuilder) defaultWorkerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("300Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("150m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+	}
+}
+
+func (m *BackendOptionsBuilder) defaultCronResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("150m"),
+			v1.ResourceMemory: resource.MustParse("80Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("40Mi"),
+		},
 	}
 }

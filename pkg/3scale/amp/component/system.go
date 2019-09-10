@@ -75,6 +75,10 @@ const (
 	SystemSecretSystemMasterApicastAccessToken                   = "ACCESS_TOKEN"
 )
 
+const (
+	SystemFileStoragePVCName = "system-storage"
+)
+
 type System struct {
 	Options *SystemOptions
 }
@@ -84,53 +88,51 @@ func NewSystem(options *SystemOptions) *System {
 }
 
 func (system *System) Objects() []common.KubernetesObject {
-	systemSharedStorage := system.buildSystemSharedPVC()
-	systemProviderService := system.buildSystemProviderService()
-	systemMasterService := system.buildSystemMasterService()
-	systemDeveloperService := system.buildSystemDeveloperService()
-	systemRedisService := system.buildSystemRedisService()
-	systemSphinxService := system.buildSystemSphinxService()
-	systemMemcachedService := system.buildSystemMemcachedService()
+	sharedStorage := system.SharedStorage()
+	providerService := system.ProviderService()
+	masterService := system.MasterService()
+	developerService := system.DeveloperService()
+	sphinxService := system.SphinxService()
+	memcachedService := system.MemcachedService()
 
-	systemAppDeploymentConfig := system.buildSystemAppDeploymentConfig()
-	systemSidekiqDeploymentConfig := system.buildSystemSidekiqDeploymentConfig()
-	systemSphinxDeploymentConfig := system.buildSystemSphinxDeploymentConfig()
+	appDeploymentConfig := system.AppDeploymentConfig()
+	sidekiqDeploymentConfig := system.SidekiqDeploymentConfig()
+	sphinxDeploymentConfig := system.SphinxDeploymentConfig()
 
-	systemConfigMap := system.buildSystemConfigMap()
-	systemEnvironmentConfigMap := system.buildSystemEnvironmentConfigMap()
-	systemSmtpConfigMap := system.buildSystemSmtpConfigMap()
+	systemConfigMap := system.SystemConfigMap()
+	environmentConfigMap := system.EnvironmentConfigMap()
+	smtpConfigMap := system.SMTPConfigMap()
 
-	systemEventsHookSecret := system.buildSystemEventsHookSecrets()
+	eventsHookSecret := system.EventsHookSecret()
 
-	systemRedisSecret := system.buildSystemRedisSecrets()
-	systemMasterApicastSecret := system.buildSystemMasterApicastSecrets()
+	redisSecret := system.RedisSecret()
+	masterApicastSecret := system.MasterApicastSecret()
 
-	systemSeedSecret := system.buildSystemSeedSecrets()
-	systemRecaptchaSecret := system.buildSystemRecaptchaSecrets()
-	systemAppSecret := system.buildSystemAppSecrets()
-	systemMemcachedSecret := system.buildSystemMemcachedSecrets()
+	seedSecret := system.SeedSecret()
+	recaptchaSecret := system.RecaptchaSecret()
+	appSecret := system.AppSecret()
+	memcachedSecret := system.MemcachedSecret()
 
 	objects := []common.KubernetesObject{
-		systemSharedStorage,
-		systemProviderService,
-		systemMasterService,
-		systemDeveloperService,
-		systemRedisService,
-		systemSphinxService,
-		systemMemcachedService,
+		sharedStorage,
+		providerService,
+		masterService,
+		developerService,
+		sphinxService,
+		memcachedService,
 		systemConfigMap,
-		systemSmtpConfigMap,
-		systemEnvironmentConfigMap,
-		systemAppDeploymentConfig,
-		systemSidekiqDeploymentConfig,
-		systemSphinxDeploymentConfig,
-		systemEventsHookSecret,
-		systemRedisSecret,
-		systemMasterApicastSecret,
-		systemSeedSecret,
-		systemRecaptchaSecret,
-		systemAppSecret,
-		systemMemcachedSecret,
+		smtpConfigMap,
+		environmentConfigMap,
+		appDeploymentConfig,
+		sidekiqDeploymentConfig,
+		sphinxDeploymentConfig,
+		eventsHookSecret,
+		redisSecret,
+		masterApicastSecret,
+		seedSecret,
+		recaptchaSecret,
+		appSecret,
+		memcachedSecret,
 	}
 	return objects
 }
@@ -139,7 +141,7 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 	result := []v1.EnvVar{}
 
 	// Add system-base-env ConfigMap values to envvar sources
-	cfg := system.buildSystemEnvironmentConfigMap()
+	cfg := system.EnvironmentConfigMap()
 	cfgmapkeys := make([]string, 0, len(cfg.Data))
 	for key := range cfg.Data {
 		cfgmapkeys = append(cfgmapkeys, key)
@@ -155,7 +157,7 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 
 func (system *System) getSystemSmtpEnvsFromSMTPConfigMap() []v1.EnvVar {
 	// Add smtp configmap to sources
-	cfg := system.buildSystemSmtpConfigMap()
+	cfg := system.SMTPConfigMap()
 	cfgmapkeys := make([]string, 0, len(cfg.Data))
 	for key := range cfg.Data {
 		cfgmapkeys = append(cfgmapkeys, key)
@@ -255,7 +257,7 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	smtpEnvConfigMapEnvs := system.getSystemSmtpEnvsFromSMTPConfigMap()
 	result = append(result, smtpEnvConfigMapEnvs...)
 
-	apicastAccessToken := envVarFromSecret("APICAST_ACCESS_TOKEN", "system-master-apicast", "ACCESS_TOKEN")
+	apicastAccessToken := envVarFromSecret("APICAST_ACCESS_TOKEN", SystemSecretSystemMasterApicastSecretName, "ACCESS_TOKEN")
 	result = append(result, apicastAccessToken)
 
 	// Add zync secret to envvars sources
@@ -266,6 +268,16 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	systemBackendInternalAPIUser := envVarFromSecret("CONFIG_INTERNAL_API_USER", "backend-internal-api", "username")
 	systemBackendInternalAPIPass := envVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", "backend-internal-api", "password")
 	result = append(result, systemBackendInternalAPIUser, systemBackendInternalAPIPass)
+
+	if system.Options.s3FileStorageOptions != nil {
+		result = append(result,
+			envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
+			envVarFromSecret("AWS_ACCESS_KEY_ID", system.Options.s3FileStorageOptions.AWSCredentialsSecret, S3SecretAWSAccessKeyIdFieldName),
+			envVarFromSecret("AWS_SECRET_ACCESS_KEY", system.Options.s3FileStorageOptions.AWSCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
+			envVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
+			envVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
+		)
+	}
 
 	return result
 }
@@ -282,8 +294,8 @@ func (system *System) BackendRedisEnvVars() []v1.EnvVar {
 	}
 }
 
-func (system *System) buildSystemEnvironmentConfigMap() *v1.ConfigMap {
-	return &v1.ConfigMap{
+func (system *System) EnvironmentConfigMap() *v1.ConfigMap {
+	res := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
 			APIVersion: "v1",
@@ -306,9 +318,21 @@ func (system *System) buildSystemEnvironmentConfigMap() *v1.ConfigMap {
 			"SSL_CERT_DIR": "/etc/pki/tls/certs",
 		},
 	}
+
+	if system.Options.s3FileStorageOptions != nil {
+		system.AddS3ConfigIntoEnvironmentConfigMap(res)
+	}
+
+	return res
 }
 
-func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
+func (system *System) AddS3ConfigIntoEnvironmentConfigMap(configMap *v1.ConfigMap) {
+	configMap.Data["FILE_UPLOAD_STORAGE"] = "s3"
+	configMap.Data["AWS_BUCKET"] = system.Options.s3FileStorageOptions.AWSBucket
+	configMap.Data["AWS_REGION"] = system.Options.s3FileStorageOptions.AWSRegion
+}
+
+func (system *System) MemcachedSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -328,7 +352,7 @@ func (system *System) buildSystemMemcachedSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemRecaptchaSecrets() *v1.Secret {
+func (system *System) RecaptchaSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -349,7 +373,7 @@ func (system *System) buildSystemRecaptchaSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemEventsHookSecrets() *v1.Secret {
+func (system *System) EventsHookSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -370,7 +394,7 @@ func (system *System) buildSystemEventsHookSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemRedisSecrets() *v1.Secret {
+func (system *System) RedisSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -397,7 +421,7 @@ func (system *System) buildSystemRedisSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemAppSecrets() *v1.Secret {
+func (system *System) AppSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -417,7 +441,7 @@ func (system *System) buildSystemAppSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemSeedSecrets() *v1.Secret {
+func (system *System) SeedSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -445,7 +469,7 @@ func (system *System) buildSystemSeedSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
+func (system *System) MasterApicastSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -467,7 +491,50 @@ func (system *System) buildSystemMasterApicastSecrets() *v1.Secret {
 	}
 }
 
-func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig {
+func (system *System) appPodVolumes() []v1.Volume {
+	res := []v1.Volume{}
+	if system.Options.pvcFileStorageOptions != nil {
+		res = append(res, system.FileStorageVolume())
+	}
+
+	systemConfigVolume := v1.Volume{
+		Name: "system-config",
+		VolumeSource: v1.VolumeSource{
+			ConfigMap: &v1.ConfigMapVolumeSource{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "system",
+				},
+				Items: []v1.KeyToPath{
+					v1.KeyToPath{
+						Key:  "zync.yml",
+						Path: "zync.yml",
+					},
+					v1.KeyToPath{
+						Key:  "rolling_updates.yml",
+						Path: "rolling_updates.yml",
+					},
+					v1.KeyToPath{
+						Key:  "service_discovery.yml",
+						Path: "service_discovery.yml",
+					},
+				},
+			},
+		},
+	}
+
+	res = append(res, systemConfigVolume)
+	return res
+}
+
+func (system *System) volumeNamesForSystemAppPreHookPod() []string {
+	res := []string{}
+	if system.Options.pvcFileStorageOptions != nil {
+		res = append(res, SystemFileStoragePVCName)
+	}
+	return res
+}
+
+func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -500,7 +567,7 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy " + "MASTER_ACCESS_TOKEN" + "=\"" + system.Options.masterAccessToken + "\""},
 							Env:           system.buildSystemBaseEnv(),
 							ContainerName: "system-master",
-							Volumes:       []string{"system-storage"}},
+							Volumes:       system.volumeNamesForSystemAppPreHookPod()},
 					},
 					Post: &appsv1.LifecycleHook{
 						FailurePolicy: appsv1.LifecycleHookFailurePolicyAbort,
@@ -521,40 +588,14 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 							Kind: "ImageStreamTag",
 							Name: "amp-system:latest"}}},
 			},
-			Replicas: 1,
+			Replicas: *system.Options.appReplicas,
 			Selector: map[string]string{"deploymentConfig": "system-app"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "app", "app": system.Options.appLabel, "deploymentConfig": "system-app"},
 				},
 				Spec: v1.PodSpec{
-					Volumes: []v1.Volume{
-						v1.Volume{
-							Name: "system-storage",
-							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: "system-storage",
-								ReadOnly:  false}},
-						}, v1.Volume{
-							Name: "system-config",
-							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "system",
-								},
-								Items: []v1.KeyToPath{
-									v1.KeyToPath{
-										Key:  "zync.yml",
-										Path: "zync.yml",
-									},
-									v1.KeyToPath{
-										Key:  "rolling_updates.yml",
-										Path: "rolling_updates.yml",
-									},
-									v1.KeyToPath{
-										Key:  "service_discovery.yml",
-										Path: "service_discovery.yml",
-									},
-								}}}},
-					},
+					Volumes: system.appPodVolumes(),
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "system-master",
@@ -567,27 +608,9 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									ContainerPort: 3002,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env: system.buildSystemBaseEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("800Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("600Mi"),
-								},
-							},
-							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
-									Name:      "system-storage",
-									ReadOnly:  false,
-									MountPath: "/opt/system/public/system",
-								}, v1.VolumeMount{
-									Name:      "system-config",
-									ReadOnly:  false,
-									MountPath: "/opt/system-extra-configs"},
-							},
+							Env:          system.buildSystemBaseEnv(),
+							Resources:    *system.Options.appMasterContainerResourceRequirements,
+							VolumeMounts: system.appMasterContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
@@ -634,27 +657,9 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									ContainerPort: 3000,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env: system.buildSystemBaseEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("800Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("600Mi"),
-								},
-							},
-							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
-									Name:      "system-storage",
-									ReadOnly:  false,
-									MountPath: "/opt/system/public/system",
-								}, v1.VolumeMount{
-									Name:      "system-config",
-									ReadOnly:  false,
-									MountPath: "/opt/system-extra-configs"},
-							},
+							Env:          system.buildSystemBaseEnv(),
+							Resources:    *system.Options.appProviderContainerResourceRequirements,
+							VolumeMounts: system.appProviderContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
@@ -701,27 +706,9 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 									ContainerPort: 3001,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env: system.buildSystemBaseEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("800Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("50m"),
-									v1.ResourceMemory: resource.MustParse("600Mi"),
-								},
-							},
-							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
-									Name:      "system-storage",
-									ReadOnly:  true,
-									MountPath: "/opt/system/public/system",
-								}, v1.VolumeMount{
-									Name:      "system-config",
-									ReadOnly:  false,
-									MountPath: "/opt/system-extra-configs"},
-							},
+							Env:          system.buildSystemBaseEnv(),
+							Resources:    *system.Options.appDeveloperContainerResourceRequirements,
+							VolumeMounts: system.appDeveloperContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
@@ -762,7 +749,59 @@ func (system *System) buildSystemAppDeploymentConfig() *appsv1.DeploymentConfig 
 	}
 }
 
-func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentConfig {
+func (system *System) FileStorageVolume() v1.Volume {
+	return v1.Volume{
+		Name: SystemFileStoragePVCName,
+		VolumeSource: v1.VolumeSource{
+			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+				ClaimName: SystemFileStoragePVCName,
+				ReadOnly:  false,
+			},
+		},
+	}
+}
+
+func (system *System) SidekiqPodVolumes() []v1.Volume {
+	res := []v1.Volume{}
+	systemTmpVolume := v1.Volume{
+		Name: "system-tmp",
+		VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{
+			Medium: v1.StorageMediumMemory}},
+	}
+
+	res = append(res, systemTmpVolume)
+	if system.Options.pvcFileStorageOptions != nil {
+		res = append(res, system.FileStorageVolume())
+	}
+
+	systemConfigVolume := v1.Volume{
+		Name: "system-config",
+		VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "system",
+			},
+			Items: []v1.KeyToPath{
+				v1.KeyToPath{
+					Key:  "zync.yml",
+					Path: "zync.yml",
+				}, v1.KeyToPath{
+					Key:  "rolling_updates.yml",
+					Path: "rolling_updates.yml",
+				},
+				v1.KeyToPath{
+					Key:  "service_discovery.yml",
+					Path: "service_discovery.yml",
+				},
+			},
+		},
+		},
+	}
+
+	res = append(res, systemConfigVolume)
+	return res
+}
+
+func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -800,43 +839,14 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 							Kind: "ImageStreamTag",
 							Name: "amp-system:latest"}}},
 			},
-			Replicas: 1,
+			Replicas: *system.Options.sidekiqReplicas,
 			Selector: map[string]string{"deploymentConfig": "system-sidekiq"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "sidekiq", "app": system.Options.appLabel, "deploymentConfig": "system-sidekiq"},
 				},
 				Spec: v1.PodSpec{
-					Volumes: []v1.Volume{
-						v1.Volume{
-							Name: "system-tmp",
-							VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{
-								Medium: v1.StorageMediumMemory}},
-						}, v1.Volume{
-							Name: "system-storage",
-							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: "system-storage",
-								ReadOnly:  false}},
-						}, v1.Volume{
-							Name: "system-config",
-							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "system",
-								},
-								Items: []v1.KeyToPath{
-									v1.KeyToPath{
-										Key:  "zync.yml",
-										Path: "zync.yml",
-									}, v1.KeyToPath{
-										Key:  "rolling_updates.yml",
-										Path: "rolling_updates.yml",
-									},
-									v1.KeyToPath{
-										Key:  "service_discovery.yml",
-										Path: "service_discovery.yml",
-									},
-								}}}},
-					},
+					Volumes: system.SidekiqPodVolumes(),
 					InitContainers: []v1.Container{
 						v1.Container{
 							Name:  "check-svc",
@@ -851,34 +861,12 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "system-sidekiq",
-							Image: "amp-system:latest",
-							Args:  []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
-							Env:   system.buildSystemBaseEnv(),
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("2Gi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("100m"),
-									v1.ResourceMemory: resource.MustParse("500Mi"),
-								},
-							},
-							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
-									Name:      "system-storage",
-									ReadOnly:  false,
-									MountPath: "/opt/system/public/system",
-								}, v1.VolumeMount{
-									Name:      "system-tmp",
-									ReadOnly:  false,
-									MountPath: "/tmp",
-								}, v1.VolumeMount{
-									Name:      "system-config",
-									ReadOnly:  false,
-									MountPath: "/opt/system-extra-configs"},
-							},
+							Name:            "system-sidekiq",
+							Image:           "amp-system:latest",
+							Args:            []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
+							Env:             system.buildSystemBaseEnv(),
+							Resources:       *system.Options.sidekiqContainerResourceRequirements,
+							VolumeMounts:    system.sidekiqContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
@@ -888,8 +876,63 @@ func (system *System) buildSystemSidekiqDeploymentConfig() *appsv1.DeploymentCon
 	}
 }
 
-func (system *System) buildSystemSharedPVC() *v1.PersistentVolumeClaim {
-	return &v1.PersistentVolumeClaim{
+func (system *System) systemStorageVolumeMount(readOnly bool) v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      SystemFileStoragePVCName,
+		ReadOnly:  readOnly,
+		MountPath: "/opt/system/public/system",
+	}
+}
+
+func (system *System) systemConfigVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "system-config",
+		ReadOnly:  false,
+		MountPath: "/opt/system-extra-configs",
+	}
+}
+
+func (system *System) appCommonContainerVolumeMounts(systemStorageReadonly bool) []v1.VolumeMount {
+	res := []v1.VolumeMount{}
+	if system.Options.pvcFileStorageOptions != nil {
+		res = append(res, system.systemStorageVolumeMount(systemStorageReadonly))
+	}
+	res = append(res, system.systemConfigVolumeMount())
+
+	return res
+}
+
+func (system *System) appMasterContainerVolumeMounts() []v1.VolumeMount {
+	return system.appCommonContainerVolumeMounts(false)
+}
+
+func (system *System) appProviderContainerVolumeMounts() []v1.VolumeMount {
+	return system.appCommonContainerVolumeMounts(false)
+}
+
+func (system *System) appDeveloperContainerVolumeMounts() []v1.VolumeMount {
+	// TODO why system-app developer container has the system-config volume set to true? is it really necessary?
+	// other containers in the same pod have it to false
+	return system.appCommonContainerVolumeMounts(true)
+}
+
+func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
+	res := []v1.VolumeMount{}
+	if system.Options.pvcFileStorageOptions != nil {
+		res = append(res, system.systemStorageVolumeMount(false))
+	}
+	systemTmpVolumeMount := v1.VolumeMount{
+		Name:      "system-tmp",
+		ReadOnly:  false,
+		MountPath: "/tmp",
+	}
+	res = append(res, systemTmpVolumeMount)
+	res = append(res, system.systemConfigVolumeMount())
+	return res
+}
+
+func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
+	res := &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "PersistentVolumeClaim",
@@ -914,9 +957,15 @@ func (system *System) buildSystemSharedPVC() *v1.PersistentVolumeClaim {
 			},
 		},
 	}
+
+	if system.Options.pvcFileStorageOptions != nil {
+		res.Spec.StorageClassName = system.Options.storageClassName
+	}
+
+	return res
 }
 
-func (system *System) buildSystemProviderService() *v1.Service {
+func (system *System) ProviderService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -944,7 +993,7 @@ func (system *System) buildSystemProviderService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemMasterService() *v1.Service {
+func (system *System) MasterService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -972,7 +1021,7 @@ func (system *System) buildSystemMasterService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemDeveloperService() *v1.Service {
+func (system *System) DeveloperService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -999,35 +1048,8 @@ func (system *System) buildSystemDeveloperService() *v1.Service {
 		},
 	}
 }
-func (system *System) buildSystemRedisService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-redis",
-			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
-				"threescale_component":         "system",
-				"threescale_component_element": "redis",
-			},
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "redis",
-					Protocol:   v1.ProtocolTCP,
-					Port:       6379,
-					TargetPort: intstr.FromInt(6379),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "system-redis"},
-		},
-	}
-}
 
-func (system *System) buildSystemSphinxService() *v1.Service {
+func (system *System) SphinxService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -1055,7 +1077,7 @@ func (system *System) buildSystemSphinxService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemMemcachedService() *v1.Service {
+func (system *System) MemcachedService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -1083,7 +1105,7 @@ func (system *System) buildSystemMemcachedService() *v1.Service {
 	}
 }
 
-func (system *System) buildSystemSmtpConfigMap() *v1.ConfigMap {
+func (system *System) SMTPConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -1096,7 +1118,7 @@ func (system *System) buildSystemSmtpConfigMap() *v1.ConfigMap {
 		Data: map[string]string{"address": "", "authentication": "", "domain": "", "openssl.verify.mode": "", "password": "", "port": "", "username": ""}}
 }
 
-func (system *System) buildSystemConfigMap() *v1.ConfigMap {
+func (system *System) SystemConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system",
@@ -1173,7 +1195,7 @@ func (system *System) getSystemServiceDiscoveryData() string {
 `
 }
 
-func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConfig {
+func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
@@ -1278,20 +1300,28 @@ func (system *System) buildSystemSphinxDeploymentConfig() *appsv1.DeploymentConf
 								InitialDelaySeconds: 60,
 								PeriodSeconds:       10,
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("1000m"),
-									v1.ResourceMemory: resource.MustParse("512Mi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("80m"),
-									v1.ResourceMemory: resource.MustParse("250Mi"),
-								},
-							},
+							Resources: *system.Options.sphinxContainerResourceRequirements,
 						},
 					},
 				},
 			},
 		},
+	}
+}
+
+func (system *System) S3AWSSecret() *v1.Secret {
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: system.Options.s3FileStorageOptions.AWSCredentialsSecret,
+		},
+		StringData: map[string]string{
+			S3SecretAWSAccessKeyIdFieldName:     system.Options.s3FileStorageOptions.AWSAccessKeyId,
+			S3SecretAWSSecretAccessKeyFieldName: system.Options.s3FileStorageOptions.AWSSecretAccessKey,
+		},
+		Type: v1.SecretTypeOpaque,
 	}
 }

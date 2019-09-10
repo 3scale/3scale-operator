@@ -24,7 +24,7 @@ func getSecret(name string, namespace string, client k8sclient.Client) (*v1.Secr
 
 	err := client.Get(context.TODO(), objKey, secret)
 	if err != nil {
-		return nil, err
+		return secret, err
 	}
 
 	return secret, nil
@@ -37,6 +37,22 @@ func getSecretDataValue(secretData map[string][]byte, fieldName string) *string 
 	} else {
 		return nil
 	}
+}
+
+func getSecretDataFromStringData(secretStringData map[string]string) map[string][]byte {
+	result := map[string][]byte{}
+	for k, v := range secretStringData {
+		result[k] = []byte(v)
+	}
+	return result
+}
+
+func getSecretStringDataFromData(secretData map[string][]byte) map[string]string {
+	result := map[string]string{}
+	for k, v := range secretData {
+		result[k] = string(v)
+	}
+	return result
 }
 
 // Returns a new map containing the contents of `from` and the

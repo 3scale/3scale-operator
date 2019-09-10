@@ -1,6 +1,23 @@
 package component
 
-import "fmt"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+)
+
+type S3FileStorageOptions struct {
+	AWSAccessKeyId       string
+	AWSSecretAccessKey   string
+	AWSRegion            string
+	AWSBucket            string
+	AWSCredentialsSecret string
+}
+
+type PVCFileStorageOptions struct {
+	StorageClass *string
+}
 
 type SystemOptions struct {
 	// systemNonRequiredOptions
@@ -17,6 +34,18 @@ type SystemOptions struct {
 	apicastSystemMasterProxyConfigEndpoint *string
 	apicastSystemMasterBaseURL             *string
 	adminEmail                             *string
+
+	appMasterContainerResourceRequirements    *v1.ResourceRequirements
+	appProviderContainerResourceRequirements  *v1.ResourceRequirements
+	appDeveloperContainerResourceRequirements *v1.ResourceRequirements
+	sidekiqContainerResourceRequirements      *v1.ResourceRequirements
+	sphinxContainerResourceRequirements       *v1.ResourceRequirements
+
+	s3FileStorageOptions  *S3FileStorageOptions
+	pvcFileStorageOptions *PVCFileStorageOptions
+
+	appReplicas     *int32
+	sidekiqReplicas *int32
 
 	// systemRequiredOptions
 	adminAccessToken    string
@@ -55,8 +84,8 @@ func (s *SystemOptionsBuilder) AdminUsername(adminUsername string) {
 	s.options.adminUsername = adminUsername
 }
 
-func (s *SystemOptionsBuilder) AdminEmail(adminEmail string) {
-	s.options.adminEmail = &adminEmail
+func (s *SystemOptionsBuilder) AdminEmail(adminEmail *string) {
+	s.options.adminEmail = adminEmail
 }
 
 func (s *SystemOptionsBuilder) AmpRelease(ampRelease string) {
@@ -119,52 +148,88 @@ func (s *SystemOptionsBuilder) StorageClassName(storageClassName *string) {
 	s.options.storageClassName = storageClassName
 }
 
-func (s *SystemOptionsBuilder) MemcachedServers(servers string) {
-	s.options.memcachedServers = &servers
+func (s *SystemOptionsBuilder) MemcachedServers(servers *string) {
+	s.options.memcachedServers = servers
 }
 
-func (s *SystemOptionsBuilder) EventHooksURL(eventHooksURL string) {
-	s.options.eventHooksURL = &eventHooksURL
+func (s *SystemOptionsBuilder) EventHooksURL(eventHooksURL *string) {
+	s.options.eventHooksURL = eventHooksURL
 }
 
-func (s *SystemOptionsBuilder) RedisURL(redisURL string) {
-	s.options.redisURL = &redisURL
+func (s *SystemOptionsBuilder) RedisURL(redisURL *string) {
+	s.options.redisURL = redisURL
 }
 
-func (s *SystemOptionsBuilder) RedisSentinelHosts(hosts string) {
-	s.options.redisSentinelHosts = &hosts
+func (s *SystemOptionsBuilder) RedisSentinelHosts(hosts *string) {
+	s.options.redisSentinelHosts = hosts
 }
 
-func (s *SystemOptionsBuilder) RedisSentinelRole(role string) {
-	s.options.redisSentinelRole = &role
+func (s *SystemOptionsBuilder) RedisSentinelRole(role *string) {
+	s.options.redisSentinelRole = role
 }
 
-func (s *SystemOptionsBuilder) MessageBusRedisURL(url string) {
-	s.options.messageBusRedisURL = &url
+func (s *SystemOptionsBuilder) MessageBusRedisURL(url *string) {
+	s.options.messageBusRedisURL = url
 }
 
-func (s *SystemOptionsBuilder) MessageBusRedisSentinelHosts(hosts string) {
-	s.options.messageBusRedisSentinelHosts = &hosts
+func (s *SystemOptionsBuilder) MessageBusRedisSentinelHosts(hosts *string) {
+	s.options.messageBusRedisSentinelHosts = hosts
 }
 
-func (s *SystemOptionsBuilder) MessageBusRedisSentinelRole(role string) {
-	s.options.messageBusRedisSentinelRole = &role
+func (s *SystemOptionsBuilder) MessageBusRedisSentinelRole(role *string) {
+	s.options.messageBusRedisSentinelRole = role
 }
 
-func (s *SystemOptionsBuilder) RedisNamespace(namespace string) {
-	s.options.redisNamespace = &namespace
+func (s *SystemOptionsBuilder) RedisNamespace(namespace *string) {
+	s.options.redisNamespace = namespace
 }
 
-func (s *SystemOptionsBuilder) MessageBusRedisNamespace(namespace string) {
-	s.options.messageBusRedisNamespace = &namespace
+func (s *SystemOptionsBuilder) MessageBusRedisNamespace(namespace *string) {
+	s.options.messageBusRedisNamespace = namespace
 }
 
-func (s *SystemOptionsBuilder) ApicastSystemMasterProxyConfigEndpoint(endpoint string) {
-	s.options.apicastSystemMasterProxyConfigEndpoint = &endpoint
+func (s *SystemOptionsBuilder) ApicastSystemMasterProxyConfigEndpoint(endpoint *string) {
+	s.options.apicastSystemMasterProxyConfigEndpoint = endpoint
 }
 
-func (s *SystemOptionsBuilder) ApicastSystemMasterBaseURL(url string) {
-	s.options.apicastSystemMasterBaseURL = &url
+func (s *SystemOptionsBuilder) ApicastSystemMasterBaseURL(url *string) {
+	s.options.apicastSystemMasterBaseURL = url
+}
+
+func (s *SystemOptionsBuilder) AppMasterContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.appMasterContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) AppProviderContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.appProviderContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) AppDeveloperContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.appDeveloperContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) SidekiqContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.sidekiqContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) SphinxContainerResourceRequirements(resourceRequirements v1.ResourceRequirements) {
+	s.options.sphinxContainerResourceRequirements = &resourceRequirements
+}
+
+func (s *SystemOptionsBuilder) S3FileStorageOptions(options S3FileStorageOptions) {
+	s.options.s3FileStorageOptions = &options
+}
+
+func (s *SystemOptionsBuilder) PVCFileStorageOptions(options PVCFileStorageOptions) {
+	s.options.pvcFileStorageOptions = &options
+}
+
+func (s *SystemOptionsBuilder) AppReplicas(replicas int32) {
+	s.options.appReplicas = &replicas
+}
+
+func (s *SystemOptionsBuilder) SidekiqReplicas(replicas int32) {
+	s.options.sidekiqReplicas = &replicas
 }
 
 func (s *SystemOptionsBuilder) Build() (*SystemOptions, error) {
@@ -225,6 +290,10 @@ func (s *SystemOptionsBuilder) setRequiredOptions() error {
 		return fmt.Errorf("no wildcard domain has been provided")
 	}
 
+	if s.options.s3FileStorageOptions == nil && s.options.pvcFileStorageOptions == nil {
+		s.options.pvcFileStorageOptions = &PVCFileStorageOptions{}
+	}
+
 	return nil
 }
 
@@ -256,6 +325,36 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 
 	if s.options.adminEmail == nil {
 		s.options.adminEmail = &defaultAdminEmail
+	}
+
+	if s.options.appMasterContainerResourceRequirements == nil {
+		s.options.appMasterContainerResourceRequirements = s.defaultAppMasterContainerResourceRequirements()
+	}
+
+	if s.options.appProviderContainerResourceRequirements == nil {
+		s.options.appProviderContainerResourceRequirements = s.defaultAppProviderContainerResourceRequirements()
+	}
+
+	if s.options.appDeveloperContainerResourceRequirements == nil {
+		s.options.appDeveloperContainerResourceRequirements = s.defaultAppDeveloperContainerResourceRequirements()
+	}
+
+	if s.options.sidekiqContainerResourceRequirements == nil {
+		s.options.sidekiqContainerResourceRequirements = s.defaultSidekiqContainerResourceRequirements()
+	}
+
+	if s.options.sphinxContainerResourceRequirements == nil {
+		s.options.sphinxContainerResourceRequirements = s.defaultSphinxContainerResourceRequirements()
+	}
+
+	if s.options.appReplicas == nil {
+		var defaultAppReplicas int32 = 1
+		s.options.appReplicas = &defaultAppReplicas
+	}
+
+	if s.options.sidekiqReplicas == nil {
+		var defaultSidekiqReplicas int32 = 1
+		s.options.sidekiqReplicas = &defaultSidekiqReplicas
 	}
 }
 
@@ -299,5 +398,70 @@ func (s *SystemOptionsBuilder) setRedisDefaultsOptions() {
 
 	if s.options.messageBusRedisNamespace == nil {
 		s.options.messageBusRedisNamespace = &defaultMessageBusRedisNamespace
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultAppMasterContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("800Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("600Mi"),
+		},
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultAppProviderContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("800Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("600Mi"),
+		},
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultAppDeveloperContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("800Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("50m"),
+			v1.ResourceMemory: resource.MustParse("600Mi"),
+		},
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultSidekiqContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("2Gi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("500Mi"),
+		},
+	}
+}
+
+func (s *SystemOptionsBuilder) defaultSphinxContainerResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("512Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("80m"),
+			v1.ResourceMemory: resource.MustParse("250Mi"),
+		},
 	}
 }

@@ -77,8 +77,6 @@ func (i *ImagesAdapter) options() (*component.AmpImagesOptions, error) {
 	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
 	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
 	aob.ZyncDatabasePostgreSQLImage("${ZYNC_DATABASE_IMAGE}")
-	aob.BackendRedisImage("${REDIS_IMAGE}")
-	aob.SystemRedisImage("${REDIS_IMAGE}")
 	aob.SystemMemcachedImage("${MEMCACHED_IMAGE}")
 
 	aob.InsecureImportPolicy(false)

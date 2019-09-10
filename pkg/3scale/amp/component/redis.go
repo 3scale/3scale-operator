@@ -4,6 +4,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	appsv1 "github.com/openshift/api/apps/v1"
+	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,20 +29,22 @@ func (redis *Redis) Objects() []common.KubernetesObject {
 }
 
 func (redis *Redis) buildBackendRedisObjects() []common.KubernetesObject {
-	dc := redis.buildBackendDeploymentConfig()
-	bs := redis.buildBackendService()
-	cm := redis.buildBackendConfigMap()
-	bpvc := redis.buildBackendRedisPVC()
+	dc := redis.BackendDeploymentConfig()
+	bs := redis.BackendService()
+	cm := redis.BackendConfigMap()
+	bpvc := redis.BackendPVC()
+	bis := redis.BackendImageStream()
 	objects := []common.KubernetesObject{
 		dc,
 		bs,
 		cm,
 		bpvc,
+		bis,
 	}
 	return objects
 }
 
-func (redis *Redis) buildBackendDeploymentConfig() *appsv1.DeploymentConfig {
+func (redis *Redis) BackendDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta:   redis.buildDeploymentConfigTypeMeta(),
 		ObjectMeta: redis.buildDeploymentConfigObjectMeta(),
@@ -214,16 +217,7 @@ func (redis *Redis) buildPodContainerCommandArgs() []string {
 }
 
 func (redis *Redis) buildPodContainerResourceLimits() v1.ResourceRequirements {
-	return v1.ResourceRequirements{ //TODO Make this configurable via an option flag.
-		Limits: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("2000m"), //another option was to use resource.Parse which would not panic and return an error if error
-			v1.ResourceMemory: resource.MustParse("32Gi"),
-		},
-		Requests: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("1000m"),
-			v1.ResourceMemory: resource.MustParse("1024Mi"),
-		},
-	}
+	return *redis.Options.backendRedisContainerResourceRequirements
 }
 
 func (redis *Redis) buildPodContainerReadinessProbe() *v1.Probe {
@@ -269,7 +263,7 @@ func (redis *Redis) buildPodContainerVolumeMounts() []v1.VolumeMount {
 	}
 }
 
-func (redis *Redis) buildBackendService() *v1.Service {
+func (redis *Redis) BackendService() *v1.Service {
 	return &v1.Service{
 		ObjectMeta: redis.buildServiceObjectMeta(),
 		TypeMeta:   redis.buildServiceTypeMeta(),
@@ -322,7 +316,7 @@ func (redis *Redis) buildServiceSelector() map[string]string {
 	}
 }
 
-func (redis *Redis) buildBackendConfigMap() *v1.ConfigMap {
+func (redis *Redis) BackendConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		ObjectMeta: redis.buildConfigMapObjectMeta(),
 		TypeMeta:   redis.buildConfigMapTypeMeta(),
@@ -407,7 +401,7 @@ dir /var/lib/redis/data
 `
 }
 
-func (redis *Redis) buildBackendRedisPVC() *v1.PersistentVolumeClaim {
+func (redis *Redis) BackendPVC() *v1.PersistentVolumeClaim {
 	return &v1.PersistentVolumeClaim{
 		ObjectMeta: redis.buildPVCObjectMeta(),
 		TypeMeta:   redis.buildPVCTypeMeta(),
@@ -451,11 +445,68 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 	}
 }
 
+func (redis *Redis) BackendImageStream() *imagev1.ImageStream {
+	return &imagev1.ImageStream{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "backend-redis",
+			Labels: map[string]string{
+				"app":                  redis.Options.appLabel,
+				"threescale_component": "backend",
+			},
+			Annotations: map[string]string{
+				"openshift.io/display-name": "Backend Redis",
+			},
+		},
+		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
+		Spec: imagev1.ImageStreamSpec{
+			Tags: []imagev1.TagReference{
+				imagev1.TagReference{
+					Name: "latest",
+					Annotations: map[string]string{
+						"openshift.io/display-name": "Backend Redis (latest)",
+					},
+					From: &v1.ObjectReference{
+						Kind: "ImageStreamTag",
+						Name: redis.Options.ampRelease,
+					},
+				},
+				imagev1.TagReference{
+					Name: redis.Options.ampRelease,
+					Annotations: map[string]string{
+						"openshift.io/display-name": "Backend " + redis.Options.ampRelease + " Redis",
+					},
+					From: &v1.ObjectReference{
+						Kind: "DockerImage",
+						Name: redis.Options.backendImage,
+					},
+					ImportPolicy: imagev1.TagImportPolicy{
+						Insecure: redis.Options.insecureImportPolicy,
+					},
+				},
+			},
+		},
+	}
+}
+
 ////// Begin System Redis
-
 func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
+	systemRedisDC := redis.SystemDeploymentConfig()
+	systemRedisPVC := redis.SystemPVC()
+	systemRedisService := redis.SystemService()
+	systemRedisImageStream := redis.SystemImageStream()
 
-	systemRedisDC := &appsv1.DeploymentConfig{
+	objects := []common.KubernetesObject{
+		systemRedisDC,
+		systemRedisPVC,
+		systemRedisService,
+		systemRedisImageStream,
+	}
+
+	return objects
+}
+
+func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
+	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
 			APIVersion: "apps.openshift.io/v1",
@@ -513,20 +564,11 @@ func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:    "system-redis",
-							Image:   "system-redis:latest",
-							Command: []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
-							Args:    []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("500m"),
-									v1.ResourceMemory: resource.MustParse("32Gi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("150m"),
-									v1.ResourceMemory: resource.MustParse("256Mi"),
-								},
-							},
+							Name:      "system-redis",
+							Image:     "system-redis:latest",
+							Command:   []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
+							Args:      []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
+							Resources: *redis.Options.systemRedisContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "system-redis-storage",
@@ -567,8 +609,38 @@ func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
 				}},
 		},
 	}
+}
 
-	systemRedisPVC := &v1.PersistentVolumeClaim{
+func (redis *Redis) SystemService() *v1.Service {
+	return &v1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system-redis",
+			Labels: map[string]string{
+				"app":                          redis.Options.appLabel,
+				"threescale_component":         "system",
+				"threescale_component_element": "redis",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:       "redis",
+					Protocol:   v1.ProtocolTCP,
+					Port:       6379,
+					TargetPort: intstr.FromInt(6379),
+				},
+			},
+			Selector: map[string]string{"deploymentConfig": "system-redis"},
+		},
+	}
+}
+
+func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
+	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
 			APIVersion: "v1",
@@ -585,14 +657,54 @@ func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
 			},
-			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")}}}}
-
-	objects := []common.KubernetesObject{
-		systemRedisDC,
-		systemRedisPVC,
+			Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")},
+			},
+		},
 	}
+}
 
-	return objects
+func (redis *Redis) SystemImageStream() *imagev1.ImageStream {
+	return &imagev1.ImageStream{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system-redis",
+			Labels: map[string]string{
+				"app":                  redis.Options.appLabel,
+				"threescale_component": "system",
+			},
+			Annotations: map[string]string{
+				"openshift.io/display-name": "System Redis",
+			},
+		},
+		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
+		Spec: imagev1.ImageStreamSpec{
+			Tags: []imagev1.TagReference{
+				imagev1.TagReference{
+					Name: "latest",
+					Annotations: map[string]string{
+						"openshift.io/display-name": "System Redis (latest)",
+					},
+					From: &v1.ObjectReference{
+						Kind: "ImageStreamTag",
+						Name: redis.Options.ampRelease,
+					},
+				},
+				imagev1.TagReference{
+					Name: redis.Options.ampRelease,
+					Annotations: map[string]string{
+						"openshift.io/display-name": "System " + redis.Options.ampRelease + " Redis",
+					},
+					From: &v1.ObjectReference{
+						Kind: "DockerImage",
+						Name: redis.Options.systemImage,
+					},
+					ImportPolicy: imagev1.TagImportPolicy{
+						Insecure: redis.Options.insecureImportPolicy,
+					},
+				},
+			},
+		},
+	}
 }
 
 ////// End System Redis
