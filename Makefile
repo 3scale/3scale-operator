@@ -84,7 +84,7 @@ endif
 	license_finder report --decisions-file=$(DEPENDENCY_DECISION_FILE) --quiet --format=xml > licenses.xml
 
 ## licenses-check: Check license compliance of dependencies
-licenses-check:
+licenses-check: vendor
 ifndef LICENSEFINDERBINARY
 	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
 endif
