@@ -1,6 +1,18 @@
 version: 2.1
 
 commands:
+  attach-workspace:
+    steps:
+    - run:
+        name: Preparing workspace directory
+        command: |
+          sudo rm -rf /tmp/workspace
+          sudo mkdir -p /tmp/workspace
+          sudo chown -vf circleci:circleci /tmp/workspace
+        working_directory: /
+    - attach_workspace:
+        at: /tmp/workspace
+
   docker-login:
     steps:
       - run:
@@ -19,10 +31,18 @@ commands:
 
   install-operator-dependencies:
     steps:
+      - restore_cache:
+          keys:
+            - v2-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
       - run:
           name: Install operator dependencies
           command: |
             make vendor
+      - save_cache:
+          key: v2-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
+          paths:
+            - "vendor"
+            - "/go/pkg"
 
   install-openshift:
     steps:
@@ -183,46 +203,16 @@ commands:
           path: reports
 
   build-operator-image:
-    parameters:
-      version:
-        default: master
-        type: string
     steps:
       - checkout
-
-      - restore_cache:
-          keys:
-            - v2-gopkg-cache-{{ arch }}-{{ checksum "go.sum" }}
-            - v2-gopkg-cache-{{ arch }}-{{ .Branch }}
-
       - install-operator-sdk
       - install-operator-dependencies
-
-      - save_cache:
-          key: v2-gopkg-cache-{{ arch }}-{{ checksum "go.sum" }}
-          paths:
-            - "/go/src/github.com/3scale/3scale-operator/vendor"
-            - "/go/pkg"
-
       - run:
           name: Build Operator
           command: |
-              make build VERSION=<< parameters.version >>
-
-  push-operator-image:
-    parameters:
-      version:
-        default: master
-        type: string
-    steps:
-      - docker-login
-      - run:
-          name: Push 3scale-operator image
-          command: |
-            make push VERSION=<< parameters.version >>
-
+              make build IMAGE=172.30.1.1:5000/openshift/3scale-operator VERSION=test
 jobs:
-  build-deploy-operator:
+  install-operator:
     docker:
       - image: circleci/golang:1.12.5
     working_directory: /go/src/github.com/3scale/3scale-operator
@@ -230,54 +220,60 @@ jobs:
       - setup_remote_docker:
           reusable: true
           exclusive: false
-      - build-operator-image:
-          version: ${CIRCLE_SHA1}
-      - push-operator-image:
-          version: ${CIRCLE_SHA1}
+      - build-operator-image
+      - run:
+          name: Sharing requirements to downstream job
+          command: |
+            mkdir -p /tmp/workspace/images
+            docker save -o /tmp/workspace/images/3scaleoperator-image.tar 172.30.1.1:5000/openshift/3scale-operator:test
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - images/3scaleoperator-image.tar
 
   tag-operator-image-master:
     machine: true
     steps:
-      - checkout
-      - docker-login
+      - attach-workspace
       - run:
-          name: Pull origin image tag
+          name: Unpack docker image
           command: |
-            make pull VERSION=${CIRCLE_SHA1}
+            docker load -i /tmp/workspace/images/3scaleoperator-image.tar
       - run:
           name: Tag image as master
           command: |
-            make tag SOURCE_VERSION=${CIRCLE_SHA1} VERSION=master
-      - push-operator-image:
-          version: master
+              docker tag 172.30.1.1:5000/openshift/3scale-operator:test quay.io/3scale/3scale-operator:master
+      - docker-login
+      - run:
+          name: Push master image
+          command: |
+              docker push quay.io/3scale/3scale-operator:master
       - run:
           name: Tag image as latest
           command: |
-            make tag SOURCE_VERSION=master VERSION=latest
-      - push-operator-image:
-          version: latest
+            docker tag quay.io/3scale/3scale-operator:master quay.io/3scale/3scale-operator:latest
+      - run:
+          name: Push latest image
+          command: |
+              docker push quay.io/3scale/3scale-operator:latest
 
   tag-operator-image-release:
     machine: true
     steps:
-      - checkout
-      - docker-login
+      - attach-workspace
       - run:
-          name: Pull origin image tag
+          name: Unpack docker image
           command: |
-            make pull VERSION=${CIRCLE_SHA1}
+            docker load -i /tmp/workspace/images/3scaleoperator-image.tar
       - run:
           name: Tag image as release ${CIRCLE_TAG}
           command: |
-            make tag SOURCE_VERSION=${CIRCLE_SHA1} VERSION=${CIRCLE_TAG}
-      - push-operator-image:
-          version: ${CIRCLE_TAG}
+              docker tag 172.30.1.1:5000/openshift/3scale-operator:test quay.io/3scale/3scale-operator:${CIRCLE_TAG}
+      - docker-login
       - run:
-          name: Tag image as latest
+          name: Push ${CIRCLE_TAG} tag
           command: |
-            make tag SOURCE_VERSION=${CIRCLE_TAG} VERSION=latest
-      - push-operator-image:
-          version: latest
+              docker push quay.io/3scale/3scale-operator:${CIRCLE_TAG}
 
   deploy_templates:
     machine:
@@ -309,20 +305,25 @@ jobs:
     resource_class: large
     working_directory: ~/go/src/github.com/3scale/3scale-operator
     steps:
+      - attach-workspace
       - install-openshift
       - install-golang
       - install-operator-sdk
       - checkout
       - install-operator-dependencies
+      - oc-observe
       - run:
-          name: Update the operator image
+          name: Unpack and push operator to internal registry
           command: |
-            sed "s@REPLACE_IMAGE@quay.io/3scale/3scale-operator:${CIRCLE_SHA1}@g" -i deploy/operator.yaml
+            docker load -i /tmp/workspace/images/3scaleoperator-image.tar
+            oc whoami -t | docker login --username developer --password-stdin 172.30.1.1:5000
+            docker push 172.30.1.1:5000/openshift/3scale-operator:test
       - run:
           name: run E2E tests
           command: |
-            make e2e-run
+            make e2e-run IMAGE=172.30.1.1:5000/openshift/3scale-operator:test
           no_output_timeout: 1800
+      - oc-status
 
   generator:
     docker:
@@ -366,12 +367,10 @@ workflows:
       - license-check
       - test-crds
       - verify-manifest
-      - build-deploy-operator:
-          context: org-global
+      - install-operator
       - run-operator-e2e-test:
-          context: org-global
           requires:
-            - build-deploy-operator
+            - install-operator
       - tag-operator-image-master:
           context: org-global
           requires:
@@ -392,7 +391,6 @@ workflows:
     jobs:
       - generator
       - deploy_templates:
-          context: org-global
           requires:
             - generator
   nightly:
