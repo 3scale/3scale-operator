@@ -1,7 +1,7 @@
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 .DEFAULT_GOAL := help
-.PHONY: build e2e test-crds verify-manifest licenses-check
+.PHONY: build e2e test-crds verify-manifest licenses-check push-manifest
 UNAME := $(shell uname)
 
 ifeq (${UNAME}, Linux)
@@ -26,6 +26,8 @@ SOURCE_VERSION ?= master
 VERSION ?= v0.0.1
 NAMESPACE ?= operator-test
 OPERATOR_NAME ?= threescale-operator
+MANIFEST_RELEASE ?= 1.0.$(shell git rev-list --count master)
+APPLICATION_REPOSITORY_NAMESPACE ?= 3scaleoperatormaster
 
 ## build: Build operator
 build:
@@ -74,7 +76,7 @@ verify-manifest:
 ifndef OPERATORCOURIER
 	$(error "operator-courier is not available please install pip3 install operator-courier")
 endif
-	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier verify --ui_validate_io 3scale-operator/
+	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier verify --ui_validate_io 3scale-operator-master/
 
 ## licenses.xml: Generate licenses.xml file
 licenses.xml:
@@ -90,3 +92,10 @@ ifndef LICENSEFINDERBINARY
 endif
 	@echo "Checking license compliance"
 	license_finder --decisions-file=$(DEPENDENCY_DECISION_FILE)
+
+## push-manifest: Push manifests to application repository
+push-manifest:
+ifndef OPERATORCOURIER
+	$(error "operator-courier is not available please install pip3 install operator-courier")
+endif
+	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier push 3scale-operator-master/ $(APPLICATION_REPOSITORY_NAMESPACE) 3scale-operator-master $(MANIFEST_RELEASE) "$(TOKEN)"
