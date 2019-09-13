@@ -153,21 +153,13 @@ make push IMAGE=quay.io/myorg/3scale-operator VERSION=test
 ```
 ## Deploy to OpenShift 4 using OLM
 
-To install this operator on OpenShift 4 for end-to-end testing, make sure you have access to a quay.io account to create an application repository. Follow the [authentication](https://github.com/operator-framework/operator-courier/#authentication) instructions for Operator Courier to obtain an account token. This token is in the form of "basic XXXXXXXXX" and both words are required for the command.
-
-Push the operator bundle to your quay application repository as follows:
-
-```bash
-operator-courier push deploy/olm-catalog/3scale-operator/ 3scale 3scale-operator 0.3.0 "basic XXXXXXXXX"
-```
-
-If pushing to another quay repository, replace _3scale_ with your username or other namespace. Also note that the push command does not overwrite an existing repository, and it needs to be deleted before a new version can be built and uploaded. Once the bundle has been uploaded, create an [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster) to load your operator bundle in OpenShift.
+To install this operator on OpenShift 4 for end-to-end testing,
+create the [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster)
+provided in `deploy/olm-catalog/3scale-operatorsource.yaml` to load your operator bundle in OpenShift.
 
 ```bash
-deploy/olm-catalog/3scale-operatorsource.yaml
+oc create -f deploy/olm-catalog/3scale-operatorsource.yaml
 ```
-
-Remember to replace _registryNamespace_ with your quay namespace. The name, display name and publisher of the operator are the only other attributes that may be modified.
 
 It will take a few minutes for the operator to become visible under the _OperatorHub_ section of the OpenShift console _Catalog_. It can be easily found by filtering the provider type to _Custom_.
 
