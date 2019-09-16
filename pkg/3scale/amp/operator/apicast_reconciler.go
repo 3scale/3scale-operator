@@ -34,28 +34,6 @@ func (r *ApicastEnvCMReconciler) IsUpdateNeeded(desiredCM, existingCM *v1.Config
 	return update
 }
 
-type ApicastProdDCReconciler struct {
-	BaseAPIManagerLogicReconciler
-}
-
-func NewApicastProdDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *ApicastProdDCReconciler {
-	return &ApicastProdDCReconciler{
-		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
-	}
-}
-
-func (r *ApicastProdDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
-	update := false
-
-	tmpUpdate := DeploymentConfigReconcileReplicas(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	tmpUpdate = DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	return update
-}
-
 type ApicastStagingDCReconciler struct {
 	BaseAPIManagerLogicReconciler
 }
