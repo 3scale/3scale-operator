@@ -191,6 +191,8 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		if err != nil || res.Requeue {
 			if err != nil {
 				r.Logger().Error(err, "Error upgrading APIManager")
+			} else {
+				r.Logger().Info("Changes performed when upgrading APIManager")
 			}
 			r.Logger().Info("Requeuing request")
 			return res, err
