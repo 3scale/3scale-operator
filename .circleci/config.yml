@@ -317,11 +317,15 @@ jobs:
             docker load -i /tmp/workspace/images/3scaleoperator-image.tar
             oc whoami -t | docker login --username developer --password-stdin 172.30.1.1:5000
             docker push 172.30.1.1:5000/openshift/3scale-operator:test
+      - run:
+          name: Change to new testing namespace
+          command: |
+            oc new-project operator-test
       - oc-observe
       - run:
           name: run E2E tests
           command: |
-            make e2e-run IMAGE=172.30.1.1:5000/openshift/3scale-operator:test
+            make e2e-run IMAGE=172.30.1.1:5000/openshift/3scale-operator:test NAMESPACE=operator-test
           no_output_timeout: 1800
       - oc-status
 
