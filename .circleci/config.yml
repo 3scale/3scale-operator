@@ -346,6 +346,7 @@ jobs:
     docker:
       - image: circleci/ruby:2.5
     steps:
+      - install-golang
       - checkout
       - run: sudo gem install license_finder --version 5.7.1
       - run: make licenses-check
