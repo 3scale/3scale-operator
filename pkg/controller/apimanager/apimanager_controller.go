@@ -98,17 +98,12 @@ type ReconcileAPIManager struct {
 	operator.BaseControllerReconciler
 }
 
-const (
-	ThreescaleVersionAnnotation = "apps.3scale.net/apimanager-threescale-version"
-	OperatorVersionAnnotation   = "apps.3scale.net/threescale-operator-version"
-)
-
 func (r *ReconcileAPIManager) updateVersionAnnotations(cr *appsv1alpha1.APIManager) error {
 	if cr.Annotations == nil {
 		cr.Annotations = map[string]string{}
 	}
-	cr.Annotations[ThreescaleVersionAnnotation] = product.ThreescaleRelease
-	cr.Annotations[OperatorVersionAnnotation] = version.Version
+	cr.Annotations[appsv1alpha1.ThreescaleVersionAnnotation] = product.ThreescaleRelease
+	cr.Annotations[appsv1alpha1.OperatorVersionAnnotation] = version.Version
 	r.Logger().Info("Updating version annotations")
 	err := r.Client().Update(context.TODO(), cr)
 	return err
@@ -121,7 +116,7 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 		BaseUpgrade{
 			client:      r.Client(),
 			cr:          cr,
-			fromVersion: cr.Annotations[OperatorVersionAnnotation],
+			fromVersion: cr.Annotations[appsv1alpha1.OperatorVersionAnnotation],
 			toVersion:   version.Version,
 			logger:      r.Logger(),
 		},
@@ -174,16 +169,7 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 	r.Logger().Info("Defaults for APIManager already set")
 
-	// TODO Should this be placed before setting the CR defaults/validation?
-	currentOperatorVersion := instance.Annotations[OperatorVersionAnnotation]
-	currentThreescaleversion := instance.Annotations[ThreescaleVersionAnnotation]
-	if currentOperatorVersion == "" || currentThreescaleversion == "" {
-		r.Logger().Info("Version not currently set in the CR. Trying to set installed version")
-		err := r.updateVersionAnnotations(instance)
-		return reconcile.Result{Requeue: true}, err
-	}
-
-	if currentOperatorVersion != version.Version {
+	if instance.Annotations[appsv1alpha1.OperatorVersionAnnotation] != version.Version {
 		r.Logger().Info("Installed version differs from desired version. Performing upgrade procedure")
 		// TODO add logic to check that only immediate consecutive installs
 		// are possible?
