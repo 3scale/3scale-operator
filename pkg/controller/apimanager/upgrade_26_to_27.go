@@ -71,16 +71,7 @@ func (u *Upgrade26_to_27) upgradeImageStream(imageStream *imagev1.ImageStream, n
 	return changed, nil
 }
 
-func (u *Upgrade26_to_27) apicastImageOverriden() bool {
-	return u.cr.Spec.Apicast != nil && u.cr.Spec.Apicast.Image != nil
-}
-
 func (u *Upgrade26_to_27) upgradeAPIcastImageStream() (bool, error) {
-	if u.apicastImageOverriden() {
-		u.logger.Info("[WARN] APIcast image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	apicastImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "amp-apicast", Namespace: u.cr.Namespace}, apicastImageStream)
 	if err != nil {
@@ -88,19 +79,14 @@ func (u *Upgrade26_to_27) upgradeAPIcastImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetApicastImage()
+	if u.cr.Spec.Apicast != nil && u.cr.Spec.Apicast.Image != nil {
+		newImageURL = *u.cr.Spec.Apicast.Image
+	}
+
 	return u.upgradeImageStream(apicastImageStream, newImageURL)
 }
 
-func (u *Upgrade26_to_27) backendImageOverriden() bool {
-	return u.cr.Spec.Backend != nil && u.cr.Spec.Backend.Image != nil
-}
-
 func (u *Upgrade26_to_27) upgradeBackendImageStream() (bool, error) {
-	if u.backendImageOverriden() {
-		u.logger.Info("[WARN] Backend image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	backendImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "amp-backend", Namespace: u.cr.Namespace}, backendImageStream)
 	if err != nil {
@@ -108,20 +94,15 @@ func (u *Upgrade26_to_27) upgradeBackendImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetBackendImage()
+	if u.cr.Spec.Backend != nil && u.cr.Spec.Backend.Image != nil {
+		newImageURL = *u.cr.Spec.Backend.Image
+	}
+
 	return u.upgradeImageStream(backendImageStream, newImageURL)
 
 }
 
-func (u *Upgrade26_to_27) backendRedisImageOverriden() bool {
-	return u.cr.Spec.Backend != nil && u.cr.Spec.Backend.RedisImage != nil
-}
-
 func (u *Upgrade26_to_27) upgradeBackendRedisImageStream() (bool, error) {
-	if u.backendRedisImageOverriden() {
-		u.logger.Info("[WARN] Backend Redis image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	backendRedisImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "backend-redis", Namespace: u.cr.Namespace}, backendRedisImageStream)
 	if err != nil {
@@ -129,19 +110,14 @@ func (u *Upgrade26_to_27) upgradeBackendRedisImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetBackendRedisImage()
+	if u.cr.Spec.Backend != nil && u.cr.Spec.Backend.RedisImage != nil {
+		newImageURL = *u.cr.Spec.Backend.RedisImage
+	}
+
 	return u.upgradeImageStream(backendRedisImageStream, newImageURL)
 }
 
-func (u *Upgrade26_to_27) systemRedisImageOverriden() bool {
-	return u.cr.Spec.System != nil && u.cr.Spec.System.RedisImage != nil
-}
-
 func (u *Upgrade26_to_27) upgradeSystemRedisImageStream() (bool, error) {
-	if u.systemRedisImageOverriden() {
-		u.logger.Info("[WARN] System Redis image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	systemRedisImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "system-redis", Namespace: u.cr.Namespace}, systemRedisImageStream)
 	if err != nil {
@@ -149,19 +125,14 @@ func (u *Upgrade26_to_27) upgradeSystemRedisImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetSystemRedisImage()
+	if u.cr.Spec.System != nil && u.cr.Spec.System.RedisImage != nil {
+		newImageURL = *u.cr.Spec.System.RedisImage
+	}
+
 	return u.upgradeImageStream(systemRedisImageStream, newImageURL)
 }
 
-func (u *Upgrade26_to_27) systemImageOverriden() bool {
-	return u.cr.Spec.System != nil && u.cr.Spec.System.Image != nil
-}
-
 func (u *Upgrade26_to_27) upgradeSystemImageStream() (bool, error) {
-	if u.systemImageOverriden() {
-		u.logger.Info("[WARN] System image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	systemImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "amp-system", Namespace: u.cr.Namespace}, systemImageStream)
 	if err != nil {
@@ -169,21 +140,14 @@ func (u *Upgrade26_to_27) upgradeSystemImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetSystemImage()
+	if u.cr.Spec.System != nil && u.cr.Spec.System.Image != nil {
+		newImageURL = *u.cr.Spec.System.Image
+	}
+
 	return u.upgradeImageStream(systemImageStream, newImageURL)
 }
 
-func (u *Upgrade26_to_27) systemMySQLImageOverriden() bool {
-	return u.cr.Spec.System != nil && u.cr.Spec.System.DatabaseSpec != nil &&
-		u.cr.Spec.System.DatabaseSpec.MySQL != nil &&
-		u.cr.Spec.System.DatabaseSpec.MySQL.Image != nil
-}
-
 func (u *Upgrade26_to_27) upgradeSystemMySQLImageStream() (bool, error) {
-	if u.systemMySQLImageOverriden() {
-		u.logger.Info("[WARN] System MySQL image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	systemMySQLImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "system-mysql", Namespace: u.cr.Namespace}, systemMySQLImageStream)
 	if err != nil {
@@ -191,21 +155,16 @@ func (u *Upgrade26_to_27) upgradeSystemMySQLImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetSystemMySQLImage()
+	if u.cr.Spec.System != nil && u.cr.Spec.System.DatabaseSpec != nil &&
+		u.cr.Spec.System.DatabaseSpec.MySQL != nil &&
+		u.cr.Spec.System.DatabaseSpec.MySQL.Image != nil {
+		newImageURL = *u.cr.Spec.System.DatabaseSpec.MySQL.Image
+	}
+
 	return u.upgradeImageStream(systemMySQLImageStream, newImageURL)
 }
 
-func (u *Upgrade26_to_27) systemPostgreSQLImageOverriden() bool {
-	return u.cr.Spec.System != nil && u.cr.Spec.System.DatabaseSpec != nil &&
-		u.cr.Spec.System.DatabaseSpec.PostgreSQL != nil &&
-		u.cr.Spec.System.DatabaseSpec.PostgreSQL.Image != nil
-}
-
 func (u *Upgrade26_to_27) upgradeSystemPostgreSQLImageStream() (bool, error) {
-	if u.systemPostgreSQLImageOverriden() {
-		u.logger.Info("[WARN] System PostgreSQL image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	systemPostgreSQLImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "system-postgresql", Namespace: u.cr.Namespace}, systemPostgreSQLImageStream)
 	if err != nil {
@@ -213,6 +172,12 @@ func (u *Upgrade26_to_27) upgradeSystemPostgreSQLImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetSystemPostgreSQLImage()
+	if u.cr.Spec.System != nil && u.cr.Spec.System.DatabaseSpec != nil &&
+		u.cr.Spec.System.DatabaseSpec.PostgreSQL != nil &&
+		u.cr.Spec.System.DatabaseSpec.PostgreSQL.Image != nil {
+		newImageURL = *u.cr.Spec.System.DatabaseSpec.PostgreSQL.Image
+	}
+
 	return u.upgradeImageStream(systemPostgreSQLImageStream, newImageURL)
 }
 
@@ -228,16 +193,7 @@ func (u *Upgrade26_to_27) upgradeSystemDatabaseImageStream() (bool, error) {
 	return false, fmt.Errorf("System database is not set")
 }
 
-func (u *Upgrade26_to_27) systemMemcachedImageOverriden() bool {
-	return u.cr.Spec.System != nil && u.cr.Spec.System.MemcachedImage != nil
-}
-
 func (u *Upgrade26_to_27) upgradeSystemMemcachedImageStream() (bool, error) {
-	if u.systemMemcachedImageOverriden() {
-		u.logger.Info("[WARN] System Memcached image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	systemMemcachedImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "system-memcached", Namespace: u.cr.Namespace}, systemMemcachedImageStream)
 	if err != nil {
@@ -245,19 +201,14 @@ func (u *Upgrade26_to_27) upgradeSystemMemcachedImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetSystemMemcachedImage()
+	if u.cr.Spec.System != nil && u.cr.Spec.System.MemcachedImage != nil {
+		newImageURL = *u.cr.Spec.System.MemcachedImage
+	}
+
 	return u.upgradeImageStream(systemMemcachedImageStream, newImageURL)
 }
 
-func (u *Upgrade26_to_27) zyncImageOverriden() bool {
-	return u.cr.Spec.Zync != nil && u.cr.Spec.Zync.Image != nil
-}
-
 func (u *Upgrade26_to_27) upgradeZyncImageStream() (bool, error) {
-	if u.zyncImageOverriden() {
-		u.logger.Info("[WARN] Zync image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	zyncImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "amp-zync", Namespace: u.cr.Namespace}, zyncImageStream)
 	if err != nil {
@@ -265,19 +216,14 @@ func (u *Upgrade26_to_27) upgradeZyncImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetZyncImage()
+	if u.cr.Spec.Zync != nil && u.cr.Spec.Zync.Image != nil {
+		newImageURL = *u.cr.Spec.Zync.Image
+	}
+
 	return u.upgradeImageStream(zyncImageStream, newImageURL)
 }
 
-func (u *Upgrade26_to_27) zyncDatabaseImageOverriden() bool {
-	return u.cr.Spec.Zync != nil && u.cr.Spec.Zync.PostgreSQLImage != nil
-}
-
 func (u *Upgrade26_to_27) upgradeZyncDatabaseImageStream() (bool, error) {
-	if u.zyncDatabaseImageOverriden() {
-		u.logger.Info("[WARN] Zync Database image is overriden in CR. Skipping upgrade of it. This might cause inconsistent behavior")
-		return false, nil
-	}
-
 	zyncDatabaseImageStream := &imagev1.ImageStream{}
 	err := u.client.Get(context.TODO(), types.NamespacedName{Name: "zync-database-postgresql", Namespace: u.cr.Namespace}, zyncDatabaseImageStream)
 	if err != nil {
@@ -285,6 +231,10 @@ func (u *Upgrade26_to_27) upgradeZyncDatabaseImageStream() (bool, error) {
 	}
 
 	newImageURL := product.CurrentImageProvider().GetZyncPostgreSQLImage()
+	if u.cr.Spec.Zync != nil && u.cr.Spec.Zync.PostgreSQLImage != nil {
+		newImageURL = *u.cr.Spec.Zync.PostgreSQLImage
+	}
+
 	return u.upgradeImageStream(zyncDatabaseImageStream, newImageURL)
 }
 
