@@ -311,13 +311,13 @@ jobs:
       - install-operator-sdk
       - checkout
       - install-operator-dependencies
-      - oc-observe
       - run:
           name: Unpack and push operator to internal registry
           command: |
             docker load -i /tmp/workspace/images/3scaleoperator-image.tar
             oc whoami -t | docker login --username developer --password-stdin 172.30.1.1:5000
             docker push 172.30.1.1:5000/openshift/3scale-operator:test
+      - oc-observe
       - run:
           name: run E2E tests
           command: |
