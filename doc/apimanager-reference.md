@@ -57,7 +57,7 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by System |
 | MemcachedImage | `memcachedImage` | string | No | nil | Used to overwrite the desired Memcached image for the Memcached used by System |
 | FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification | Spec of the System's File Storage part |
-| DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [SystemDatabaseSpec](#SystemDatabaseSpec) specification | Spec of the System's Database part |
+| DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [DatabaseSpec](#DatabaseSpec) specification | Spec of the System's Database part |
 
 #### FileStorageSpec
 
@@ -93,13 +93,20 @@ that should be set on it.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| MySQLSpec | `mysql`| \*SystemMySQLSpec | No | nil | See [MySQLSpec](#MySQLSpec) specification |
+| MySQL | `mysql`| \*SystemMySQLSpec | No | nil | Enable MySQL database as System's database. See [MySQLSpec](#MySQLSpec) specification |
+| PostgreSQL | `postgresql` | \*SystemPostgreSQLSpec | No | nil | Enable PostgreSQL database as System's database. See [PostgreSQLSpec](#PostgreSQLSpec)
 
 #### MySQLSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's MySQL database |
+
+#### PostgreSQLSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Image | `image` | string | No | nil | Used to overwrite the desired container image for System's PostgreSQL database |
 
 #### ZyncSpec
 
