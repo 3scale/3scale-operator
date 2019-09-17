@@ -47,7 +47,7 @@ func (u *Upgrade26_to_27) upgradeImageStream(imageStream *imagev1.ImageStream, n
 				tag.From.Name = newImageURL
 				changed = true
 			}
-			if strings.Contains(tag.Annotations["openshift.io/display-name"], desiredTag) {
+			if strings.Contains(tag.Annotations["openshift.io/display-name"], tagToRemove) {
 				tag.Annotations["openshift.io/display-name"] = strings.ReplaceAll(tag.Annotations["openshift.io/display-name"], tagToRemove, desiredTag)
 				changed = true
 			}
