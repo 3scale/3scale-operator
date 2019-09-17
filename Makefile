@@ -58,7 +58,7 @@ e2e-local-run:
 
 ## e2e-run: operator local test
 e2e-run:
-	operator-sdk test local ./test/e2e --go-test-flags '-v -timeout 0' --debug --image $(IMAGE)
+	operator-sdk test local ./test/e2e --go-test-flags '-v -timeout 0' --debug --image $(IMAGE) --namespace $(NAMESPACE)
 
 ## e2e-clean: delete operator OCP project
 e2e-clean:
