@@ -3,6 +3,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 
 	v1 "k8s.io/api/core/v1"
@@ -12,6 +14,11 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 // Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+
+const (
+	ThreescaleVersionAnnotation = "apps.3scale.net/apimanager-threescale-version"
+	OperatorVersionAnnotation   = "apps.3scale.net/threescale-operator-version"
+)
 
 // APIManagerSpec defines the desired state of APIManager
 // +k8s:openapi-gen=true
@@ -204,7 +211,10 @@ func (apimanager *APIManager) SetDefaults() (bool, error) {
 	var err error
 	changed := false
 
-	tmpChanged := apimanager.setAPIManagerCommonSpecDefaults()
+	tmpChanged := apimanager.setAPIManagerAnnotationsDefaults()
+	changed = changed || tmpChanged
+
+	tmpChanged = apimanager.setAPIManagerCommonSpecDefaults()
 	changed = changed || tmpChanged
 
 	tmpChanged = apimanager.setApicastSpecDefaults()
@@ -214,6 +224,27 @@ func (apimanager *APIManager) SetDefaults() (bool, error) {
 	changed = changed || tmpChanged
 
 	return changed, err
+}
+
+func (apimanager *APIManager) setAPIManagerAnnotationsDefaults() bool {
+	changed := false
+
+	if apimanager.Annotations == nil {
+		apimanager.Annotations = map[string]string{}
+		changed = true
+	}
+
+	if _, ok := apimanager.Annotations[OperatorVersionAnnotation]; !ok {
+		apimanager.Annotations[OperatorVersionAnnotation] = version.Version
+		changed = true
+	}
+
+	if _, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; !ok {
+		apimanager.Annotations[ThreescaleVersionAnnotation] = product.ThreescaleRelease
+		changed = true
+	}
+
+	return changed
 }
 
 func (apimanager *APIManager) setApicastSpecDefaults() bool {
