@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -76,61 +74,31 @@ func (r *SystemMySQLReconciler) systemMySQL() (*component.SystemMysql, error) {
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyDCReconciler())
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLMainConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	err := reconciler.Reconcile(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
-	return nil
+	return reconciler.Reconcile(desiredConfigMap)
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLExtraConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	err := reconciler.Reconcile(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
-	return nil
+	return reconciler.Reconcile(desiredConfigMap)
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLSystemDatabaseSecret(desiredSecret *v1.Secret) error {
 	// Secret values are not affected by CR field values
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemMySQLReconciler) reconcileSystemMySQLPersistentVolumeClaim(desiredPVC *v1.PersistentVolumeClaim) error {
 	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	err := reconciler.Reconcile(desiredPVC)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredPVC)))
-	return nil
+	return reconciler.Reconcile(desiredPVC)
 }

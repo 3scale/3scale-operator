@@ -2,6 +2,7 @@ package apimanager
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/3scale/3scale-operator/version"
@@ -104,9 +105,7 @@ func (r *ReconcileAPIManager) updateVersionAnnotations(cr *appsv1alpha1.APIManag
 	}
 	cr.Annotations[appsv1alpha1.ThreescaleVersionAnnotation] = product.ThreescaleRelease
 	cr.Annotations[appsv1alpha1.OperatorVersionAnnotation] = version.Version
-	r.Logger().Info("Updating version annotations")
-	err := r.Client().Update(context.TODO(), cr)
-	return err
+	return r.Client().Update(context.TODO(), cr)
 }
 
 func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
@@ -122,15 +121,7 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 		},
 	}
 
-	res, err := upgrade.Upgrade()
-
-	if err != nil || res.Requeue {
-		return res, err
-	}
-
-	err = r.updateVersionAnnotations(cr)
-	return reconcile.Result{}, err
-
+	return upgrade.Upgrade()
 }
 
 // Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
@@ -142,71 +133,67 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	r.Logger().Info("Reconciling APIManager")
+	logger := r.Logger().WithValues("namespace", request.Namespace, "name", request.Name)
+	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
 
-	r.Logger().Info("Trying to get APIManager resource")
 	instance, err := r.apiManagerInstance(request.NamespacedName)
 	if err != nil {
-		r.Logger().Error(err, "Requeuing request...")
+		logger.Error(err, "Error fetching apimanager instance")
 		return reconcile.Result{}, err
 	}
 	if instance == nil {
-		r.Logger().Info("Finished reconciliation")
+		logger.Info("resource not found. Ignoring since object must have been deleted")
 		return reconcile.Result{}, nil
 	}
-	r.Logger().Info("Successfully retreived APIManager resource")
 
-	r.Logger().Info("Setting defaults for APIManager resource")
-	changed, err := r.setAPIManagerDefaults(instance)
+	res, err := r.setAPIManagerDefaults(instance)
 	if err != nil {
-		r.Logger().Error(err, "Requeuing request...")
+		logger.Error(err, "Error")
 		return reconcile.Result{}, err
 	}
-	if changed {
-		r.Logger().Info("Defaults set. Requeuing request...")
-		return reconcile.Result{}, nil
+	if res.Requeue {
+		logger.Info("Defaults set for APIManager resource")
+		return res, nil
 	}
-	r.Logger().Info("Defaults for APIManager already set")
 
 	if instance.Annotations[appsv1alpha1.OperatorVersionAnnotation] != version.Version {
-		r.Logger().Info("Installed version differs from desired version. Performing upgrade procedure")
+		logger.Info(fmt.Sprintf("Upgrade %s -> %s", instance.Annotations[appsv1alpha1.OperatorVersionAnnotation], version.Version))
 		// TODO add logic to check that only immediate consecutive installs
 		// are possible?
 		res, err := r.upgradeAPIManager(instance)
-		if err != nil || res.Requeue {
-			if err != nil {
-				r.Logger().Error(err, "Error upgrading APIManager")
-			} else {
-				r.Logger().Info("Changes performed when upgrading APIManager")
-			}
-			r.Logger().Info("Requeuing request")
-			return res, err
+		if err != nil {
+			logger.Error(err, "Error upgrading APIManager")
+			return reconcile.Result{}, err
 		}
-		r.Logger().Info("Upgrade procedure performed")
+		if res.Requeue {
+			logger.Info("Upgrading not finished. Requeueing.")
+			return res, nil
+		}
+
+		err = r.updateVersionAnnotations(instance)
+		if err != nil {
+			logger.Error(err, "Error updating annotations")
+			return reconcile.Result{}, err
+		}
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	r.Logger().Info("Current version is desired version")
-
-	r.Logger().Info("Reconciling APIManager logic")
 	result, err := r.reconcileAPIManagerLogic(instance)
 	if err != nil {
-		r.Logger().Error(err, "Requeuing request...")
+		logger.Error(err, "Error during reconciliation")
 		return result, err
 	}
 	if result.Requeue {
-		return reconcile.Result{Requeue: true}, nil
+		logger.Info("Reconciling not finished. Requeueing.")
+		return result, nil
 	}
-	r.Logger().Info("APIManager logic reconciled")
 
 	err = r.reconcileAPIManagerStatus(instance)
 	if err != nil {
-		r.Logger().Error(err, "Requeuing request...")
+		logger.Error(err, "Error updating status")
 		return reconcile.Result{}, err
 	}
 
-	r.Logger().Info("Finished current reconcile request successfully. Skipping requeue of the request")
 	return reconcile.Result{}, nil
 }
 
@@ -220,34 +207,24 @@ func (r *ReconcileAPIManager) apiManagerInstance(namespacedName types.Namespaced
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			r.Logger().Info("APIManager Resource not found. Ignoring since object must have been deleted")
 			return nil, nil
 		}
-		r.Logger().Error(err, "APIManager Resource cannot be retrieved. Requeuing request...")
-		// Error reading the object - requeue the request.
 		return nil, err
 	}
 	return instance, nil
 }
 
-func (r *ReconcileAPIManager) setAPIManagerDefaults(cr *appsv1alpha1.APIManager) (bool, error) {
+func (r *ReconcileAPIManager) setAPIManagerDefaults(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
 	changed, err := cr.SetDefaults() // TODO check where to put this
 	if err != nil {
-		// Error setting defaults - Stop reconciliation
-		r.Logger().Error(err, "Error setting defaults")
-		return changed, err
+		return reconcile.Result{}, err
 	}
+
 	if changed {
-		r.Logger().Info("Updating defaults for APIManager resource")
 		err = r.Client().Update(context.TODO(), cr)
-		if err != nil {
-			r.Logger().Error(err, "APIManager Resource cannot be updated")
-			return changed, err
-		}
-		r.Logger().Info("Successfully updated defaults for APIManager resource")
-		return changed, nil
 	}
-	return changed, nil
+
+	return reconcile.Result{Requeue: changed}, err
 }
 
 func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
@@ -290,8 +267,6 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 	if err != nil || result.Requeue {
 		return result, err
 	}
-
-	// TODO reconcile more components
 
 	return reconcile.Result{}, nil
 }
@@ -374,11 +349,7 @@ func (r *ReconcileAPIManager) reconcileApicast(cr *appsv1alpha1.APIManager) (rec
 }
 
 func (r *ReconcileAPIManager) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager) error {
-	err := r.setDeploymentStatus(cr)
-	if err != nil {
-		r.Logger().Error(err, "Failed to set deployment status")
-	}
-	return err
+	return r.setDeploymentStatus(cr)
 }
 
 func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {

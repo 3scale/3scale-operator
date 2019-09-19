@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -154,93 +152,48 @@ func (r *BackendReconciler) backend() (*component.Backend, error) {
 
 func (r *BackendReconciler) reconcileCronDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewBackendCronDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *BackendReconciler) reconcileListenerDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewBackendListenerDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *BackendReconciler) reconcileListenerService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *BackendReconciler) reconcileListenerRoute(desiredRoute *routev1.Route) error {
 	reconciler := NewRouteBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyRouteReconciler())
-	err := reconciler.Reconcile(desiredRoute)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredRoute)))
-	return nil
+	return reconciler.Reconcile(desiredRoute)
 }
 
 func (r *BackendReconciler) reconcileWorkerDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewBackendWorkerDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *BackendReconciler) reconcileEnvironmentConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	err := reconciler.Reconcile(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
-	return nil
+	return reconciler.Reconcile(desiredConfigMap)
 }
 
 func (r *BackendReconciler) reconcileInternalAPISecret(desiredSecret *v1.Secret) error {
 	// Secret values are not affected by CR field values
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *BackendReconciler) reconcileRedisSecret(desiredSecret *v1.Secret) error {
 	// Secret values are not affected by CR field values
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *BackendReconciler) reconcileListenerSecret(desiredSecret *v1.Secret) error {
 	// Secret values are not affected by CR field values
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }

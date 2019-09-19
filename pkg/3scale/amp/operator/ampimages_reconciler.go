@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	imagev1 "github.com/openshift/api/image/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -79,70 +77,35 @@ func (r *AMPImagesReconciler) ampImages() (*component.AmpImages, error) {
 
 func (r *AMPImagesReconciler) reconcileBackendImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	err := reconciler.Reconcile(desiredImageStream)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
-	return nil
+	return reconciler.Reconcile(desiredImageStream)
 }
 
 func (r *AMPImagesReconciler) reconcileZyncImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	err := reconciler.Reconcile(desiredImageStream)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
-	return nil
+	return reconciler.Reconcile(desiredImageStream)
 }
 
 func (r *AMPImagesReconciler) reconcileApicastImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	err := reconciler.Reconcile(desiredImageStream)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info("apicast imagestream reconciled")
-	return nil
+	return reconciler.Reconcile(desiredImageStream)
 }
 
 func (r *AMPImagesReconciler) reconcileSystemImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	err := reconciler.Reconcile(desiredImageStream)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
-	return nil
+	return reconciler.Reconcile(desiredImageStream)
 }
 
 func (r *AMPImagesReconciler) reconcileZyncDatabasePostgreSQLImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	err := reconciler.Reconcile(desiredImageStream)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
-	return nil
+	return reconciler.Reconcile(desiredImageStream)
 }
 
 func (r *AMPImagesReconciler) reconcileSystemMemcachedImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	err := reconciler.Reconcile(desiredImageStream)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
-	return nil
+	return reconciler.Reconcile(desiredImageStream)
 }
 
 func (r *AMPImagesReconciler) reconcileDeploymentsServiceAccount(desiredServiceAccount *v1.ServiceAccount) error {
 	reconciler := NewServiceAccountBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyServiceAccountReconciler())
-	err := reconciler.Reconcile(desiredServiceAccount)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredServiceAccount)))
-	return nil
+	return reconciler.Reconcile(desiredServiceAccount)
 }

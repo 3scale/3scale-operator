@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -114,50 +112,25 @@ func (r *ApicastReconciler) apicast() (*component.Apicast, error) {
 
 func (r *ApicastReconciler) reconcileStagingDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewApicastDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *ApicastReconciler) reconcileProductionDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewApicastDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *ApicastReconciler) reconcileStagingService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *ApicastReconciler) reconcileProductionService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *ApicastReconciler) reconcileEnvironmentConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewApicastEnvCMReconciler())
-	err := reconciler.Reconcile(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
-	return nil
+	return reconciler.Reconcile(desiredConfigMap)
 }

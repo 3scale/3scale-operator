@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -130,90 +128,45 @@ func (r *RedisReconciler) redis() (*component.Redis, error) {
 
 func (r *RedisReconciler) reconcileBackendDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewRedisBackendDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *RedisReconciler) reconcileBackendService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *RedisReconciler) reconcileBackendConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	err := reconciler.Reconcile(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
-	return nil
+	return reconciler.Reconcile(desiredConfigMap)
 }
 
 func (r *RedisReconciler) reconcileBackendPVC(desiredPVC *v1.PersistentVolumeClaim) error {
 	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	err := reconciler.Reconcile(desiredPVC)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredPVC)))
-	return nil
+	return reconciler.Reconcile(desiredPVC)
 }
 
 func (r *RedisReconciler) reconcileSystemDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewRedisSystemDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *RedisReconciler) reconcileSystemPVC(desiredPVC *v1.PersistentVolumeClaim) error {
 	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	err := reconciler.Reconcile(desiredPVC)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredPVC)))
-	return nil
+	return reconciler.Reconcile(desiredPVC)
 }
 
 func (r *RedisReconciler) reconcileSystemService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *RedisReconciler) reconcileBackendImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	err := reconciler.Reconcile(desiredImageStream)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
-	return nil
+	return reconciler.Reconcile(desiredImageStream)
 }
 
 func (r *RedisReconciler) reconcileSystemImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	err := reconciler.Reconcile(desiredImageStream)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredImageStream)))
-	return nil
+	return reconciler.Reconcile(desiredImageStream)
 }
