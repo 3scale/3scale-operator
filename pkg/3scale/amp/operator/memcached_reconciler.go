@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -65,10 +63,5 @@ func (r *MemcachedReconciler) memcached() (*component.Memcached, error) {
 
 func (r *MemcachedReconciler) reconcileMemcachedDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewMemcachedDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }

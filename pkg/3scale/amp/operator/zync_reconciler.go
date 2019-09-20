@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -129,92 +127,47 @@ func (r *ZyncReconciler) zync() (*component.Zync, error) {
 
 func (r *ZyncReconciler) reconcileQueRole(desiredRole *rbacv1.Role) error {
 	reconciler := NewRoleBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyRoleReconciler())
-	err := reconciler.Reconcile(desiredRole)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredRole)))
-	return nil
+	return reconciler.Reconcile(desiredRole)
 }
 
 func (r *ZyncReconciler) reconcileQueServiceAccount(desiredServiceAccount *v1.ServiceAccount) error {
 	reconciler := NewServiceAccountBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyServiceAccountReconciler())
-	err := reconciler.Reconcile(desiredServiceAccount)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredServiceAccount)))
-	return nil
+	return reconciler.Reconcile(desiredServiceAccount)
 }
 
 func (r *ZyncReconciler) reconcileQueRoleBinding(desiredRoleBinding *rbacv1.RoleBinding) error {
 	reconciler := NewRoleBindingBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyRoleBindingReconciler())
-	err := reconciler.Reconcile(desiredRoleBinding)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredRoleBinding)))
-	return nil
+	return reconciler.Reconcile(desiredRoleBinding)
 }
 
 func (r *ZyncReconciler) reconcileZyncDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewZyncDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *ZyncReconciler) reconcileZyncQueDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	// Zync deployment config reconciler works for ZyncQue
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewZyncDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *ZyncReconciler) reconcileZyncDatabaseDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewZyncDatabaseDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *ZyncReconciler) reconcileZyncService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *ZyncReconciler) reconcileZyncDatabaseService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *ZyncReconciler) reconcileZyncSecret(desiredSecret *v1.Secret) error {
 	// Secret values are not affected by CR field values
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }

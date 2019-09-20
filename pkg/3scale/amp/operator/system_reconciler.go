@@ -128,12 +128,7 @@ func (r *SystemReconciler) reconcileFileStorage(system *component.System) error 
 
 func (r *SystemReconciler) reconcileS3AWSSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
@@ -273,200 +268,100 @@ func (r *SystemReconciler) highAvailability() (*component.HighAvailability, erro
 
 func (r *SystemReconciler) reconcileSharedStorage(desiredPVC *v1.PersistentVolumeClaim) error {
 	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	err := reconciler.Reconcile(desiredPVC)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredPVC)))
-	return nil
+	return reconciler.Reconcile(desiredPVC)
 }
 
 func (r *SystemReconciler) reconcileProviderService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *SystemReconciler) reconcileMasterService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *SystemReconciler) reconcileDeveloperService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *SystemReconciler) reconcileSphinxService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *SystemReconciler) reconcileMemcachedService(desiredService *v1.Service) error {
 	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	err := reconciler.Reconcile(desiredService)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredService)))
-	return nil
+	return reconciler.Reconcile(desiredService)
 }
 
 func (r *SystemReconciler) reconcileAppDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewSystemAppDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *SystemReconciler) reconcileSidekiqDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewSystemSidekiqDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *SystemReconciler) reconcileSphinxDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewSystemSphinxDCReconciler(r.BaseAPIManagerLogicReconciler))
-	err := reconciler.Reconcile(desiredDeploymentConfig)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredDeploymentConfig)))
-	return nil
+	return reconciler.Reconcile(desiredDeploymentConfig)
 }
 
 func (r *SystemReconciler) reconcileSystemConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	err := reconciler.Reconcile(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
-	return nil
+	return reconciler.Reconcile(desiredConfigMap)
 }
 
 func (r *SystemReconciler) reconcileEnvironmentConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	err := reconciler.Reconcile(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
-	return nil
+	return reconciler.Reconcile(desiredConfigMap)
 }
 
 func (r *SystemReconciler) reconcileSMTPConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	err := reconciler.Reconcile(desiredConfigMap)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredConfigMap)))
-	return nil
+	return reconciler.Reconcile(desiredConfigMap)
 }
 
 func (r *SystemReconciler) reconcileEventsHookSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) reconcileRedisSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) reconcileMasterApicastSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) reconcileSeedSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) reconcileRecaptchaSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) reconcileAppSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) reconcileMemcachedSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) reconcileDatabaseHASecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	err := reconciler.Reconcile(desiredSecret)
-	if err != nil {
-		return err
-	}
-	r.Logger().Info(fmt.Sprintf("%s reconciled", ObjectInfo(desiredSecret)))
-	return nil
+	return reconciler.Reconcile(desiredSecret)
 }
