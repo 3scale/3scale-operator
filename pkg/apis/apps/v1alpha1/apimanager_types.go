@@ -118,14 +118,48 @@ type ApicastSpec struct {
 	RegistryURL *string `json:"registryURL,omitempty"`
 	// +optional
 	Image *string `json:"image,omitempty"`
+	// +optional
+	ProductionSpec *ApicastProductionSpec `json:"productionSpec,omitempty"`
+	// +optional
+	StagingSpec *ApicastStagingSpec `json:"stagingSpec,omitempty"`
+}
+
+type ApicastProductionSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
+}
+
+type ApicastStagingSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
 }
 
 type BackendSpec struct {
 	// +optional
 	Image *string `json:"image,omitempty"`
-
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
+	// +optional
+	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
+	// +optional
+	WorkerSpec *BackendWorkerSpec `json:"workerSpec,omitempty"`
+	// +optional
+	CronSpec *BackendCronSpec `json:"cronSpec,omitempty"`
+}
+
+type BackendListenerSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
+}
+
+type BackendWorkerSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
+}
+
+type BackendCronSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
 }
 
 type SystemSpec struct {
@@ -152,6 +186,19 @@ type SystemSpec struct {
 
 	// +optional
 	DatabaseSpec *SystemDatabaseSpec `json:"database,omitempty"`
+
+	AppSpec     *SystemAppSpec     `json:"appSpec,omitempty"`
+	SidekiqSpec *SystemSidekiqSpec `json:"sidekiqSpec,omitempty"`
+}
+
+type SystemAppSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
+}
+
+type SystemSidekiqSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
 }
 
 type SystemFileStorageSpec struct {
@@ -196,6 +243,22 @@ type ZyncSpec struct {
 	Image *string `json:"image,omitempty"`
 	// +optional
 	PostgreSQLImage *string `json:"postgreSQLImage,omitempty"`
+
+	// +optional
+	AppSpec *ZyncAppSpec `json:"appSpec,omitempty"`
+
+	// +optional
+	QueSpec *ZyncQueSpec `json:"queSpec,omitempty"`
+}
+
+type ZyncAppSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
+}
+
+type ZyncQueSpec struct {
+	// +optional
+	Replicas *int64 `json:"replicas,omitempty"`
 }
 
 type HighAvailabilitySpec struct {
@@ -217,10 +280,19 @@ func (apimanager *APIManager) SetDefaults() (bool, error) {
 	tmpChanged = apimanager.setAPIManagerCommonSpecDefaults()
 	changed = changed || tmpChanged
 
+	tmpChanged = apimanager.setBackendSpecDefaults()
+	changed = changed || tmpChanged
+
 	tmpChanged = apimanager.setApicastSpecDefaults()
 	changed = changed || tmpChanged
 
 	tmpChanged, err = apimanager.setSystemSpecDefaults()
+	changed = changed || tmpChanged
+	if err != nil {
+		return changed, err
+	}
+
+	tmpChanged = apimanager.setZyncDefaults()
 	changed = changed || tmpChanged
 
 	return changed, err
@@ -274,6 +346,73 @@ func (apimanager *APIManager) setApicastSpecDefaults() bool {
 	}
 	if spec.Apicast.RegistryURL == nil {
 		spec.Apicast.RegistryURL = &defaultApicastRegistryURL
+		changed = true
+	}
+
+	if spec.Apicast.StagingSpec == nil {
+		spec.Apicast.StagingSpec = &ApicastStagingSpec{}
+		changed = true
+	}
+
+	if spec.Apicast.ProductionSpec == nil {
+		spec.Apicast.ProductionSpec = &ApicastProductionSpec{}
+		changed = true
+	}
+
+	if spec.Apicast.StagingSpec.Replicas == nil {
+		spec.Apicast.StagingSpec.Replicas = apimanager.defaultReplicas()
+		changed = true
+	}
+
+	if spec.Apicast.ProductionSpec.Replicas == nil {
+		spec.Apicast.ProductionSpec.Replicas = apimanager.defaultReplicas()
+		changed = true
+	}
+
+	return changed
+}
+
+func (apimanager *APIManager) defaultReplicas() *int64 {
+	var defaultReplicas int64 = 1
+	return &defaultReplicas
+}
+
+func (apimanager *APIManager) setBackendSpecDefaults() bool {
+	changed := false
+	spec := &apimanager.Spec
+
+	if spec.Backend == nil {
+		spec.Backend = &BackendSpec{}
+		changed = true
+	}
+
+	if spec.Backend.ListenerSpec == nil {
+		spec.Backend.ListenerSpec = &BackendListenerSpec{}
+		changed = true
+	}
+
+	if spec.Backend.CronSpec == nil {
+		spec.Backend.CronSpec = &BackendCronSpec{}
+		changed = true
+	}
+
+	if spec.Backend.WorkerSpec == nil {
+		spec.Backend.WorkerSpec = &BackendWorkerSpec{}
+		changed = true
+	}
+
+	if spec.Backend.ListenerSpec.Replicas == nil {
+		spec.Backend.ListenerSpec.Replicas = apimanager.defaultReplicas()
+		changed = true
+	}
+
+	if spec.Backend.CronSpec.Replicas == nil {
+		spec.Backend.CronSpec.Replicas = apimanager.defaultReplicas()
+		changed = true
+	}
+
+	if spec.Backend.WorkerSpec.Replicas == nil {
+		spec.Backend.WorkerSpec.Replicas = apimanager.defaultReplicas()
 		changed = true
 	}
 
@@ -337,6 +476,26 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 		return changed, err
 	}
 
+	if spec.System.AppSpec == nil {
+		spec.System.AppSpec = &SystemAppSpec{}
+		changed = true
+	}
+
+	if spec.System.SidekiqSpec == nil {
+		spec.System.SidekiqSpec = &SystemSidekiqSpec{}
+		changed = true
+	}
+
+	if spec.System.AppSpec.Replicas == nil {
+		spec.System.AppSpec.Replicas = apimanager.defaultReplicas()
+		changed = true
+	}
+
+	if spec.System.SidekiqSpec.Replicas == nil {
+		spec.System.SidekiqSpec.Replicas = apimanager.defaultReplicas()
+		changed = true
+	}
+
 	return changed, nil
 }
 
@@ -393,4 +552,35 @@ func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	}
 
 	return changed, nil
+}
+
+func (apimanager *APIManager) setZyncDefaults() bool {
+	changed := false
+	spec := &apimanager.Spec
+
+	if spec.Zync == nil {
+		spec.Zync = &ZyncSpec{}
+		changed = true
+	}
+
+	if spec.Zync.AppSpec == nil {
+		spec.Zync.AppSpec = &ZyncAppSpec{}
+		changed = true
+	}
+
+	if spec.Zync.QueSpec == nil {
+		spec.Zync.QueSpec = &ZyncQueSpec{}
+	}
+
+	if spec.Zync.AppSpec.Replicas == nil {
+		spec.Zync.AppSpec.Replicas = apimanager.defaultReplicas()
+		changed = true
+	}
+
+	if spec.Zync.QueSpec.Replicas == nil {
+		spec.Zync.QueSpec.Replicas = apimanager.defaultReplicas()
+		changed = true
+	}
+
+	return changed
 }

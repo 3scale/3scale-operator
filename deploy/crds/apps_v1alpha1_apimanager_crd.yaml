@@ -37,19 +37,49 @@ spec:
                   type: string
                 openSSLVerify:
                   type: boolean
+                productionSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
                 registryURL:
                   type: string
                 responseCodes:
                   type: boolean
+                stagingSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
               type: object
             appLabel:
               type: string
             backend:
               properties:
+                cronSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
                 image:
                   type: string
+                listenerSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
                 redisImage:
                   type: string
+                workerSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
               type: object
             highAvailability:
               properties:
@@ -62,6 +92,12 @@ spec:
               type: boolean
             system:
               properties:
+                appSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
                 database:
                   properties:
                     mysql:
@@ -107,6 +143,12 @@ spec:
                   type: string
                 redisImage:
                   type: string
+                sidekiqSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
               type: object
             tenantName:
               type: string
@@ -114,10 +156,22 @@ spec:
               type: string
             zync:
               properties:
+                appSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
                 image:
                   type: string
                 postgreSQLImage:
                   type: string
+                queSpec:
+                  properties:
+                    replicas:
+                      format: int64
+                      type: integer
+                  type: object
               type: object
           required:
           - wildcardDomain

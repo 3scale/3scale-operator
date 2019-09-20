@@ -34,8 +34,6 @@ func (o *OperatorApicastOptionsProvider) setResourceRequirementsOptions(b *compo
 }
 
 func (o *OperatorApicastOptionsProvider) setReplicas(b *component.ApicastOptionsBuilder) {
-	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
-		b.StagingReplicas(2)
-		b.ProductionReplicas(2)
-	}
+	b.StagingReplicas(int32(*o.APIManagerSpec.Apicast.StagingSpec.Replicas))
+	b.ProductionReplicas(int32(*o.APIManagerSpec.Apicast.ProductionSpec.Replicas))
 }

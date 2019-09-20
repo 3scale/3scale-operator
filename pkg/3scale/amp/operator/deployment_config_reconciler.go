@@ -108,12 +108,7 @@ func DeploymentConfigReconcileReplicas(desired, existing *appsv1.DeploymentConfi
 	desiredName := ObjectInfo(desired)
 	update := false
 
-	// TODO implement right replica reconciliation with replica fields in CRD
-
-	// Currently, to alllow scaling manually, we do no reconcile repolicas.
-	// One exception: Just in case some configuration (like HA conf) sets replica to higher than 1 and existing replica is 1,
-	// then the replica will be reconciled. This is a hack to be removed when replica reconciliation is implemented.
-	if desired.Spec.Replicas > 1 && existing.Spec.Replicas == 1 {
+	if desired.Spec.Replicas != existing.Spec.Replicas {
 		logger.Info(fmt.Sprintf("%s spec.replicas differs, recreating dc", desiredName))
 		existing.Spec.Replicas = desired.Spec.Replicas
 		update = true

@@ -274,8 +274,6 @@ func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.Syste
 }
 
 func (o *OperatorSystemOptionsProvider) setReplicas(sob *component.SystemOptionsBuilder) {
-	if o.APIManagerSpec.HighAvailability != nil && o.APIManagerSpec.HighAvailability.Enabled {
-		sob.AppReplicas(2)
-		sob.SidekiqReplicas(2)
-	}
+	sob.AppReplicas(int32(*o.APIManagerSpec.System.AppSpec.Replicas))
+	sob.SidekiqReplicas(int32(*o.APIManagerSpec.System.SidekiqSpec.Replicas))
 }
