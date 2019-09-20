@@ -113,11 +113,13 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 	// that upgrades the threescale version
 	upgrade := Upgrade26_to_27{
 		BaseUpgrade{
-			client:      r.Client(),
-			cr:          cr,
-			fromVersion: cr.Annotations[appsv1alpha1.OperatorVersionAnnotation],
-			toVersion:   version.Version,
-			logger:      r.Logger(),
+			client:          r.Client(),
+			apiClientReader: r.APIClientReader(),
+			scheme:          r.Scheme(),
+			cr:              cr,
+			fromVersion:     cr.Annotations[appsv1alpha1.OperatorVersionAnnotation],
+			toVersion:       version.Version,
+			logger:          r.Logger(),
 		},
 	}
 
