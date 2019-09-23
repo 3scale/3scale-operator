@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/common"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -15,13 +14,11 @@ func NewSystemMysqlImageAdapter() Adapter {
 }
 
 func (a *SystemMysqlImageAdapter) Parameters() []templatev1.Parameter {
-	imageProvider := product.CurrentImageProvider()
-
 	return []templatev1.Parameter{
 		{
 			Name:        "SYSTEM_DATABASE_IMAGE",
 			Description: "System MySQL image to use",
-			Value:       imageProvider.GetSystemMySQLImage(),
+			Value:       component.SystemMySQLImageURL(),
 			Required:    true,
 		},
 	}

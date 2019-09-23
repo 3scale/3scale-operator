@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/common"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -15,39 +14,37 @@ func NewImagesAdapter() Adapter {
 }
 
 func (i *ImagesAdapter) Parameters() []templatev1.Parameter {
-	imageProvider := product.CurrentImageProvider()
-
 	return []templatev1.Parameter{
 		templatev1.Parameter{
 			Name:     "AMP_BACKEND_IMAGE",
 			Required: true,
-			Value:    imageProvider.GetBackendImage(),
+			Value:    component.ApisonatorImageURL(),
 		},
 		templatev1.Parameter{
 			Name:     "AMP_ZYNC_IMAGE",
-			Value:    imageProvider.GetZyncImage(),
+			Value:    component.ZyncImageURL(),
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_APICAST_IMAGE",
-			Value:    imageProvider.GetApicastImage(),
+			Value:    component.ApicastImageURL(),
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:     "AMP_SYSTEM_IMAGE",
-			Value:    imageProvider.GetSystemImage(),
+			Value:    component.PortaImageURL(),
 			Required: true,
 		},
 		templatev1.Parameter{
 			Name:        "ZYNC_DATABASE_IMAGE",
 			Description: "Zync's PostgreSQL image to use",
-			Value:       imageProvider.GetZyncPostgreSQLImage(),
+			Value:       component.ZyncPostgreSQLImageURL(),
 			Required:    true,
 		},
 		templatev1.Parameter{
 			Name:        "MEMCACHED_IMAGE",
 			Description: "Memcached image to use",
-			Value:       imageProvider.GetSystemMemcachedImage(),
+			Value:       component.PortaMemcachedImageURL(),
 			Required:    true,
 		},
 		templatev1.Parameter{

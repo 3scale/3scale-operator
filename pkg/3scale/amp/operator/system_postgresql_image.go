@@ -9,13 +9,12 @@ import (
 
 func (o *OperatorSystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageOptions() (*component.SystemPostgreSQLImageOptions, error) {
 	optProv := component.SystemPostgreSQLImageOptionsBuilder{}
-	imageProvider := product.CurrentImageProvider()
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 	optProv.AmpRelease(product.ThreescaleRelease)
 	if o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image != nil {
 		optProv.Image(*o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image)
 	} else {
-		optProv.Image(imageProvider.GetSystemPostgreSQLImage())
+		optProv.Image(component.SystemPostgreSQLImageURL())
 	}
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 

@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/common"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -15,8 +14,6 @@ func NewRedisAdapter() Adapter {
 }
 
 func (a *RedisAdapter) Parameters() []templatev1.Parameter {
-	imageProvider := product.CurrentImageProvider()
-
 	return []templatev1.Parameter{
 		{
 			Name:        "REDIS_IMAGE",
@@ -25,7 +22,7 @@ func (a *RedisAdapter) Parameters() []templatev1.Parameter {
 			// We use backend-redis image because we have to choose one
 			// but in templates there's no distinction between Backend Redis image
 			// used and System Redis image. They are always the same
-			Value: imageProvider.GetBackendRedisImage(),
+			Value: component.BackendRedisImageURL(),
 		},
 	}
 }

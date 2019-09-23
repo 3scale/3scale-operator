@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/common"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -15,14 +14,12 @@ func NewSystemPostgreSQLImageAdapter() Adapter {
 }
 
 func (a *SystemPostgreSQLImageAdapter) Parameters() []templatev1.Parameter {
-	imageProvider := product.CurrentImageProvider()
-
 	return []templatev1.Parameter{
 		templatev1.Parameter{
 			Name:        "SYSTEM_DATABASE_IMAGE",
 			Description: "System PostgreSQL image to use",
 			Required:    true,
-			Value:       imageProvider.GetSystemPostgreSQLImage(),
+			Value:       component.SystemPostgreSQLImageURL(),
 		},
 	}
 }

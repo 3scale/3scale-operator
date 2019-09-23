@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: 3scale-operator.v0.0.0
+  name: 3scale-operator-master.v0.0.0
   namespace: placeholder
   annotations:
     repository: https://github.com/3scale/3scale-operator
@@ -155,6 +155,16 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: threescale-operator
+                - name: APISONATOR_IMAGE
+                  value: "quay.io/3scale/apisonator:nightly"
+                - name: APICAST_IMAGE
+                  value: "quay.io/3scale/apicast:nightly"
+                - name: PORTA_IMAGE
+                  value: "quay.io/3scale/porta:nightly"
+                - name: ZYNC_IMAGE
+                  value: "quay.io/3scale/zync:nightly"
+                - name: PORTA_MEMCACHED_IMAGE
+                  value: "memcached:1.5"
                 image: quay.io/3scale/3scale-operator:master
                 imagePullPolicy: Always
                 name: 3scale-operator

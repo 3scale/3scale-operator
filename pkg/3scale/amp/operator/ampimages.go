@@ -10,44 +10,42 @@ import (
 func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOptions, error) {
 	optProv := component.AmpImagesOptionsBuilder{}
 
-	imageProvider := product.CurrentImageProvider()
-
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 	optProv.AMPRelease(product.ThreescaleRelease)
 	if o.APIManagerSpec.Apicast != nil && o.APIManagerSpec.Apicast.Image != nil {
 		optProv.ApicastImage(*o.APIManagerSpec.Apicast.Image)
 	} else {
-		optProv.ApicastImage(imageProvider.GetApicastImage())
+		optProv.ApicastImage(ApicastImageURL())
 	}
 
 	if o.APIManagerSpec.Backend != nil && o.APIManagerSpec.Backend.Image != nil {
 		optProv.BackendImage(*o.APIManagerSpec.Backend.Image)
 	} else {
-		optProv.BackendImage(imageProvider.GetBackendImage())
+		optProv.BackendImage(ApisonatorImageURL())
 	}
 
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.Image != nil {
 		optProv.SystemImage(*o.APIManagerSpec.System.Image)
 	} else {
-		optProv.SystemImage(imageProvider.GetSystemImage())
+		optProv.SystemImage(PortaImageURL())
 	}
 
 	if o.APIManagerSpec.Zync != nil && o.APIManagerSpec.Zync.Image != nil {
 		optProv.ZyncImage(*o.APIManagerSpec.Zync.Image)
 	} else {
-		optProv.ZyncImage(imageProvider.GetZyncImage())
+		optProv.ZyncImage(ZyncImageURL())
 	}
 
 	if o.APIManagerSpec.Zync != nil && o.APIManagerSpec.Zync.PostgreSQLImage != nil {
 		optProv.ZyncDatabasePostgreSQLImage(*o.APIManagerSpec.Zync.PostgreSQLImage)
 	} else {
-		optProv.ZyncDatabasePostgreSQLImage(imageProvider.GetZyncPostgreSQLImage())
+		optProv.ZyncDatabasePostgreSQLImage(component.ZyncPostgreSQLImageURL())
 	}
 
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.MemcachedImage != nil {
 		optProv.SystemMemcachedImage(*o.APIManagerSpec.System.MemcachedImage)
 	} else {
-		optProv.SystemMemcachedImage(imageProvider.GetSystemMemcachedImage())
+		optProv.SystemMemcachedImage(PortaMemcachedImageURL())
 	}
 
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
