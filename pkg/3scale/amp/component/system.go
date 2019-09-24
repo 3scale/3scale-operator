@@ -1152,28 +1152,7 @@ func (system *System) getSystemZyncConfData() string {
 }
 
 func (system *System) getSystemRollingUpdatesConfData() string {
-	return `production:
-  old_charts: false
-  new_provider_documentation: false
-  proxy_pro: false
-  instant_bill_plan_change: false
-  service_permissions: true
-  async_apicast_deploy: false
-  duplicate_application_id: true
-  duplicate_user_key: true
-  plan_changes_wizard: false
-  require_cc_on_signup: false
-  apicast_per_service: true
-  new_notification_system: true
-  cms_api: false
-  apicast_v2: true
-  forum: false
-  published_service_plan_signup: true
-  apicast_oidc: true
-  policies: true
-  policy_registry: true
-  proxy_private_base_path: true
-  service_mesh_integration: true
+	return `production: {}
 `
 }
 
