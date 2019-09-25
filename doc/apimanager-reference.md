@@ -41,6 +41,20 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | IncludeResponseCodes  | `responseCodes` | bool | No | `true` | Enable logging response codes in APIcast |
 | RegistryURL | `registryURL` | string | No | `http://apicast-staging:8090/policies` | The URL to point to APIcast policies registry management |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Apicast |
+| ProductionSpec | `productionSpec` | \*ApicastProductionSpec | No | See [ApicastProductionSpec](#ApicastProductionSpec) reference | Spec of APIcast production part |
+| StagingSpec | `stagingSpec` | \*ApicastStagingSpec | No | See [ApicastStagingSpec](#ApicastStagingSpec) reference | Spec of APIcast staging part |
+
+#### ApicastProductionSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `apicast-production` deployment |
+
+#### ApicastStagingSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `apicast-staging` deployment |
 
 #### BackendSpec
 
@@ -48,6 +62,27 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Backend |
 | RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by backend |
+| ListenerSpec | `listenerSpec` | \*BackendListenerSpec | No | See [BackendListenerSpec](#BackendListenerSpec) reference | Spec of Backend Listener part |
+| WorkerSpec | `workerSpec` | \*BackendWorkerSpec | No | See [BackendWorkerSpec](#BackendWorkerSpec) reference | Spec of Backend Worker part |
+| CronSpec | `cronSpec` | \*BackendCronSpec | No | See [BackendCronSpec](#BackendCronSpec) reference | Spec of Backend Cron part |
+
+#### BackendListenerSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `backend-listener` deployment |
+
+#### BackendWorkerSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `backend-worker` deployment |
+
+#### BackendCronSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `backend-cron` deployment |
 
 #### SystemSpec
 
@@ -58,6 +93,8 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | MemcachedImage | `memcachedImage` | string | No | nil | Used to overwrite the desired Memcached image for the Memcached used by System |
 | FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification | Spec of the System's File Storage part |
 | DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [DatabaseSpec](#DatabaseSpec) specification | Spec of the System's Database part |
+| AppSpec | `appSpec` | \*SystemAppSpec | No | See [SystemAppSpec](#SystemAppSpec) reference | Spec of System App part |
+| SidekiqSpec | `sidekiqSpec` | \*SystemSidekiqSpec | No | See [SystemSidekiqSpec](#SystemSidekiqSpec) reference | Spec of System Sidekiq part |
 
 #### FileStorageSpec
 
@@ -108,12 +145,38 @@ that should be set on it.
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's PostgreSQL database |
 
+#### SystemAppSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `system-app` deployment |
+
+#### SystemSidekiqSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `system-sidekiq` deployment |
+
 #### ZyncSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Zync |
 | PostgreSQLImage | `postgreSQLImage` | string | No | nil | Used to overwrite the desired PostgreSQL image for the PostgreSQL used by Zync |
+| AppSpec | `appSpec` | \*ZyncAppSpec | No | See [ZyncAppSpec](#ZyncAppSpec) reference | Spec of Zync App part |
+| QueSpec | `queSpec` | \*ZyncQueSpec | No | See [ZyncQueSpec](#ZyncQueSpec) reference | Spec of Zync Que part |
+
+#### ZyncAppSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `zync` deployment |
+
+#### ZyncQueSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `zync-que` deployment |
 
 #### HighAvailabilitySpec
 
