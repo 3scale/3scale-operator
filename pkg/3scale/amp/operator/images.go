@@ -13,14 +13,14 @@ func ApisonatorImageURL() string {
 	return helper.GetEnvVar("APISONATOR_IMAGE", component.ApisonatorImageURL())
 }
 
-func PortaImageURL() string {
-	return helper.GetEnvVar("PORTA_IMAGE", component.PortaImageURL())
+func SystemImageURL() string {
+	return helper.GetEnvVar("SYSTEM_IMAGE", component.SystemImageURL())
 }
 
 func ZyncImageURL() string {
 	return helper.GetEnvVar("ZYNC_IMAGE", component.ZyncImageURL())
 }
 
-func PortaMemcachedImageURL() string {
-	return helper.GetEnvVar("PORTA_MEMCACHED_IMAGE", component.PortaMemcachedImageURL())
+func SystemMemcachedImageURL() string {
+	return helper.GetEnvVar("SYSTEM_MEMCACHED_IMAGE", component.SystemMemcachedImageURL())
 }

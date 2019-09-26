@@ -27,7 +27,7 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.Image != nil {
 		optProv.SystemImage(*o.APIManagerSpec.System.Image)
 	} else {
-		optProv.SystemImage(PortaImageURL())
+		optProv.SystemImage(SystemImageURL())
 	}
 
 	if o.APIManagerSpec.Zync != nil && o.APIManagerSpec.Zync.Image != nil {
@@ -45,7 +45,7 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.MemcachedImage != nil {
 		optProv.SystemMemcachedImage(*o.APIManagerSpec.System.MemcachedImage)
 	} else {
-		optProv.SystemMemcachedImage(PortaMemcachedImageURL())
+		optProv.SystemMemcachedImage(SystemMemcachedImageURL())
 	}
 
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)

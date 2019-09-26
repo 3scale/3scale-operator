@@ -8,7 +8,7 @@ func ApisonatorImageURL() string {
 	return "quay.io/3scale/apisonator:nightly"
 }
 
-func PortaImageURL() string {
+func SystemImageURL() string {
 	return "quay.io/3scale/porta:nightly"
 }
 
@@ -32,7 +32,7 @@ func SystemPostgreSQLImageURL() string {
 	return "centos/postgresql-10-centos7"
 }
 
-func PortaMemcachedImageURL() string {
+func SystemMemcachedImageURL() string {
 	return "memcached:1.5"
 }
 

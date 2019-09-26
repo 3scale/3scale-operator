@@ -32,7 +32,7 @@ func (i *ImagesAdapter) Parameters() []templatev1.Parameter {
 		},
 		templatev1.Parameter{
 			Name:     "AMP_SYSTEM_IMAGE",
-			Value:    component.PortaImageURL(),
+			Value:    component.SystemImageURL(),
 			Required: true,
 		},
 		templatev1.Parameter{
@@ -44,7 +44,7 @@ func (i *ImagesAdapter) Parameters() []templatev1.Parameter {
 		templatev1.Parameter{
 			Name:        "MEMCACHED_IMAGE",
 			Description: "Memcached image to use",
-			Value:       component.PortaMemcachedImageURL(),
+			Value:       component.SystemMemcachedImageURL(),
 			Required:    true,
 		},
 		templatev1.Parameter{
