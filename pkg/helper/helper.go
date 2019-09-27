@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -104,4 +105,11 @@ func CmpResourceList(a, b *v1.ResourceList) bool {
 		a.Memory().Cmp(*b.Memory()) == 0 &&
 		b.Pods().Cmp(*b.Pods()) == 0 &&
 		b.StorageEphemeral().Cmp(*b.StorageEphemeral()) == 0
+}
+
+func GetEnvVar(key, def string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return def
 }
