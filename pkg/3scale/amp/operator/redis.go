@@ -5,6 +5,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -43,4 +44,13 @@ func (o *OperatorRedisOptionsProvider) setResourceRequirementsOptions(b *compone
 		b.SystemRedisContainerResourceRequirements(v1.ResourceRequirements{})
 		b.BackendRedisContainerResourceRequirements(v1.ResourceRequirements{})
 	}
+}
+
+func Redis(cr *appsv1alpha1.APIManager) (*component.Redis, error) {
+	optsProvider := OperatorRedisOptionsProvider{APIManagerSpec: &cr.Spec}
+	opts, err := optsProvider.GetRedisOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewRedis(opts), nil
 }
