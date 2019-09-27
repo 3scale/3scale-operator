@@ -33,13 +33,13 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v2-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
+            - v3-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
       - run:
           name: Install operator dependencies
           command: |
             make vendor
       - save_cache:
-          key: v2-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
+          key: v3-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
           paths:
             - "vendor"
             - "/go/pkg"
