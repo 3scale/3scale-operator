@@ -18,7 +18,7 @@ func (i *ImagesAdapter) Parameters() []templatev1.Parameter {
 		templatev1.Parameter{
 			Name:     "AMP_BACKEND_IMAGE",
 			Required: true,
-			Value:    component.ApisonatorImageURL(),
+			Value:    component.BackendImageURL(),
 		},
 		templatev1.Parameter{
 			Name:     "AMP_ZYNC_IMAGE",

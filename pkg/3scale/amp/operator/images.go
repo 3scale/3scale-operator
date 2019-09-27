@@ -9,8 +9,8 @@ func ApicastImageURL() string {
 	return helper.GetEnvVar("APICAST_IMAGE", component.ApicastImageURL())
 }
 
-func ApisonatorImageURL() string {
-	return helper.GetEnvVar("APISONATOR_IMAGE", component.ApisonatorImageURL())
+func BackendImageURL() string {
+	return helper.GetEnvVar("BACKEND_IMAGE", component.BackendImageURL())
 }
 
 func SystemImageURL() string {

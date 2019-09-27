@@ -4,7 +4,7 @@ func ApicastImageURL() string {
 	return "quay.io/3scale/apicast:nightly"
 }
 
-func ApisonatorImageURL() string {
+func BackendImageURL() string {
 	return "quay.io/3scale/apisonator:nightly"
 }
 

@@ -155,7 +155,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: threescale-operator
-                - name: APISONATOR_IMAGE
+                - name: BACKEND_IMAGE
                   value: "quay.io/3scale/apisonator:nightly"
                 - name: APICAST_IMAGE
                   value: "quay.io/3scale/apicast:nightly"

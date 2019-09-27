@@ -21,7 +21,7 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 	if o.APIManagerSpec.Backend != nil && o.APIManagerSpec.Backend.Image != nil {
 		optProv.BackendImage(*o.APIManagerSpec.Backend.Image)
 	} else {
-		optProv.BackendImage(ApisonatorImageURL())
+		optProv.BackendImage(BackendImageURL())
 	}
 
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.Image != nil {
