@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	clientappsv1 "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
+	clientroutev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 )
 
 func TestApiManagerController(t *testing.T) {
@@ -92,10 +93,11 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	backendNightlyImage := "quay.io/3scale/apisonator:nightly"
 	systemNightlyImage := "quay.io/3scale/porta:nightly"
 	zyncNightlyImage := "quay.io/3scale/zync:nightly"
+	wildcardDomain := "test1.127.0.0.1.nip.io"
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				WildcardDomain:              "test1.127.0.0.1.nip.io",
+				WildcardDomain:              wildcardDomain,
 				ResourceRequirementsEnabled: &enableResourceRequirements,
 			},
 			Apicast: &appsv1alpha1.ApicastSpec{
@@ -132,7 +134,17 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = waitForAllApiManagerStandardDeploymentConfigs(t, f.KubeClient, osAppsV1Client, namespace, "3scale-operator", retryInterval, time.Minute*15)
+	err = waitForAllAPIManagerStandardDeploymentConfigs(t, f.KubeClient, osAppsV1Client, namespace, retryInterval, time.Minute*15)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	osRouteV1Client, err := clientroutev1.NewForConfig(f.KubeConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = waitForAllAPIManagerStandardRoutes(t, f.KubeClient, osRouteV1Client, namespace, retryInterval, time.Minute*15, wildcardDomain)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +153,7 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	t.Logf("APIManager creation and availability took %s seconds", elapsed)
 }
 
-func waitForAllApiManagerStandardDeploymentConfigs(t *testing.T, kubeclient kubernetes.Interface, osAppsV1Client clientappsv1.AppsV1Interface, namespace, name string, retryInterval, timeout time.Duration) error {
+func waitForAllAPIManagerStandardDeploymentConfigs(t *testing.T, kubeclient kubernetes.Interface, osAppsV1Client clientappsv1.AppsV1Interface, namespace string, retryInterval, timeout time.Duration) error {
 	deploymentConfigNames := []string{ // TODO gather this from constants/somewhere centralized
 		"apicast-production",
 		"apicast-staging",
@@ -162,6 +174,25 @@ func waitForAllApiManagerStandardDeploymentConfigs(t *testing.T, kubeclient kube
 
 	for _, dcName := range deploymentConfigNames {
 		err := e2eutil.WaitForDeploymentConfig(t, kubeclient, osAppsV1Client, namespace, dcName, retryInterval, time.Minute*15)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func waitForAllAPIManagerStandardRoutes(t *testing.T, kubeclient kubernetes.Interface, osRouteV1Client clientroutev1.RouteV1Interface, namespace string, retryInterval, timeout time.Duration, wildcardDomain string) error {
+	routeHosts := []string{
+		"backend-3scale." + wildcardDomain,                // Backend Listener route
+		"api-3scale-apicast-production." + wildcardDomain, // Apicast Production '3scale' tenant Route
+		"api-3scale-apicast-staging." + wildcardDomain,    // Apicast Staging '3scale' tenant Route
+		"master." + wildcardDomain,                        // System's Master Portal Route
+		"3scale." + wildcardDomain,                        // System's '3scale' tenant Developer Portal Route
+		"3scale-admin." + wildcardDomain,                  // System's '3scale' tenant Admin Portal Route
+	}
+	for _, routeHost := range routeHosts {
+		err := e2eutil.WaitForRouteFromHost(t, kubeclient, osRouteV1Client, namespace, routeHost, retryInterval, time.Minute*15)
 		if err != nil {
 			return err
 		}
