@@ -33,15 +33,16 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v3-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
+            - v4-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
+            # Find the most recently generated cache used from any branch
+            - v4-3scaleoperator-vendor-{{ arch }}
       - run:
           name: Install operator dependencies
           command: |
             make vendor
       - save_cache:
-          key: v3-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
+          key: v4-3scaleoperator-vendor-{{ arch }}-{{ checksum "go.sum" }}
           paths:
-            - "vendor"
             - "/go/pkg"
 
   install-openshift:
