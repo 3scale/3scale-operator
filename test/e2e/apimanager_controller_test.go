@@ -94,6 +94,7 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	systemNightlyImage := "quay.io/3scale/porta:nightly"
 	zyncNightlyImage := "quay.io/3scale/zync:nightly"
 	wildcardDomain := "test1.127.0.0.1.nip.io"
+	memcachedLastProductizedImage := "registry.redhat.io/3scale-amp20/memcached"
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
@@ -107,7 +108,8 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 				Image: &backendNightlyImage,
 			},
 			System: &appsv1alpha1.SystemSpec{
-				Image: &systemNightlyImage,
+				Image:          &systemNightlyImage,
+				MemcachedImage: &memcachedLastProductizedImage,
 			},
 			Zync: &appsv1alpha1.ZyncSpec{
 				Image: &zyncNightlyImage,
