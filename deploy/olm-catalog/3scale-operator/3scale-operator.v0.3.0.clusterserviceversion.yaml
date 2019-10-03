@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: 3scale-operator-master.v0.0.0
+  name: 3scale-operator.v0.3.0
   namespace: placeholder
   annotations:
     repository: https://github.com/3scale/3scale-operator
@@ -9,7 +9,7 @@ metadata:
     categories: "Integration & Delivery"
     certified: "false"
     description: 3scale Operator to provision 3scale and publish/manage API
-    containerImage: quay.io/3scale/3scale-operator:master
+    containerImage: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/3scale-amp26/3scale-operator
     createdAt: 2019-05-30T22:40:00Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
@@ -125,7 +125,7 @@ spec:
   keywords:
     - 3scale
     - API
-  displayName: 3scale (nightly)
+  displayName: 3scale Operator
   install:
     spec:
       deployments:
@@ -155,17 +155,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: threescale-operator
-                - name: BACKEND_IMAGE
-                  value: "quay.io/3scale/apisonator:nightly"
-                - name: APICAST_IMAGE
-                  value: "quay.io/3scale/apicast:nightly"
-                - name: SYSTEM_IMAGE
-                  value: "quay.io/3scale/porta:nightly"
-                - name: ZYNC_IMAGE
-                  value: "quay.io/3scale/zync:nightly"
-                - name: SYSTEM_MEMCACHED_IMAGE
-                  value: "memcached:1.5"
-                image: quay.io/3scale/3scale-operator:master
+                image: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/3scale-amp26/3scale-operator
                 imagePullPolicy: Always
                 name: 3scale-operator
                 resources: {}

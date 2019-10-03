@@ -1,11 +1,11 @@
 apiVersion: operators.coreos.com/v1
 kind: OperatorSource
 metadata:
-  name: threescale-operator-master-source
+  name: three-scale-operators
   namespace: openshift-marketplace
 spec:
   type: appregistry
   endpoint: https://quay.io/cnr
-  registryNamespace: 3scaleoperatormaster
-  displayName: "3scale Operators master"
+  registryNamespace: 3scale
+  displayName: "3scale Operators"
   publisher: "Red Hat"
