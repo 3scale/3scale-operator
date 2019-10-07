@@ -235,17 +235,19 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		return result, err
 	}
 
-	result, err = r.reconcileRedisLogic(cr)
-	if err != nil || result.Requeue {
-		return result, err
+	if cr.Spec.HighAvailability != nil && cr.Spec.HighAvailability.Enabled {
+		result, err = r.reconcileRedisLogic(cr)
+		if err != nil || result.Requeue {
+			return result, err
+		}
+
+		result, err = r.reconcileSystemDatabaseLogic(cr)
+		if err != nil || result.Requeue {
+			return result, err
+		}
 	}
 
 	result, err = r.reconcileBackendLogic(cr)
-	if err != nil || result.Requeue {
-		return result, err
-	}
-
-	result, err = r.reconcileSystemDatabaseLogic(cr)
 	if err != nil || result.Requeue {
 		return result, err
 	}
@@ -292,12 +294,24 @@ func (r *ReconcileAPIManager) reconcileBackendLogic(cr *appsv1alpha1.APIManager)
 }
 
 func (r *ReconcileAPIManager) reconcileSystemDatabaseLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	if cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
-		return r.reconcileSystemPostgreSQLLogic(cr)
-	} else {
-		// Defaults to MySQL
-		return r.reconcileSystemMySQLLogic(cr)
+	var res reconcile.Result
+	var err error
+
+	if cr.Spec.System.DatabaseSpec.MySQL != nil && cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+		r.Logger().Info("[WARNING] Only one System Database can be chosen at the same time. Using MySQL as database.")
 	}
+
+	if cr.Spec.System.DatabaseSpec.MySQL != nil {
+		// By default, read Mysql
+		res, err = r.reconcileSystemMySQLLogic(cr)
+	} else if cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+		res, err = r.reconcileSystemPostgreSQLLogic(cr)
+	} else {
+		// Should never happen as setting defaults stage should set defaults for mysql
+		err = fmt.Errorf("No database spec specified. Database is mandatory")
+	}
+
+	return res, err
 }
 
 func (r *ReconcileAPIManager) reconcileSystemPostgreSQLLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {

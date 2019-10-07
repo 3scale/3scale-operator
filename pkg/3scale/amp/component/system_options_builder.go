@@ -65,7 +65,6 @@ type SystemOptions struct {
 	backendSharedSecret string
 	tenantName          string
 	wildcardDomain      string
-	storageClassName    *string // should this be a string or *string? check what would be the difference between passing a "" and a nil pointer in the PersistentVolumeClaim corresponding field
 }
 
 type SystemOptionsBuilder struct {
@@ -142,10 +141,6 @@ func (s *SystemOptionsBuilder) TenantName(tenantName string) {
 
 func (s *SystemOptionsBuilder) WildcardDomain(wildcardDomain string) {
 	s.options.wildcardDomain = wildcardDomain
-}
-
-func (s *SystemOptionsBuilder) StorageClassName(storageClassName *string) {
-	s.options.storageClassName = storageClassName
 }
 
 func (s *SystemOptionsBuilder) MemcachedServers(servers *string) {
@@ -288,10 +283,6 @@ func (s *SystemOptionsBuilder) setRequiredOptions() error {
 	}
 	if s.options.wildcardDomain == "" {
 		return fmt.Errorf("no wildcard domain has been provided")
-	}
-
-	if s.options.s3FileStorageOptions == nil && s.options.pvcFileStorageOptions == nil {
-		s.options.pvcFileStorageOptions = &PVCFileStorageOptions{}
 	}
 
 	return nil

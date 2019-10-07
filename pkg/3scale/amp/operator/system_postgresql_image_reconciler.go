@@ -20,10 +20,6 @@ func NewSystemPostgreSQLImageReconciler(baseAPIManagerLogicReconciler BaseAPIMan
 }
 
 func (r *SystemPostgreSQLImageReconciler) Reconcile() (reconcile.Result, error) {
-	if r.apiManager.Spec.HighAvailability != nil && r.apiManager.Spec.HighAvailability.Enabled {
-		return reconcile.Result{}, nil
-	}
-
 	systemPostgreSQLImage, err := r.systemPostgreSQLImage()
 	if err != nil {
 		return reconcile.Result{}, err

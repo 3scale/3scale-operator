@@ -19,12 +19,6 @@ func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOpt
 	optProv.TenantName(*o.APIManagerSpec.TenantName)
 	optProv.WildcardDomain(o.APIManagerSpec.WildcardDomain)
 
-	if o.APIManagerSpec.System.FileStorageSpec.PVC == nil {
-		optProv.StorageClassName(nil)
-	} else {
-		optProv.StorageClassName(o.APIManagerSpec.System.FileStorageSpec.PVC.StorageClassName)
-	}
-
 	err := o.setSecretBasedOptions(&optProv)
 	if err != nil {
 		return nil, err
@@ -222,18 +216,20 @@ func (o *OperatorSystemOptionsProvider) setResourceRequirementsOptions(b *compon
 }
 
 func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.SystemOptionsBuilder) {
-	s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
-	if s3FileStorageSpec != nil {
+	if o.APIManagerSpec.System.FileStorageSpec.PVC != nil {
+		b.PVCFileStorageOptions(component.PVCFileStorageOptions{
+			StorageClass: o.APIManagerSpec.System.FileStorageSpec.PVC.StorageClassName,
+		})
+	}
+
+	if o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
+		s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
 		b.S3FileStorageOptions(component.S3FileStorageOptions{
 			AWSAccessKeyId:       "",
 			AWSSecretAccessKey:   "",
 			AWSRegion:            s3FileStorageSpec.AWSRegion,
 			AWSBucket:            s3FileStorageSpec.AWSBucket,
 			AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
-		})
-	} else { // PVC by default
-		b.PVCFileStorageOptions(component.PVCFileStorageOptions{
-			StorageClass: o.APIManagerSpec.System.FileStorageSpec.PVC.StorageClassName,
 		})
 	}
 }
