@@ -1,15 +1,15 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: 3scale-operator-master.v0.0.0
+  name: 3scale-community-operator.v0.3.0
   namespace: placeholder
   annotations:
     repository: https://github.com/3scale/3scale-operator
     capabilities: Basic Install
     categories: "Integration & Delivery"
     certified: "false"
-    description: 3scale Operator to provision 3scale and publish/manage API
-    containerImage: quay.io/3scale/3scale-operator:master
+    description: Install 3scale and publish/manage your API
+    containerImage: quay.io/3scale/3scale-operator:v0.3.0
     createdAt: 2019-05-30T22:40:00Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
@@ -91,7 +91,7 @@ spec:
       description: Tenant
       displayName: Tenant
   description: |
-    The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
+    The 3scale community Operator creates and maintains the Red Hat 3scale API Management - Community version on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 
     [3scale API Management](https://www.redhat.com/en/technologies/jboss-middleware/3scale) makes it easy to manage your APIs.
     Share, secure, distribute, control, and monetize your APIs on an infrastructure platform built for performance, customer control, and future growth.
@@ -107,25 +107,25 @@ spec:
     Documentation can be found on our [website](https://github.com/3scale/3scale-operator/blob/v0.3.0/doc/user-guide.md).
 
     ### Getting help
-    If you encounter any issues while using 3scale operator, you can create an issue on our [website](https://github.com/3scale/3scale-operator) for bugs, enhancements, or other requests.
+    If you encounter any issues while using 3scale community operator, you can create an issue on our [website](https://github.com/3scale/3scale-operator) for bugs, enhancements, or other requests.
 
     ### Contributing
     You can contribute by:
 
-    * Raising any issues you find using 3scale Operator
+    * Raising any issues you find using 3scale community Operator
     * Fixing issues by opening [Pull Requests](https://github.com/3scale/3scale-operator/pulls)
     * Improving [documentation](https://github.com/3scale/3scale-operator/blob/v0.3.0/doc/user-guide.md)
-    * Talking about 3scale Operator
+    * Talking about 3scale community Operator
 
     All bugs, tasks or enhancements are tracked as [GitHub issues](https://github.com/3scale/3scale-operator/issues).
 
     ### License
-    3scale Operator is licensed under the [Apache 2.0 license](https://github.com/3scale/3scale-operator/blob/master/LICENSE)
+    3scale community Operator is licensed under the [Apache 2.0 license](https://github.com/3scale/3scale-operator/blob/master/LICENSE)
 
   keywords:
     - 3scale
     - API
-  displayName: 3scale (nightly)
+  displayName: 3scale
   install:
     spec:
       deployments:
@@ -155,17 +155,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: threescale-operator
-                - name: BACKEND_IMAGE
-                  value: "quay.io/3scale/apisonator:nightly"
-                - name: APICAST_IMAGE
-                  value: "quay.io/3scale/apicast:nightly"
-                - name: SYSTEM_IMAGE
-                  value: "quay.io/3scale/porta:nightly"
-                - name: ZYNC_IMAGE
-                  value: "quay.io/3scale/zync:nightly"
-                - name: SYSTEM_MEMCACHED_IMAGE
-                  value: "memcached:1.5"
-                image: quay.io/3scale/3scale-operator:master
+                image: quay.io/3scale/3scale-operator:v0.3.0
                 imagePullPolicy: Always
                 name: 3scale-operator
                 resources: {}

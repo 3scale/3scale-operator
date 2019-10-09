@@ -1,4 +1,0 @@
-packageName: 3scale-operator-master
-channels:
-  - name: alpha
-    currentCSV: 3scale-operator-master.v0.0.0
