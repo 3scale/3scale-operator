@@ -5,9 +5,11 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (o *OperatorSystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, error) {
@@ -276,4 +278,13 @@ func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.Syste
 func (o *OperatorSystemOptionsProvider) setReplicas(sob *component.SystemOptionsBuilder) {
 	sob.AppReplicas(int32(*o.APIManagerSpec.System.AppSpec.Replicas))
 	sob.SidekiqReplicas(int32(*o.APIManagerSpec.System.SidekiqSpec.Replicas))
+}
+
+func System(cr *appsv1alpha1.APIManager, client client.Client) (*component.System, error) {
+	optsProvider := OperatorSystemOptionsProvider{APIManagerSpec: &cr.Spec, Namespace: cr.Namespace, Client: client}
+	opts, err := optsProvider.GetSystemOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewSystem(opts), nil
 }
