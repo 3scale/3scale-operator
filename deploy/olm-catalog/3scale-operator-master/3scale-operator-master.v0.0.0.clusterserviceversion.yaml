@@ -44,52 +44,467 @@ spec:
         - kind: ImageStream
           version: image.openshift.io/v1
       specDescriptors:
-        - displayName: Wildcard Domain
-          description: Wildcard domain as configured in the API Manager object
-          path: wildcardDomain
-          x-descriptors:
-            - "urn:alm:descriptor:com.tectonic.ui:label"
-      statusDescriptors:
-        - displayName: Deployments
-          description: API Manager Deployment Configs
-          path: deployments
-          x-descriptors:
-            - "urn:alm:descriptor:com.tectonic.ui:podStatuses"
-    - kind: API
-      name: apis.capabilities.3scale.net
-      version: v1alpha1
-      description: API
-      displayName: API
-    - kind: Binding
-      name: bindings.capabilities.3scale.net
-      version: v1alpha1
-      description: Binding
-      displayName: Binding
-    - kind: Limit
-      name: limits.capabilities.3scale.net
-      version: v1alpha1
-      description: Limit
-      displayName: Limit
-    - kind: MappingRule
-      name: mappingrules.capabilities.3scale.net
-      version: v1alpha1
-      description: MappingRule
-      displayName: MappingRule
-    - kind: Metric
-      name: metrics.capabilities.3scale.net
-      version: v1alpha1
-      description: Metric
-      displayName: Metric
-    - kind: Plan
-      name: plans.capabilities.3scale.net
-      version: v1alpha1
-      description: Plan
-      displayName: Plan
-    - kind: Tenant
-      name: tenants.capabilities.3scale.net
-      version: v1alpha1
-      description: Tenant
-      displayName: Tenant
+          - description: Image Stream Tag Import Insecure
+            displayName: Image Stream Tag Import Insecure
+            path: imageStreamTagImportInsecure
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+          - description: Resource Requirements Enabled
+            displayName: Resource Requirements Enabled
+            path: resourceRequirementsEnabled
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+          - description: Wildcard domain as configured in the API Manager object
+            displayName: Wildcard Domain
+            path: wildcardDomain
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: MySQL Image
+            displayName: Image
+            path: system.database.mysql.image
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: PostgresSQL Image
+            displayName: Image
+            path: system.database.postgresql.image
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: AWS Bucket
+            displayName: AWS Bucket
+            path: system.fileStorage.amazonSimpleStorageService.awsBucket
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: AWS Credentials Secret Name
+            displayName: AWS Credentials Secret Name
+            path: >-
+              system.fileStorage.amazonSimpleStorageService.awsCredentialsSecret.name
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: AWS Region
+            displayName: AWS Region
+            path: system.fileStorage.amazonSimpleStorageService.awsRegion
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: >-
+              persistentVolumeClaim - Union type. Only one of the fields can be
+              set.
+            displayName: Storage Class Name
+            path: system.fileStorage.persistentVolumeClaim.storageClassName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Image
+            displayName: Image
+            path: system.image
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Memcached Image
+            displayName: Memcached Image
+            path: system.memcachedImage
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Redis Image
+            displayName: Redis Image
+            path: system.redisImage
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:system'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: App Label
+            displayName: App Label
+            path: appLabel
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Image
+            displayName: Image
+            path: zync.image
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:zync'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Postgres SQL Image
+            displayName: Postgres SQL Image
+            path: zync.postgreSQLImage
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:zync'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Image
+            displayName: Image
+            path: backend.image
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:backend'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Redis Image
+            displayName: Redis Image
+            path: backend.redisImage
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:backend'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: tenantName
+            displayName: tenantName
+            path: tenantName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Image
+            displayName: Image
+            path: apicast.image
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apicast'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Management API
+            displayName: Management API
+            path: apicast.managementAPI
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apicast'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Open SSL Verify
+            displayName: Open SSL Verify
+            path: apicast.openSSLVerify
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apicast'
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+          - description: Registry URL
+            displayName: Registry URL
+            path: apicast.registryURL
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apicast'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Response Codes
+            displayName: Response Codes
+            path: apicast.responseCodes
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apicast'
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+          - description: Enabled
+            displayName: Enabled
+            path: highAvailability.enabled
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:highAvailability'
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+        statusDescriptors:
+          - description: API Manager Deployment Configs
+            displayName: Deployments
+            path: deployments
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:podStatuses'
+        version: v1alpha1
+      - description: API
+        displayName: API
+        kind: API
+        name: apis.capabilities.3scale.net
+        version: v1alpha1
+      - description: Binding
+        displayName: Binding
+        kind: Binding
+        name: bindings.capabilities.3scale.net
+        specDescriptors:
+          - description: Match Labels
+            displayName: Match Labels
+            path: apiSelector.matchLabels
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apiSelector'
+              - 'urn:alm:descriptor:io.kubernetes:matchLabels'
+          - description: Key
+            displayName: Key
+            path: 'apiSelector.matchExpressions[0].key'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apiSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Operator
+            displayName: Operator
+            path: 'apiSelector.matchExpressions[0].operator'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apiSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Values
+            displayName: Values
+            path: 'apiSelector.matchExpressions[0].values[0]'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:apiSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Name
+            displayName: Name
+            path: credentialsRef.name
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:credentialsRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Namespace
+            displayName: Namespace
+            path: credentialsRef.namespace
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:credentialsRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+        version: v1alpha1
+      - description: Limit
+        displayName: Limit
+        kind: Limit
+        name: limits.capabilities.3scale.net
+        specDescriptors:
+          - description: Max Value
+            displayName: Max Value
+            path: maxValue
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+          - description: API Version
+            displayName: API Version
+            path: metricRef.apiVersion
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Field Path
+            displayName: Field Path
+            path: metricRef.fieldPath
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Kind
+            displayName: Kind
+            path: metricRef.kind
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Name
+            displayName: Name
+            path: metricRef.name
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Namespace
+            displayName: Namespace
+            path: metricRef.namespace
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Resource Version
+            displayName: Resource Version
+            path: metricRef.resourceVersion
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: UID
+            displayName: UID
+            path: metricRef.uid
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Period
+            displayName: Period
+            path: period
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+        version: v1alpha1
+      - description: MappingRule
+        displayName: MappingRule
+        kind: MappingRule
+        name: mappingrules.capabilities.3scale.net
+        specDescriptors:
+          - description: Increment
+            displayName: Increment
+            path: increment
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+          - description: Method
+            displayName: Method
+            path: method
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Field Path
+            displayName: Field Path
+            path: metricRef.fieldPath
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Kind
+            displayName: Kind
+            path: metricRef.kind
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Name
+            displayName: Name
+            path: metricRef.name
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Namespace
+            displayName: Namespace
+            path: metricRef.namespace
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: API Version
+            displayName: API Version
+            path: metricRef.apiVersion
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Resource Version
+            displayName: Resource Version
+            path: metricRef.resourceVersion
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: UID
+            displayName: UID
+            path: metricRef.uid
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Period
+            displayName: Period
+            path: period
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+        version: v1alpha1
+      - description: Metric
+        displayName: Metric
+        kind: Metric
+        name: metrics.capabilities.3scale.net
+        specDescriptors:
+          - description: Description
+            displayName: Description
+            path: description
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Increment Hits
+            displayName: Increment Hits
+            path: incrementHits
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+          - description: Unit
+            displayName: Unit
+            path: unit
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+        version: v1alpha1
+      - description: Plan
+        displayName: Plan
+        kind: Plan
+        name: plans.capabilities.3scale.net
+        specDescriptors:
+          - description: Approval Required
+            displayName: Approval Required
+            path: approvalRequired
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+          - description: Cost Month
+            displayName: Cost Month
+            path: costs.costMonth
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:costs'
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+          - description: Setup Fee
+            displayName: Setup Fee
+            path: costs.setupFee
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:costs'
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+          - description: Default
+            displayName: Default
+            path: default
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+          - description: Match Labels
+            displayName: Match Labels
+            path: limitSelector.matchLabels
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:limitSelector'
+              - 'urn:alm:descriptor:io.kubernetes:matchLabels'
+          - description: Key
+            displayName: Key
+            path: 'limitSelector.matchExpressions[0].key'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:limitSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Operator
+            displayName: Operator
+            path: 'limitSelector.matchExpressions[0].operator'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:limitSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Values
+            displayName: Values
+            path: 'limitSelector.matchExpressions[0].values[0]'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:limitSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Trial Period
+            displayName: Trial Period
+            path: trialPeriod
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+        version: v1alpha1
+      - description: Tenant
+        displayName: Tenant
+        kind: Tenant
+        name: tenants.capabilities.3scale.net
+        specDescriptors:
+          - description: Email
+            displayName: Email
+            path: email
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Name
+            displayName: Name
+            path: masterCredentialsRef.name
+            x-descriptors:
+              - >-
+                urn:alm:descriptor:com.tectonic.ui:fieldGroup:masterCredentialsRef
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Namespace
+            displayName: Namespace
+            path: masterCredentialsRef.namespace
+            x-descriptors:
+              - >-
+                urn:alm:descriptor:com.tectonic.ui:fieldGroup:masterCredentialsRef
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Organization Name
+            displayName: Organization Name
+            path: organizationName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Name
+            displayName: Name
+            path: passwordCredentialsRef.name
+            x-descriptors:
+              - >-
+                urn:alm:descriptor:com.tectonic.ui:fieldGroup:passwordCredentialsRef
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Namespace
+            displayName: Namespace
+            path: passwordCredentialsRef.namespace
+            x-descriptors:
+              - >-
+                urn:alm:descriptor:com.tectonic.ui:fieldGroup:passwordCredentialsRef
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: System Master Url
+            displayName: System Master Url
+            path: systemMasterUrl
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Name
+            displayName: Name
+            path: tenantSecretRef.name
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:tenantSecretRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Namespace
+            displayName: Namespace
+            path: tenantSecretRef.namespace
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:tenantSecretRef'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Username
+            displayName: Username
+            path: username
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+        version: v1alpha1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 
