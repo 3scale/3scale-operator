@@ -197,6 +197,465 @@ spec:
         displayName: API
         kind: API
         name: apis.capabilities.3scale.net
+        specDescriptors:
+          - description: description
+            displayName: Description
+            path: description
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: apiTestGetRequest
+            displayName: API Test Get Request
+            path: integrationMethod.apicastHosted.apiTestGetRequest
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: authParameterName
+            displayName: Auth Parameter Name
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.credentials.apiKey.authParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.credentials.apiKey.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: appIDParameterName
+            displayName: App ID Parameter Name
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.credentials.appID.appIDParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: appKeyParameterName
+            displayName: App Key Parameter Name
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.credentials.appID.appKeyParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.credentials.appID.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Issuer
+            displayName: Issuer
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.credentials.openIDConnector.issuer
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.credentials.openIDConnector.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Failed contentType
+            displayName: Authentication Failed contentType
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.errors.authenticationFailed.contentType
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Failed contentType
+            displayName: Authentication Failed responseBody
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.errors.authenticationFailed.responseBody
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Failed ResponseCode
+            displayName: Authentication Failed ResponseCode
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.errors.authenticationFailed.responseCode
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+          - description: Authentication Missing contentType
+            displayName: Authentication Missing contentType
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.errors.authenticationMissing.contentType
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Missing contentType
+            displayName: Authentication Missing responseBody
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.errors.authenticationMissing.responseBody
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Missing ResponseCode
+            displayName: Authentication Missing ResponseCode
+            path: >-
+              integrationMethod.apicastHosted.authenticationSettings.errors.authenticationMissing.responseCode
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+          - description: hostHeader
+            displayName: hostHeader
+            path: integrationMethod.apicastHosted.authenticationSettings.hostHeader
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: secretToken
+            displayName: Secret Token
+            path: integrationMethod.apicastHosted.authenticationSettings.secretToken
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Match Labels (Mapping Rules Selector for API cast hosted)
+            displayName: Match Labels
+            path: integrationMethod.apicastHosted.mappingRulesSelector.matchLabels
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:io.kubernetes:matchLabels'
+          - description: Key
+            displayName: Key
+            path: >-
+              integrationMethod.apicastHosted.mappingRulesSelector.matchExpressions[0].key
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Operator
+            displayName: Operator
+            path: >-
+              integrationMethod.apicastHosted.mappingRulesSelector.matchExpressions[0].operator
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Values
+            displayName: Values
+            path: >-
+              integrationMethod.apicastHosted.mappingRulesSelector.matchExpressions[0].values[0]
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Match Labels (Policies Selector for API cast hosted)
+            displayName: Match Labels
+            path: integrationMethod.apicastHosted.policiesSelector.matchLabels
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:io.kubernetes:matchLabels'
+          - description: Key
+            displayName: Key
+            path: >-
+              integrationMethod.apicastHosted.policiesSelector.matchExpressions[0].key
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Operator
+            displayName: Operator
+            path: >-
+              integrationMethod.apicastHosted.policiesSelector.matchExpressions[0].operator
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Values
+            displayName: Values
+            path: >-
+              integrationMethod.apicastHosted.policiesSelector.matchExpressions[0].values[0]
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: privateBaseURL for apicastHosted
+            displayName: Private Base URL
+            path: integrationMethod.apicastHosted.privateBaseURL
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: apiTestGetRequest for apicastOnPrem
+            displayName: API Test Get Request
+            path: integrationMethod.apicastOnPrem.apiTestGetRequest
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: authParameterName
+            displayName: Auth Parameter Name
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.credentials.apiKey.authParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.credentials.apiKey.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: appIDParameterName
+            displayName: App ID Parameter Name
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.credentials.appID.appIDParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: appKeyParameterName
+            displayName: App Key Parameter Name
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.credentials.appID.appKeyParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.credentials.appID.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Issuer
+            displayName: Issuer
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.credentials.openIDConnector.issuer
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.credentials.openIDConnector.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Failed contentType
+            displayName: Authentication Failed contentType
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.errors.authenticationFailed.contentType
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Failed contentType
+            displayName: Authentication Failed responseBody
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.errors.authenticationFailed.responseBody
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Failed ResponseCode
+            displayName: Authentication Failed ResponseCode
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.errors.authenticationFailed.responseCode
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+          - description: Authentication Missing contentType
+            displayName: Authentication Missing contentType
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.errors.authenticationMissing.contentType
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Missing contentType
+            displayName: Authentication Missing responseBody
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.errors.authenticationMissing.responseBody
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Authentication Missing ResponseCode
+            displayName: Authentication Missing ResponseCode
+            path: >-
+              integrationMethod.apicastOnPrem.authenticationSettings.errors.authenticationMissing.responseCode
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:number'
+          - description: hostHeader
+            displayName: hostHeader
+            path: integrationMethod.apicastOnPrem.authenticationSettings.hostHeader
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: secretToken
+            displayName: Secret Token
+            path: integrationMethod.apicastOnPrem.authenticationSettings.secretToken
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Match Labels (Mapping Rules Selector for API cast on Prem)
+            displayName: Match Labels
+            path: integrationMethod.apicastOnPrem.mappingRulesSelector.matchLabels
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:io.kubernetes:matchLabels'
+          - description: Key
+            displayName: Key
+            path: >-
+              integrationMethod.apicastOnPrem.mappingRulesSelector.matchExpressions[0].key
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Operator
+            displayName: Operator
+            path: >-
+              integrationMethod.apicastOnPrem.mappingRulesSelector.matchExpressions[0].operator
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Values
+            displayName: Values
+            path: >-
+              integrationMethod.apicastOnPrem.mappingRulesSelector.matchExpressions[0].values[0]
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Match Labels (Policies Selector for API cast on Prem)
+            displayName: Match Labels
+            path: integrationMethod.apicastOnPrem.policiesSelector.matchLabels
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:io.kubernetes:matchLabels'
+          - description: Key
+            displayName: Key
+            path: >-
+              integrationMethod.apicastOnPrem.policiesSelector.matchExpressions[0].key
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Operator
+            displayName: Operator
+            path: >-
+              integrationMethod.apicastOnPrem.policiesSelector.matchExpressions[0].operator
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Values
+            displayName: Values
+            path: >-
+              integrationMethod.apicastOnPrem.policiesSelector.matchExpressions[0].values[0]
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: privateBaseURL for apicastOnPrem
+            displayName: Private Base URL
+            path: integrationMethod.apicastOnPrem.privateBaseURL
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: productionPublicBaseURL
+            displayName: Production Public Base URL
+            path: integrationMethod.apicastOnPrem.productionPublicBaseURL
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: stagingPublicBaseURL
+            displayName: Staging Public Base URL
+            path: integrationMethod.apicastOnPrem.stagingPublicBaseURL
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: apiTestGetRequest
+            displayName: API Test Get Request
+            path: integrationMethod.codePlugin.
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: authParameterName
+            displayName: Auth Parameter Name (Code plugin)
+            path: >-
+              integrationMethod.codePlugin.authenticationSettings.credentials.apiKey.authParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location  (Code plugin)
+            path: >-
+              integrationMethod.codePlugin.authenticationSettings.credentials.apiKey.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: appIDParameterName
+            displayName: App ID Parameter Name  (Code plugin)
+            path: >-
+              integrationMethod.codePlugin.authenticationSettings.credentials.appID.appIDParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: appKeyParameterName
+            displayName: App Key Parameter Name (Code plugin)
+            path: >-
+              integrationMethod.codePlugin.authenticationSettings.credentials.appID.appKeyParameterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location (Code plugin)
+            path: >-
+              integrationMethod.codePlugin.authenticationSettings.credentials.appID.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Issuer
+            displayName: Issuer (Code plugin)
+            path: >-
+              integrationMethod.codePlugin.authenticationSettings.credentials.openIDConnector.issuer
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: credentialsLocation
+            displayName: Credentials Location  (Code plugin)
+            path: >-
+              integrationMethod.codePlugin.authenticationSettings.credentials.openIDConnector.credentialsLocation
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:integrationMethod'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Match Labels
+            displayName: Match Labels (Metric selector)
+            path: metricSelector.matchLabels
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricSelector'
+              - 'urn:alm:descriptor:io.kubernetes:matchLabels'
+          - description: Key
+            displayName: Key
+            path: 'metricSelector.matchExpressions[0].key'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Operator
+            displayName: Operator
+            path: 'metricSelector.matchExpressions[0].operator'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Values
+            displayName: Values
+            path: 'metricSelector.matchExpressions[0].values[0]'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:metricSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Match Labels
+            displayName: Match Labels (Plan selector)
+            path: planSelector.matchLabels
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:planSelector'
+              - 'urn:alm:descriptor:io.kubernetes:matchLabels'
+          - description: Key
+            displayName: Key
+            path: 'planSelector.matchExpressions[0].key'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:planSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Operator
+            displayName: Operator
+            path: 'planSelector.matchExpressions[0].operator'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:planSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Values
+            displayName: Values
+            path: 'planSelector.matchExpressions[0].values[0]'
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:planSelector'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
         version: v1alpha1
       - description: Binding
         displayName: Binding
