@@ -20,6 +20,20 @@ const (
 	OperatorVersionAnnotation   = "apps.3scale.net/threescale-operator-version"
 )
 
+const (
+	defaultAppLabel                    = "3scale-api-management"
+	defaultTenantName                  = "3scale"
+	defaultImageStreamImportInsecure   = false
+	defaultResourceRequirementsEnabled = true
+)
+
+const (
+	defaultApicastManagementAPI = "status"
+	defaultApicastOpenSSLVerify = false
+	defaultApicastResponseCodes = true
+	defaultApicastRegistryURL   = "http://apicast-staging:8090/policies"
+)
+
 // APIManagerSpec defines the desired state of APIManager
 // +k8s:openapi-gen=true
 type APIManagerSpec struct {
@@ -323,29 +337,29 @@ func (apimanager *APIManager) setApicastSpecDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
 
-	defaultApicastManagementAPI := "status"
-	defaultApicastOpenSSLVerify := false
-	defaultApicastResponseCodes := true
-	defaultApicastRegistryURL := "http://apicast-staging:8090/policies"
+	tmpDefaultApicastManagementAPI := defaultApicastManagementAPI
+	tmpDefaultApicastOpenSSLVerify := defaultApicastOpenSSLVerify
+	tmpDefaultApicastResponseCodes := defaultApicastResponseCodes
+	tmpDefaultApicastRegistryURL := defaultApicastRegistryURL
 	if spec.Apicast == nil {
 		spec.Apicast = &ApicastSpec{}
 		changed = true
 	}
 
 	if spec.Apicast.ApicastManagementAPI == nil {
-		spec.Apicast.ApicastManagementAPI = &defaultApicastManagementAPI
+		spec.Apicast.ApicastManagementAPI = &tmpDefaultApicastManagementAPI
 		changed = true
 	}
 	if spec.Apicast.OpenSSLVerify == nil {
-		spec.Apicast.OpenSSLVerify = &defaultApicastOpenSSLVerify
+		spec.Apicast.OpenSSLVerify = &tmpDefaultApicastOpenSSLVerify
 		changed = true
 	}
 	if spec.Apicast.IncludeResponseCodes == nil {
-		spec.Apicast.IncludeResponseCodes = &defaultApicastResponseCodes
+		spec.Apicast.IncludeResponseCodes = &tmpDefaultApicastResponseCodes
 		changed = true
 	}
 	if spec.Apicast.RegistryURL == nil {
-		spec.Apicast.RegistryURL = &defaultApicastRegistryURL
+		spec.Apicast.RegistryURL = &tmpDefaultApicastRegistryURL
 		changed = true
 	}
 
@@ -423,28 +437,28 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
 
-	defaultAppLabel := "3scale-api-management"
-	defaultTenantName := "3scale"
-	defaultImageStreamTagImportInsecure := false
-	defaultResourceRequirementsEnabled := true
+	tmpDefaultAppLabel := defaultAppLabel
+	tmpDefaultTenantName := defaultTenantName
+	tmpDefaultImageStreamTagImportInsecure := defaultImageStreamImportInsecure
+	tmpDefaultResourceRequirementsEnabled := defaultResourceRequirementsEnabled
 
 	if spec.AppLabel == nil {
-		spec.AppLabel = &defaultAppLabel
+		spec.AppLabel = &tmpDefaultAppLabel
 		changed = true
 	}
 
 	if spec.TenantName == nil {
-		spec.TenantName = &defaultTenantName
+		spec.TenantName = &tmpDefaultTenantName
 		changed = true
 	}
 
 	if spec.ImageStreamTagImportInsecure == nil {
-		spec.ImageStreamTagImportInsecure = &defaultImageStreamTagImportInsecure
+		spec.ImageStreamTagImportInsecure = &tmpDefaultImageStreamTagImportInsecure
 		changed = true
 	}
 
 	if spec.ResourceRequirementsEnabled == nil {
-		spec.ResourceRequirementsEnabled = &defaultResourceRequirementsEnabled
+		spec.ResourceRequirementsEnabled = &tmpDefaultResourceRequirementsEnabled
 		changed = true
 	}
 
