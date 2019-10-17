@@ -14,36 +14,36 @@ metadata:
     support: Red Hat, Inc.
     tectonic-visibility: ocs
     alm-examples: >-
-       [{"apiVersion":"apps.3scale.net/v1alpha1","kind":"APIManager","metadata":{"name":"example-apimanager"},"spec":{"wildcardDomain":"example.com"}},
-       {"apiVersion":"apps.3scale.net/v1alpha1","kind":"APIManager","metadata":{"name":"example-apimanager-ha"},"spec":{"highAvailability":{"enabled":true},"wildcardDomain":"example.com"}},
-       {"apiVersion":"apps.3scale.net/v1alpha1","kind":"APIManager","metadata":{"name":"example-apimanager-s3"},"spec":{"system":{"fileStorage":{"amazonSimpleStorageService":{"awsBucket":"\u003cbucket-name\u003e","awsCredentialsSecret":{"name":"\u003ccredentials-secret-name\u003e"},"awsRegion":"\u003cregion\u003e"}}},"wildcardDomain":"\u003cdesired-domain\u003e"}},
-       {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"API","metadata":{"labels":{"environment":"testing"},"name":"example-api"},"spec":{"description":"api01","integrationMethod":{"apicastHosted":{"apiTestGetRequest":"/","authenticationSettings":{"credentials":{"apiKey":{"authParameterName":"user-key","credentialsLocation":"headers"}},"errors":{"authenticationFailed":{"contentType":"text/plain; charset=us-ascii","responseBody":"Authentication failed","responseCode":403},"authenticationMissing":{"contentType":"text/plain; charset=us-ascii","responseBody":"Authentication Missing","responseCode":403}},"hostHeader":"","secretToken":"MySecretTokenBetweenApicastAndMyBackend_1237120312"},"mappingRulesSelector":{"matchLabels":{"api":"api01"}},"privateBaseURL":"https://echo-api.3scale.net:443"}}}},
-       {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Binding","metadata":{"name":"example-binding"},"spec":{"APISelector":{"matchLabels":{"environment":"testing"}},"credentialsRef":{"name":"ecorp-tenant-secret"}}},
-       {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Limit","metadata":{"labels":{"api":"api01"},"name":"plan01-metric01-day-10"},"spec":{"description":"Limit for metric01 in plan01","maxValue":10,"metricRef":{"name":"metric01"},"period":"day"}},
-       {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"MappingRule","metadata":{"labels":{"api":"api01"},"name":"metric01-get-path01"},"spec":{"increment":1,"method":"GET","metricRef":{"name":"metric01"},"path":"/path01"}},
-       {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Metric","metadata":{"labels":{"api":"api01"},"name":"metric01"},"spec":{"description":"metric01","incrementHits":false,"unit":"hit"}},
-       {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Plan","metadata":{"labels":{"api":"api01"},"name":"example-plan"},"spec":{"approvalRequired":false,"costs":{"costMonth":0,"setupFee":0},"default":true,"limitSelector":{"matchLabels":{"plan":"plan01"}},"trialPeriod":0}},
-       {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Tenant","metadata":{"name":"example-tenant"},"spec":{"email":"admin@example.com","masterCredentialsRef":{"name":"system-seed"},"organizationName":"Example.com","passwordCredentialsRef":{"name":"ecorp-admin-secret"},"systemMasterUrl":"https://master.example.com","tenantSecretRef":{"name":"ecorp-tenant-secret","namespace":"operator-test"},"username":"admin"}}]
+      [{"apiVersion":"apps.3scale.net/v1alpha1","kind":"APIManager","metadata":{"name":"example-apimanager"},"spec":{"wildcardDomain":"example.com"}},
+      {"apiVersion":"apps.3scale.net/v1alpha1","kind":"APIManager","metadata":{"name":"example-apimanager-ha"},"spec":{"highAvailability":{"enabled":true},"wildcardDomain":"example.com"}},
+      {"apiVersion":"apps.3scale.net/v1alpha1","kind":"APIManager","metadata":{"name":"example-apimanager-s3"},"spec":{"system":{"fileStorage":{"amazonSimpleStorageService":{"awsBucket":"\u003cbucket-name\u003e","awsCredentialsSecret":{"name":"\u003ccredentials-secret-name\u003e"},"awsRegion":"\u003cregion\u003e"}}},"wildcardDomain":"\u003cdesired-domain\u003e"}},
+      {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"API","metadata":{"labels":{"environment":"testing"},"name":"example-api"},"spec":{"description":"api01","integrationMethod":{"apicastHosted":{"apiTestGetRequest":"/","authenticationSettings":{"credentials":{"apiKey":{"authParameterName":"user-key","credentialsLocation":"headers"}},"errors":{"authenticationFailed":{"contentType":"text/plain; charset=us-ascii","responseBody":"Authentication failed","responseCode":403},"authenticationMissing":{"contentType":"text/plain; charset=us-ascii","responseBody":"Authentication Missing","responseCode":403}},"hostHeader":"","secretToken":"MySecretTokenBetweenApicastAndMyBackend_1237120312"},"mappingRulesSelector":{"matchLabels":{"api":"api01"}},"privateBaseURL":"https://echo-api.3scale.net:443"}}}},
+      {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Binding","metadata":{"name":"example-binding"},"spec":{"APISelector":{"matchLabels":{"environment":"testing"}},"credentialsRef":{"name":"ecorp-tenant-secret"}}},
+      {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Limit","metadata":{"labels":{"api":"api01"},"name":"plan01-metric01-day-10"},"spec":{"description":"Limit for metric01 in plan01","maxValue":10,"metricRef":{"name":"metric01"},"period":"day"}},
+      {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"MappingRule","metadata":{"labels":{"api":"api01"},"name":"metric01-get-path01"},"spec":{"increment":1,"method":"GET","metricRef":{"name":"metric01"},"path":"/path01"}},
+      {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Metric","metadata":{"labels":{"api":"api01"},"name":"metric01"},"spec":{"description":"metric01","incrementHits":false,"unit":"hit"}},
+      {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Plan","metadata":{"labels":{"api":"api01"},"name":"example-plan"},"spec":{"approvalRequired":false,"costs":{"costMonth":0,"setupFee":0},"default":true,"limitSelector":{"matchLabels":{"plan":"plan01"}},"trialPeriod":0}},
+      {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Tenant","metadata":{"name":"example-tenant"},"spec":{"email":"admin@example.com","masterCredentialsRef":{"name":"system-seed"},"organizationName":"Example.com","passwordCredentialsRef":{"name":"ecorp-admin-secret"},"systemMasterUrl":"https://master.example.com","tenantSecretRef":{"name":"ecorp-tenant-secret","namespace":"operator-test"},"username":"admin"}}]
 spec:
   customresourcedefinitions:
     owned:
-    - kind: APIManager
-      name: apimanagers.apps.3scale.net
-      version: v1alpha1
-      description: API Manager
-      displayName: API Manager
-      resources:
-        - kind: DeploymentConfig
-          version: apps.openshift.io/v1
-        - kind: PersistentVolumeClaim
-          version: v1
-        - kind: Service
-          version: v1
-        - kind: Route
-          version: route.openshift.io/v1
-        - kind: ImageStream
-          version: image.openshift.io/v1
-      specDescriptors:
+      - kind: APIManager
+        name: apimanagers.apps.3scale.net
+        version: v1alpha1
+        description: API Manager
+        displayName: API Manager
+        resources:
+          - kind: DeploymentConfig
+            version: apps.openshift.io/v1
+          - kind: PersistentVolumeClaim
+            version: v1
+          - kind: Service
+            version: v1
+          - kind: Route
+            version: route.openshift.io/v1
+          - kind: ImageStream
+            version: image.openshift.io/v1
+        specDescriptors:
           - description: Image Stream Tag Import Insecure
             displayName: Image Stream Tag Import Insecure
             path: imageStreamTagImportInsecure
@@ -192,7 +192,6 @@ spec:
             path: deployments
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:podStatuses'
-        version: v1alpha1
       - description: API
         displayName: API
         kind: API
@@ -1003,155 +1002,155 @@ spec:
   install:
     spec:
       deployments:
-      - name: 3scale-operator
-        spec:
-          replicas: 1
-          selector:
-            matchLabels:
-              name: threescale-operator
-          strategy: {}
-          template:
-            metadata:
-              labels:
+        - name: 3scale-operator
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
                 name: threescale-operator
-            spec:
-              containers:
-              - command:
-                - 3scale-operator
-                env:
-                - name: WATCH_NAMESPACE
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.namespace
-                - name: POD_NAME
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.name
-                - name: OPERATOR_NAME
-                  value: threescale-operator
-                - name: BACKEND_IMAGE
-                  value: "quay.io/3scale/apisonator:nightly"
-                - name: APICAST_IMAGE
-                  value: "quay.io/3scale/apicast:nightly"
-                - name: SYSTEM_IMAGE
-                  value: "quay.io/3scale/porta:nightly"
-                - name: ZYNC_IMAGE
-                  value: "quay.io/3scale/zync:nightly"
-                - name: SYSTEM_MEMCACHED_IMAGE
-                  value: "memcached:1.5"
-                image: quay.io/3scale/3scale-operator:master
-                imagePullPolicy: Always
-                name: 3scale-operator
-                resources: {}
-              serviceAccountName: 3scale-operator
+            strategy: {}
+            template:
+              metadata:
+                labels:
+                  name: threescale-operator
+              spec:
+                containers:
+                  - command:
+                      - 3scale-operator
+                    env:
+                      - name: WATCH_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: OPERATOR_NAME
+                        value: threescale-operator
+                      - name: BACKEND_IMAGE
+                        value: "quay.io/3scale/apisonator:nightly"
+                      - name: APICAST_IMAGE
+                        value: "quay.io/3scale/apicast:nightly"
+                      - name: SYSTEM_IMAGE
+                        value: "quay.io/3scale/porta:nightly"
+                      - name: ZYNC_IMAGE
+                        value: "quay.io/3scale/zync:nightly"
+                      - name: SYSTEM_MEMCACHED_IMAGE
+                        value: "memcached:1.5"
+                    image: quay.io/3scale/3scale-operator:master
+                    imagePullPolicy: Always
+                    name: 3scale-operator
+                    resources: {}
+                serviceAccountName: 3scale-operator
       permissions:
-      - rules:
-        - apiGroups:
-          - ""
-          resources:
-          - pods
-          - replicationcontrollers
-          - services
-          - endpoints
-          - persistentvolumeclaims
-          - events
-          - configmaps
-          - secrets
-          - serviceaccounts
-          - bindings/finalizers
-          verbs:
-          - '*'
-        - apiGroups:
-          - apps
-          resources:
-          - deployments
-          - daemonsets
-          - replicasets
-          - statefulsets
-          verbs:
-          - '*'
-        - apiGroups:
-          - apps
-          resourceNames:
-          - 3scale-operator
-          resources:
-          - deployments/finalizers
-          verbs:
-          - update
-        - apiGroups:
-          - rbac.authorization.k8s.io
-          resources:
-          - roles
-          - rolebindings
-          verbs:
-          - '*'
-        - apiGroups:
-          - image.openshift.io
-          resources:
-          - imagestreams
-          - imagestreams/layers
-          verbs:
-          - '*'
-        - apiGroups:
-          - route.openshift.io
-          resources:
-          - routes
-          verbs:
-          - '*'
-        - apiGroups:
-          - route.openshift.io
-          resources:
-          - routes/custom-host
-          verbs:
-          - create
-        - apiGroups:
-          - route.openshift.io
-          resources:
-          - routes/status
-          verbs:
-          - get
-        - apiGroups:
-          - apps.openshift.io
-          resources:
-          - deploymentconfigs
-          verbs:
-          - '*'
-        - apiGroups:
-          - monitoring.coreos.com
-          resources:
-          - servicemonitors
-          verbs:
-          - get
-          - create
-        - apiGroups:
-          - apps.3scale.net
-          resources:
-          - '*'
-          verbs:
-          - '*'
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - '*'
-          - bindings
-          - metrics
-          - plans
-          - limits
-          - mappingrules
-          - tenants
-          verbs:
-          - '*'
-        serviceAccountName: 3scale-operator
+        - rules:
+            - apiGroups:
+                - ""
+              resources:
+                - pods
+                - replicationcontrollers
+                - services
+                - endpoints
+                - persistentvolumeclaims
+                - events
+                - configmaps
+                - secrets
+                - serviceaccounts
+                - bindings/finalizers
+              verbs:
+                - "*"
+            - apiGroups:
+                - apps
+              resources:
+                - deployments
+                - daemonsets
+                - replicasets
+                - statefulsets
+              verbs:
+                - "*"
+            - apiGroups:
+                - apps
+              resourceNames:
+                - 3scale-operator
+              resources:
+                - deployments/finalizers
+              verbs:
+                - update
+            - apiGroups:
+                - rbac.authorization.k8s.io
+              resources:
+                - roles
+                - rolebindings
+              verbs:
+                - "*"
+            - apiGroups:
+                - image.openshift.io
+              resources:
+                - imagestreams
+                - imagestreams/layers
+              verbs:
+                - "*"
+            - apiGroups:
+                - route.openshift.io
+              resources:
+                - routes
+              verbs:
+                - "*"
+            - apiGroups:
+                - route.openshift.io
+              resources:
+                - routes/custom-host
+              verbs:
+                - create
+            - apiGroups:
+                - route.openshift.io
+              resources:
+                - routes/status
+              verbs:
+                - get
+            - apiGroups:
+                - apps.openshift.io
+              resources:
+                - deploymentconfigs
+              verbs:
+                - "*"
+            - apiGroups:
+                - monitoring.coreos.com
+              resources:
+                - servicemonitors
+              verbs:
+                - get
+                - create
+            - apiGroups:
+                - apps.3scale.net
+              resources:
+                - "*"
+              verbs:
+                - "*"
+            - apiGroups:
+                - capabilities.3scale.net
+              resources:
+                - "*"
+                - bindings
+                - metrics
+                - plans
+                - limits
+                - mappingrules
+                - tenants
+              verbs:
+                - "*"
+          serviceAccountName: 3scale-operator
     strategy: deployment
   installModes:
-  - supported: true
-    type: OwnNamespace
-  - supported: true
-    type: SingleNamespace
-  - supported: false
-    type: MultiNamespace
-  - supported: false
-    type: AllNamespaces
+    - supported: true
+      type: OwnNamespace
+    - supported: true
+      type: SingleNamespace
+    - supported: false
+      type: MultiNamespace
+    - supported: false
+      type: AllNamespaces
   maturity: alpha
   provider:
     name: Red Hat
