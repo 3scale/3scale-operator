@@ -1069,6 +1069,8 @@ objects:
             - bash
             - -c
             - bundle exec rake boot openshift:deploy MASTER_ACCESS_TOKEN="${MASTER_ACCESS_TOKEN}"
+              && bundle exec rake services:create_backend_apis services:update_metric_owners
+              proxy:update_proxy_rule_owners
             containerName: system-master
             env:
             - name: AMP_RELEASE
