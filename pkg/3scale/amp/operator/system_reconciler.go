@@ -132,7 +132,7 @@ func (r *SystemReconciler) reconcileS3AWSSecret(desiredSecret *v1.Secret) error 
 }
 
 func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
-	system, err := r.system()
+	system, err := System(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -246,15 +246,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
-}
-
-func (r *SystemReconciler) system() (*component.System, error) {
-	optsProvider := OperatorSystemOptionsProvider{APIManagerSpec: &r.apiManager.Spec, Namespace: r.apiManager.Namespace, Client: r.Client()}
-	opts, err := optsProvider.GetSystemOptions()
-	if err != nil {
-		return nil, err
-	}
-	return component.NewSystem(opts), nil
 }
 
 func (r *SystemReconciler) highAvailability() (*component.HighAvailability, error) {
