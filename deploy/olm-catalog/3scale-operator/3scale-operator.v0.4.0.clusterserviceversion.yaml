@@ -9,7 +9,7 @@ metadata:
     categories: "Integration & Delivery"
     certified: "false"
     description: 3scale Operator to provision 3scale and publish/manage API
-    containerImage: registry.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-1
+    containerImage: registry.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-2
     createdAt: 2019-05-30T22:40:00Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
