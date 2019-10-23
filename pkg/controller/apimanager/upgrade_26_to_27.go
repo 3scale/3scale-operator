@@ -6,7 +6,9 @@ import (
 	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1 "github.com/openshift/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -18,6 +20,11 @@ type Upgrade26_to_27 struct {
 func (u *Upgrade26_to_27) Upgrade() (reconcile.Result, error) {
 
 	res, err := u.upgradeSystemAppPreHookPodCommand()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeSystemAMPReleaseInSystemEnvironmentConfigMap()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -72,6 +79,45 @@ func (u *Upgrade26_to_27) upgradeSystemAppPreHookPodCommand() (reconcile.Result,
 		u.logger.Info(fmt.Sprintf("Update object %s", operator.ObjectInfo(existingDeploymentConfig)))
 		err := u.client.Update(context.TODO(), existingDeploymentConfig)
 		return reconcile.Result{Requeue: true}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *Upgrade26_to_27) upgradeSystemAMPReleaseInSystemEnvironmentConfigMap() (reconcile.Result, error) {
+	system, err := operator.System(u.cr, u.client)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	desiredSystemEnvironmentConfigMap := system.EnvironmentConfigMap()
+	desiredAMPReleaseValue := product.ThreescaleRelease
+
+	existingSystemEnvironmentConfigMap := &v1.ConfigMap{}
+	err = u.client.Get(context.TODO(), types.NamespacedName{Name: desiredSystemEnvironmentConfigMap.Name, Namespace: u.cr.Namespace}, existingSystemEnvironmentConfigMap)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	ampReleaseKey := "AMP_RELEASE"
+	var existingAMPReleaseValue string
+	var ok bool
+	if existingAMPReleaseValue, ok = existingSystemEnvironmentConfigMap.Data[ampReleaseKey]; !ok {
+		return reconcile.Result{}, fmt.Errorf("Key '%s' not found in ConfigMap '%s'", ampReleaseKey, existingSystemEnvironmentConfigMap.Name)
+	}
+
+	var changed bool
+	if existingAMPReleaseValue != desiredAMPReleaseValue {
+		existingSystemEnvironmentConfigMap.Data[ampReleaseKey] = desiredAMPReleaseValue
+		changed = true
+	}
+
+	if changed {
+		u.logger.Info(fmt.Sprintf("Update object %s", operator.ObjectInfo(existingSystemEnvironmentConfigMap)))
+		err = u.client.Update(context.TODO(), existingSystemEnvironmentConfigMap)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	return reconcile.Result{}, nil
