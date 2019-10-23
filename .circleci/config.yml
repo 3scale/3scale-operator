@@ -319,6 +319,18 @@ jobs:
       - oc-status
       - push-3scale-images-to-quay
 
+  run-unit-tests:
+    docker:
+      - image: circleci/golang:1.12.5
+    working_directory: /go/src/github.com/3scale/3scale-operator
+    steps:
+      - checkout
+      - run: make vendor
+      - run:
+          name: Run unit tests in pkg folder
+          command: |
+            make unit
+
   run-operator-e2e-test:
     machine:
       image: circleci/classic:latest
@@ -392,6 +404,7 @@ workflows:
     jobs:
       - license-check
       - test-crds
+      - run-unit-tests
       - verify-manifest
       - install-operator
       - run-operator-e2e-test:
