@@ -3,7 +3,7 @@
   <dependencies>
           <dependency>
         <packageName>cloud.google.com/go</packageName>
-        <version>v0.34.0</version>
+        <version>v0.38.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -103,7 +103,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/beorn7/perks</packageName>
-        <version>v0.0.0-20180321164747-3a771d992973</version>
+        <version>v1.0.1</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -113,7 +113,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/census-instrumentation/opencensus-proto</packageName>
-        <version>v0.2.0</version>
+        <version>v0.2.1</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -158,6 +158,16 @@
                       <license>
               <name>MIT</name>
               <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/evanphx/json-patch</packageName>
+        <version>v4.0.0+incompatible</version>
+        <licenses>
+                      <license>
+              <name>unknown</name>
+              <url></url>
             </license>
                   </licenses>
       </dependency>
@@ -353,7 +363,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/golang/protobuf</packageName>
-        <version>v1.3.1</version>
+        <version>v1.3.2</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -373,7 +383,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/google/go-cmp</packageName>
-        <version>v0.2.0</version>
+        <version>v0.3.0</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -383,7 +393,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/google/gofuzz</packageName>
-        <version>v0.0.0-20170612174753-24818f796faf</version>
+        <version>v1.0.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -433,7 +443,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/grpc-ecosystem/grpc-gateway</packageName>
-        <version>v1.8.5</version>
+        <version>v1.9.4</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -493,7 +503,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/json-iterator/go</packageName>
-        <version>v1.1.6</version>
+        <version>v1.1.7</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -723,7 +733,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/prometheus/common</packageName>
-        <version>v0.2.0</version>
+        <version>v0.6.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -733,7 +743,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/prometheus/procfs</packageName>
-        <version>v0.0.0-20190117184657-bf6a532e95b1</version>
+        <version>v0.0.3</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -843,7 +853,7 @@
       </dependency>
           <dependency>
         <packageName>go.opencensus.io</packageName>
-        <version>v0.19.2</version>
+        <version>v0.22.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -893,7 +903,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/net</packageName>
-        <version>v0.0.0-20190311183353-d8887717615a</version>
+        <version>v0.0.0-20190628185345-da137c7871d7</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -903,7 +913,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/oauth2</packageName>
-        <version>v0.0.0-20190226205417-e64efc72b421</version>
+        <version>v0.0.0-20190604053449-0f29369cfe45</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -913,7 +923,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/sync</packageName>
-        <version>v0.0.0-20190227155943-e225da77a7e6</version>
+        <version>v0.0.0-20190423024810-112230192c58</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -923,7 +933,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/sys</packageName>
-        <version>v0.0.0-20190215142949-d0b11bdaac8a</version>
+        <version>v0.0.0-20190801041406-cbf593c0f2f3</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -933,7 +943,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/text</packageName>
-        <version>v0.3.0</version>
+        <version>v0.3.2</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -943,7 +953,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/time</packageName>
-        <version>v0.0.0-20180412165947-fbb02b2291d2</version>
+        <version>v0.0.0-20181108054448-85acf8d2951c</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -953,7 +963,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/tools</packageName>
-        <version>v0.0.0-20190312170243-e65039ee4138</version>
+        <version>v0.0.0-20190524140312-2c0ae7006135</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -963,7 +973,7 @@
       </dependency>
           <dependency>
         <packageName>google.golang.org/api</packageName>
-        <version>v0.2.0</version>
+        <version>v0.7.0</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -973,7 +983,7 @@
       </dependency>
           <dependency>
         <packageName>google.golang.org/appengine</packageName>
-        <version>v1.4.0</version>
+        <version>v1.5.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -983,7 +993,7 @@
       </dependency>
           <dependency>
         <packageName>google.golang.org/genproto</packageName>
-        <version>v0.0.0-20190307195333-5fe7a883aa19</version>
+        <version>v0.0.0-20190716160619-c506a9f90610</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -993,7 +1003,7 @@
       </dependency>
           <dependency>
         <packageName>google.golang.org/grpc</packageName>
-        <version>v1.19.1</version>
+        <version>v1.22.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
