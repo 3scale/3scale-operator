@@ -176,3 +176,10 @@
     :why: MIT License https://github.com/onsi/gomega/blob/master/LICENSE
     :versions: []
     :when: 2019-09-09 16:19:43.097866630 Z
+- - :license
+  - github.com/evanphx/json-patch
+  - 3-clause BSD License
+  - :who:
+    :why: 3-clause BSD License https://github.com/evanphx/json-patch/blob/master/LICENSE
+    :versions: []
+    :when: 2019-10-24 09:56:58.733603332 Z
