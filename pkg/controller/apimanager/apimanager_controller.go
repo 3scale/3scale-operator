@@ -111,19 +111,14 @@ func (r *ReconcileAPIManager) updateVersionAnnotations(cr *appsv1alpha1.APIManag
 func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
 	// The object to instantiate would change in every release of the operator
 	// that upgrades the threescale version
-	upgrade := Upgrade26_to_27{
-		BaseUpgrade{
-			client:          r.Client(),
-			apiClientReader: r.APIClientReader(),
-			scheme:          r.Scheme(),
-			cr:              cr,
-			fromVersion:     cr.Annotations[appsv1alpha1.OperatorVersionAnnotation],
-			toVersion:       version.Version,
-			logger:          r.Logger(),
-		},
+	upgradeApiManager := &operator.UpgradeApiManager{
+		Client:          r.Client(),
+		ApiClientReader: r.APIClientReader(),
+		Scheme:          r.Scheme(),
+		Cr:              cr,
+		Logger:          r.Logger(),
 	}
-
-	return upgrade.Upgrade()
+	return upgradeApiManager.Upgrade()
 }
 
 // Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
