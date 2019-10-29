@@ -472,6 +472,49 @@ jobs:
           command: |
             cp _output/unit.cov coverage.txt
             bash <(curl -s https://codecov.io/bash)
+  simple-upgrade-test:
+    machine:
+      image: ubuntu-1604:201903-01
+      docker_layer_caching: true
+    resource_class: large
+    parameters:
+      threescale_release_version:
+        type: string
+        default: "2.6"
+    steps:
+      - install-openshift
+      - run:
+          name: Change to migration-test namespace
+          command: |
+            oc new-project migration-test
+      - oc-observe
+      - run:
+          name: Watch deployment configs
+          command: |
+            while true; do oc describe dc; sleep 600; done
+          background: true
+      - run:
+          name: Watch imagestreams
+          command: |
+            while true; do oc describe is; sleep 600; done
+          background: true
+      - run:
+          name: Deploy 3scale << parameters.threescale_release_version >> from amp-eval template
+          command: |
+            oc create -f https://raw.githubusercontent.com/3scale/3scale-operator/<< parameters.threescale_release_version >>-stable/pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml
+            oc new-app 3scale-api-management-eval --param WILDCARD_DOMAIN=lvh.me
+            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
+          no_output_timeout: 30m
+      - checkout
+      - run:
+          name: Build system master image
+          command: |
+            oc create -f test/migration/build-system-master.json
+            oc start-build amp-system-master --wait --follow
+      - run:
+          name: Run upgrade from 3scale << parameters.threescale_release_version >> test
+          command: |
+            test/migration/run_migration_test.sh
 
 workflows:
   version: 2
@@ -507,6 +550,8 @@ workflows:
           requires:
             - install-operator
             - build-push-3scale-nightly-images
+      - simple-upgrade-test:
+          threescale_release_version: "2.6"
     <<: *nightly-trigger
   operator-release:
     jobs:
