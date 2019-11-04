@@ -9,7 +9,7 @@ metadata:
     categories: "Integration & Delivery"
     certified: "false"
     description: 3scale Operator to provision 3scale and publish/manage API
-    containerImage: registry.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-2
+    containerImage: registry.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-3
     createdAt: 2019-05-30T22:40:00Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
@@ -166,7 +166,7 @@ spec:
                   value: registry.stage.redhat.io/3scale-amp2/zync-rhel7:3scale2.7
                 - name: SYSTEM_MEMCACHED_IMAGE
                   value: registry.stage.redhat.io/3scale-amp2/memcached-rhel7:3scale2.7
-                image: registry.stage.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-2
+                image: registry.stage.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-3
                 imagePullPolicy: Always
                 name: 3scale-operator
                 resources: {}
