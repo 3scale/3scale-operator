@@ -167,6 +167,7 @@ commands:
       - run:
           name: Build images
           command: |
+            set -o errexit
             oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
               --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:nightly \
               --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
@@ -176,20 +177,7 @@ commands:
               jq -j '.items[] | select(.kind == "ImageStream")' | \
               oc create -f -
             oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml --allow-missing-imagestream-tags
-            set -x
-            oc cancel-build $(oc get bc --output=name)
-            for bc in $(oc get bc --output=name); do oc start-build $bc --wait --follow & done
-            echo "List of build image processes:"
-            for job in $(jobs -p); do
-              ps aux | grep $job
-            done
-            echo "Waiting for the build processes to finish"
-            for job in $(jobs -p); do
-              if ! wait ${job} ; then
-                echo "Build image process ${job} exited with non-zero exit code"
-                exit 1
-              fi
-            done
+            for bc in $(oc get bc --output=name); do oc start-build $bc --wait --follow; done
             echo "Finished waiting for the processes"
             oc delete events --all
   oc-observe:

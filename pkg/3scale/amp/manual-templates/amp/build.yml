@@ -42,8 +42,6 @@ objects:
           kind: ImageStreamTag
           name: ruby-24-centos7:latest
       type: Docker
-    triggers:
-    - type: ConfigChange
 
 - apiVersion: v1
   kind: BuildConfig
@@ -64,8 +62,6 @@ objects:
       dockerStrategy:
         dockerfilePath: openshift/system/Dockerfile.on_prem
         forcePull: true
-    triggers:
-      - type: ConfigChange
 
 - apiVersion: v1
   kind: BuildConfig
@@ -94,8 +90,6 @@ objects:
           kind: ImageStreamTag
           name: s2i-openresty-centos7:runtime
       type: Source
-    triggers:
-    - type: ConfigChange
 
 - apiVersion: v1
   kind: ImageStream
@@ -137,8 +131,6 @@ objects:
           dockerStrategy:
               contextDir: /
               dockerfilePath: openshift/distro/centos/7/release/Dockerfile
-      triggers:
-        - type: ConfigChange
 
 parameters:
 - name: ZYNC_GIT_REF
