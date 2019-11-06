@@ -230,17 +230,19 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		return result, err
 	}
 
-	result, err = r.reconcileRedisLogic(cr)
-	if err != nil || result.Requeue {
-		return result, err
+	if cr.Spec.HighAvailability == nil || !cr.Spec.HighAvailability.Enabled {
+		result, err = r.reconcileRedisLogic(cr)
+		if err != nil || result.Requeue {
+			return result, err
+		}
+
+		result, err = r.reconcileSystemDatabaseLogic(cr)
+		if err != nil || result.Requeue {
+			return result, err
+		}
 	}
 
 	result, err = r.reconcileBackendLogic(cr)
-	if err != nil || result.Requeue {
-		return result, err
-	}
-
-	result, err = r.reconcileSystemDatabaseLogic(cr)
 	if err != nil || result.Requeue {
 		return result, err
 	}
