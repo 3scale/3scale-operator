@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
@@ -469,7 +467,6 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 }
 
 func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
-	// TODO fix how should be shown
 	changed := false
 	spec := &apimanager.Spec
 
@@ -478,17 +475,11 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 		changed = true
 	}
 
-	tmpChanged, err := apimanager.setSystemFileStorageSpecDefaults()
+	tmpChanged := apimanager.setSystemFileStorageSpecDefaults()
 	changed = changed || tmpChanged
-	if err != nil {
-		return changed, err
-	}
 
-	tmpChanged, err = apimanager.setSystemDatabaseSpecDefaults()
+	tmpChanged = apimanager.setSystemDatabaseSpecDefaults()
 	changed = changed || tmpChanged
-	if err != nil {
-		return changed, err
-	}
 
 	if spec.System.AppSpec == nil {
 		spec.System.AppSpec = &SystemAppSpec{}
@@ -513,59 +504,36 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 	return changed, nil
 }
 
-func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
+func (apimanager *APIManager) setSystemFileStorageSpecDefaults() bool {
 	changed := false
 	systemSpec := apimanager.Spec.System
-
-	defaultFileStorageSpec := &SystemFileStorageSpec{
-		PVC: &SystemPVCSpec{
-			StorageClassName: nil,
-		},
-	}
 
 	if systemSpec.FileStorageSpec == nil {
-		systemSpec.FileStorageSpec = defaultFileStorageSpec
-		changed = true
-		return changed, nil
-	}
-
-	if systemSpec.FileStorageSpec.PVC != nil && systemSpec.FileStorageSpec.S3 != nil {
-		return changed, fmt.Errorf("Only one FileStorage can be chosen at the same time")
-	}
-
-	if systemSpec.FileStorageSpec.PVC == nil && systemSpec.FileStorageSpec.S3 == nil {
-		systemSpec.FileStorageSpec.PVC = defaultFileStorageSpec.PVC
+		systemSpec.FileStorageSpec = &SystemFileStorageSpec{}
 		changed = true
 	}
 
-	return changed, nil
+	// No default values for S3
+	// PVC
+	if systemSpec.FileStorageSpec.PVC == nil {
+		systemSpec.FileStorageSpec.PVC = &SystemPVCSpec{}
+		changed = true
+		// StorageClassName default value is nil
+	}
+
+	return changed
 }
 
-func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
+func (apimanager *APIManager) setSystemDatabaseSpecDefaults() bool {
 	changed := false
 	systemSpec := apimanager.Spec.System
 
-	defaultDatabaseSpec := &SystemDatabaseSpec{
-		MySQL: &SystemMySQLSpec{
-			Image: nil,
-		},
-	}
-
 	if systemSpec.DatabaseSpec == nil {
-		systemSpec.DatabaseSpec = defaultDatabaseSpec
+		systemSpec.DatabaseSpec = &SystemDatabaseSpec{}
 		changed = true
-		return changed, nil
 	}
 
-	if systemSpec.DatabaseSpec.MySQL != nil && systemSpec.DatabaseSpec.PostgreSQL != nil {
-		return changed, fmt.Errorf("Only one System Database can be chosen at the same time")
-	}
-
-	if systemSpec.DatabaseSpec.MySQL == nil && systemSpec.DatabaseSpec.PostgreSQL == nil {
-		systemSpec.DatabaseSpec.MySQL = defaultDatabaseSpec.MySQL
-	}
-
-	return changed, nil
+	return changed
 }
 
 func (apimanager *APIManager) setZyncDefaults() bool {
@@ -597,4 +565,8 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 	}
 
 	return changed
+}
+
+func (apimanager *APIManager) IsExternalDatabaseEnabled() bool {
+	return apimanager.Spec.HighAvailability != nil && apimanager.Spec.HighAvailability.Enabled
 }

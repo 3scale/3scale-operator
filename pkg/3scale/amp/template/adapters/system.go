@@ -161,6 +161,6 @@ func (s *System) options() (*component.SystemOptions, error) {
 	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
 	sob.TenantName("${TENANT_NAME}")
 	sob.WildcardDomain("${WILDCARD_DOMAIN}")
-	sob.StorageClassName(nil)
+	sob.PVCFileStorageOptions(component.PVCFileStorageOptions{StorageClass: nil})
 	return sob.Build()
 }

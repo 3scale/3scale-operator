@@ -72,9 +72,7 @@ func TestSetDefaults(t *testing.T) {
 				AppSpec: &SystemAppSpec{
 					Replicas: &tmpDefaultReplicas,
 				},
-				DatabaseSpec: &SystemDatabaseSpec{
-					MySQL: &SystemMySQLSpec{},
-				},
+				DatabaseSpec: &SystemDatabaseSpec{},
 				FileStorageSpec: &SystemFileStorageSpec{
 					PVC: &SystemPVCSpec{},
 				},

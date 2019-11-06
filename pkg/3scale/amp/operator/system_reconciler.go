@@ -114,16 +114,19 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconc
 }
 
 func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
-	if r.apiManager.Spec.System != nil && r.apiManager.Spec.System.FileStorageSpec != nil {
-		if r.apiManager.Spec.System.FileStorageSpec.PVC != nil {
-			return r.reconcileSharedStorage(system.SharedStorage())
-		} else if r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
-			return r.reconcileS3AWSSecret(system.S3AWSSecret())
-		} else {
-			return fmt.Errorf("No FileStorage spec specified. FileStorage is mandatory")
-		}
+	if r.apiManager.Spec.System.FileStorageSpec.PVC != nil && r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
+		return fmt.Errorf("Only one system FileStorage can be chosen at the same time")
 	}
-	return nil
+
+	var err error
+	if r.apiManager.Spec.System.FileStorageSpec.PVC != nil {
+		err = r.reconcileSharedStorage(system.SharedStorage())
+	} else if r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
+		err = r.reconcileS3AWSSecret(system.S3AWSSecret())
+	} else {
+		err = fmt.Errorf("No FileStorage spec specified. FileStorage is mandatory")
+	}
+	return err
 }
 
 func (r *SystemReconciler) reconcileS3AWSSecret(desiredSecret *v1.Secret) error {

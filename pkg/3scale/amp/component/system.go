@@ -935,7 +935,7 @@ func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
 }
 
 func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
-	res := &v1.PersistentVolumeClaim{
+	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "PersistentVolumeClaim",
@@ -949,7 +949,7 @@ func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
 			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
-			StorageClassName: system.Options.storageClassName,
+			StorageClassName: system.Options.pvcFileStorageOptions.StorageClass,
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteMany,
 			},
@@ -960,12 +960,6 @@ func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
 			},
 		},
 	}
-
-	if system.Options.pvcFileStorageOptions != nil {
-		res.Spec.StorageClassName = system.Options.storageClassName
-	}
-
-	return res
 }
 
 func (system *System) ProviderService() *v1.Service {

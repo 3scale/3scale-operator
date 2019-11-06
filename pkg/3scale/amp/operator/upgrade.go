@@ -53,7 +53,7 @@ func (u *UpgradeApiManager) upgradeImages() (reconcile.Result, error) {
 		return res, err
 	}
 
-	if !u.highAvailabilityModeEnabled() {
+	if !u.IsExternalDatabaseEnabled() {
 		res, err = u.upgradeBackendRedisImageStream()
 		if res.Requeue || err != nil {
 			return res, err
@@ -254,10 +254,6 @@ func (u *UpgradeApiManager) ensureDeploymentConfigPodTemplateEnvVars(desired, ex
 	}
 
 	return changed, nil
-}
-
-func (u *UpgradeApiManager) highAvailabilityModeEnabled() bool {
-	return u.Cr.Spec.HighAvailability != nil && u.Cr.Spec.HighAvailability.Enabled
 }
 
 func (u *UpgradeApiManager) upgradeBackendRedisImageStream() (reconcile.Result, error) {
