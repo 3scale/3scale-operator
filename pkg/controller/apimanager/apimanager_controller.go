@@ -271,23 +271,25 @@ func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager
 	}
 	results = append(results, images...)
 
-	redis, err := r.createRedis(cr)
-	if err != nil {
-		return nil, err
+	if cr.Spec.HighAvailability == nil || !cr.Spec.HighAvailability.Enabled {
+		redis, err := r.createRedis(cr)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, redis...)
+
+		systemDB, err := r.createSystemDatabase(cr)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, systemDB...)
 	}
-	results = append(results, redis...)
 
 	backend, err := r.createBackend(cr)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, backend...)
-
-	systemDB, err := r.createSystemDatabase(cr)
-	if err != nil {
-		return nil, err
-	}
-	results = append(results, systemDB...)
 
 	memcached, err := r.createMemcached(cr)
 	if err != nil {
