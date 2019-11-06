@@ -290,6 +290,10 @@ The available configurable secrets are:
 | MESSAGE_BUS_URL | System's Message Bus Redis database URL | `redis://system-redis:6379/8` |
 | NAMESPACE | Define the namespace to be used by System's Redis Database. The empty value means not namespaced | `""` |
 | MESSAGE_BUS_NAMESPACE | Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced | `""` |
+| SENTINEL_HOSTS | System's Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
+| SENTINEL_ROLE | System's Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
+| MESSAGE_BUS_SENTINEL_HOSTS | System's Message Bus Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
+| MESSAGE_BUS_SENTINEL_ROLE | System's Message Bus Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
 
 #### system-seed
 
