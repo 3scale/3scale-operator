@@ -59,10 +59,6 @@ func NewRedisReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconci
 }
 
 func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
-	if r.apiManager.Spec.HighAvailability != nil && r.apiManager.Spec.HighAvailability.Enabled {
-		return reconcile.Result{}, nil
-	}
-
 	redis, err := Redis(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
