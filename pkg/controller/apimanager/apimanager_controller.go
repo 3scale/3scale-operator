@@ -355,7 +355,6 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 		h := component.NewHighAvailability(opts)
 		res := objects
 		h.IncreaseReplicasNumber(res)
-		res = h.DeleteInternalDatabasesObjects(res)
 		h.UpdateDatabasesURLS(res)
 		objects = res
 	}
