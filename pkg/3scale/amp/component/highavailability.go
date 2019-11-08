@@ -19,9 +19,10 @@ const (
 )
 
 var highlyAvailableExternalDatabases = map[string]bool{
-	"backend-redis": true,
-	"system-redis":  true,
-	"system-mysql":  true,
+	"backend-redis":     true,
+	"system-redis":      true,
+	"system-mysql":      true,
+	"system-postgresql": true,
 }
 
 func NewHighAvailability(options *HighAvailabilityOptions) *HighAvailability {
