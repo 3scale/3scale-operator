@@ -1,7 +1,6 @@
 package component
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -284,7 +283,13 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 }
 
 func (system *System) buildSystemAppPreHookEnv() []v1.EnvVar {
-	return nil
+	result := []v1.EnvVar{}
+	baseEnv := system.buildSystemBaseEnv()
+	result = append(result, baseEnv...)
+	result = append(result,
+		envVarFromSecret("MASTER_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterAccessTokenFieldName),
+	)
+	return result
 }
 
 func (system *System) BackendRedisEnvVars() []v1.EnvVar {
@@ -565,8 +570,8 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 						ExecNewPod: &appsv1.ExecNewPodHook{
 							// TODO the MASTER_ACCESS_TOKEN reference should be probably set as an envvar that gathers its value from the system-seed secret
 							// but changing that probably has some implications during an upgrade process of the product
-							Command:       []string{"bash", "-c", fmt.Sprintf("bundle exec rake boot openshift:deploy %s=\"%s\" && bundle exec rake services:create_backend_apis services:update_metric_owners proxy:update_proxy_rule_owners", "MASTER_ACCESS_TOKEN", system.Options.masterAccessToken)},
-							Env:           system.buildSystemBaseEnv(),
+							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy && bundle exec rake services:create_backend_apis services:update_metric_owners proxy:update_proxy_rule_owners"},
+							Env:           system.buildSystemAppPreHookEnv(),
 							ContainerName: "system-master",
 							Volumes:       system.volumeNamesForSystemAppPreHookPod()},
 					},

@@ -1636,9 +1636,8 @@ objects:
             command:
             - bash
             - -c
-            - bundle exec rake boot openshift:deploy MASTER_ACCESS_TOKEN="${MASTER_ACCESS_TOKEN}"
-              && bundle exec rake services:create_backend_apis services:update_metric_owners
-              proxy:update_proxy_rule_owners
+            - bundle exec rake boot openshift:deploy && bundle exec rake services:create_backend_apis
+              services:update_metric_owners proxy:update_proxy_rule_owners
             containerName: system-master
             env:
             - name: AMP_RELEASE
@@ -1890,6 +1889,11 @@ objects:
                 secretKeyRef:
                   key: password
                   name: backend-internal-api
+            - name: MASTER_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: MASTER_ACCESS_TOKEN
+                  name: system-seed
             volumes:
             - system-storage
           failurePolicy: Retry
