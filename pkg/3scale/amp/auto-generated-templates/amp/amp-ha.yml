@@ -750,11 +750,11 @@ objects:
       threescale_component: backend
     name: backend-redis
   stringData:
-    REDIS_QUEUES_SENTINEL_HOSTS: ""
-    REDIS_QUEUES_SENTINEL_ROLE: ""
+    REDIS_QUEUES_SENTINEL_HOSTS: ${BACKEND_REDIS_QUEUE_SENTINEL_HOSTS}
+    REDIS_QUEUES_SENTINEL_ROLE: ${BACKEND_REDIS_QUEUE_SENTINEL_ROLE}
     REDIS_QUEUES_URL: ${BACKEND_REDIS_QUEUES_ENDPOINT}
-    REDIS_STORAGE_SENTINEL_HOSTS: ""
-    REDIS_STORAGE_SENTINEL_ROLE: ""
+    REDIS_STORAGE_SENTINEL_HOSTS: ${BACKEND_REDIS_STORAGE_SENTINEL_HOSTS}
+    REDIS_STORAGE_SENTINEL_ROLE: ${BACKEND_REDIS_STORAGE_SENTINEL_ROLE}
     REDIS_STORAGE_URL: ${BACKEND_REDIS_STORAGE_ENDPOINT}
   type: Opaque
 - apiVersion: v1
@@ -2832,12 +2832,12 @@ objects:
     name: system-redis
   stringData:
     MESSAGE_BUS_NAMESPACE: ${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}
-    MESSAGE_BUS_SENTINEL_HOSTS: ""
-    MESSAGE_BUS_SENTINEL_ROLE: ""
+    MESSAGE_BUS_SENTINEL_HOSTS: ${SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_HOSTS}
+    MESSAGE_BUS_SENTINEL_ROLE: ${SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_ROLE}
     MESSAGE_BUS_URL: ${SYSTEM_MESSAGE_BUS_REDIS_URL}
     NAMESPACE: ${SYSTEM_REDIS_NAMESPACE}
-    SENTINEL_HOSTS: ""
-    SENTINEL_ROLE: ""
+    SENTINEL_HOSTS: ${SYSTEM_REDIS_SENTINEL_HOSTS}
+    SENTINEL_ROLE: ${SYSTEM_REDIS_SENTINEL_ROLE}
     URL: ${SYSTEM_REDIS_URL}
   type: Opaque
 - apiVersion: v1
@@ -3816,3 +3816,19 @@ parameters:
 - description: Define the external system-mysql to connect to
   name: SYSTEM_DATABASE_URL
   required: true
+- description: Define the external system message bus sentinel hosts
+  name: SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_HOSTS
+- description: Define the external system message bus sentinel role
+  name: SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_ROLE
+- description: Define the external system redis sentinel hosts
+  name: SYSTEM_REDIS_SENTINEL_HOSTS
+- description: Define the external system redis sentinel role
+  name: SYSTEM_REDIS_SENTINEL_ROLE
+- description: Define the external backend redis queue sentinel hosts
+  name: BACKEND_REDIS_QUEUE_SENTINEL_HOSTS
+- description: Define the external backend redis queue sentinel role
+  name: BACKEND_REDIS_QUEUE_SENTINEL_ROLE
+- description: Define the external backend redis storage sentinel hosts
+  name: BACKEND_REDIS_STORAGE_SENTINEL_HOSTS
+- description: Define the external backend redis storage sentinel role
+  name: BACKEND_REDIS_STORAGE_SENTINEL_ROLE
