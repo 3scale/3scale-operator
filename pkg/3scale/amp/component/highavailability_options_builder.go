@@ -6,12 +6,20 @@ type HighAvailabilityOptions struct {
 	// nonRequiredHighAvailabilityOptions
 
 	//requiredHighAvailabilityOptions
-	appLabel                    string
-	backendRedisQueuesEndpoint  string
-	backendRedisStorageEndpoint string
-	systemDatabaseURL           string
-	systemRedisURL              string
-	systemMessageBusRedisURL    string
+	appLabel                            string
+	backendRedisQueuesEndpoint          string
+	backendRedisQueuesSentinelHosts     string
+	backendRedisQueuesSentinelRole      string
+	backendRedisStorageEndpoint         string
+	backendRedisStorageSentinelHosts    string
+	backendRedisStorageSentinelRole     string
+	systemDatabaseURL                   string
+	systemRedisURL                      string
+	systemRedisSentinelsHosts           string
+	systemRedisSentinelsRole            string
+	systemMessageBusRedisURL            string
+	systemMessageBusRedisSentinelsHosts string
+	systemMessageBusRedisSentinelsRole  string
 }
 
 type HighAvailabilityOptionsBuilder struct {
@@ -40,6 +48,38 @@ func (ha *HighAvailabilityOptionsBuilder) SystemRedisURL(systemRedisURL string) 
 
 func (ha *HighAvailabilityOptionsBuilder) SystemMessageBusRedisURL(url string) {
 	ha.options.systemMessageBusRedisURL = url
+}
+
+func (ha *HighAvailabilityOptionsBuilder) SystemRedisSentinelsHosts(hosts string) {
+	ha.options.systemRedisSentinelsHosts = hosts
+}
+
+func (ha *HighAvailabilityOptionsBuilder) SystemRedisSentinelsRole(role string) {
+	ha.options.systemRedisSentinelsRole = role
+}
+
+func (ha *HighAvailabilityOptionsBuilder) SystemMessageBusRedisSentinelsHosts(hosts string) {
+	ha.options.systemMessageBusRedisSentinelsHosts = hosts
+}
+
+func (ha *HighAvailabilityOptionsBuilder) SystemMessageBusRedisSentinelsRole(role string) {
+	ha.options.systemMessageBusRedisSentinelsRole = role
+}
+
+func (ha *HighAvailabilityOptionsBuilder) BackendRedisQueuesSentinelHosts(hosts string) {
+	ha.options.backendRedisQueuesSentinelHosts = hosts
+}
+
+func (ha *HighAvailabilityOptionsBuilder) BackendRedisQueuesSentinelRole(role string) {
+	ha.options.backendRedisQueuesSentinelRole = role
+}
+
+func (ha *HighAvailabilityOptionsBuilder) BackendRedisStorageSentinelHosts(hosts string) {
+	ha.options.backendRedisStorageSentinelHosts = hosts
+}
+
+func (ha *HighAvailabilityOptionsBuilder) BackendRedisStorageSentinelRole(role string) {
+	ha.options.backendRedisStorageSentinelRole = role
 }
 
 func (ha *HighAvailabilityOptionsBuilder) Build() (*HighAvailabilityOptions, error) {

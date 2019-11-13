@@ -156,9 +156,17 @@ func (ha *HighAvailability) UpdateDatabasesURLS(objects []common.KubernetesObjec
 			case "system-redis":
 				secret.StringData["URL"] = ha.Options.systemRedisURL
 				secret.StringData["MESSAGE_BUS_URL"] = ha.Options.systemMessageBusRedisURL
+				secret.StringData[SystemSecretSystemRedisSentinelHosts] = ha.Options.systemRedisSentinelsHosts
+				secret.StringData[SystemSecretSystemRedisSentinelRole] = ha.Options.systemRedisSentinelsRole
+				secret.StringData[SystemSecretSystemRedisMessageBusSentinelHosts] = ha.Options.systemMessageBusRedisSentinelsHosts
+				secret.StringData[SystemSecretSystemRedisMessageBusSentinelRole] = ha.Options.systemMessageBusRedisSentinelsRole
 			case "backend-redis":
 				secret.StringData["REDIS_STORAGE_URL"] = ha.Options.backendRedisStorageEndpoint
 				secret.StringData["REDIS_QUEUES_URL"] = ha.Options.backendRedisQueuesEndpoint
+				secret.StringData[BackendSecretBackendRedisStorageSentinelHostsFieldName] = ha.Options.backendRedisStorageSentinelHosts
+				secret.StringData[BackendSecretBackendRedisStorageSentinelRoleFieldName] = ha.Options.backendRedisStorageSentinelRole
+				secret.StringData[BackendSecretBackendRedisQueuesSentinelHostsFieldName] = ha.Options.backendRedisQueuesSentinelHosts
+				secret.StringData[BackendSecretBackendRedisQueuesSentinelRoleFieldName] = ha.Options.backendRedisQueuesSentinelRole
 			}
 		}
 	}
