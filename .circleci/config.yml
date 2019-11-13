@@ -1,5 +1,18 @@
 version: 2.1
 
+##################################### YAML ANCHORS  ############################################
+
+only-master-filter: &only-master-filter
+  filters:
+    branches:
+      only: master
+
+nightly-trigger: &nightly-trigger
+  triggers:
+    - schedule:
+        cron: "0 0 * * *"
+        <<: *only-master-filter
+
 commands:
   attach-workspace:
     steps:
@@ -436,10 +449,12 @@ workflows:
     jobs:
       - build-push-3scale-nightly-images:
           context: org-global
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
+      - deploy_templates:
+          requires:
+            - build-push-3scale-nightly-images
+      - install-operator
+      - run-operator-e2e-test:
+          requires:
+            - install-operator
+            - build-push-3scale-nightly-images
+    <<: *nightly-trigger
