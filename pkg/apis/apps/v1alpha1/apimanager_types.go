@@ -515,7 +515,7 @@ func (apimanager *APIManager) setSystemFileStorageSpecDefaults() bool {
 
 	// No default values for S3
 	// PVC
-	if systemSpec.FileStorageSpec.PVC == nil {
+	if systemSpec.FileStorageSpec.S3 == nil && systemSpec.FileStorageSpec.PVC == nil {
 		systemSpec.FileStorageSpec.PVC = &SystemPVCSpec{}
 		changed = true
 		// StorageClassName default value is nil
