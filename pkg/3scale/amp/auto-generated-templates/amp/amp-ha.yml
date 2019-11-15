@@ -997,7 +997,15 @@ objects:
       threescale_component: system
     name: system
 - apiVersion: v1
-  data:
+  kind: Secret
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: smtp
+    name: system-smtp
+  stringData:
     address: ""
     authentication: ""
     domain: ""
@@ -1005,14 +1013,6 @@ objects:
     password: ""
     port: ""
     username: ""
-  kind: ConfigMap
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: system
-      threescale_component_element: smtp
-    name: smtp
 - apiVersion: v1
   data:
     AMP_RELEASE: ${AMP_RELEASE}
@@ -1265,39 +1265,39 @@ objects:
                   name: backend-listener
             - name: SMTP_ADDRESS
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: address
-                  name: smtp
+                  name: system-smtp
             - name: SMTP_USER_NAME
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: username
-                  name: smtp
+                  name: system-smtp
             - name: SMTP_PASSWORD
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: password
-                  name: smtp
+                  name: system-smtp
             - name: SMTP_DOMAIN
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: domain
-                  name: smtp
+                  name: system-smtp
             - name: SMTP_PORT
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: port
-                  name: smtp
+                  name: system-smtp
             - name: SMTP_AUTHENTICATION
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: authentication
-                  name: smtp
+                  name: system-smtp
             - name: SMTP_OPENSSL_VERIFY_MODE
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: openssl.verify.mode
-                  name: smtp
+                  name: system-smtp
             - name: APICAST_ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -1546,39 +1546,39 @@ objects:
                 name: backend-listener
           - name: SMTP_ADDRESS
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: address
-                name: smtp
+                name: system-smtp
           - name: SMTP_USER_NAME
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: username
-                name: smtp
+                name: system-smtp
           - name: SMTP_PASSWORD
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: password
-                name: smtp
+                name: system-smtp
           - name: SMTP_DOMAIN
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: domain
-                name: smtp
+                name: system-smtp
           - name: SMTP_PORT
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: port
-                name: smtp
+                name: system-smtp
           - name: SMTP_AUTHENTICATION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: authentication
-                name: smtp
+                name: system-smtp
           - name: SMTP_OPENSSL_VERIFY_MODE
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: openssl.verify.mode
-                name: smtp
+                name: system-smtp
           - name: APICAST_ACCESS_TOKEN
             valueFrom:
               secretKeyRef:
@@ -1844,39 +1844,39 @@ objects:
                 name: backend-listener
           - name: SMTP_ADDRESS
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: address
-                name: smtp
+                name: system-smtp
           - name: SMTP_USER_NAME
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: username
-                name: smtp
+                name: system-smtp
           - name: SMTP_PASSWORD
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: password
-                name: smtp
+                name: system-smtp
           - name: SMTP_DOMAIN
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: domain
-                name: smtp
+                name: system-smtp
           - name: SMTP_PORT
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: port
-                name: smtp
+                name: system-smtp
           - name: SMTP_AUTHENTICATION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: authentication
-                name: smtp
+                name: system-smtp
           - name: SMTP_OPENSSL_VERIFY_MODE
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: openssl.verify.mode
-                name: smtp
+                name: system-smtp
           - name: APICAST_ACCESS_TOKEN
             valueFrom:
               secretKeyRef:
@@ -2141,39 +2141,39 @@ objects:
                 name: backend-listener
           - name: SMTP_ADDRESS
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: address
-                name: smtp
+                name: system-smtp
           - name: SMTP_USER_NAME
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: username
-                name: smtp
+                name: system-smtp
           - name: SMTP_PASSWORD
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: password
-                name: smtp
+                name: system-smtp
           - name: SMTP_DOMAIN
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: domain
-                name: smtp
+                name: system-smtp
           - name: SMTP_PORT
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: port
-                name: smtp
+                name: system-smtp
           - name: SMTP_AUTHENTICATION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: authentication
-                name: smtp
+                name: system-smtp
           - name: SMTP_OPENSSL_VERIFY_MODE
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: openssl.verify.mode
-                name: smtp
+                name: system-smtp
           - name: APICAST_ACCESS_TOKEN
             valueFrom:
               secretKeyRef:
@@ -2501,39 +2501,39 @@ objects:
                 name: backend-listener
           - name: SMTP_ADDRESS
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: address
-                name: smtp
+                name: system-smtp
           - name: SMTP_USER_NAME
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: username
-                name: smtp
+                name: system-smtp
           - name: SMTP_PASSWORD
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: password
-                name: smtp
+                name: system-smtp
           - name: SMTP_DOMAIN
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: domain
-                name: smtp
+                name: system-smtp
           - name: SMTP_PORT
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: port
-                name: smtp
+                name: system-smtp
           - name: SMTP_AUTHENTICATION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: authentication
-                name: smtp
+                name: system-smtp
           - name: SMTP_OPENSSL_VERIFY_MODE
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: openssl.verify.mode
-                name: smtp
+                name: system-smtp
           - name: APICAST_ACCESS_TOKEN
             valueFrom:
               secretKeyRef:
