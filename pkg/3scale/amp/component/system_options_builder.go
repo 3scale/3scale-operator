@@ -15,6 +15,16 @@ type S3FileStorageOptions struct {
 	AWSCredentialsSecret string
 }
 
+type SystemSMTPSecretOptions struct {
+	Address           string
+	Authentication    string
+	Domain            string
+	OpenSSLVerifyMode string
+	Password          string
+	Port              string
+	Username          string
+}
+
 type PVCFileStorageOptions struct {
 	StorageClass *string
 }
@@ -66,6 +76,8 @@ type SystemOptions struct {
 	tenantName          string
 	wildcardDomain      string
 	storageClassName    *string // should this be a string or *string? check what would be the difference between passing a "" and a nil pointer in the PersistentVolumeClaim corresponding field
+
+	smtpSecretOptions SystemSMTPSecretOptions
 }
 
 type SystemOptionsBuilder struct {
@@ -230,6 +242,10 @@ func (s *SystemOptionsBuilder) AppReplicas(replicas int32) {
 
 func (s *SystemOptionsBuilder) SidekiqReplicas(replicas int32) {
 	s.options.sidekiqReplicas = &replicas
+}
+
+func (s *SystemOptionsBuilder) SystemSMTPSecretOptions(options SystemSMTPSecretOptions) {
+	s.options.smtpSecretOptions = options
 }
 
 func (s *SystemOptionsBuilder) Build() (*SystemOptions, error) {

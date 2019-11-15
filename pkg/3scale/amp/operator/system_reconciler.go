@@ -192,7 +192,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSMTPConfigMap(system.SMTPConfigMap())
+	err = r.reconcileSMTPSecret(system.SMTPSecret())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -290,9 +290,9 @@ func (r *SystemReconciler) reconcileEnvironmentConfigMap(desiredConfigMap *v1.Co
 	return reconciler.Reconcile(desiredConfigMap)
 }
 
-func (r *SystemReconciler) reconcileSMTPConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	return reconciler.Reconcile(desiredConfigMap)
+func (r *SystemReconciler) reconcileSMTPSecret(desiredSecret *v1.Secret) error {
+	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
+	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) reconcileEventsHookSecret(desiredSecret *v1.Secret) error {

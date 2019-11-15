@@ -79,6 +79,11 @@ func (o *OperatorSystemOptionsProvider) setSecretBasedOptions(builder *component
 		return fmt.Errorf("unable to create System Master Apicast secret options - %s", err)
 	}
 
+	err = o.setSystemSMTPOptions(builder)
+	if err != nil {
+		return fmt.Errorf("unable to create System SMTP secret options - %s", err)
+	}
+
 	if o.APIManagerSpec.System.FileStorageSpec != nil && o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
 		err = o.setAWSSecretOptions(builder)
 		if err != nil {
@@ -209,6 +214,29 @@ func (o *OperatorSystemOptionsProvider) setSystemMasterApicastOptions(builder *c
 	secretData := currSecret.Data
 	// TODO we do not reconcile ProxyConfigEndpoint nor BaseURL fields because they are dependant on the TenantName
 	builder.ApicastAccessToken(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemMasterApicastAccessToken, defaultSystemMasterApicastAccessToken))
+
+	return nil
+}
+
+func (o *OperatorSystemOptionsProvider) setSystemSMTPOptions(builder *component.SystemOptionsBuilder) error {
+	currSecret, err := getSecret(component.SystemSecretSystemSMTPSecretName, o.Namespace, o.Client)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	secretData := currSecret.Data
+
+	smtpSecretOptions := component.SystemSMTPSecretOptions{
+		Address:           getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSMTPAddressFieldName, ""),
+		Authentication:    getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSMTPAuthenticationFieldName, ""),
+		Domain:            getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSMTPDomainFieldName, ""),
+		OpenSSLVerifyMode: getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSMTPOpenSSLVerifyModeFieldName, ""),
+		Password:          getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSMTPPasswordFieldName, ""),
+		Port:              getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSMTPPortFieldName, ""),
+		Username:          getSecretDataValueOrDefault(secretData, component.SystemSecretSystemSMTPUserNameFieldName, ""),
+	}
+
+	builder.SystemSMTPSecretOptions(smtpSecretOptions)
 
 	return nil
 }
