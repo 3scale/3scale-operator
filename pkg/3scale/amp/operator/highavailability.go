@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 func (o *OperatorHighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*component.HighAvailabilityOptions, error) {
@@ -30,20 +31,20 @@ func (o *OperatorHighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (
 }
 
 func (o *OperatorHighAvailabilityOptionsProvider) setBackendRedisOptions(builder *component.HighAvailabilityOptionsBuilder) error {
-	currSecret, err := getSecret(component.BackendSecretBackendRedisSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(component.BackendSecretBackendRedisSecretName, o.Namespace, o.Client)
 	if err != nil {
 		return err
 	}
 
 	secretData := currSecret.Data
 	var result *string
-	result = getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageURLFieldName)
+	result = helper.GetSecretDataValue(secretData, component.BackendSecretBackendRedisStorageURLFieldName)
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.BackendSecretBackendRedisStorageURLFieldName, component.BackendSecretBackendRedisSecretName)
 	}
 	builder.BackendRedisStorageEndpoint(*result)
 
-	result = getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesURLFieldName)
+	result = helper.GetSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesURLFieldName)
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.BackendSecretBackendRedisQueuesURLFieldName, component.BackendSecretBackendRedisSecretName)
 	}
@@ -53,20 +54,20 @@ func (o *OperatorHighAvailabilityOptionsProvider) setBackendRedisOptions(builder
 }
 
 func (o *OperatorHighAvailabilityOptionsProvider) setSystemRedisOptions(builder *component.HighAvailabilityOptionsBuilder) error {
-	currSecret, err := getSecret(component.SystemSecretSystemRedisSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(component.SystemSecretSystemRedisSecretName, o.Namespace, o.Client)
 	if err != nil {
 		return err
 	}
 
 	secretData := currSecret.Data
 	var result *string
-	result = getSecretDataValue(secretData, component.SystemSecretSystemRedisURLFieldName)
+	result = helper.GetSecretDataValue(secretData, component.SystemSecretSystemRedisURLFieldName)
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.SystemSecretSystemRedisURLFieldName, component.SystemSecretSystemRedisSecretName)
 	}
 	builder.SystemRedisURL(*result)
 
-	result = getSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisURLFieldName)
+	result = helper.GetSecretDataValue(secretData, component.SystemSecretSystemRedisMessageBusRedisURLFieldName)
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.SystemSecretSystemRedisMessageBusRedisURLFieldName, component.SystemSecretSystemRedisSecretName)
 	}
@@ -76,14 +77,14 @@ func (o *OperatorHighAvailabilityOptionsProvider) setSystemRedisOptions(builder 
 }
 
 func (o *OperatorHighAvailabilityOptionsProvider) setSystemDatabaseOptions(builder *component.HighAvailabilityOptionsBuilder) error {
-	currSecret, err := getSecret(component.SystemSecretSystemDatabaseSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(component.SystemSecretSystemDatabaseSecretName, o.Namespace, o.Client)
 	if err != nil {
 		return err
 	}
 
 	secretData := currSecret.Data
 	var result *string
-	result = getSecretDataValue(secretData, component.SystemSecretSystemDatabaseURLFieldName)
+	result = helper.GetSecretDataValue(secretData, component.SystemSecretSystemDatabaseURLFieldName)
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.SystemSecretSystemDatabaseURLFieldName, component.SystemSecretSystemDatabaseSecretName)
 	}

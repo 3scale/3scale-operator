@@ -7,6 +7,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
@@ -39,7 +40,7 @@ func (o *OperatorSystemPostgreSQLOptionsProvider) setSecretBasedOptions(builder 
 }
 
 func (o *OperatorSystemPostgreSQLOptionsProvider) setSystemDatabaseOptions(builder *component.SystemPostgreSQLOptionsBuilder) error {
-	currSecret, err := getSecret(component.SystemSecretSystemDatabaseSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(component.SystemSecretSystemDatabaseSecretName, o.Namespace, o.Client)
 	defaultDatabaseName := "system"
 	defaultDatabaseUsername := "system"
 	defaultDatabasePassword := oprand.String(8)
@@ -54,8 +55,8 @@ func (o *OperatorSystemPostgreSQLOptionsProvider) setSystemDatabaseOptions(build
 	// If a field of a secret already exists in the deployed secret then
 	// We do not modify it. Otherwise we set a default value
 	secretData := currSecret.Data
-	builder.User(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseUserFieldName, defaultDatabaseUsername))
-	builder.Password(getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabasePasswordFieldName, defaultDatabasePassword))
+	builder.User(helper.GetSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseUserFieldName, defaultDatabaseUsername))
+	builder.Password(helper.GetSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabasePasswordFieldName, defaultDatabasePassword))
 	err = o.parseAndSetDatabaseURLAndParts(builder, secretData, defaultDatabaseURL)
 	if err != nil {
 		return err
@@ -65,7 +66,7 @@ func (o *OperatorSystemPostgreSQLOptionsProvider) setSystemDatabaseOptions(build
 }
 
 func (o *OperatorSystemPostgreSQLOptionsProvider) parseAndSetDatabaseURLAndParts(builder *component.SystemPostgreSQLOptionsBuilder, secretData map[string][]byte, defaultDatabaseURL string) error {
-	resultURLStr := getSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseURLFieldName, defaultDatabaseURL)
+	resultURLStr := helper.GetSecretDataValueOrDefault(secretData, component.SystemSecretSystemDatabaseURLFieldName, defaultDatabaseURL)
 	resultURL, err := o.systemDatabaseURLIsValid(resultURLStr)
 	if err != nil {
 		return err

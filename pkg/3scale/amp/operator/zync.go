@@ -5,6 +5,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
@@ -42,7 +43,7 @@ func (o *OperatorZyncOptionsProvider) setZyncSecretOptions(zob *component.ZyncOp
 	defaultZyncDatabasePassword := oprand.String(16)
 	defaultZyncAuthenticationToken := oprand.String(16)
 
-	currSecret, err := getSecret(component.ZyncSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(component.ZyncSecretName, o.Namespace, o.Client)
 
 	if err != nil && !errors.IsNotFound(err) {
 		return err
@@ -51,9 +52,9 @@ func (o *OperatorZyncOptionsProvider) setZyncSecretOptions(zob *component.ZyncOp
 	// If a field of a secret already exists in the deployed secret then
 	// We do not modify it. Otherwise we set a default value
 	secretData := currSecret.Data
-	zob.SecretKeyBase(getSecretDataValueOrDefault(secretData, component.ZyncSecretKeyBaseFieldName, defaultZyncSecretKeyBase))
-	zob.DatabasePassword(getSecretDataValueOrDefault(secretData, component.ZyncSecretDatabasePasswordFieldName, defaultZyncDatabasePassword))
-	zob.AuthenticationToken(getSecretDataValueOrDefault(secretData, component.ZyncSecretAuthenticationTokenFieldName, defaultZyncAuthenticationToken))
+	zob.SecretKeyBase(helper.GetSecretDataValueOrDefault(secretData, component.ZyncSecretKeyBaseFieldName, defaultZyncSecretKeyBase))
+	zob.DatabasePassword(helper.GetSecretDataValueOrDefault(secretData, component.ZyncSecretDatabasePasswordFieldName, defaultZyncDatabasePassword))
+	zob.AuthenticationToken(helper.GetSecretDataValueOrDefault(secretData, component.ZyncSecretAuthenticationTokenFieldName, defaultZyncAuthenticationToken))
 
 	return nil
 }

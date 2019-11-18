@@ -3,6 +3,8 @@ package operator
 import (
 	"testing"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
@@ -63,7 +65,7 @@ func getMemcachedSecret(namespace string) *v1.Secret {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 
@@ -80,7 +82,7 @@ func getRecaptchaSecret(namespace string) *v1.Secret {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 
@@ -97,7 +99,7 @@ func getEventHookSecret(namespace string) *v1.Secret {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 
@@ -120,7 +122,7 @@ func getSystemRedisSecret(namespace string) *v1.Secret {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 
@@ -136,7 +138,7 @@ func getSystemAppSecret(namespace string) *v1.Secret {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 
@@ -159,7 +161,7 @@ func getSystemSeedSecret(namespace string) *v1.Secret {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 
@@ -175,7 +177,7 @@ func getSystemMasterApicastSecret(namespace string) *v1.Secret {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 
@@ -192,7 +194,7 @@ func getAWSCredentialsSecret(name, namespace string) *v1.Secret {
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 
