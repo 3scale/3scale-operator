@@ -79,11 +79,9 @@ func (o *OperatorSystemOptionsProvider) setSecretBasedOptions(builder *component
 		return fmt.Errorf("unable to create System Master Apicast secret options - %s", err)
 	}
 
-	if o.APIManagerSpec.System.FileStorageSpec != nil && o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
-		err = o.setAWSSecretOptions(builder)
-		if err != nil {
-			return fmt.Errorf("unable to create AWS S3 secret options - %s", err)
-		}
+	err = o.setAWSSecretOptions(builder)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -227,8 +225,6 @@ func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.Syste
 	s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
 	if s3FileStorageSpec != nil {
 		b.S3FileStorageOptions(component.S3FileStorageOptions{
-			AWSAccessKeyId:       "",
-			AWSSecretAccessKey:   "",
 			AWSRegion:            s3FileStorageSpec.AWSRegion,
 			AWSBucket:            s3FileStorageSpec.AWSBucket,
 			AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
@@ -241,7 +237,15 @@ func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.Syste
 }
 
 func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.SystemOptionsBuilder) error {
+	if o.APIManagerSpec.System.FileStorageSpec == nil || o.APIManagerSpec.System.FileStorageSpec.S3 == nil {
+		return nil
+	}
+
 	awsCredentialsSecretName := o.APIManagerSpec.System.FileStorageSpec.S3.AWSCredentials.Name
+	if awsCredentialsSecretName == "" {
+		return fmt.Errorf("no aws credentials provided")
+	}
+
 	currSecret, err := getSecret(awsCredentialsSecretName, o.Namespace, o.Client)
 	if err != nil {
 		return err
@@ -255,22 +259,11 @@ func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.Syste
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSAccessKeyIdFieldName, awsCredentialsSecretName)
 	}
-	awsAccessKeyID := *result
 
 	result = getSecretDataValue(secretData, component.S3SecretAWSSecretAccessKeyFieldName)
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSSecretAccessKeyFieldName, awsCredentialsSecretName)
 	}
-	awsSecretAccessKeyID := *result
-
-	s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
-	sob.S3FileStorageOptions(component.S3FileStorageOptions{
-		AWSAccessKeyId:       awsAccessKeyID,
-		AWSSecretAccessKey:   awsSecretAccessKeyID,
-		AWSRegion:            s3FileStorageSpec.AWSRegion,
-		AWSBucket:            s3FileStorageSpec.AWSBucket,
-		AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
-	})
 
 	return nil
 }

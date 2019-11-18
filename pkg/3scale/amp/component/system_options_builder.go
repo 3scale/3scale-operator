@@ -8,8 +8,6 @@ import (
 )
 
 type S3FileStorageOptions struct {
-	AWSAccessKeyId       string
-	AWSSecretAccessKey   string
 	AWSRegion            string
 	AWSBucket            string
 	AWSCredentialsSecret string
@@ -290,8 +288,14 @@ func (s *SystemOptionsBuilder) setRequiredOptions() error {
 		return fmt.Errorf("no wildcard domain has been provided")
 	}
 
-	if s.options.s3FileStorageOptions == nil && s.options.pvcFileStorageOptions == nil {
-		s.options.pvcFileStorageOptions = &PVCFileStorageOptions{}
+	if s.options.s3FileStorageOptions != nil {
+		if s.options.s3FileStorageOptions.AWSBucket == "" {
+			return fmt.Errorf("no aws bucket been provided")
+		}
+
+		if s.options.s3FileStorageOptions.AWSRegion == "" {
+			return fmt.Errorf("no aws region been provided")
+		}
 	}
 
 	return nil
@@ -355,6 +359,10 @@ func (s *SystemOptionsBuilder) setNonRequiredOptions() {
 	if s.options.sidekiqReplicas == nil {
 		var defaultSidekiqReplicas int32 = 1
 		s.options.sidekiqReplicas = &defaultSidekiqReplicas
+	}
+
+	if s.options.s3FileStorageOptions == nil && s.options.pvcFileStorageOptions == nil {
+		s.options.pvcFileStorageOptions = &PVCFileStorageOptions{}
 	}
 }
 
