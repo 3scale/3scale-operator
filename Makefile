@@ -67,9 +67,23 @@ e2e-clean:
 ## e2e: e2e-clean e2e-setup e2e-run
 e2e: e2e-clean e2e-setup e2e-run
 
-## unit: run all available unit tests in pkg directory of the repository
-unit:
-	go test -v ./pkg/...
+$(PROJECT_PATH)/_output/unit.cov:
+	mkdir -p "$(PROJECT_PATH)/_output"
+	go test ./pkg/... -v -covermode=count -test.coverprofile="$(PROJECT_PATH)/_output/unit.cov"
+
+## unit: Run unit tests in pkg directory
+.PHONY: unit
+unit: $(PROJECT_PATH)/_output/unit.cov 
+
+## coverage_analysis: Analyze coverage via a browse
+.PHONY: coverage_analysis
+coverage_analysis: $(PROJECT_PATH)/_output/unit.cov 
+	go tool cover -html="$(PROJECT_PATH)/_output/unit.cov"
+
+## coverage_total_report: Simple coverage report
+.PHONY: coverage_total_report
+coverage_total_report: $(PROJECT_PATH)/_output/unit.cov 
+	@go tool cover -func=$(PROJECT_PATH)/_output/unit.cov | grep total | awk '{print $$3}'
 
 ## test-crds: Run CRD unittests
 test-crds:
@@ -103,3 +117,7 @@ ifndef OPERATORCOURIER
 	$(error "operator-courier is not available please install pip3 install operator-courier")
 endif
 	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier push 3scale-operator-master/ $(APPLICATION_REPOSITORY_NAMESPACE) 3scale-operator-master $(MANIFEST_RELEASE) "$(TOKEN)"
+
+## clean: Clean build resources
+clean:
+	rm -rf $(PROJECT_PATH)/_output

@@ -231,6 +231,15 @@ commands:
           name: Build Operator
           command: |
               make build IMAGE=172.30.1.1:5000/openshift/3scale-operator VERSION=test
+
+  unit-tests:
+    steps:
+      - checkout
+      - run: make vendor
+      - run:
+          name: Run unit tests in pkg folder
+          command: |
+            make unit
 jobs:
   install-operator:
     docker:
@@ -329,12 +338,7 @@ jobs:
       - image: circleci/golang:1.12.5
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
-      - checkout
-      - run: make vendor
-      - run:
-          name: Run unit tests in pkg folder
-          command: |
-            make unit
+      - unit-tests
 
   run-operator-e2e-test:
     machine:
@@ -403,6 +407,18 @@ jobs:
       - run: sudo pip3 install operator-courier
       - run: make verify-manifest
 
+  unit-tests-coverage:
+    docker:
+      - image: circleci/golang:1.12.5
+    working_directory: /go/src/github.com/3scale/3scale-operator
+    steps:
+      - unit-tests
+      - run:
+          name: Report to Codecov
+          command: |
+            cp _output/unit.cov coverage.txt
+            bash <(curl -s https://codecov.io/bash)
+
 workflows:
   version: 2
   operator:
@@ -449,4 +465,5 @@ workflows:
           requires:
             - install-operator
             - build-push-3scale-nightly-images
+      - unit-tests-coverage
     <<: *nightly-trigger
