@@ -240,6 +240,13 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		if err != nil || result.Requeue {
 			return result, err
 		}
+	} else {
+		// External databases
+		// validate required secrets exist
+		err := r.externalDatabasesCheck(cr)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	result, err = r.reconcileBackendLogic(cr)
@@ -380,4 +387,14 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 		}
 	}
 	return nil
+}
+
+func (r *ReconcileAPIManager) externalDatabasesCheck(cr *appsv1alpha1.APIManager) error {
+	optsProvider := operator.OperatorHighAvailabilityOptionsProvider{
+		APIManagerSpec: &cr.Spec,
+		Namespace:      cr.Namespace,
+		Client:         r.Client(),
+	}
+	_, err := optsProvider.GetHighAvailabilityOptions()
+	return err
 }
