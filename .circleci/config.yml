@@ -447,6 +447,11 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
+
+      - unit-tests-coverage:
+          requires:
+            - run-unit-tests
+          <<: *only-master-filter
   templates:
     jobs:
       - generator
@@ -465,5 +470,4 @@ workflows:
           requires:
             - install-operator
             - build-push-3scale-nightly-images
-      - unit-tests-coverage
     <<: *nightly-trigger
