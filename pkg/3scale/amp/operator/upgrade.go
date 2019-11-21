@@ -281,15 +281,12 @@ func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, e
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseImageStream() (reconcile.Result, error) {
-	if u.Cr.Spec.System.DatabaseSpec.MySQL != nil {
-		return u.upgradeSystemMySQLImageStream()
-	}
-
 	if u.Cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
 		return u.upgradeSystemPostgreSQLImageStream()
+	} else {
+		// default is MySQL
+		return u.upgradeSystemMySQLImageStream()
 	}
-
-	return reconcile.Result{}, fmt.Errorf("System database is not set")
 }
 
 func (u *UpgradeApiManager) upgradeSystemMySQLImageStream() (reconcile.Result, error) {
