@@ -1,7 +1,7 @@
 # 3scale-operator
 
 [![CircleCI](https://circleci.com/gh/3scale/3scale-operator/tree/master.svg?style=svg)](https://circleci.com/gh/3scale/3scale-operator/tree/master)
-[![codecov](https://codecov.io/gh/eguzki/3scale-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/eguzki/3scale-operator)
+[![codecov](https://codecov.io/gh/3scale/3scale-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/3scale/3scale-operator)
 
 This software is licensed under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
 
