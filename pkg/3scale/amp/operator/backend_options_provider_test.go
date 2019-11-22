@@ -116,11 +116,7 @@ func TestGetBackendOptions(t *testing.T) {
 			}
 
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := OperatorBackendOptionsProvider{
-				APIManagerSpec: &apimanager.Spec,
-				Namespace:      namespace,
-				Client:         cl,
-			}
+			optsProvider := NewOperatorBackendOptionsProvider(&apimanager.Spec, namespace, cl)
 			_, err := optsProvider.GetBackendOptions()
 			if err != nil {
 				t.Error(err)
