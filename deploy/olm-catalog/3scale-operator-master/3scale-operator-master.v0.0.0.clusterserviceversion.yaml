@@ -166,7 +166,6 @@ spec:
                 - name: SYSTEM_MEMCACHED_IMAGE
                   value: "memcached:1.5"
                 image: quay.io/3scale/3scale-operator:master
-                imagePullPolicy: Always
                 name: 3scale-operator
                 resources: {}
               serviceAccountName: 3scale-operator
