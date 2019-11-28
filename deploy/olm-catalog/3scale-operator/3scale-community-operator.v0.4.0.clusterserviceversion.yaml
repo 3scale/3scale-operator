@@ -98,16 +98,15 @@ spec:
 
     ### Supported Features
     * **Installer** A way to install a 3scale API Management solution, providing configurability options at the time of installation
+    * **Upgrade** Upgrade from previously installed 3scale API Management solution
+    * **Reconcilliation** Tunable CRD parameters after 3scale API Management solution is installed
     * **Capabilities** Ability to define 3scale API definitions and set them into a 3scale API Management solution
-
-    ### Upgrading your installation
-    Currently upgrading feature is not available.
 
     ### Documentation
     Documentation can be found on our [website](https://github.com/3scale/3scale-operator/blob/v0.4.0/doc/user-guide.md).
 
     ### Getting help
-    If you encounter any issues while using 3scale operator, you can create an issue on our [website](https://github.com/3scale/3scale-operator) for bugs, enhancements, or other requests.
+    If you encounter any issues while using 3scale operator, you can create an issue on our [Github repo](https://github.com/3scale/3scale-operator) for bugs, enhancements, or other requests.
 
     ### Contributing
     You can contribute by:
