@@ -277,7 +277,7 @@ spec:
     type: MultiNamespace
   - supported: false
     type: AllNamespaces
-  maturity: alpha
+  maturity: stable
   provider:
     name: Red Hat
   links:
