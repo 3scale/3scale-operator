@@ -141,8 +141,11 @@ oc delete crds apimanagers.apps.3scale.net
 
 ### Deploy custom 3scale Operator using OLM
 
-To install this operator on OpenShift 4 for end-to-end testing,
-create the [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster)
+To install this operator on OpenShift 4 using OLM for end-to-end testing, 
+
+* [Push an operator bundle into external app registry](#push-an-operator-bundle-into-external-app-registry).
+
+* Create the [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster)
 provided in `deploy/olm-catalog/3scale-operatorsource.yaml` to load your operator bundle in OpenShift.
 
 ```bash
@@ -218,19 +221,19 @@ make verify-manifest
 
 * Get quay token
 
-Howto [here](https://github.com/operator-framework/operator-courier/#authentication)
+Detailed information on this [guide](https://github.com/operator-framework/operator-courier/#authentication)
 
 ```bash
 curl -sH "Content-Type: application/json" -XPOST https://quay.io/cnr/api/v1/users/login -d '{"user": {"username": "YOURUSERNAME", "password": "YOURPASSWORD"}}' | jq '.token'
 ```
 
-Push bundle
+* Push bundle to Quay.io
+
+Detailed information on this [guide](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#push-to-quayio).
 
 ```bash
 make push-manifest APPLICATION_REPOSITORY_NAMESPACE=YOUR_QUAY_NAMESPACE MANIFEST_RELEASE=1.0.0 TOKEN=YOUR_TOKEN
 ```
-
-More info on [pushing to quai.io](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#push-to-quayio).
 
 ## Licenses management
 
