@@ -145,7 +145,7 @@ To install this operator on OpenShift 4 using OLM for end-to-end testing,
 
 * [Push an operator bundle into external app registry](#push-an-operator-bundle-into-external-app-registry).
 
-* Create the [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#linking-the-quay-application-repository-to-your-openshift-40-cluster)
+* Create the [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#4-create-the-operatorsource)
 provided in `deploy/olm-catalog/3scale-operatorsource.yaml` to load your operator bundle in OpenShift.
 
 ```bash
