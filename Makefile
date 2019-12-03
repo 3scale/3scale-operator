@@ -24,7 +24,7 @@ vendor:
 IMAGE ?= quay.io/3scale/3scale-operator
 SOURCE_VERSION ?= master
 VERSION ?= v0.0.1
-NAMESPACE ?= operator-test
+NAMESPACE ?= $(shell oc project -q 2>/dev/null || echo operator-test)
 OPERATOR_NAME ?= threescale-operator
 MANIFEST_RELEASE ?= 1.0.$(shell git rev-list --count master)
 APPLICATION_REPOSITORY_NAMESPACE ?= 3scaleoperatormaster
