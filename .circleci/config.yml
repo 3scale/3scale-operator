@@ -235,15 +235,6 @@ commands:
           name: Build Operator
           command: |
               make build IMAGE=172.30.1.1:5000/openshift/3scale-operator VERSION=test
-
-  unit-tests:
-    steps:
-      - checkout
-      - run: make vendor
-      - run:
-          name: Run unit tests in pkg folder
-          command: |
-            make unit
 jobs:
   install-operator:
     docker:
@@ -342,7 +333,21 @@ jobs:
       - image: circleci/golang:1.12.5
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
-      - unit-tests
+      - checkout
+      - run: make vendor
+      - run:
+          name: Run unit tests in pkg folder
+          command: |
+            make unit
+      - run:
+          name: Sharing requirements to downstream job
+          command: |
+            mkdir -p /tmp/workspace/coverage
+            cp unit.cov /tmp/workspace/coverage
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - coverage/unit.cov
 
   run-operator-e2e-test:
     machine:
@@ -375,6 +380,15 @@ jobs:
             make e2e-run IMAGE=172.30.1.1:5000/openshift/3scale-operator:test NAMESPACE=operator-test
           no_output_timeout: 30m
       - oc-status
+      - run:
+          name: Sharing requirements to downstream job
+          command: |
+            mkdir -p /tmp/workspace/coverage
+            cp integration.cov /tmp/workspace/coverage
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - coverage/integration.cov
 
   generator:
     docker:
@@ -411,16 +425,17 @@ jobs:
       - run: sudo pip3 install operator-courier
       - run: make verify-manifest
 
-  unit-tests-coverage:
+  publish-coverage:
     docker:
       - image: circleci/golang:1.12.5
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
-      - unit-tests
+      - attach-workspace
       - run:
           name: Report to Codecov
           command: |
-            cp _output/unit.cov coverage.txt
+            echo "mode: count" > coverage.txt
+            tail -q -n +2 /tmp/workspace/coverage/*.cov >> coverage.txt
             bash <(curl -s https://codecov.io/bash)
 
 workflows:
@@ -435,9 +450,10 @@ workflows:
       - run-operator-e2e-test:
           requires:
             - install-operator
-      - unit-tests-coverage:
+      - publish-coverage:
           requires:
             - run-unit-tests
+            - run-operator-e2e-test
           <<: *only-master-filter
   templates:
     jobs:
