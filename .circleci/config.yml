@@ -2,6 +2,10 @@ version: 2.1
 
 ##################################### YAML ANCHORS  ############################################
 
+tag-triggerr: &tag-trigger
+  tags:
+    only: /^v.*/
+
 only-master-filter: &only-master-filter
   filters:
     branches:
@@ -431,23 +435,6 @@ workflows:
       - run-operator-e2e-test:
           requires:
             - install-operator
-      - tag-operator-image-master:
-          context: org-global
-          requires:
-            - run-operator-e2e-test
-          filters:
-            branches:
-              only: master
-      - tag-operator-image-release:
-          context: org-global
-          requires:
-            - run-operator-e2e-test
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-
       - unit-tests-coverage:
           requires:
             - run-unit-tests
@@ -471,3 +458,23 @@ workflows:
             - install-operator
             - build-push-3scale-nightly-images
     <<: *nightly-trigger
+  operator-release:
+    jobs:
+      - install-operator:
+          filters:
+            <<: *tag-trigger
+      - tag-operator-image-master:
+          context: org-global
+          requires:
+            - install-operator
+          filters:
+            branches:
+              only: master
+      - tag-operator-image-release:
+          context: org-global
+          requires:
+            - install-operator
+          filters:
+            <<: *tag-trigger
+            branches:
+              ignore: /.*/
