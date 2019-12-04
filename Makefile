@@ -69,7 +69,7 @@ e2e: e2e-clean e2e-setup e2e-run
 
 $(PROJECT_PATH)/_output/unit.cov:
 	mkdir -p "$(PROJECT_PATH)/_output"
-	go test ./pkg/... -v -covermode=count -test.coverprofile="$(PROJECT_PATH)/_output/unit.cov"
+	go test ./pkg/... -v -tags=unit -covermode=count -coverprofile $(PROJECT_PATH)/_output/unit.cov -coverpkg ./...
 
 ## unit: Run unit tests in pkg directory
 .PHONY: unit
