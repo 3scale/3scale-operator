@@ -71,13 +71,6 @@ func buildTemplateParameters() []templatev1.Parameter {
 			Required:    true,
 			Value:       "3scale",
 		},
-		templatev1.Parameter{
-			Name:        "RWX_STORAGE_CLASS",
-			Description: "The Storage Class to be used by ReadWriteMany PVCs",
-			Required:    false,
-			Value:       "null",
-			//Value: "null", //TODO this is incorrect. The value that should be used at the end is null and not "null", however template parameters only accept strings.
-		},
 	}
 	return parameters
 }

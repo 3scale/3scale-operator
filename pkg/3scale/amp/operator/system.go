@@ -79,13 +79,6 @@ func (o *OperatorSystemOptionsProvider) setSecretBasedOptions(builder *component
 		return fmt.Errorf("unable to create System SMTP secret options - %s", err)
 	}
 
-	if o.APIManagerSpec.System.FileStorageSpec != nil && o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
-		err = o.setAWSSecretOptions(builder)
-		if err != nil {
-			return fmt.Errorf("unable to create AWS S3 secret options - %s", err)
-		}
-	}
-
 	return nil
 }
 
@@ -246,66 +239,45 @@ func (o *OperatorSystemOptionsProvider) setResourceRequirementsOptions(b *compon
 	}
 }
 
-func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.SystemOptionsBuilder) {
+func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.SystemOptionsBuilder) error {
+	var err error
 	if o.APIManagerSpec.System != nil &&
 		o.APIManagerSpec.System.FileStorageSpec != nil &&
 		o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
-		s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
-		b.S3FileStorageOptions(component.S3FileStorageOptions{
-			AWSAccessKeyId:       "",
-			AWSSecretAccessKey:   "",
-			AWSRegion:            s3FileStorageSpec.AWSRegion,
-			AWSBucket:            s3FileStorageSpec.AWSBucket,
-			AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
-		})
-	} else {
-		// default to PVC
-		var storageClass *string
-		if o.APIManagerSpec.System != nil &&
-			o.APIManagerSpec.System.FileStorageSpec != nil &&
-			o.APIManagerSpec.System.FileStorageSpec.PVC != nil {
-			storageClass = o.APIManagerSpec.System.FileStorageSpec.PVC.StorageClassName
-		}
-
-		b.PVCFileStorageOptions(component.PVCFileStorageOptions{
-			StorageClass: storageClass,
-		})
+		err = o.setS3FileStorageOptions(b)
+	} else { // default to PVC
+		o.setPVCFileStorageOptions(b)
 	}
+
+	return err
 }
 
-func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.SystemOptionsBuilder) error {
-	awsCredentialsSecretName := o.APIManagerSpec.System.FileStorageSpec.S3.AWSCredentials.Name
-	currSecret, err := helper.GetSecret(awsCredentialsSecretName, o.Namespace, o.Client)
+func (o *OperatorSystemOptionsProvider) setS3FileStorageOptions(b *component.SystemOptionsBuilder) error {
+	s3ConfigurationSecretName := o.APIManagerSpec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name
+	_, err := helper.GetSecret(s3ConfigurationSecretName, o.Namespace, o.Client)
 	if err != nil {
 		return err
 	}
 
-	// If a field of a secret already exists in the deployed secret then
-	// We do not modify it. Otherwise we set a default value
-	secretData := currSecret.Data
-	var result *string
-	result = helper.GetSecretDataValue(secretData, component.S3SecretAWSAccessKeyIdFieldName)
-	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSAccessKeyIdFieldName, awsCredentialsSecretName)
-	}
-	awsAccessKeyID := *result
-
-	result = helper.GetSecretDataValue(secretData, component.S3SecretAWSSecretAccessKeyFieldName)
-	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSSecretAccessKeyFieldName, awsCredentialsSecretName)
-	}
-	awsSecretAccessKeyID := *result
-
 	s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
-	sob.S3FileStorageOptions(component.S3FileStorageOptions{
-		AWSAccessKeyId:       awsAccessKeyID,
-		AWSSecretAccessKey:   awsSecretAccessKeyID,
-		AWSRegion:            s3FileStorageSpec.AWSRegion,
-		AWSBucket:            s3FileStorageSpec.AWSBucket,
-		AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
+	b.S3FileStorageOptions(component.S3FileStorageOptions{
+		S3ConfigSecret: s3FileStorageSpec.ConfigurationSecretRef.Name,
 	})
 
 	return nil
+}
+
+func (o *OperatorSystemOptionsProvider) setPVCFileStorageOptions(b *component.SystemOptionsBuilder) {
+	var storageClass *string
+	if o.APIManagerSpec.System != nil &&
+		o.APIManagerSpec.System.FileStorageSpec != nil &&
+		o.APIManagerSpec.System.FileStorageSpec.PVC != nil {
+		storageClass = o.APIManagerSpec.System.FileStorageSpec.PVC.StorageClassName
+	}
+
+	b.PVCFileStorageOptions(component.PVCFileStorageOptions{
+		StorageClass: storageClass,
+	})
 }
 
 func (o *OperatorSystemOptionsProvider) setReplicas(sob *component.SystemOptionsBuilder) {

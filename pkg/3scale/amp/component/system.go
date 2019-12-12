@@ -87,19 +87,31 @@ const (
 )
 
 const (
-	SystemFileStoragePVCName = "system-storage"
+	SystemFileStoragePVCName      = "system-storage"
+	SystemFileStorageS3VolumeName = "file-storage-s3-config"
 )
 
 type System struct {
 	Options *SystemOptions
 }
 
+type SystemFileStorageType string
+
+const (
+	SystemFileStorageTypePVC = "pvc"
+	SystemFileStorageTypeS3  = "s3"
+)
+
 func NewSystem(options *SystemOptions) *System {
 	return &System{Options: options}
 }
 
 func (system *System) Objects() []common.KubernetesObject {
-	sharedStorage := system.SharedStorage()
+	objects := []common.KubernetesObject{}
+	if system.fileStorageIsPVC() {
+		objects = append(objects, system.SharedStorage())
+	}
+
 	providerService := system.ProviderService()
 	masterService := system.MasterService()
 	developerService := system.DeveloperService()
@@ -124,8 +136,7 @@ func (system *System) Objects() []common.KubernetesObject {
 	appSecret := system.AppSecret()
 	memcachedSecret := system.MemcachedSecret()
 
-	objects := []common.KubernetesObject{
-		sharedStorage,
+	objects = append(objects,
 		providerService,
 		masterService,
 		developerService,
@@ -144,7 +155,7 @@ func (system *System) Objects() []common.KubernetesObject {
 		recaptchaSecret,
 		appSecret,
 		memcachedSecret,
-	}
+	)
 	return objects
 }
 
@@ -266,16 +277,6 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	systemBackendInternalAPIPass := envVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", "backend-internal-api", "password")
 	result = append(result, systemBackendInternalAPIUser, systemBackendInternalAPIPass)
 
-	if system.Options.s3FileStorageOptions != nil {
-		result = append(result,
-			envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-			envVarFromSecret("AWS_ACCESS_KEY_ID", system.Options.s3FileStorageOptions.AWSCredentialsSecret, S3SecretAWSAccessKeyIdFieldName),
-			envVarFromSecret("AWS_SECRET_ACCESS_KEY", system.Options.s3FileStorageOptions.AWSCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
-			envVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
-			envVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
-		)
-	}
-
 	return result
 }
 
@@ -331,8 +332,6 @@ func (system *System) EnvironmentConfigMap() *v1.ConfigMap {
 
 func (system *System) AddS3ConfigIntoEnvironmentConfigMap(configMap *v1.ConfigMap) {
 	configMap.Data["FILE_UPLOAD_STORAGE"] = "s3"
-	configMap.Data["AWS_BUCKET"] = system.Options.s3FileStorageOptions.AWSBucket
-	configMap.Data["AWS_REGION"] = system.Options.s3FileStorageOptions.AWSRegion
 }
 
 func (system *System) MemcachedSecret() *v1.Secret {
@@ -496,9 +495,7 @@ func (system *System) MasterApicastSecret() *v1.Secret {
 
 func (system *System) appPodVolumes() []v1.Volume {
 	res := []v1.Volume{}
-	if system.Options.pvcFileStorageOptions != nil {
-		res = append(res, system.FileStorageVolume())
-	}
+	res = append(res, system.fileStorageVolume())
 
 	systemConfigVolume := v1.Volume{
 		Name: "system-config",
@@ -530,9 +527,9 @@ func (system *System) appPodVolumes() []v1.Volume {
 }
 
 func (system *System) volumeNamesForSystemAppPreHookPod() []string {
-	res := []string{}
-	if system.Options.pvcFileStorageOptions != nil {
-		res = append(res, SystemFileStoragePVCName)
+	SystemFileStorageVolumeName := system.fileStorageVolume().Name
+	res := []string{
+		SystemFileStorageVolumeName,
 	}
 	return res
 }
@@ -752,7 +749,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (system *System) FileStorageVolume() v1.Volume {
+func (system *System) pvcFileStorageVolume() v1.Volume {
 	return v1.Volume{
 		Name: SystemFileStoragePVCName,
 		VolumeSource: v1.VolumeSource{
@@ -764,6 +761,33 @@ func (system *System) FileStorageVolume() v1.Volume {
 	}
 }
 
+func (system *System) s3FileStorageVolume() v1.Volume {
+	return v1.Volume{
+		// TODO here we could use the secret name provided as the volume name but
+		// this means if the secret name changes the value that arrives here would
+		// change too. Do we really want to allow that to happen/reconcile it?
+		Name: SystemFileStorageS3VolumeName,
+		VolumeSource: v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{
+				SecretName: system.Options.s3FileStorageOptions.S3ConfigSecret,
+			},
+		},
+	}
+}
+
+func (system *System) fileStorageVolume() v1.Volume {
+	if system.Options.pvcFileStorageOptions != nil {
+		return system.pvcFileStorageVolume()
+	}
+
+	if system.Options.s3FileStorageOptions != nil {
+		return system.s3FileStorageVolume()
+	}
+
+	// TODO should we panic? what would be best approach here?
+	panic("One of the volume types should be defined")
+}
+
 func (system *System) SidekiqPodVolumes() []v1.Volume {
 	res := []v1.Volume{}
 	systemTmpVolume := v1.Volume{
@@ -773,9 +797,7 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 	}
 
 	res = append(res, systemTmpVolume)
-	if system.Options.pvcFileStorageOptions != nil {
-		res = append(res, system.FileStorageVolume())
-	}
+	res = append(res, system.fileStorageVolume())
 
 	systemConfigVolume := v1.Volume{
 		Name: "system-config",
@@ -895,26 +917,57 @@ func (system *System) systemConfigVolumeMount() v1.VolumeMount {
 	}
 }
 
-func (system *System) appCommonContainerVolumeMounts(systemStorageReadonly bool) []v1.VolumeMount {
-	res := []v1.VolumeMount{}
-	if system.Options.pvcFileStorageOptions != nil {
-		res = append(res, system.systemStorageVolumeMount(systemStorageReadonly))
+func (system *System) fileStorageVolumeMountPath() string {
+	if system.fileStorageVolume().PersistentVolumeClaim != nil {
+		return system.pvcFileStorageVolumeMountPath()
 	}
+	if system.fileStorageVolume().Secret != nil {
+		return system.s3FileStorageVolumeMountPath()
+	}
+
+	// Should we panic?
+	panic("At least one of both file storages types has to be set")
+}
+
+func (system *System) s3FileStorageVolumeMountPath() string {
+	return "/opt/system-filestorage-config"
+}
+
+func (system *System) pvcFileStorageVolumeMountPath() string {
+	return "/opt/system/public/system"
+}
+
+func (system *System) fileStorageVolumeMount(readOnly bool) v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      system.fileStorageVolume().Name,
+		ReadOnly:  readOnly,
+		MountPath: system.fileStorageVolumeMountPath(),
+	}
+}
+
+func (system *System) appCommonContainerVolumeMounts(fileStorageReadonly bool) []v1.VolumeMount {
+	res := []v1.VolumeMount{}
+	res = append(res, system.fileStorageVolumeMount(fileStorageReadonly))
 	res = append(res, system.systemConfigVolumeMount())
 
 	return res
 }
 
+func (system *System) fileStorageIsPVC() bool {
+	return system.fileStorageVolume().PersistentVolumeClaim != nil
+}
+
 func (system *System) appMasterContainerVolumeMounts() []v1.VolumeMount {
-	return system.appCommonContainerVolumeMounts(false)
+	return system.appCommonContainerVolumeMounts(!system.fileStorageIsPVC())
 }
 
 func (system *System) appProviderContainerVolumeMounts() []v1.VolumeMount {
-	return system.appCommonContainerVolumeMounts(false)
+	return system.appCommonContainerVolumeMounts(!system.fileStorageIsPVC())
 }
 
 func (system *System) appDeveloperContainerVolumeMounts() []v1.VolumeMount {
-	// TODO why system-app developer container has the system-config volume set to true? is it really necessary?
+	// TODO why system-app developer container has the system-storage VolumeMount set
+	// to readonly true? is it really necessary?
 	// other containers in the same pod have it to false
 	return system.appCommonContainerVolumeMounts(true)
 }
@@ -922,7 +975,7 @@ func (system *System) appDeveloperContainerVolumeMounts() []v1.VolumeMount {
 func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
 	res := []v1.VolumeMount{}
 	if system.Options.pvcFileStorageOptions != nil {
-		res = append(res, system.systemStorageVolumeMount(false))
+		res = append(res, system.fileStorageVolumeMount(!system.fileStorageIsPVC()))
 	}
 	systemTmpVolumeMount := v1.VolumeMount{
 		Name:      "system-tmp",
@@ -941,7 +994,7 @@ func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
 			Kind:       "PersistentVolumeClaim",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-storage",
+			Name: SystemFileStoragePVCName,
 			Labels: map[string]string{
 				"app":                          system.Options.appLabel,
 				"threescale_component":         "system",
@@ -1291,22 +1344,5 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 		},
-	}
-}
-
-func (system *System) S3AWSSecret() *v1.Secret {
-	return &v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: system.Options.s3FileStorageOptions.AWSCredentialsSecret,
-		},
-		StringData: map[string]string{
-			S3SecretAWSAccessKeyIdFieldName:     system.Options.s3FileStorageOptions.AWSAccessKeyId,
-			S3SecretAWSSecretAccessKeyFieldName: system.Options.s3FileStorageOptions.AWSSecretAccessKey,
-		},
-		Type: v1.SecretTypeOpaque,
 	}
 }

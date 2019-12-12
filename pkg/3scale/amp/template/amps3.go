@@ -1,6 +1,7 @@
 package template
 
 import (
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/template/adapters"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -22,8 +23,18 @@ type AmpS3TemplateFactory struct {
 }
 
 func (f *AmpS3TemplateFactory) Adapters() []adapters.Adapter {
-	ampFactory := NewAmpTemplateFactory()
-	return append(ampFactory.Adapters(), adapters.NewS3Adapter(), &AmpS3TemplateAdapter{})
+	return []adapters.Adapter{
+		adapters.NewImagesAdapter(),
+		adapters.NewSystemMysqlImageAdapter(),
+		adapters.NewRedisAdapter(),
+		adapters.NewBackendAdapter(),
+		adapters.NewMysqlAdapter(),
+		adapters.NewMemcachedAdapter(),
+		adapters.NewSystemAdapter(component.SystemFileStorageTypeS3),
+		adapters.NewZyncAdapter(),
+		adapters.NewApicastAdapter(),
+		&AmpS3TemplateAdapter{},
+	}
 }
 
 func (f *AmpS3TemplateFactory) Type() TemplateType {

@@ -1,6 +1,7 @@
 package template
 
 import (
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/template/adapters"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -28,7 +29,7 @@ func (f *AmpTemplateFactory) Adapters() []adapters.Adapter {
 		adapters.NewBackendAdapter(),
 		adapters.NewMysqlAdapter(),
 		adapters.NewMemcachedAdapter(),
-		adapters.NewSystemAdapter(),
+		adapters.NewSystemAdapter(component.SystemFileStorageTypePVC),
 		adapters.NewZyncAdapter(),
 		adapters.NewApicastAdapter(),
 		&AmpTemplateAdapter{},

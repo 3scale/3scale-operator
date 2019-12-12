@@ -229,9 +229,14 @@ type SystemPVCSpec struct {
 }
 
 type SystemS3Spec struct {
-	AWSBucket      string                  `json:"awsBucket"`
-	AWSRegion      string                  `json:"awsRegion"`
-	AWSCredentials v1.LocalObjectReference `json:"awsCredentialsSecret"`
+	// TODO we now have a problem which is that some fields that were required
+	// when specifying S3 as the File Storage should no longer be required as
+	// the configuration is located in ConfigurationSecretName. What happens
+	// with existing installations?
+	AWSBucket              string                  `json:"awsBucket"`
+	AWSRegion              string                  `json:"awsRegion"`
+	AWSCredentials         v1.LocalObjectReference `json:"awsCredentialsSecret"`
+	ConfigurationSecretRef v1.LocalObjectReference `json:"configurationSecretRef"`
 }
 
 type SystemDatabaseSpec struct {

@@ -119,16 +119,19 @@ spec:
                         awsBucket:
                           type: string
                         awsCredentialsSecret:
+                          type: object
+                        awsRegion:
+                          type: string
+                        configurationSecretRef:
                           properties:
                             name:
                               type: string
                           type: object
-                        awsRegion:
-                          type: string
                       required:
                       - awsBucket
                       - awsRegion
                       - awsCredentialsSecret
+                      - configurationSecretRef
                       type: object
                     persistentVolumeClaim:
                       description: Union type. Only one of the fields can be set.

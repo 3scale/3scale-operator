@@ -116,7 +116,7 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconc
 func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
 	if r.apiManager.Spec.System.FileStorageSpec != nil &&
 		r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
-		return r.reconcileS3AWSSecret(system.S3AWSSecret())
+		return nil // Do we need to reconcile something?
 	}
 
 	return r.reconcileSharedStorage(system.SharedStorage())

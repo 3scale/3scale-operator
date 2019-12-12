@@ -7,14 +7,15 @@ import (
 )
 
 type System struct {
+	FileStorageType component.SystemFileStorageType
 }
 
-func NewSystemAdapter() Adapter {
-	return NewAppenderAdapter(&System{})
+func NewSystemAdapter(fileStorageType component.SystemFileStorageType) Adapter {
+	return NewAppenderAdapter(&System{FileStorageType: fileStorageType})
 }
 
 func (s *System) Parameters() []templatev1.Parameter {
-	return []templatev1.Parameter{
+	parameters := []templatev1.Parameter{
 		templatev1.Parameter{
 			Name:        "WILDCARD_DOMAIN",
 			Description: "Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com.",
@@ -121,6 +122,9 @@ func (s *System) Parameters() []templatev1.Parameter {
 			Description: "Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced",
 		},
 	}
+
+	parameters = append(parameters, s.fileStorageParameters()...)
+	return parameters
 }
 
 func (s *System) Objects() ([]common.KubernetesObject, error) {
@@ -161,6 +165,51 @@ func (s *System) options() (*component.SystemOptions, error) {
 	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
 	sob.TenantName("${TENANT_NAME}")
 	sob.WildcardDomain("${WILDCARD_DOMAIN}")
-	sob.PVCFileStorageOptions(component.PVCFileStorageOptions{StorageClass: nil})
+	s.setFileStorageOptions(&sob)
 	return sob.Build()
+}
+
+func (s *System) setFileStorageOptions(sob *component.SystemOptionsBuilder) {
+	switch s.FileStorageType {
+	case component.SystemFileStorageTypePVC:
+		// We set the storageClassName as nil even though the value comes
+		// as a template parameter in this case.
+		// The reason for this is that the PersistentVolumeClaim Kubernetes object
+		// requires a pointer to string to specify the StorageClassName. For this
+		// you need to reference it using OpenShift double-brace parameter
+		// expansion, which does not exist in Kubernetes. We take care of replacing
+		// the value with the double brace parameter expansion as a postProcess
+		// step after generating the template objects
+		sob.PVCFileStorageOptions(component.PVCFileStorageOptions{StorageClass: nil})
+	case component.SystemFileStorageTypeS3:
+		sob.S3FileStorageOptions(component.S3FileStorageOptions{
+			S3ConfigSecret: "${S3_CONFIGURATION_SECRET_NAME}",
+		})
+	default:
+		panic("s3 or pvc has to be set as system's file storage option")
+	}
+}
+
+func (s *System) fileStorageParameters() []templatev1.Parameter {
+	switch s.FileStorageType {
+	case component.SystemFileStorageTypePVC:
+		return []templatev1.Parameter{
+			templatev1.Parameter{
+				Name:        "RWX_STORAGE_CLASS",
+				Description: "The Storage Class to be used by ReadWriteMany System's PVC",
+				Required:    false,
+				Value:       "null", //TODO this is incorrect. The value that should be used at the end is null and not "null", however template parameters only accept strings.
+			},
+		}
+	case component.SystemFileStorageTypeS3:
+		return []templatev1.Parameter{
+			templatev1.Parameter{
+				Name:        "S3_CONFIGURATION_SECRET_NAME",
+				Description: "Name of the secret that contains S3 configuration for System's File Storage. The secret name needs to exist previously.",
+				Required:    true,
+			},
+		}
+	default:
+		panic("s3 or pvc has to be set as system's file storage option")
+	}
 }

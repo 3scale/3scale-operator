@@ -538,6 +538,7 @@ func (in *SystemPostgreSQLSpec) DeepCopy() *SystemPostgreSQLSpec {
 func (in *SystemS3Spec) DeepCopyInto(out *SystemS3Spec) {
 	*out = *in
 	out.AWSCredentials = in.AWSCredentials
+	out.ConfigurationSecretRef = in.ConfigurationSecretRef
 	return
 }
 
