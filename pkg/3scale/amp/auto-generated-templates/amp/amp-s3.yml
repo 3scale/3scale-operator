@@ -1612,8 +1612,6 @@ objects:
   data:
     AMP_RELEASE: ${AMP_RELEASE}
     APICAST_REGISTRY_URL: ${APICAST_REGISTRY_URL}
-    AWS_BUCKET: ${AWS_BUCKET}
-    AWS_REGION: ${AWS_REGION}
     FILE_UPLOAD_STORAGE: s3
     FORCE_SSL: "true"
     PROVIDER_PLAN: enterprise
@@ -1676,6 +1674,11 @@ objects:
               valueFrom:
                 configMapKeyRef:
                   key: APICAST_REGISTRY_URL
+                  name: system-environment
+            - name: FILE_UPLOAD_STORAGE
+              valueFrom:
+                configMapKeyRef:
+                  key: FILE_UPLOAD_STORAGE
                   name: system-environment
             - name: FORCE_SSL
               valueFrom:
@@ -1921,31 +1924,8 @@ objects:
                 secretKeyRef:
                   key: MASTER_ACCESS_TOKEN
                   name: system-seed
-            - name: FILE_UPLOAD_STORAGE
-              valueFrom:
-                configMapKeyRef:
-                  key: FILE_UPLOAD_STORAGE
-                  name: system-environment
-            - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  key: AWS_ACCESS_KEY_ID
-                  name: aws-auth
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: AWS_SECRET_ACCESS_KEY
-                  name: aws-auth
-            - name: AWS_BUCKET
-              valueFrom:
-                configMapKeyRef:
-                  key: AWS_BUCKET
-                  name: system-environment
-            - name: AWS_REGION
-              valueFrom:
-                configMapKeyRef:
-                  key: AWS_REGION
-                  name: system-environment
+            volumes:
+            - file-storage-s3-config
           failurePolicy: Retry
         timeoutSeconds: 1200
         updatePeriodSeconds: 1
@@ -1981,6 +1961,11 @@ objects:
               configMapKeyRef:
                 key: APICAST_REGISTRY_URL
                 name: system-environment
+          - name: FILE_UPLOAD_STORAGE
+            valueFrom:
+              configMapKeyRef:
+                key: FILE_UPLOAD_STORAGE
+                name: system-environment
           - name: FORCE_SSL
             valueFrom:
               configMapKeyRef:
@@ -2220,31 +2205,6 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
-          - name: FILE_UPLOAD_STORAGE
-            valueFrom:
-              configMapKeyRef:
-                key: FILE_UPLOAD_STORAGE
-                name: system-environment
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: AWS_ACCESS_KEY_ID
-                name: aws-auth
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: AWS_SECRET_ACCESS_KEY
-                name: aws-auth
-          - name: AWS_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_BUCKET
-                name: system-environment
-          - name: AWS_REGION
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_REGION
-                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2279,6 +2239,9 @@ objects:
               cpu: 50m
               memory: 600Mi
           volumeMounts:
+          - mountPath: /opt/system-filestorage-config
+            name: file-storage-s3-config
+            readOnly: true
           - mountPath: /opt/system-extra-configs
             name: system-config
         - args:
@@ -2301,6 +2264,11 @@ objects:
             valueFrom:
               configMapKeyRef:
                 key: APICAST_REGISTRY_URL
+                name: system-environment
+          - name: FILE_UPLOAD_STORAGE
+            valueFrom:
+              configMapKeyRef:
+                key: FILE_UPLOAD_STORAGE
                 name: system-environment
           - name: FORCE_SSL
             valueFrom:
@@ -2541,31 +2509,6 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
-          - name: FILE_UPLOAD_STORAGE
-            valueFrom:
-              configMapKeyRef:
-                key: FILE_UPLOAD_STORAGE
-                name: system-environment
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: AWS_ACCESS_KEY_ID
-                name: aws-auth
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: AWS_SECRET_ACCESS_KEY
-                name: aws-auth
-          - name: AWS_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_BUCKET
-                name: system-environment
-          - name: AWS_REGION
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_REGION
-                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2600,6 +2543,9 @@ objects:
               cpu: 50m
               memory: 600Mi
           volumeMounts:
+          - mountPath: /opt/system-filestorage-config
+            name: file-storage-s3-config
+            readOnly: true
           - mountPath: /opt/system-extra-configs
             name: system-config
         - args:
@@ -2621,6 +2567,11 @@ objects:
             valueFrom:
               configMapKeyRef:
                 key: APICAST_REGISTRY_URL
+                name: system-environment
+          - name: FILE_UPLOAD_STORAGE
+            valueFrom:
+              configMapKeyRef:
+                key: FILE_UPLOAD_STORAGE
                 name: system-environment
           - name: FORCE_SSL
             valueFrom:
@@ -2861,31 +2812,6 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
-          - name: FILE_UPLOAD_STORAGE
-            valueFrom:
-              configMapKeyRef:
-                key: FILE_UPLOAD_STORAGE
-                name: system-environment
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: AWS_ACCESS_KEY_ID
-                name: aws-auth
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: AWS_SECRET_ACCESS_KEY
-                name: aws-auth
-          - name: AWS_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_BUCKET
-                name: system-environment
-          - name: AWS_REGION
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_REGION
-                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2920,10 +2846,16 @@ objects:
               cpu: 50m
               memory: 600Mi
           volumeMounts:
+          - mountPath: /opt/system-filestorage-config
+            name: file-storage-s3-config
+            readOnly: true
           - mountPath: /opt/system-extra-configs
             name: system-config
         serviceAccountName: amp
         volumes:
+        - name: file-storage-s3-config
+          secret:
+            secretName: ${S3_CONFIGURATION_SECRET_NAME}
         - configMap:
             items:
             - key: zync.yml
@@ -3001,6 +2933,11 @@ objects:
               configMapKeyRef:
                 key: APICAST_REGISTRY_URL
                 name: system-environment
+          - name: FILE_UPLOAD_STORAGE
+            valueFrom:
+              configMapKeyRef:
+                key: FILE_UPLOAD_STORAGE
+                name: system-environment
           - name: FORCE_SSL
             valueFrom:
               configMapKeyRef:
@@ -3240,31 +3177,6 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
-          - name: FILE_UPLOAD_STORAGE
-            valueFrom:
-              configMapKeyRef:
-                key: FILE_UPLOAD_STORAGE
-                name: system-environment
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: AWS_ACCESS_KEY_ID
-                name: aws-auth
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: AWS_SECRET_ACCESS_KEY
-                name: aws-auth
-          - name: AWS_BUCKET
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_BUCKET
-                name: system-environment
-          - name: AWS_REGION
-            valueFrom:
-              configMapKeyRef:
-                key: AWS_REGION
-                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           name: system-sidekiq
@@ -3338,6 +3250,9 @@ objects:
         - emptyDir:
             medium: Memory
           name: system-tmp
+        - name: file-storage-s3-config
+          secret:
+            secretName: ${S3_CONFIGURATION_SECRET_NAME}
         - configMap:
             items:
             - key: zync.yml
@@ -4358,15 +4273,6 @@ objects:
       app: ${APP_LABEL}
       threescale_component: apicast
     name: apicast-environment
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    creationTimestamp: null
-    name: aws-auth
-  stringData:
-    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-  type: Opaque
 parameters:
 - description: AMP release tag.
   name: AMP_RELEASE
@@ -4505,6 +4411,10 @@ parameters:
 - description: Define the namespace to be used by System's Message Bus Redis Database.
     The empty value means not namespaced
   name: SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE
+- description: Name of the secret that contains S3 configuration for System's File
+    Storage. The secret name needs to exist previously.
+  name: S3_CONFIGURATION_SECRET_NAME
+  required: true
 - description: Password for the Zync Database PostgreSQL connection user.
   displayName: Zync Database PostgreSQL Connection Password
   from: '[a-zA-Z0-9]{16}'
@@ -4540,11 +4450,3 @@ parameters:
   name: APICAST_REGISTRY_URL
   required: true
   value: http://apicast-staging:8090/policies
-- description: AWS Access Key ID to use in S3 Storage for assets.
-  name: AWS_ACCESS_KEY_ID
-- description: AWS Access Key Secret to use in S3 Storage for assets.
-  name: AWS_SECRET_ACCESS_KEY
-- description: AWS S3 Bucket Name to use in S3 Storage for assets.
-  name: AWS_BUCKET
-- description: AWS Region to use in S3 Storage for assets.
-  name: AWS_REGION

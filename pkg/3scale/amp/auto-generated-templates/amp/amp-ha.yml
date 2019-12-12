@@ -3677,9 +3677,6 @@ parameters:
   name: TENANT_NAME
   required: true
   value: 3scale
-- description: The Storage Class to be used by ReadWriteMany PVCs
-  name: RWX_STORAGE_CLASS
-  value: "null"
 - name: AMP_BACKEND_IMAGE
   required: true
   value: quay.io/3scale/apisonator:nightly
@@ -3772,6 +3769,9 @@ parameters:
 - description: Define the namespace to be used by System's Message Bus Redis Database.
     The empty value means not namespaced
   name: SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE
+- description: The Storage Class to be used by ReadWriteMany System's PVC
+  name: RWX_STORAGE_CLASS
+  value: "null"
 - description: Password for the Zync Database PostgreSQL connection user.
   displayName: Zync Database PostgreSQL Connection Password
   from: '[a-zA-Z0-9]{16}'
