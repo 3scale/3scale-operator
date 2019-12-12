@@ -23,10 +23,6 @@ func (h *HAAdapter) Adapt(template *templatev1.Template) {
 	h.addParameters(template)
 	h.addObjects(template, haComponent)
 	h.postProcess(template, haComponent)
-
-	// update metadata
-	template.Name = "3scale-api-management-ha"
-	template.ObjectMeta.Annotations["description"] = "3scale API Management main system (High Availability)"
 }
 
 func (h *HAAdapter) postProcess(template *templatev1.Template, haComponent *component.HighAvailability) {

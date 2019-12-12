@@ -10,25 +10,12 @@ func init() {
 	TemplateFactories = append(TemplateFactories, NewAmpPostgresqlTemplateFactory)
 }
 
-type AmpPostgresqlTemplateAdapter struct {
+type AmpPostgreSQLTemplateAdapter struct {
 }
 
-func (a *AmpPostgresqlTemplateAdapter) Adapt(template *templatev1.Template) {
-	template.ObjectMeta.Name = "3scale-api-management-postgresql"
-	template.Message = "Login on https://${TENANT_NAME}-admin.${WILDCARD_DOMAIN} as ${ADMIN_USERNAME}/${ADMIN_PASSWORD}"
-	template.ObjectMeta.Annotations = a.buildAmpTemplateMetaAnnotations()
-}
-
-func (a *AmpPostgresqlTemplateAdapter) buildAmpTemplateMetaAnnotations() map[string]string {
-	annotations := map[string]string{
-		"openshift.io/display-name":          "3scale API Management",
-		"openshift.io/provider-display-name": "Red Hat, Inc.",
-		"iconClass":                          "icon-3scale",
-		"description":                        "3scale API Management main system with PostgreSQL as System's database",
-		"tags":                               "integration, api management, 3scale",
-	}
-
-	return annotations
+func (a *AmpPostgreSQLTemplateAdapter) Adapt(template *templatev1.Template) {
+	template.Name = "3scale-api-management-postgresql"
+	template.Annotations["description"] = "3scale API Management main system with PostgreSQL as System's database"
 }
 
 type AmpPostgresqlTemplateFactory struct {
@@ -45,7 +32,7 @@ func (f *AmpPostgresqlTemplateFactory) Adapters() []adapters.Adapter {
 		adapters.NewSystemAdapter(),
 		adapters.NewZyncAdapter(),
 		adapters.NewApicastAdapter(),
-		&AmpPostgresqlTemplateAdapter{},
+		&AmpPostgreSQLTemplateAdapter{},
 	}
 }
 

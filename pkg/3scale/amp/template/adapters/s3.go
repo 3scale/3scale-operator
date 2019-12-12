@@ -23,10 +23,6 @@ func (s *S3) Adapt(template *templatev1.Template) {
 	s.addParameters(template)
 	s.addObjects(template, s3Component)
 	s.postProcess(template, s3Component)
-
-	// update metadata
-	template.Name = "3scale-api-management-s3"
-	template.ObjectMeta.Annotations["description"] = "3scale API Management main system with shared file storage in AWS S3."
 }
 
 func (s *S3) postProcess(template *templatev1.Template, s3Component *component.S3) {

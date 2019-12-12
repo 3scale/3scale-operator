@@ -14,8 +14,7 @@ type AmpTemplateAdapter struct {
 }
 
 func (a *AmpTemplateAdapter) Adapt(template *templatev1.Template) {
-	template.ObjectMeta.Name = "3scale-api-management"
-	template.Message = "Login on https://${TENANT_NAME}-admin.${WILDCARD_DOMAIN} as ${ADMIN_USERNAME}/${ADMIN_PASSWORD}"
+	template.Name = "3scale-api-management"
 }
 
 type AmpTemplateFactory struct {

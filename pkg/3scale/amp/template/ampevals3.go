@@ -10,12 +10,12 @@ func init() {
 	TemplateFactories = append(TemplateFactories, NewAmpEvalS3TemplateFactory)
 }
 
-type EvalS3Adapter struct {
+type AmpEvalS3TemplateAdapter struct {
 }
 
-func (e *EvalS3Adapter) Adapt(template *templatev1.Template) {
+func (e *AmpEvalS3TemplateAdapter) Adapt(template *templatev1.Template) {
 	template.Name = "3scale-api-management-eval-s3"
-	template.ObjectMeta.Annotations["description"] = "3scale API Management main system (Evaluation) with shared file storage in AWS S3."
+	template.Annotations["description"] = "3scale API Management main system (Evaluation) with shared file storage in AWS S3."
 }
 
 type AmpEvalS3TemplateFactory struct {
@@ -26,7 +26,7 @@ func (f *AmpEvalS3TemplateFactory) Adapters() []adapters.Adapter {
 	evalAdapter := adapters.NewEvalAdapter()
 	s3Adapter := adapters.NewS3Adapter()
 
-	return append(ampFactory.Adapters(), evalAdapter, s3Adapter, &EvalS3Adapter{})
+	return append(ampFactory.Adapters(), evalAdapter, s3Adapter, &AmpEvalS3TemplateAdapter{})
 }
 
 func (f *AmpEvalS3TemplateFactory) Type() TemplateType {

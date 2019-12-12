@@ -14,10 +14,6 @@ func NewEvalAdapter() Adapter {
 }
 
 func (e *EvalAdapter) Adapt(template *templatev1.Template) {
-	// update metadata
-	template.Name = "3scale-api-management-eval"
-	template.ObjectMeta.Annotations["description"] = "3scale API Management main system (Evaluation)"
-
 	objects := helper.UnwrapRawExtensions(template.Objects)
 	evalComponent := component.NewEvaluation()
 	evalComponent.RemoveContainersResourceRequestsAndLimits(objects)
