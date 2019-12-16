@@ -18,10 +18,10 @@ import (
 const (
 	ThreescaleVersionAnnotation = "apps.3scale.net/apimanager-threescale-version"
 	OperatorVersionAnnotation   = "apps.3scale.net/threescale-operator-version"
+	Default3scaleAppLabel       = "3scale-api-management"
 )
 
 const (
-	defaultAppLabel                    = "3scale-api-management"
 	defaultTenantName                  = "3scale"
 	defaultImageStreamImportInsecure   = false
 	defaultResourceRequirementsEnabled = true
@@ -470,7 +470,7 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
 
-	tmpDefaultAppLabel := defaultAppLabel
+	tmpDefaultAppLabel := Default3scaleAppLabel
 	tmpDefaultTenantName := defaultTenantName
 	tmpDefaultImageStreamTagImportInsecure := defaultImageStreamImportInsecure
 	tmpDefaultResourceRequirementsEnabled := defaultResourceRequirementsEnabled
