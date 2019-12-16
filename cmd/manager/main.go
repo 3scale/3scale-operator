@@ -14,10 +14,13 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/apis"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/controller"
 	"github.com/3scale/3scale-operator/version"
-	"github.com/prometheus/client_golang/prometheus"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -27,10 +30,12 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
 	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -127,6 +132,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Setup Scheme for all monitoring resources
+	if err := monitoringv1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	// Setup Scheme for all grafana resources
+	if err := grafanav1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
@@ -189,6 +206,12 @@ func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
 	service, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
 	if err != nil {
 		log.Info("Could not create metrics Service", "error", err.Error())
+	}
+
+	// Adding the monitoring-key:middleware to the operator service which will get propagated to the serviceMonitor
+	err = addMonitoringKeyLabelToOperatorService(ctx, cfg, service)
+	if err != nil {
+		log.Error(err, "Could not add monitoring-key label to operator metrics Service")
 	}
 
 	// CreateServiceMonitors will automatically create the prometheus-operator ServiceMonitor resources
@@ -297,4 +320,31 @@ func filterGKVsFromAddToScheme(gvks []schema.GroupVersionKind) []schema.GroupVer
 	}
 
 	return ownGVKs
+}
+
+func addMonitoringKeyLabelToOperatorService(ctx context.Context, cfg *rest.Config, service *v1.Service) error {
+	if service == nil {
+		return fmt.Errorf("service doesn't exist")
+	}
+
+	kclient, err := client.New(cfg, client.Options{})
+	if err != nil {
+		return err
+	}
+
+	updatedLabels := map[string]string{
+		"monitoring-key": common.MonitoringKey,
+		"app":            appsv1alpha1.Default3scaleAppLabel,
+	}
+	for k, v := range service.ObjectMeta.Labels {
+		updatedLabels[k] = v
+	}
+	service.ObjectMeta.Labels = updatedLabels
+
+	err = kclient.Update(ctx, service)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
