@@ -326,3 +326,15 @@ existing secret names.
 | --- | --- | --- |
 | AWS_ACCESS_KEY_ID | AWS Access Key ID to use in S3 Storage for System's file storage | N/A |
 | AWS_SECRET_ACCESS_KEY | AWS Access Key Secret to use in S3 Storage for System's file storage | N/A |
+
+#### system-smtp
+
+| **Field** | **Description** | **Default value** |
+| --- | --- | --- |
+| address | Address (hostname or IP) of the remote mail server to use. If set to a value different than `""` System will use the mail server to send mails related to events that happen in the API management solution |  `""` |
+| port | Port of the remote mail server to use | `""` |
+| domain | In case the mail server requires a HELO domain | `""` |
+| authentication | In case the mail server requires authentication, set this setting to the authentication type here. `plain` to send the password in the clear, `login` to send password Base64 encoded, or `cram_md5` to combine a Challenge/Response mechanism based on the HMAC-MD5 algorithm | `""` |
+| username | In case the mail server requires authentication and the authentication type requires it | `""` |
+| password | In case the mail server requires authentication and the authentication type requires it | `""` |
+| openssl.verify.mode | When using TLS, you can set how OpenSSL checks the certificate. This is really useful if you need to validate a self-signed and/or a wildcard certificate. You can use the name of an OpenSSL verify constant: `none` or `peer` | `""` |
