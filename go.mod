@@ -4,12 +4,15 @@ go 1.13
 
 require (
 	github.com/3scale/3scale-porta-go-client v0.0.3
+	github.com/Azure/go-autorest v12.2.0+incompatible
 	github.com/RHsyseng/operator-utils v0.0.0-20200204194854-c5b0d8533458
+	github.com/coreos/prometheus-operator v0.34.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.4
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/google/go-cmp v0.3.1
+	github.com/integr8ly/grafana-operator/v3 v3.1.0
 	github.com/luci/go-render v0.0.0-20160219211803-9a04cc21af0f
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
