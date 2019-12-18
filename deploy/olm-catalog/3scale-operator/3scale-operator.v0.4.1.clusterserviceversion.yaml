@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: 3scale-operator.v0.4.0
+  name: 3scale-operator.v0.4.1
   namespace: placeholder
   annotations:
     repository: https://github.com/3scale/3scale-operator
@@ -9,7 +9,7 @@ metadata:
     categories: "Integration & Delivery"
     certified: "false"
     description: 3scale Operator to provision 3scale and publish/manage API
-    containerImage: registry.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-4
+    containerImage: registry.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-5
     createdAt: 2019-05-30T22:40:00Z
     support: Red Hat, Inc.
     tectonic-visibility: ocs
@@ -25,7 +25,7 @@ metadata:
        {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Plan","metadata":{"labels":{"api":"api01"},"name":"example-plan"},"spec":{"approvalRequired":false,"costs":{"costMonth":0,"setupFee":0},"default":true,"limitSelector":{"matchLabels":{"plan":"plan01"}},"trialPeriod":0}},
        {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Tenant","metadata":{"name":"example-tenant"},"spec":{"email":"admin@example.com","masterCredentialsRef":{"name":"system-seed"},"organizationName":"Example.com","passwordCredentialsRef":{"name":"ecorp-admin-secret"},"systemMasterUrl":"https://master.example.com","tenantSecretRef":{"name":"ecorp-tenant-secret","namespace":"operator-test"},"username":"admin"}}]
 spec:
-  replaces: 3scale-operator.v0.3.0
+  replaces: 3scale-operator.v0.4.0
   customresourcedefinitions:
     owned:
     - kind: APIManager
@@ -166,7 +166,7 @@ spec:
                   value: registry.stage.redhat.io/3scale-amp2/zync-rhel7:3scale2.7
                 - name: SYSTEM_MEMCACHED_IMAGE
                   value: registry.stage.redhat.io/3scale-amp2/memcached-rhel7:3scale2.7
-                image: registry.stage.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-4
+                image: registry.stage.redhat.io/3scale-amp2/3scale-rhel7-operator:1.10-5
                 imagePullPolicy: Always
                 name: 3scale-operator
                 resources: {}
