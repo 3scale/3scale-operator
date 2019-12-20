@@ -1,4 +1,4 @@
-package operator
+package helper
 
 import (
 	"context"
@@ -7,14 +7,14 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getSecretDataValueOrDefault(secretData map[string][]byte, fieldName string, defaultValue string) string {
+func GetSecretDataValueOrDefault(secretData map[string][]byte, fieldName string, defaultValue string) string {
 	if value, exists := secretData[fieldName]; exists {
 		return string(value)
 	}
 	return defaultValue
 }
 
-func getSecret(name string, namespace string, client k8sclient.Client) (*v1.Secret, error) {
+func GetSecret(name string, namespace string, client k8sclient.Client) (*v1.Secret, error) {
 	secret := &v1.Secret{}
 
 	objKey := k8sclient.ObjectKey{
@@ -30,7 +30,7 @@ func getSecret(name string, namespace string, client k8sclient.Client) (*v1.Secr
 	return secret, nil
 }
 
-func getSecretDataValue(secretData map[string][]byte, fieldName string) *string {
+func GetSecretDataValue(secretData map[string][]byte, fieldName string) *string {
 	if value, exists := secretData[fieldName]; exists {
 		resultStr := string(value)
 		return &resultStr
@@ -39,7 +39,7 @@ func getSecretDataValue(secretData map[string][]byte, fieldName string) *string 
 	}
 }
 
-func getSecretDataFromStringData(secretStringData map[string]string) map[string][]byte {
+func GetSecretDataFromStringData(secretStringData map[string]string) map[string][]byte {
 	result := map[string][]byte{}
 	for k, v := range secretStringData {
 		result[k] = []byte(v)
@@ -47,7 +47,7 @@ func getSecretDataFromStringData(secretStringData map[string]string) map[string]
 	return result
 }
 
-func getSecretStringDataFromData(secretData map[string][]byte) map[string]string {
+func GetSecretStringDataFromData(secretData map[string][]byte) map[string]string {
 	result := map[string]string{}
 	for k, v := range secretData {
 		result[k] = string(v)
@@ -58,7 +58,7 @@ func getSecretStringDataFromData(secretData map[string][]byte) map[string]string
 // Returns a new map containing the contents of `from` and the
 // contents of `to`. The value for entries with duplicated keys
 // will be that of `from`
-func mergeSecretData(from, to map[string][]byte) map[string][]byte {
+func MergeSecretData(from, to map[string][]byte) map[string][]byte {
 	result := map[string][]byte{}
 	for key := range to {
 		val := make([]byte, len(to[key]))

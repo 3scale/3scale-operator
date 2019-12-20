@@ -5,6 +5,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	oprand "github.com/3scale/3scale-operator/pkg/crypto/rand"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	v1 "k8s.io/api/core/v1"
@@ -60,45 +61,45 @@ func (o *OperatorBackendOptionsProvider) setBackendInternalApiOptions(b *compone
 	defaultSystemBackendUsername := "3scale_api_user"
 	defaultSystemBackendPassword := oprand.String(8)
 
-	currSecret, err := getSecret(component.BackendSecretInternalApiSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(component.BackendSecretInternalApiSecretName, o.Namespace, o.Client)
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	// when secret is not found, it behaves like an empty secret
 	secretData := currSecret.Data
-	b.SystemBackendUsername(getSecretDataValueOrDefault(secretData, component.BackendSecretInternalApiUsernameFieldName, defaultSystemBackendUsername))
-	b.SystemBackendPassword(getSecretDataValueOrDefault(secretData, component.BackendSecretInternalApiPasswordFieldName, defaultSystemBackendPassword))
+	b.SystemBackendUsername(helper.GetSecretDataValueOrDefault(secretData, component.BackendSecretInternalApiUsernameFieldName, defaultSystemBackendUsername))
+	b.SystemBackendPassword(helper.GetSecretDataValueOrDefault(secretData, component.BackendSecretInternalApiPasswordFieldName, defaultSystemBackendPassword))
 
 	return nil
 }
 
 func (o *OperatorBackendOptionsProvider) setBackendListenerOptions(b *component.BackendOptionsBuilder) error {
-	currSecret, err := getSecret(component.BackendSecretBackendListenerSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(component.BackendSecretBackendListenerSecretName, o.Namespace, o.Client)
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	secretData := currSecret.Data
-	b.ListenerServiceEndpoint(getSecretDataValue(secretData, component.BackendSecretBackendListenerServiceEndpointFieldName))
-	b.ListenerRouteEndpoint(getSecretDataValue(secretData, component.BackendSecretBackendListenerRouteEndpointFieldName))
+	b.ListenerServiceEndpoint(helper.GetSecretDataValue(secretData, component.BackendSecretBackendListenerServiceEndpointFieldName))
+	b.ListenerRouteEndpoint(helper.GetSecretDataValue(secretData, component.BackendSecretBackendListenerRouteEndpointFieldName))
 
 	return nil
 }
 
 func (o *OperatorBackendOptionsProvider) setBackendRedisOptions(b *component.BackendOptionsBuilder) error {
-	currSecret, err := getSecret(component.BackendSecretBackendRedisSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(component.BackendSecretBackendRedisSecretName, o.Namespace, o.Client)
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	secretData := currSecret.Data
-	b.RedisStorageURL(getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageURLFieldName))
-	b.RedisQueuesURL(getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesURLFieldName))
-	b.RedisStorageSentinelHosts(getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageSentinelHostsFieldName))
-	b.RedisStorageSentinelRole(getSecretDataValue(secretData, component.BackendSecretBackendRedisStorageSentinelRoleFieldName))
-	b.RedisQueuesSentinelHosts(getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelHostsFieldName))
-	b.RedisQueuesSentinelRole(getSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelRoleFieldName))
+	b.RedisStorageURL(helper.GetSecretDataValue(secretData, component.BackendSecretBackendRedisStorageURLFieldName))
+	b.RedisQueuesURL(helper.GetSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesURLFieldName))
+	b.RedisStorageSentinelHosts(helper.GetSecretDataValue(secretData, component.BackendSecretBackendRedisStorageSentinelHostsFieldName))
+	b.RedisStorageSentinelRole(helper.GetSecretDataValue(secretData, component.BackendSecretBackendRedisStorageSentinelRoleFieldName))
+	b.RedisQueuesSentinelHosts(helper.GetSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelHostsFieldName))
+	b.RedisQueuesSentinelRole(helper.GetSecretDataValue(secretData, component.BackendSecretBackendRedisQueuesSentinelRoleFieldName))
 
 	return nil
 }

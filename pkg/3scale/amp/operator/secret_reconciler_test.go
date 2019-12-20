@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -39,7 +41,7 @@ func TestDefaultsOnlySecretReconciler(t *testing.T) {
 			"a3": "a3Value",
 		},
 	}
-	existingSecret.Data = getSecretDataFromStringData(existingSecret.StringData)
+	existingSecret.Data = helper.GetSecretDataFromStringData(existingSecret.StringData)
 	if !defaultsOnlySecretReconciler.IsUpdateNeeded(desiredSecret, existingSecret) {
 		t.Fatal("when defaults can be applied, reconciler reported no update needed")
 	}
@@ -78,7 +80,7 @@ func TestDefaultsOnlySecretReconcilerNoUpdateNeeded(t *testing.T) {
 			"a2": "other_a2_value",
 		},
 	}
-	existingSecret.Data = getSecretDataFromStringData(existingSecret.StringData)
+	existingSecret.Data = helper.GetSecretDataFromStringData(existingSecret.StringData)
 	if defaultsOnlySecretReconciler.IsUpdateNeeded(desiredSecret, existingSecret) {
 		t.Fatal("when defaults cannot be applied, reconciler reported update needed")
 	}

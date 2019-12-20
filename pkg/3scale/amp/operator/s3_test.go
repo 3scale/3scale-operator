@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
@@ -22,7 +24,7 @@ func getTestSecret(namespace, secretName string, data map[string]string) *v1.Sec
 		StringData: data,
 		Type:       v1.SecretTypeOpaque,
 	}
-	secret.Data = getSecretDataFromStringData(secret.StringData)
+	secret.Data = helper.GetSecretDataFromStringData(secret.StringData)
 	return secret
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 func (o *OperatorS3OptionsProvider) GetS3Options() (*component.S3Options, error) {
@@ -35,7 +36,7 @@ func (o *OperatorS3OptionsProvider) setSecretBasedOptions(sob *component.S3Optio
 
 func (o *OperatorS3OptionsProvider) setAWSSecretOptions(sob *component.S3OptionsBuilder) error {
 	awsCredentialsSecretName := o.APIManagerSpec.System.FileStorageSpec.S3.AWSCredentials.Name
-	currSecret, err := getSecret(awsCredentialsSecretName, o.Namespace, o.Client)
+	currSecret, err := helper.GetSecret(awsCredentialsSecretName, o.Namespace, o.Client)
 	if err != nil {
 		return err
 	}
@@ -44,13 +45,13 @@ func (o *OperatorS3OptionsProvider) setAWSSecretOptions(sob *component.S3Options
 	// We do not modify it. Otherwise we set a default value
 	secretData := currSecret.Data
 	var result *string
-	result = getSecretDataValue(secretData, component.S3SecretAWSAccessKeyIdFieldName)
+	result = helper.GetSecretDataValue(secretData, component.S3SecretAWSAccessKeyIdFieldName)
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSAccessKeyIdFieldName, awsCredentialsSecretName)
 	}
 	sob.AwsAccessKeyId(*result)
 
-	result = getSecretDataValue(secretData, component.S3SecretAWSSecretAccessKeyFieldName)
+	result = helper.GetSecretDataValue(secretData, component.S3SecretAWSSecretAccessKeyFieldName)
 	if result == nil {
 		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSSecretAccessKeyFieldName, awsCredentialsSecretName)
 	}

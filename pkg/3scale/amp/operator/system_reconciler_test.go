@@ -71,7 +71,7 @@ func TestSystemReconcilerCreate(t *testing.T) {
 		{"systemSphinxqDC", "system-sphinx", &appsv1.DeploymentConfig{}},
 		{"systemCM", "system", &v1.ConfigMap{}},
 		{"systemEnvironmentCM", "system-environment", &v1.ConfigMap{}},
-		{"systemSMTPCM", "smtp", &v1.ConfigMap{}},
+		{"systemSMTPSecret", "system-smtp", &v1.Secret{}},
 		{"systemEventsHookSecret", component.SystemSecretSystemEventsHookSecretName, &v1.Secret{}},
 		{"systemRedisSecret", component.SystemSecretSystemRedisSecretName, &v1.Secret{}},
 		{"systemMasterApicastSecret", component.SystemSecretSystemMasterApicastSecretName, &v1.Secret{}},

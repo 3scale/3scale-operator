@@ -76,6 +76,17 @@ const (
 )
 
 const (
+	SystemSecretSystemSMTPSecretName                 = "system-smtp"
+	SystemSecretSystemSMTPAddressFieldName           = "address"
+	SystemSecretSystemSMTPUserNameFieldName          = "username"
+	SystemSecretSystemSMTPPasswordFieldName          = "password"
+	SystemSecretSystemSMTPDomainFieldName            = "domain"
+	SystemSecretSystemSMTPPortFieldName              = "port"
+	SystemSecretSystemSMTPAuthenticationFieldName    = "authentication"
+	SystemSecretSystemSMTPOpenSSLVerifyModeFieldName = "openssl.verify.mode"
+)
+
+const (
 	SystemFileStoragePVCName = "system-storage"
 )
 
@@ -101,7 +112,7 @@ func (system *System) Objects() []common.KubernetesObject {
 
 	systemConfigMap := system.SystemConfigMap()
 	environmentConfigMap := system.EnvironmentConfigMap()
-	smtpConfigMap := system.SMTPConfigMap()
+	smtpSecret := system.SMTPSecret()
 
 	eventsHookSecret := system.EventsHookSecret()
 
@@ -121,7 +132,7 @@ func (system *System) Objects() []common.KubernetesObject {
 		sphinxService,
 		memcachedService,
 		systemConfigMap,
-		smtpConfigMap,
+		smtpSecret,
 		environmentConfigMap,
 		appDeploymentConfig,
 		sidekiqDeploymentConfig,
@@ -155,30 +166,15 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 	return result
 }
 
-func (system *System) getSystemSmtpEnvsFromSMTPConfigMap() []v1.EnvVar {
-	// Add smtp configmap to sources
-	cfg := system.SMTPConfigMap()
-	cfgmapkeys := make([]string, 0, len(cfg.Data))
-	for key := range cfg.Data {
-		cfgmapkeys = append(cfgmapkeys, key)
-	}
-	sort.Strings(cfgmapkeys)
-
-	// This cannot be used because the config map keys currently
-	// do not have the same name than the envvar names in base_env
-	// for _, key := range cfgmapkeys {
-	// 	envvar := envVarFromConfigMap(key, "smtp", key)
-	// 	result = append(result, envvar)
-	// }
-
+func (system *System) getSystemSMTPEnvsFromSMTPSecret() []v1.EnvVar {
 	result := []v1.EnvVar{
-		envVarFromConfigMap("SMTP_ADDRESS", "smtp", "address"),
-		envVarFromConfigMap("SMTP_USER_NAME", "smtp", "username"),
-		envVarFromConfigMap("SMTP_PASSWORD", "smtp", "password"),
-		envVarFromConfigMap("SMTP_DOMAIN", "smtp", "domain"),
-		envVarFromConfigMap("SMTP_PORT", "smtp", "port"),
-		envVarFromConfigMap("SMTP_AUTHENTICATION", "smtp", "authentication"),
-		envVarFromConfigMap("SMTP_OPENSSL_VERIFY_MODE", "smtp", "openssl.verify.mode"),
+		envVarFromSecret("SMTP_ADDRESS", SystemSecretSystemSMTPSecretName, "address"),
+		envVarFromSecret("SMTP_USER_NAME", SystemSecretSystemSMTPSecretName, "username"),
+		envVarFromSecret("SMTP_PASSWORD", SystemSecretSystemSMTPSecretName, "password"),
+		envVarFromSecret("SMTP_DOMAIN", SystemSecretSystemSMTPSecretName, "domain"),
+		envVarFromSecret("SMTP_PORT", SystemSecretSystemSMTPSecretName, "port"),
+		envVarFromSecret("SMTP_AUTHENTICATION", SystemSecretSystemSMTPSecretName, "authentication"),
+		envVarFromSecret("SMTP_OPENSSL_VERIFY_MODE", SystemSecretSystemSMTPSecretName, "openssl.verify.mode"),
 	}
 
 	return result
@@ -213,6 +209,7 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 		envVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelHosts),
 		envVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelRole),
 	)
+
 	return result
 }
 
@@ -254,8 +251,8 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	bckListenerRouteEnv := envVarFromSecret("BACKEND_ROUTE", "backend-listener", "route_endpoint")
 	result = append(result, bckListenerApicastRouteEnv, bckListenerRouteEnv)
 
-	smtpEnvConfigMapEnvs := system.getSystemSmtpEnvsFromSMTPConfigMap()
-	result = append(result, smtpEnvConfigMapEnvs...)
+	smtpEnvSecretEnvs := system.getSystemSMTPEnvsFromSMTPSecret()
+	result = append(result, smtpEnvSecretEnvs...)
 
 	apicastAccessToken := envVarFromSecret("APICAST_ACCESS_TOKEN", SystemSecretSystemMasterApicastSecretName, "ACCESS_TOKEN")
 	result = append(result, apicastAccessToken)
@@ -1111,17 +1108,26 @@ func (system *System) MemcachedService() *v1.Service {
 	}
 }
 
-func (system *System) SMTPConfigMap() *v1.ConfigMap {
-	return &v1.ConfigMap{
+func (system *System) SMTPSecret() *v1.Secret {
+	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "ConfigMap",
+			Kind:       "Secret",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "smtp",
+			Name:   SystemSecretSystemSMTPSecretName,
 			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "smtp", "app": system.Options.appLabel},
 		},
-		Data: map[string]string{"address": "", "authentication": "", "domain": "", "openssl.verify.mode": "", "password": "", "port": "", "username": ""}}
+		StringData: map[string]string{
+			SystemSecretSystemSMTPAddressFieldName:           system.Options.smtpSecretOptions.Address,
+			SystemSecretSystemSMTPAuthenticationFieldName:    system.Options.smtpSecretOptions.Authentication,
+			SystemSecretSystemSMTPDomainFieldName:            system.Options.smtpSecretOptions.Domain,
+			SystemSecretSystemSMTPOpenSSLVerifyModeFieldName: system.Options.smtpSecretOptions.OpenSSLVerifyMode,
+			SystemSecretSystemSMTPPasswordFieldName:          system.Options.smtpSecretOptions.Password,
+			SystemSecretSystemSMTPPortFieldName:              system.Options.smtpSecretOptions.Port,
+			SystemSecretSystemSMTPUserNameFieldName:          system.Options.smtpSecretOptions.Username,
+		},
+	}
 }
 
 func (system *System) SystemConfigMap() *v1.ConfigMap {
