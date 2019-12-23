@@ -96,3 +96,19 @@ func DefaultSystemBackendUsername() string {
 func DefaultSystemBackendPassword() string {
 	return oprand.String(8)
 }
+
+func DefaultBackendStorageSentinelHosts() string {
+	return ""
+}
+
+func DefaultBackendStorageSentinelRole() string {
+	return ""
+}
+
+func DefaultBackendQueuesSentinelHosts() string {
+	return ""
+}
+
+func DefaultBackendQueuesSentinelRole() string {
+	return ""
+}

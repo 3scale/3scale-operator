@@ -92,25 +92,25 @@ func (o *OperatorBackendOptionsProvider) setSecretBasedOptions() error {
 			&o.backendOptions.StorageSentinelHosts,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisStorageSentinelHostsFieldName,
-			"",
+			component.DefaultBackendStorageSentinelHosts(),
 		},
 		{
 			&o.backendOptions.StorageSentinelRole,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisStorageSentinelRoleFieldName,
-			"",
+			component.DefaultBackendStorageSentinelRole(),
 		},
 		{
 			&o.backendOptions.QueuesSentinelHosts,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisQueuesSentinelHostsFieldName,
-			"",
+			component.DefaultBackendQueuesSentinelHosts(),
 		},
 		{
 			&o.backendOptions.QueuesSentinelRole,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisQueuesSentinelRoleFieldName,
-			"",
+			component.DefaultBackendQueuesSentinelRole(),
 		},
 	}
 
