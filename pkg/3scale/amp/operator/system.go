@@ -247,13 +247,17 @@ func (o *OperatorSystemOptionsProvider) setResourceRequirementsOptions(b *compon
 }
 
 func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.SystemOptionsBuilder) {
-	if o.APIManagerSpec.System.FileStorageSpec.PVC != nil {
+	if o.APIManagerSpec.System != nil &&
+		o.APIManagerSpec.System.FileStorageSpec != nil &&
+		o.APIManagerSpec.System.FileStorageSpec.PVC != nil {
 		b.PVCFileStorageOptions(component.PVCFileStorageOptions{
 			StorageClass: o.APIManagerSpec.System.FileStorageSpec.PVC.StorageClassName,
 		})
 	}
 
-	if o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
+	if o.APIManagerSpec.System != nil &&
+		o.APIManagerSpec.System.FileStorageSpec != nil &&
+		o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
 		s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
 		b.S3FileStorageOptions(component.S3FileStorageOptions{
 			AWSAccessKeyId:       "",

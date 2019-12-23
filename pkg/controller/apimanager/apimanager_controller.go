@@ -296,22 +296,12 @@ func (r *ReconcileAPIManager) reconcileBackendLogic(cr *appsv1alpha1.APIManager)
 }
 
 func (r *ReconcileAPIManager) reconcileSystemDatabaseLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	if cr.Spec.System.DatabaseSpec.PostgreSQL != nil && cr.Spec.System.DatabaseSpec.MySQL != nil {
-		return reconcile.Result{}, fmt.Errorf("Only one System Database can be chosen at the same time")
+	if cr.Spec.System.DatabaseSpec != nil && cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+		return r.reconcileSystemPostgreSQLLogic(cr)
 	}
 
-	var res reconcile.Result
-	var err error
-
-	if cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
-		res, err = r.reconcileSystemPostgreSQLLogic(cr)
-	} else {
-		// By default, Mysql
-		// cr.Spec.System.DatabaseSpec.MySQL can be nil Mysql
-		res, err = r.reconcileSystemMySQLLogic(cr)
-	}
-
-	return res, err
+	// Defaults to MySQL
+	return r.reconcileSystemMySQLLogic(cr)
 }
 
 func (r *ReconcileAPIManager) reconcileSystemPostgreSQLLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {

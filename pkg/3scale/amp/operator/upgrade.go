@@ -53,7 +53,7 @@ func (u *UpgradeApiManager) upgradeImages() (reconcile.Result, error) {
 		return res, err
 	}
 
-	if !u.IsExternalDatabaseEnabled() {
+	if !u.Cr.IsExternalDatabaseEnabled() {
 		res, err = u.upgradeBackendRedisImageStream()
 		if res.Requeue || err != nil {
 			return res, err

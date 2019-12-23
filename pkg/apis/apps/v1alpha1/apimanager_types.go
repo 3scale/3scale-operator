@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
@@ -475,11 +477,17 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 		changed = true
 	}
 
-	tmpChanged := apimanager.setSystemFileStorageSpecDefaults()
+	tmpChanged, err := apimanager.setSystemFileStorageSpecDefaults()
 	changed = changed || tmpChanged
+	if err != nil {
+		return changed, err
+	}
 
-	tmpChanged = apimanager.setSystemDatabaseSpecDefaults()
+	tmpChanged, err = apimanager.setSystemDatabaseSpecDefaults()
 	changed = changed || tmpChanged
+	if err != nil {
+		return changed, err
+	}
 
 	if spec.System.AppSpec == nil {
 		spec.System.AppSpec = &SystemAppSpec{}
@@ -504,36 +512,38 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 	return changed, nil
 }
 
-func (apimanager *APIManager) setSystemFileStorageSpecDefaults() bool {
-	changed := false
+func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
 	systemSpec := apimanager.Spec.System
 
-	if systemSpec.FileStorageSpec == nil {
-		systemSpec.FileStorageSpec = &SystemFileStorageSpec{}
-		changed = true
+	if systemSpec.FileStorageSpec != nil &&
+		systemSpec.FileStorageSpec.PVC != nil &&
+		systemSpec.FileStorageSpec.S3 != nil {
+		return true, fmt.Errorf("Only one FileStorage can be chosen at the same time")
 	}
 
-	// No default values for S3
-	// PVC
-	if systemSpec.FileStorageSpec.S3 == nil && systemSpec.FileStorageSpec.PVC == nil {
-		systemSpec.FileStorageSpec.PVC = &SystemPVCSpec{}
-		changed = true
-		// StorageClassName default value is nil
-	}
-
-	return changed
+	return false, nil
 }
 
-func (apimanager *APIManager) setSystemDatabaseSpecDefaults() bool {
+func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	changed := false
 	systemSpec := apimanager.Spec.System
 
-	if systemSpec.DatabaseSpec == nil {
-		systemSpec.DatabaseSpec = &SystemDatabaseSpec{}
-		changed = true
+	if apimanager.IsExternalDatabaseEnabled() {
+		if systemSpec.DatabaseSpec != nil {
+			systemSpec.DatabaseSpec = nil
+			changed = true
+		}
+		return changed, nil
 	}
 
-	return changed
+	// databases managed internally
+	if systemSpec.DatabaseSpec != nil &&
+		systemSpec.DatabaseSpec.MySQL != nil &&
+		systemSpec.DatabaseSpec.PostgreSQL != nil {
+		return changed, fmt.Errorf("Only one System Database can be chosen at the same time")
+	}
+
+	return changed, nil
 }
 
 func (apimanager *APIManager) setZyncDefaults() bool {
