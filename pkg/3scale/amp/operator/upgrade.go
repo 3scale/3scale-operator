@@ -29,7 +29,12 @@ type UpgradeApiManager struct {
 }
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
-	res, err := u.upgradeSystemAppPreHookPodEnv()
+	res, err := u.upgradeAPIManagerCR()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeSystemAppPreHookPodEnv()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -40,6 +45,20 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 	}
 
 	res, err = u.upgradeSystemSMTP()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeAPIManagerCR() (reconcile.Result, error) {
+	res, err := u.upgradeAPIManagerCRStorageDefaults()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeAPIManagerCRDatabaseDefaults()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -321,6 +340,50 @@ func (u *UpgradeApiManager) upgradeSystemAppPreHookPodEnv() (reconcile.Result, e
 	if changed {
 		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(existingDeploymentConfig)))
 		err := u.Client.Update(context.TODO(), existingDeploymentConfig)
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeAPIManagerCRStorageDefaults() (reconcile.Result, error) {
+	changed := false
+
+	if u.Cr.Spec.System.FileStorageSpec != nil &&
+		u.Cr.Spec.System.FileStorageSpec.PVC != nil &&
+		u.Cr.Spec.System.FileStorageSpec.PVC.StorageClassName == nil {
+		u.Cr.Spec.System.FileStorageSpec = nil
+		changed = true
+	}
+
+	if changed {
+		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(u.Cr)))
+		err := u.Client.Update(context.TODO(), u.Cr)
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeAPIManagerCRDatabaseDefaults() (reconcile.Result, error) {
+	if u.Cr.IsExternalDatabaseEnabled() {
+		return reconcile.Result{}, nil
+	}
+
+	// databases internally managed
+	// remove when CR database values are default ones
+	changed := false
+
+	if u.Cr.Spec.System.DatabaseSpec != nil &&
+		u.Cr.Spec.System.DatabaseSpec.MySQL != nil &&
+		u.Cr.Spec.System.DatabaseSpec.MySQL.Image == nil {
+		u.Cr.Spec.System.DatabaseSpec = nil
+		changed = true
+	}
+
+	if changed {
+		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(u.Cr)))
+		err := u.Client.Update(context.TODO(), u.Cr)
 		return reconcile.Result{Requeue: true}, err
 	}
 
