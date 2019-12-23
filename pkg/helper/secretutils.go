@@ -78,17 +78,23 @@ func MergeSecretData(from, to map[string][]byte) map[string][]byte {
 	return result
 }
 
+type SecretCacheElement struct {
+	Secret *v1.Secret
+	Err    error
+}
+
 type SecretSource struct {
-	client    client.Client
-	namespace string
+	client      client.Client
+	namespace   string
+	secretCache *MemoryCache
 }
 
 func NewSecretSource(client client.Client, namespace string) *SecretSource {
 	return &SecretSource{
-		client:    client,
-		namespace: namespace,
+		client:      client,
+		namespace:   namespace,
+		secretCache: NewMemoryCache(),
 	}
-	// TODO implement caching??
 }
 
 func (s *SecretSource) FieldValue(secretName, fieldName string, def string) (*string, error) {
@@ -108,7 +114,7 @@ func (s *SecretSource) RequiredFieldValueFromRequiredSecret(secretName, fieldNam
 }
 
 func (s *SecretSource) fieldReader(secretName, fieldName string, secretRequired, fieldRequired bool, def string) (*string, error) {
-	secret, err := GetSecret(secretName, s.namespace, s.client)
+	secret, err := s.CachedSecret(secretName)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return nil, err
@@ -129,4 +135,31 @@ func (s *SecretSource) fieldReader(secretName, fieldName string, secretRequired,
 	}
 
 	return result, nil
+}
+
+func (s *SecretSource) CachedSecret(secretName string) (*v1.Secret, error) {
+	var secret *v1.Secret
+	secretElementI, err := s.secretCache.Get(secretName)
+	if err != nil {
+		if err != ErrNonExistentKey {
+			return nil, err
+		}
+
+		// Key not found in cache, do the actual call
+		secret, err = GetSecret(secretName, s.namespace, s.client)
+		// Always store result, even when there is error.
+		// Save calls when secret not found
+		// Lifecycle of this cache instance is expected to be short
+		// and limited (one reconciliation loop run)
+		s.secretCache.Put(secretName, SecretCacheElement{Secret: secret, Err: err})
+	} else {
+		secretElement, ok := secretElementI.(SecretCacheElement)
+		if !ok {
+			return nil, fmt.Errorf("Unexpected error. Secret cache returned non secret object")
+		}
+		secret = secretElement.Secret
+		err = secretElement.Err
+	}
+
+	return secret, err
 }
