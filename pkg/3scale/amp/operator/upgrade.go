@@ -281,12 +281,12 @@ func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, e
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseImageStream() (reconcile.Result, error) {
-	if u.Cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if u.Cr.Spec.System.DatabaseSpec != nil && u.Cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
 		return u.upgradeSystemPostgreSQLImageStream()
-	} else {
-		// default is MySQL
-		return u.upgradeSystemMySQLImageStream()
 	}
+
+	// default is MySQL
+	return u.upgradeSystemMySQLImageStream()
 }
 
 func (u *UpgradeApiManager) upgradeSystemMySQLImageStream() (reconcile.Result, error) {

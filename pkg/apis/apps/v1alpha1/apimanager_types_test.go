@@ -72,10 +72,6 @@ func TestSetDefaults(t *testing.T) {
 				AppSpec: &SystemAppSpec{
 					Replicas: &tmpDefaultReplicas,
 				},
-				DatabaseSpec: &SystemDatabaseSpec{},
-				FileStorageSpec: &SystemFileStorageSpec{
-					PVC: &SystemPVCSpec{},
-				},
 				SidekiqSpec: &SystemSidekiqSpec{
 					Replicas: &tmpDefaultReplicas,
 				},

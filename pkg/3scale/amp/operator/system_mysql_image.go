@@ -12,7 +12,9 @@ func (o *OperatorSystemMySQLImageOptionsProvider) GetSystemMySQLImageOptions() (
 
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 	optProv.AmpRelease(product.ThreescaleRelease)
-	if o.APIManagerSpec.System.DatabaseSpec.MySQL != nil && o.APIManagerSpec.System.DatabaseSpec.MySQL.Image != nil {
+	if o.APIManagerSpec.System.DatabaseSpec != nil &&
+		o.APIManagerSpec.System.DatabaseSpec.MySQL != nil &&
+		o.APIManagerSpec.System.DatabaseSpec.MySQL.Image != nil {
 		optProv.Image(*o.APIManagerSpec.System.DatabaseSpec.MySQL.Image)
 	} else {
 		optProv.Image(component.SystemMySQLImageURL())

@@ -11,7 +11,9 @@ func (o *OperatorSystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageO
 	optProv := component.SystemPostgreSQLImageOptionsBuilder{}
 	optProv.AppLabel(*o.APIManagerSpec.AppLabel)
 	optProv.AmpRelease(product.ThreescaleRelease)
-	if o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image != nil {
+	if o.APIManagerSpec.System.DatabaseSpec != nil &&
+		o.APIManagerSpec.System.DatabaseSpec.PostgreSQL != nil &&
+		o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image != nil {
 		optProv.Image(*o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image)
 	} else {
 		optProv.Image(component.SystemPostgreSQLImageURL())
