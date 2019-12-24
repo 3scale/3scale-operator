@@ -45,7 +45,7 @@ func TestGetApicastOptions(t *testing.T) {
 					},
 				},
 			}
-			optsProvider := OperatorApicastOptionsProvider{APIManagerSpec: apimanager}
+			optsProvider := NewApicastOptionsProvider(apimanager)
 			_, err := optsProvider.GetApicastOptions()
 			if err != nil {
 				subT.Error(err)

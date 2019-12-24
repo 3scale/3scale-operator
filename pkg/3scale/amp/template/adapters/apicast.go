@@ -64,12 +64,20 @@ func (a *Apicast) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (a *Apicast) options() (*component.ApicastOptions, error) {
-	aob := &component.ApicastOptionsBuilder{}
-	aob.AppLabel("${APP_LABEL}")
-	aob.ManagementAPI("${APICAST_MANAGEMENT_API}")
-	aob.OpenSSLVerify("${APICAST_OPENSSL_VERIFY}")
-	aob.ResponseCodes("${APICAST_RESPONSE_CODES}")
-	aob.TenantName("${TENANT_NAME}")
-	aob.WildcardDomain("${WILDCARD_DOMAIN}")
-	return aob.Build()
+	ao := component.NewApicastOptions()
+	ao.AppLabel = "${APP_LABEL}"
+	ao.ManagementAPI = "${APICAST_MANAGEMENT_API}"
+	ao.OpenSSLVerify = "${APICAST_OPENSSL_VERIFY}"
+	ao.ResponseCodes = "${APICAST_RESPONSE_CODES}"
+	ao.TenantName = "${TENANT_NAME}"
+	ao.WildcardDomain = "${WILDCARD_DOMAIN}"
+
+	ao.ProductionResourceRequirements = component.DefaultProductionResourceRequirements()
+	ao.StagingResourceRequirements = component.DefaultStagingResourceRequirements()
+
+	ao.ProductionReplicas = 1
+	ao.StagingReplicas = 1
+
+	err := ao.Validate()
+	return ao, err
 }
