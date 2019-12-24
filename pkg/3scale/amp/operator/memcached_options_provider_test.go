@@ -59,9 +59,7 @@ func TestMemcachedOptions(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			optsProvider := OperatorMemcachedOptionsProvider{
-				APIManagerSpec: &tc.apimanagerFactory().Spec,
-			}
+			optsProvider := NewMemcachedOptionsProvider(&tc.apimanagerFactory().Spec)
 			_, err := optsProvider.GetMemcachedOptions()
 			if err != nil {
 				subT.Error(err)

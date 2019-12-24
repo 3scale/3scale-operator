@@ -31,10 +31,6 @@ type OperatorSystemPostgreSQLImageOptionsProvider struct {
 	Client         k8sclient.Client
 }
 
-type OperatorMemcachedOptionsProvider struct {
-	APIManagerSpec *appsv1alpha1.APIManagerSpec
-}
-
 type OperatorSystemOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 	Namespace      string
