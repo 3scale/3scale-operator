@@ -58,12 +58,16 @@ func (m *SystemMysqlAdapter) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (a *SystemMysqlAdapter) options() (*component.SystemMysqlOptions, error) {
-	mob := component.SystemMysqlOptionsBuilder{}
-	mob.AppLabel("${APP_LABEL}")
-	mob.DatabaseName("${SYSTEM_DATABASE}")
-	mob.User("${SYSTEM_DATABASE_USER}")
-	mob.Password("${SYSTEM_DATABASE_PASSWORD}")
-	mob.RootPassword("${SYSTEM_DATABASE_ROOT_PASSWORD}")
-	mob.DatabaseURL("mysql2://root:" + "${SYSTEM_DATABASE_ROOT_PASSWORD}" + "@system-mysql/" + "${SYSTEM_DATABASE}")
-	return mob.Build()
+	mo := component.NewSystemMysqlOptions()
+	mo.AppLabel = "${APP_LABEL}"
+	mo.DatabaseName = "${SYSTEM_DATABASE}"
+	mo.User = "${SYSTEM_DATABASE_USER}"
+	mo.Password = "${SYSTEM_DATABASE_PASSWORD}"
+	mo.RootPassword = "${SYSTEM_DATABASE_ROOT_PASSWORD}"
+	mo.DatabaseURL = "mysql2://root:" + "${SYSTEM_DATABASE_ROOT_PASSWORD}" + "@system-mysql/" + "${SYSTEM_DATABASE}"
+
+	mo.ContainerResourceRequirements = component.DefaultSystemMysqlResourceRequirements()
+
+	err := mo.Validate()
+	return mo, err
 }

@@ -71,11 +71,7 @@ func TestGetMysqlOptions(t *testing.T) {
 				objs = append(objs, tc.systemDatabaseSecret)
 			}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := OperatorMysqlOptionsProvider{
-				APIManagerSpec: &apimanager.Spec,
-				Namespace:      namespace,
-				Client:         cl,
-			}
+			optsProvider := NewSystemMysqlOptionsProvider(&apimanager.Spec, namespace, cl)
 			_, err := optsProvider.GetMysqlOptions()
 			if err != nil {
 				subT.Error(err)
@@ -131,11 +127,7 @@ func TestGetMysqlOptionsInvalidURL(t *testing.T) {
 			secret := getSystemDBSecret(namespace, tc.databaseURL)
 			objs := []runtime.Object{apimanager, secret}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := OperatorMysqlOptionsProvider{
-				APIManagerSpec: &apimanager.Spec,
-				Namespace:      namespace,
-				Client:         cl,
-			}
+			optsProvider := NewSystemMysqlOptionsProvider(&apimanager.Spec, namespace, cl)
 			_, err := optsProvider.GetMysqlOptions()
 			if err == nil {
 				subT.Fatal("expected to fail for invalid URL")

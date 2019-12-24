@@ -9,12 +9,6 @@ type OperatorRedisOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
 
-type OperatorMysqlOptionsProvider struct {
-	APIManagerSpec *appsv1alpha1.APIManagerSpec
-	Namespace      string
-	Client         k8sclient.Client
-}
-
 type OperatorSystemPostgreSQLOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 	Namespace      string
