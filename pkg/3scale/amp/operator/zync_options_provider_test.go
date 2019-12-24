@@ -55,11 +55,7 @@ func TestGetZyncOptions(t *testing.T) {
 			}
 
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := OperatorZyncOptionsProvider{
-				APIManagerSpec: &apimanager.Spec,
-				Namespace:      namespace,
-				Client:         cl,
-			}
+			optsProvider := NewZyncOptionsProvider(&apimanager.Spec, namespace, cl)
 			_, err := optsProvider.GetZyncOptions()
 			if err != nil {
 				t.Error(err)

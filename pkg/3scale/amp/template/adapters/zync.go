@@ -53,10 +53,21 @@ func (z *Zync) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (z *Zync) options() (*component.ZyncOptions, error) {
-	zob := component.ZyncOptionsBuilder{}
-	zob.AppLabel("${APP_LABEL}")
-	zob.AuthenticationToken("${ZYNC_AUTHENTICATION_TOKEN}")
-	zob.DatabasePassword("${ZYNC_DATABASE_PASSWORD}")
-	zob.SecretKeyBase("${ZYNC_SECRET_KEY_BASE}")
-	return zob.Build()
+	zo := component.NewZyncOptions()
+	zo.AppLabel = "${APP_LABEL}"
+	zo.AuthenticationToken = "${ZYNC_AUTHENTICATION_TOKEN}"
+	zo.DatabasePassword = "${ZYNC_DATABASE_PASSWORD}"
+	zo.SecretKeyBase = "${ZYNC_SECRET_KEY_BASE}"
+
+	zo.ZyncReplicas = 1
+	zo.ZyncQueReplicas = 1
+
+	zo.ContainerResourceRequirements = component.DefaultZyncContainerResourceRequirements()
+	zo.QueContainerResourceRequirements = component.DefaultZyncQueContainerResourceRequirements()
+	zo.DatabaseContainerResourceRequirements = component.DefaultZyncDatabaseContainerResourceRequirements()
+
+	zo.DatabaseURL = component.DefaultZyncDatabaseURL(zo.DatabasePassword)
+
+	err := zo.Validate()
+	return zo, err
 }

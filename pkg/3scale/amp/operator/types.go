@@ -49,12 +49,6 @@ type OperatorSystemOptionsProvider struct {
 	Client         k8sclient.Client
 }
 
-type OperatorZyncOptionsProvider struct {
-	APIManagerSpec *appsv1alpha1.APIManagerSpec
-	Namespace      string
-	Client         k8sclient.Client
-}
-
 type OperatorApicastOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 	Namespace      string
