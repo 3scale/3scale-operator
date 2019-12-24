@@ -66,17 +66,17 @@ func (i *ImagesAdapter) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (i *ImagesAdapter) options() (*component.AmpImagesOptions, error) {
-	aob := component.AmpImagesOptionsBuilder{}
-	aob.AppLabel("${APP_LABEL}")
-	aob.AMPRelease("${AMP_RELEASE}")
-	aob.ApicastImage("${AMP_APICAST_IMAGE}")
-	aob.BackendImage("${AMP_BACKEND_IMAGE}")
-	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
-	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
-	aob.ZyncDatabasePostgreSQLImage("${ZYNC_DATABASE_IMAGE}")
-	aob.SystemMemcachedImage("${MEMCACHED_IMAGE}")
+	ao := component.NewAmpImagesOptions()
+	ao.AppLabel = "${APP_LABEL}"
+	ao.AmpRelease = "${AMP_RELEASE}"
+	ao.ApicastImage = "${AMP_APICAST_IMAGE}"
+	ao.BackendImage = "${AMP_BACKEND_IMAGE}"
+	ao.SystemImage = "${AMP_SYSTEM_IMAGE}"
+	ao.ZyncImage = "${AMP_ZYNC_IMAGE}"
+	ao.ZyncDatabasePostgreSQLImage = "${ZYNC_DATABASE_IMAGE}"
+	ao.SystemMemcachedImage = "${MEMCACHED_IMAGE}"
+	ao.InsecureImportPolicy = false
 
-	aob.InsecureImportPolicy(false)
-
-	return aob.Build()
+	err := ao.Validate()
+	return ao, err
 }

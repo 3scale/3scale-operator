@@ -47,7 +47,7 @@ func (ampImages *AmpImages) BackendImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-backend",
 			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
+				"app":                  ampImages.Options.AppLabel,
 				"threescale_component": "backend",
 			},
 			Annotations: map[string]string{
@@ -64,20 +64,20 @@ func (ampImages *AmpImages) BackendImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
+						Name: ampImages.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
+					Name: ampImages.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "amp-backend " + ampImages.Options.ampRelease,
+						"openshift.io/display-name": "amp-backend " + ampImages.Options.AmpRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: ampImages.Options.backendImage,
+						Name: ampImages.Options.BackendImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: ampImages.Options.insecureImportPolicy,
+						Insecure: ampImages.Options.InsecureImportPolicy,
 					},
 				},
 			},
@@ -90,7 +90,7 @@ func (ampImages *AmpImages) ZyncImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-zync",
 			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
+				"app":                  ampImages.Options.AppLabel,
 				"threescale_component": "zync",
 			},
 			Annotations: map[string]string{
@@ -107,20 +107,20 @@ func (ampImages *AmpImages) ZyncImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
+						Name: ampImages.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
+					Name: ampImages.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP Zync " + ampImages.Options.ampRelease,
+						"openshift.io/display-name": "AMP Zync " + ampImages.Options.AmpRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: ampImages.Options.zyncImage,
+						Name: ampImages.Options.ZyncImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: ampImages.Options.insecureImportPolicy,
+						Insecure: ampImages.Options.InsecureImportPolicy,
 					},
 				},
 			},
@@ -133,7 +133,7 @@ func (ampImages *AmpImages) APICastImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-apicast",
 			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
+				"app":                  ampImages.Options.AppLabel,
 				"threescale_component": "apicast",
 			},
 			Annotations: map[string]string{
@@ -150,20 +150,20 @@ func (ampImages *AmpImages) APICastImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
+						Name: ampImages.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
+					Name: ampImages.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP APIcast " + ampImages.Options.ampRelease,
+						"openshift.io/display-name": "AMP APIcast " + ampImages.Options.AmpRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: ampImages.Options.apicastImage,
+						Name: ampImages.Options.ApicastImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: ampImages.Options.insecureImportPolicy,
+						Insecure: ampImages.Options.InsecureImportPolicy,
 					},
 				},
 			},
@@ -176,7 +176,7 @@ func (ampImages *AmpImages) SystemImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp-system",
 			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
+				"app":                  ampImages.Options.AppLabel,
 				"threescale_component": "system",
 			},
 			Annotations: map[string]string{
@@ -193,20 +193,20 @@ func (ampImages *AmpImages) SystemImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
+						Name: ampImages.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
+					Name: ampImages.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP system " + ampImages.Options.ampRelease,
+						"openshift.io/display-name": "AMP system " + ampImages.Options.AmpRelease,
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: ampImages.Options.systemImage,
+						Name: ampImages.Options.SystemImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: ampImages.Options.insecureImportPolicy,
+						Insecure: ampImages.Options.InsecureImportPolicy,
 					},
 				},
 			},
@@ -219,7 +219,7 @@ func (ampImages *AmpImages) ZyncDatabasePostgreSQLImageStream() *imagev1.ImageSt
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync-database-postgresql",
 			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
+				"app":                  ampImages.Options.AppLabel,
 				"threescale_component": "system",
 			},
 			Annotations: map[string]string{
@@ -236,20 +236,20 @@ func (ampImages *AmpImages) ZyncDatabasePostgreSQLImageStream() *imagev1.ImageSt
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
+						Name: ampImages.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
+					Name: ampImages.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "Zync " + ampImages.Options.ampRelease + " PostgreSQL",
+						"openshift.io/display-name": "Zync " + ampImages.Options.AmpRelease + " PostgreSQL",
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
 						Name: ampImages.Options.ZyncDatabasePostgreSQLImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: ampImages.Options.insecureImportPolicy,
+						Insecure: ampImages.Options.InsecureImportPolicy,
 					},
 				},
 			},
@@ -262,7 +262,7 @@ func (ampImages *AmpImages) SystemMemcachedImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-memcached",
 			Labels: map[string]string{
-				"app":                  ampImages.Options.appLabel,
+				"app":                  ampImages.Options.AppLabel,
 				"threescale_component": "system",
 			},
 			Annotations: map[string]string{
@@ -279,20 +279,20 @@ func (ampImages *AmpImages) SystemMemcachedImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: ampImages.Options.ampRelease,
+						Name: ampImages.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: ampImages.Options.ampRelease,
+					Name: ampImages.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "System " + ampImages.Options.ampRelease + " Memcached",
+						"openshift.io/display-name": "System " + ampImages.Options.AmpRelease + " Memcached",
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: ampImages.Options.systemMemcachedImage,
+						Name: ampImages.Options.SystemMemcachedImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: ampImages.Options.insecureImportPolicy,
+						Insecure: ampImages.Options.InsecureImportPolicy,
 					},
 				},
 			},

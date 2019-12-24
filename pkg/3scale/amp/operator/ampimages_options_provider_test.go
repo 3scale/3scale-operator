@@ -78,7 +78,7 @@ func TestGetAmpImagesOptions(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(subT *testing.T) {
-			optsProvider := OperatorAmpImagesOptionsProvider{APIManagerSpec: tc.apimanager}
+			optsProvider := NewAmpImagesOptionsProvider(tc.apimanager)
 			_, err := optsProvider.GetAmpImagesOptions()
 			if err != nil {
 				subT.Error(err)

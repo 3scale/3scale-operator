@@ -5,14 +5,6 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// TODO probably this could be in only one type where the different
-// OptionsProvider interfaces are implemented. For the moment we
-// duplicate the data to allow having possible future differences in
-// the required data
-type OperatorAmpImagesOptionsProvider struct {
-	APIManagerSpec *appsv1alpha1.APIManagerSpec
-}
-
 type OperatorRedisOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 }
