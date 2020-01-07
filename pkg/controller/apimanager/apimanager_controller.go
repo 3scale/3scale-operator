@@ -230,7 +230,7 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		return result, err
 	}
 
-	if cr.Spec.HighAvailability == nil || !cr.Spec.HighAvailability.Enabled {
+	if !cr.IsExternalDatabaseEnabled() {
 		result, err = r.reconcileRedisLogic(cr)
 		if err != nil || result.Requeue {
 			return result, err
@@ -296,12 +296,12 @@ func (r *ReconcileAPIManager) reconcileBackendLogic(cr *appsv1alpha1.APIManager)
 }
 
 func (r *ReconcileAPIManager) reconcileSystemDatabaseLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	if cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if cr.Spec.System.DatabaseSpec != nil && cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
 		return r.reconcileSystemPostgreSQLLogic(cr)
-	} else {
-		// Defaults to MySQL
-		return r.reconcileSystemMySQLLogic(cr)
 	}
+
+	// Defaults to MySQL
+	return r.reconcileSystemMySQLLogic(cr)
 }
 
 func (r *ReconcileAPIManager) reconcileSystemPostgreSQLLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {

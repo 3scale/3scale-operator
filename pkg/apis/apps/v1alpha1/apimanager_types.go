@@ -469,7 +469,6 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 }
 
 func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
-	// TODO fix how should be shown
 	changed := false
 	spec := &apimanager.Spec
 
@@ -514,55 +513,34 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 }
 
 func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
-	changed := false
 	systemSpec := apimanager.Spec.System
 
-	defaultFileStorageSpec := &SystemFileStorageSpec{
-		PVC: &SystemPVCSpec{
-			StorageClassName: nil,
-		},
+	if systemSpec.FileStorageSpec != nil &&
+		systemSpec.FileStorageSpec.PVC != nil &&
+		systemSpec.FileStorageSpec.S3 != nil {
+		return true, fmt.Errorf("Only one FileStorage can be chosen at the same time")
 	}
 
-	if systemSpec.FileStorageSpec == nil {
-		systemSpec.FileStorageSpec = defaultFileStorageSpec
-		changed = true
-		return changed, nil
-	}
-
-	if systemSpec.FileStorageSpec.PVC != nil && systemSpec.FileStorageSpec.S3 != nil {
-		return changed, fmt.Errorf("Only one FileStorage can be chosen at the same time")
-	}
-
-	if systemSpec.FileStorageSpec.PVC == nil && systemSpec.FileStorageSpec.S3 == nil {
-		systemSpec.FileStorageSpec.PVC = defaultFileStorageSpec.PVC
-		changed = true
-	}
-
-	return changed, nil
+	return false, nil
 }
 
 func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	changed := false
 	systemSpec := apimanager.Spec.System
 
-	defaultDatabaseSpec := &SystemDatabaseSpec{
-		MySQL: &SystemMySQLSpec{
-			Image: nil,
-		},
-	}
-
-	if systemSpec.DatabaseSpec == nil {
-		systemSpec.DatabaseSpec = defaultDatabaseSpec
-		changed = true
+	if apimanager.IsExternalDatabaseEnabled() {
+		if systemSpec.DatabaseSpec != nil {
+			systemSpec.DatabaseSpec = nil
+			changed = true
+		}
 		return changed, nil
 	}
 
-	if systemSpec.DatabaseSpec.MySQL != nil && systemSpec.DatabaseSpec.PostgreSQL != nil {
+	// databases managed internally
+	if systemSpec.DatabaseSpec != nil &&
+		systemSpec.DatabaseSpec.MySQL != nil &&
+		systemSpec.DatabaseSpec.PostgreSQL != nil {
 		return changed, fmt.Errorf("Only one System Database can be chosen at the same time")
-	}
-
-	if systemSpec.DatabaseSpec.MySQL == nil && systemSpec.DatabaseSpec.PostgreSQL == nil {
-		systemSpec.DatabaseSpec.MySQL = defaultDatabaseSpec.MySQL
 	}
 
 	return changed, nil
@@ -597,4 +575,8 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 	}
 
 	return changed
+}
+
+func (apimanager *APIManager) IsExternalDatabaseEnabled() bool {
+	return apimanager.Spec.HighAvailability != nil && apimanager.Spec.HighAvailability.Enabled
 }
