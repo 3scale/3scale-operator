@@ -113,3 +113,10 @@ func GetEnvVar(key, def string) string {
 	}
 	return def
 }
+
+func GetStringPointerValueOrDefault(val *string, def string) string {
+	if val != nil {
+		return *val
+	}
+	return def
+}

@@ -14,6 +14,11 @@ const (
 	S3SecretAWSSecretAccessKeyFieldName = "AWS_SECRET_ACCESS_KEY"
 )
 
+const (
+	StorageServiceEndpointScheme = "STORAGE_SERVICE_ENDPOINT_SCHEME"
+	StorageServiceEndpointHost   = "STORAGE_SERVICE_ENDPOINT_HOST" // TODO Includes Host and Port. Maybe choose a better name?
+)
+
 type S3 struct {
 	Options *S3Options
 }
@@ -101,6 +106,8 @@ func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 		envVarFromSecret("AWS_SECRET_ACCESS_KEY", s3.Options.awsCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
 		envVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
 		envVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
+		envVarFromConfigMap(StorageServiceEndpointScheme, "system-environment", StorageServiceEndpointScheme),
+		envVarFromConfigMap(StorageServiceEndpointHost, "system-environment", StorageServiceEndpointHost),
 	}
 }
 
@@ -140,6 +147,8 @@ func (s3 *S3) AddS3PostprocessOptionsToSystemEnvironmentCfgMap(objects []common.
 	systemEnvCfgMap.Data["FILE_UPLOAD_STORAGE"] = "s3"
 	systemEnvCfgMap.Data["AWS_BUCKET"] = s3.Options.awsBucket
 	systemEnvCfgMap.Data["AWS_REGION"] = s3.Options.awsRegion
+	systemEnvCfgMap.Data[StorageServiceEndpointScheme] = s3.Options.storageServiceEndpointScheme
+	systemEnvCfgMap.Data[StorageServiceEndpointHost] = s3.Options.storageServiceEndpointHost
 }
 
 func (s3 *S3) RemoveSystemStoragePVC(objects []common.KubernetesObject) []common.KubernetesObject {

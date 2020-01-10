@@ -6,11 +6,13 @@ type S3Options struct {
 	// s3NonRequiredOptions
 
 	// s3RequiredOptions
-	awsAccessKeyId       string
-	awsSecretAccessKey   string
-	awsRegion            string
-	awsBucket            string
-	awsCredentialsSecret string
+	awsAccessKeyId               string
+	awsSecretAccessKey           string
+	awsRegion                    string
+	awsBucket                    string
+	awsCredentialsSecret         string
+	storageServiceEndpointScheme string
+	storageServiceEndpointHost   string
 }
 
 type S3OptionsBuilder struct {
@@ -35,6 +37,14 @@ func (s3 *S3OptionsBuilder) AwsBucket(awsBucket string) {
 
 func (s3 *S3OptionsBuilder) AWSCredentialsSecret(awsCredentials string) {
 	s3.options.awsCredentialsSecret = awsCredentials
+}
+
+func (s3 *S3OptionsBuilder) StorageServiceEndpointScheme(scheme string) {
+	s3.options.storageServiceEndpointScheme = scheme
+}
+
+func (s3 *S3OptionsBuilder) StorageServiceEndpointHost(hostport string) {
+	s3.options.storageServiceEndpointHost = hostport
 }
 
 func (s3 *S3OptionsBuilder) Build() (*S3Options, error) {

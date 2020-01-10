@@ -232,6 +232,10 @@ type SystemS3Spec struct {
 	AWSBucket      string                  `json:"awsBucket"`
 	AWSRegion      string                  `json:"awsRegion"`
 	AWSCredentials v1.LocalObjectReference `json:"awsCredentialsSecret"`
+	// +optional
+	EndpointScheme *string `json:"endpointScheme,omitempty"`
+	// +optional
+	EndpointHost *string `json:"endpointHost,omitempty"`
 }
 
 type SystemDatabaseSpec struct {

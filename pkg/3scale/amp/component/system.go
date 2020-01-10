@@ -273,6 +273,8 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 			envVarFromSecret("AWS_SECRET_ACCESS_KEY", system.Options.s3FileStorageOptions.AWSCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
 			envVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
 			envVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
+			envVarFromConfigMap(StorageServiceEndpointScheme, "system-environment", StorageServiceEndpointScheme),
+			envVarFromConfigMap(StorageServiceEndpointHost, "system-environment", StorageServiceEndpointHost),
 		)
 	}
 
@@ -333,6 +335,8 @@ func (system *System) AddS3ConfigIntoEnvironmentConfigMap(configMap *v1.ConfigMa
 	configMap.Data["FILE_UPLOAD_STORAGE"] = "s3"
 	configMap.Data["AWS_BUCKET"] = system.Options.s3FileStorageOptions.AWSBucket
 	configMap.Data["AWS_REGION"] = system.Options.s3FileStorageOptions.AWSRegion
+	configMap.Data[StorageServiceEndpointScheme] = system.Options.s3FileStorageOptions.EndpointScheme
+	configMap.Data[StorageServiceEndpointHost] = system.Options.s3FileStorageOptions.EndpointHost
 }
 
 func (system *System) MemcachedSecret() *v1.Secret {

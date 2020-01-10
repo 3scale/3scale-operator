@@ -125,6 +125,10 @@ spec:
                           type: object
                         awsRegion:
                           type: string
+                        endpointHost:
+                          type: string
+                        endpointScheme:
+                          type: string
                       required:
                       - awsBucket
                       - awsRegion

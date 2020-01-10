@@ -13,6 +13,8 @@ type S3FileStorageOptions struct {
 	AWSRegion            string
 	AWSBucket            string
 	AWSCredentialsSecret string
+	EndpointScheme       string
+	EndpointHost         string
 }
 
 type SystemSMTPSecretOptions struct {
@@ -75,7 +77,7 @@ type SystemOptions struct {
 	backendSharedSecret string
 	tenantName          string
 	wildcardDomain      string
-	smtpSecretOptions SystemSMTPSecretOptions
+	smtpSecretOptions   SystemSMTPSecretOptions
 }
 
 type SystemOptionsBuilder struct {

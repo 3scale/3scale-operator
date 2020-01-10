@@ -49,6 +49,13 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, err
 	}
 
+	if u.Cr.Spec.System.FileStorageSpec != nil && u.Cr.Spec.System.FileStorageSpec.S3 != nil {
+		res, err = u.upgradeSystemS3()
+		if res.Requeue || err != nil {
+			return res, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -385,6 +392,65 @@ func (u *UpgradeApiManager) upgradeAPIManagerCRDatabaseDefaults() (reconcile.Res
 		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(u.Cr)))
 		err := u.Client.Update(context.TODO(), u.Cr)
 		return reconcile.Result{Requeue: true}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemS3() (reconcile.Result, error) {
+	res, err := u.upgradeSystemEnvironmentConfigMapWithNewS3Config()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeSystemS3EnvVars()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemEnvironmentConfigMapWithNewS3Config() (reconcile.Result, error) {
+	var changed bool
+	existingConfigMap := &v1.ConfigMap{}
+	configMapNamespacedName := types.NamespacedName{
+		Name:      "system-environment",
+		Namespace: u.Cr.Namespace,
+	}
+	err := u.Client.Get(context.TODO(), configMapNamespacedName, existingConfigMap)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if _, ok := existingConfigMap.Data[component.StorageServiceEndpointScheme]; !ok {
+		existingConfigMap.Data[component.StorageServiceEndpointScheme] = ""
+		changed = true
+	}
+
+	if _, ok := existingConfigMap.Data[component.StorageServiceEndpointHost]; !ok {
+		existingConfigMap.Data[component.StorageServiceEndpointHost] = ""
+		changed = true
+	}
+
+	if changed {
+		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(u.Cr)))
+		err := u.Client.Update(context.TODO(), u.Cr)
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemS3EnvVars() (reconcile.Result, error) {
+	res, err := u.upgradeSystemSidekiqEnvVars()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeSystemAppEnvVars()
+	if res.Requeue || err != nil {
+		return res, err
 	}
 
 	return reconcile.Result{}, nil

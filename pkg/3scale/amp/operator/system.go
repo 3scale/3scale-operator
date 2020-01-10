@@ -257,6 +257,8 @@ func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.Syste
 			AWSRegion:            s3FileStorageSpec.AWSRegion,
 			AWSBucket:            s3FileStorageSpec.AWSBucket,
 			AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
+			EndpointScheme:       helper.GetStringPointerValueOrDefault(s3FileStorageSpec.EndpointScheme, ""),
+			EndpointHost:         helper.GetStringPointerValueOrDefault(s3FileStorageSpec.EndpointHost, ""),
 		})
 	} else {
 		// default to PVC
@@ -302,6 +304,8 @@ func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.Syste
 		AWSSecretAccessKey:   awsSecretAccessKeyID,
 		AWSRegion:            s3FileStorageSpec.AWSRegion,
 		AWSBucket:            s3FileStorageSpec.AWSBucket,
+		EndpointScheme:       helper.GetStringPointerValueOrDefault(s3FileStorageSpec.EndpointScheme, ""),
+		EndpointHost:         helper.GetStringPointerValueOrDefault(s3FileStorageSpec.EndpointHost, ""),
 		AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
 	})
 

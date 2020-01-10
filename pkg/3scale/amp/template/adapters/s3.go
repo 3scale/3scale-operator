@@ -53,6 +53,8 @@ func (s *S3) options() (*component.S3Options, error) {
 	sob.AwsSecretAccessKey("${AWS_SECRET_ACCESS_KEY}")
 	sob.AwsRegion("${AWS_REGION}")
 	sob.AwsBucket("${AWS_BUCKET}")
+	sob.StorageServiceEndpointScheme("${STORAGE_SERVICE_ENDPOINT_SCHEME}")
+	sob.StorageServiceEndpointHost("${STORAGE_SERVICE_ENDPOINT_HOST}")
 	sob.AWSCredentialsSecret("aws-auth")
 	return sob.Build()
 }
@@ -77,6 +79,17 @@ func (s3 *S3) parameters() []templatev1.Parameter {
 		templatev1.Parameter{
 			Name:        "AWS_REGION",
 			Description: "AWS Region to use in S3 Storage for assets.",
+			Required:    false,
+		},
+		templatev1.Parameter{
+			Name:        "STORAGE_SERVICE_ENDPOINT_SCHEME",
+			Description: "Storage Service URL scheme to use for the S3 API-compatible storage service",
+			Required:    false,
+		},
+		templatev1.Parameter{
+			Name: "STORAGE_SERVICE_ENDPOINT_HOST",
+			// TODO we assume can handle this format
+			Description: "Storage Service URL host and optionally a port separated by a colon (:) to use as the S3 API-compatible storage service",
 			Required:    false,
 		},
 	}
