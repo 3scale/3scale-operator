@@ -1580,6 +1580,8 @@ objects:
     RAILS_LOG_LEVEL: info
     RAILS_LOG_TO_STDOUT: "true"
     SSL_CERT_DIR: /etc/pki/tls/certs
+    STORAGE_SERVICE_ENDPOINT_HOST: ${STORAGE_SERVICE_ENDPOINT_HOST}
+    STORAGE_SERVICE_ENDPOINT_SCHEME: ${STORAGE_SERVICE_ENDPOINT_SCHEME}
     THINKING_SPHINX_PORT: "9306"
     THREESCALE_SANDBOX_PROXY_OPENSSL_VERIFY_MODE: VERIFY_NONE
     THREESCALE_SUPERDOMAIN: ${WILDCARD_DOMAIN}
@@ -1905,6 +1907,16 @@ objects:
                 configMapKeyRef:
                   key: AWS_REGION
                   name: system-environment
+            - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+              valueFrom:
+                configMapKeyRef:
+                  key: STORAGE_SERVICE_ENDPOINT_SCHEME
+                  name: system-environment
+            - name: STORAGE_SERVICE_ENDPOINT_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: STORAGE_SERVICE_ENDPOINT_HOST
+                  name: system-environment
           failurePolicy: Retry
         timeoutSeconds: 1200
         updatePeriodSeconds: 1
@@ -2203,6 +2215,16 @@ objects:
             valueFrom:
               configMapKeyRef:
                 key: AWS_REGION
+                name: system-environment
+          - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+            valueFrom:
+              configMapKeyRef:
+                key: STORAGE_SERVICE_ENDPOINT_SCHEME
+                name: system-environment
+          - name: STORAGE_SERVICE_ENDPOINT_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: STORAGE_SERVICE_ENDPOINT_HOST
                 name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
@@ -2519,6 +2541,16 @@ objects:
               configMapKeyRef:
                 key: AWS_REGION
                 name: system-environment
+          - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+            valueFrom:
+              configMapKeyRef:
+                key: STORAGE_SERVICE_ENDPOINT_SCHEME
+                name: system-environment
+          - name: STORAGE_SERVICE_ENDPOINT_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: STORAGE_SERVICE_ENDPOINT_HOST
+                name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2832,6 +2864,16 @@ objects:
             valueFrom:
               configMapKeyRef:
                 key: AWS_REGION
+                name: system-environment
+          - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+            valueFrom:
+              configMapKeyRef:
+                key: STORAGE_SERVICE_ENDPOINT_SCHEME
+                name: system-environment
+          - name: STORAGE_SERVICE_ENDPOINT_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: STORAGE_SERVICE_ENDPOINT_HOST
                 name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
@@ -3205,6 +3247,16 @@ objects:
             valueFrom:
               configMapKeyRef:
                 key: AWS_REGION
+                name: system-environment
+          - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+            valueFrom:
+              configMapKeyRef:
+                key: STORAGE_SERVICE_ENDPOINT_SCHEME
+                name: system-environment
+          - name: STORAGE_SERVICE_ENDPOINT_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: STORAGE_SERVICE_ENDPOINT_HOST
                 name: system-environment
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
@@ -4447,3 +4499,9 @@ parameters:
   name: AWS_BUCKET
 - description: AWS Region to use in S3 Storage for assets.
   name: AWS_REGION
+- description: Storage Service URL scheme to use for the S3 API-compatible storage
+    service
+  name: STORAGE_SERVICE_ENDPOINT_SCHEME
+- description: Storage Service URL host and optionally a port separated by a colon
+    (:) to use as the S3 API-compatible storage service
+  name: STORAGE_SERVICE_ENDPOINT_HOST
