@@ -15,7 +15,7 @@ const (
 )
 
 const (
-	StorageServiceEndpointScheme = "STORAGE_SERVICE_ENDPOINT_SCHEME"
+	StorageServiceEndpointScheme = "AWS_PROTOCOL"
 	StorageServiceEndpointHost   = "STORAGE_SERVICE_ENDPOINT_HOST" // TODO Includes Host and Port. Maybe choose a better name?
 )
 
