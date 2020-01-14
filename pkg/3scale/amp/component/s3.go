@@ -16,7 +16,7 @@ const (
 
 const (
 	StorageServiceEndpointScheme = "AWS_PROTOCOL"
-	StorageServiceEndpointHost   = "STORAGE_SERVICE_ENDPOINT_HOST" // TODO Includes Host and Port. Maybe choose a better name?
+	StorageServiceEndpointHost   = "AWS_HOSTNAME" // TODO Includes Host and Port. Maybe choose a better name?
 )
 
 type S3 struct {
