@@ -4600,7 +4600,7 @@ parameters:
   name: AWS_BUCKET
 - description: AWS Region to use in S3 Storage for assets.
   name: AWS_REGION
-- description: AWS S3 provider endpoint protocol. HTTP or HTTPS.
+- description: AWS S3 compatible provider endpoint protocol. HTTP or HTTPS.
   name: AWS_PROTOCOL
-- description: AWS S3 provider endpoint hostname
+- description: AWS S3 compatible provider endpoint hostname
   name: AWS_HOSTNAME
