@@ -6,13 +6,13 @@ type S3Options struct {
 	// s3NonRequiredOptions
 
 	// s3RequiredOptions
-	awsAccessKeyId               string
-	awsSecretAccessKey           string
-	awsRegion                    string
-	awsBucket                    string
-	awsCredentialsSecret         string
-	storageServiceEndpointScheme string
-	storageServiceEndpointHost   string
+	awsAccessKeyId       string
+	awsSecretAccessKey   string
+	awsRegion            string
+	awsBucket            string
+	awsProtocol          string
+	awsHostname          string
+	awsCredentialsSecret string
 }
 
 type S3OptionsBuilder struct {
@@ -35,16 +35,16 @@ func (s3 *S3OptionsBuilder) AwsBucket(awsBucket string) {
 	s3.options.awsBucket = awsBucket
 }
 
+func (s3 *S3OptionsBuilder) AWSProtocol(awsProtocol string) {
+	s3.options.awsProtocol = awsProtocol
+}
+
+func (s3 *S3OptionsBuilder) AWSHostname(awsHostname string) {
+	s3.options.awsHostname = awsHostname
+}
+
 func (s3 *S3OptionsBuilder) AWSCredentialsSecret(awsCredentials string) {
 	s3.options.awsCredentialsSecret = awsCredentials
-}
-
-func (s3 *S3OptionsBuilder) StorageServiceEndpointScheme(scheme string) {
-	s3.options.storageServiceEndpointScheme = scheme
-}
-
-func (s3 *S3OptionsBuilder) StorageServiceEndpointHost(hostport string) {
-	s3.options.storageServiceEndpointHost = hostport
 }
 
 func (s3 *S3OptionsBuilder) Build() (*S3Options, error) {
@@ -71,6 +71,12 @@ func (s3 *S3OptionsBuilder) setRequiredOptions() error {
 	}
 	if s3.options.awsBucket == "" {
 		return fmt.Errorf("no AWS bucket has been provided")
+	}
+	if s3.options.awsProtocol == "" {
+		return fmt.Errorf("no AWS protocol has been provided")
+	}
+	if s3.options.awsHostname == "" {
+		return fmt.Errorf("no AWS Hostname has been provided")
 	}
 	if s3.options.awsCredentialsSecret == "" {
 		return fmt.Errorf("no AWS credentials secret has been provided")

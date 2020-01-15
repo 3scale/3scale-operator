@@ -1571,8 +1571,6 @@ objects:
   data:
     AMP_RELEASE: ${AMP_RELEASE}
     APICAST_REGISTRY_URL: ${APICAST_REGISTRY_URL}
-    AWS_BUCKET: ${AWS_BUCKET}
-    AWS_REGION: ${AWS_REGION}
     FILE_UPLOAD_STORAGE: s3
     FORCE_SSL: "true"
     PROVIDER_PLAN: enterprise
@@ -1580,8 +1578,6 @@ objects:
     RAILS_LOG_LEVEL: info
     RAILS_LOG_TO_STDOUT: "true"
     SSL_CERT_DIR: /etc/pki/tls/certs
-    STORAGE_SERVICE_ENDPOINT_HOST: ${STORAGE_SERVICE_ENDPOINT_HOST}
-    STORAGE_SERVICE_ENDPOINT_SCHEME: ${STORAGE_SERVICE_ENDPOINT_SCHEME}
     THINKING_SPHINX_PORT: "9306"
     THREESCALE_SANDBOX_PROXY_OPENSSL_VERIFY_MODE: VERIFY_NONE
     THREESCALE_SUPERDOMAIN: ${WILDCARD_DOMAIN}
@@ -1899,24 +1895,24 @@ objects:
                   name: aws-auth
             - name: AWS_BUCKET
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: AWS_BUCKET
-                  name: system-environment
+                  name: aws-auth
             - name: AWS_REGION
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: AWS_REGION
-                  name: system-environment
-            - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+                  name: aws-auth
+            - name: AWS_PROTOCOL
               valueFrom:
-                configMapKeyRef:
-                  key: STORAGE_SERVICE_ENDPOINT_SCHEME
-                  name: system-environment
-            - name: STORAGE_SERVICE_ENDPOINT_HOST
+                secretKeyRef:
+                  key: AWS_PROTOCOL
+                  name: aws-auth
+            - name: AWS_HOSTNAME
               valueFrom:
-                configMapKeyRef:
-                  key: STORAGE_SERVICE_ENDPOINT_HOST
-                  name: system-environment
+                secretKeyRef:
+                  key: AWS_HOSTNAME
+                  name: aws-auth
           failurePolicy: Retry
         timeoutSeconds: 1200
         updatePeriodSeconds: 1
@@ -2208,24 +2204,24 @@ objects:
                 name: aws-auth
           - name: AWS_BUCKET
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_BUCKET
-                name: system-environment
+                name: aws-auth
           - name: AWS_REGION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_REGION
-                name: system-environment
-          - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+                name: aws-auth
+          - name: AWS_PROTOCOL
             valueFrom:
-              configMapKeyRef:
-                key: STORAGE_SERVICE_ENDPOINT_SCHEME
-                name: system-environment
-          - name: STORAGE_SERVICE_ENDPOINT_HOST
+              secretKeyRef:
+                key: AWS_PROTOCOL
+                name: aws-auth
+          - name: AWS_HOSTNAME
             valueFrom:
-              configMapKeyRef:
-                key: STORAGE_SERVICE_ENDPOINT_HOST
-                name: system-environment
+              secretKeyRef:
+                key: AWS_HOSTNAME
+                name: aws-auth
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2533,24 +2529,24 @@ objects:
                 name: aws-auth
           - name: AWS_BUCKET
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_BUCKET
-                name: system-environment
+                name: aws-auth
           - name: AWS_REGION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_REGION
-                name: system-environment
-          - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+                name: aws-auth
+          - name: AWS_PROTOCOL
             valueFrom:
-              configMapKeyRef:
-                key: STORAGE_SERVICE_ENDPOINT_SCHEME
-                name: system-environment
-          - name: STORAGE_SERVICE_ENDPOINT_HOST
+              secretKeyRef:
+                key: AWS_PROTOCOL
+                name: aws-auth
+          - name: AWS_HOSTNAME
             valueFrom:
-              configMapKeyRef:
-                key: STORAGE_SERVICE_ENDPOINT_HOST
-                name: system-environment
+              secretKeyRef:
+                key: AWS_HOSTNAME
+                name: aws-auth
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2857,24 +2853,24 @@ objects:
                 name: aws-auth
           - name: AWS_BUCKET
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_BUCKET
-                name: system-environment
+                name: aws-auth
           - name: AWS_REGION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_REGION
-                name: system-environment
-          - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+                name: aws-auth
+          - name: AWS_PROTOCOL
             valueFrom:
-              configMapKeyRef:
-                key: STORAGE_SERVICE_ENDPOINT_SCHEME
-                name: system-environment
-          - name: STORAGE_SERVICE_ENDPOINT_HOST
+              secretKeyRef:
+                key: AWS_PROTOCOL
+                name: aws-auth
+          - name: AWS_HOSTNAME
             valueFrom:
-              configMapKeyRef:
-                key: STORAGE_SERVICE_ENDPOINT_HOST
-                name: system-environment
+              secretKeyRef:
+                key: AWS_HOSTNAME
+                name: aws-auth
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3240,24 +3236,24 @@ objects:
                 name: aws-auth
           - name: AWS_BUCKET
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_BUCKET
-                name: system-environment
+                name: aws-auth
           - name: AWS_REGION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_REGION
-                name: system-environment
-          - name: STORAGE_SERVICE_ENDPOINT_SCHEME
+                name: aws-auth
+          - name: AWS_PROTOCOL
             valueFrom:
-              configMapKeyRef:
-                key: STORAGE_SERVICE_ENDPOINT_SCHEME
-                name: system-environment
-          - name: STORAGE_SERVICE_ENDPOINT_HOST
+              secretKeyRef:
+                key: AWS_PROTOCOL
+                name: aws-auth
+          - name: AWS_HOSTNAME
             valueFrom:
-              configMapKeyRef:
-                key: STORAGE_SERVICE_ENDPOINT_HOST
-                name: system-environment
+              secretKeyRef:
+                key: AWS_HOSTNAME
+                name: aws-auth
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           name: system-sidekiq
@@ -4316,6 +4312,10 @@ objects:
     name: aws-auth
   stringData:
     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    AWS_BUCKET: ${AWS_BUCKET}
+    AWS_HOSTNAME: ${AWS_HOSTNAME}
+    AWS_PROTOCOL: ${AWS_PROTOCOL}
+    AWS_REGION: ${AWS_REGION}
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
   type: Opaque
 parameters:
@@ -4499,9 +4499,7 @@ parameters:
   name: AWS_BUCKET
 - description: AWS Region to use in S3 Storage for assets.
   name: AWS_REGION
-- description: Storage Service URL scheme to use for the S3 API-compatible storage
-    service
-  name: STORAGE_SERVICE_ENDPOINT_SCHEME
-- description: Storage Service URL host and optionally a port separated by a colon
-    (:) to use as the S3 API-compatible storage service
-  name: STORAGE_SERVICE_ENDPOINT_HOST
+- description: AWS S3 provider endpoint protocol. HTTP or HTTPS.
+  name: AWS_PROTOCOL
+- description: AWS S3 provider endpoint hostname
+  name: AWS_HOSTNAME

@@ -252,13 +252,7 @@ func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.Syste
 		o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
 		s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
 		b.S3FileStorageOptions(component.S3FileStorageOptions{
-			AWSAccessKeyId:       "",
-			AWSSecretAccessKey:   "",
-			AWSRegion:            s3FileStorageSpec.AWSRegion,
-			AWSBucket:            s3FileStorageSpec.AWSBucket,
 			AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
-			EndpointScheme:       helper.GetStringPointerValueOrDefault(s3FileStorageSpec.EndpointScheme, ""),
-			EndpointHost:         helper.GetStringPointerValueOrDefault(s3FileStorageSpec.EndpointHost, ""),
 		})
 	} else {
 		// default to PVC
@@ -286,26 +280,18 @@ func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.Syste
 	// We do not modify it. Otherwise we set a default value
 	secretData := currSecret.Data
 	var result *string
-	result = helper.GetSecretDataValue(secretData, component.S3SecretAWSAccessKeyIdFieldName)
+	result = helper.GetSecretDataValue(secretData, component.AwsAccessKeyID)
 	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSAccessKeyIdFieldName, awsCredentialsSecretName)
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsAccessKeyID, awsCredentialsSecretName)
 	}
-	awsAccessKeyID := *result
 
-	result = helper.GetSecretDataValue(secretData, component.S3SecretAWSSecretAccessKeyFieldName)
+	result = helper.GetSecretDataValue(secretData, component.AwsSecretAccessKey)
 	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.S3SecretAWSSecretAccessKeyFieldName, awsCredentialsSecretName)
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsSecretAccessKey, awsCredentialsSecretName)
 	}
-	awsSecretAccessKeyID := *result
 
 	s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
 	sob.S3FileStorageOptions(component.S3FileStorageOptions{
-		AWSAccessKeyId:       awsAccessKeyID,
-		AWSSecretAccessKey:   awsSecretAccessKeyID,
-		AWSRegion:            s3FileStorageSpec.AWSRegion,
-		AWSBucket:            s3FileStorageSpec.AWSBucket,
-		EndpointScheme:       helper.GetStringPointerValueOrDefault(s3FileStorageSpec.EndpointScheme, ""),
-		EndpointHost:         helper.GetStringPointerValueOrDefault(s3FileStorageSpec.EndpointHost, ""),
 		AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
 	})
 

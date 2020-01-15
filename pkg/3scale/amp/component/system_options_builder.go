@@ -13,8 +13,6 @@ type S3FileStorageOptions struct {
 	AWSRegion            string
 	AWSBucket            string
 	AWSCredentialsSecret string
-	EndpointScheme       string
-	EndpointHost         string
 }
 
 type SystemSMTPSecretOptions struct {

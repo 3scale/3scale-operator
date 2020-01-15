@@ -189,8 +189,8 @@ func getAWSCredentialsSecret(name, namespace string) *v1.Secret {
 			Namespace: namespace,
 		},
 		StringData: map[string]string{
-			component.S3SecretAWSAccessKeyIdFieldName:     "my_aws_access_key_id",
-			component.S3SecretAWSSecretAccessKeyFieldName: "my_aws_secret_access_key",
+			component.AwsAccessKeyID:     "my_aws_access_key_id",
+			component.AwsSecretAccessKey: "my_aws_secret_access_key",
 		},
 		Type: v1.SecretTypeOpaque,
 	}

@@ -269,12 +269,12 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	if system.Options.s3FileStorageOptions != nil {
 		result = append(result,
 			envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-			envVarFromSecret("AWS_ACCESS_KEY_ID", system.Options.s3FileStorageOptions.AWSCredentialsSecret, S3SecretAWSAccessKeyIdFieldName),
-			envVarFromSecret("AWS_SECRET_ACCESS_KEY", system.Options.s3FileStorageOptions.AWSCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
-			envVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
-			envVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
-			envVarFromConfigMap(StorageServiceEndpointScheme, "system-environment", StorageServiceEndpointScheme),
-			envVarFromConfigMap(StorageServiceEndpointHost, "system-environment", StorageServiceEndpointHost),
+			envVarFromSecret(AwsAccessKeyID, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsAccessKeyID),
+			envVarFromSecret(AwsSecretAccessKey, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsSecretAccessKey),
+			envVarFromSecret(AwsBucket, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsBucket),
+			envVarFromSecret(AwsRegion, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsRegion),
+			envVarFromSecret(AwsProtocol, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsProtocol),
+			envVarFromSecret(AwsHostname, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsHostname),
 		)
 	}
 
@@ -325,18 +325,10 @@ func (system *System) EnvironmentConfigMap() *v1.ConfigMap {
 	}
 
 	if system.Options.s3FileStorageOptions != nil {
-		system.AddS3ConfigIntoEnvironmentConfigMap(res)
+		res.Data["FILE_UPLOAD_STORAGE"] = "s3"
 	}
 
 	return res
-}
-
-func (system *System) AddS3ConfigIntoEnvironmentConfigMap(configMap *v1.ConfigMap) {
-	configMap.Data["FILE_UPLOAD_STORAGE"] = "s3"
-	configMap.Data["AWS_BUCKET"] = system.Options.s3FileStorageOptions.AWSBucket
-	configMap.Data["AWS_REGION"] = system.Options.s3FileStorageOptions.AWSRegion
-	configMap.Data[StorageServiceEndpointScheme] = system.Options.s3FileStorageOptions.EndpointScheme
-	configMap.Data[StorageServiceEndpointHost] = system.Options.s3FileStorageOptions.EndpointHost
 }
 
 func (system *System) MemcachedSecret() *v1.Secret {
@@ -1308,8 +1300,8 @@ func (system *System) S3AWSSecret() *v1.Secret {
 			Name: system.Options.s3FileStorageOptions.AWSCredentialsSecret,
 		},
 		StringData: map[string]string{
-			S3SecretAWSAccessKeyIdFieldName:     system.Options.s3FileStorageOptions.AWSAccessKeyId,
-			S3SecretAWSSecretAccessKeyFieldName: system.Options.s3FileStorageOptions.AWSSecretAccessKey,
+			AwsAccessKeyID:     system.Options.s3FileStorageOptions.AWSAccessKeyId,
+			AwsSecretAccessKey: system.Options.s3FileStorageOptions.AWSSecretAccessKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
