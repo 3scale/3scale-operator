@@ -1289,20 +1289,3 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 	}
 }
-
-func (system *System) S3AWSSecret() *v1.Secret {
-	return &v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: system.Options.s3FileStorageOptions.AWSCredentialsSecret,
-		},
-		StringData: map[string]string{
-			AwsAccessKeyID:     system.Options.s3FileStorageOptions.AWSAccessKeyId,
-			AwsSecretAccessKey: system.Options.s3FileStorageOptions.AWSSecretAccessKey,
-		},
-		Type: v1.SecretTypeOpaque,
-	}
-}

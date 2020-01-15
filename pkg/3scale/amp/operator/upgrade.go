@@ -478,6 +478,9 @@ func (u *UpgradeApiManager) upgradeAwsSecret() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+	if existingSecret.StringData == nil {
+		existingSecret.StringData = map[string]string{}
+	}
 	secretData := helper.GetSecretStringDataFromData(existingSecret.Data)
 	if _, ok := secretData[component.AwsBucket]; !ok {
 		existingSecret.StringData[component.AwsBucket] = u.Cr.Spec.System.FileStorageSpec.S3.AWSBucket

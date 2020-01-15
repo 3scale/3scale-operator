@@ -8,10 +8,6 @@ import (
 )
 
 type S3FileStorageOptions struct {
-	AWSAccessKeyId       string
-	AWSSecretAccessKey   string
-	AWSRegion            string
-	AWSBucket            string
 	AWSCredentialsSecret string
 }
 

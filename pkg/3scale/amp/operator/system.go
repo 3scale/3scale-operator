@@ -79,13 +79,6 @@ func (o *OperatorSystemOptionsProvider) setSecretBasedOptions(builder *component
 		return fmt.Errorf("unable to create System SMTP secret options - %s", err)
 	}
 
-	if o.APIManagerSpec.System.FileStorageSpec != nil && o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
-		err = o.setAWSSecretOptions(builder)
-		if err != nil {
-			return fmt.Errorf("unable to create AWS S3 secret options - %s", err)
-		}
-	}
-
 	return nil
 }
 
@@ -267,35 +260,6 @@ func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.Syste
 			StorageClass: storageClass,
 		})
 	}
-}
-
-func (o *OperatorSystemOptionsProvider) setAWSSecretOptions(sob *component.SystemOptionsBuilder) error {
-	awsCredentialsSecretName := o.APIManagerSpec.System.FileStorageSpec.S3.AWSCredentials.Name
-	currSecret, err := helper.GetSecret(awsCredentialsSecretName, o.Namespace, o.Client)
-	if err != nil {
-		return err
-	}
-
-	// If a field of a secret already exists in the deployed secret then
-	// We do not modify it. Otherwise we set a default value
-	secretData := currSecret.Data
-	var result *string
-	result = helper.GetSecretDataValue(secretData, component.AwsAccessKeyID)
-	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsAccessKeyID, awsCredentialsSecretName)
-	}
-
-	result = helper.GetSecretDataValue(secretData, component.AwsSecretAccessKey)
-	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsSecretAccessKey, awsCredentialsSecretName)
-	}
-
-	s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
-	sob.S3FileStorageOptions(component.S3FileStorageOptions{
-		AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
-	})
-
-	return nil
 }
 
 func (o *OperatorSystemOptionsProvider) setReplicas(sob *component.SystemOptionsBuilder) {
