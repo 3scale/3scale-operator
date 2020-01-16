@@ -229,10 +229,17 @@ metadata:
 stringData:
   AWS_ACCESS_KEY_ID: 1234567
   AWS_SECRET_ACCESS_KEY: 987654321
+  AWS_BUCKET: mybucket.example.com
+  AWS_REGION: eu-west-1
 type: Opaque
 ```
 
 Secret name can be anyone, as it will be referenced in the *APIManager* custom resource.
+
+**AWS S3 compatible provider**
+
+AWS S3 compatible provider endpoint hostname can be configured in the S3 secret with
+*AWS_HOSTNAME* and *AWS_PROTOCOL* optional keys. Check [S3 secret reference](apimanager-reference.md#fileStorage-S3-credentials-secret) for reference.
 
 Finally, create *APIManager* custom resource to deploy 3scale
 
@@ -246,17 +253,18 @@ spec:
   system:
     fileStorage:
       amazonSimpleStorageService:
-        awsRegion: eu-west-1
-        awsBucket: enterprise-onprem.3sca.net
+        awsRegion: ""
+        awsBucket: ""
         awsCredentialsSecret:
           name: aws-auth
 ```
 
-Note that **S3 region** and **S3 bucket** settings are provided directly in the APIManager custom resource.
-
 Note that S3 secret name is provided directly in the APIManager custom resource.
 
 Check [*APIManager SystemS3Spec*](apimanager-reference.md#SystemS3Spec) for reference.
+
+**Deprecation Note**
+**awsRegion** and **awsBucket** attributes are deprecated. They must exist and left with empty value.
 
 #### PostgreSQL Installation
 

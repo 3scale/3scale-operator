@@ -456,7 +456,7 @@ func (in *SystemFileStorageSpec) DeepCopyInto(out *SystemFileStorageSpec) {
 	if in.S3 != nil {
 		in, out := &in.S3, &out.S3
 		*out = new(SystemS3Spec)
-		(*in).DeepCopyInto(*out)
+		**out = **in
 	}
 	return
 }
@@ -538,16 +538,6 @@ func (in *SystemPostgreSQLSpec) DeepCopy() *SystemPostgreSQLSpec {
 func (in *SystemS3Spec) DeepCopyInto(out *SystemS3Spec) {
 	*out = *in
 	out.AWSCredentials = in.AWSCredentials
-	if in.EndpointScheme != nil {
-		in, out := &in.EndpointScheme, &out.EndpointScheme
-		*out = new(string)
-		**out = **in
-	}
-	if in.EndpointHost != nil {
-		in, out := &in.EndpointHost, &out.EndpointHost
-		*out = new(string)
-		**out = **in
-	}
 	return
 }
 

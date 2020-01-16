@@ -53,8 +53,8 @@ func (s *S3) options() (*component.S3Options, error) {
 	sob.AwsSecretAccessKey("${AWS_SECRET_ACCESS_KEY}")
 	sob.AwsRegion("${AWS_REGION}")
 	sob.AwsBucket("${AWS_BUCKET}")
-	sob.StorageServiceEndpointScheme("${STORAGE_SERVICE_ENDPOINT_SCHEME}")
-	sob.StorageServiceEndpointHost("${STORAGE_SERVICE_ENDPOINT_HOST}")
+	sob.AWSProtocol("${AWS_PROTOCOL}")
+	sob.AWSHostname("${AWS_HOSTNAME}")
 	sob.AWSCredentialsSecret("aws-auth")
 	return sob.Build()
 }
@@ -82,14 +82,13 @@ func (s3 *S3) parameters() []templatev1.Parameter {
 			Required:    false,
 		},
 		templatev1.Parameter{
-			Name:        "STORAGE_SERVICE_ENDPOINT_SCHEME",
-			Description: "Storage Service URL scheme to use for the S3 API-compatible storage service",
+			Name:        "AWS_PROTOCOL",
+			Description: "AWS S3 compatible provider endpoint protocol. HTTP or HTTPS.",
 			Required:    false,
 		},
 		templatev1.Parameter{
-			Name: "STORAGE_SERVICE_ENDPOINT_HOST",
-			// TODO we assume can handle this format
-			Description: "Storage Service URL host and optionally a port separated by a colon (:) to use as the S3 API-compatible storage service",
+			Name:        "AWS_HOSTNAME",
+			Description: "AWS S3 compatible provider endpoint hostname",
 			Required:    false,
 		},
 	}

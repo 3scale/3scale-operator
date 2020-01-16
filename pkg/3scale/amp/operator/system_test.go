@@ -189,8 +189,10 @@ func getAWSCredentialsSecret(name, namespace string) *v1.Secret {
 			Namespace: namespace,
 		},
 		StringData: map[string]string{
-			component.S3SecretAWSAccessKeyIdFieldName:     "my_aws_access_key_id",
-			component.S3SecretAWSSecretAccessKeyFieldName: "my_aws_secret_access_key",
+			component.AwsAccessKeyID:     "my_aws_access_key_id",
+			component.AwsSecretAccessKey: "my_aws_secret_access_key",
+			component.AwsBucket:          "someBucket",
+			component.AwsRegion:          "someRegion",
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -262,8 +264,6 @@ func TestGetSystemOptions(t *testing.T) {
 				apimanager := basicApimanagerSpecTestSystemOptions(name, namespace)
 				apimanager.Spec.System.FileStorageSpec.PVC = nil
 				apimanager.Spec.System.FileStorageSpec.S3 = &appsv1alpha1.SystemS3Spec{
-					AWSBucket:      "someBucket",
-					AWSRegion:      "someRegion",
 					AWSCredentials: v1.LocalObjectReference{Name: "myawsauth"},
 				}
 				return apimanager

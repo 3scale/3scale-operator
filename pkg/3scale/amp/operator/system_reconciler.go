@@ -114,17 +114,10 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconc
 }
 
 func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
-	if r.apiManager.Spec.System.FileStorageSpec != nil &&
-		r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
-		return r.reconcileS3AWSSecret(system.S3AWSSecret())
+	if r.apiManager.Spec.System.FileStorageSpec != nil && r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
+		return r.reconcileS3Storage()
 	}
-
 	return r.reconcileSharedStorage(system.SharedStorage())
-}
-
-func (r *SystemReconciler) reconcileS3AWSSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
 }
 
 func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
@@ -229,6 +222,44 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *SystemReconciler) reconcileS3Storage() error {
+	// Nothing for reconcile.
+	// Check all required fields exist
+	awsCredentialsSecretName := r.apiManager.Spec.System.FileStorageSpec.S3.AWSCredentials.Name
+	if awsCredentialsSecretName == "" {
+		return fmt.Errorf("no aws credentials provided")
+	}
+
+	awsSecret, err := helper.GetSecret(awsCredentialsSecretName, r.apiManager.Namespace, r.Client())
+	if err != nil {
+		return err
+	}
+
+	secretData := awsSecret.Data
+	var result *string
+	result = helper.GetSecretDataValue(secretData, component.AwsAccessKeyID)
+	if result == nil {
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsAccessKeyID, awsCredentialsSecretName)
+	}
+
+	result = helper.GetSecretDataValue(secretData, component.AwsSecretAccessKey)
+	if result == nil {
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsSecretAccessKey, awsCredentialsSecretName)
+	}
+
+	result = helper.GetSecretDataValue(secretData, component.AwsBucket)
+	if result == nil {
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsBucket, awsCredentialsSecretName)
+	}
+
+	result = helper.GetSecretDataValue(secretData, component.AwsRegion)
+	if result == nil {
+		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsRegion, awsCredentialsSecretName)
+	}
+
+	return nil
 }
 
 func (r *SystemReconciler) reconcileSharedStorage(desiredPVC *v1.PersistentVolumeClaim) error {

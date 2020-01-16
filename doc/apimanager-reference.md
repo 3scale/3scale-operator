@@ -115,8 +115,8 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| AWSBucket | `awsBucket` | string | Yes | N/A | AWS Bucket name of the S3 bucket to be used as System's FileStorage for assets |
-| AWSRegion | `awsRegion` | string | Yes | N/A | AWS Region of the S3 bucket to be used as Sytem's FileStorage for assets |
+| AWSBucket | `awsBucket` | string | Yes | N/A | **DEPRECATED** Use [fileStorage S3 credentials secret](#fileStorage-S3-credentials-secret) instead |
+| AWSRegion | `awsRegion` | string | Yes | N/A | **DEPRECATED** Use [fileStorage S3 credentials secret](#fileStorage-S3-credentials-secret) instead |
 | AWSCredentials | `awsCredentialsSecret` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS credentials are stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
 
 The secret name specified in the `awsCredentialsSecret` field must be
@@ -322,10 +322,14 @@ The available configurable secrets are:
 The name of this secret can be any name as long as does not collide with other
 existing secret names.
 
-| **Field** | **Description** | **Default value** |
+| **Field** | **Description** | | **Required** |
 | --- | --- | --- |
-| AWS_ACCESS_KEY_ID | AWS Access Key ID to use in S3 Storage for System's file storage | N/A |
-| AWS_SECRET_ACCESS_KEY | AWS Access Key Secret to use in S3 Storage for System's file storage | N/A |
+| AWS_ACCESS_KEY_ID | AWS Access Key ID to use in S3 Storage for System's file storage | Y |
+| AWS_SECRET_ACCESS_KEY | AWS Access Key Secret to use in S3 Storage for System's file storage | Y |
+| AWS_BUCKET | S3 bucket to be used as System's FileStorage for assets | Y |
+| AWS_REGION | Region of the S3 bucket to be used as Sytem's FileStorage for assets | Y |
+| AWS_HOSTNAME | AWS S3 compatible provider endpoint hostname | N |
+| AWS_PROTOCOL | AWS S3 compatible provider endpoint protocol | N |
 
 #### system-smtp
 
