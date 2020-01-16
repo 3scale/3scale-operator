@@ -1908,11 +1908,13 @@ objects:
                 secretKeyRef:
                   key: AWS_PROTOCOL
                   name: aws-auth
+                  optional: true
             - name: AWS_HOSTNAME
               valueFrom:
                 secretKeyRef:
                   key: AWS_HOSTNAME
                   name: aws-auth
+                  optional: true
           failurePolicy: Retry
         timeoutSeconds: 1200
         updatePeriodSeconds: 1
@@ -2217,11 +2219,13 @@ objects:
               secretKeyRef:
                 key: AWS_PROTOCOL
                 name: aws-auth
+                optional: true
           - name: AWS_HOSTNAME
             valueFrom:
               secretKeyRef:
                 key: AWS_HOSTNAME
                 name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2542,11 +2546,13 @@ objects:
               secretKeyRef:
                 key: AWS_PROTOCOL
                 name: aws-auth
+                optional: true
           - name: AWS_HOSTNAME
             valueFrom:
               secretKeyRef:
                 key: AWS_HOSTNAME
                 name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2866,11 +2872,13 @@ objects:
               secretKeyRef:
                 key: AWS_PROTOCOL
                 name: aws-auth
+                optional: true
           - name: AWS_HOSTNAME
             valueFrom:
               secretKeyRef:
                 key: AWS_HOSTNAME
                 name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3249,11 +3257,13 @@ objects:
               secretKeyRef:
                 key: AWS_PROTOCOL
                 name: aws-auth
+                optional: true
           - name: AWS_HOSTNAME
             valueFrom:
               secretKeyRef:
                 key: AWS_HOSTNAME
                 name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           name: system-sidekiq

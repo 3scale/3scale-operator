@@ -105,8 +105,8 @@ func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 		envVarFromSecret(AwsSecretAccessKey, s3.Options.awsCredentialsSecret, AwsSecretAccessKey),
 		envVarFromSecret(AwsBucket, s3.Options.awsCredentialsSecret, AwsBucket),
 		envVarFromSecret(AwsRegion, s3.Options.awsCredentialsSecret, AwsRegion),
-		envVarFromSecret(AwsProtocol, s3.Options.awsCredentialsSecret, AwsProtocol),
-		envVarFromSecret(AwsHostname, s3.Options.awsCredentialsSecret, AwsHostname),
+		envVarFromSecretOptional(AwsProtocol, s3.Options.awsCredentialsSecret, AwsProtocol),
+		envVarFromSecretOptional(AwsHostname, s3.Options.awsCredentialsSecret, AwsHostname),
 	}
 }
 

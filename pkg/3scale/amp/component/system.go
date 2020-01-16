@@ -273,8 +273,8 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 			envVarFromSecret(AwsSecretAccessKey, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsSecretAccessKey),
 			envVarFromSecret(AwsBucket, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsBucket),
 			envVarFromSecret(AwsRegion, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsRegion),
-			envVarFromSecret(AwsProtocol, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsProtocol),
-			envVarFromSecret(AwsHostname, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsHostname),
+			envVarFromSecretOptional(AwsProtocol, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsProtocol),
+			envVarFromSecretOptional(AwsHostname, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsHostname),
 		)
 	}
 
