@@ -229,7 +229,9 @@ type SystemPVCSpec struct {
 }
 
 type SystemS3Spec struct {
-	AWSBucket      string                  `json:"awsBucket"`
+	// Deprecated
+	AWSBucket string `json:"awsBucket"`
+	// Deprecated
 	AWSRegion      string                  `json:"awsRegion"`
 	AWSCredentials v1.LocalObjectReference `json:"awsCredentialsSecret"`
 }

@@ -1571,8 +1571,6 @@ objects:
   data:
     AMP_RELEASE: ${AMP_RELEASE}
     APICAST_REGISTRY_URL: ${APICAST_REGISTRY_URL}
-    AWS_BUCKET: ${AWS_BUCKET}
-    AWS_REGION: ${AWS_REGION}
     FILE_UPLOAD_STORAGE: s3
     FORCE_SSL: "true"
     PROVIDER_PLAN: enterprise
@@ -1897,14 +1895,26 @@ objects:
                   name: aws-auth
             - name: AWS_BUCKET
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: AWS_BUCKET
-                  name: system-environment
+                  name: aws-auth
             - name: AWS_REGION
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   key: AWS_REGION
-                  name: system-environment
+                  name: aws-auth
+            - name: AWS_PROTOCOL
+              valueFrom:
+                secretKeyRef:
+                  key: AWS_PROTOCOL
+                  name: aws-auth
+                  optional: true
+            - name: AWS_HOSTNAME
+              valueFrom:
+                secretKeyRef:
+                  key: AWS_HOSTNAME
+                  name: aws-auth
+                  optional: true
           failurePolicy: Retry
         timeoutSeconds: 1200
         updatePeriodSeconds: 1
@@ -2196,14 +2206,26 @@ objects:
                 name: aws-auth
           - name: AWS_BUCKET
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_BUCKET
-                name: system-environment
+                name: aws-auth
           - name: AWS_REGION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_REGION
-                name: system-environment
+                name: aws-auth
+          - name: AWS_PROTOCOL
+            valueFrom:
+              secretKeyRef:
+                key: AWS_PROTOCOL
+                name: aws-auth
+                optional: true
+          - name: AWS_HOSTNAME
+            valueFrom:
+              secretKeyRef:
+                key: AWS_HOSTNAME
+                name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2511,14 +2533,26 @@ objects:
                 name: aws-auth
           - name: AWS_BUCKET
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_BUCKET
-                name: system-environment
+                name: aws-auth
           - name: AWS_REGION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_REGION
-                name: system-environment
+                name: aws-auth
+          - name: AWS_PROTOCOL
+            valueFrom:
+              secretKeyRef:
+                key: AWS_PROTOCOL
+                name: aws-auth
+                optional: true
+          - name: AWS_HOSTNAME
+            valueFrom:
+              secretKeyRef:
+                key: AWS_HOSTNAME
+                name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2825,14 +2859,26 @@ objects:
                 name: aws-auth
           - name: AWS_BUCKET
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_BUCKET
-                name: system-environment
+                name: aws-auth
           - name: AWS_REGION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_REGION
-                name: system-environment
+                name: aws-auth
+          - name: AWS_PROTOCOL
+            valueFrom:
+              secretKeyRef:
+                key: AWS_PROTOCOL
+                name: aws-auth
+                optional: true
+          - name: AWS_HOSTNAME
+            valueFrom:
+              secretKeyRef:
+                key: AWS_HOSTNAME
+                name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3198,14 +3244,26 @@ objects:
                 name: aws-auth
           - name: AWS_BUCKET
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_BUCKET
-                name: system-environment
+                name: aws-auth
           - name: AWS_REGION
             valueFrom:
-              configMapKeyRef:
+              secretKeyRef:
                 key: AWS_REGION
-                name: system-environment
+                name: aws-auth
+          - name: AWS_PROTOCOL
+            valueFrom:
+              secretKeyRef:
+                key: AWS_PROTOCOL
+                name: aws-auth
+                optional: true
+          - name: AWS_HOSTNAME
+            valueFrom:
+              secretKeyRef:
+                key: AWS_HOSTNAME
+                name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           name: system-sidekiq
@@ -4264,6 +4322,10 @@ objects:
     name: aws-auth
   stringData:
     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    AWS_BUCKET: ${AWS_BUCKET}
+    AWS_HOSTNAME: ${AWS_HOSTNAME}
+    AWS_PROTOCOL: ${AWS_PROTOCOL}
+    AWS_REGION: ${AWS_REGION}
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
   type: Opaque
 parameters:
@@ -4447,3 +4509,7 @@ parameters:
   name: AWS_BUCKET
 - description: AWS Region to use in S3 Storage for assets.
   name: AWS_REGION
+- description: AWS S3 compatible provider endpoint protocol. HTTP or HTTPS.
+  name: AWS_PROTOCOL
+- description: AWS S3 compatible provider endpoint hostname
+  name: AWS_HOSTNAME

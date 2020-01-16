@@ -29,7 +29,7 @@ type UpgradeApiManager struct {
 }
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
-	res, err := u.upgradeAPIManagerCR()
+	res, err := u.upgradeAPIManagerCRDefaults()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -49,10 +49,17 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, err
 	}
 
+	if u.Cr.Spec.System.FileStorageSpec != nil && u.Cr.Spec.System.FileStorageSpec.S3 != nil {
+		res, err = u.upgradeSystemS3()
+		if res.Requeue || err != nil {
+			return res, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 
-func (u *UpgradeApiManager) upgradeAPIManagerCR() (reconcile.Result, error) {
+func (u *UpgradeApiManager) upgradeAPIManagerCRDefaults() (reconcile.Result, error) {
 	res, err := u.upgradeAPIManagerCRStorageDefaults()
 	if res.Requeue || err != nil {
 		return res, err
@@ -378,6 +385,136 @@ func (u *UpgradeApiManager) upgradeAPIManagerCRDatabaseDefaults() (reconcile.Res
 		u.Cr.Spec.System.DatabaseSpec.MySQL != nil &&
 		u.Cr.Spec.System.DatabaseSpec.MySQL.Image == nil {
 		u.Cr.Spec.System.DatabaseSpec = nil
+		changed = true
+	}
+
+	if changed {
+		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(u.Cr)))
+		err := u.Client.Update(context.TODO(), u.Cr)
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemS3() (reconcile.Result, error) {
+	res, err := u.upgradeSystemEnvironmentConfigMapRemoveS3Config()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeAwsSecret()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeSystemS3EnvVars()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeApimanagerCRS3Attrs()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemEnvironmentConfigMapRemoveS3Config() (reconcile.Result, error) {
+	changed := false
+	existingConfigMap := &v1.ConfigMap{}
+	configMapNamespacedName := types.NamespacedName{
+		Name:      "system-environment",
+		Namespace: u.Cr.Namespace,
+	}
+	err := u.Client.Get(context.TODO(), configMapNamespacedName, existingConfigMap)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if _, ok := existingConfigMap.Data[component.AwsBucket]; ok {
+		changed = true
+	}
+	delete(existingConfigMap.Data, component.AwsBucket)
+
+	if _, ok := existingConfigMap.Data[component.AwsRegion]; ok {
+		changed = true
+	}
+	delete(existingConfigMap.Data, component.AwsRegion)
+
+	if changed {
+		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(existingConfigMap)))
+		err := u.Client.Update(context.TODO(), existingConfigMap)
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemS3EnvVars() (reconcile.Result, error) {
+	res, err := u.upgradeSystemSidekiqEnvVars()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeSystemAppEnvVars()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeAwsSecret() (reconcile.Result, error) {
+	changed := false
+	existingSecret := &v1.Secret{}
+	secretNamespacedName := types.NamespacedName{
+		Name:      u.Cr.Spec.System.FileStorageSpec.S3.AWSCredentials.Name,
+		Namespace: u.Cr.Namespace,
+	}
+	err := u.Client.Get(context.TODO(), secretNamespacedName, existingSecret)
+	// NotFound also regarded as error, as secret is expected to exist
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if existingSecret.StringData == nil {
+		existingSecret.StringData = map[string]string{}
+	}
+	secretData := helper.GetSecretStringDataFromData(existingSecret.Data)
+	if _, ok := secretData[component.AwsBucket]; !ok {
+		existingSecret.StringData[component.AwsBucket] = u.Cr.Spec.System.FileStorageSpec.S3.AWSBucket
+		changed = true
+	}
+
+	if _, ok := secretData[component.AwsRegion]; !ok {
+		existingSecret.StringData[component.AwsRegion] = u.Cr.Spec.System.FileStorageSpec.S3.AWSRegion
+		changed = true
+	}
+
+	// new attrs AWS_HOSTNAME and AWS_PROTOCOL are not needed
+	// as upgrading always is done from settings for AWS provider
+	// and default (empty) values are good enough
+
+	if changed {
+		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(existingSecret)))
+		err := u.Client.Update(context.TODO(), existingSecret)
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeApimanagerCRS3Attrs() (reconcile.Result, error) {
+	changed := false
+
+	if u.Cr.Spec.System.FileStorageSpec.S3.AWSBucket != "" {
+		u.Cr.Spec.System.FileStorageSpec.S3.AWSBucket = ""
+		changed = true
+	}
+
+	if u.Cr.Spec.System.FileStorageSpec.S3.AWSRegion != "" {
+		u.Cr.Spec.System.FileStorageSpec.S3.AWSRegion = ""
 		changed = true
 	}
 

@@ -10,8 +10,12 @@ import (
 )
 
 const (
-	S3SecretAWSAccessKeyIdFieldName     = "AWS_ACCESS_KEY_ID"
-	S3SecretAWSSecretAccessKeyFieldName = "AWS_SECRET_ACCESS_KEY"
+	AwsAccessKeyID     = "AWS_ACCESS_KEY_ID"
+	AwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
+	AwsBucket          = "AWS_BUCKET"
+	AwsRegion          = "AWS_REGION"
+	AwsProtocol        = "AWS_PROTOCOL"
+	AwsHostname        = "AWS_HOSTNAME"
 )
 
 type S3 struct {
@@ -97,10 +101,12 @@ func (s3 *S3) RemoveRWXStorageClassParameter(template *templatev1.Template) {
 func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 	return []v1.EnvVar{
 		envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-		envVarFromSecret("AWS_ACCESS_KEY_ID", s3.Options.awsCredentialsSecret, S3SecretAWSAccessKeyIdFieldName),
-		envVarFromSecret("AWS_SECRET_ACCESS_KEY", s3.Options.awsCredentialsSecret, S3SecretAWSSecretAccessKeyFieldName),
-		envVarFromConfigMap("AWS_BUCKET", "system-environment", "AWS_BUCKET"),
-		envVarFromConfigMap("AWS_REGION", "system-environment", "AWS_REGION"),
+		envVarFromSecret(AwsAccessKeyID, s3.Options.awsCredentialsSecret, AwsAccessKeyID),
+		envVarFromSecret(AwsSecretAccessKey, s3.Options.awsCredentialsSecret, AwsSecretAccessKey),
+		envVarFromSecret(AwsBucket, s3.Options.awsCredentialsSecret, AwsBucket),
+		envVarFromSecret(AwsRegion, s3.Options.awsCredentialsSecret, AwsRegion),
+		envVarFromSecretOptional(AwsProtocol, s3.Options.awsCredentialsSecret, AwsProtocol),
+		envVarFromSecretOptional(AwsHostname, s3.Options.awsCredentialsSecret, AwsHostname),
 	}
 }
 
@@ -138,8 +144,6 @@ func (s3 *S3) AddS3PostprocessOptionsToSystemEnvironmentCfgMap(objects []common.
 	}
 
 	systemEnvCfgMap.Data["FILE_UPLOAD_STORAGE"] = "s3"
-	systemEnvCfgMap.Data["AWS_BUCKET"] = s3.Options.awsBucket
-	systemEnvCfgMap.Data["AWS_REGION"] = s3.Options.awsRegion
 }
 
 func (s3 *S3) RemoveSystemStoragePVC(objects []common.KubernetesObject) []common.KubernetesObject {
@@ -168,8 +172,12 @@ func (s3 *S3) S3AWSSecret() *v1.Secret {
 			Name: s3.Options.awsCredentialsSecret,
 		},
 		StringData: map[string]string{
-			S3SecretAWSAccessKeyIdFieldName:     s3.Options.awsAccessKeyId,
-			S3SecretAWSSecretAccessKeyFieldName: s3.Options.awsSecretAccessKey,
+			AwsAccessKeyID:     s3.Options.awsAccessKeyId,
+			AwsSecretAccessKey: s3.Options.awsSecretAccessKey,
+			AwsRegion:          s3.Options.awsRegion,
+			AwsBucket:          s3.Options.awsBucket,
+			AwsProtocol:        s3.Options.awsProtocol,
+			AwsHostname:        s3.Options.awsHostname,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

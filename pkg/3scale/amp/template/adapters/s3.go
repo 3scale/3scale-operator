@@ -53,6 +53,8 @@ func (s *S3) options() (*component.S3Options, error) {
 	sob.AwsSecretAccessKey("${AWS_SECRET_ACCESS_KEY}")
 	sob.AwsRegion("${AWS_REGION}")
 	sob.AwsBucket("${AWS_BUCKET}")
+	sob.AWSProtocol("${AWS_PROTOCOL}")
+	sob.AWSHostname("${AWS_HOSTNAME}")
 	sob.AWSCredentialsSecret("aws-auth")
 	return sob.Build()
 }
@@ -77,6 +79,16 @@ func (s3 *S3) parameters() []templatev1.Parameter {
 		templatev1.Parameter{
 			Name:        "AWS_REGION",
 			Description: "AWS Region to use in S3 Storage for assets.",
+			Required:    false,
+		},
+		templatev1.Parameter{
+			Name:        "AWS_PROTOCOL",
+			Description: "AWS S3 compatible provider endpoint protocol. HTTP or HTTPS.",
+			Required:    false,
+		},
+		templatev1.Parameter{
+			Name:        "AWS_HOSTNAME",
+			Description: "AWS S3 compatible provider endpoint hostname",
 			Required:    false,
 		},
 	}

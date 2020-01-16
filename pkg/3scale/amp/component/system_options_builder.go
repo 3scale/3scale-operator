@@ -8,10 +8,6 @@ import (
 )
 
 type S3FileStorageOptions struct {
-	AWSAccessKeyId       string
-	AWSSecretAccessKey   string
-	AWSRegion            string
-	AWSBucket            string
 	AWSCredentialsSecret string
 }
 
@@ -75,7 +71,7 @@ type SystemOptions struct {
 	backendSharedSecret string
 	tenantName          string
 	wildcardDomain      string
-	smtpSecretOptions SystemSMTPSecretOptions
+	smtpSecretOptions   SystemSMTPSecretOptions
 }
 
 type SystemOptionsBuilder struct {

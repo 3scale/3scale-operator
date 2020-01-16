@@ -10,6 +10,8 @@ type S3Options struct {
 	awsSecretAccessKey   string
 	awsRegion            string
 	awsBucket            string
+	awsProtocol          string
+	awsHostname          string
 	awsCredentialsSecret string
 }
 
@@ -31,6 +33,14 @@ func (s3 *S3OptionsBuilder) AwsRegion(awsRegion string) {
 
 func (s3 *S3OptionsBuilder) AwsBucket(awsBucket string) {
 	s3.options.awsBucket = awsBucket
+}
+
+func (s3 *S3OptionsBuilder) AWSProtocol(awsProtocol string) {
+	s3.options.awsProtocol = awsProtocol
+}
+
+func (s3 *S3OptionsBuilder) AWSHostname(awsHostname string) {
+	s3.options.awsHostname = awsHostname
 }
 
 func (s3 *S3OptionsBuilder) AWSCredentialsSecret(awsCredentials string) {
@@ -61,6 +71,12 @@ func (s3 *S3OptionsBuilder) setRequiredOptions() error {
 	}
 	if s3.options.awsBucket == "" {
 		return fmt.Errorf("no AWS bucket has been provided")
+	}
+	if s3.options.awsProtocol == "" {
+		return fmt.Errorf("no AWS protocol has been provided")
+	}
+	if s3.options.awsHostname == "" {
+		return fmt.Errorf("no AWS Hostname has been provided")
 	}
 	if s3.options.awsCredentialsSecret == "" {
 		return fmt.Errorf("no AWS credentials secret has been provided")
