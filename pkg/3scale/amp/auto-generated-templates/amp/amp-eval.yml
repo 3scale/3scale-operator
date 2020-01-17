@@ -1636,8 +1636,7 @@ objects:
             command:
             - bash
             - -c
-            - bundle exec rake boot openshift:deploy && bundle exec rake services:create_backend_apis
-              services:update_metric_owners proxy:update_proxy_rule_owners
+            - bundle exec rake boot openshift:deploy
             containerName: system-master
             env:
             - name: AMP_RELEASE
