@@ -34,7 +34,7 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, err
 	}
 
-	res, err = u.upgradeSystemAppPreHookPodEnv()
+	res, err = u.upgradeSystemAppPreHookPod()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -264,6 +264,17 @@ func (u *UpgradeApiManager) ensureDeploymentConfigPreHookPodEnvVars(desired, exi
 	return changed
 }
 
+func (u *UpgradeApiManager) ensureDeploymentConfigPreHookPodCommand(desired, existing *appsv1.DeploymentConfig) bool {
+	changed := false
+	desiredPreHookPod := desired.Spec.Strategy.RollingParams.Pre.ExecNewPod
+	existingPrehookPod := existing.Spec.Strategy.RollingParams.Pre.ExecNewPod
+	if !reflect.DeepEqual(existingPrehookPod.Command, desiredPreHookPod.Command) {
+		existingPrehookPod.Command = desiredPreHookPod.Command
+		changed = true
+	}
+	return changed
+}
+
 func (u *UpgradeApiManager) ensureDeploymentConfigPodTemplateEnvVars(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	if len(existing.Spec.Template.Spec.Containers) != len(desired.Spec.Template.Spec.Containers) {
 		return false, fmt.Errorf("%s desired containers length does not match existing containers length", desired.Name)
@@ -329,7 +340,7 @@ func (u *UpgradeApiManager) upgradeSystemPostgreSQLImageStream() (reconcile.Resu
 	return reconciler.Reconcile()
 }
 
-func (u *UpgradeApiManager) upgradeSystemAppPreHookPodEnv() (reconcile.Result, error) {
+func (u *UpgradeApiManager) upgradeSystemAppPreHookPod() (reconcile.Result, error) {
 	existingDeploymentConfig := &appsv1.DeploymentConfig{}
 	err := u.Client.Get(context.TODO(), types.NamespacedName{Name: "system-app", Namespace: u.Cr.Namespace}, existingDeploymentConfig)
 	if err != nil {
@@ -343,6 +354,8 @@ func (u *UpgradeApiManager) upgradeSystemAppPreHookPodEnv() (reconcile.Result, e
 
 	desiredDeploymentConfig := system.AppDeploymentConfig()
 	changed := u.ensureDeploymentConfigPreHookPodEnvVars(desiredDeploymentConfig, existingDeploymentConfig)
+	tmpChanged := u.ensureDeploymentConfigPreHookPodCommand(desiredDeploymentConfig, existingDeploymentConfig)
+	changed = changed || tmpChanged
 
 	if changed {
 		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(existingDeploymentConfig)))
