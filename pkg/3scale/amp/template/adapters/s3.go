@@ -55,6 +55,7 @@ func (s *S3) options() (*component.S3Options, error) {
 	sob.AwsBucket("${AWS_BUCKET}")
 	sob.AWSProtocol("${AWS_PROTOCOL}")
 	sob.AWSHostname("${AWS_HOSTNAME}")
+	sob.AWSPathStyle("${AWS_PATH_STYLE}")
 	sob.AWSCredentialsSecret("aws-auth")
 	return sob.Build()
 }
@@ -89,6 +90,11 @@ func (s3 *S3) parameters() []templatev1.Parameter {
 		templatev1.Parameter{
 			Name:        "AWS_HOSTNAME",
 			Description: "AWS S3 compatible provider endpoint hostname",
+			Required:    false,
+		},
+		templatev1.Parameter{
+			Name:        "AWS_PATH_STYLE",
+			Description: "When set to true, the bucket name is always left in the request URI and never moved to the host as a sub-domain",
 			Required:    false,
 		},
 	}

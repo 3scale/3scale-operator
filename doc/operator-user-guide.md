@@ -238,8 +238,9 @@ Secret name can be anyone, as it will be referenced in the *APIManager* custom r
 
 **AWS S3 compatible provider**
 
-AWS S3 compatible provider endpoint hostname can be configured in the S3 secret with
-*AWS_HOSTNAME* and *AWS_PROTOCOL* optional keys. Check [S3 secret reference](apimanager-reference.md#fileStorage-S3-credentials-secret) for reference.
+AWS S3 compatible provider can be configured in the S3 secret with *AWS_HOSTNAME*,
+*AWS_PATH_STYLE* and *AWS_PROTOCOL* optional keys.
+Check [S3 secret reference](apimanager-reference.md#fileStorage-S3-credentials-secret) for reference.
 
 Finally, create *APIManager* custom resource to deploy 3scale
 

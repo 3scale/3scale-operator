@@ -16,6 +16,7 @@ const (
 	AwsRegion          = "AWS_REGION"
 	AwsProtocol        = "AWS_PROTOCOL"
 	AwsHostname        = "AWS_HOSTNAME"
+	AwsPathStyle       = "AWS_PATH_STYLE"
 )
 
 type S3 struct {
@@ -107,6 +108,7 @@ func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 		envVarFromSecret(AwsRegion, s3.Options.awsCredentialsSecret, AwsRegion),
 		envVarFromSecretOptional(AwsProtocol, s3.Options.awsCredentialsSecret, AwsProtocol),
 		envVarFromSecretOptional(AwsHostname, s3.Options.awsCredentialsSecret, AwsHostname),
+		envVarFromSecretOptional(AwsPathStyle, s3.Options.awsCredentialsSecret, AwsPathStyle),
 	}
 }
 
@@ -178,6 +180,7 @@ func (s3 *S3) S3AWSSecret() *v1.Secret {
 			AwsBucket:          s3.Options.awsBucket,
 			AwsProtocol:        s3.Options.awsProtocol,
 			AwsHostname:        s3.Options.awsHostname,
+			AwsPathStyle:       s3.Options.awsPathStyle,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

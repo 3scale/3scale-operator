@@ -12,6 +12,7 @@ type S3Options struct {
 	awsBucket            string
 	awsProtocol          string
 	awsHostname          string
+	awsPathStyle         string
 	awsCredentialsSecret string
 }
 
@@ -41,6 +42,10 @@ func (s3 *S3OptionsBuilder) AWSProtocol(awsProtocol string) {
 
 func (s3 *S3OptionsBuilder) AWSHostname(awsHostname string) {
 	s3.options.awsHostname = awsHostname
+}
+
+func (s3 *S3OptionsBuilder) AWSPathStyle(awsPathStyle string) {
+	s3.options.awsPathStyle = awsPathStyle
 }
 
 func (s3 *S3OptionsBuilder) AWSCredentialsSecret(awsCredentials string) {
