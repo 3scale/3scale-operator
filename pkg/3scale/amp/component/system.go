@@ -563,7 +563,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 						ExecNewPod: &appsv1.ExecNewPodHook{
 							// TODO the MASTER_ACCESS_TOKEN reference should be probably set as an envvar that gathers its value from the system-seed secret
 							// but changing that probably has some implications during an upgrade process of the product
-							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy && bundle exec rake services:create_backend_apis services:update_metric_owners proxy:update_proxy_rule_owners"},
+							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy"},
 							Env:           system.buildSystemAppPreHookEnv(),
 							ContainerName: "system-master",
 							Volumes:       system.volumeNamesForSystemAppPreHookPod()},
