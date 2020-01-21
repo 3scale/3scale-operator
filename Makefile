@@ -28,6 +28,7 @@ NAMESPACE ?= $(shell oc project -q 2>/dev/null || echo operator-test)
 OPERATOR_NAME ?= threescale-operator
 MANIFEST_RELEASE ?= 1.0.$(shell git rev-list --count master)
 APPLICATION_REPOSITORY_NAMESPACE ?= 3scaleoperatormaster
+TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
 
 ## build: Build operator
 build:
@@ -73,16 +74,16 @@ $(PROJECT_PATH)/_output/unit.cov:
 
 ## unit: Run unit tests in pkg directory
 .PHONY: unit
-unit: $(PROJECT_PATH)/_output/unit.cov 
+unit: $(PROJECT_PATH)/_output/unit.cov
 
 ## coverage_analysis: Analyze coverage via a browse
 .PHONY: coverage_analysis
-coverage_analysis: $(PROJECT_PATH)/_output/unit.cov 
+coverage_analysis: $(PROJECT_PATH)/_output/unit.cov
 	go tool cover -html="$(PROJECT_PATH)/_output/unit.cov"
 
 ## coverage_total_report: Simple coverage report
 .PHONY: coverage_total_report
-coverage_total_report: $(PROJECT_PATH)/_output/unit.cov 
+coverage_total_report: $(PROJECT_PATH)/_output/unit.cov
 	@go tool cover -func=$(PROJECT_PATH)/_output/unit.cov | grep total | awk '{print $$3}'
 
 ## test-crds: Run CRD unittests
@@ -117,6 +118,10 @@ ifndef OPERATORCOURIER
 	$(error "operator-courier is not available please install pip3 install operator-courier")
 endif
 	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier push 3scale-operator-master/ $(APPLICATION_REPOSITORY_NAMESPACE) 3scale-operator-master $(MANIFEST_RELEASE) "$(TOKEN)"
+
+## templates: generate templates
+templates:
+	$(MAKE) -C $(TEMPLATES_MAKEFILE_PATH) clean all
 
 ## clean: Clean build resources
 clean:
