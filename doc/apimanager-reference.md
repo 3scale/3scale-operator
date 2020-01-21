@@ -328,8 +328,9 @@ existing secret names.
 | AWS_SECRET_ACCESS_KEY | AWS Access Key Secret to use in S3 Storage for System's file storage | Y |
 | AWS_BUCKET | S3 bucket to be used as System's FileStorage for assets | Y |
 | AWS_REGION | Region of the S3 bucket to be used as Sytem's FileStorage for assets | Y |
-| AWS_HOSTNAME | AWS S3 compatible provider endpoint hostname | N |
-| AWS_PROTOCOL | AWS S3 compatible provider endpoint protocol | N |
+| AWS_HOSTNAME | Default: Amazon endpoints - AWS S3 compatible provider endpoint hostname | N |
+| AWS_PROTOCOL | Default: HTTPS - AWS S3 compatible provider endpoint protocol | N |
+| AWS_PATH_STYLE | Default: false - When set to true, the bucket name is always left in the request URI and never moved to the host as a sub-domain | N |
 
 #### system-smtp
 

@@ -1955,6 +1955,12 @@ objects:
                   key: AWS_HOSTNAME
                   name: aws-auth
                   optional: true
+            - name: AWS_PATH_STYLE
+              valueFrom:
+                secretKeyRef:
+                  key: AWS_PATH_STYLE
+                  name: aws-auth
+                  optional: true
           failurePolicy: Retry
         timeoutSeconds: 1200
         updatePeriodSeconds: 1
@@ -2264,6 +2270,12 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: AWS_HOSTNAME
+                name: aws-auth
+                optional: true
+          - name: AWS_PATH_STYLE
+            valueFrom:
+              secretKeyRef:
+                key: AWS_PATH_STYLE
                 name: aws-auth
                 optional: true
           image: amp-system:latest
@@ -2599,6 +2611,12 @@ objects:
                 key: AWS_HOSTNAME
                 name: aws-auth
                 optional: true
+          - name: AWS_PATH_STYLE
+            valueFrom:
+              secretKeyRef:
+                key: AWS_PATH_STYLE
+                name: aws-auth
+                optional: true
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2929,6 +2947,12 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: AWS_HOSTNAME
+                name: aws-auth
+                optional: true
+          - name: AWS_PATH_STYLE
+            valueFrom:
+              secretKeyRef:
+                key: AWS_PATH_STYLE
                 name: aws-auth
                 optional: true
           image: amp-system:latest
@@ -3320,6 +3344,12 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: AWS_HOSTNAME
+                name: aws-auth
+                optional: true
+          - name: AWS_PATH_STYLE
+            valueFrom:
+              secretKeyRef:
+                key: AWS_PATH_STYLE
                 name: aws-auth
                 optional: true
           image: amp-system:latest
@@ -4424,6 +4454,7 @@ objects:
     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
     AWS_BUCKET: ${AWS_BUCKET}
     AWS_HOSTNAME: ${AWS_HOSTNAME}
+    AWS_PATH_STYLE: ${AWS_PATH_STYLE}
     AWS_PROTOCOL: ${AWS_PROTOCOL}
     AWS_REGION: ${AWS_REGION}
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
@@ -4613,3 +4644,6 @@ parameters:
   name: AWS_PROTOCOL
 - description: AWS S3 compatible provider endpoint hostname
   name: AWS_HOSTNAME
+- description: When set to true, the bucket name is always left in the request URI
+    and never moved to the host as a sub-domain
+  name: AWS_PATH_STYLE
