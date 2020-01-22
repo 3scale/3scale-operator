@@ -114,8 +114,13 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconc
 }
 
 func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
-	if r.apiManager.Spec.System.FileStorageSpec != nil && r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
-		return r.reconcileS3Storage()
+	if r.apiManager.Spec.System.FileStorageSpec != nil {
+		if r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
+			return r.reconcileS3Storage()
+		}
+		if r.apiManager.Spec.System.FileStorageSpec.DeprecatedS3 != nil {
+			r.logger.Info("Warning: deprecated amazonSimpleStorageService field in CR being used. Ignoring it... Please use simpleStorageService")
+		}
 	}
 	return r.reconcileSharedStorage(system.SharedStorage())
 }
@@ -227,7 +232,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 func (r *SystemReconciler) reconcileS3Storage() error {
 	// Nothing for reconcile.
 	// Check all required fields exist
-	awsCredentialsSecretName := r.apiManager.Spec.System.FileStorageSpec.S3.AWSCredentials.Name
+	awsCredentialsSecretName := r.apiManager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name
 	if awsCredentialsSecretName == "" {
 		return fmt.Errorf("no aws credentials provided")
 	}

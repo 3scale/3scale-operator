@@ -194,6 +194,7 @@ type SystemSpec struct {
 	// something)
 
 	// +optional
+
 	FileStorageSpec *SystemFileStorageSpec `json:"fileStorage,omitempty"`
 
 	// TODO should union fields be optional?
@@ -220,7 +221,10 @@ type SystemFileStorageSpec struct {
 	// +optional
 	PVC *SystemPVCSpec `json:"persistentVolumeClaim,omitempty"`
 	// +optional
-	S3 *SystemS3Spec `json:"amazonSimpleStorageService,omitempty"`
+	// Deprecated
+	DeprecatedS3 *DeprecatedSystemS3Spec `json:"amazonSimpleStorageService,omitempty"`
+	// +optional
+	S3 *SystemS3Spec `json:"simpleStorageService,omitempty"`
 }
 
 type SystemPVCSpec struct {
@@ -228,12 +232,17 @@ type SystemPVCSpec struct {
 	StorageClassName *string `json:"storageClassName,omitempty"`
 }
 
-type SystemS3Spec struct {
+type DeprecatedSystemS3Spec struct {
 	// Deprecated
 	AWSBucket string `json:"awsBucket"`
 	// Deprecated
-	AWSRegion      string                  `json:"awsRegion"`
+	AWSRegion string `json:"awsRegion"`
+	// Deprecated
 	AWSCredentials v1.LocalObjectReference `json:"awsCredentialsSecret"`
+}
+
+type SystemS3Spec struct {
+	ConfigurationSecretRef v1.LocalObjectReference `json:"configurationSecretRef"`
 }
 
 type SystemDatabaseSpec struct {

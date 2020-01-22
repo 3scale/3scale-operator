@@ -115,15 +115,19 @@ spec:
                 fileStorage:
                   properties:
                     amazonSimpleStorageService:
+                      description: Deprecated
                       properties:
                         awsBucket:
+                          description: Deprecated
                           type: string
                         awsCredentialsSecret:
                           properties:
                             name:
                               type: string
+                          description: Deprecated
                           type: object
                         awsRegion:
+                          description: Deprecated
                           type: string
                       required:
                       - awsBucket
@@ -135,6 +139,16 @@ spec:
                       properties:
                         storageClassName:
                           type: string
+                      type: object
+                    simpleStorageService:
+                      properties:
+                        configurationSecretRef:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                      required:
+                      - configurationSecretRef
                       type: object
                   type: object
                 image:

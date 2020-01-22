@@ -264,7 +264,7 @@ func TestGetSystemOptions(t *testing.T) {
 				apimanager := basicApimanagerSpecTestSystemOptions(name, namespace)
 				apimanager.Spec.System.FileStorageSpec.PVC = nil
 				apimanager.Spec.System.FileStorageSpec.S3 = &appsv1alpha1.SystemS3Spec{
-					AWSCredentials: v1.LocalObjectReference{Name: "myawsauth"},
+					ConfigurationSecretRef: v1.LocalObjectReference{Name: "myawsauth"},
 				}
 				return apimanager
 			}, nil, nil, nil, nil, nil, nil, nil, getAWSCredentialsSecret("myawsauth", namespace),

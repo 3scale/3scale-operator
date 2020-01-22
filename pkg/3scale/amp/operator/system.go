@@ -245,7 +245,7 @@ func (o *OperatorSystemOptionsProvider) setFileStorageOptions(b *component.Syste
 		o.APIManagerSpec.System.FileStorageSpec.S3 != nil {
 		s3FileStorageSpec := o.APIManagerSpec.System.FileStorageSpec.S3
 		b.S3FileStorageOptions(component.S3FileStorageOptions{
-			AWSCredentialsSecret: s3FileStorageSpec.AWSCredentials.Name,
+			ConfigurationSecretName: s3FileStorageSpec.ConfigurationSecretRef.Name,
 		})
 	} else {
 		// default to PVC
