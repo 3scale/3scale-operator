@@ -50,6 +50,7 @@ type APIStatus struct {
 // API is the Schema for the apis API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=apis,scope=Namespaced
 type API struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

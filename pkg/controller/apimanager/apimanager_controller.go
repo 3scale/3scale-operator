@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -359,9 +359,11 @@ func (r *ReconcileAPIManager) reconcileAPIManagerStatus(cr *appsv1alpha1.APIMana
 }
 
 func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {
-	listOps := &client.ListOptions{Namespace: instance.Namespace}
+	listOps := []client.ListOption{
+		client.InNamespace(instance.Namespace),
+	}
 	dcList := &appsv1.DeploymentConfigList{}
-	err := r.Client().List(context.TODO(), listOps, dcList)
+	err := r.Client().List(context.TODO(), dcList, listOps...)
 	if err != nil {
 		r.Logger().Error(err, "Failed to list deployment configs")
 		return err

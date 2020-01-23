@@ -62,6 +62,7 @@ type APIManagerStatus struct {
 // APIManager is the Schema for the apimanagers API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=apimanagers,scope=Namespaced
 type APIManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -248,10 +248,11 @@ func get3scalePlanFromInternalPlan(c *portaClient.ThreeScaleClient, serviceID st
 }
 func getPlans(namespace string, matchLabels map[string]string, c client.Client) (*PlanList, error) {
 	plans := &PlanList{}
-	opts := client.ListOptions{}
-	opts.InNamespace(namespace)
-	opts.MatchingLabels(matchLabels)
-	err := c.List(context.TODO(), &opts, plans)
+	opts := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels(matchLabels),
+	}
+	err := c.List(context.TODO(), plans, opts...)
 	return plans, err
 }
 func newInternalPlanFromPlan(plan Plan, c client.Client) (*InternalPlan, error) {
