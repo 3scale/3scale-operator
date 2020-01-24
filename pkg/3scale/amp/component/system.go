@@ -269,13 +269,13 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	if system.Options.s3FileStorageOptions != nil {
 		result = append(result,
 			envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-			envVarFromSecret(AwsAccessKeyID, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsAccessKeyID),
-			envVarFromSecret(AwsSecretAccessKey, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsSecretAccessKey),
-			envVarFromSecret(AwsBucket, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsBucket),
-			envVarFromSecret(AwsRegion, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsRegion),
-			envVarFromSecretOptional(AwsProtocol, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsProtocol),
-			envVarFromSecretOptional(AwsHostname, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsHostname),
-			envVarFromSecretOptional(AwsPathStyle, system.Options.s3FileStorageOptions.AWSCredentialsSecret, AwsPathStyle),
+			envVarFromSecret(AwsAccessKeyID, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
+			envVarFromSecret(AwsSecretAccessKey, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
+			envVarFromSecret(AwsBucket, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsBucket),
+			envVarFromSecret(AwsRegion, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsRegion),
+			envVarFromSecretOptional(AwsProtocol, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsProtocol),
+			envVarFromSecretOptional(AwsHostname, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsHostname),
+			envVarFromSecretOptional(AwsPathStyle, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsPathStyle),
 		)
 	}
 

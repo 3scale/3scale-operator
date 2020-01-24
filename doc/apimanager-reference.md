@@ -101,7 +101,8 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | PVC | `persistentVolumeClaim` | \*SystemPVCSpec | No | nil | Used to use a PersistentVolumeClaim as the System's file storage. See [SystemPVCSpec](#SystemPVCSpec) |
-| S3  | `amazonSimpleStorageService` | \*SystemS3Spec | No | nil | Used to use S3 as the System's file storage. See [SystemS3Spec](#SystemS3Spec) |
+| DeprecatedS3  | `amazonSimpleStorageService` | \*DeprecatedSystemS3Spec | No | nil | DEPRECATED [DeprecatedSystemS3Spec](#DeprecatedSystemS3Spec). Used to use S3 as the System's file storage. See [SystemS3Spec](#SystemS3Spec) |
+| S3  | `simpleStorageService` | \*SystemS3Spec | No | nil | Used to use S3 as the System's file storage. See [SystemS3Spec](#SystemS3Spec) |
 
 Only one of the fields can be chosen. If no field is specified then PVC is used.
 
@@ -115,16 +116,23 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| AWSBucket | `awsBucket` | string | Yes | N/A | **DEPRECATED** Use [fileStorage S3 credentials secret](#fileStorage-S3-credentials-secret) instead |
-| AWSRegion | `awsRegion` | string | Yes | N/A | **DEPRECATED** Use [fileStorage S3 credentials secret](#fileStorage-S3-credentials-secret) instead |
-| AWSCredentials | `awsCredentialsSecret` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS credentials are stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
+| Configuration | `configurationSecretRef` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS configuration is stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
 
-The secret name specified in the `awsCredentialsSecret` field must be
+The secret name specified in the `configurationSecretRef` field must be
 pre-created by the user before creating the APIManager custom resource.
 Otherwise the operator will complain about it. See the
 [fileStorage S3 credentials secret](#fileStorage-S3-credentials-secret)
 specification to see what fields the secret should have and the values
 that should be set on it.
+
+#### DeprecatedSystemS3Spec
+  **DEPRECATED** Setting fields here has no effect. Use [SystemS3Spec](#SystemS3Spec) instead
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| AWSBucket | `awsBucket` | string | Yes | N/A | **DEPRECATED** Use [SystemS3Spec](#SystemS3Spec) instead |
+| AWSRegion | `awsRegion` | string | Yes | N/A | **DEPRECATED** Use [SystemS3Spec](#SystemS3Spec) instead |
+| AWSCredentials | `awsCredentialsSecret` | **DEPRECATED** Use [SystemS3Spec](#SystemS3Spec) instead |
 
 #### DatabaseSpec
 

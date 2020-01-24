@@ -49,7 +49,7 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, err
 	}
 
-	if u.Cr.Spec.System.FileStorageSpec != nil && u.Cr.Spec.System.FileStorageSpec.S3 != nil {
+	if u.Cr.Spec.System.FileStorageSpec != nil && u.Cr.Spec.System.FileStorageSpec.DeprecatedS3 != nil {
 		res, err = u.upgradeSystemS3()
 		if res.Requeue || err != nil {
 			return res, err
@@ -426,6 +426,10 @@ func (u *UpgradeApiManager) upgradeSystemS3() (reconcile.Result, error) {
 		return res, err
 	}
 
+	// upgradeApimanagerCRS3Attrs should always be the last method
+	// in upgradeSystemS3, as it performs the CR sections migrations, and
+	// upgradeSystemS3 has the precondition that at any time the CR section
+	// has not been migrated yet
 	res, err = u.upgradeApimanagerCRS3Attrs()
 	if res.Requeue || err != nil {
 		return res, err
@@ -483,7 +487,7 @@ func (u *UpgradeApiManager) upgradeAwsSecret() (reconcile.Result, error) {
 	changed := false
 	existingSecret := &v1.Secret{}
 	secretNamespacedName := types.NamespacedName{
-		Name:      u.Cr.Spec.System.FileStorageSpec.S3.AWSCredentials.Name,
+		Name:      u.Cr.Spec.System.FileStorageSpec.DeprecatedS3.AWSCredentials.Name,
 		Namespace: u.Cr.Namespace,
 	}
 	err := u.Client.Get(context.TODO(), secretNamespacedName, existingSecret)
@@ -496,12 +500,12 @@ func (u *UpgradeApiManager) upgradeAwsSecret() (reconcile.Result, error) {
 	}
 	secretData := helper.GetSecretStringDataFromData(existingSecret.Data)
 	if _, ok := secretData[component.AwsBucket]; !ok {
-		existingSecret.StringData[component.AwsBucket] = u.Cr.Spec.System.FileStorageSpec.S3.AWSBucket
+		existingSecret.StringData[component.AwsBucket] = u.Cr.Spec.System.FileStorageSpec.DeprecatedS3.AWSBucket
 		changed = true
 	}
 
 	if _, ok := secretData[component.AwsRegion]; !ok {
-		existingSecret.StringData[component.AwsRegion] = u.Cr.Spec.System.FileStorageSpec.S3.AWSRegion
+		existingSecret.StringData[component.AwsRegion] = u.Cr.Spec.System.FileStorageSpec.DeprecatedS3.AWSRegion
 		changed = true
 	}
 
@@ -521,13 +525,11 @@ func (u *UpgradeApiManager) upgradeAwsSecret() (reconcile.Result, error) {
 func (u *UpgradeApiManager) upgradeApimanagerCRS3Attrs() (reconcile.Result, error) {
 	changed := false
 
-	if u.Cr.Spec.System.FileStorageSpec.S3.AWSBucket != "" {
-		u.Cr.Spec.System.FileStorageSpec.S3.AWSBucket = ""
-		changed = true
-	}
-
-	if u.Cr.Spec.System.FileStorageSpec.S3.AWSRegion != "" {
-		u.Cr.Spec.System.FileStorageSpec.S3.AWSRegion = ""
+	if u.Cr.Spec.System.FileStorageSpec.DeprecatedS3 != nil {
+		u.Cr.Spec.System.FileStorageSpec.S3 = &appsv1alpha1.SystemS3Spec{
+			ConfigurationSecretRef: u.Cr.Spec.System.FileStorageSpec.DeprecatedS3.AWSCredentials,
+		}
+		u.Cr.Spec.System.FileStorageSpec.DeprecatedS3 = nil
 		changed = true
 	}
 

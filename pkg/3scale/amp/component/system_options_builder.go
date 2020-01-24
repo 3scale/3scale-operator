@@ -8,7 +8,7 @@ import (
 )
 
 type S3FileStorageOptions struct {
-	AWSCredentialsSecret string
+	ConfigurationSecretName string
 }
 
 type SystemSMTPSecretOptions struct {
