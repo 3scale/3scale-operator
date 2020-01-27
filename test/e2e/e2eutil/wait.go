@@ -26,7 +26,7 @@ import (
 func WaitForDeploymentConfig(t *testing.T, kubeclient kubernetes.Interface, osAppsV1Client clientappsv1.AppsV1Interface, namespace, name string, retryInterval, timeout time.Duration) error {
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		dcInterface := osAppsV1Client.DeploymentConfigs(namespace)
-		dc, err := dcInterface.Get(name, metav1.GetOptions{IncludeUninitialized: true})
+		dc, err := dcInterface.Get(name, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				t.Logf("Waiting for availability of '%s' DeploymentConfig\n", name)
@@ -104,9 +104,7 @@ func WaitForRouteFromHost(t *testing.T, kubeClient kubernetes.Interface, osRoute
 		routeInteface := osRouteV1Client.Routes(namespace)
 		routeFieldSelector := "spec.host=" + host
 		routeList, err := routeInteface.List(
-			metav1.ListOptions{
-				IncludeUninitialized: true,
-				FieldSelector:        routeFieldSelector},
+			metav1.ListOptions{FieldSelector: routeFieldSelector},
 		)
 		if err != nil {
 			if apierrors.IsNotFound(err) {

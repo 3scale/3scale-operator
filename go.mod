@@ -10,7 +10,7 @@ require (
 	github.com/luci/go-render v0.0.0-20160219211803-9a04cc21af0f
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
-	github.com/openshift/client-go v3.9.0+incompatible
+	github.com/openshift/client-go v0.0.0-20200116152001-92a2713fa240
 	github.com/operator-framework/operator-sdk v0.14.1
 	github.com/prometheus/client_golang v1.2.1
 	github.com/spf13/cobra v0.0.5
