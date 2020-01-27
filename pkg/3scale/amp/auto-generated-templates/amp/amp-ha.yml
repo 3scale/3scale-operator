@@ -860,7 +860,6 @@ objects:
   spec:
     accessModes:
     - ReadWriteMany
-    dataSource: null
     resources:
       requests:
         storage: 100Mi

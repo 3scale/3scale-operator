@@ -7,9 +7,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sort"
 	"strconv"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -35,8 +35,11 @@ type PlanSelectors struct {
 }
 
 type PlanCost struct {
-	SetupFee  float64 `json:"setupFee,omitempty"`
-	CostMonth float64 `json:"costMonth,omitempty"`
+	// +kubebuilder:validation:Pattern=[0-9]+(\.[0-9]+)?
+	SetupFee string `json:"setupFee,omitempty"`
+
+	// +kubebuilder:validation:Pattern=[0-9]+(\.[0-9]+)?
+	CostMonth string `json:"costMonth,omitempty"`
 }
 
 // PlanStatus defines the observed state of Plan
@@ -122,8 +125,8 @@ func (d *plansDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, service
 		}
 		params := portaClient.Params{
 			"approval_required": strconv.FormatBool(plan.ApprovalRequired),
-			"setup_fee":         strconv.FormatFloat(plan.Costs.SetupFee, 'f', 1, 64),
-			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
+			"setup_fee":         plan.Costs.SetupFee,
+			"cost_per_month":    plan.Costs.CostMonth,
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
 		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
@@ -141,8 +144,8 @@ func (d *plansDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, service
 		}
 		params := portaClient.Params{
 			"approval_required": strconv.FormatBool(planPair.A.ApprovalRequired),
-			"setup_fee":         strconv.FormatFloat(planPair.A.Costs.SetupFee, 'f', 1, 64),
-			"cost_per_month":    strconv.FormatFloat(planPair.A.Costs.CostMonth, 'f', 1, 64),
+			"setup_fee":         planPair.A.Costs.SetupFee,
+			"cost_per_month":    planPair.A.Costs.CostMonth,
 			"trial_period_days": strconv.FormatInt(planPair.A.TrialPeriodDays, 10),
 		}
 		stateEvent := ""

@@ -248,8 +248,8 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 
 		trialPeriodDays, _ := strconv.ParseInt(applicationPlan.TrialPeriodDays, 10, 64)
 		approvalRequired, _ := strconv.ParseBool(applicationPlan.ApprovalRequired)
-		setupFee, _ := strconv.ParseFloat(applicationPlan.SetupFee, 64)
-		costMonth, _ := strconv.ParseFloat(applicationPlan.CostPerMonth, 64)
+		setupFee := applicationPlan.SetupFee
+		costMonth := applicationPlan.CostPerMonth
 
 		internalPlan := InternalPlan{
 			Name:             applicationPlan.PlanName,
@@ -671,8 +671,8 @@ func (api InternalAPI) createIn3scale(c *portaClient.ThreeScaleClient) error {
 		//TODO: add cancellation_period to application Plan
 		params := portaClient.Params{
 			"approval_required": strconv.FormatBool(plan.ApprovalRequired),
-			"setup_fee":         strconv.FormatFloat(plan.Costs.SetupFee, 'f', 1, 64),
-			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
+			"setup_fee": plan.Costs.SetupFee,
+			"cost_per_month": plan.Costs.CostMonth,
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
 		_, err = c.UpdateAppPlan(service.ID, plan3scale.ID, plan3scale.PlanName, "", params)
