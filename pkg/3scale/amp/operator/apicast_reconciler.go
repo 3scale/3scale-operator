@@ -98,6 +98,16 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcilePodDisruptionBudget(apicast.StagingPodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePodDisruptionBudget(apicast.ProductionPodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 

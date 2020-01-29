@@ -138,6 +138,21 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcilePodDisruptionBudget(backend.WorkerPodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePodDisruptionBudget(backend.CronPodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePodDisruptionBudget(backend.ListenerPodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 

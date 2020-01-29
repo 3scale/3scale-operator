@@ -47,7 +47,9 @@ type APIManagerSpec struct {
 	// +optional
 	Zync *ZyncSpec `json:"zync,omitempty"`
 	// +optional
-	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
+	HighAvailability    *HighAvailabilitySpec    `json:"highAvailability,omitempty"`
+	// +optional
+	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -287,6 +289,10 @@ type ZyncQueSpec struct {
 }
 
 type HighAvailabilitySpec struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type PodDisruptionBudgetSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
 
@@ -590,4 +596,8 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 
 func (apimanager *APIManager) IsExternalDatabaseEnabled() bool {
 	return apimanager.Spec.HighAvailability != nil && apimanager.Spec.HighAvailability.Enabled
+}
+
+func (apimanager *APIManager) IsPDBEnabled() bool {
+	return apimanager.Spec.PodDisruptionBudget != nil && apimanager.Spec.PodDisruptionBudget.Enabled
 }

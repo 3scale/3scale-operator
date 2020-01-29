@@ -7,10 +7,11 @@ import (
 )
 
 type Zync struct {
+	generatePodDisruptionBudget bool
 }
 
-func NewZyncAdapter() Adapter {
-	return NewAppenderAdapter(&Zync{})
+func NewZyncAdapter(generatePDB bool) Adapter {
+	return NewAppenderAdapter(&Zync{generatePodDisruptionBudget:generatePDB})
 }
 
 func (z *Zync) Parameters() []templatev1.Parameter {
@@ -44,7 +45,11 @@ func (z *Zync) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	zyncComponent := component.NewZync(zyncOptions)
-	return zyncComponent.Objects(), nil
+	objects := zyncComponent.Objects()
+	if z.generatePodDisruptionBudget {
+		objects = append(objects, zyncComponent.PDBObjects()...)
+	}
+	return objects, nil
 }
 
 func (z *Zync) options() (*component.ZyncOptions, error) {

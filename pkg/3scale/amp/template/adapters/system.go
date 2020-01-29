@@ -7,10 +7,11 @@ import (
 )
 
 type System struct {
+	generatePodDisruptionBudget bool
 }
 
-func NewSystemAdapter() Adapter {
-	return NewAppenderAdapter(&System{})
+func NewSystemAdapter(generatePDB bool) Adapter {
+	return NewAppenderAdapter(&System{generatePodDisruptionBudget:generatePDB})
 }
 
 func (s *System) Parameters() []templatev1.Parameter {
@@ -129,7 +130,11 @@ func (s *System) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	systemComponent := component.NewSystem(systemOptions)
-	return systemComponent.Objects(), nil
+	objects := systemComponent.Objects()
+	if s.generatePodDisruptionBudget {
+		objects = append(objects, systemComponent.PDBObjects()...)
+	}
+	return objects, nil
 }
 
 func (s *System) options() (*component.SystemOptions, error) {

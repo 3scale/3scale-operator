@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"k8s.io/api/policy/v1beta1"
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -80,6 +81,8 @@ func TestSystemReconcilerCreate(t *testing.T) {
 		{"systemAppSecret", component.SystemSecretSystemAppSecretName, &v1.Secret{}},
 		{"systemMemcachedSecret", component.SystemSecretSystemMemcachedSecretName, &v1.Secret{}},
 		{"systemMemcachedSecret", component.SystemSecretSystemMemcachedSecretName, &v1.Secret{}},
+		{"systemAppPDB", "system-app", &v1beta1.PodDisruptionBudget{}},
+		{"systemSidekiqPDB", "system-sidekiq", &v1beta1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {

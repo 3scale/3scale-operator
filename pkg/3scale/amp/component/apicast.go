@@ -2,6 +2,7 @@ package component
 
 import (
 	"github.com/3scale/3scale-operator/pkg/common"
+	"k8s.io/api/policy/v1beta1"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -32,6 +33,15 @@ func (apicast *Apicast) Objects() []common.KubernetesObject {
 		environmentConfigMap,
 	}
 	return objects
+}
+
+func (apicast *Apicast) PDBObjects() []common.KubernetesObject {
+	stagingPDB := apicast.StagingPodDisruptionBudget()
+	prodPDB := apicast.ProductionPodDisruptionBudget()
+	return []common.KubernetesObject{
+		stagingPDB,
+		prodPDB,
+	}
 }
 
 func (apicast *Apicast) StagingService() *v1.Service {
@@ -388,6 +398,52 @@ func (apicast *Apicast) EnvironmentConfigMap() *v1.ConfigMap {
 			"APICAST_MANAGEMENT_API": apicast.Options.managementAPI,
 			"OPENSSL_VERIFY":         apicast.Options.openSSLVerify,
 			"APICAST_RESPONSE_CODES": apicast.Options.responseCodes,
+		},
+	}
+}
+
+func (apicast *Apicast) StagingPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "apicast-staging",
+			Labels: map[string]string{
+				"app":                          apicast.Options.appLabel,
+				"threescale_component":         "apicast",
+				"threescale_component_element": "staging",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "apicast-staging"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (apicast *Apicast) ProductionPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "apicast-production",
+			Labels: map[string]string{
+				"app":                          apicast.Options.appLabel,
+				"threescale_component":         "apicast",
+				"threescale_component_element": "production",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "apicast-production"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
 	}
 }

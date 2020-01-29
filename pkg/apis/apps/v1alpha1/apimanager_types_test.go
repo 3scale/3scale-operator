@@ -84,6 +84,7 @@ func TestSetDefaults(t *testing.T) {
 					Replicas: &tmpDefaultReplicas,
 				},
 			},
+			PodDisruptionBudget: nil,
 		},
 	}
 

@@ -7,10 +7,11 @@ import (
 )
 
 type Apicast struct {
+	generatePodDisruptionBudget bool
 }
 
-func NewApicastAdapter() Adapter {
-	return NewAppenderAdapter(&Apicast{})
+func NewApicastAdapter(generatePDB bool) Adapter {
+	return NewAppenderAdapter(&Apicast{generatePodDisruptionBudget:generatePDB})
 }
 
 func (a *Apicast) Parameters() []templatev1.Parameter {
@@ -55,7 +56,11 @@ func (a *Apicast) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	apicastComponent := component.NewApicast(apicastOptions)
-	return apicastComponent.Objects(), nil
+	objects := apicastComponent.Objects()
+	if a.generatePodDisruptionBudget {
+		objects = append(objects, apicastComponent.PDBObjects()...)
+	}
+	return objects, nil
 }
 
 func (a *Apicast) options() (*component.ApicastOptions, error) {

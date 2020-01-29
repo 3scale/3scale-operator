@@ -88,6 +88,11 @@ spec:
               type: object
             imageStreamTagImportInsecure:
               type: boolean
+            podDisruptionBudget:
+              properties:
+                enabled:
+                  type: boolean
+              type: object
             resourceRequirementsEnabled:
               type: boolean
             system:

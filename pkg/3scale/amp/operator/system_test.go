@@ -49,6 +49,7 @@ func basicApimanagerSpecTestSystemOptions(name, namespace string) *appsv1alpha1.
 					Replicas: &oneValue,
 				},
 			},
+			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
 }

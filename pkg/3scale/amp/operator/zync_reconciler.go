@@ -113,6 +113,16 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcilePodDisruptionBudget(zync.ZyncPodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePodDisruptionBudget(zync.QuePodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
