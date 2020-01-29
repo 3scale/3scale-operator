@@ -3,6 +3,7 @@ package apimanager
 import (
 	"context"
 	"fmt"
+	"k8s.io/api/policy/v1beta1"
 	"reflect"
 
 	"github.com/3scale/3scale-operator/version"
@@ -84,6 +85,11 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		OwnerType:    &appsv1alpha1.APIManager{},
 	}
 	err = c.Watch(&source.Kind{Type: &appsv1.DeploymentConfig{}}, ownerHandler)
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &v1beta1.PodDisruptionBudget{}}, ownerHandler)
 	if err != nil {
 		return err
 	}

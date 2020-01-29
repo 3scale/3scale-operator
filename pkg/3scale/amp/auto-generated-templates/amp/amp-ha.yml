@@ -769,6 +769,63 @@ objects:
     route_endpoint: https://backend-${TENANT_NAME}.${WILDCARD_DOMAIN}
     service_endpoint: http://backend-listener:3000
   type: Opaque
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: worker
+    name: backend-worker
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: backend-worker
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: cron
+    name: backend-cron
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: backend-cron
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: backend
+      threescale_component_element: listener
+    name: backend-listener
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: backend-listener
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -2905,6 +2962,44 @@ objects:
   stringData:
     SERVERS: system-memcache:11211
   type: Opaque
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: app
+    name: system-app
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: system-app
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: system
+      threescale_component_element: sidekiq
+    name: system-sidekiq
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: system-sidekiq
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: Role
   metadata:
@@ -3344,6 +3439,42 @@ objects:
     ZYNC_AUTHENTICATION_TOKEN: ${ZYNC_AUTHENTICATION_TOKEN}
     ZYNC_DATABASE_PASSWORD: ${ZYNC_DATABASE_PASSWORD}
   type: Opaque
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: zync
+    name: zync
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: zync
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: zync
+    name: zync-que
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: zync-que
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -3651,6 +3782,44 @@ objects:
       app: ${APP_LABEL}
       threescale_component: apicast
     name: apicast-environment
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: staging
+    name: apicast-staging
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: apicast-staging
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
+- apiVersion: policy/v1beta1
+  kind: PodDisruptionBudget
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: apicast
+      threescale_component_element: production
+    name: apicast-production
+  spec:
+    maxUnavailable: 1
+    selector:
+      matchLabels:
+        deploymentConfig: apicast-production
+  status:
+    currentHealthy: 0
+    desiredHealthy: 0
+    disruptionsAllowed: 0
+    expectedPods: 0
 - apiVersion: v1
   kind: Secret
   metadata:

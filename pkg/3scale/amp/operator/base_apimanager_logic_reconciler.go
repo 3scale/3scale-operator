@@ -3,6 +3,7 @@ package operator
 import (
 	"context"
 	"fmt"
+	"k8s.io/api/policy/v1beta1"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -81,4 +82,14 @@ func (r *BaseAPIManagerLogicReconciler) updateResource(obj common.KubernetesObje
 
 	r.Logger().Info(fmt.Sprintf("Updated object %s", ObjectInfo(obj)))
 	return r.Client().Update(context.TODO(), obj) // don't wrap error
+}
+
+func (r *BaseAPIManagerLogicReconciler) deleteResource(obj common.KubernetesObject) error {
+	r.Logger().Info(fmt.Sprintf("Delete object %s", ObjectInfo(obj)))
+	return r.Client().Delete(context.TODO(), obj)
+}
+
+func (r *BaseAPIManagerLogicReconciler) reconcilePodDisruptionBudget(desiredPDB *v1beta1.PodDisruptionBudget) error {
+	reconciler := NewPodDisruptionBudgetReconciler(*r)
+	return reconciler.Reconcile(desiredPDB)
 }

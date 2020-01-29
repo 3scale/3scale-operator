@@ -14,11 +14,11 @@ func (f *AmpHATemplateFactory) Adapters() []adapters.Adapter {
 	return []adapters.Adapter{
 		adapters.NewImagesAdapter(),
 		adapters.NewRedisAdapter(),
-		adapters.NewBackendAdapter(),
+		adapters.NewBackendAdapter(true),
 		adapters.NewMemcachedAdapter(),
-		adapters.NewSystemAdapter(),
-		adapters.NewZyncAdapter(),
-		adapters.NewApicastAdapter(),
+		adapters.NewSystemAdapter(true),
+		adapters.NewZyncAdapter(true),
+		adapters.NewApicastAdapter(true),
 		adapters.NewHAAdapter(),
 	}
 }

@@ -2,6 +2,7 @@ package component
 
 import (
 	"github.com/3scale/3scale-operator/pkg/common"
+	"k8s.io/api/policy/v1beta1"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -64,6 +65,17 @@ func (backend *Backend) Objects() []common.KubernetesObject {
 		listenerSecret,
 	}
 	return objects
+}
+
+func (backend *Backend) PDBObjects() []common.KubernetesObject {
+	workerPDB := backend.WorkerPodDisruptionBudget()
+	cronPDB := backend.CronPodDisruptionBudget()
+	listenerPDB := backend.ListenerPodDisruptionBudget()
+	return []common.KubernetesObject{
+		workerPDB,
+		cronPDB,
+		listenerPDB,
+	}
 }
 
 func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
@@ -477,5 +489,74 @@ func (backend *Backend) ListenerSecret() *v1.Secret {
 			BackendSecretBackendListenerRouteEndpointFieldName:   *backend.Options.routeEndpoint,
 		},
 		Type: v1.SecretTypeOpaque,
+	}
+}
+
+func (backend *Backend) WorkerPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "backend-worker",
+			Labels: map[string]string{
+				"app":                          backend.Options.appLabel,
+				"threescale_component":         "backend",
+				"threescale_component_element": "worker",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "backend-worker"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (backend *Backend) CronPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "backend-cron",
+			Labels: map[string]string{
+				"app":                          backend.Options.appLabel,
+				"threescale_component":         "backend",
+				"threescale_component_element": "cron",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "backend-cron"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (backend *Backend) ListenerPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "backend-listener",
+			Labels: map[string]string{
+				"app":                          backend.Options.appLabel,
+				"threescale_component":         "backend",
+				"threescale_component_element": "listener",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "backend-listener"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
 	}
 }

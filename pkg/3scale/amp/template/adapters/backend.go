@@ -7,10 +7,13 @@ import (
 )
 
 type Backend struct {
+	generatePodDisruptionBudget bool
 }
 
-func NewBackendAdapter() Adapter {
-	return NewAppenderAdapter(&Backend{})
+func NewBackendAdapter(generatePDB bool) Adapter {
+	return NewAppenderAdapter(&Backend{
+		generatePodDisruptionBudget:generatePDB,
+	})
 }
 
 func (b *Backend) Parameters() []templatev1.Parameter {
@@ -23,7 +26,11 @@ func (b *Backend) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	backendComponent := component.NewBackend(backendOptions)
-	return backendComponent.Objects(), nil
+	objects := backendComponent.Objects()
+	if b.generatePodDisruptionBudget {
+		objects = append(objects, backendComponent.PDBObjects()...)
+	}
+	return objects, nil
 }
 
 func (b *Backend) options() (*component.BackendOptions, error) {

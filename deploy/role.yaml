@@ -86,6 +86,17 @@ rules:
   - get
   - create
 - apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - watch
+  - delete
+- apiGroups:
   - apps.3scale.net
   resources:
   - '*'

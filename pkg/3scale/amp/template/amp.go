@@ -26,12 +26,12 @@ func (f *AmpTemplateFactory) Adapters() []adapters.Adapter {
 		adapters.NewImagesAdapter(),
 		adapters.NewSystemMysqlImageAdapter(),
 		adapters.NewRedisAdapter(),
-		adapters.NewBackendAdapter(),
+		adapters.NewBackendAdapter(false),
 		adapters.NewMysqlAdapter(),
 		adapters.NewMemcachedAdapter(),
-		adapters.NewSystemAdapter(),
-		adapters.NewZyncAdapter(),
-		adapters.NewApicastAdapter(),
+		adapters.NewSystemAdapter(false),
+		adapters.NewZyncAdapter(false),
+		adapters.NewApicastAdapter(false),
 		&AmpTemplateAdapter{},
 	}
 }

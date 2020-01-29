@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"k8s.io/api/policy/v1beta1"
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -47,6 +48,7 @@ func TestNewBackendReconciler(t *testing.T) {
 				WorkerSpec:   &appsv1alpha1.BackendWorkerSpec{Replicas: &oneValue},
 				CronSpec:     &appsv1alpha1.BackendCronSpec{Replicas: &oneValue},
 			},
+			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
 	// Objects to track in the fake client.
@@ -94,6 +96,9 @@ func TestNewBackendReconciler(t *testing.T) {
 		{"internalAPISecret", component.BackendSecretInternalApiSecretName, &v1.Secret{}},
 		{"listenerSecret", component.BackendSecretBackendListenerSecretName, &v1.Secret{}},
 		{"redisSecret", component.BackendSecretBackendRedisSecretName, &v1.Secret{}},
+		{"workerPDB", "backend-worker", &v1beta1.PodDisruptionBudget{}},
+		{"cronPDB", "backend-cron", &v1beta1.PodDisruptionBudget{}},
+		{"listenerPDB", "backend-listener", &v1beta1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {

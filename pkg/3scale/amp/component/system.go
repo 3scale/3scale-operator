@@ -1,6 +1,7 @@
 package component
 
 import (
+	"k8s.io/api/policy/v1beta1"
 	"sort"
 
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -146,6 +147,16 @@ func (system *System) Objects() []common.KubernetesObject {
 		memcachedSecret,
 	}
 	return objects
+}
+
+func (system *System) PDBObjects() []common.KubernetesObject {
+	appPDB := system.AppPodDisruptionBudget()
+	sidekiqPDB := system.SidekiqPodDisruptionBudget()
+
+	return []common.KubernetesObject {
+		appPDB,
+		sidekiqPDB,
+	}
 }
 
 func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
@@ -1287,6 +1298,52 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 				},
 			},
+		},
+	}
+}
+
+func (system *System) AppPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system-app",
+			Labels: map[string]string{
+				"app":                          system.Options.appLabel,
+				"threescale_component":         "system",
+				"threescale_component_element": "app",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "system-app"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (system *System) SidekiqPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system-sidekiq",
+			Labels: map[string]string{
+				"app":                          system.Options.appLabel,
+				"threescale_component":         "system",
+				"threescale_component_element": "sidekiq",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "system-sidekiq"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
 	}
 }

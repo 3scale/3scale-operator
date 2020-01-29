@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"k8s.io/api/policy/v1beta1"
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -47,6 +48,7 @@ func TestNewZyncReconciler(t *testing.T) {
 				AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &oneValue},
 				QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: &oneValue},
 			},
+			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
 	// Objects to track in the fake client.
@@ -94,6 +96,8 @@ func TestNewZyncReconciler(t *testing.T) {
 		{"zyncService", "zync", &v1.Service{}},
 		{"zyncDatabaseService", "zync-database", &v1.Service{}},
 		{"zyncSecret", component.ZyncSecretName, &v1.Secret{}},
+		{"zyncPDB", "zync", &v1beta1.PodDisruptionBudget{}},
+		{"quePDB", "zync-que", &v1beta1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {

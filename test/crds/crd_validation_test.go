@@ -62,8 +62,8 @@ func TestCompleteCRD(t *testing.T) {
 		"capabilities_v1alpha1_limit_crd.yaml":       &capabilities.Limit{},
 		"capabilities_v1alpha1_mappingrule_crd.yaml": &capabilities.MappingRule{},
 		"capabilities_v1alpha1_metric_crd.yaml":      &capabilities.Metric{},
-		"capabilities_v1alpha1_plan_crd.yaml":   &capabilities.Plan{},
-		"capabilities_v1alpha1_tenant_crd.yaml": &capabilities.Tenant{},
+		"capabilities_v1alpha1_plan_crd.yaml":        &capabilities.Plan{},
+		"capabilities_v1alpha1_tenant_crd.yaml":      &capabilities.Tenant{},
 	}
 	for crd, obj := range crdStructMap {
 		schema := getSchema(t, fmt.Sprintf("%s/%s", root, crd))

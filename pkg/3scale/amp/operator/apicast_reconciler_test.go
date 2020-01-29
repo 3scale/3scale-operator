@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"k8s.io/api/policy/v1beta1"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -53,6 +54,7 @@ func TestApicastReconciler(t *testing.T) {
 					Replicas: &oneValue,
 				},
 			},
+			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
 	// Objects to track in the fake client.
@@ -96,6 +98,8 @@ func TestApicastReconciler(t *testing.T) {
 		{"stagingService", "apicast-staging", &v1.Service{}},
 		{"productionService", "apicast-production", &v1.Service{}},
 		{"envConfigMap", "apicast-environment", &v1.ConfigMap{}},
+		{"stagingPDB", "apicast-staging", &v1beta1.PodDisruptionBudget{}},
+		{"productionPDB", "apicast-production", &v1beta1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {

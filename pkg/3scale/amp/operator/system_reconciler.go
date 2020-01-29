@@ -226,6 +226,16 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcilePodDisruptionBudget(system.AppPodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePodDisruptionBudget(system.SidekiqPodDisruptionBudget())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 

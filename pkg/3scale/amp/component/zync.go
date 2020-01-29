@@ -2,6 +2,7 @@ package component
 
 import (
 	"github.com/3scale/3scale-operator/pkg/common"
+	"k8s.io/api/policy/v1beta1"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -54,6 +55,16 @@ func (zync *Zync) Objects() []common.KubernetesObject {
 		secret,
 	}
 	return objects
+}
+
+func (zync *Zync) PDBObjects() []common.KubernetesObject {
+	zyncPDB := zync.ZyncPodDisruptionBudget()
+	quePDB := zync.QuePodDisruptionBudget()
+
+	return []common.KubernetesObject {
+		zyncPDB,
+		quePDB,
+	}
 }
 
 func (zync *Zync) Secret() *v1.Secret {
@@ -608,6 +619,50 @@ func (zync *Zync) DatabaseService() *v1.Service {
 				},
 			},
 			Selector: map[string]string{"deploymentConfig": "zync-database"},
+		},
+	}
+}
+
+func (zync *Zync) ZyncPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync",
+			Labels: map[string]string{
+				"app":                  zync.Options.appLabel,
+				"threescale_component": "zync",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "zync"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (zync *Zync) QuePodDisruptionBudget() *v1beta1.PodDisruptionBudget {
+	return &v1beta1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "zync-que",
+			Labels: map[string]string{
+				"app":                  zync.Options.appLabel,
+				"threescale_component": "zync",
+			},
+		},
+		Spec: v1beta1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "zync-que"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
 	}
 }
