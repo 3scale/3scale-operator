@@ -120,7 +120,7 @@ commands:
           command: |
             WILDCARD_DOMAIN="lvh.me"
             ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
-              oc new-app -f- --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN} --param AMP_RELEASE=master
+              oc new-app -f- --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN}
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
             oc get events | egrep ' Failed ' || :
@@ -164,13 +164,9 @@ commands:
   deploy-3scale-eval-from-template:
     steps:
       - run:
-          name: Deploy 3scale from amp-eval template with nightly images
+          name: Deploy 3scale from amp-eval template
           command: |
             oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
-              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:nightly \
-              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
-              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
-              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
               --param WILDCARD_DOMAIN=lvh.me --param TENANT_NAME=3scale
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
@@ -182,7 +178,7 @@ commands:
     steps:
       - docker-login
       - run:
-          name: Push images to quay.io
+          name: Push nightly images to quay.io
           command: |
             oc whoami --show-token | docker login -u $(oc whoami) --password-stdin 172.30.1.1:5000
             project=$(oc project -q)
@@ -201,10 +197,10 @@ commands:
               --docker-password="${DOCKER_PASSWORD}" \
               --docker-username="${DOCKER_USERNAME}" \
               --docker-server="${DOCKER_REGISTRY}"
-  build-amp:
+  build-nightly-amp:
     steps:
       - run:
-          name: Build images
+          name: Build nightly images
           no_output_timeout: 30m
           command: |
             set -o errexit
@@ -367,7 +363,7 @@ jobs:
       - checkout
       - install-openshift
       - create-secrets
-      - build-amp
+      - build-nightly-amp
       - oc-observe
       - deploy-3scale-eval-from-template-imagestreamsless
       - oc-status
