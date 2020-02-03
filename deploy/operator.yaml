@@ -31,12 +31,12 @@ spec:
             - name: OPERATOR_NAME
               value: "threescale-operator"
             - name: BACKEND_IMAGE
-              value: "registry.stage.redhat.io/3scale-amp2/backend-rhel7:3scale2.7"
+              value: "registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.7"
             - name: APICAST_IMAGE
-              value: "registry.stage.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.7"
+              value: "registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.7"
             - name: SYSTEM_IMAGE
-              value: "registry.stage.redhat.io/3scale-amp2/system-rhel7:3scale2.7"
+              value: "registry.redhat.io/3scale-amp2/system-rhel7:3scale2.7"
             - name: ZYNC_IMAGE
-              value: "registry.stage.redhat.io/3scale-amp2/zync-rhel7:3scale2.7"
+              value: "registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.7"
             - name: SYSTEM_MEMCACHED_IMAGE
-              value: "registry.stage.redhat.io/3scale-amp2/memcached-rhel7:3scale2.7"
+              value: "registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.7"
