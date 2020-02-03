@@ -170,6 +170,7 @@ commands:
     steps:
       - run:
           name: Build images
+          no_output_timeout: 30m
           command: |
             set -o errexit
             oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
