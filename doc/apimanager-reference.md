@@ -338,7 +338,7 @@ The available configurable secrets are:
 The name of this secret can be any name as long as does not collide with other
 existing secret names.
 
-| **Field** | **Description** | | **Required** |
+| **Field** | **Description** | **Required** |
 | --- | --- | --- |
 | AWS_ACCESS_KEY_ID | AWS Access Key ID to use in S3 Storage for System's file storage | Y |
 | AWS_SECRET_ACCESS_KEY | AWS Access Key Secret to use in S3 Storage for System's file storage | Y |

@@ -253,19 +253,14 @@ spec:
   wildcardDomain: lvh.me
   system:
     fileStorage:
-      amazonSimpleStorageService:
-        awsRegion: ""
-        awsBucket: ""
-        awsCredentialsSecret:
+      simpleStorageService:
+        configurationSecretRef:
           name: aws-auth
 ```
 
 Note that S3 secret name is provided directly in the APIManager custom resource.
 
 Check [*APIManager SystemS3Spec*](apimanager-reference.md#SystemS3Spec) for reference.
-
-**Deprecation Note**
-**awsRegion** and **awsBucket** attributes are deprecated. They must exist and left with empty value.
 
 #### PostgreSQL Installation
 
