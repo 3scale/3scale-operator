@@ -13,9 +13,22 @@ Procedure
 1. After the subscription *upgrade status* is shown as *Up to date*, click *Catalog > Installed Operators* to verify that the 3scale operator ClusterServiceVersion (CSV) is displayed and its Status ultimately resolves to _InstallSucceeded_ in the `operator-test` project.
 
 # Deploying 3scale using the operator
+
+## Prerequisites
+
+* An OpenShift secret with the name "threescale-registry-auth" has to be created
+  in every OpenShift project where an APIManager is desired to be deployed. This
+  secret is used to be able to retrieve images from the registry.redhat.io
+  container registry. The secret must have the credentials of a Service Account
+  created in the registry.redhat.io container registry. The secret contents
+  and more information about the registry can be found here: https://access.redhat.com/RegistryAuthentication.
+  To create the secret: `oc create -f threescale-registry-auth-secret.yml` in
+  the project where an APIManager is to be deployed
+
+## Deployment
+
 Deploying the *APIManager* custom resource will make the operator begin processing and will deploy a 3scale solution from it.
 
-Procedure
 1. Click *Catalog > Installed Operators*. From the list of *Installed Operator*s, click _3scale Operator_. 
 1. Click *API Manager > Create APIManager*
 1. Create *APIManager* object with the following content.
