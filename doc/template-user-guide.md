@@ -54,19 +54,19 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
-| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
-| **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
+| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
+| **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | registry.redhat.io/rhscl/mysql-57-rhel7:5.7 |
+| **REDIS_IMAGE** | Redis image to use | registry.redhat.io/rhscl/redis-32-rhel7:3.2 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
 | **SYSTEM_DATABASE** | System MySQL Database Name | system |
@@ -124,19 +124,19 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
-| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
-| **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
+| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
+| **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System PostgreSQL image URL | centos/postgresql-10-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | registry.redhat.io/rhscl/mysql-57-rhel7:5.7 |
+| **REDIS_IMAGE** | Redis image to use | registry.redhat.io/rhscl/redis-32-rhel7:3.2 |
 | **SYSTEM_DATABASE_USER** | System PostgreSQL User | system |
 | **SYSTEM_DATABASE_PASSWORD** | System PostgreSQL Password | random value |
 | **SYSTEM_DATABASE** | System PostgreSQL Database Name | system |
@@ -201,18 +201,18 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-s3.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
-| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
-| **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
+| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
+| **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | registry.redhat.io/rhscl/mysql-57-rhel7:5.7 |
+| **REDIS_IMAGE** | Redis image to use | registry.redhat.io/rhscl/redis-32-rhel7:3.2 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
 | **SYSTEM_DATABASE** | System MySQL Database Name | system |
@@ -281,16 +281,16 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
-| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
-| **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
+| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
+| **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
 | **SYSTEM_BACKEND_USERNAME** | Internal 3scale API username for internal 3scale api auth | 3scale_api_user |
 | **SYSTEM_BACKEND_PASSWORD** | Internal 3scale API password for internal 3scale api auth | random value |
@@ -360,18 +360,18 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval-s3.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
-| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
-| **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
+| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
+| **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | registry.redhat.io/rhscl/mysql-57-rhel7:5.7 |
+| **REDIS_IMAGE** | Redis image to use | registry.redhat.io/rhscl/redis-32-rhel7:3.2 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
 | **SYSTEM_DATABASE** | System MySQL Database Name | system |
@@ -429,19 +429,19 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
-| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
-| **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
+| **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
+| **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | registry.redhat.io/rhscl/postgresql-10-rhel7 |
+| **REDIS_IMAGE** | Redis image to use | registry.redhat.io/rhscl/redis-32-rhel7:3.2 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
 | **SYSTEM_DATABASE** | System MySQL Database Name | system |

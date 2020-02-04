@@ -38,4 +38,4 @@ spec:
             - name: ZYNC_IMAGE
               value: "quay.io/3scale/zync:nightly"
             - name: SYSTEM_MEMCACHED_IMAGE
-              value: "memcached:1.5"
+              value: "registry.stage.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8"
