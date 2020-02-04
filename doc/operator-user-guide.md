@@ -43,7 +43,14 @@ in [quickstart guide](quickstart-guide.md) about *Install the 3scale operator*
       * System can be scaled horizontally with multiple pods uploading and
         reading said static files, hence the need for a RWX PersistentVolume
         when APIManager is configured to use PVC as System's FileStorage
-
+* An OpenShift secret with the name "threescale-registry-auth" has to be created
+  in every OpenShift project where an APIManager is desired to be deployed. This
+  secret is used to be able to retrieve images from the registry.redhat.io
+  container registry. The secret must have the credentials of a Service Account
+  created in the registry.redhat.io container registry. The secret contents
+  and more information about the registry can be found here: https://access.redhat.com/RegistryAuthentication.
+  To create the secret: `oc create -f threescale-registry-auth-secret.yml` in
+  the project where an APIManager is to be deployed
 
 The RWX persistent volume must be configured to be group writable.
 For a list of persistent volume types that support the required access modes,
