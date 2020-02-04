@@ -136,6 +136,7 @@ commands:
               --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
               --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
               --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
+              --param MEMCACHED_IMAGE=registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.7 \
               --param WILDCARD_DOMAIN=lvh.me --param TENANT_NAME=3scale
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
@@ -156,6 +157,16 @@ commands:
               echo 172.30.1.1:5000/$project/amp-$component:latest=quay.io/3scale/$component:nightly
             done) 172.30.1.1:5000/$project/amp-backend:latest=quay.io/3scale/apisonator:nightly \
             172.30.1.1:5000/$project/amp-system:latest=quay.io/3scale/porta:nightly --insecure
+
+  create-redhat-registry-io-secret:
+    steps:
+      - run:
+          name: Create registry.redhat.io secret
+          command: |
+            oc create secret docker-registry threescale-registry-auth \
+              --docker-password="${REGISTRY_REDHAT_IO_PASSWORD}" \
+              --docker-username="${REGISTRY_REDHAT_IO_USERNAME}" \
+              --docker-server="${REGISTRY_REDHAT_IO_SERVER}"
 
   create-secrets:
     steps:
@@ -320,6 +331,7 @@ jobs:
     steps:
       - checkout
       - install-openshift
+      - create-redhat-registry-io-secret
       - deploy-3scale-eval-from-template
       - oc-status
 
@@ -332,6 +344,7 @@ jobs:
       - checkout
       - install-openshift
       - create-secrets
+      - create-redhat-registry-io-secret
       - build-amp
       - oc-observe
       - deploy-3scale-eval-from-template-imagestreamsless
@@ -404,14 +417,6 @@ jobs:
       - run: sudo gem install license_finder --version 5.7.1
       - run: make licenses-check
 
-  verify-manifest:
-    docker:
-      - image: circleci/python:3.6.4
-    steps:
-      - checkout
-      - run: sudo pip3 install operator-courier
-      - run: make verify-manifest
-
   unit-tests-coverage:
     docker:
       - image: circleci/golang:1.12.5
@@ -431,7 +436,6 @@ workflows:
       - license-check
       - test-crds
       - run-unit-tests
-      - verify-manifest
       - install-operator
       - run-operator-e2e-test:
           requires:
