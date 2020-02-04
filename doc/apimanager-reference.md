@@ -14,8 +14,8 @@ This resource is the resource used to deploy a 3scale API Management solution.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Description** |
 | --- | --- | --- | --- | --- |
-| Spec | `spec` | [APIManagerSpec](#APIManagerSpec) | The specfication for APIManager custom resource | Yes |
-| Status | `status` | [APIManagerStatus](#APIManagerStatus) | The status for the custom resource | No |
+| Spec | `spec` | [APIManagerSpec](#APIManagerSpec) | Yes | The specfication for APIManager custom resource |
+| Status | `status` | [APIManagerStatus](#APIManagerStatus) | No | The status for the custom resource |
 
 #### APIManagerSpec
 
