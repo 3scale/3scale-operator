@@ -4484,7 +4484,7 @@ parameters:
   value: registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8
 - name: AMP_APICAST_IMAGE
   required: true
-  value: registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8
+  value: registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.8
 - name: AMP_SYSTEM_IMAGE
   required: true
   value: registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8

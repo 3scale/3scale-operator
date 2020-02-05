@@ -1,7 +1,7 @@
 package component
 
 func ApicastImageURL() string {
-	return "registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8"
+	return "registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.8"
 }
 
 func BackendImageURL() string {
