@@ -60,7 +60,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp.yml \
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
 | **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.8 |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
@@ -130,7 +130,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
 | **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.8 |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
@@ -206,7 +206,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-s3.yml \
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
 | **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.8 |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
@@ -287,7 +287,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
 | **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.8 |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
@@ -365,7 +365,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval-s3.yml \
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
 | **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.8 |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
@@ -435,7 +435,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.8 |
 | **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.8 |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel7:3scale2.8 |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.8 |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | registry.redhat.io/3scale-amp2/system-rhel7:3scale2.8 |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | registry.redhat.io/rhscl/postgresql-10-rhel7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.8 |
