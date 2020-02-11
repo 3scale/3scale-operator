@@ -111,7 +111,7 @@ commands:
       - run:
           name: Install Golang
           command: |
-            curl --fail -L https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
+            curl --fail -L https://dl.google.com/go/go1.13.7.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
 
   deploy-3scale-eval-from-template-imagestreamsless:
     steps:
@@ -279,7 +279,7 @@ commands:
 jobs:
   install-operator:
     docker:
-      - image: circleci/golang:1.12.5
+      - image: circleci/golang:1.13.7
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - setup_remote_docker:
@@ -371,7 +371,7 @@ jobs:
 
   run-unit-tests:
     docker:
-      - image: circleci/golang:1.12.5
+      - image: circleci/golang:1.13.7
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - unit-tests
@@ -410,7 +410,7 @@ jobs:
 
   generator:
     docker:
-      - image: circleci/golang:1.12.5
+      - image: circleci/golang:1.13.7
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - checkout
@@ -419,7 +419,7 @@ jobs:
 
   test-crds:
     docker:
-      - image: circleci/golang:1.12.5
+      - image: circleci/golang:1.13.7
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - checkout
@@ -445,7 +445,7 @@ jobs:
 
   unit-tests-coverage:
     docker:
-      - image: circleci/golang:1.12.5
+      - image: circleci/golang:1.13.7
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - unit-tests
