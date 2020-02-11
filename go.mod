@@ -30,7 +30,7 @@ require (
 	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/operator-framework/operator-sdk v0.8.1-0.20190517223317-f7f644008098
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/prometheus/client_golang v1.1.0 // indirect
+	github.com/prometheus/client_golang v1.1.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
