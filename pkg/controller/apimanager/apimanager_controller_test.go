@@ -188,7 +188,7 @@ func TestAPIManagerControllerUpgrade(t *testing.T) {
 	}
 
 	if !res.Requeue {
-		t.Error("upgrade procedure tries to reques on finished")
+		t.Error("upgrade procedure should request requeue when job is done")
 	}
 
 	finalAPIManager := &appsv1alpha1.APIManager{}
