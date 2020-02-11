@@ -1,5 +1,7 @@
 module github.com/3scale/3scale-operator
 
+go 1.12
+
 require (
 	contrib.go.opencensus.io/exporter/ocagent v0.6.0 // indirect
 	github.com/3scale/3scale-porta-go-client v0.0.3
