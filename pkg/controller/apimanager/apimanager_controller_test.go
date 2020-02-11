@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -14,7 +12,6 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -127,7 +124,8 @@ func TestAPIManagerControllerUpgrade(t *testing.T) {
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				appsv1alpha1.OperatorVersionAnnotation: fmt.Sprintf("not_%s", version.Version),
+				appsv1alpha1.OperatorVersionAnnotation:   fmt.Sprintf("not_%s", version.Version),
+				appsv1alpha1.ThreescaleVersionAnnotation: "something",
 			},
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
@@ -137,80 +135,8 @@ func TestAPIManagerControllerUpgrade(t *testing.T) {
 		},
 	}
 
-	systemApp := &appsv1.DeploymentConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "system-app",
-			Namespace: namespace,
-		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					Pre: &appsv1.LifecycleHook{
-						ExecNewPod: &appsv1.ExecNewPodHook{
-							Command: []string{},
-							Env:     []corev1.EnvVar{},
-						},
-					},
-				},
-			},
-			Template: &corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						corev1.Container{
-							Name: "system-master",
-						},
-						corev1.Container{
-							Name: "system-developer",
-						},
-						corev1.Container{
-							Name: "system-provider",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	systemSidekiq := &appsv1.DeploymentConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "system-sidekiq",
-			Namespace: namespace,
-		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Template: &corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						corev1.Container{
-							Name: "system-sidekiq",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	smtpConfigMapToReplace := corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "ConfigMap",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "smtp",
-			Namespace: namespace,
-		},
-		Data: map[string]string{
-			component.SystemSecretSystemSMTPAddressFieldName:           "myaddress@domain.com",
-			component.SystemSecretSystemSMTPUserNameFieldName:          "myusername",
-			component.SystemSecretSystemSMTPPasswordFieldName:          "mypassword",
-			component.SystemSecretSystemSMTPDomainFieldName:            "mydomain",
-			component.SystemSecretSystemSMTPPortFieldName:              "25",
-			component.SystemSecretSystemSMTPAuthenticationFieldName:    "login",
-			component.SystemSecretSystemSMTPOpenSSLVerifyModeFieldName: "none",
-		},
-	}
-
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager, systemApp, systemSidekiq, &smtpConfigMapToReplace}
+	objs := []runtime.Object{apimanager}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
@@ -262,43 +188,7 @@ func TestAPIManagerControllerUpgrade(t *testing.T) {
 	}
 
 	if !res.Requeue {
-		t.Error("upgrade not expected to finish. Should requeue before update system-app pre-hook pod")
-	}
-
-	res, err = r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
-	}
-
-	if !res.Requeue {
-		t.Error("upgrade not expected to finish. Should requeue after migrating smtp ConfigMap to system-smtp Secret")
-	}
-
-	res, err = r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
-	}
-
-	if !res.Requeue {
-		t.Error("upgrade not expected to finish. Should requeue after updating smtp envvars in system-sidekiq")
-	}
-
-	res, err = r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
-	}
-
-	if !res.Requeue {
-		t.Error("upgrade not expected to finish. Should requeue after updating smtp envvars in system-app")
-	}
-
-	res, err = r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
-	}
-
-	if !res.Requeue {
-		t.Error("upgrade not expected to finish. Should requeue before update annotations")
+		t.Error("upgrade procedure should request requeue when job is done")
 	}
 
 	finalAPIManager := &appsv1alpha1.APIManager{}
