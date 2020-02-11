@@ -21,9 +21,9 @@ const (
 )
 
 const (
-	defaultAppLabel                    = "3scale-api-management"
+	DefaultAppLabel                    = "3scale-api-management"
 	defaultTenantName                  = "3scale"
-	defaultImageStreamImportInsecure   = false
+	DefaultImageStreamImportInsecure   = false
 	defaultResourceRequirementsEnabled = true
 )
 
@@ -47,7 +47,7 @@ type APIManagerSpec struct {
 	// +optional
 	Zync *ZyncSpec `json:"zync,omitempty"`
 	// +optional
-	HighAvailability    *HighAvailabilitySpec    `json:"highAvailability,omitempty"`
+	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 	// +optional
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 }
@@ -454,9 +454,9 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
 
-	tmpDefaultAppLabel := defaultAppLabel
+	tmpDefaultAppLabel := DefaultAppLabel
 	tmpDefaultTenantName := defaultTenantName
-	tmpDefaultImageStreamTagImportInsecure := defaultImageStreamImportInsecure
+	tmpDefaultImageStreamTagImportInsecure := DefaultImageStreamImportInsecure
 	tmpDefaultResourceRequirementsEnabled := defaultResourceRequirementsEnabled
 
 	if spec.AppLabel == nil {
