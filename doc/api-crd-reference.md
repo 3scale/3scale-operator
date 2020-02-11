@@ -64,7 +64,7 @@ CRD Diagram:
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
-| Credentials Reference | `credentialsRef` | SecretRef | Reference to a Secret that contains the tenant credentials. See [Tenant Secret](#TenantSecret) for more details | Yes |
+| Credentials Reference | `credentialsRef` | SecretRef | Reference to a Secret that contains the tenant credentials. See [Tenant Secret](#Tenant-Secret) for more details | Yes |
 | API Selector | `APISelector` | LabelSelector | Selects the desired APIs to be created with the previous credentials, if empty, selects all the API object in the current namespace/project. | No |
 
 ### BindingStatus
@@ -78,7 +78,7 @@ CRD Diagram:
 
 ### Tenant Secret
 
-The credentials are typically provided by the [Tenant Controller](/doc/tenant-reference.md)
+The credentials are typically provided by the [Tenant Controller](tenant-reference.md)
 and stored in a secret, defined by the tenant CR.
 
 But this Secret can also be created by the user following this schema: 
@@ -149,7 +149,7 @@ spec:
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
 | API Test Get Request | `apiTestGetRequest` | string | The API path to use for the initial test request. Example: "/" |  Yes  |
-| Authentication Settings | `authenticationSettings` | Object | See [Authentication Settings](#AuthenticationSettings) for more details |  Yes  |
+| Authentication Settings | `authenticationSettings` | Object | See [Authentication Settings](#Authentication-Settings) for more details |  Yes  |
 | MappingRules Selector | `mappingRulesSelector` | LabelSelector | Selects the desired MappingRule objects, if empty, selects all the MappingRule objects in the same namespace | No |
 | Private Base URL | `privateBaseURL` | string | The URL of the private API to expose with 3scale. For example: "https://echo-api.3scale.net:443" |  Yes  |
 
@@ -158,7 +158,7 @@ spec:
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
 | API Test Get Request | `apiTestGetRequest` | string | The API path to use for the initial test request. Example: "/" |  Yes  |
-| Authentication Settings | `authenticationSettings` | Object | See [Authentication Settings](#AuthenticationSettings) for more details |  Yes  |
+| Authentication Settings | `authenticationSettings` | Object | See [Authentication Settings](#Authentication-Settings) for more details |  Yes  |
 | MappingRules Selector | `mappingRulesSelector` | LabelSelector | Selects the desired MappingRule objects, if empty, selects all the MappingRule objects in the same namespace | No |
 | Private Base URL | `privateBaseURL` | string | The URL of the API to expose with 3scale. For example: "https://echo-api.3scale.net:443" |  Yes  |
 | Staging Public Base URL | `stagingPublicBaseURL` | string | The endpoint where the staging config will be exposed |  Yes  |
@@ -168,7 +168,7 @@ spec:
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
-| Authentication Settings | `authenticationSettings` | Object | See [Authentication Settings](#AuthenticationSettings) for more details |  Yes  |
+| Authentication Settings | `authenticationSettings` | Object | See [Authentication Settings](#Authentication-Settings) for more details |  Yes  |
 
 ###### Authentication Settings
 
@@ -329,7 +329,7 @@ spec:
 | Approval Required | `approvalRequired` | boolean | Defines if a final user requires approval from the admin to sign up for a plan | Yes |
 | Costs | `costs` | Object | See [Costs](#Costs) | Yes |
 | Limit Selector | `limitSelector` | LabelSelector | Selects the desired Limit objects, if empty, selects all the Limit objects in the same namespace | No |
-| Trial Period | `trialPeriod` | int | See [Master Secret](#MasterSecret) for more details | Yes |
+| Trial Period | `trialPeriod` | int | See [Master Secret](tenant-reference.md#Master-Secret) for more details | Yes |
 
 #### Costs
 

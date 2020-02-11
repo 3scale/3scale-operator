@@ -1,7 +1,7 @@
 # User Guide
 
 ## Table of contents
-* [Installing 3scale](#deploying-3scale)
+* [Installing 3scale](#installing-3scale)
   * [Prerequisites](#prerequisites)
   * [Basic Installation](#basic-installation)
   * [Deployment Configuration Options](#deployment-configuration-options)

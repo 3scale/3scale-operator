@@ -39,7 +39,7 @@ git checkout master
 
 ## Building 3scale operator image
 
-[Clone the repo](#clonerepository)
+[Clone the repository](#clone-repository)
 
 Build operator image
 
@@ -53,7 +53,7 @@ make build IMAGE=quay.io/myorg/3scale-operator VERSION=test
 
 Run operator from command line, it will not be deployed as pod.
 
-* [Clone the repo](#clonerepository)
+* [Clone the repository](#clone-repository)
 
 * Register the 3scale-operator CRDs in the OpenShift API Server
 
@@ -79,7 +79,7 @@ make local
 
 Build operator image and deploy manually as a pod.
 
-* [Build 3scale operator image](#building3scaleoperatorimage)
+* [Build 3scale operator image](#building-3scale-operator-image)
 
 * Push image to public repo (for instance `quay.io`)
 
@@ -184,7 +184,7 @@ make e2e-local-run
 
 ## Building 3scale templates
 
-[Clone the repo](#clonerepository)
+[Clone the repository](#clone-repository)
 
 ```sh
 cd cd pkg/3scale/amp && make clean all
