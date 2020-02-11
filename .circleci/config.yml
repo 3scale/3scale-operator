@@ -118,13 +118,48 @@ commands:
       - run:
           name: Deploy 3scale from amp-eval template without imagestreams
           command: |
+            WILDCARD_DOMAIN="lvh.me"
             ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
-              oc new-app -f- --param WILDCARD_DOMAIN=lvh.me --param AMP_RELEASE=master
+              oc new-app -f- --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN} --param AMP_RELEASE=master
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
             oc get events | egrep ' Failed ' || :
             oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
           no_output_timeout: 30m
+      - check-3scale-templates-deployed-routes
+
+  check-3scale-templates-deployed-routes:
+    parameters:
+      wildcard_domain:
+        type: string
+        default: "lvh.me"
+    steps:
+      - run:
+          name: "Verify that all default routes are created"
+          command: |
+            WILDCARD_DOMAIN=<< parameters.wildcard_domain >>
+
+            hostroutes=("backend-3scale"                # Backend Listener route
+                        "api-3scale-apicast-production" # Apicast Production '3scale' tenant Route
+                        "api-3scale-apicast-staging"    # Apicast Staging '3scale' tenant Route
+                        "master"                        # System's Master Portal Route
+                        "3scale"                        # System's '3scale' tenant Developer Portal Route
+                        "3scale-admin"                  # System's '3scale' tenant Admin Portal Route
+            )
+            for hostroute in "${hostroutes[@]}"; do
+              fullhostroute="${hostroute}.${WILDCARD_DOMAIN}"
+              ROUTE_CREATED=0
+              echo "Waiting for route with host '${fullhostroute}' to be created..."
+              while [ ${ROUTE_CREATED} -eq 0 ]; do
+                ROUTE_NAME=$(oc get route --field-selector spec.host="${fullhostroute}" -o name)
+                if [ -z "${ROUTE_NAME}" ]; then
+                  sleep 5
+                else
+                  echo "Route '${ROUTE_NAME}' with host '${fullhostroute}' has been created"
+                  ROUTE_CREATED=1
+                fi
+              done
+            done
 
   deploy-3scale-eval-from-template:
     steps:
@@ -142,7 +177,7 @@ commands:
             oc get events | egrep ' Failed ' || :
             oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
           no_output_timeout: 30m
-
+      - check-3scale-templates-deployed-routes
   push-3scale-images-to-quay:
     steps:
       - docker-login
