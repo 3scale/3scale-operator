@@ -15,15 +15,15 @@
 | Email | `email` | string | Admin email address | Yes |
 | Admin Username | `username` | string | Admin credentials: username | Yes |
 | Master Account Domain URL | `systemMasterUrl` | string | Master Account URL | Yes |
-| Master Account Credentials Secret | `masterCredentialsRef` | object | See [Master Secret](#MasterSecret) for more details | Yes |
-| Admin Secret | `passwordCredentialsRef` | object | See [Admin Secret](#AdminSecret) for more details | Yes |
-| Tenant Credentials Secret | `tenantSecretRef` | object | See [Tenant Secret](#TenantSecret) for more details | No |
+| Master Account Credentials Secret | `masterCredentialsRef` | object | See [Master Secret](#Master-Secret) for more details | Yes |
+| Admin Secret | `passwordCredentialsRef` | object | See [Admin Secret](#Admin-Secret) for more details | Yes |
+| Tenant Credentials Secret | `tenantSecretRef` | object | See [Tenant Secret](#Tenant-Secret) for more details | No |
 
 #### Master Secret
 Tenants can be managed using master provider account credentials. This secret provides those credentials to the 3scale operator.
 
-The credentials are tipically provided by [APIManager](/doc/user-guide.md#DeploytheAPIManagercustomresource)
-and stored in the secret name [system-seed](/doc/reference.md#system-seed).
+The credentials are tipically provided by [APIManager](operator-user-guide.md#Basic-installation)
+and stored in the secret name [system-seed](apimanager-reference.md#system-seed).
 If this is the case, `masterCredentialsRef` object should look like:
 
 ```yaml
