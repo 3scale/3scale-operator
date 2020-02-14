@@ -73,9 +73,7 @@ func TestGetSystemMySQLImageOptions(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			optsProvider := OperatorSystemMySQLImageOptionsProvider{
-				APIManagerSpec: &tc.apimanagerFactory().Spec,
-			}
+			optsProvider := NewSystemMysqlImageOptionsProvider(tc.apimanagerFactory())
 			_, err := optsProvider.GetSystemMySQLImageOptions()
 			if err != nil {
 				subT.Error(err)

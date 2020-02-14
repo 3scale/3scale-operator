@@ -34,7 +34,7 @@ func (r *SystemMySQLImageReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (r *SystemMySQLImageReconciler) systemMySQLImage() (*component.SystemMySQLImage, error) {
-	optsProvider := OperatorSystemMySQLImageOptionsProvider{APIManagerSpec: &r.apiManager.Spec}
+	optsProvider := NewSystemMysqlImageOptionsProvider(r.apiManager)
 	opts, err := optsProvider.GetSystemMySQLImageOptions()
 	if err != nil {
 		return nil, err
