@@ -34,11 +34,13 @@ func (r *SystemPostgreSQLImageAdapter) Objects() ([]common.KubernetesObject, err
 }
 
 func (r *SystemPostgreSQLImageAdapter) options() (*component.SystemPostgreSQLImageOptions, error) {
-	aob := component.SystemPostgreSQLImageOptionsBuilder{}
-	aob.AppLabel("${APP_LABEL}")
-	aob.AmpRelease("${AMP_RELEASE}")
-	aob.Image("${SYSTEM_DATABASE_IMAGE}")
-	aob.InsecureImportPolicy(component.InsecureImportPolicy)
+	o := component.NewSystemPostgreSQLImageOptions()
+	o.AppLabel = "${APP_LABEL}"
+	o.AmpRelease = "${AMP_RELEASE}"
+	o.Image = "${SYSTEM_DATABASE_IMAGE}"
+	tmp := component.InsecureImportPolicy
+	o.InsecureImportPolicy = &tmp
 
-	return aob.Build()
+	err := o.Validate()
+	return o, err
 }

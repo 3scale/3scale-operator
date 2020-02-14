@@ -31,7 +31,7 @@ func (s *SystemPostgreSQLImage) ImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-postgresql",
 			Labels: map[string]string{
-				"app":                  s.Options.appLabel,
+				"app":                  s.Options.AppLabel,
 				"threescale_component": "system",
 			},
 			Annotations: map[string]string{
@@ -48,20 +48,20 @@ func (s *SystemPostgreSQLImage) ImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: s.Options.ampRelease,
+						Name: s.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: s.Options.ampRelease,
+					Name: s.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "System " + s.Options.ampRelease + " PostgreSQL",
+						"openshift.io/display-name": "System " + s.Options.AmpRelease + " PostgreSQL",
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: s.Options.image,
+						Name: s.Options.Image,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: s.Options.insecureImportPolicy,
+						Insecure: *s.Options.InsecureImportPolicy,
 					},
 				},
 			},

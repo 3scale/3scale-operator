@@ -64,10 +64,7 @@ func TestGetSystemPostgreSQLImageOptions(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			optsProvider := OperatorSystemPostgreSQLImageOptionsProvider{
-				APIManagerSpec: &tc.apimanager.Spec,
-				Namespace:      namespace,
-			}
+			optsProvider := NewSystemPostgreSQLImageOptionsProvider(tc.apimanager)
 			_, err := optsProvider.GetSystemPostgreSQLImageOptions()
 			if err != nil {
 				subT.Error(err)

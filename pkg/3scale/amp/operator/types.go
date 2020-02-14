@@ -15,12 +15,6 @@ type OperatorSystemPostgreSQLOptionsProvider struct {
 	Client         k8sclient.Client
 }
 
-type OperatorSystemPostgreSQLImageOptionsProvider struct {
-	APIManagerSpec *appsv1alpha1.APIManagerSpec
-	Namespace      string
-	Client         k8sclient.Client
-}
-
 type OperatorSystemOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 	Namespace      string
