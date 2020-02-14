@@ -89,28 +89,12 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	t.Log("operator Deployment is ready")
 
 	enableResourceRequirements := false
-	apicastNightlyImage := "quay.io/3scale/apicast:nightly"
-	backendNightlyImage := "quay.io/3scale/apisonator:nightly"
-	systemNightlyImage := "quay.io/3scale/porta:nightly"
-	zyncNightlyImage := "quay.io/3scale/zync:nightly"
 	wildcardDomain := "test1.127.0.0.1.nip.io"
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
 				WildcardDomain:              wildcardDomain,
 				ResourceRequirementsEnabled: &enableResourceRequirements,
-			},
-			Apicast: &appsv1alpha1.ApicastSpec{
-				Image: &apicastNightlyImage,
-			},
-			Backend: &appsv1alpha1.BackendSpec{
-				Image: &backendNightlyImage,
-			},
-			System: &appsv1alpha1.SystemSpec{
-				Image: &systemNightlyImage,
-			},
-			Zync: &appsv1alpha1.ZyncSpec{
-				Image: &zyncNightlyImage,
 			},
 		},
 		ObjectMeta: metav1.ObjectMeta{
