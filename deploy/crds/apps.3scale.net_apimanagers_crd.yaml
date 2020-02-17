@@ -181,6 +181,7 @@ spec:
             tenantName:
               type: string
             wildcardDomain:
+              description: Wildcard domain as configured in the API Manager object
               type: string
             zync:
               properties:
@@ -220,6 +221,7 @@ spec:
                 type: object
               type: array
             deployments:
+              description: APIManager Deployment Configs
               properties:
                 ready:
                   description: Deployments are ready to serve requests
