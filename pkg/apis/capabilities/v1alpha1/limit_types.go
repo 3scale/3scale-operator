@@ -208,9 +208,10 @@ func get3scaleLimitFromInternalLimit(c *portaClient.ThreeScaleClient, serviceID 
 }
 func getLimits(namespace string, matchLabels map[string]string, c client.Client) (*LimitList, error) {
 	limits := &LimitList{}
-	opts := client.ListOptions{}
-	opts.InNamespace(namespace)
-	opts.MatchingLabels(matchLabels)
-	err := c.List(context.TODO(), &opts, limits)
+	opts := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels(matchLabels),
+	}
+	err := c.List(context.TODO(), limits, opts...)
 	return limits, err
 }

@@ -365,9 +365,11 @@ func (r *ReconcileAPIManager) reconcileAPIManagerStatus(cr *appsv1alpha1.APIMana
 }
 
 func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {
-	listOps := &client.ListOptions{Namespace: instance.Namespace}
+	listOps := []client.ListOption{
+		client.InNamespace(instance.Namespace),
+	}
 	dcList := &appsv1.DeploymentConfigList{}
-	err := r.Client().List(context.TODO(), listOps, dcList)
+	err := r.Client().List(context.TODO(), dcList, listOps...)
 	if err != nil {
 		r.Logger().Error(err, "Failed to list deployment configs")
 		return err
