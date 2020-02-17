@@ -65,6 +65,11 @@ type APIManagerStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=apimanagers,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="DeploymentConfig,apps.openshift.io/v1"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="PersistentVolumeClaim,v1"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="Service,v1"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="Route,route.openshift.io/v1"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="ImageStream,image.openshift.io/v1"
 type APIManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
