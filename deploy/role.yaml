@@ -23,7 +23,13 @@ rules:
   # https://github.com/openshift/origin/pull/16253
   - bindings/finalizers
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - apps
   resources:
@@ -32,35 +38,109 @@ rules:
   - replicasets
   - statefulsets
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - apps
+  resourceNames:
+  - 3scale-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
 - apiGroups:
   - apps
   resources:
-  - deployments/finalizers
-  resourceNames:
-  - 3scale-operator
+  - replicasets
+  - deployments
   verbs:
-  - "update"
+  - get
+- apiGroups:
+  - apps.3scale.net
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - '*'
+  - bindings
+  - metrics
+  - plans
+  - limits
+  - mappingrules
+  - tenants
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
   - roles
   - rolebindings
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - image.openshift.io
   resources:
   - imagestreams
   - imagestreams/layers
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - route.openshift.io
   resources:
   - routes
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - route.openshift.io
   resources:
@@ -78,14 +158,13 @@ rules:
   resources:
   - deploymentconfigs
   verbs:
-  - '*'
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - servicemonitors
-  verbs:
-  - get
   - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - policy
   resources:
@@ -97,21 +176,3 @@ rules:
   - update
   - watch
   - delete
-- apiGroups:
-  - apps.3scale.net
-  resources:
-  - '*'
-  verbs:
-  - '*'
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - '*'
-  - bindings
-  - metrics
-  - plans
-  - limits
-  - mappingrules
-  - tenants
-  verbs:
-  - '*'
