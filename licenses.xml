@@ -12,16 +12,6 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>contrib.go.opencensus.io/exporter/ocagent</packageName>
-        <version>v0.6.0</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
         <packageName>github.com/3scale/3scale-porta-go-client</packageName>
         <version>v0.0.3</version>
         <licenses>
@@ -32,8 +22,8 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>github.com/Azure/go-autorest</packageName>
-        <version>v11.5.2+incompatible</version>
+        <packageName>github.com/Azure/go-autorest/autorest</packageName>
+        <version>v0.9.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -42,18 +32,48 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>github.com/BurntSushi/toml</packageName>
-        <version>v0.3.1</version>
+        <packageName>github.com/Azure/go-autorest/autorest/adal</packageName>
+        <version>v0.5.0</version>
         <licenses>
                       <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/Azure/go-autorest/autorest/date</packageName>
+        <version>v0.1.0</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/Azure/go-autorest/logger</packageName>
+        <version>v0.1.0</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/Azure/go-autorest/tracing</packageName>
+        <version>v0.5.0</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
             </license>
                   </licenses>
       </dependency>
           <dependency>
         <packageName>github.com/PuerkitoBio/purell</packageName>
-        <version>v1.1.0</version>
+        <version>v1.1.1</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -73,17 +93,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/RHsyseng/operator-utils</packageName>
-        <version>v0.0.0-20190617184533-a633dc5f85a3</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/appscode/jsonpatch</packageName>
-        <version>v0.0.0-20190108182946-7c0e3b262f30</version>
+        <version>v0.0.0-20200204194854-c5b0d8533458</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -93,7 +103,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/asaskevich/govalidator</packageName>
-        <version>v0.0.0-20180720115003-f9ffefc3facf</version>
+        <version>v0.0.0-20190424111038-f61b66f89f4a</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -112,18 +122,18 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>github.com/census-instrumentation/opencensus-proto</packageName>
-        <version>v0.2.1</version>
+        <packageName>github.com/cespare/xxhash/v2</packageName>
+        <version>v2.1.0</version>
         <licenses>
                       <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
             </license>
                   </licenses>
       </dependency>
           <dependency>
         <packageName>github.com/coreos/prometheus-operator</packageName>
-        <version>v0.26.0</version>
+        <version>v0.34.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -153,7 +163,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/emicklei/go-restful</packageName>
-        <version>v2.8.1+incompatible</version>
+        <version>v2.11.1+incompatible</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -163,10 +173,10 @@
       </dependency>
           <dependency>
         <packageName>github.com/evanphx/json-patch</packageName>
-        <version>v4.0.0+incompatible</version>
+        <version>v4.5.0+incompatible</version>
         <licenses>
                       <license>
-              <name>unknown</name>
+              <name>3-clause BSD License</name>
               <url></url>
             </license>
                   </licenses>
@@ -183,7 +193,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/ghodss/yaml</packageName>
-        <version>v1.0.0</version>
+        <version>v1.0.1-0.20190212211648-25d852aebe32</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -193,7 +203,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/globalsign/mgo</packageName>
-        <version>v0.0.0-20180905125535-1ca0a4f7cbcb</version>
+        <version>v0.0.0-20181015135952-eeefdecb41b8</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -213,7 +223,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-logr/zapr</packageName>
-        <version>v0.1.0</version>
+        <version>v0.1.1</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -223,7 +233,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/analysis</packageName>
-        <version>v0.17.0</version>
+        <version>v0.19.2</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -233,7 +243,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/errors</packageName>
-        <version>v0.17.0</version>
+        <version>v0.19.2</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -243,7 +253,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/jsonpointer</packageName>
-        <version>v0.17.0</version>
+        <version>v0.19.3</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -253,7 +263,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/jsonreference</packageName>
-        <version>v0.17.0</version>
+        <version>v0.19.3</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -263,7 +273,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/loads</packageName>
-        <version>v0.17.0</version>
+        <version>v0.19.2</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -273,7 +283,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/runtime</packageName>
-        <version>v0.0.0-20180920151709-4f900dc2ade9</version>
+        <version>v0.19.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -283,7 +293,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/spec</packageName>
-        <version>v0.18.0</version>
+        <version>v0.19.4</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -303,7 +313,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/swag</packageName>
-        <version>v0.17.0</version>
+        <version>v0.19.5</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -313,7 +323,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/go-openapi/validate</packageName>
-        <version>v0.19.0</version>
+        <version>v0.19.2</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -323,7 +333,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/gobuffalo/envy</packageName>
-        <version>v1.6.15</version>
+        <version>v1.7.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -333,7 +343,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/gogo/protobuf</packageName>
-        <version>v1.2.1</version>
+        <version>v1.3.1</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -342,18 +352,8 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>github.com/golang/glog</packageName>
-        <version>v0.0.0-20160126235308-23def4e6c14b</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
         <packageName>github.com/golang/groupcache</packageName>
-        <version>v0.0.0-20180924190550-6f2cf27854a4</version>
+        <version>v0.0.0-20191027212112-611e8accdfc9</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -372,18 +372,8 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>github.com/google/btree</packageName>
-        <version>v0.0.0-20180813153112-4030bb1f1f0c</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
         <packageName>github.com/google/go-cmp</packageName>
-        <version>v0.3.0</version>
+        <version>v0.3.1</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -413,7 +403,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/googleapis/gnostic</packageName>
-        <version>v0.2.0</version>
+        <version>v0.3.1</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -423,31 +413,11 @@
       </dependency>
           <dependency>
         <packageName>github.com/gophercloud/gophercloud</packageName>
-        <version>v0.0.0-20190318015731-ff9851476e98</version>
+        <version>v0.2.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
               <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/gregjones/httpcache</packageName>
-        <version>v0.0.0-20180305231024-9cad4c3443a7</version>
-        <licenses>
-                      <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/grpc-ecosystem/grpc-gateway</packageName>
-        <version>v1.9.4</version>
-        <licenses>
-                      <license>
-              <name>New BSD</name>
-              <url>http://opensource.org/licenses/BSD-3-Clause</url>
             </license>
                   </licenses>
       </dependency>
@@ -473,7 +443,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/imdario/mergo</packageName>
-        <version>v0.3.6</version>
+        <version>v0.3.8</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -513,7 +483,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/konsorten/go-windows-terminal-sequences</packageName>
-        <version>v1.0.1</version>
+        <version>v1.0.2</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -533,7 +503,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/magiconair/properties</packageName>
-        <version>v1.8.0</version>
+        <version>v1.8.1</version>
         <licenses>
                       <license>
               <name>2-clause BSDL</name>
@@ -543,7 +513,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/mailru/easyjson</packageName>
-        <version>v0.0.0-20180823135443-60711f1a8329</version>
+        <version>v0.7.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -612,28 +582,8 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>github.com/onsi/ginkgo</packageName>
-        <version>v1.10.1</version>
-        <licenses>
-                      <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/onsi/gomega</packageName>
-        <version>v1.7.0</version>
-        <licenses>
-                      <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
         <packageName>github.com/openshift/api</packageName>
-        <version>v3.9.1-0.20180830153656-5ad8479f64f1+incompatible</version>
+        <version>v3.9.1-0.20190924102528-32369d4db2ad+incompatible</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -643,7 +593,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/openshift/client-go</packageName>
-        <version>v3.9.0+incompatible</version>
+        <version>v0.0.0-20190923180330-3b6373338c9b</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -653,7 +603,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/operator-framework/operator-sdk</packageName>
-        <version>v0.8.1-0.20190517223317-f7f644008098</version>
+        <version>v0.15.2</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -674,16 +624,6 @@
           <dependency>
         <packageName>github.com/pelletier/go-toml</packageName>
         <version>v1.2.0</version>
-        <licenses>
-                      <license>
-              <name>MIT</name>
-              <url>http://opensource.org/licenses/mit-license</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/peterbourgon/diskv</packageName>
-        <version>v2.0.1+incompatible</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -713,7 +653,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/prometheus/client_golang</packageName>
-        <version>v1.1.0</version>
+        <version>v1.2.1</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -733,7 +673,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/prometheus/common</packageName>
-        <version>v0.6.0</version>
+        <version>v0.7.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -743,7 +683,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/prometheus/procfs</packageName>
-        <version>v0.0.3</version>
+        <version>v0.0.5</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -753,21 +693,11 @@
       </dependency>
           <dependency>
         <packageName>github.com/rogpeppe/go-internal</packageName>
-        <version>v1.2.2</version>
+        <version>v1.5.0</version>
         <licenses>
                       <license>
               <name>New BSD</name>
               <url>http://opensource.org/licenses/BSD-3-Clause</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>github.com/sergi/go-diff</packageName>
-        <version>v1.0.0</version>
-        <licenses>
-                      <license>
-              <name>OSI MIT</name>
-              <url></url>
             </license>
                   </licenses>
       </dependency>
@@ -803,7 +733,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/spf13/cobra</packageName>
-        <version>v0.0.3</version>
+        <version>v0.0.5</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -813,7 +743,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/spf13/jwalterweatherman</packageName>
-        <version>v1.0.0</version>
+        <version>v1.1.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -823,7 +753,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/spf13/pflag</packageName>
-        <version>v1.0.3</version>
+        <version>v1.0.5</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -833,7 +763,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/spf13/viper</packageName>
-        <version>v1.3.2</version>
+        <version>v1.4.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -843,7 +773,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/stretchr/testify</packageName>
-        <version>v1.3.0</version>
+        <version>v1.4.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -852,18 +782,8 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>go.opencensus.io</packageName>
-        <version>v0.22.0</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
         <packageName>go.uber.org/atomic</packageName>
-        <version>v1.3.2</version>
+        <version>v1.4.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -883,7 +803,7 @@
       </dependency>
           <dependency>
         <packageName>go.uber.org/zap</packageName>
-        <version>v1.9.1</version>
+        <version>v1.10.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -893,7 +813,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/crypto</packageName>
-        <version>v0.0.0-20190308221718-c2843e01d9a2</version>
+        <version>v0.0.0-20191028145041-f83a4685e152</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -903,7 +823,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/net</packageName>
-        <version>v0.0.0-20190628185345-da137c7871d7</version>
+        <version>v0.0.0-20191028085509-fe3aa8a45271</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -922,18 +842,8 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>golang.org/x/sync</packageName>
-        <version>v0.0.0-20190423024810-112230192c58</version>
-        <licenses>
-                      <license>
-              <name>New BSD</name>
-              <url>http://opensource.org/licenses/BSD-3-Clause</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
         <packageName>golang.org/x/sys</packageName>
-        <version>v0.0.0-20190801041406-cbf593c0f2f3</version>
+        <version>v0.0.0-20191028164358-195ce5e7f934</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -953,7 +863,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/time</packageName>
-        <version>v0.0.0-20181108054448-85acf8d2951c</version>
+        <version>v0.0.0-20191024005414-555d28b269f0</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -963,7 +873,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/tools</packageName>
-        <version>v0.0.0-20190524140312-2c0ae7006135</version>
+        <version>v0.0.0-20191018212557-ed542cd5b28a</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -972,18 +882,28 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>google.golang.org/api</packageName>
-        <version>v0.7.0</version>
+        <packageName>golang.org/x/xerrors</packageName>
+        <version>v0.0.0-20190717185122-a985d3407aa7</version>
         <licenses>
                       <license>
               <name>New BSD</name>
               <url>http://opensource.org/licenses/BSD-3-Clause</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>gomodules.xyz/jsonpatch/v2</packageName>
+        <version>v2.0.1</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
             </license>
                   </licenses>
       </dependency>
           <dependency>
         <packageName>google.golang.org/appengine</packageName>
-        <version>v1.5.0</version>
+        <version>v1.6.5</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -992,22 +912,12 @@
                   </licenses>
       </dependency>
           <dependency>
-        <packageName>google.golang.org/genproto</packageName>
-        <version>v0.0.0-20190716160619-c506a9f90610</version>
+        <packageName>gopkg.in/fsnotify.v1</packageName>
+        <version>v1.4.7</version>
         <licenses>
                       <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>google.golang.org/grpc</packageName>
-        <version>v1.22.0</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+              <name>New BSD</name>
+              <url>http://opensource.org/licenses/BSD-3-Clause</url>
             </license>
                   </licenses>
       </dependency>
@@ -1023,7 +933,7 @@
       </dependency>
           <dependency>
         <packageName>gopkg.in/yaml.v2</packageName>
-        <version>v2.2.2</version>
+        <version>v2.2.4</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -1037,7 +947,7 @@
       </dependency>
           <dependency>
         <packageName>k8s.io/api</packageName>
-        <version>v0.0.0-20190222213804-5cb15d344471</version>
+        <version>v0.0.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -1047,7 +957,7 @@
       </dependency>
           <dependency>
         <packageName>k8s.io/apimachinery</packageName>
-        <version>v0.0.0-20190221213512-86fb29eff628</version>
+        <version>v0.0.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -1057,27 +967,7 @@
       </dependency>
           <dependency>
         <packageName>k8s.io/client-go</packageName>
-        <version>v2.0.0-alpha.0.0.20181126152608-d082d5923d3c+incompatible</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>k8s.io/code-generator</packageName>
-        <version>v0.0.0-20180823001027-3dcf91f64f63</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>k8s.io/gengo</packageName>
-        <version>v0.0.0-20190128074634-0689ccc1d7d6</version>
+        <version>v12.0.0+incompatible</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -1087,7 +977,7 @@
       </dependency>
           <dependency>
         <packageName>k8s.io/klog</packageName>
-        <version>v0.2.0</version>
+        <version>v1.0.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -1097,7 +987,27 @@
       </dependency>
           <dependency>
         <packageName>k8s.io/kube-openapi</packageName>
-        <version>v0.0.0-20180711000925-0cf8f7e6ed1d</version>
+        <version>v0.0.0-20190918143330-0270cf2f1c1d</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>k8s.io/kube-state-metrics</packageName>
+        <version>v1.7.2</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>k8s.io/utils</packageName>
+        <version>v0.0.0-20191010214722-8d271d903fe4</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -1107,27 +1017,7 @@
       </dependency>
           <dependency>
         <packageName>sigs.k8s.io/controller-runtime</packageName>
-        <version>v0.1.10</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>sigs.k8s.io/controller-tools</packageName>
-        <version>v0.1.10</version>
-        <licenses>
-                      <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                  </licenses>
-      </dependency>
-          <dependency>
-        <packageName>sigs.k8s.io/testing_frameworks</packageName>
-        <version>v0.1.0</version>
+        <version>v0.4.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
