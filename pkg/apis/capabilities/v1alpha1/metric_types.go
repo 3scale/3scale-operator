@@ -33,6 +33,7 @@ type MetricStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=metrics,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="Metric"
 type Metric struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

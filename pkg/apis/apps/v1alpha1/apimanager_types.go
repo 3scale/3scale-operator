@@ -70,6 +70,7 @@ type APIManagerStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=apimanagers,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="APIManager"
 // +operator-sdk:gen-csv:customresourcedefinitions.resources="DeploymentConfig,apps.openshift.io/v1"
 // +operator-sdk:gen-csv:customresourcedefinitions.resources="PersistentVolumeClaim,v1"
 // +operator-sdk:gen-csv:customresourcedefinitions.resources="Service,v1"

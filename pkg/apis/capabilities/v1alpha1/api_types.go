@@ -52,6 +52,7 @@ type APIStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=apis,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="API"
 type API struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -672,8 +673,8 @@ func (api InternalAPI) createIn3scale(c *portaClient.ThreeScaleClient) error {
 		//TODO: add cancellation_period to application Plan
 		params := portaClient.Params{
 			"approval_required": strconv.FormatBool(plan.ApprovalRequired),
-			"setup_fee": plan.Costs.SetupFee,
-			"cost_per_month": plan.Costs.CostMonth,
+			"setup_fee":         plan.Costs.SetupFee,
+			"cost_per_month":    plan.Costs.CostMonth,
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
 		_, err = c.UpdateAppPlan(service.ID, plan3scale.ID, plan3scale.PlanName, "", params)
