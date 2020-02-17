@@ -14,20 +14,22 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
+      description: APIManager is the Schema for the apimanagers API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         spec:
+          description: APIManagerSpec defines the desired state of APIManager
           properties:
             apicast:
               properties:
@@ -126,18 +128,20 @@ spec:
                           description: Deprecated
                           type: string
                         awsCredentialsSecret:
+                          description: Deprecated
                           properties:
                             name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
                               type: string
-                          description: Deprecated
                           type: object
                         awsRegion:
                           description: Deprecated
                           type: string
                       required:
                       - awsBucket
-                      - awsRegion
                       - awsCredentialsSecret
+                      - awsRegion
                       type: object
                     persistentVolumeClaim:
                       description: Union type. Only one of the fields can be set.
@@ -148,10 +152,15 @@ spec:
                     simpleStorageService:
                       properties:
                         configurationSecretRef:
-                          type: object
+                          description: LocalObjectReference contains enough information
+                            to let you locate the referenced object inside the same
+                            namespace.
                           properties:
                             name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
                               type: string
+                          type: object
                       required:
                       - configurationSecretRef
                       type: object
@@ -196,6 +205,7 @@ spec:
           - wildcardDomain
           type: object
         status:
+          description: APIManagerStatus defines the observed state of APIManager
           properties:
             conditions:
               items:
@@ -205,8 +215,8 @@ spec:
                   type:
                     type: string
                 required:
-                - type
                 - status
+                - type
                 type: object
               type: array
             deployments:
@@ -231,6 +241,7 @@ spec:
           required:
           - deployments
           type: object
+      type: object
   version: v1alpha1
   versions:
   - name: v1alpha1
