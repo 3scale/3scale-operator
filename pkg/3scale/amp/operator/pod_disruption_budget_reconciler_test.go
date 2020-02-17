@@ -2,6 +2,9 @@ package operator
 
 import (
 	"context"
+	"reflect"
+	"testing"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -10,10 +13,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"testing"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func TestPodDisruptionBudgetBaseReconcilerCreate(t *testing.T) {
