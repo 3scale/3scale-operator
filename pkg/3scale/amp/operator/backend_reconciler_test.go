@@ -2,8 +2,9 @@ package operator
 
 import (
 	"context"
-	"k8s.io/api/policy/v1beta1"
 	"testing"
+
+	"k8s.io/api/policy/v1beta1"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -16,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func TestNewBackendReconciler(t *testing.T) {
