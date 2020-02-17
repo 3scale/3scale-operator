@@ -23,6 +23,8 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/restmapper"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	crmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
@@ -32,8 +34,9 @@ import (
 
 // Change below variables to serve metrics on different host or port.
 var (
-	metricsHost       = "0.0.0.0"
-	metricsPort int32 = 8383
+	metricsHost               = "0.0.0.0"
+	metricsPort         int32 = 8383
+	operatorMetricsPort int32 = 8686
 )
 var log = logf.Log.WithName("cmd")
 
@@ -115,8 +118,14 @@ func main() {
 
 	register3scaleVersionInfoMetric()
 
-	// Create Service object to expose the metrics port.
-	_, err = metrics.ExposeMetricsPort(ctx, metricsPort)
+	// Add to the below struct any other metrics ports you want to expose.
+	servicePorts := []v1.ServicePort{
+		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: metricsPort}},
+		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorMetricsPort}},
+	}
+
+	// Create Service object to expose the metrics port(s).
+	_, err = metrics.CreateMetricsService(ctx, cfg, servicePorts)
 	if err != nil {
 		log.Info(err.Error())
 	}
