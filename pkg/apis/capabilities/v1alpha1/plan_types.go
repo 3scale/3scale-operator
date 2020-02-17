@@ -3,13 +3,14 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"log"
+	"sort"
+	"strconv"
+
 	portaClient "github.com/3scale/3scale-porta-go-client/client"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
-	"strconv"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -51,6 +52,7 @@ type PlanStatus struct {
 // Plan is the Schema for the plans API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=plans,scope=Namespaced
 type Plan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
