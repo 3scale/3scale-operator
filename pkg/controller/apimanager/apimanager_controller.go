@@ -137,7 +137,7 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	logger := r.Logger().WithValues("namespace", request.Namespace, "name", request.Name)
+	logger := r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
 
 	instance, err := r.apiManagerInstance(request.NamespacedName)
