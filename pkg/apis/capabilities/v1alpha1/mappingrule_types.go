@@ -46,6 +46,7 @@ type MappingRuleStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=mappingrules,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="MappingRule"
 type MappingRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
