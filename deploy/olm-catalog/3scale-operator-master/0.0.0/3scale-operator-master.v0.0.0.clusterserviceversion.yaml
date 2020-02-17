@@ -282,6 +282,7 @@ spec:
   customresourcedefinitions:
     owned:
     - description: APIManager is the Schema for the apimanagers API
+      displayName: APIManager
       kind: APIManager
       name: apimanagers.apps.3scale.net
       resources:
@@ -314,30 +315,37 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
     - description: API is the Schema for the apis API
+      displayName: API
       kind: API
       name: apis.capabilities.3scale.net
       version: v1alpha1
     - description: Binding is the Schema for the bindings API
+      displayName: Binding
       kind: Binding
       name: bindings.capabilities.3scale.net
       version: v1alpha1
     - description: Limit is the Schema for the limits API
+      displayName: Limit
       kind: Limit
       name: limits.capabilities.3scale.net
       version: v1alpha1
     - description: MappingRule is the Schema for the mappingrules API
+      displayName: MappingRule
       kind: MappingRule
       name: mappingrules.capabilities.3scale.net
       version: v1alpha1
     - description: Metric is the Schema for the metrics API
+      displayName: Metric
       kind: Metric
       name: metrics.capabilities.3scale.net
       version: v1alpha1
     - description: Plan is the Schema for the plans API
+      displayName: Plan
       kind: Plan
       name: plans.capabilities.3scale.net
       version: v1alpha1
     - description: Tenant is the Schema for the tenants API
+      displayName: Tenant
       kind: Tenant
       name: tenants.capabilities.3scale.net
       version: v1alpha1
