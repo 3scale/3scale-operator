@@ -8,8 +8,8 @@ spec:
   default: true
   approvalRequired: false
   costs:
-    costMonth: 0
-    setupFee: 0
+    costMonth: "0"
+    setupFee: "0.5"
   limitSelector:
     matchLabels:
       plan: plan01
