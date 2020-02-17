@@ -10,6 +10,7 @@ rules:
   - pods
   - replicationcontrollers
   - services
+  - services/finalizers
   - endpoints
   - persistentvolumeclaims
   - events
