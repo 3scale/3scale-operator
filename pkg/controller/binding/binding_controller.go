@@ -99,10 +99,11 @@ func (r *ReconcileBinding) Reconcile(request reconcile.Request) (reconcile.Resul
 	// all the binding object from the same namespace and reconcile them.
 	// This is a hack. but we don't have owner references, so it should work.
 	if request.Name == "_NonBinding" {
-		opts := client.ListOptions{}
-		opts.InNamespace(request.Namespace)
+		opts := []client.ListOption{
+			client.InNamespace(request.Namespace),
+		}
 		BindingList := &apiv1alpha1.BindingList{}
-		err := r.client.List(context.TODO(), &opts, BindingList)
+		err := r.client.List(context.TODO(), BindingList, opts...)
 		if err != nil {
 			reqLogger.Error(err, "error")
 			return reconcile.Result{}, nil

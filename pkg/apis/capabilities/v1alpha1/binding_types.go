@@ -384,10 +384,11 @@ func (b Binding) GetCurrentState() (*State, error) {
 }
 func (b Binding) getAPIs(c client.Client) (*APIList, error) {
 	apis := &APIList{}
-	opts := &client.ListOptions{}
-	opts.InNamespace(b.Namespace)
-	opts.MatchingLabels(b.Spec.APISelector.MatchLabels)
-	err := c.List(context.TODO(), opts, apis)
+	opts := []client.ListOption{
+		client.InNamespace(b.Namespace),
+		client.MatchingLabels(b.Spec.APISelector.MatchLabels),
+	}
+	err := c.List(context.TODO(), apis, opts...)
 	return apis, err
 }
 func (b Binding) newInternalCredentials(c client.Client) (*InternalCredentials, error) {

@@ -85,10 +85,11 @@ func get3scaleMappingRulefromInternalMappingRule(c *portaClient.ThreeScaleClient
 }
 func getMappingRules(namespace string, matchLabels map[string]string, c client.Client) (*MappingRuleList, error) {
 	mappingRules := &MappingRuleList{}
-	opts := client.ListOptions{}
-	opts.InNamespace(namespace)
-	opts.MatchingLabels(matchLabels)
-	err := c.List(context.TODO(), &opts, mappingRules)
+	opts := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels(matchLabels),
+	}
+	err := c.List(context.TODO(), mappingRules, opts...)
 	return mappingRules, err
 }
 func getServiceMappingRulesFrom3scale(c *portaClient.ThreeScaleClient, service portaClient.Service) (*[]InternalMappingRule, error) {

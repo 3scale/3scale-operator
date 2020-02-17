@@ -152,10 +152,11 @@ func (d *MetricsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, servi
 }
 func getMetrics(namespace string, matchLabels map[string]string, c client.Client) (*MetricList, error) {
 	metrics := &MetricList{}
-	opts := client.ListOptions{}
-	opts.InNamespace(namespace)
-	opts.MatchingLabels(matchLabels)
-	err := c.List(context.TODO(), &opts, metrics)
+	opts := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels(matchLabels),
+	}
+	err := c.List(context.TODO(), metrics, opts...)
 	return metrics, err
 }
 
