@@ -455,7 +455,6 @@ objects:
   spec:
     accessModes:
     - ReadWriteOnce
-    dataSource: null
     resources:
       requests:
         storage: 1Gi
@@ -601,7 +600,6 @@ objects:
   spec:
     accessModes:
     - ReadWriteOnce
-    dataSource: null
     resources:
       requests:
         storage: 1Gi
@@ -1364,7 +1362,6 @@ objects:
   spec:
     accessModes:
     - ReadWriteOnce
-    dataSource: null
     resources:
       requests:
         storage: 1Gi
