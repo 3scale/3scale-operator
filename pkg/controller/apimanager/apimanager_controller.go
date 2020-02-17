@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 
 	"k8s.io/api/policy/v1beta1"
 
@@ -384,6 +385,7 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 			}
 		}
 	}
+	sort.Slice(dcs, func(i, j int) bool { return dcs[i].Name < dcs[j].Name })
 
 	deploymentStatus := olm.GetDeploymentConfigStatus(dcs)
 	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {
