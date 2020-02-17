@@ -43,7 +43,7 @@ func (p *SystemPostgreSQL) Service() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-postgresql",
 			Labels: map[string]string{
-				"app":                          p.Options.appLabel,
+				"app":                          p.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "postgresql",
 			},
@@ -70,7 +70,7 @@ func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "postgresql-data",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.AppLabel},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -93,7 +93,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-postgresql",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -120,7 +120,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": "system-postgresql"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.appLabel, "deploymentConfig": "system-postgresql"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.AppLabel, "deploymentConfig": "system-postgresql"},
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp", //TODO make this configurable via flag
@@ -150,9 +150,9 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
 								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
 								// are deprecated we should be able to change this.
-								envVarFromValue("POSTGRESQL_DATABASE", p.Options.databaseName),
+								envVarFromValue("POSTGRESQL_DATABASE", p.Options.DatabaseName),
 							},
-							Resources: *p.Options.containerResourceRequirements,
+							Resources: p.Options.ContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "postgresql-data",
@@ -204,14 +204,14 @@ func (p *SystemPostgreSQL) SystemDatabaseSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemDatabaseSecretName,
 			Labels: map[string]string{
-				"app":                  p.Options.appLabel,
+				"app":                  p.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemDatabaseUserFieldName:     p.Options.user,
-			SystemSecretSystemDatabasePasswordFieldName: p.Options.password,
-			SystemSecretSystemDatabaseURLFieldName:      p.Options.databaseURL,
+			SystemSecretSystemDatabaseUserFieldName:     p.Options.User,
+			SystemSecretSystemDatabasePasswordFieldName: p.Options.Password,
+			SystemSecretSystemDatabaseURLFieldName:      p.Options.DatabaseURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

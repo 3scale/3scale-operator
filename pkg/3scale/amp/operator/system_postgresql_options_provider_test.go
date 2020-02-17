@@ -51,11 +51,7 @@ func TestGetSystemPostgreSQLOptions(t *testing.T) {
 				objs = append(objs, tc.systemDatabaseSecret)
 			}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := OperatorSystemPostgreSQLOptionsProvider{
-				APIManagerSpec: &apimanager.Spec,
-				Namespace:      namespace,
-				Client:         cl,
-			}
+			optsProvider := NewSystemPostgresqlOptionsProvider(apimanager, namespace, cl)
 			_, err := optsProvider.GetSystemPostgreSQLOptions()
 			if err != nil {
 				subT.Error(err)
@@ -113,11 +109,7 @@ func TestGetPostgreSQLOptionsInvalidURL(t *testing.T) {
 			secret := getSystemDBSecret(namespace, tc.databaseURL)
 			objs := []runtime.Object{apimanager, secret}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := OperatorSystemPostgreSQLOptionsProvider{
-				APIManagerSpec: &apimanager.Spec,
-				Namespace:      namespace,
-				Client:         cl,
-			}
+			optsProvider := NewSystemPostgresqlOptionsProvider(apimanager, namespace, cl)
 			_, err := optsProvider.GetSystemPostgreSQLOptions()
 			if err == nil {
 				subT.Fatal("expected to fail for invalid URL")
