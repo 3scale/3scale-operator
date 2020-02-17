@@ -3,16 +3,17 @@ package v1alpha1
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"reflect"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/3scale/3scale-operator/pkg/helper"
 	portaClient "github.com/3scale/3scale-porta-go-client/client"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"log"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -50,6 +51,7 @@ type APIStatus struct {
 // API is the Schema for the apis API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=apis,scope=Namespaced
 type API struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

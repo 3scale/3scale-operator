@@ -3,12 +3,13 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	portaClient "github.com/3scale/3scale-porta-go-client/client"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -44,6 +45,7 @@ type LimitStatus struct {
 // Limit is the Schema for the limits API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=limits,scope=Namespaced
 type Limit struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
