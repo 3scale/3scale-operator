@@ -357,7 +357,7 @@ spec:
     Documentation can be found on our [website](https://github.com/3scale/3scale-operator/blob/master/doc/operator-user-guide.md).
 
     ### Getting help
-    If you encounter any issues while using 3scale operator, you can create an issue on our [website](https://github.com/3scale/3scale-operator) for bugs, enhancements, or other requests.
+    If you encounter any issues while using 3scale operator, you can create an issue on our [Github repo](https://github.com/3scale/3scale-operator) for bugs, enhancements, or other requests.
 
     ### Contributing
     You can contribute by:
