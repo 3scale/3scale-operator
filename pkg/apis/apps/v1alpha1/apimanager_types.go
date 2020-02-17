@@ -55,8 +55,13 @@ type APIManagerSpec struct {
 // APIManagerStatus defines the observed state of APIManager
 // +k8s:openapi-gen=true
 type APIManagerStatus struct {
-	Conditions  []APIManagerCondition `json:"conditions,omitempty" protobuf:"bytes,4,rep,name=conditions"`
-	Deployments olm.DeploymentStatus  `json:"deployments"`
+	Conditions []APIManagerCondition `json:"conditions,omitempty" protobuf:"bytes,4,rep,name=conditions"`
+
+	// APIManager Deployment Configs
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors.displayName="Deployments"
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:podStatuses"
+	Deployments olm.DeploymentStatus `json:"deployments"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -118,6 +123,10 @@ type APIManagerList struct {
 }
 
 type APIManagerCommonSpec struct {
+	// Wildcard domain as configured in the API Manager object
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Wildcard Domain"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:label"
 	WildcardDomain string `json:"wildcardDomain"`
 	// +optional
 	AppLabel *string `json:"appLabel,omitempty"`

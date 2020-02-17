@@ -70,8 +70,9 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref common.ReferenceCallback) 
 				Properties: map[string]spec.Schema{
 					"wildcardDomain": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Wildcard domain as configured in the API Manager object",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"appLabel": {
@@ -158,7 +159,8 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref common.ReferenceCallback
 					},
 					"deployments": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/RHsyseng/operator-utils/pkg/olm.DeploymentStatus"),
+							Description: "APIManager Deployment Configs",
+							Ref:         ref("github.com/RHsyseng/operator-utils/pkg/olm.DeploymentStatus"),
 						},
 					},
 				},
