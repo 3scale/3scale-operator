@@ -25,7 +25,6 @@ metadata:
        {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Plan","metadata":{"labels":{"api":"api01"},"name":"example-plan"},"spec":{"approvalRequired":false,"costs":{"costMonth":0,"setupFee":0},"default":true,"limitSelector":{"matchLabels":{"plan":"plan01"}},"trialPeriod":0}},
        {"apiVersion":"capabilities.3scale.net/v1alpha1","kind":"Tenant","metadata":{"name":"example-tenant"},"spec":{"email":"admin@example.com","masterCredentialsRef":{"name":"system-seed"},"organizationName":"Example.com","passwordCredentialsRef":{"name":"ecorp-admin-secret"},"systemMasterUrl":"https://master.example.com","tenantSecretRef":{"name":"ecorp-tenant-secret","namespace":"operator-test"},"username":"admin"}}]
 spec:
-  replaces: 3scale-operator-master.v0.0.0
   relatedImages:
   - name: APIcast
     image: quay.io/3scale/apicast:nightly
