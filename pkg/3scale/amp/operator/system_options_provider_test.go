@@ -324,11 +324,7 @@ func TestGetSystemOptions(t *testing.T) {
 				objs = append(objs, tc.awsCredentialsSecret)
 			}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := OperatorSystemOptionsProvider{
-				APIManagerSpec: &tc.apimanagerFactory().Spec,
-				Namespace:      namespace,
-				Client:         cl,
-			}
+			optsProvider := NewSystemOptionsProvider(tc.apimanagerFactory(), namespace, cl)
 			_, err := optsProvider.GetSystemOptions()
 			if err != nil {
 				subT.Error(err)

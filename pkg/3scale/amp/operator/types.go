@@ -5,12 +5,6 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type OperatorSystemOptionsProvider struct {
-	APIManagerSpec *appsv1alpha1.APIManagerSpec
-	Namespace      string
-	Client         k8sclient.Client
-}
-
 type OperatorS3OptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 	Namespace      string

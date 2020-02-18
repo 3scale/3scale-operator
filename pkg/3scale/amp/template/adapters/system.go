@@ -11,7 +11,7 @@ type System struct {
 }
 
 func NewSystemAdapter(generatePDB bool) Adapter {
-	return NewAppenderAdapter(&System{generatePodDisruptionBudget:generatePDB})
+	return NewAppenderAdapter(&System{generatePodDisruptionBudget: generatePDB})
 }
 
 func (s *System) Parameters() []templatev1.Parameter {
@@ -138,34 +138,73 @@ func (s *System) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (s *System) options() (*component.SystemOptions, error) {
-	sob := component.SystemOptionsBuilder{}
-	sob.AdminAccessToken("${ADMIN_ACCESS_TOKEN}")
-	sob.AdminPassword("${ADMIN_PASSWORD}")
-	sob.AdminUsername("${ADMIN_USERNAME}")
+	o := component.NewSystemOptions()
+
+	o.AdminAccessToken = "${ADMIN_ACCESS_TOKEN}"
+	o.AdminPassword = "${ADMIN_PASSWORD}"
+	o.AdminUsername = "${ADMIN_USERNAME}"
 	adminEmail := "${ADMIN_EMAIL}"
-	sob.AdminEmail(&adminEmail)
-	sob.AmpRelease("${AMP_RELEASE}")
-	sob.ApicastAccessToken("${APICAST_ACCESS_TOKEN}")
-	sob.ApicastRegistryURL("${APICAST_REGISTRY_URL}")
-	sob.MasterAccessToken("${MASTER_ACCESS_TOKEN}")
-	sob.MasterName("${MASTER_NAME}")
-	sob.MasterUsername("${MASTER_USER}")
-	sob.MasterPassword("${MASTER_PASSWORD}")
-	sob.AppLabel("${APP_LABEL}")
-	sob.RecaptchaPublicKey("${RECAPTCHA_PUBLIC_KEY}")
-	sob.RecaptchaPrivateKey("${RECAPTCHA_PRIVATE_KEY}")
-	redisUrl := "${SYSTEM_REDIS_URL}"
-	sob.RedisURL(&redisUrl)
+	o.AdminEmail = &adminEmail
+	o.AmpRelease = "${AMP_RELEASE}"
+	o.ApicastAccessToken = "${APICAST_ACCESS_TOKEN}"
+	o.ApicastRegistryURL = "${APICAST_REGISTRY_URL}"
+	o.MasterAccessToken = "${MASTER_ACCESS_TOKEN}"
+	o.MasterName = "${MASTER_NAME}"
+	o.MasterUsername = "${MASTER_USER}"
+	o.MasterPassword = "${MASTER_PASSWORD}"
+	o.AppLabel = "${APP_LABEL}"
+	recaptchaPublicKey := "${RECAPTCHA_PUBLIC_KEY}"
+	o.RecaptchaPublicKey = &recaptchaPublicKey
+	recaptchaPrivateKey := "${RECAPTCHA_PRIVATE_KEY}"
+	o.RecaptchaPrivateKey = &recaptchaPrivateKey
+	o.RedisURL = "${SYSTEM_REDIS_URL}"
+	redisSentinelHosts := component.DefaultSystemRedisSentinelHosts()
+	o.RedisSentinelHosts = &redisSentinelHosts
+	redisSentinelRole := component.DefaultSystemRedisSentinelRole()
+	o.RedisSentinelRole = &redisSentinelRole
 	redisNamespace := "${SYSTEM_REDIS_NAMESPACE}"
-	sob.RedisNamespace(&redisNamespace)
+	o.RedisNamespace = &redisNamespace
 	messageBusRedisURL := "${SYSTEM_MESSAGE_BUS_REDIS_URL}"
-	sob.MessageBusRedisURL(&messageBusRedisURL)
+	o.MessageBusRedisURL = &messageBusRedisURL
+	messageBusRedisSentinelHosts := component.DefaultSystemMessageBusRedisSentinelHosts()
+	o.MessageBusRedisSentinelHosts = &messageBusRedisSentinelHosts
+	messageBusRedisSentinelRole := component.DefaultSystemMessageBusRedisSentinelRole()
+	o.MessageBusRedisSentinelRole = &messageBusRedisSentinelRole
 	messageBusRedisNamespace := "${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}"
-	sob.MessageBusRedisNamespace(&messageBusRedisNamespace)
-	sob.AppSecretKeyBase("${SYSTEM_APP_SECRET_KEY_BASE}")
-	sob.BackendSharedSecret("${SYSTEM_BACKEND_SHARED_SECRET}")
-	sob.TenantName("${TENANT_NAME}")
-	sob.WildcardDomain("${WILDCARD_DOMAIN}")
-	sob.PVCFileStorageOptions(component.PVCFileStorageOptions{StorageClass: nil})
-	return sob.Build()
+	o.MessageBusRedisNamespace = &messageBusRedisNamespace
+	o.AppSecretKeyBase = "${SYSTEM_APP_SECRET_KEY_BASE}"
+	o.BackendSharedSecret = "${SYSTEM_BACKEND_SHARED_SECRET}"
+	o.TenantName = "${TENANT_NAME}"
+	o.WildcardDomain = "${WILDCARD_DOMAIN}"
+	o.PvcFileStorageOptions = &component.PVCFileStorageOptions{}
+	o.MemcachedServers = component.DefaultMemcachedServers()
+	o.EventHooksURL = component.DefaultEventHooksURL()
+	o.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(o.ApicastAccessToken)
+	o.ApicastSystemMasterBaseURL = component.DefaultApicastSystemMasterBaseURL(o.ApicastAccessToken)
+	o.AppProviderContainerResourceRequirements = component.DefaultAppProviderContainerResourceRequirements()
+	o.AppMasterContainerResourceRequirements = component.DefaultAppMasterContainerResourceRequirements()
+	o.AppDeveloperContainerResourceRequirements = component.DefaultAppDeveloperContainerResourceRequirements()
+	o.SphinxContainerResourceRequirements = component.DefaultSphinxContainerResourceRequirements()
+	o.SidekiqContainerResourceRequirements = component.DefaultSidekiqContainerResourceRequirements()
+	o.AppReplicas = component.DefaultAppReplicas()
+	o.SidekiqReplicas = component.DefaultSidekiqReplicas()
+	defaultSystemSMTPAddress := component.DefaultSystemSMTPAddress()
+	defaultSystemSMTPAuthentication := component.DefaultSystemSMTPAuthentication()
+	defaultSystemSMTPDomain := component.DefaultSystemSMTPDomain()
+	defaultSystemSMTPOpenSSLVerifyMode := component.DefaultSystemSMTPOpenSSLVerifyMode()
+	defaultSystemSMTPPassword := component.DefaultSystemSMTPPassword()
+	defaultSystemSMTPPort := component.DefaultSystemSMTPPort()
+	defaultSystemSMTPUsername := component.DefaultSystemSMTPUsername()
+	o.SmtpSecretOptions = component.SystemSMTPSecretOptions{
+		Address:           &defaultSystemSMTPAddress,
+		Authentication:    &defaultSystemSMTPAuthentication,
+		Domain:            &defaultSystemSMTPDomain,
+		OpenSSLVerifyMode: &defaultSystemSMTPOpenSSLVerifyMode,
+		Password:          &defaultSystemSMTPPassword,
+		Port:              &defaultSystemSMTPPort,
+		Username:          &defaultSystemSMTPUsername,
+	}
+
+	err := o.Validate()
+	return o, err
 }
