@@ -79,9 +79,7 @@ func TestGetRedisOptions(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			optsProvider := OperatorRedisOptionsProvider{
-				APIManagerSpec: &tc.apimanager.Spec,
-			}
+			optsProvider := NewRedisOptionsProvider(tc.apimanager)
 			_, err := optsProvider.GetRedisOptions()
 			if err != nil {
 				subT.Error(err)

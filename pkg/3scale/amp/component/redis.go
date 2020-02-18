@@ -82,7 +82,7 @@ const (
 
 func (redis *Redis) buildLabelsForDeploymentConfigObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                          redis.Options.appLabel,
+		"app":                          redis.Options.AppLabel,
 		"threescale_component":         backendComponentNameLabel,
 		"threescale_component_element": backendComponentElementLabel,
 	}
@@ -150,7 +150,7 @@ func (redis *Redis) buildPodObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Labels: map[string]string{
 			"deploymentConfig":             backendRedisDCSelectorName,
-			"app":                          redis.Options.appLabel,
+			"app":                          redis.Options.AppLabel,
 			"threescale_component":         backendComponentNameLabel,
 			"threescale_component_element": backendComponentElementLabel,
 		},
@@ -217,7 +217,7 @@ func (redis *Redis) buildPodContainerCommandArgs() []string {
 }
 
 func (redis *Redis) buildPodContainerResourceLimits() v1.ResourceRequirements {
-	return *redis.Options.backendRedisContainerResourceRequirements
+	return *redis.Options.BackendRedisContainerResourceRequirements
 }
 
 func (redis *Redis) buildPodContainerReadinessProbe() *v1.Probe {
@@ -280,7 +280,7 @@ func (redis *Redis) buildServiceObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForServiceObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                          redis.Options.appLabel,
+		"app":                          redis.Options.AppLabel,
 		"threescale_component":         "backend",
 		"threescale_component_element": "redis",
 	}
@@ -333,7 +333,7 @@ func (redis *Redis) buildConfigMapObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForConfigMapObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                          redis.Options.appLabel,
+		"app":                          redis.Options.AppLabel,
 		"threescale_component":         "system", // TODO should also be redis???
 		"threescale_component_element": "redis",
 	}
@@ -419,7 +419,7 @@ func (redis *Redis) buildPVCObjectMeta() metav1.ObjectMeta {
 
 func (redis *Redis) buildLabelsForPVCObjectMeta() map[string]string {
 	return map[string]string{
-		"app":                          redis.Options.appLabel,
+		"app":                          redis.Options.AppLabel,
 		"threescale_component":         "backend",
 		"threescale_component_element": "redis",
 	}
@@ -450,7 +450,7 @@ func (redis *Redis) BackendImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-redis",
 			Labels: map[string]string{
-				"app":                  redis.Options.appLabel,
+				"app":                  redis.Options.AppLabel,
 				"threescale_component": "backend",
 			},
 			Annotations: map[string]string{
@@ -467,20 +467,20 @@ func (redis *Redis) BackendImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: redis.Options.ampRelease,
+						Name: redis.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: redis.Options.ampRelease,
+					Name: redis.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "Backend " + redis.Options.ampRelease + " Redis",
+						"openshift.io/display-name": "Backend " + redis.Options.AmpRelease + " Redis",
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: redis.Options.backendImage,
+						Name: redis.Options.BackendImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: redis.Options.insecureImportPolicy,
+						Insecure: *redis.Options.InsecureImportPolicy,
 					},
 				},
 			},
@@ -513,7 +513,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-redis",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "redis", "app": redis.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "redis", "app": redis.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -541,7 +541,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": "system-redis"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "redis", "app": redis.Options.appLabel, "deploymentConfig": "system-redis"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "redis", "app": redis.Options.AppLabel, "deploymentConfig": "system-redis"},
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp", //TODO make this configurable via flag
@@ -568,7 +568,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 							Image:     "system-redis:latest",
 							Command:   []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
 							Args:      []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
-							Resources: *redis.Options.systemRedisContainerResourceRequirements,
+							Resources: *redis.Options.SystemRedisContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "system-redis-storage",
@@ -620,7 +620,7 @@ func (redis *Redis) SystemService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-redis",
 			Labels: map[string]string{
-				"app":                          redis.Options.appLabel,
+				"app":                          redis.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "redis",
 			},
@@ -650,7 +650,7 @@ func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
 			Labels: map[string]string{
 				"threescale_component":         "system",
 				"threescale_component_element": "redis",
-				"app":                          redis.Options.appLabel,
+				"app":                          redis.Options.AppLabel,
 			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
@@ -669,7 +669,7 @@ func (redis *Redis) SystemImageStream() *imagev1.ImageStream {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-redis",
 			Labels: map[string]string{
-				"app":                  redis.Options.appLabel,
+				"app":                  redis.Options.AppLabel,
 				"threescale_component": "system",
 			},
 			Annotations: map[string]string{
@@ -686,20 +686,20 @@ func (redis *Redis) SystemImageStream() *imagev1.ImageStream {
 					},
 					From: &v1.ObjectReference{
 						Kind: "ImageStreamTag",
-						Name: redis.Options.ampRelease,
+						Name: redis.Options.AmpRelease,
 					},
 				},
 				imagev1.TagReference{
-					Name: redis.Options.ampRelease,
+					Name: redis.Options.AmpRelease,
 					Annotations: map[string]string{
-						"openshift.io/display-name": "System " + redis.Options.ampRelease + " Redis",
+						"openshift.io/display-name": "System " + redis.Options.AmpRelease + " Redis",
 					},
 					From: &v1.ObjectReference{
 						Kind: "DockerImage",
-						Name: redis.Options.systemImage,
+						Name: redis.Options.SystemImage,
 					},
 					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: redis.Options.insecureImportPolicy,
+						Insecure: *redis.Options.InsecureImportPolicy,
 					},
 				},
 			},

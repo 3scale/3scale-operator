@@ -5,10 +5,6 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type OperatorRedisOptionsProvider struct {
-	APIManagerSpec *appsv1alpha1.APIManagerSpec
-}
-
 type OperatorSystemOptionsProvider struct {
 	APIManagerSpec *appsv1alpha1.APIManagerSpec
 	Namespace      string

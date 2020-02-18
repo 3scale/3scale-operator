@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
@@ -110,6 +112,15 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func Redis(apimanager *appsv1alpha1.APIManager) (*component.Redis, error) {
+	optsProvider := NewRedisOptionsProvider(apimanager)
+	opts, err := optsProvider.GetRedisOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewRedis(opts), nil
 }
 
 func (r *RedisReconciler) reconcileBackendDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
