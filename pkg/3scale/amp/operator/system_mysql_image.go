@@ -17,7 +17,7 @@ func (o *OperatorSystemMySQLImageOptionsProvider) GetSystemMySQLImageOptions() (
 		o.APIManagerSpec.System.DatabaseSpec.MySQL.Image != nil {
 		optProv.Image(*o.APIManagerSpec.System.DatabaseSpec.MySQL.Image)
 	} else {
-		optProv.Image(component.SystemMySQLImageURL())
+		optProv.Image(SystemMySQLImageURL())
 	}
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 

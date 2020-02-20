@@ -19,13 +19,13 @@ func (o *OperatorRedisOptionsProvider) GetRedisOptions() (*component.RedisOption
 	if o.APIManagerSpec.Backend != nil && o.APIManagerSpec.Backend.RedisImage != nil {
 		optProv.BackendImage(*o.APIManagerSpec.Backend.RedisImage)
 	} else {
-		optProv.BackendImage(component.BackendRedisImageURL())
+		optProv.BackendImage(BackendRedisImageURL())
 	}
 
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.RedisImage != nil {
 		optProv.SystemImage(*o.APIManagerSpec.System.RedisImage)
 	} else {
-		optProv.SystemImage(component.SystemRedisImageURL())
+		optProv.SystemImage(SystemRedisImageURL())
 	}
 
 	o.setResourceRequirementsOptions(&optProv)

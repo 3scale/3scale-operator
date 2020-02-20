@@ -39,7 +39,7 @@ func (o *OperatorAmpImagesOptionsProvider) GetAmpImagesOptions() (*component.Amp
 	if o.APIManagerSpec.Zync != nil && o.APIManagerSpec.Zync.PostgreSQLImage != nil {
 		optProv.ZyncDatabasePostgreSQLImage(*o.APIManagerSpec.Zync.PostgreSQLImage)
 	} else {
-		optProv.ZyncDatabasePostgreSQLImage(component.ZyncPostgreSQLImageURL())
+		optProv.ZyncDatabasePostgreSQLImage(ZyncPostgreSQLImageURL())
 	}
 
 	if o.APIManagerSpec.System != nil && o.APIManagerSpec.System.MemcachedImage != nil {
