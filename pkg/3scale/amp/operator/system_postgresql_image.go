@@ -16,7 +16,7 @@ func (o *OperatorSystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageO
 		o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image != nil {
 		optProv.Image(*o.APIManagerSpec.System.DatabaseSpec.PostgreSQL.Image)
 	} else {
-		optProv.Image(component.SystemPostgreSQLImageURL())
+		optProv.Image(SystemPostgreSQLImageURL())
 	}
 	optProv.InsecureImportPolicy(*o.APIManagerSpec.ImageStreamTagImportInsecure)
 
