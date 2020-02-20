@@ -36,6 +36,16 @@ spec:
     image: quay.io/3scale/zync:nightly
   - name: Memcached
     image: memcached:1.5
+  - name: "Backend Redis"
+    image: centos/redis-32-centos7
+  - name: "System Redis"
+    image: centos/redis-32-centos7
+  - name: "System Mysql"
+    image: centos/mysql-57-centos7
+  - name: "System Postgresql"
+    image: centos/postgresql-10-centos7
+  - name: "Zync Postgresql"
+    image: centos/postgresql-10-centos7
   customresourcedefinitions:
     owned:
     - kind: APIManager
@@ -174,6 +184,16 @@ spec:
                   value: "quay.io/3scale/zync:nightly"
                 - name: SYSTEM_MEMCACHED_IMAGE
                   value: "memcached:1.5"
+                - name: BACKEND_REDIS_IMAGE
+                  value: "centos/redis-32-centos7"
+                - name: SYSTEM_REDIS_IMAGE
+                  value: "centos/redis-32-centos7"
+                - name: SYSTEM_MYSQL_IMAGE
+                  value: "centos/mysql-57-centos7"
+                - name: SYSTEM_POSTGRESQL_IMAGE
+                  value: "centos/postgresql-10-centos7"
+                - name: ZYNC_POSTGRESQL_IMAGE
+                  value: "centos/postgresql-10-centos7"
                 image: quay.io/3scale/3scale-operator:master
                 name: 3scale-operator
                 resources: {}
