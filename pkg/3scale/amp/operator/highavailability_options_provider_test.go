@@ -40,7 +40,7 @@ func TestGetHighAvailabilityOptions(t *testing.T) {
 
 	objs := []runtime.Object{backendRedisSecret, systemRedisSecret, systemDatabaseSecret}
 	cl := fake.NewFakeClient(objs...)
-	optsProvider := OperatorHighAvailabilityOptionsProvider{APIManagerSpec: nil, Namespace: namespace, Client: cl}
+	optsProvider := NewHighAvailabilityOptionsProvider(namespace, cl)
 	_, err := optsProvider.GetHighAvailabilityOptions()
 	if err != nil {
 		t.Fatal(err)
@@ -137,7 +137,7 @@ func TestGetHighAvailabilityOptionsInvalid(t *testing.T) {
 				objs = append(objs, helper.GetTestSecret(namespace, component.SystemSecretSystemDatabaseSecretName, tc.systemDatabaseSecretData))
 			}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := OperatorHighAvailabilityOptionsProvider{APIManagerSpec: nil, Namespace: namespace, Client: cl}
+			optsProvider := NewHighAvailabilityOptionsProvider(namespace, cl)
 			_, err := optsProvider.GetHighAvailabilityOptions()
 			if err == nil {
 				subT.Fatal("expected to fail")

@@ -401,11 +401,7 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 }
 
 func (r *ReconcileAPIManager) externalDatabasesCheck(cr *appsv1alpha1.APIManager) error {
-	optsProvider := operator.OperatorHighAvailabilityOptionsProvider{
-		APIManagerSpec: &cr.Spec,
-		Namespace:      cr.Namespace,
-		Client:         r.Client(),
-	}
+	optsProvider := operator.NewHighAvailabilityOptionsProvider(cr.Namespace, r.Client())
 	_, err := optsProvider.GetHighAvailabilityOptions()
 	return err
 }
