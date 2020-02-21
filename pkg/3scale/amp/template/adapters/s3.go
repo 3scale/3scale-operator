@@ -48,16 +48,18 @@ func (s *S3) addParameters(template *templatev1.Template) {
 }
 
 func (s *S3) options() (*component.S3Options, error) {
-	sob := component.S3OptionsBuilder{}
-	sob.AwsAccessKeyId("${AWS_ACCESS_KEY_ID}")
-	sob.AwsSecretAccessKey("${AWS_SECRET_ACCESS_KEY}")
-	sob.AwsRegion("${AWS_REGION}")
-	sob.AwsBucket("${AWS_BUCKET}")
-	sob.AWSProtocol("${AWS_PROTOCOL}")
-	sob.AWSHostname("${AWS_HOSTNAME}")
-	sob.AWSPathStyle("${AWS_PATH_STYLE}")
-	sob.AWSCredentialsSecret("aws-auth")
-	return sob.Build()
+	o := component.NewS3Options()
+	o.AwsAccessKeyId = "${AWS_ACCESS_KEY_ID}"
+	o.AwsSecretAccessKey = "${AWS_SECRET_ACCESS_KEY}"
+	o.AwsRegion = "${AWS_REGION}"
+	o.AwsBucket = "${AWS_BUCKET}"
+	o.AwsProtocol = "${AWS_PROTOCOL}"
+	o.AwsHostname = "${AWS_HOSTNAME}"
+	o.AwsPathStyle = "${AWS_PATH_STYLE}"
+	o.AwsCredentialsSecret = "aws-auth"
+
+	err := o.Validate()
+	return o, err
 }
 
 func (s3 *S3) parameters() []templatev1.Parameter {
