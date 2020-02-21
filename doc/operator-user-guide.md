@@ -9,6 +9,7 @@
     * [External Databases Installation](#external-databases-installation)
     * [S3 Filestorage Installation](#s3-filestorage-installation)
     * [PostgreSQL Installation](#postgresql-installation)
+    * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
 * [Feature Operator (in *TechPreview*)](operator-capabilities.md)
@@ -281,6 +282,66 @@ spec:
 
 Check [*APIManager DatabaseSpec*](apimanager-reference.md#DatabaseSpec) for reference.
 
+#### Enabling Pod Disruption Budgets
+The 3scale API Management solution DeploymentConfigs deployed and managed by the
+APIManager will be configured with Kubernetes Pod Disruption Budgets
+enabled.
+
+A Pod Disruption Budget limits the number of pods related to an application
+(in this case, pods of a DeploymentConfig) that are down simultaneously
+from **voluntary disruptions**.
+
+When enabling the Pod Disruption Budgets for non-database DeploymentConfigs will
+be set with a setting of maximum of 1 unavailable pod at any given time.
+Database-related DeploymentConfigs are excluded from this configuration.
+Additionally, `system-sphinx` DeploymentConfig is also excluded.
+
+For details about the behavior of Pod Disruption Budgets, what they perform and
+what constitutes a 'voluntary disruption' see the following
+[Kubernetes Documentation](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)
+
+Pods which are deleted or unavailable due to a rolling upgrade to an application
+do count against the disruption budget, but the DeploymentConfigs are not
+limited by Pod Disruption Budgets when doing rolling upgrades or they are
+scaled up/down.
+
+In order for the Pod Disruption Budget setting to be effective the number of
+replicas of each non-database component has to be set to a value greater than 1.
+
+Example:
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  wildcardDomain: lvh.me
+  apicast:
+    stagingSpec:
+      replicas: 2
+    productionSpec:
+      replicas: 2
+  backend:
+    listenerSpec:
+      replicas: 2
+    workerSpec:
+      replicas: 2
+    cronSpec:
+      replicas: 2
+  system:
+    appSpec:
+      replicas: 2
+    sidekiqSpec:
+      replicas: 2
+  zync:
+    appSpec:
+      replicas: 2
+    queSpec:
+      replicas: 2
+  podDisruptionBudget:
+    enabled: true
+```
+
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set
 of parameters from the custom resource in order to modify system configuration options.
@@ -294,6 +355,7 @@ The following is a list of reconciliable parameters.
 * [Backend replicas](#backend-replicas)
 * [Apicast replicas](#apicast-replicas)
 * [System replicas](#system-replicas)
+* [Pod Disruption Budget](#pod-disruption-budget)
 
 #### Resources
 Resource limits and requests for all 3scale components
@@ -355,6 +417,21 @@ spec:
       replicas: X
     sidekiqSpec:
       replicas: Z
+```
+
+#### Pod Disruption Budget
+Whether Pod Disruption Budgets are enabled for non-database DeploymentConfigs
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  ...
+  podDisruptionBudget:
+    enabled: true/false
+  ...
 ```
 
 ### Upgrading 3scale
