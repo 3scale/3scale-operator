@@ -119,8 +119,7 @@ func (o *OperatorBackendOptionsProvider) setSecretBasedOptions() error {
 		if err != nil {
 			return err
 		}
-		// not nil value is ensured
-		*option.field = *val
+		*option.field = val
 	}
 
 	return nil

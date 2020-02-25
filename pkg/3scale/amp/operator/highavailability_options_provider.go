@@ -74,8 +74,7 @@ func (h *HighAvailabilityOptionsProvider) setBackendRedisOptions() error {
 		if err != nil {
 			return err
 		}
-		// not nil value is ensured
-		*option.field = *val
+		*option.field = val
 	}
 
 	return nil
@@ -104,8 +103,7 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 		if err != nil {
 			return err
 		}
-		// not nil value is ensured
-		*option.field = *val
+		*option.field = val
 	}
 
 	return nil
@@ -117,7 +115,6 @@ func (h *HighAvailabilityOptionsProvider) setSystemDatabaseOptions() error {
 	if err != nil {
 		return err
 	}
-	// not nil value is ensured
-	h.options.SystemDatabaseURL = *val
+	h.options.SystemDatabaseURL = val
 	return nil
 }

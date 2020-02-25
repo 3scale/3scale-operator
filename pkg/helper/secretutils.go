@@ -97,44 +97,44 @@ func NewSecretSource(client client.Client, namespace string) *SecretSource {
 	}
 }
 
-func (s *SecretSource) FieldValue(secretName, fieldName string, def string) (*string, error) {
+func (s *SecretSource) FieldValue(secretName, fieldName string, def string) (string, error) {
 	return s.fieldReader(secretName, fieldName, false, false, def)
 }
 
-func (s *SecretSource) FieldValueFromRequiredSecret(secretName, fieldName string, def string) (*string, error) {
+func (s *SecretSource) FieldValueFromRequiredSecret(secretName, fieldName string, def string) (string, error) {
 	return s.fieldReader(secretName, fieldName, true, false, def)
 }
 
-func (s *SecretSource) RequiredFieldValue(secretName, fieldName string) (*string, error) {
+func (s *SecretSource) RequiredFieldValue(secretName, fieldName string) (string, error) {
 	return s.fieldReader(secretName, fieldName, false, true, "")
 }
 
-func (s *SecretSource) RequiredFieldValueFromRequiredSecret(secretName, fieldName string) (*string, error) {
+func (s *SecretSource) RequiredFieldValueFromRequiredSecret(secretName, fieldName string) (string, error) {
 	return s.fieldReader(secretName, fieldName, true, true, "")
 }
 
-func (s *SecretSource) fieldReader(secretName, fieldName string, secretRequired, fieldRequired bool, def string) (*string, error) {
+func (s *SecretSource) fieldReader(secretName, fieldName string, secretRequired, fieldRequired bool, def string) (string, error) {
 	secret, err := s.CachedSecret(secretName)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			return nil, err
+			return "", err
 		}
 		// secret not found
 		if secretRequired {
-			return nil, err
+			return "", err
 		}
 	}
 	// when secret is not found, it behaves like an empty secret
 	result := GetSecretDataValue(secret.Data, fieldName)
 	if fieldRequired && result == nil {
-		return nil, fmt.Errorf("Secret field '%s' is required in secret '%s'", fieldName, secretName)
+		return "", fmt.Errorf("Secret field '%s' is required in secret '%s'", fieldName, secretName)
 	}
 
 	if result == nil {
 		result = &def
 	}
 
-	return result, nil
+	return *result, nil
 }
 
 func (s *SecretSource) CachedSecret(secretName string) (*v1.Secret, error) {

@@ -52,8 +52,7 @@ func (s *SystemPostgresqlOptionsProvider) setSecretBasedOptions() error {
 	if err != nil {
 		return err
 	}
-	// not nil value is ensured
-	s.options.User = *val
+	s.options.User = val
 
 	val, err = s.secretSource.FieldValue(
 		component.SystemSecretSystemDatabaseSecretName,
@@ -62,8 +61,7 @@ func (s *SystemPostgresqlOptionsProvider) setSecretBasedOptions() error {
 	if err != nil {
 		return err
 	}
-	// not nil value is ensured
-	s.options.Password = *val
+	s.options.Password = val
 
 	val, err = s.secretSource.FieldValue(
 		component.SystemSecretSystemDatabaseSecretName,
@@ -72,8 +70,7 @@ func (s *SystemPostgresqlOptionsProvider) setSecretBasedOptions() error {
 	if err != nil {
 		return err
 	}
-	// not nil value is ensured
-	s.options.DatabaseURL = *val
+	s.options.DatabaseURL = val
 
 	// databaseURL processing
 	urlObj, err := s.databaseURLIsValid(s.options.DatabaseURL)

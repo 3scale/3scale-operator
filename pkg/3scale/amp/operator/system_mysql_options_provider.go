@@ -76,8 +76,7 @@ func (s *SystemMysqlOptionsProvider) setSecretBasedOptions() error {
 		if err != nil {
 			return err
 		}
-		// not nil value is ensured
-		*option.field = *val
+		*option.field = val
 	}
 
 	// databaseURL processing
