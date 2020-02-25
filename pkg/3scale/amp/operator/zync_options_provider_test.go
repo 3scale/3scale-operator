@@ -1,69 +1,122 @@
 package operator
 
 import (
+	"reflect"
 	"testing"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func TestGetZyncOptions(t *testing.T) {
-	wildcardDomain := "test.3scale.net"
-	appLabel := "someLabel"
-	name := "example-apimanager"
-	namespace := "someNS"
-	tenantName := "someTenant"
-	trueValue := true
-	var oneValue int64 = 1
+const (
+	zyncReplica           int64 = 3
+	zyncQueReplica        int64 = 4
+	zyncSecretKeyBasename       = "someKeyBase"
+	zyncDatabasePasswd          = "somePass3424"
+	zyncAuthToken               = "someToken5252"
+)
+
+func getZyncSecret() *v1.Secret {
+	data := map[string]string{
+		component.ZyncSecretKeyBaseFieldName:             zyncSecretKeyBasename,
+		component.ZyncSecretDatabasePasswordFieldName:    zyncDatabasePasswd,
+		component.ZyncSecretAuthenticationTokenFieldName: zyncAuthToken,
+	}
+	return GetTestSecret(namespace, component.ZyncSecretName, data)
+}
+
+func basicApimanagerSpecTestZyncOptions() *appsv1alpha1.APIManager {
+	tmpZyncReplicas := zyncReplica
+	tmpZyncQueReplicas := zyncQueReplica
+
+	apimanager := basicApimanager()
+	apimanager.Spec.Zync = &appsv1alpha1.ZyncSpec{
+		AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &tmpZyncReplicas},
+		QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: &tmpZyncQueReplicas},
+	}
+	return apimanager
+}
+
+func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
+	expectedOpts := &component.ZyncOptions{
+		AppLabel:                              appLabel,
+		ContainerResourceRequirements:         component.DefaultZyncContainerResourceRequirements(),
+		QueContainerResourceRequirements:      component.DefaultZyncQueContainerResourceRequirements(),
+		DatabaseContainerResourceRequirements: component.DefaultZyncDatabaseContainerResourceRequirements(),
+		AuthenticationToken:                   opts.AuthenticationToken,
+		DatabasePassword:                      opts.DatabasePassword,
+		SecretKeyBase:                         opts.SecretKeyBase,
+		ZyncReplicas:                          int32(zyncReplica),
+		ZyncQueReplicas:                       int32(zyncQueReplica),
+	}
+
+	expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(expectedOpts.DatabasePassword)
+
+	return expectedOpts
+}
+
+func TestGetZyncOptionsProvider(t *testing.T) {
+	falseValue := false
 
 	cases := []struct {
-		testName                    string
-		resourceRequirementsEnabled bool
-		zyncSecret                  *v1.Secret
+		testName               string
+		zyncSecret             *v1.Secret
+		apimanagerFactory      func() *appsv1alpha1.APIManager
+		expectedOptionsFactory func(*component.ZyncOptions) *component.ZyncOptions
 	}{
-		{"WithResourceRequirements", true, nil},
-		{"ZincSecret", false, getRedisSecret(namespace)},
+		{"Default", nil, basicApimanagerSpecTestZyncOptions,
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				return defaultZyncOptions(opts)
+			},
+		},
+		{"WithoutResourceRequirements", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestZyncOptions()
+				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
+				return apimanager
+			},
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				expectedOpts := defaultZyncOptions(opts)
+				expectedOpts.ContainerResourceRequirements = v1.ResourceRequirements{}
+				expectedOpts.QueContainerResourceRequirements = v1.ResourceRequirements{}
+				expectedOpts.DatabaseContainerResourceRequirements = v1.ResourceRequirements{}
+				return expectedOpts
+			},
+		},
+		{"ZincSecret", getZyncSecret(), basicApimanagerSpecTestZyncOptions,
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				expectedOpts := defaultZyncOptions(opts)
+				expectedOpts.SecretKeyBase = zyncSecretKeyBasename
+				expectedOpts.DatabasePassword = zyncDatabasePasswd
+				expectedOpts.AuthenticationToken = zyncAuthToken
+				expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(zyncDatabasePasswd)
+				return opts
+			},
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			apimanager := &appsv1alpha1.APIManager{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      name,
-					Namespace: namespace,
-				},
-				Spec: appsv1alpha1.APIManagerSpec{
-					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						WildcardDomain:               wildcardDomain,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &tc.resourceRequirementsEnabled,
-					},
-					Zync: &appsv1alpha1.ZyncSpec{
-						AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &oneValue},
-						QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: &oneValue},
-					},
-				},
-			}
-			objs := []runtime.Object{apimanager}
+			objs := []runtime.Object{}
 			if tc.zyncSecret != nil {
 				objs = append(objs, tc.zyncSecret)
 			}
-
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := NewZyncOptionsProvider(&apimanager.Spec, namespace, cl)
-			_, err := optsProvider.GetZyncOptions()
+			optsProvider := NewZyncOptionsProvider(tc.apimanagerFactory(), namespace, cl)
+			opts, err := optsProvider.GetZyncOptions()
 			if err != nil {
 				t.Error(err)
 			}
-			// created "opts" cannot be tested  here, it only has set methods
-			// and cannot assert on setted values from a different package
-			// TODO: refactor options provider structure
-			// then validate setted resources
+			expectedOptions := tc.expectedOptionsFactory(opts)
+			if !reflect.DeepEqual(expectedOptions, opts) {
+				subT.Errorf("Resulting expected options differ: %s", cmp.Diff(expectedOptions, opts, cmpopts.IgnoreUnexported(resource.Quantity{})))
+			}
 		})
 	}
 }

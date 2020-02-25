@@ -21,11 +21,9 @@ import (
 
 func TestSystemReconcilerCreate(t *testing.T) {
 	var (
-		name      = "example-apimanager"
-		namespace = "operator-unittest"
-		log       = logf.Log.WithName("operator_test")
+		log = logf.Log.WithName("operator_test")
 	)
-	apimanager := basicApimanagerSpecTestSystemOptions(name, namespace)
+	apimanager := basicApimanagerSpecTestSystemOptions()
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme

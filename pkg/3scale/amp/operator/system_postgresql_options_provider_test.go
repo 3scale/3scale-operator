@@ -1,77 +1,94 @@
 package operator
 
 import (
+	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func TestGetSystemPostgreSQLOptions(t *testing.T) {
-	wildcardDomain := "test.3scale.net"
-	appLabel := "someLabel"
-	name := "example-apimanager"
-	namespace := "someNS"
-	tenantName := "someTenant"
-	trueValue := true
-	databaseURL := "postgresql://user:password@postgresql.example.com/system"
+const (
+	systemPostgreSQLUsername     = "postgresqluser"
+	systemPostgreSQLPassword     = "password1435"
+	systemPostgreSQLDatabaseName = "system"
+)
+
+func defaultSystemPostgreSQLOptions(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+	return &component.SystemPostgreSQLOptions{
+		AppLabel:                      appLabel,
+		DatabaseName:                  component.DefaultSystemPostgresqlDatabaseName(),
+		User:                          component.DefaultSystemPostgresqlUser(),
+		Password:                      opts.Password,
+		DatabaseURL:                   component.DefaultSystemPostgresqlDatabaseURL(component.DefaultSystemPostgresqlUser(), opts.Password, component.DefaultSystemPostgresqlDatabaseName()),
+		ContainerResourceRequirements: component.DefaultSystemPostgresqlResourceRequirements(),
+	}
+}
+
+func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
+	falseValue := false
+	databaseURL := fmt.Sprintf("postgresql://%s:%s@postgresql.example.com/%s", systemPostgreSQLUsername, systemPostgreSQLPassword, systemPostgreSQLDatabaseName)
 
 	cases := []struct {
-		testName                    string
-		resourceRequirementsEnabled bool
-		systemDatabaseSecret        *v1.Secret
+		testName               string
+		systemDatabaseSecret   *v1.Secret
+		apimanagerFactory      func() *appsv1alpha1.APIManager
+		expectedOptionsFactory func(*component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions
 	}{
-		{"WithResourceRequirements", true, nil},
-		{"SystemDBSecret", false, getSystemDBSecret(namespace, databaseURL)},
+		{"Default", nil, basicApimanager, defaultSystemPostgreSQLOptions},
+		{"WithoutResourceRequirements", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
+				return apimanager
+			},
+			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				expecteOpts := defaultSystemPostgreSQLOptions(opts)
+				expecteOpts.ContainerResourceRequirements = v1.ResourceRequirements{}
+				return expecteOpts
+			},
+		},
+		{"SystemDBSecret", getSystemDBSecret(databaseURL, systemPostgreSQLUsername, systemPostgreSQLPassword),
+			basicApimanager, func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				expecteOpts := defaultSystemPostgreSQLOptions(opts)
+				expecteOpts.User = systemPostgreSQLUsername
+				expecteOpts.Password = systemPostgreSQLPassword
+				expecteOpts.DatabaseURL = databaseURL
+				expecteOpts.DatabaseName = systemPostgreSQLDatabaseName
+				return expecteOpts
+			},
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			apimanager := &appsv1alpha1.APIManager{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      name,
-					Namespace: namespace,
-				},
-				Spec: appsv1alpha1.APIManagerSpec{
-					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						WildcardDomain:               wildcardDomain,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &tc.resourceRequirementsEnabled,
-					},
-				},
-			}
-			objs := []runtime.Object{apimanager}
+			objs := []runtime.Object{}
 			if tc.systemDatabaseSecret != nil {
 				objs = append(objs, tc.systemDatabaseSecret)
 			}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := NewSystemPostgresqlOptionsProvider(apimanager, namespace, cl)
-			_, err := optsProvider.GetSystemPostgreSQLOptions()
+			optsProvider := NewSystemPostgresqlOptionsProvider(tc.apimanagerFactory(), namespace, cl)
+			opts, err := optsProvider.GetSystemPostgreSQLOptions()
 			if err != nil {
 				subT.Error(err)
 			}
-			// created "opts" cannot be tested  here, it only has set methods
-			// and cannot assert on setted values from a different package
-			// TODO: refactor options provider structure
-			// then validate setted resources
+			expectedOptions := tc.expectedOptionsFactory(opts)
+			if !reflect.DeepEqual(expectedOptions, opts) {
+				subT.Errorf("Resulting expected options differ: %s", cmp.Diff(expectedOptions, opts, cmpopts.IgnoreUnexported(resource.Quantity{})))
+			}
 		})
 	}
 }
 
 func TestGetPostgreSQLOptionsInvalidURL(t *testing.T) {
-	wildcardDomain := "test.3scale.net"
-	appLabel := "someLabel"
-	name := "example-apimanager"
-	namespace := "someNS"
-	tenantName := "someTenant"
-	trueValue := true
-
 	cases := []struct {
 		testName    string
 		databaseURL string
@@ -91,25 +108,10 @@ func TestGetPostgreSQLOptionsInvalidURL(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			apimanager := &appsv1alpha1.APIManager{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      name,
-					Namespace: namespace,
-				},
-				Spec: appsv1alpha1.APIManagerSpec{
-					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						WildcardDomain:               wildcardDomain,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &trueValue,
-					},
-				},
-			}
-			secret := getSystemDBSecret(namespace, tc.databaseURL)
-			objs := []runtime.Object{apimanager, secret}
+			secret := getSystemDBSecret(tc.databaseURL, systemPostgreSQLUsername, systemPostgreSQLPassword)
+			objs := []runtime.Object{secret}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := NewSystemPostgresqlOptionsProvider(apimanager, namespace, cl)
+			optsProvider := NewSystemPostgresqlOptionsProvider(basicApimanager(), namespace, cl)
 			_, err := optsProvider.GetSystemPostgreSQLOptions()
 			if err == nil {
 				subT.Fatal("expected to fail for invalid URL")

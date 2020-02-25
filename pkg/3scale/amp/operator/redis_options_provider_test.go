@@ -1,93 +1,96 @@
 package operator
 
 import (
+	"reflect"
 	"testing"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func TestGetRedisOptions(t *testing.T) {
-	appLabel := "someLabel"
-	name := "example-apimanager"
-	namespace := "someNS"
-	trueValue := true
-	falseValue := false
-	backendRedisImageUrl := "redis:backend"
-	systemRedisImageUrl := "redis:system"
-	tenantName := "someTenant"
+func defaultRedisOptions() *component.RedisOptions {
+	tmpInsecure := insecureImportPolicy
+	return &component.RedisOptions{
+		AppLabel:     appLabel,
+		AmpRelease:   product.ThreescaleRelease,
+		BackendImage: component.BackendRedisImageURL(),
+		SystemImage:  component.SystemRedisImageURL(),
+		BackendRedisContainerResourceRequirements: component.DefaultBackendRedisContainerResourceRequirements(),
+		SystemRedisContainerResourceRequirements:  component.DefaultSystemRedisContainerResourceRequirements(),
+		InsecureImportPolicy:                      &tmpInsecure,
+	}
+}
+
+func TestGetRedisOptionsProvider(t *testing.T) {
+	tmpFalseValue := false
+	backendRedisImageURL := "redis:backend"
+	systemRedisImageURL := "redis:system"
 
 	cases := []struct {
-		testName   string
-		apimanager *appsv1alpha1.APIManager
+		testName               string
+		apimanagerFactory      func() *appsv1alpha1.APIManager
+		expectedOptionsFactory func() *component.RedisOptions
 	}{
-		{"WithResourceRequirements",
-			&appsv1alpha1.APIManager{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      name,
-					Namespace: namespace,
-				},
-				Spec: appsv1alpha1.APIManagerSpec{
-					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &trueValue,
-					},
-				},
+		{"Default", basicApimanager, defaultRedisOptions},
+		{"WithoutResourceRequirements",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.BackendRedisContainerResourceRequirements = &v1.ResourceRequirements{}
+				opts.SystemRedisContainerResourceRequirements = &v1.ResourceRequirements{}
+				return opts
 			},
 		},
 		{"BackendRedisImageSet",
-			&appsv1alpha1.APIManager{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      name,
-					Namespace: namespace,
-				},
-				Spec: appsv1alpha1.APIManagerSpec{
-					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &falseValue,
-					},
-					Backend: &appsv1alpha1.BackendSpec{
-						RedisImage: &backendRedisImageUrl,
-					},
-				},
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
+					RedisImage: &backendRedisImageURL,
+				}
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.BackendImage = backendRedisImageURL
+				return opts
 			},
 		},
 		{"SystemRedisImageSet",
-			&appsv1alpha1.APIManager{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      name,
-					Namespace: namespace,
-				},
-				Spec: appsv1alpha1.APIManagerSpec{
-					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &falseValue,
-					},
-					System: &appsv1alpha1.SystemSpec{
-						RedisImage: &systemRedisImageUrl,
-					},
-				},
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					RedisImage: &systemRedisImageURL,
+				}
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.SystemImage = systemRedisImageURL
+				return opts
 			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			optsProvider := NewRedisOptionsProvider(tc.apimanager)
-			_, err := optsProvider.GetRedisOptions()
+			optsProvider := NewRedisOptionsProvider(tc.apimanagerFactory())
+			opts, err := optsProvider.GetRedisOptions()
 			if err != nil {
 				subT.Error(err)
 			}
-			// created "opts" cannot be tested  here, it only has set methods
-			// and cannot assert on setted values from a different package
-			// TODO: refactor options provider structure
-			// then validate setted resources
+			expectedOptions := tc.expectedOptionsFactory()
+			if !reflect.DeepEqual(expectedOptions, opts) {
+				subT.Errorf("Resulting expected options differ: %s", cmp.Diff(expectedOptions, opts, cmpopts.IgnoreUnexported(resource.Quantity{})))
+			}
 		})
 	}
 }

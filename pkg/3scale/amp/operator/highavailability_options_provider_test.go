@@ -2,124 +2,172 @@ package operator
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/google/go-cmp/cmp"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func backendRedisTestData() map[string]string {
-	return map[string]string{
-		component.BackendSecretBackendRedisStorageURLFieldName: "redis://storage.redis.example.com",
-		component.BackendSecretBackendRedisQueuesURLFieldName:  "redis://queue.redis.example.com",
+const (
+	backendStorageURL   = "redis://storage.redis.example.com"
+	backendQueueURL     = "redis://queue.redis.example.com"
+	systemRedisURL      = "redis://system.redis.example.com"
+	systemMessageBusURL = "redis://messagebus.redis.example.com"
+	systemDatabaseURL   = "mysql://mysql.example.com"
+)
+
+func getSystemRedisSecretMissingRedisURL() *v1.Secret {
+	data := map[string]string{
+		component.SystemSecretSystemRedisMessageBusRedisURLFieldName: systemMessageBusURL,
 	}
+	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
 
-func systemRedisTestData() map[string]string {
-	return map[string]string{
-		component.SystemSecretSystemRedisURLFieldName:                "redis://system.redis.example.com",
-		component.SystemSecretSystemRedisMessageBusRedisURLFieldName: "redis://messagebus.redis.example.com",
+func getSystemRedisSecretMissingMessageBusRedisURL() *v1.Secret {
+	data := map[string]string{
+		component.SystemSecretSystemRedisURLFieldName: systemRedisURL,
 	}
+	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
 
-func systemDatabaseTestData() map[string]string {
-	return map[string]string{
-		component.SystemSecretSystemDatabaseURLFieldName: "mysql://mysql.example.com",
+func getSystemRedisSecretForHighAvailabilityTest() *v1.Secret {
+	data := map[string]string{
+		component.SystemSecretSystemRedisURLFieldName:                systemRedisURL,
+		component.SystemSecretSystemRedisMessageBusRedisURLFieldName: systemMessageBusURL,
 	}
+	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
 
-func TestGetHighAvailabilityOptions(t *testing.T) {
-	namespace := "someNS"
+func getSystemDatabaseSecretMissingDatabaseURL() *v1.Secret {
+	data := map[string]string{}
+	return GetTestSecret(namespace, component.SystemSecretSystemDatabaseSecretName, data)
+}
 
-	backendRedisSecret := helper.GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, backendRedisTestData())
-	systemRedisSecret := helper.GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, systemRedisTestData())
-	systemDatabaseSecret := helper.GetTestSecret(namespace, component.SystemSecretSystemDatabaseSecretName, systemDatabaseTestData())
+func getSystemDatabaseSecret() *v1.Secret {
+	data := map[string]string{
+		component.SystemSecretSystemDatabaseURLFieldName: systemDatabaseURL,
+	}
+	return GetTestSecret(namespace, component.SystemSecretSystemDatabaseSecretName, data)
+}
 
-	objs := []runtime.Object{backendRedisSecret, systemRedisSecret, systemDatabaseSecret}
+func getBackendRedisSecretMissingStorageURL() *v1.Secret {
+	data := map[string]string{
+		component.BackendSecretBackendRedisQueuesURLFieldName: backendQueueURL,
+	}
+	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
+}
+
+func getBackendRedisSecretMissingQueueURL() *v1.Secret {
+	data := map[string]string{
+		component.BackendSecretBackendRedisStorageURLFieldName: backendStorageURL,
+	}
+	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
+}
+func getBackendRedisSecret() *v1.Secret {
+	data := map[string]string{
+		component.BackendSecretBackendRedisStorageURLFieldName: backendStorageURL,
+		component.BackendSecretBackendRedisQueuesURLFieldName:  backendQueueURL,
+	}
+	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
+}
+
+func TestGetHighAvailabilityOptionsProvider(t *testing.T) {
+	objs := []runtime.Object{getSystemRedisSecretForHighAvailabilityTest(), getSystemDatabaseSecret(), getBackendRedisSecret()}
 	cl := fake.NewFakeClient(objs...)
 	optsProvider := NewHighAvailabilityOptionsProvider(namespace, cl)
-	_, err := optsProvider.GetHighAvailabilityOptions()
+	opts, err := optsProvider.GetHighAvailabilityOptions()
 	if err != nil {
 		t.Fatal(err)
 	}
-	// created "opts" cannot be tested  here, it only has set methods
-	// and cannot assert on setted values from a different package
-	// TODO: refactor options provider structure
-	// then validate setted resources
+	expectedOptions := &component.HighAvailabilityOptions{
+		AppLabel:                            "-",
+		BackendRedisQueuesEndpoint:          backendQueueURL,
+		BackendRedisQueuesSentinelHosts:     "-",
+		BackendRedisQueuesSentinelRole:      "-",
+		BackendRedisStorageEndpoint:         backendStorageURL,
+		BackendRedisStorageSentinelHosts:    "-",
+		BackendRedisStorageSentinelRole:     "-",
+		SystemRedisURL:                      systemRedisURL,
+		SystemRedisSentinelsHosts:           "-",
+		SystemRedisSentinelsRole:            "-",
+		SystemMessageBusRedisURL:            systemMessageBusURL,
+		SystemMessageBusRedisSentinelsHosts: "-",
+		SystemMessageBusRedisSentinelsRole:  "-",
+		SystemDatabaseURL:                   systemDatabaseURL,
+	}
+
+	if !reflect.DeepEqual(expectedOptions, opts) {
+		t.Errorf("Resulting expected options differ: %s", cmp.Diff(expectedOptions, opts))
+	}
 }
 
 func TestGetHighAvailabilityOptionsInvalid(t *testing.T) {
-	namespace := "someNS"
-
 	cases := []struct {
-		testName                 string
-		backendRedisSecretData   map[string]string
-		systemRedisSecretData    map[string]string
-		systemDatabaseSecretData map[string]string
-		errSubstr                string
+		testName             string
+		backendRedisSecret   *v1.Secret
+		systemRedisSecret    *v1.Secret
+		systemDatabaseSecret *v1.Secret
+		errSubstr            string
 	}{
 		{
-			"NoBackendRedisSecretFound", nil, systemRedisTestData(), systemDatabaseTestData(),
+			"NoBackendRedisSecretFound",
+			nil,
+			getSystemRedisSecretForHighAvailabilityTest(),
+			getSystemDatabaseSecret(),
 			fmt.Sprintf("\"%s\" not found", component.BackendSecretBackendRedisSecretName),
 		},
 		{
-			"NoSystemRedisSecretFound", backendRedisTestData(), nil, systemDatabaseTestData(),
+			"NoSystemRedisSecretFound",
+			getBackendRedisSecret(),
+			nil,
+			getSystemDatabaseSecret(),
 			fmt.Sprintf("\"%s\" not found", component.SystemSecretSystemRedisSecretName),
 		},
 		{
-			"NoSystemDatabaseSecretFound", backendRedisTestData(), systemRedisTestData(), nil,
+			"NoSystemDatabaseSecretFound",
+			getBackendRedisSecret(),
+			getSystemRedisSecretForHighAvailabilityTest(),
+			nil,
 			fmt.Sprintf("\"%s\" not found", component.SystemSecretSystemDatabaseSecretName),
 		},
 		{
 			"BackendRedisStorageURLMissing",
-			func() map[string]string {
-				data := backendRedisTestData()
-				delete(data, component.BackendSecretBackendRedisStorageURLFieldName)
-				return data
-			}(),
-			systemRedisTestData(), systemDatabaseTestData(), component.BackendSecretBackendRedisStorageURLFieldName,
+			getBackendRedisSecretMissingStorageURL(),
+			getSystemRedisSecretForHighAvailabilityTest(),
+			getSystemDatabaseSecret(),
+			component.BackendSecretBackendRedisStorageURLFieldName,
 		},
 		{
 			"BackendRedisQueueURLMissing",
-			func() map[string]string {
-				data := backendRedisTestData()
-				delete(data, component.BackendSecretBackendRedisQueuesURLFieldName)
-				return data
-			}(),
-			systemRedisTestData(), systemDatabaseTestData(), component.BackendSecretBackendRedisQueuesURLFieldName,
+			getBackendRedisSecretMissingQueueURL(),
+			getSystemRedisSecretForHighAvailabilityTest(),
+			getSystemDatabaseSecret(),
+			component.BackendSecretBackendRedisQueuesURLFieldName,
 		},
 		{
 			"SystemRedisURLMissing",
-			backendRedisTestData(),
-			func() map[string]string {
-				data := systemRedisTestData()
-				delete(data, component.SystemSecretSystemRedisURLFieldName)
-				return data
-			}(),
-			systemDatabaseTestData(), component.SystemSecretSystemRedisURLFieldName,
+			getBackendRedisSecret(),
+			getSystemRedisSecretMissingRedisURL(),
+			getSystemDatabaseSecret(),
+			component.SystemSecretSystemRedisURLFieldName,
 		},
 		{
 			"SystemRedisMessagebusURLMissing",
-			backendRedisTestData(),
-			func() map[string]string {
-				data := systemRedisTestData()
-				delete(data, component.SystemSecretSystemRedisMessageBusRedisURLFieldName)
-				return data
-			}(),
-			systemDatabaseTestData(), component.SystemSecretSystemRedisMessageBusRedisURLFieldName,
+			getBackendRedisSecret(),
+			getSystemRedisSecretMissingMessageBusRedisURL(),
+			getSystemDatabaseSecret(),
+			component.SystemSecretSystemRedisMessageBusRedisURLFieldName,
 		},
 		{
 			"SystemDatabaseURLMissing",
-			backendRedisTestData(),
-			systemRedisTestData(),
-			func() map[string]string {
-				data := systemDatabaseTestData()
-				delete(data, component.SystemSecretSystemDatabaseURLFieldName)
-				return data
-			}(),
+			getBackendRedisSecret(),
+			getSystemRedisSecretForHighAvailabilityTest(),
+			getSystemDatabaseSecretMissingDatabaseURL(),
 			component.SystemSecretSystemDatabaseURLFieldName,
 		},
 	}
@@ -127,14 +175,14 @@ func TestGetHighAvailabilityOptionsInvalid(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			objs := []runtime.Object{}
-			if tc.backendRedisSecretData != nil {
-				objs = append(objs, helper.GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, tc.backendRedisSecretData))
+			if tc.backendRedisSecret != nil {
+				objs = append(objs, tc.backendRedisSecret)
 			}
-			if tc.systemRedisSecretData != nil {
-				objs = append(objs, helper.GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, tc.systemRedisSecretData))
+			if tc.systemRedisSecret != nil {
+				objs = append(objs, tc.systemRedisSecret)
 			}
-			if tc.systemDatabaseSecretData != nil {
-				objs = append(objs, helper.GetTestSecret(namespace, component.SystemSecretSystemDatabaseSecretName, tc.systemDatabaseSecretData))
+			if tc.systemDatabaseSecret != nil {
+				objs = append(objs, tc.systemDatabaseSecret)
 			}
 			cl := fake.NewFakeClient(objs...)
 			optsProvider := NewHighAvailabilityOptionsProvider(namespace, cl)
