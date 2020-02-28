@@ -47,7 +47,7 @@ type APIManagerSpec struct {
 	// +optional
 	Zync *ZyncSpec `json:"zync,omitempty"`
 	// +optional
-	HighAvailability    *HighAvailabilitySpec    `json:"highAvailability,omitempty"`
+	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 	// +optional
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 }
@@ -55,8 +55,13 @@ type APIManagerSpec struct {
 // APIManagerStatus defines the observed state of APIManager
 // +k8s:openapi-gen=true
 type APIManagerStatus struct {
-	Conditions  []APIManagerCondition `json:"conditions,omitempty" protobuf:"bytes,4,rep,name=conditions"`
-	Deployments olm.DeploymentStatus  `json:"deployments"`
+	Conditions []APIManagerCondition `json:"conditions,omitempty" protobuf:"bytes,4,rep,name=conditions"`
+
+	// APIManager Deployment Configs
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors.displayName="Deployments"
+	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:podStatuses"
+	Deployments olm.DeploymentStatus `json:"deployments"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -64,6 +69,13 @@ type APIManagerStatus struct {
 // APIManager is the Schema for the apimanagers API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=apimanagers,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="APIManager"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="DeploymentConfig,apps.openshift.io/v1"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="PersistentVolumeClaim,v1"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="Service,v1"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="Route,route.openshift.io/v1"
+// +operator-sdk:gen-csv:customresourcedefinitions.resources="ImageStream,image.openshift.io/v1"
 type APIManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -112,6 +124,10 @@ type APIManagerList struct {
 }
 
 type APIManagerCommonSpec struct {
+	// Wildcard domain as configured in the API Manager object
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Wildcard Domain"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:label"
 	WildcardDomain string `json:"wildcardDomain"`
 	// +optional
 	AppLabel *string `json:"appLabel,omitempty"`

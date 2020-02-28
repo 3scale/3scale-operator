@@ -3,13 +3,14 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+
 	portaClient "github.com/3scale/3scale-porta-go-client/client"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
-	"strings"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -44,6 +45,8 @@ type MappingRuleStatus struct {
 // MappingRule is the Schema for the mappingrules API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=mappingrules,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="MappingRule"
 type MappingRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -85,10 +88,11 @@ func get3scaleMappingRulefromInternalMappingRule(c *portaClient.ThreeScaleClient
 }
 func getMappingRules(namespace string, matchLabels map[string]string, c client.Client) (*MappingRuleList, error) {
 	mappingRules := &MappingRuleList{}
-	opts := client.ListOptions{}
-	opts.InNamespace(namespace)
-	opts.MatchingLabels(matchLabels)
-	err := c.List(context.TODO(), &opts, mappingRules)
+	opts := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels(matchLabels),
+	}
+	err := c.List(context.TODO(), mappingRules, opts...)
 	return mappingRules, err
 }
 func getServiceMappingRulesFrom3scale(c *portaClient.ThreeScaleClient, service portaClient.Service) (*[]InternalMappingRule, error) {

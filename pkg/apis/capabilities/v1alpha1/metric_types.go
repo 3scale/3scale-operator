@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+
 	portaClient "github.com/3scale/3scale-porta-go-client/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,6 +32,8 @@ type MetricStatus struct {
 // Metric is the Schema for the metrics API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=metrics,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="Metric"
 type Metric struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -152,10 +155,11 @@ func (d *MetricsDiff) ReconcileWith3scale(c *portaClient.ThreeScaleClient, servi
 }
 func getMetrics(namespace string, matchLabels map[string]string, c client.Client) (*MetricList, error) {
 	metrics := &MetricList{}
-	opts := client.ListOptions{}
-	opts.InNamespace(namespace)
-	opts.MatchingLabels(matchLabels)
-	err := c.List(context.TODO(), &opts, metrics)
+	opts := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels(matchLabels),
+	}
+	err := c.List(context.TODO(), metrics, opts...)
 	return metrics, err
 }
 

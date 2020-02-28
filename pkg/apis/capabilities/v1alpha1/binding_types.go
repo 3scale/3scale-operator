@@ -4,16 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"reflect"
+	"sort"
+	"strings"
+
 	"github.com/3scale/3scale-operator/pkg/helper"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"log"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
-	"strings"
 )
 
 const BINDING_FINALIZER = "binding.capabilities.3scale.net"
@@ -48,6 +49,8 @@ type BindingStatus struct {
 // Binding is the Schema for the bindings API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=bindings,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="Binding"
 type Binding struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -384,10 +387,11 @@ func (b Binding) GetCurrentState() (*State, error) {
 }
 func (b Binding) getAPIs(c client.Client) (*APIList, error) {
 	apis := &APIList{}
-	opts := &client.ListOptions{}
-	opts.InNamespace(b.Namespace)
-	opts.MatchingLabels(b.Spec.APISelector.MatchLabels)
-	err := c.List(context.TODO(), opts, apis)
+	opts := []client.ListOption{
+		client.InNamespace(b.Namespace),
+		client.MatchingLabels(b.Spec.APISelector.MatchLabels),
+	}
+	err := c.List(context.TODO(), apis, opts...)
 	return apis, err
 }
 func (b Binding) newInternalCredentials(c client.Client) (*InternalCredentials, error) {

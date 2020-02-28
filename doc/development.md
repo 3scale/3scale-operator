@@ -19,9 +19,9 @@
 
 ## Prerequisites
 
-* [operator-sdk] version v0.8.0
+* [operator-sdk] version v0.15.2
 * [git][git_tool]
-* [go] version 1.12.5+
+* [go] version 1.13+
 * [kubernetes] version v1.13.0+
 * [oc] version v4.1+
 * Access to a Openshift v4.1.0+ cluster.

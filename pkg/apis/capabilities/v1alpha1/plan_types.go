@@ -3,13 +3,14 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"log"
+	"sort"
+	"strconv"
+
 	portaClient "github.com/3scale/3scale-porta-go-client/client"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
-	"strconv"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -35,8 +36,11 @@ type PlanSelectors struct {
 }
 
 type PlanCost struct {
-	SetupFee  float64 `json:"setupFee,omitempty"`
-	CostMonth float64 `json:"costMonth,omitempty"`
+	// +kubebuilder:validation:Pattern=[0-9]+(\.[0-9]+)?
+	SetupFee string `json:"setupFee,omitempty"`
+
+	// +kubebuilder:validation:Pattern=[0-9]+(\.[0-9]+)?
+	CostMonth string `json:"costMonth,omitempty"`
 }
 
 // PlanStatus defines the observed state of Plan
@@ -51,6 +55,8 @@ type PlanStatus struct {
 // Plan is the Schema for the plans API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=plans,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="Plan"
 type Plan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -122,8 +128,8 @@ func (d *plansDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, service
 		}
 		params := portaClient.Params{
 			"approval_required": strconv.FormatBool(plan.ApprovalRequired),
-			"setup_fee":         strconv.FormatFloat(plan.Costs.SetupFee, 'f', 1, 64),
-			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
+			"setup_fee":         plan.Costs.SetupFee,
+			"cost_per_month":    plan.Costs.CostMonth,
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
 		_, err = c.UpdateAppPlan(serviceId, plan3scale.ID, plan3scale.PlanName, "", params)
@@ -141,8 +147,8 @@ func (d *plansDiff) reconcileWith3scale(c *portaClient.ThreeScaleClient, service
 		}
 		params := portaClient.Params{
 			"approval_required": strconv.FormatBool(planPair.A.ApprovalRequired),
-			"setup_fee":         strconv.FormatFloat(planPair.A.Costs.SetupFee, 'f', 1, 64),
-			"cost_per_month":    strconv.FormatFloat(planPair.A.Costs.CostMonth, 'f', 1, 64),
+			"setup_fee":         planPair.A.Costs.SetupFee,
+			"cost_per_month":    planPair.A.Costs.CostMonth,
 			"trial_period_days": strconv.FormatInt(planPair.A.TrialPeriodDays, 10),
 		}
 		stateEvent := ""
@@ -248,10 +254,11 @@ func get3scalePlanFromInternalPlan(c *portaClient.ThreeScaleClient, serviceID st
 }
 func getPlans(namespace string, matchLabels map[string]string, c client.Client) (*PlanList, error) {
 	plans := &PlanList{}
-	opts := client.ListOptions{}
-	opts.InNamespace(namespace)
-	opts.MatchingLabels(matchLabels)
-	err := c.List(context.TODO(), &opts, plans)
+	opts := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels(matchLabels),
+	}
+	err := c.List(context.TODO(), plans, opts...)
 	return plans, err
 }
 func newInternalPlanFromPlan(plan Plan, c client.Client) (*InternalPlan, error) {

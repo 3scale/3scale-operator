@@ -3,8 +3,10 @@ package apimanager
 import (
 	"context"
 	"fmt"
-	"k8s.io/api/policy/v1beta1"
 	"reflect"
+	"sort"
+
+	"k8s.io/api/policy/v1beta1"
 
 	"github.com/3scale/3scale-operator/version"
 
@@ -20,9 +22,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -136,7 +138,7 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	logger := r.Logger().WithValues("namespace", request.Namespace, "name", request.Name)
+	logger := r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
 
 	instance, err := r.apiManagerInstance(request.NamespacedName)
@@ -365,9 +367,11 @@ func (r *ReconcileAPIManager) reconcileAPIManagerStatus(cr *appsv1alpha1.APIMana
 }
 
 func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {
-	listOps := &client.ListOptions{Namespace: instance.Namespace}
+	listOps := []client.ListOption{
+		client.InNamespace(instance.Namespace),
+	}
 	dcList := &appsv1.DeploymentConfigList{}
-	err := r.Client().List(context.TODO(), listOps, dcList)
+	err := r.Client().List(context.TODO(), dcList, listOps...)
 	if err != nil {
 		r.Logger().Error(err, "Failed to list deployment configs")
 		return err
@@ -381,6 +385,7 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 			}
 		}
 	}
+	sort.Slice(dcs, func(i, j int) bool { return dcs[i].Name < dcs[j].Name })
 
 	deploymentStatus := olm.GetDeploymentConfigStatus(dcs)
 	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {

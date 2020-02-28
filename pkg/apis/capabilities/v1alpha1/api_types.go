@@ -3,16 +3,17 @@ package v1alpha1
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"reflect"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/3scale/3scale-operator/pkg/helper"
 	portaClient "github.com/3scale/3scale-porta-go-client/client"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"log"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -50,6 +51,8 @@ type APIStatus struct {
 // API is the Schema for the apis API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:path=apis,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="API"
 type API struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -247,8 +250,8 @@ func (api API) getInternalAPIfrom3scale(c *portaClient.ThreeScaleClient) (*Inter
 
 		trialPeriodDays, _ := strconv.ParseInt(applicationPlan.TrialPeriodDays, 10, 64)
 		approvalRequired, _ := strconv.ParseBool(applicationPlan.ApprovalRequired)
-		setupFee, _ := strconv.ParseFloat(applicationPlan.SetupFee, 64)
-		costMonth, _ := strconv.ParseFloat(applicationPlan.CostPerMonth, 64)
+		setupFee := applicationPlan.SetupFee
+		costMonth := applicationPlan.CostPerMonth
 
 		internalPlan := InternalPlan{
 			Name:             applicationPlan.PlanName,
@@ -670,8 +673,8 @@ func (api InternalAPI) createIn3scale(c *portaClient.ThreeScaleClient) error {
 		//TODO: add cancellation_period to application Plan
 		params := portaClient.Params{
 			"approval_required": strconv.FormatBool(plan.ApprovalRequired),
-			"setup_fee":         strconv.FormatFloat(plan.Costs.SetupFee, 'f', 1, 64),
-			"cost_per_month":    strconv.FormatFloat(plan.Costs.CostMonth, 'f', 1, 64),
+			"setup_fee":         plan.Costs.SetupFee,
+			"cost_per_month":    plan.Costs.CostMonth,
 			"trial_period_days": strconv.FormatInt(plan.TrialPeriodDays, 10),
 		}
 		_, err = c.UpdateAppPlan(service.ID, plan3scale.ID, plan3scale.PlanName, "", params)
