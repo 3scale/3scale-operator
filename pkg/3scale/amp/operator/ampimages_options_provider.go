@@ -43,7 +43,7 @@ func (a *AmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOp
 		a.ampImagesOptions.ZyncImage = *a.apimanager.Spec.Zync.Image
 	}
 
-	a.ampImagesOptions.ZyncDatabasePostgreSQLImage = component.ZyncPostgreSQLImageURL()
+	a.ampImagesOptions.ZyncDatabasePostgreSQLImage = ZyncPostgreSQLImageURL()
 	if a.apimanager.Spec.Zync != nil && a.apimanager.Spec.Zync.PostgreSQLImage != nil {
 		a.ampImagesOptions.ZyncDatabasePostgreSQLImage = *a.apimanager.Spec.Zync.PostgreSQLImage
 	}

@@ -23,7 +23,7 @@ func (s *SystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageOptions()
 	s.options.AmpRelease = product.ThreescaleRelease
 	s.options.InsecureImportPolicy = s.apimanager.Spec.ImageStreamTagImportInsecure
 
-	s.options.Image = component.SystemPostgreSQLImageURL()
+	s.options.Image = SystemPostgreSQLImageURL()
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Image != nil {

@@ -24,12 +24,12 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.options.AmpRelease = product.ThreescaleRelease
 	r.options.InsecureImportPolicy = r.apimanager.Spec.ImageStreamTagImportInsecure
 
-	r.options.BackendImage = component.BackendRedisImageURL()
+	r.options.BackendImage = BackendRedisImageURL()
 	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisImage != nil {
 		r.options.BackendImage = *r.apimanager.Spec.Backend.RedisImage
 	}
 
-	r.options.SystemImage = component.SystemRedisImageURL()
+	r.options.SystemImage = SystemRedisImageURL()
 	if r.apimanager.Spec.System != nil && r.apimanager.Spec.System.RedisImage != nil {
 		r.options.SystemImage = *r.apimanager.Spec.System.RedisImage
 	}

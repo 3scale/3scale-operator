@@ -23,7 +23,7 @@ func (s *SystemMysqlImageOptionsProvider) GetSystemMySQLImageOptions() (*compone
 	s.mysqlImageOptions.AmpRelease = product.ThreescaleRelease
 	s.mysqlImageOptions.InsecureImportPolicy = s.apimanager.Spec.ImageStreamTagImportInsecure
 
-	s.mysqlImageOptions.Image = component.SystemMySQLImageURL()
+	s.mysqlImageOptions.Image = SystemMySQLImageURL()
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.MySQL.Image != nil {
