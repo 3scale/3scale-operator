@@ -18,6 +18,9 @@ import (
 	"github.com/3scale/3scale-operator/version"
 	"github.com/prometheus/client_golang/prometheus"
 
+	appsv1 "github.com/openshift/api/apps/v1"
+	imagev1 "github.com/openshift/api/image/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -105,6 +108,24 @@ func main() {
 	}
 
 	log.Info("Registering Components.")
+
+	// Setup Scheme for OpenShift routes
+	if err := routev1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	// Setup Scheme for OpenShift imagestreams and related
+	if err := imagev1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	// Setup Scheme for OpenShift deploymentconfigs and related
+	if err := appsv1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
