@@ -415,7 +415,8 @@ jobs:
     steps:
       - checkout
       - run: make vendor
-      - run: make clean test -j 2 --directory pkg/3scale/amp
+      - run: make templates
+      - run: make test -j 2 --directory pkg/3scale/amp
 
   test-crds:
     docker:

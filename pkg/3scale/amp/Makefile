@@ -7,7 +7,7 @@ targets = $(foreach template,$(templates),./auto-generated-templates/amp/$(templ
 
 .DELETE_ON_ERROR: $(targets)
 
-DEPS = ../../../vendor $(shell find . -name '*.go')
+DEPS = $(shell find . -name '*.go')
 
 all: $(targets) ## Generate all templates
 
@@ -24,6 +24,5 @@ help: ## Print this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 test:
-	$(MAKE) all
 	git diff --exit-code ./auto-generated-templates
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./auto-generated-templates)" ]
