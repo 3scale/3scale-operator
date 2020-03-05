@@ -21,7 +21,7 @@ func TestSystemPostgreSQLImageReconcilerCreate(t *testing.T) {
 		name      = "example-apimanager"
 		namespace = "operator-unittest"
 		trueValue = true
-		imageUrl  = "postgresql:test"
+		imageURL  = "postgresql:test"
 		log       = logf.Log.WithName("operator_test")
 	)
 
@@ -40,7 +40,7 @@ func TestSystemPostgreSQLImageReconcilerCreate(t *testing.T) {
 			System: &appsv1alpha1.SystemSpec{
 				DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 					PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
-						Image: &imageUrl,
+						Image: &imageURL,
 					},
 				},
 			},
