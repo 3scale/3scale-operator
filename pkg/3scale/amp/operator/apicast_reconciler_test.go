@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -31,6 +32,12 @@ func TestApicastReconciler(t *testing.T) {
 		apicastManagementAPI       = "disabled"
 		oneValue             int64 = 1
 	)
+
+	cfg, err := config.GetConfig()
+	if err != nil {
+		t.Fatalf("Unable to get config: (%v)", err)
+	}
+
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -62,7 +69,7 @@ func TestApicastReconciler(t *testing.T) {
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +86,7 @@ func TestApicastReconciler(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	BaseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 

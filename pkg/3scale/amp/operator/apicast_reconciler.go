@@ -109,6 +109,36 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcileMonitoringService(component.ApicastStagingMonitoringService())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileMonitoringService(component.ApicastProductionMonitoringService())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileGrafanaDashboard(component.ApicastGrafanaDashboard(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePrometheusRules(component.ApicastPrometheusRules(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileServiceMonitor(component.ApicastProductionServiceMonitor())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileServiceMonitor(component.ApicastStagingServiceMonitor())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
