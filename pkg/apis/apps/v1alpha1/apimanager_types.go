@@ -50,6 +50,8 @@ type APIManagerSpec struct {
 	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 	// +optional
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
+	// +optional
+	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -309,6 +311,10 @@ type HighAvailabilitySpec struct {
 }
 
 type PodDisruptionBudgetSpec struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type MonitoringSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
 
@@ -628,4 +634,8 @@ func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
 	return !apimanager.IsExternalDatabaseEnabled() &&
 		apimanager.Spec.System.DatabaseSpec != nil &&
 		apimanager.Spec.System.DatabaseSpec.MySQL != nil
+}
+
+func (apimanager *APIManager) IsMonitoringEnabled() bool {
+	return apimanager.Spec.Monitoring != nil && apimanager.Spec.Monitoring.Enabled
 }
