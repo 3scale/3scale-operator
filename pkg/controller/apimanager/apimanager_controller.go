@@ -60,7 +60,7 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 		return nil, err
 	}
 
-	BaseReconciler := operator.NewBaseReconciler(mgr.GetClient(), apiClientReader, mgr.GetScheme(), log)
+	BaseReconciler := operator.NewBaseReconciler(mgr.GetClient(), apiClientReader, mgr.GetScheme(), log, mgr.GetConfig())
 	return &ReconcileAPIManager{
 		BaseControllerReconciler: operator.NewBaseControllerReconciler(BaseReconciler),
 	}, nil
@@ -125,6 +125,7 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 		Scheme:          r.Scheme(),
 		Cr:              cr,
 		Logger:          r.Logger(),
+		Cfg:             r.Config(),
 	}
 	return upgradeApiManager.Upgrade()
 }

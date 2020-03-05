@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -23,12 +24,16 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	var (
 		log = logf.Log.WithName("operator_test")
 	)
-	apimanager := basicApimanagerSpecTestSystemOptions()
+	cfg, err := config.GetConfig()
+	if err != nil {
+		t.Fatalf("Unable to get config: (%v)", err)
+	}
+	apimanager := basicApimanagerSpecTestSystemOptions(name, namespace)
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +50,7 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	BaseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 

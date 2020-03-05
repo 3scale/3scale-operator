@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -22,6 +23,10 @@ func TestServiceAccountBaseReconcilerCreate(t *testing.T) {
 		namespace = "operator-unittest"
 		log       = logf.Log.WithName("operator_test")
 	)
+	cfg, err := config.GetConfig()
+	if err != nil {
+		t.Fatalf("Unable to get config: (%v)", err)
+	}
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -31,7 +36,7 @@ func TestServiceAccountBaseReconcilerCreate(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +48,7 @@ func TestServiceAccountBaseReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	createOnlyReconciler := NewCreateOnlyServiceAccountReconciler()
@@ -84,6 +89,10 @@ func TestServiceAccountBaseReconcilerUpdateOwnerRef(t *testing.T) {
 		namespace = "operator-unittest"
 		log       = logf.Log.WithName("operator_test")
 	)
+	cfg, err := config.GetConfig()
+	if err != nil {
+		t.Fatalf("Unable to get config: (%v)", err)
+	}
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -103,7 +112,7 @@ func TestServiceAccountBaseReconcilerUpdateOwnerRef(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +124,7 @@ func TestServiceAccountBaseReconcilerUpdateOwnerRef(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	createOnlyReconciler := NewCreateOnlyServiceAccountReconciler()
@@ -171,6 +180,10 @@ func TestServiceAccountBaseReconcilerUpdateNeeded(t *testing.T) {
 		namespace = "operator-unittest"
 		log       = logf.Log.WithName("operator_test")
 	)
+	cfg, err := config.GetConfig()
+	if err != nil {
+		t.Fatalf("Unable to get config: (%v)", err)
+	}
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -190,7 +203,7 @@ func TestServiceAccountBaseReconcilerUpdateNeeded(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +220,7 @@ func TestServiceAccountBaseReconcilerUpdateNeeded(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	saReconciler := newCustomServiceAccountReconciler()

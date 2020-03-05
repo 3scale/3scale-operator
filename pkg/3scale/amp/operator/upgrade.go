@@ -13,6 +13,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -24,6 +25,7 @@ type UpgradeApiManager struct {
 	Logger          logr.Logger
 	ApiClientReader client.Reader
 	Scheme          *runtime.Scheme
+	Cfg             *restclient.Config
 }
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
@@ -338,7 +340,7 @@ func (u *UpgradeApiManager) ensureDeploymentConfigImageChangeTrigger(desired, ex
 
 func (u *UpgradeApiManager) upgradeAMPImageStreams() (reconcile.Result, error) {
 	// implement upgrade procedure by reconcile procedure
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
+	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger, u.Cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	reconciler := NewAMPImagesReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr))
 	return reconciler.Reconcile()
@@ -350,7 +352,7 @@ func (u *UpgradeApiManager) upgradeBackendRedisImageStream() (reconcile.Result, 
 		return reconcile.Result{}, err
 	}
 
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
+	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger, u.Cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	reconciler := NewImageStreamBaseReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr), NewImageStreamGenericReconciler())
 	return reconcile.Result{}, reconciler.Reconcile(redis.BackendImageStream())
@@ -362,7 +364,7 @@ func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, e
 		return reconcile.Result{}, err
 	}
 
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
+	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger, u.Cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	reconciler := NewImageStreamBaseReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr), NewImageStreamGenericReconciler())
 	return reconcile.Result{}, reconciler.Reconcile(redis.SystemImageStream())
@@ -378,14 +380,14 @@ func (u *UpgradeApiManager) upgradeSystemDatabaseImageStream() (reconcile.Result
 }
 
 func (u *UpgradeApiManager) upgradeSystemMySQLImageStream() (reconcile.Result, error) {
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
+	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger, u.Cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	reconciler := NewSystemMySQLImageReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr))
 	return reconciler.Reconcile()
 }
 
 func (u *UpgradeApiManager) upgradeSystemPostgreSQLImageStream() (reconcile.Result, error) {
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
+	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger, u.Cfg)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	reconciler := NewSystemPostgreSQLImageReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr))
 	return reconciler.Reconcile()

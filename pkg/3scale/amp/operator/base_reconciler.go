@@ -3,6 +3,7 @@ package operator
 import (
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
+	restclient "k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -15,14 +16,16 @@ type BaseReconciler struct {
 	apiClientReader client.Reader
 	scheme          *runtime.Scheme
 	logger          logr.Logger
+	cfg             *restclient.Config
 }
 
-func NewBaseReconciler(client client.Client, apiClientReader client.Reader, scheme *runtime.Scheme, logger logr.Logger) BaseReconciler {
+func NewBaseReconciler(client client.Client, apiClientReader client.Reader, scheme *runtime.Scheme, logger logr.Logger, cfg *restclient.Config) BaseReconciler {
 	return BaseReconciler{
 		client:          client,
 		apiClientReader: apiClientReader,
 		scheme:          scheme,
 		logger:          logger,
+		cfg:             cfg,
 	}
 }
 
@@ -40,4 +43,8 @@ func (b *BaseReconciler) Scheme() *runtime.Scheme {
 
 func (b *BaseReconciler) Logger() logr.Logger {
 	return b.logger
+}
+
+func (b *BaseReconciler) Config() *restclient.Config {
+	return b.cfg
 }
