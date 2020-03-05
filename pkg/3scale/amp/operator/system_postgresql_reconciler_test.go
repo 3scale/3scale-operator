@@ -24,7 +24,7 @@ func TestSystemPostgreSQLReconcilerCreate(t *testing.T) {
 		name           = "example-apimanager"
 		namespace      = "operator-unittest"
 		trueValue      = true
-		imageUrl       = "postgresql:test"
+		imageURL       = "postgresql:test"
 		wildcardDomain = "test.3scale.net"
 		tenantName     = "someTenant"
 		log            = logf.Log.WithName("operator_test")
@@ -48,7 +48,7 @@ func TestSystemPostgreSQLReconcilerCreate(t *testing.T) {
 			System: &appsv1alpha1.SystemSpec{
 				DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 					PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
-						Image: &imageUrl,
+						Image: &imageURL,
 					},
 				},
 			},

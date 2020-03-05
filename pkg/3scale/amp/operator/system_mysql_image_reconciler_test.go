@@ -21,7 +21,7 @@ func TestSystemMySQLImageReconciler(t *testing.T) {
 		name      = "example-apimanager"
 		namespace = "operator-unittest"
 		trueValue = true
-		imageUrl  = "mysql:test"
+		imageURL  = "mysql:test"
 		log       = logf.Log.WithName("operator_test")
 	)
 
@@ -40,7 +40,7 @@ func TestSystemMySQLImageReconciler(t *testing.T) {
 			System: &appsv1alpha1.SystemSpec{
 				DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 					MySQL: &appsv1alpha1.SystemMySQLSpec{
-						Image: &imageUrl,
+						Image: &imageURL,
 					},
 				},
 			},
