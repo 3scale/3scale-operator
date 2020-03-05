@@ -90,6 +90,11 @@ spec:
               type: object
             imageStreamTagImportInsecure:
               type: boolean
+            monitoring:
+              properties:
+                enabled:
+                  type: boolean
+              type: object
             podDisruptionBudget:
               properties:
                 enabled:
