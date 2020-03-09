@@ -2,11 +2,10 @@ package operator
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -27,22 +26,26 @@ func NewServiceBaseReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicR
 }
 
 func (r *ServiceBaseReconciler) Reconcile(desired *v1.Service) error {
-	objectInfo := ObjectInfo(desired)
 	existing := &v1.Service{}
 	err := r.Client().Get(
 		context.TODO(),
 		types.NamespacedName{Name: desired.Name, Namespace: r.apiManager.GetNamespace()},
 		existing)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			createErr := r.createResource(desired)
-			if createErr != nil {
-				r.Logger().Error(createErr, fmt.Sprintf("Error creating object %s. Requeuing request...", objectInfo))
-				return createErr
-			}
-			return nil
-		}
+
+	if err != nil && !apierrors.IsNotFound(err) {
 		return err
+	}
+
+	if IsObjectTaggedTorDelete(desired) {
+		if !apierrors.IsNotFound(err) {
+			return r.deleteResource(existing)
+		}
+		// if not found, nothing else to do
+		return nil
+	}
+
+	if apierrors.IsNotFound(err) {
+		return r.createResource(desired)
 	}
 
 	update, err := r.isUpdateNeeded(desired, existing)
