@@ -3,10 +3,14 @@ package operator
 import (
 	"context"
 	"fmt"
+
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/policy/v1beta1"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -92,4 +96,36 @@ func (r *BaseAPIManagerLogicReconciler) deleteResource(obj common.KubernetesObje
 func (r *BaseAPIManagerLogicReconciler) reconcilePodDisruptionBudget(desiredPDB *v1beta1.PodDisruptionBudget) error {
 	reconciler := NewPodDisruptionBudgetReconciler(*r)
 	return reconciler.Reconcile(desiredPDB)
+}
+
+func (r *BaseAPIManagerLogicReconciler) reconcileServiceMonitor(desired *monitoringv1.ServiceMonitor) error {
+	if !r.apiManager.IsMonitoringEnabled() {
+		TagObjectToDelete(desired)
+	}
+	reconciler := NewServiceMonitorBaseReconciler(*r, NewCreateOnlyServiceMonitorReconciler())
+	return reconciler.Reconcile(desired)
+}
+
+func (r *BaseAPIManagerLogicReconciler) reconcileMonitoringService(desired *v1.Service) error {
+	if !r.apiManager.IsMonitoringEnabled() {
+		TagObjectToDelete(desired)
+	}
+	reconciler := NewServiceBaseReconciler(*r, NewCreateOnlySvcReconciler())
+	return reconciler.Reconcile(desired)
+}
+
+func (r *BaseAPIManagerLogicReconciler) reconcileGrafanaDashboard(desired *grafanav1alpha1.GrafanaDashboard) error {
+	if !r.apiManager.IsMonitoringEnabled() {
+		TagObjectToDelete(desired)
+	}
+	reconciler := NewGrafanaDashboardBaseReconciler(*r, NewCreateOnlyGrafanaDashboardReconciler())
+	return reconciler.Reconcile(desired)
+}
+
+func (r *BaseAPIManagerLogicReconciler) reconcilePrometheusRules(desired *monitoringv1.PrometheusRule) error {
+	if !r.apiManager.IsMonitoringEnabled() {
+		TagObjectToDelete(desired)
+	}
+	reconciler := NewPrometheusRuleBaseReconciler(*r, NewCreateOnlyPrometheusRuleReconciler())
+	return reconciler.Reconcile(desired)
 }
