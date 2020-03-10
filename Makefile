@@ -39,6 +39,16 @@ download:
 	@echo Download go.mod dependencies
 	@go mod download
 
+## install-tools: Installing tools from tools.go
+install-tools: download
+	@echo Installing tools from tools.go
+	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+
+## generate: Go generate
+generate:
+	@echo Generate Go files by processing source
+	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
+
 ## build: Build operator
 build:
 	$(OPERATOR_SDK) build $(IMAGE):$(VERSION)
