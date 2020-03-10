@@ -34,6 +34,20 @@ MANIFEST_RELEASE ?= 1.0.$(shell git rev-list --count master)
 APPLICATION_REPOSITORY_NAMESPACE ?= 3scaleoperatormaster
 TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
 
+## download: Download go.mod dependencies
+download:
+	@echo Download go.mod dependencies
+	@go mod download
+
+## install-tools: Installing tools from tools.go
+install-tools: download
+	@echo Installing tools from tools.go
+	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+
+## generate: Go generate
+generate:
+	@echo Generate Go files by processing source
+	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
 ## build: Build operator
 build:
