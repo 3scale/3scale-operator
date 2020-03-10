@@ -110,7 +110,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 	messageBusRedisURL := component.DefaultSystemMessageBusRedisURL()
 	messageBusRedisSentinelHosts := component.DefaultSystemMessageBusRedisSentinelHosts()
 	messageBusRedisSentinelRole := component.DefaultSystemMessageBusRedisSentinelRole()
-	messageBusRedisNamespace := component.DefaultSystemMessgeBusRedisNamespace()
+	messageBusRedisNamespace := component.DefaultSystemMessageBusRedisNamespace()
 	redisNamespace := component.DefaultSystemRedisNamespace()
 	tmpSystemAppReplicas := int32(systemAppReplicas)
 	tmpSystemSideKiqReplicas := int32(systemSidekiqReplicas)

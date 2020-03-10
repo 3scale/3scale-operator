@@ -206,7 +206,7 @@ func (s *SystemOptionsProvider) setSystemRedisOptions() error {
 			&s.options.MessageBusRedisNamespace,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisMessageBusRedisNamespace,
-			component.DefaultSystemMessgeBusRedisNamespace(),
+			component.DefaultSystemMessageBusRedisNamespace(),
 		},
 	}
 

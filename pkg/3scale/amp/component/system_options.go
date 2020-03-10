@@ -139,7 +139,7 @@ func DefaultSystemRedisNamespace() string {
 	return ""
 }
 
-func DefaultSystemMessgeBusRedisNamespace() string {
+func DefaultSystemMessageBusRedisNamespace() string {
 	return ""
 }
 
