@@ -105,10 +105,6 @@ func (s *SecretSource) FieldValueFromRequiredSecret(secretName, fieldName string
 	return s.fieldReader(secretName, fieldName, true, false, def)
 }
 
-func (s *SecretSource) RequiredFieldValue(secretName, fieldName string) (string, error) {
-	return s.fieldReader(secretName, fieldName, false, true, "")
-}
-
 func (s *SecretSource) RequiredFieldValueFromRequiredSecret(secretName, fieldName string) (string, error) {
 	return s.fieldReader(secretName, fieldName, true, true, "")
 }
