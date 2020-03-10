@@ -102,13 +102,13 @@ func (s3 *S3) RemoveRWXStorageClassParameter(template *templatev1.Template) {
 func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 	return []v1.EnvVar{
 		envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-		envVarFromSecret(AwsAccessKeyID, s3.Options.awsCredentialsSecret, AwsAccessKeyID),
-		envVarFromSecret(AwsSecretAccessKey, s3.Options.awsCredentialsSecret, AwsSecretAccessKey),
-		envVarFromSecret(AwsBucket, s3.Options.awsCredentialsSecret, AwsBucket),
-		envVarFromSecret(AwsRegion, s3.Options.awsCredentialsSecret, AwsRegion),
-		envVarFromSecretOptional(AwsProtocol, s3.Options.awsCredentialsSecret, AwsProtocol),
-		envVarFromSecretOptional(AwsHostname, s3.Options.awsCredentialsSecret, AwsHostname),
-		envVarFromSecretOptional(AwsPathStyle, s3.Options.awsCredentialsSecret, AwsPathStyle),
+		envVarFromSecret(AwsAccessKeyID, s3.Options.AwsCredentialsSecret, AwsAccessKeyID),
+		envVarFromSecret(AwsSecretAccessKey, s3.Options.AwsCredentialsSecret, AwsSecretAccessKey),
+		envVarFromSecret(AwsBucket, s3.Options.AwsCredentialsSecret, AwsBucket),
+		envVarFromSecret(AwsRegion, s3.Options.AwsCredentialsSecret, AwsRegion),
+		envVarFromSecretOptional(AwsProtocol, s3.Options.AwsCredentialsSecret, AwsProtocol),
+		envVarFromSecretOptional(AwsHostname, s3.Options.AwsCredentialsSecret, AwsHostname),
+		envVarFromSecretOptional(AwsPathStyle, s3.Options.AwsCredentialsSecret, AwsPathStyle),
 	}
 }
 
@@ -171,16 +171,16 @@ func (s3 *S3) S3AWSSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: s3.Options.awsCredentialsSecret,
+			Name: s3.Options.AwsCredentialsSecret,
 		},
 		StringData: map[string]string{
-			AwsAccessKeyID:     s3.Options.awsAccessKeyId,
-			AwsSecretAccessKey: s3.Options.awsSecretAccessKey,
-			AwsRegion:          s3.Options.awsRegion,
-			AwsBucket:          s3.Options.awsBucket,
-			AwsProtocol:        s3.Options.awsProtocol,
-			AwsHostname:        s3.Options.awsHostname,
-			AwsPathStyle:       s3.Options.awsPathStyle,
+			AwsAccessKeyID:     s3.Options.AwsAccessKeyId,
+			AwsSecretAccessKey: s3.Options.AwsSecretAccessKey,
+			AwsRegion:          s3.Options.AwsRegion,
+			AwsBucket:          s3.Options.AwsBucket,
+			AwsProtocol:        s3.Options.AwsProtocol,
+			AwsHostname:        s3.Options.AwsHostname,
+			AwsPathStyle:       s3.Options.AwsPathStyle,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

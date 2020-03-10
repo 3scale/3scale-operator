@@ -50,11 +50,15 @@ func (r *SystemPostgreSQLAdapter) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (r *SystemPostgreSQLAdapter) options() (*component.SystemPostgreSQLOptions, error) {
-	mob := component.SystemPostgreSQLOptionsBuilder{}
-	mob.AppLabel("${APP_LABEL}")
-	mob.DatabaseName("${SYSTEM_DATABASE}")
-	mob.User("${SYSTEM_DATABASE_USER}")
-	mob.Password("${SYSTEM_DATABASE_PASSWORD}")
-	mob.DatabaseURL("postgresql://${SYSTEM_DATABASE_USER}:" + "${SYSTEM_DATABASE_PASSWORD}" + "@system-postgresql/" + "${SYSTEM_DATABASE}")
-	return mob.Build()
+	o := component.NewSystemPostgreSQLOptions()
+	o.AppLabel = "${APP_LABEL}"
+	o.DatabaseName = "${SYSTEM_DATABASE}"
+	o.User = "${SYSTEM_DATABASE_USER}"
+	o.Password = "${SYSTEM_DATABASE_PASSWORD}"
+	o.DatabaseURL = "postgresql://${SYSTEM_DATABASE_USER}:" + "${SYSTEM_DATABASE_PASSWORD}" + "@system-postgresql/" + "${SYSTEM_DATABASE}"
+
+	o.ContainerResourceRequirements = component.DefaultSystemPostgresqlResourceRequirements()
+
+	err := o.Validate()
+	return o, err
 }

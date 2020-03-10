@@ -47,7 +47,7 @@ func (mysql *SystemMysql) Service() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-mysql",
 			Labels: map[string]string{
-				"app":                          mysql.Options.appLabel,
+				"app":                          mysql.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "mysql",
 			},
@@ -74,7 +74,7 @@ func (mysql *SystemMysql) MainConfigConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-main-conf",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel},
 		},
 		Data: map[string]string{"my.cnf": "!include /etc/my.cnf\n!includedir /etc/my-extra.d\n"}}
 }
@@ -87,7 +87,7 @@ func (mysql *SystemMysql) ExtraConfigConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-extra-conf",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel},
 		},
 		Data: map[string]string{"mysql-charset.cnf": "[client]\ndefault-character-set = utf8\n\n[mysql]\ndefault-character-set = utf8\n\n[mysqld]\ncharacter-set-server = utf8\ncollation-server = utf8_unicode_ci\n"}}
 }
@@ -100,7 +100,7 @@ func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-storage",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -117,7 +117,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-mysql",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -144,7 +144,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": "system-mysql"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.appLabel, "deploymentConfig": "system-mysql"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel, "deploymentConfig": "system-mysql"},
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp", //TODO make this configurable via flag
@@ -180,20 +180,12 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
 								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
 								// are deprecated we should be able to change this.
-								envVarFromValue("MYSQL_DATABASE", mysql.Options.databaseName),
-								envVarFromValue("MYSQL_ROOT_PASSWORD", mysql.Options.rootPassword),
+								envVarFromValue("MYSQL_DATABASE", mysql.Options.DatabaseName),
+								envVarFromValue("MYSQL_ROOT_PASSWORD", mysql.Options.RootPassword),
 								envVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
 								envVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
 							},
-							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
-									v1.ResourceMemory: resource.MustParse("2Gi"),
-								},
-								Requests: v1.ResourceList{
-									v1.ResourceCPU:    resource.MustParse("250m"),
-									v1.ResourceMemory: resource.MustParse("512Mi"),
-								},
-							},
+							Resources: mysql.Options.ContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "mysql-storage",
@@ -250,14 +242,14 @@ func (mysql *SystemMysql) SystemDatabaseSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemDatabaseSecretName,
 			Labels: map[string]string{
-				"app":                  mysql.Options.appLabel,
+				"app":                  mysql.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemDatabaseUserFieldName:     mysql.Options.user,
-			SystemSecretSystemDatabasePasswordFieldName: mysql.Options.password,
-			SystemSecretSystemDatabaseURLFieldName:      mysql.Options.databaseURL,
+			SystemSecretSystemDatabaseUserFieldName:     mysql.Options.User,
+			SystemSecretSystemDatabasePasswordFieldName: mysql.Options.Password,
+			SystemSecretSystemDatabaseURLFieldName:      mysql.Options.DatabaseURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

@@ -127,7 +127,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (r *ZyncReconciler) zync() (*component.Zync, error) {
-	optsProvider := OperatorZyncOptionsProvider{APIManagerSpec: &r.apiManager.Spec, Namespace: r.apiManager.Namespace, Client: r.Client()}
+	optsProvider := NewZyncOptionsProvider(r.apiManager, r.apiManager.Namespace, r.Client())
 	opts, err := optsProvider.GetZyncOptions()
 	if err != nil {
 		return nil, err

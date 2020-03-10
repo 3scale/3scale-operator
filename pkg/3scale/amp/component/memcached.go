@@ -34,7 +34,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-memcache",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -73,7 +73,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": "system-memcache"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.appLabel, "deploymentConfig": "system-memcache"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.AppLabel, "deploymentConfig": "system-memcache"},
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp", //TODO make this configurable via flag
@@ -87,7 +87,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 11211,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Resources: *m.Options.resourceRequirements,
+							Resources: m.Options.ResourceRequirements,
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{

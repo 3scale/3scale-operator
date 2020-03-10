@@ -37,11 +37,16 @@ func (r *RedisAdapter) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (r *RedisAdapter) options() (*component.RedisOptions, error) {
-	rob := component.RedisOptionsBuilder{}
-	rob.AppLabel("${APP_LABEL}")
-	rob.AMPRelease("${AMP_RELEASE}")
-	rob.BackendImage("${REDIS_IMAGE}")
-	rob.SystemImage("${REDIS_IMAGE}")
+	ro := component.NewRedisOptions()
+	ro.AppLabel = "${APP_LABEL}"
+	ro.AmpRelease = "${AMP_RELEASE}"
+	ro.BackendImage = "${REDIS_IMAGE}"
+	ro.SystemImage = "${REDIS_IMAGE}"
+	ro.BackendRedisContainerResourceRequirements = component.DefaultBackendRedisContainerResourceRequirements()
+	ro.SystemRedisContainerResourceRequirements = component.DefaultSystemRedisContainerResourceRequirements()
+	tmp := component.InsecureImportPolicy
+	ro.InsecureImportPolicy = &tmp
 
-	return rob.Build()
+	err := ro.Validate()
+	return ro, err
 }

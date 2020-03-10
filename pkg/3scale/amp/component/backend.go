@@ -86,7 +86,7 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-worker",
-			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "worker", "app": backend.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "worker", "app": backend.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -116,11 +116,11 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: *backend.Options.workerReplicas,
+			Replicas: backend.Options.WorkerReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-worker"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "worker", "app": backend.Options.appLabel, "deploymentConfig": "backend-worker"},
+					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "worker", "app": backend.Options.AppLabel, "deploymentConfig": "backend-worker"},
 				},
 				Spec: v1.PodSpec{
 					InitContainers: []v1.Container{
@@ -141,7 +141,7 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 							Image:           "amp-backend:latest",
 							Args:            []string{"bin/3scale_backend_worker", "run"},
 							Env:             backend.buildBackendWorkerEnv(),
-							Resources:       *backend.Options.workerResourceRequirements,
+							Resources:       backend.Options.WorkerResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
@@ -158,7 +158,7 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-cron",
-			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "cron", "app": backend.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "cron", "app": backend.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -188,11 +188,11 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: *backend.Options.cronReplicas,
+			Replicas: backend.Options.CronReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-cron"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "cron", "app": backend.Options.appLabel, "deploymentConfig": "backend-cron"},
+					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "cron", "app": backend.Options.AppLabel, "deploymentConfig": "backend-cron"},
 				},
 				Spec: v1.PodSpec{
 					InitContainers: []v1.Container{
@@ -213,7 +213,7 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 							Image:           "amp-backend:latest",
 							Args:            []string{"backend-cron"},
 							Env:             backend.buildBackendCronEnv(),
-							Resources:       *backend.Options.cronResourceRequirements,
+							Resources:       backend.Options.CronResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
@@ -231,7 +231,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-listener",
-			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "listener", "app": backend.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "listener", "app": backend.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -261,11 +261,11 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: "amp-backend:latest"}}},
 			},
-			Replicas: *backend.Options.listenerReplicas,
+			Replicas: backend.Options.ListenerReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-listener"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "listener", "app": backend.Options.appLabel, "deploymentConfig": "backend-listener"},
+					Labels: map[string]string{"threescale_component": "backend", "threescale_component_element": "listener", "app": backend.Options.AppLabel, "deploymentConfig": "backend-listener"},
 				},
 				Spec: v1.PodSpec{Containers: []v1.Container{
 					v1.Container{
@@ -278,7 +278,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 								Protocol:      v1.ProtocolTCP},
 						},
 						Env:       backend.buildBackendListenerEnv(),
-						Resources: *backend.Options.listenerResourceRequirements,
+						Resources: backend.Options.ListenerResourceRequirements,
 						LivenessProbe: &v1.Probe{
 							Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
 								Port: intstr.IntOrString{
@@ -324,7 +324,7 @@ func (backend *Backend) ListenerService() *v1.Service {
 			Labels: map[string]string{
 				"threescale_component":         "backend",
 				"threescale_component_element": "listener",
-				"app":                          backend.Options.appLabel,
+				"app":                          backend.Options.AppLabel,
 			},
 		},
 		Spec: v1.ServiceSpec{
@@ -352,10 +352,10 @@ func (backend *Backend) ListenerRoute() *routev1.Route {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend",
-			Labels: map[string]string{"app": backend.Options.appLabel, "threescale_component": "backend"},
+			Labels: map[string]string{"app": backend.Options.AppLabel, "threescale_component": "backend"},
 		},
 		Spec: routev1.RouteSpec{
-			Host: "backend-" + backend.Options.tenantName + "." + backend.Options.wildcardDomain,
+			Host: "backend-" + backend.Options.TenantName + "." + backend.Options.WildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
 				Name: "backend-listener",
@@ -378,7 +378,7 @@ func (backend *Backend) EnvironmentConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-environment",
-			Labels: map[string]string{"threescale_component": "backend", "app": backend.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "backend", "app": backend.Options.AppLabel},
 		},
 		Data: map[string]string{
 			"RACK_ENV": "production",
@@ -395,17 +395,17 @@ func (backend *Backend) RedisSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: BackendSecretBackendRedisSecretName,
 			Labels: map[string]string{
-				"app":                  backend.Options.appLabel,
+				"app":                  backend.Options.AppLabel,
 				"threescale_component": "backend",
 			},
 		},
 		StringData: map[string]string{
-			BackendSecretBackendRedisStorageURLFieldName:           *backend.Options.storageURL,
-			BackendSecretBackendRedisQueuesURLFieldName:            *backend.Options.queuesURL,
-			BackendSecretBackendRedisStorageSentinelHostsFieldName: *backend.Options.storageSentinelHosts,
-			BackendSecretBackendRedisStorageSentinelRoleFieldName:  *backend.Options.storageSentinelRole,
-			BackendSecretBackendRedisQueuesSentinelHostsFieldName:  *backend.Options.queuesSentinelHosts,
-			BackendSecretBackendRedisQueuesSentinelRoleFieldName:   *backend.Options.queuesSentinelRole,
+			BackendSecretBackendRedisStorageURLFieldName:           backend.Options.StorageURL,
+			BackendSecretBackendRedisQueuesURLFieldName:            backend.Options.QueuesURL,
+			BackendSecretBackendRedisStorageSentinelHostsFieldName: backend.Options.StorageSentinelHosts,
+			BackendSecretBackendRedisStorageSentinelRoleFieldName:  backend.Options.StorageSentinelRole,
+			BackendSecretBackendRedisQueuesSentinelHostsFieldName:  backend.Options.QueuesSentinelHosts,
+			BackendSecretBackendRedisQueuesSentinelRoleFieldName:   backend.Options.QueuesSentinelRole,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -459,13 +459,13 @@ func (backend *Backend) InternalAPISecretForSystem() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: BackendSecretInternalApiSecretName,
 			Labels: map[string]string{
-				"app":                  backend.Options.appLabel,
+				"app":                  backend.Options.AppLabel,
 				"threescale_component": "backend",
 			},
 		},
 		StringData: map[string]string{
-			BackendSecretInternalApiUsernameFieldName: backend.Options.systemBackendUsername,
-			BackendSecretInternalApiPasswordFieldName: backend.Options.systemBackendPassword,
+			BackendSecretInternalApiUsernameFieldName: backend.Options.SystemBackendUsername,
+			BackendSecretInternalApiPasswordFieldName: backend.Options.SystemBackendPassword,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -480,13 +480,13 @@ func (backend *Backend) ListenerSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: BackendSecretBackendListenerSecretName,
 			Labels: map[string]string{
-				"app":                  backend.Options.appLabel,
+				"app":                  backend.Options.AppLabel,
 				"threescale_component": "backend",
 			},
 		},
 		StringData: map[string]string{
-			BackendSecretBackendListenerServiceEndpointFieldName: *backend.Options.serviceEndpoint,
-			BackendSecretBackendListenerRouteEndpointFieldName:   *backend.Options.routeEndpoint,
+			BackendSecretBackendListenerServiceEndpointFieldName: backend.Options.ServiceEndpoint,
+			BackendSecretBackendListenerRouteEndpointFieldName:   backend.Options.RouteEndpoint,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -501,7 +501,7 @@ func (backend *Backend) WorkerPodDisruptionBudget() *v1beta1.PodDisruptionBudget
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-worker",
 			Labels: map[string]string{
-				"app":                          backend.Options.appLabel,
+				"app":                          backend.Options.AppLabel,
 				"threescale_component":         "backend",
 				"threescale_component_element": "worker",
 			},
@@ -524,7 +524,7 @@ func (backend *Backend) CronPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-cron",
 			Labels: map[string]string{
-				"app":                          backend.Options.appLabel,
+				"app":                          backend.Options.AppLabel,
 				"threescale_component":         "backend",
 				"threescale_component_element": "cron",
 			},
@@ -547,7 +547,7 @@ func (backend *Backend) ListenerPodDisruptionBudget() *v1beta1.PodDisruptionBudg
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-listener",
 			Labels: map[string]string{
-				"app":                          backend.Options.appLabel,
+				"app":                          backend.Options.AppLabel,
 				"threescale_component":         "backend",
 				"threescale_component_element": "listener",
 			},

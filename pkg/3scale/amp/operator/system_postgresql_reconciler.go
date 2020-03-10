@@ -69,7 +69,7 @@ func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (r *SystemPostgreSQLReconciler) systemPostgreSQL() (*component.SystemPostgreSQL, error) {
-	optsProvider := OperatorSystemPostgreSQLOptionsProvider{APIManagerSpec: &r.apiManager.Spec, Namespace: r.apiManager.Namespace, Client: r.Client()}
+	optsProvider := NewSystemPostgresqlOptionsProvider(r.apiManager, r.apiManager.Namespace, r.Client())
 	opts, err := optsProvider.GetSystemPostgreSQLOptions()
 	if err != nil {
 		return nil, err

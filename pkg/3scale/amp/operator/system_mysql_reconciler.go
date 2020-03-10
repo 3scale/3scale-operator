@@ -60,7 +60,7 @@ func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (r *SystemMySQLReconciler) systemMySQL() (*component.SystemMysql, error) {
-	optsProvider := OperatorMysqlOptionsProvider{APIManagerSpec: &r.apiManager.Spec, Namespace: r.apiManager.Namespace, Client: r.Client()}
+	optsProvider := NewSystemMysqlOptionsProvider(r.apiManager, r.apiManager.Namespace, r.Client())
 	opts, err := optsProvider.GetMysqlOptions()
 	if err != nil {
 		return nil, err

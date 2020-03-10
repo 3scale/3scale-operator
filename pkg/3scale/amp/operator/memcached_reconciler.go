@@ -53,7 +53,7 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (r *MemcachedReconciler) memcached() (*component.Memcached, error) {
-	optsProvider := OperatorMemcachedOptionsProvider{APIManagerSpec: &r.apiManager.Spec}
+	optsProvider := NewMemcachedOptionsProvider(r.apiManager)
 	opts, err := optsProvider.GetMemcachedOptions()
 	if err != nil {
 		return nil, err

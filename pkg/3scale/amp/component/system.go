@@ -153,7 +153,7 @@ func (system *System) PDBObjects() []common.KubernetesObject {
 	appPDB := system.AppPodDisruptionBudget()
 	sidekiqPDB := system.SidekiqPodDisruptionBudget()
 
-	return []common.KubernetesObject {
+	return []common.KubernetesObject{
 		appPDB,
 		sidekiqPDB,
 	}
@@ -277,16 +277,16 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	systemBackendInternalAPIPass := envVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", "backend-internal-api", "password")
 	result = append(result, systemBackendInternalAPIUser, systemBackendInternalAPIPass)
 
-	if system.Options.s3FileStorageOptions != nil {
+	if system.Options.S3FileStorageOptions != nil {
 		result = append(result,
 			envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-			envVarFromSecret(AwsAccessKeyID, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
-			envVarFromSecret(AwsSecretAccessKey, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
-			envVarFromSecret(AwsBucket, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsBucket),
-			envVarFromSecret(AwsRegion, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsRegion),
-			envVarFromSecretOptional(AwsProtocol, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsProtocol),
-			envVarFromSecretOptional(AwsHostname, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsHostname),
-			envVarFromSecretOptional(AwsPathStyle, system.Options.s3FileStorageOptions.ConfigurationSecretName, AwsPathStyle),
+			envVarFromSecret(AwsAccessKeyID, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
+			envVarFromSecret(AwsSecretAccessKey, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
+			envVarFromSecret(AwsBucket, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsBucket),
+			envVarFromSecret(AwsRegion, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsRegion),
+			envVarFromSecretOptional(AwsProtocol, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsProtocol),
+			envVarFromSecretOptional(AwsHostname, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsHostname),
+			envVarFromSecretOptional(AwsPathStyle, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsPathStyle),
 		)
 	}
 
@@ -319,24 +319,24 @@ func (system *System) EnvironmentConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-environment",
-			Labels: map[string]string{"threescale_component": "system", "app": system.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "app": system.Options.AppLabel},
 		},
 		Data: map[string]string{
 			"RAILS_ENV":              "production",
 			"FORCE_SSL":              "true",
-			"THREESCALE_SUPERDOMAIN": system.Options.wildcardDomain,
+			"THREESCALE_SUPERDOMAIN": system.Options.WildcardDomain,
 			"PROVIDER_PLAN":          "enterprise",
-			"APICAST_REGISTRY_URL":   system.Options.apicastRegistryURL,
+			"APICAST_REGISTRY_URL":   system.Options.ApicastRegistryURL,
 			"RAILS_LOG_TO_STDOUT":    "true",
 			"RAILS_LOG_LEVEL":        "info",
 			"THINKING_SPHINX_PORT":   "9306",
 			"THREESCALE_SANDBOX_PROXY_OPENSSL_VERIFY_MODE": "VERIFY_NONE",
-			"AMP_RELEASE":  system.Options.ampRelease,
+			"AMP_RELEASE":  system.Options.AmpRelease,
 			"SSL_CERT_DIR": "/etc/pki/tls/certs",
 		},
 	}
 
-	if system.Options.s3FileStorageOptions != nil {
+	if system.Options.S3FileStorageOptions != nil {
 		res.Data["FILE_UPLOAD_STORAGE"] = "s3"
 	}
 
@@ -352,12 +352,12 @@ func (system *System) MemcachedSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemMemcachedSecretName,
 			Labels: map[string]string{
-				"app":                  system.Options.appLabel,
+				"app":                  system.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemMemcachedServersFieldName: *system.Options.memcachedServers,
+			SystemSecretSystemMemcachedServersFieldName: system.Options.MemcachedServers,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -372,13 +372,13 @@ func (system *System) RecaptchaSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemRecaptchaSecretName,
 			Labels: map[string]string{
-				"app":                  system.Options.appLabel,
+				"app":                  system.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemRecaptchaPublicKeyFieldName:  system.Options.recaptchaPublicKey,
-			SystemSecretSystemRecaptchaPrivateKeyFieldName: system.Options.recaptchaPrivateKey,
+			SystemSecretSystemRecaptchaPublicKeyFieldName:  *system.Options.RecaptchaPublicKey,
+			SystemSecretSystemRecaptchaPrivateKeyFieldName: *system.Options.RecaptchaPrivateKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -393,13 +393,13 @@ func (system *System) EventsHookSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemEventsHookSecretName,
 			Labels: map[string]string{
-				"app":                  system.Options.appLabel,
+				"app":                  system.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemEventsHookURLFieldName:      *system.Options.eventHooksURL,
-			SystemSecretSystemEventsHookPasswordFieldName: system.Options.backendSharedSecret,
+			SystemSecretSystemEventsHookURLFieldName:      system.Options.EventHooksURL,
+			SystemSecretSystemEventsHookPasswordFieldName: system.Options.BackendSharedSecret,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -414,19 +414,19 @@ func (system *System) RedisSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemRedisSecretName,
 			Labels: map[string]string{
-				"app":                  system.Options.appLabel,
+				"app":                  system.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemRedisURLFieldName:                *system.Options.redisURL,
-			SystemSecretSystemRedisSentinelHosts:               *system.Options.redisSentinelHosts,
-			SystemSecretSystemRedisSentinelRole:                *system.Options.redisSentinelRole,
-			SystemSecretSystemRedisMessageBusRedisURLFieldName: *system.Options.messageBusRedisURL,
-			SystemSecretSystemRedisMessageBusSentinelHosts:     *system.Options.messageBusRedisSentinelHosts,
-			SystemSecretSystemRedisMessageBusSentinelRole:      *system.Options.messageBusRedisSentinelRole,
-			SystemSecretSystemRedisNamespace:                   *system.Options.redisNamespace,
-			SystemSecretSystemRedisMessageBusRedisNamespace:    *system.Options.messageBusRedisNamespace,
+			SystemSecretSystemRedisURLFieldName:                system.Options.RedisURL,
+			SystemSecretSystemRedisSentinelHosts:               *system.Options.RedisSentinelHosts,
+			SystemSecretSystemRedisSentinelRole:                *system.Options.RedisSentinelRole,
+			SystemSecretSystemRedisMessageBusRedisURLFieldName: *system.Options.MessageBusRedisURL,
+			SystemSecretSystemRedisMessageBusSentinelHosts:     *system.Options.MessageBusRedisSentinelHosts,
+			SystemSecretSystemRedisMessageBusSentinelRole:      *system.Options.MessageBusRedisSentinelRole,
+			SystemSecretSystemRedisNamespace:                   *system.Options.RedisNamespace,
+			SystemSecretSystemRedisMessageBusRedisNamespace:    *system.Options.MessageBusRedisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -441,12 +441,12 @@ func (system *System) AppSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemAppSecretName, // TODO sure this should be a secret on its own?? maybe can join different secrets into one with more values?
 			Labels: map[string]string{
-				"app":                  system.Options.appLabel,
+				"app":                  system.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemAppSecretKeyBaseFieldName: system.Options.appSecretKeyBase,
+			SystemSecretSystemAppSecretKeyBaseFieldName: system.Options.AppSecretKeyBase,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -461,20 +461,20 @@ func (system *System) SeedSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemSeedSecretName,
 			Labels: map[string]string{
-				"app":                  system.Options.appLabel,
+				"app":                  system.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemSeedMasterDomainFieldName:      system.Options.masterName,
-			SystemSecretSystemSeedMasterAccessTokenFieldName: system.Options.masterAccessToken,
-			SystemSecretSystemSeedMasterUserFieldName:        system.Options.masterUsername,
-			SystemSecretSystemSeedMasterPasswordFieldName:    system.Options.masterPassword,
-			SystemSecretSystemSeedAdminAccessTokenFieldName:  system.Options.adminAccessToken,
-			SystemSecretSystemSeedAdminUserFieldName:         system.Options.adminUsername,
-			SystemSecretSystemSeedAdminPasswordFieldName:     system.Options.adminPassword,
-			SystemSecretSystemSeedAdminEmailFieldName:        *system.Options.adminEmail,
-			SystemSecretSystemSeedTenantNameFieldName:        system.Options.tenantName,
+			SystemSecretSystemSeedMasterDomainFieldName:      system.Options.MasterName,
+			SystemSecretSystemSeedMasterAccessTokenFieldName: system.Options.MasterAccessToken,
+			SystemSecretSystemSeedMasterUserFieldName:        system.Options.MasterUsername,
+			SystemSecretSystemSeedMasterPasswordFieldName:    system.Options.MasterPassword,
+			SystemSecretSystemSeedAdminAccessTokenFieldName:  system.Options.AdminAccessToken,
+			SystemSecretSystemSeedAdminUserFieldName:         system.Options.AdminUsername,
+			SystemSecretSystemSeedAdminPasswordFieldName:     system.Options.AdminPassword,
+			SystemSecretSystemSeedAdminEmailFieldName:        *system.Options.AdminEmail,
+			SystemSecretSystemSeedTenantNameFieldName:        system.Options.TenantName,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -489,14 +489,14 @@ func (system *System) MasterApicastSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemMasterApicastSecretName,
 			Labels: map[string]string{
-				"app":                  system.Options.appLabel,
+				"app":                  system.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName: *system.Options.apicastSystemMasterProxyConfigEndpoint,
-			SystemSecretSystemMasterApicastBaseURL:                       *system.Options.apicastSystemMasterBaseURL,
-			SystemSecretSystemMasterApicastAccessToken:                   system.Options.apicastAccessToken,
+			SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName: system.Options.ApicastSystemMasterProxyConfigEndpoint,
+			SystemSecretSystemMasterApicastBaseURL:                       system.Options.ApicastSystemMasterBaseURL,
+			SystemSecretSystemMasterApicastAccessToken:                   system.Options.ApicastAccessToken,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -504,7 +504,7 @@ func (system *System) MasterApicastSecret() *v1.Secret {
 
 func (system *System) appPodVolumes() []v1.Volume {
 	res := []v1.Volume{}
-	if system.Options.pvcFileStorageOptions != nil {
+	if system.Options.PvcFileStorageOptions != nil {
 		res = append(res, system.FileStorageVolume())
 	}
 
@@ -539,7 +539,7 @@ func (system *System) appPodVolumes() []v1.Volume {
 
 func (system *System) volumeNamesForSystemAppPreHookPod() []string {
 	res := []string{}
-	if system.Options.pvcFileStorageOptions != nil {
+	if system.Options.PvcFileStorageOptions != nil {
 		res = append(res, SystemFileStoragePVCName)
 	}
 	return res
@@ -553,7 +553,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-app",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "app", "app": system.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "app", "app": system.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -599,11 +599,11 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: "amp-system:latest"}}},
 			},
-			Replicas: *system.Options.appReplicas,
+			Replicas: *system.Options.AppReplicas,
 			Selector: map[string]string{"deploymentConfig": "system-app"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "app", "app": system.Options.appLabel, "deploymentConfig": "system-app"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "app", "app": system.Options.AppLabel, "deploymentConfig": "system-app"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: system.appPodVolumes(),
@@ -620,7 +620,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									Protocol:      v1.ProtocolTCP},
 							},
 							Env:          system.buildSystemBaseEnv(),
-							Resources:    *system.Options.appMasterContainerResourceRequirements,
+							Resources:    *system.Options.AppMasterContainerResourceRequirements,
 							VolumeMounts: system.appMasterContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
@@ -669,7 +669,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									Protocol:      v1.ProtocolTCP},
 							},
 							Env:          system.buildSystemBaseEnv(),
-							Resources:    *system.Options.appProviderContainerResourceRequirements,
+							Resources:    *system.Options.AppProviderContainerResourceRequirements,
 							VolumeMounts: system.appProviderContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
@@ -718,7 +718,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									Protocol:      v1.ProtocolTCP},
 							},
 							Env:          system.buildSystemBaseEnv(),
-							Resources:    *system.Options.appDeveloperContainerResourceRequirements,
+							Resources:    *system.Options.AppDeveloperContainerResourceRequirements,
 							VolumeMounts: system.appDeveloperContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
@@ -781,7 +781,7 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 	}
 
 	res = append(res, systemTmpVolume)
-	if system.Options.pvcFileStorageOptions != nil {
+	if system.Options.PvcFileStorageOptions != nil {
 		res = append(res, system.FileStorageVolume())
 	}
 
@@ -820,7 +820,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-sidekiq",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "sidekiq", "app": system.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "sidekiq", "app": system.Options.AppLabel},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -850,11 +850,11 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: "amp-system:latest"}}},
 			},
-			Replicas: *system.Options.sidekiqReplicas,
+			Replicas: *system.Options.SidekiqReplicas,
 			Selector: map[string]string{"deploymentConfig": "system-sidekiq"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "sidekiq", "app": system.Options.appLabel, "deploymentConfig": "system-sidekiq"},
+					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "sidekiq", "app": system.Options.AppLabel, "deploymentConfig": "system-sidekiq"},
 				},
 				Spec: v1.PodSpec{
 					Volumes: system.SidekiqPodVolumes(),
@@ -876,7 +876,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 							Image:           "amp-system:latest",
 							Args:            []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
 							Env:             system.buildSystemBaseEnv(),
-							Resources:       *system.Options.sidekiqContainerResourceRequirements,
+							Resources:       *system.Options.SidekiqContainerResourceRequirements,
 							VolumeMounts:    system.sidekiqContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
@@ -905,7 +905,7 @@ func (system *System) systemConfigVolumeMount() v1.VolumeMount {
 
 func (system *System) appCommonContainerVolumeMounts(systemStorageReadonly bool) []v1.VolumeMount {
 	res := []v1.VolumeMount{}
-	if system.Options.pvcFileStorageOptions != nil {
+	if system.Options.PvcFileStorageOptions != nil {
 		res = append(res, system.systemStorageVolumeMount(systemStorageReadonly))
 	}
 	res = append(res, system.systemConfigVolumeMount())
@@ -929,7 +929,7 @@ func (system *System) appDeveloperContainerVolumeMounts() []v1.VolumeMount {
 
 func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
 	res := []v1.VolumeMount{}
-	if system.Options.pvcFileStorageOptions != nil {
+	if system.Options.PvcFileStorageOptions != nil {
 		res = append(res, system.systemStorageVolumeMount(false))
 	}
 	systemTmpVolumeMount := v1.VolumeMount{
@@ -951,13 +951,13 @@ func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-storage",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "app",
 			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
-			StorageClassName: system.Options.pvcFileStorageOptions.StorageClass,
+			StorageClassName: system.Options.PvcFileStorageOptions.StorageClass,
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteMany,
 			},
@@ -979,7 +979,7 @@ func (system *System) ProviderService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-provider",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "provider-ui",
 			},
@@ -1007,7 +1007,7 @@ func (system *System) MasterService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-master",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "master-ui",
 			},
@@ -1035,7 +1035,7 @@ func (system *System) DeveloperService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-developer",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "developer-ui",
 			},
@@ -1063,7 +1063,7 @@ func (system *System) SphinxService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-sphinx",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "sphinx",
 			},
@@ -1091,7 +1091,7 @@ func (system *System) MemcachedService() *v1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-memcache",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "memcache",
 			},
@@ -1118,16 +1118,16 @@ func (system *System) SMTPSecret() *v1.Secret {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   SystemSecretSystemSMTPSecretName,
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "smtp", "app": system.Options.appLabel},
+			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "smtp", "app": system.Options.AppLabel},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemSMTPAddressFieldName:           system.Options.smtpSecretOptions.Address,
-			SystemSecretSystemSMTPAuthenticationFieldName:    system.Options.smtpSecretOptions.Authentication,
-			SystemSecretSystemSMTPDomainFieldName:            system.Options.smtpSecretOptions.Domain,
-			SystemSecretSystemSMTPOpenSSLVerifyModeFieldName: system.Options.smtpSecretOptions.OpenSSLVerifyMode,
-			SystemSecretSystemSMTPPasswordFieldName:          system.Options.smtpSecretOptions.Password,
-			SystemSecretSystemSMTPPortFieldName:              system.Options.smtpSecretOptions.Port,
-			SystemSecretSystemSMTPUserNameFieldName:          system.Options.smtpSecretOptions.Username,
+			SystemSecretSystemSMTPAddressFieldName:           *system.Options.SmtpSecretOptions.Address,
+			SystemSecretSystemSMTPAuthenticationFieldName:    *system.Options.SmtpSecretOptions.Authentication,
+			SystemSecretSystemSMTPDomainFieldName:            *system.Options.SmtpSecretOptions.Domain,
+			SystemSecretSystemSMTPOpenSSLVerifyModeFieldName: *system.Options.SmtpSecretOptions.OpenSSLVerifyMode,
+			SystemSecretSystemSMTPPasswordFieldName:          *system.Options.SmtpSecretOptions.Password,
+			SystemSecretSystemSMTPPortFieldName:              *system.Options.SmtpSecretOptions.Port,
+			SystemSecretSystemSMTPUserNameFieldName:          *system.Options.SmtpSecretOptions.Username,
 		},
 	}
 }
@@ -1137,7 +1137,7 @@ func (system *System) SystemConfigMap() *v1.ConfigMap {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system",
 			Labels: map[string]string{
-				"app":                  system.Options.appLabel,
+				"app":                  system.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
@@ -1197,7 +1197,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-sphinx",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "sphinx",
 			},
@@ -1243,7 +1243,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app":                          system.Options.appLabel,
+						"app":                          system.Options.AppLabel,
 						"deploymentConfig":             "system-sphinx",
 						"threescale_component":         "system",
 						"threescale_component_element": "sphinx",
@@ -1293,7 +1293,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 								InitialDelaySeconds: 60,
 								PeriodSeconds:       10,
 							},
-							Resources: *system.Options.sphinxContainerResourceRequirements,
+							Resources: *system.Options.SphinxContainerResourceRequirements,
 						},
 					},
 				},
@@ -1311,7 +1311,7 @@ func (system *System) AppPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-app",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "app",
 			},
@@ -1334,7 +1334,7 @@ func (system *System) SidekiqPodDisruptionBudget() *v1beta1.PodDisruptionBudget 
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-sidekiq",
 			Labels: map[string]string{
-				"app":                          system.Options.appLabel,
+				"app":                          system.Options.AppLabel,
 				"threescale_component":         "system",
 				"threescale_component_element": "sidekiq",
 			},

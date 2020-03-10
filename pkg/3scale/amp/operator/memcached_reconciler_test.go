@@ -14,12 +14,8 @@ import (
 )
 
 func TestMemcachedDCReconciler(t *testing.T) {
-	var (
-		name      = "example-apimanager"
-		namespace = "operator-unittest"
-		log       = logf.Log.WithName("operator_test")
-	)
-	apimanager := basicApimanagerSpecTestOptions(name, namespace)
+	log := logf.Log.WithName("operator_test")
+	apimanager := basicApimanager()
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)

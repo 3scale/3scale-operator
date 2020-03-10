@@ -1,6 +1,8 @@
 package adapters
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	templatev1 "github.com/openshift/api/template/v1"
@@ -34,11 +36,22 @@ func (b *Backend) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (b *Backend) options() (*component.BackendOptions, error) {
-	bob := component.BackendOptionsBuilder{}
-	bob.AppLabel("${APP_LABEL}")
-	bob.SystemBackendUsername("${SYSTEM_BACKEND_USERNAME}")
-	bob.SystemBackendPassword("${SYSTEM_BACKEND_PASSWORD}")
-	bob.TenantName("${TENANT_NAME}")
-	bob.WildcardDomain("${WILDCARD_DOMAIN}")
-	return bob.Build()
+	bo := component.NewBackendOptions()
+	bo.AppLabel = "${APP_LABEL}"
+	bo.SystemBackendUsername = "${SYSTEM_BACKEND_USERNAME}"
+	bo.SystemBackendPassword = "${SYSTEM_BACKEND_PASSWORD}"
+	bo.TenantName = "${TENANT_NAME}"
+	bo.WildcardDomain = "${WILDCARD_DOMAIN}"
+	bo.RouteEndpoint = fmt.Sprintf("https://backend-%s.%s", "${TENANT_NAME}", "${WILDCARD_DOMAIN}")
+	bo.ServiceEndpoint = component.DefaultBackendServiceEndpoint()
+	bo.StorageURL = component.DefaultBackendRedisStorageURL()
+	bo.QueuesURL = component.DefaultBackendRedisQueuesURL()
+	bo.ListenerReplicas = 1
+	bo.WorkerReplicas = 1
+	bo.CronReplicas = 1
+	bo.ListenerResourceRequirements = component.DefaultBackendListenerResourceRequirements()
+	bo.WorkerResourceRequirements = component.DefaultBackendWorkerResourceRequirements()
+	bo.CronResourceRequirements = component.DefaultCronResourceRequirements()
+	err := bo.Validate()
+	return bo, err
 }

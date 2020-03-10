@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -370,4 +372,13 @@ func (r *SystemReconciler) reconcileAppSecret(desiredSecret *v1.Secret) error {
 func (r *SystemReconciler) reconcileMemcachedSecret(desiredSecret *v1.Secret) error {
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
 	return reconciler.Reconcile(desiredSecret)
+}
+
+func System(cr *appsv1alpha1.APIManager, client client.Client) (*component.System, error) {
+	optsProvider := NewSystemOptionsProvider(cr, cr.Namespace, client)
+	opts, err := optsProvider.GetSystemOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewSystem(opts), nil
 }

@@ -34,7 +34,7 @@ func (r *SystemPostgreSQLImageReconciler) Reconcile() (reconcile.Result, error) 
 }
 
 func (r *SystemPostgreSQLImageReconciler) systemPostgreSQLImage() (*component.SystemPostgreSQLImage, error) {
-	optsProvider := OperatorSystemPostgreSQLImageOptionsProvider{APIManagerSpec: &r.apiManager.Spec}
+	optsProvider := NewSystemPostgreSQLImageOptionsProvider(r.apiManager)
 	opts, err := optsProvider.GetSystemPostgreSQLImageOptions()
 	if err != nil {
 		return nil, err

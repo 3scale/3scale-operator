@@ -46,12 +46,12 @@ func (ha *HighAvailability) SystemDatabaseSecret() *v1.Secret {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SystemSecretSystemDatabaseSecretName,
 			Labels: map[string]string{
-				"app":                  ha.Options.appLabel,
+				"app":                  ha.Options.AppLabel,
 				"threescale_component": "system",
 			},
 		},
 		StringData: map[string]string{
-			SystemSecretSystemDatabaseURLFieldName: ha.Options.systemDatabaseURL,
+			SystemSecretSystemDatabaseURLFieldName: ha.Options.SystemDatabaseURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -154,19 +154,19 @@ func (ha *HighAvailability) UpdateDatabasesURLS(objects []common.KubernetesObjec
 		if ok {
 			switch secret.Name {
 			case "system-redis":
-				secret.StringData["URL"] = ha.Options.systemRedisURL
-				secret.StringData["MESSAGE_BUS_URL"] = ha.Options.systemMessageBusRedisURL
-				secret.StringData[SystemSecretSystemRedisSentinelHosts] = ha.Options.systemRedisSentinelsHosts
-				secret.StringData[SystemSecretSystemRedisSentinelRole] = ha.Options.systemRedisSentinelsRole
-				secret.StringData[SystemSecretSystemRedisMessageBusSentinelHosts] = ha.Options.systemMessageBusRedisSentinelsHosts
-				secret.StringData[SystemSecretSystemRedisMessageBusSentinelRole] = ha.Options.systemMessageBusRedisSentinelsRole
+				secret.StringData["URL"] = ha.Options.SystemRedisURL
+				secret.StringData["MESSAGE_BUS_URL"] = ha.Options.SystemMessageBusRedisURL
+				secret.StringData[SystemSecretSystemRedisSentinelHosts] = ha.Options.SystemRedisSentinelsHosts
+				secret.StringData[SystemSecretSystemRedisSentinelRole] = ha.Options.SystemRedisSentinelsRole
+				secret.StringData[SystemSecretSystemRedisMessageBusSentinelHosts] = ha.Options.SystemMessageBusRedisSentinelsHosts
+				secret.StringData[SystemSecretSystemRedisMessageBusSentinelRole] = ha.Options.SystemMessageBusRedisSentinelsRole
 			case "backend-redis":
-				secret.StringData["REDIS_STORAGE_URL"] = ha.Options.backendRedisStorageEndpoint
-				secret.StringData["REDIS_QUEUES_URL"] = ha.Options.backendRedisQueuesEndpoint
-				secret.StringData[BackendSecretBackendRedisStorageSentinelHostsFieldName] = ha.Options.backendRedisStorageSentinelHosts
-				secret.StringData[BackendSecretBackendRedisStorageSentinelRoleFieldName] = ha.Options.backendRedisStorageSentinelRole
-				secret.StringData[BackendSecretBackendRedisQueuesSentinelHostsFieldName] = ha.Options.backendRedisQueuesSentinelHosts
-				secret.StringData[BackendSecretBackendRedisQueuesSentinelRoleFieldName] = ha.Options.backendRedisQueuesSentinelRole
+				secret.StringData["REDIS_STORAGE_URL"] = ha.Options.BackendRedisStorageEndpoint
+				secret.StringData["REDIS_QUEUES_URL"] = ha.Options.BackendRedisQueuesEndpoint
+				secret.StringData[BackendSecretBackendRedisStorageSentinelHostsFieldName] = ha.Options.BackendRedisStorageSentinelHosts
+				secret.StringData[BackendSecretBackendRedisStorageSentinelRoleFieldName] = ha.Options.BackendRedisStorageSentinelRole
+				secret.StringData[BackendSecretBackendRedisQueuesSentinelHostsFieldName] = ha.Options.BackendRedisQueuesSentinelHosts
+				secret.StringData[BackendSecretBackendRedisQueuesSentinelRoleFieldName] = ha.Options.BackendRedisQueuesSentinelRole
 			}
 		}
 	}

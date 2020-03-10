@@ -34,11 +34,13 @@ func (r *SystemMysqlImageAdapter) Objects() ([]common.KubernetesObject, error) {
 }
 
 func (r *SystemMysqlImageAdapter) options() (*component.SystemMySQLImageOptions, error) {
-	aob := component.SystemMySQLImageOptionsBuilder{}
-	aob.AppLabel("${APP_LABEL}")
-	aob.AmpRelease("${AMP_RELEASE}")
-	aob.Image("${SYSTEM_DATABASE_IMAGE}")
-	aob.InsecureImportPolicy(component.InsecureImportPolicy)
+	o := component.NewSystemMySQLImageOptions()
+	o.AppLabel = "${APP_LABEL}"
+	o.AmpRelease = "${AMP_RELEASE}"
+	o.Image = "${SYSTEM_DATABASE_IMAGE}"
+	tmp := component.InsecureImportPolicy
+	o.InsecureImportPolicy = &tmp
 
-	return aob.Build()
+	err := o.Validate()
+	return o, err
 }

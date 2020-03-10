@@ -112,7 +112,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (r *ApicastReconciler) apicast() (*component.Apicast, error) {
-	optsProvider := OperatorApicastOptionsProvider{APIManagerSpec: &r.apiManager.Spec, Namespace: r.apiManager.Namespace, Client: r.Client()}
+	optsProvider := NewApicastOptionsProvider(r.apiManager)
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {
 		return nil, err

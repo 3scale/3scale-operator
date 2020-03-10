@@ -67,7 +67,7 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 
 // TODO should this be performed in another place
 func (r *AMPImagesReconciler) ampImages() (*component.AmpImages, error) {
-	optsProvider := OperatorAmpImagesOptionsProvider{APIManagerSpec: &r.apiManager.Spec}
+	optsProvider := NewAmpImagesOptionsProvider(r.apiManager)
 	opts, err := optsProvider.GetAmpImagesOptions()
 	if err != nil {
 		return nil, err
