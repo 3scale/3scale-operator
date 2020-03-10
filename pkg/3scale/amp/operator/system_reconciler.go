@@ -238,6 +238,26 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcileMonitoringService(component.SystemSidekiqMonitoringService())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileServiceMonitor(component.SystemSidekiqServiceMonitor())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileGrafanaDashboard(component.SystemSidekiqGrafanaDashboard(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePrometheusRules(component.SystemSidekiqPrometheusRules(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
