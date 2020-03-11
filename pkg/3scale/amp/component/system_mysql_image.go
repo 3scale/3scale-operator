@@ -42,16 +42,6 @@ func (s *SystemMySQLImage) ImageStream() *imagev1.ImageStream {
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
 				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "System MySQL (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: s.Options.AmpRelease,
-					},
-				},
-				imagev1.TagReference{
 					Name: s.Options.AmpRelease,
 					Annotations: map[string]string{
 						"openshift.io/display-name": "System " + s.Options.AmpRelease + " MySQL",

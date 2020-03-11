@@ -105,6 +105,11 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 		if res.Requeue || err != nil {
 			return res, err
 		}
+
+		res, err = u.upgradeSystemDatabaseDeploymentConfig()
+		if res.Requeue || err != nil {
+			return res, err
+		}
 	}
 
 	return reconcile.Result{}, nil
@@ -211,6 +216,43 @@ func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Resu
 	}
 
 	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.SystemDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemDatabaseDeploymentConfig() (reconcile.Result, error) {
+	if u.Cr.Spec.System.DatabaseSpec != nil && u.Cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+		return u.upgradeSystemPostgreSQLDeploymentConfig()
+	}
+
+	// default is MySQL
+	return u.upgradeSystemMySQLDeploymentConfig()
+}
+
+func (u *UpgradeApiManager) upgradeSystemPostgreSQLDeploymentConfig() (reconcile.Result, error) {
+	systemPostgreSQL, err := SystemPostgreSQL(u.Cr, u.Client)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(systemPostgreSQL.DeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemMySQLDeploymentConfig() (reconcile.Result, error) {
+	systemMySQL, err := SystemMySQL(u.Cr, u.Client)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(systemMySQL.DeploymentConfig())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -375,6 +417,11 @@ func (u *UpgradeApiManager) deleteOldImageStreamsTags() (reconcile.Result, error
 		if res.Requeue || err != nil {
 			return res, err
 		}
+
+		res, err = u.deleteSystemDatabaseOldImageStreamTags()
+		if res.Requeue || err != nil {
+			return res, err
+		}
 	}
 
 	return reconcile.Result{}, nil
@@ -445,6 +492,39 @@ func (u *UpgradeApiManager) deleteSystemRedisOldImageStreamTags() (reconcile.Res
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) deleteSystemDatabaseOldImageStreamTags() (reconcile.Result, error) {
+	if u.Cr.Spec.System.DatabaseSpec != nil && u.Cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+		return u.deleteSystemPostgreSQLOldImageStreamTags()
+	}
+
+	// default is MySQL
+	return u.deleteSystemMySQLOldImageStreamTags()
+}
+
+func (u *UpgradeApiManager) deleteSystemPostgreSQLOldImageStreamTags() (reconcile.Result, error) {
+	postgresqlImage, err := SystemPostgreSQLImage(u.Cr)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	res, err := u.deleteOldImageStreamTags(postgresqlImage.ImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) deleteSystemMySQLOldImageStreamTags() (reconcile.Result, error) {
+	mysqlImage, err := SystemMySQLImage(u.Cr)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	res, err := u.deleteOldImageStreamTags(mysqlImage.ImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+	return reconcile.Result{}, err
 }
 
 func (u *UpgradeApiManager) deleteOldImageStreamTags(imageStreamName string) (reconcile.Result, error) {

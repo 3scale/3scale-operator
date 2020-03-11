@@ -60,6 +60,7 @@ func (m *SystemMysqlAdapter) Objects() ([]common.KubernetesObject, error) {
 func (a *SystemMysqlAdapter) options() (*component.SystemMysqlOptions, error) {
 	mo := component.NewSystemMysqlOptions()
 	mo.AppLabel = "${APP_LABEL}"
+	mo.ImageTag = "${AMP_RELEASE}"
 	mo.DatabaseName = "${SYSTEM_DATABASE}"
 	mo.User = "${SYSTEM_DATABASE_USER}"
 	mo.Password = "${SYSTEM_DATABASE_PASSWORD}"

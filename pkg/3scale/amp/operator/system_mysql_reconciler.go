@@ -2,8 +2,10 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -21,7 +23,7 @@ func NewSystemMySQLReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicR
 }
 
 func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
-	systemMySQL, err := r.systemMySQL()
+	systemMySQL, err := SystemMySQL(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -59,15 +61,6 @@ func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (r *SystemMySQLReconciler) systemMySQL() (*component.SystemMysql, error) {
-	optsProvider := NewSystemMysqlOptionsProvider(r.apiManager, r.apiManager.Namespace, r.Client())
-	opts, err := optsProvider.GetMysqlOptions()
-	if err != nil {
-		return nil, err
-	}
-	return component.NewSystemMysql(opts), nil
-}
-
 func (r *SystemMySQLReconciler) reconcileSystemMySQLDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyDCReconciler())
 	return reconciler.Reconcile(desiredDeploymentConfig)
@@ -97,4 +90,13 @@ func (r *SystemMySQLReconciler) reconcileSystemMySQLSystemDatabaseSecret(desired
 func (r *SystemMySQLReconciler) reconcileSystemMySQLPersistentVolumeClaim(desiredPVC *v1.PersistentVolumeClaim) error {
 	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
 	return reconciler.Reconcile(desiredPVC)
+}
+
+func SystemMySQL(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.SystemMysql, error) {
+	optsProvider := NewSystemMysqlOptionsProvider(apimanager, apimanager.Namespace, client)
+	opts, err := optsProvider.GetMysqlOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewSystemMysql(opts), nil
 }

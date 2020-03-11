@@ -11,6 +11,7 @@ import (
 
 type SystemMysqlOptions struct {
 	AppLabel                      string                  `validate:"required"`
+	ImageTag                      string                  `validate:"required"`
 	DatabaseName                  string                  `validate:"required"`
 	User                          string                  `validate:"required"`
 	Password                      string                  `validate:"required"`

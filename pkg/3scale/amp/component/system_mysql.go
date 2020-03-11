@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -135,7 +137,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "system-mysql:latest",
+							Name: fmt.Sprintf("system-mysql:%s", mysql.Options.ImageTag),
 						},
 					},
 				},
