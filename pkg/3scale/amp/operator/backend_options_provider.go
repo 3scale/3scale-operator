@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
@@ -32,6 +33,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.backendOptions.AppLabel = *o.apimanager.Spec.AppLabel
 	o.backendOptions.TenantName = *o.apimanager.Spec.TenantName
 	o.backendOptions.WildcardDomain = o.apimanager.Spec.WildcardDomain
+	o.backendOptions.ImageTag = product.ThreescaleRelease
 
 	err := o.setSecretBasedOptions()
 	if err != nil {

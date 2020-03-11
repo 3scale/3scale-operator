@@ -16,6 +16,7 @@ type BackendOptions struct {
 	StorageSentinelRole          string
 	QueuesSentinelHosts          string
 	QueuesSentinelRole           string
+	ImageTag                     string                  `validate:"required"`
 	ListenerResourceRequirements v1.ResourceRequirements `validate:"-"`
 	WorkerResourceRequirements   v1.ResourceRequirements `validate:"-"`
 	CronResourceRequirements     v1.ResourceRequirements `validate:"-"`

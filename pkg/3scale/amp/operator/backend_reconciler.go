@@ -2,9 +2,11 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -88,7 +90,7 @@ func NewBackendReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicRecon
 }
 
 func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
-	backend, err := r.backend()
+	backend, err := Backend(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -156,15 +158,6 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (r *BackendReconciler) backend() (*component.Backend, error) {
-	optsProvider := NewOperatorBackendOptionsProvider(r.apiManager, r.apiManager.Namespace, r.Client())
-	opts, err := optsProvider.GetBackendOptions()
-	if err != nil {
-		return nil, err
-	}
-	return component.NewBackend(opts), nil
-}
-
 func (r *BackendReconciler) reconcileCronDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewBackendCronDCReconciler(r.BaseAPIManagerLogicReconciler))
 	return reconciler.Reconcile(desiredDeploymentConfig)
@@ -211,4 +204,13 @@ func (r *BackendReconciler) reconcileListenerSecret(desiredSecret *v1.Secret) er
 	// Secret values are not affected by CR field values
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
 	return reconciler.Reconcile(desiredSecret)
+}
+
+func Backend(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.Backend, error) {
+	optsProvider := NewOperatorBackendOptionsProvider(apimanager, apimanager.Namespace, client)
+	opts, err := optsProvider.GetBackendOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewBackend(opts), nil
 }

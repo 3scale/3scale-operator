@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/policy/v1beta1"
 
@@ -114,7 +116,7 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 						ContainerNames: []string{"backend-redis-svc", "backend-worker"},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-backend:latest"}}},
+							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
 			},
 			Replicas: backend.Options.WorkerReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-worker"},
@@ -186,7 +188,7 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 						ContainerNames: []string{"backend-redis-svc", "backend-cron"},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-backend:latest"}}},
+							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
 			},
 			Replicas: backend.Options.CronReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-cron"},
@@ -259,7 +261,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 						ContainerNames: []string{"backend-listener"},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-backend:latest"}}},
+							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
 			},
 			Replicas: backend.Options.ListenerReplicas,
 			Selector: map[string]string{"deploymentConfig": "backend-listener"},

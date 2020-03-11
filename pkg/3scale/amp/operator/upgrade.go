@@ -75,6 +75,11 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 		return res, err
 	}
 
+	res, err = u.upgradeBackendDeploymentConfigs()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -90,6 +95,30 @@ func (u *UpgradeApiManager) upgradeAPIcastDeploymentConfigs() (reconcile.Result,
 	}
 
 	res, err = u.upgradeDeploymentConfigImageChangeTrigger(apicast.ProductionDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeBackendDeploymentConfigs() (reconcile.Result, error) {
+	backend, err := Backend(u.Cr, u.Client)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(backend.ListenerDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeDeploymentConfigImageChangeTrigger(backend.WorkerDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeDeploymentConfigImageChangeTrigger(backend.CronDeploymentConfig())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -230,6 +259,11 @@ func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, er
 	}
 
 	res, err := u.deleteOldImageStreamTags(ampimages.APICastImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.deleteOldImageStreamTags(ampimages.BackendImageStream().GetName())
 	if res.Requeue || err != nil {
 		return res, err
 	}
