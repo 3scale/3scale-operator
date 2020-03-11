@@ -146,6 +146,7 @@ func (s *System) options() (*component.SystemOptions, error) {
 	adminEmail := "${ADMIN_EMAIL}"
 	o.AdminEmail = &adminEmail
 	o.AmpRelease = "${AMP_RELEASE}"
+	o.ImageTag = "${AMP_RELEASE}"
 	o.ApicastAccessToken = "${APICAST_ACCESS_TOKEN}"
 	o.ApicastRegistryURL = "${APICAST_REGISTRY_URL}"
 	o.MasterAccessToken = "${MASTER_ACCESS_TOKEN}"

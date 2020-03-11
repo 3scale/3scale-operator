@@ -128,6 +128,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		TenantName:                               tenantName,
 		WildcardDomain:                           wildcardDomain,
 		AmpRelease:                               product.ThreescaleRelease,
+		ImageTag:                                 product.ThreescaleRelease,
 		ApicastRegistryURL:                       apicastRegistryURL,
 		AppMasterContainerResourceRequirements:   component.DefaultAppMasterContainerResourceRequirements(),
 		AppProviderContainerResourceRequirements: component.DefaultAppProviderContainerResourceRequirements(),

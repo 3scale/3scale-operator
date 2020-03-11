@@ -85,6 +85,11 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 		return res, err
 	}
 
+	res, err = u.upgradeSystemDeploymentConfigs()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -148,6 +153,30 @@ func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, er
 	}
 
 	res, err = u.upgradeDeploymentConfigImageChangeTrigger(zync.DatabaseDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemDeploymentConfigs() (reconcile.Result, error) {
+	system, err := System(u.Cr, u.Client)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(system.AppDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeDeploymentConfigImageChangeTrigger(system.SidekiqDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeDeploymentConfigImageChangeTrigger(system.SphinxDeploymentConfig())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -303,6 +332,11 @@ func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, er
 	}
 
 	res, err = u.deleteOldImageStreamTags(ampimages.ZyncDatabasePostgreSQLImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.deleteOldImageStreamTags(ampimages.SystemImageStream().GetName())
 	if res.Requeue || err != nil {
 		return res, err
 	}

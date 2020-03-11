@@ -157,16 +157,6 @@ func (ampImages *AmpImages) SystemImageStream() *imagev1.ImageStream {
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
 				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "AMP System (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: ampImages.Options.AmpRelease,
-					},
-				},
-				imagev1.TagReference{
 					Name: ampImages.Options.AmpRelease,
 					Annotations: map[string]string{
 						"openshift.io/display-name": "AMP system " + ampImages.Options.AmpRelease,

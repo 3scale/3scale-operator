@@ -42,6 +42,8 @@ type SystemOptions struct {
 	ApicastSystemMasterBaseURL             string  `validate:"required"`
 	AdminEmail                             *string `validate:"required"`
 
+	ImageTag string `validate:"required"`
+
 	AppMasterContainerResourceRequirements    *v1.ResourceRequirements `validate:"required"`
 	AppProviderContainerResourceRequirements  *v1.ResourceRequirements `validate:"required"`
 	AppDeveloperContainerResourceRequirements *v1.ResourceRequirements `validate:"required"`
