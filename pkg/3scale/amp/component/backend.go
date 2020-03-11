@@ -387,6 +387,10 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 	result = append(result,
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK", "system-events-hook", "URL"),
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
+		// TODO: Add as EnvVar or reference to CM?
+		// TODO: Enable metrics endpoint only when monitoring is enabled by CR? Other components have monitoring enabled no matter monitoring field is enabled or not.
+		v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_PORT", Value: "9421"},
+		v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
 	)
 	return result
 }
