@@ -11,7 +11,7 @@ type Apicast struct {
 }
 
 func NewApicastAdapter(generatePDB bool) Adapter {
-	return NewAppenderAdapter(&Apicast{generatePodDisruptionBudget:generatePDB})
+	return NewAppenderAdapter(&Apicast{generatePodDisruptionBudget: generatePDB})
 }
 
 func (a *Apicast) Parameters() []templatev1.Parameter {
@@ -71,6 +71,7 @@ func (a *Apicast) options() (*component.ApicastOptions, error) {
 	ao.ResponseCodes = "${APICAST_RESPONSE_CODES}"
 	ao.TenantName = "${TENANT_NAME}"
 	ao.WildcardDomain = "${WILDCARD_DOMAIN}"
+	ao.ImageTag = "${AMP_RELEASE}"
 
 	ao.ProductionResourceRequirements = component.DefaultProductionResourceRequirements()
 	ao.StagingResourceRequirements = component.DefaultStagingResourceRequirements()

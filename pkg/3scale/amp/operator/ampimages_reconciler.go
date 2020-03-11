@@ -2,6 +2,7 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	imagev1 "github.com/openshift/api/image/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -22,7 +23,7 @@ func NewAMPImagesReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicRec
 }
 
 func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
-	ampImages, err := r.ampImages()
+	ampImages, err := AmpImages(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -65,16 +66,6 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-// TODO should this be performed in another place
-func (r *AMPImagesReconciler) ampImages() (*component.AmpImages, error) {
-	optsProvider := NewAmpImagesOptionsProvider(r.apiManager)
-	opts, err := optsProvider.GetAmpImagesOptions()
-	if err != nil {
-		return nil, err
-	}
-	return component.NewAmpImages(opts), nil
-}
-
 func (r *AMPImagesReconciler) reconcileBackendImageStream(desiredImageStream *imagev1.ImageStream) error {
 	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
 	return reconciler.Reconcile(desiredImageStream)
@@ -108,4 +99,13 @@ func (r *AMPImagesReconciler) reconcileSystemMemcachedImageStream(desiredImageSt
 func (r *AMPImagesReconciler) reconcileDeploymentsServiceAccount(desiredServiceAccount *v1.ServiceAccount) error {
 	reconciler := NewServiceAccountBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyServiceAccountReconciler())
 	return reconciler.Reconcile(desiredServiceAccount)
+}
+
+func AmpImages(apimanager *appsv1alpha1.APIManager) (*component.AmpImages, error) {
+	optsProvider := NewAmpImagesOptionsProvider(apimanager)
+	opts, err := optsProvider.GetAmpImagesOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewAmpImages(opts), nil
 }
