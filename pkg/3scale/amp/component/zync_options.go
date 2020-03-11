@@ -12,6 +12,7 @@ import (
 // ZyncOptions container object with all required to create components
 type ZyncOptions struct {
 	DatabaseURL                           string                  `validate:"required"`
+	ImageTag                              string                  `validate:"required"`
 	ContainerResourceRequirements         v1.ResourceRequirements `validate:"-"`
 	QueContainerResourceRequirements      v1.ResourceRequirements `validate:"-"`
 	DatabaseContainerResourceRequirements v1.ResourceRequirements `validate:"-"`

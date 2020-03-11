@@ -80,6 +80,11 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 		return res, err
 	}
 
+	res, err = u.upgradeZyncDeploymentConfigs()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -119,6 +124,25 @@ func (u *UpgradeApiManager) upgradeBackendDeploymentConfigs() (reconcile.Result,
 	}
 
 	res, err = u.upgradeDeploymentConfigImageChangeTrigger(backend.CronDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, error) {
+	zync, err := Zync(u.Cr, u.Client)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(zync.DeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeDeploymentConfigImageChangeTrigger(zync.QueDeploymentConfig())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -264,6 +288,11 @@ func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, er
 	}
 
 	res, err = u.deleteOldImageStreamTags(ampimages.BackendImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.deleteOldImageStreamTags(ampimages.ZyncImageStream().GetName())
 	if res.Requeue || err != nil {
 		return res, err
 	}
