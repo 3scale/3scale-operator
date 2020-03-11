@@ -471,7 +471,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "zync-database-postgresql:latest",
+							Name: fmt.Sprintf("zync-database-postgresql:%s", zync.Options.DatabaseImageTag),
 						},
 					},
 				},

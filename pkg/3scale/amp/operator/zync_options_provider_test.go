@@ -48,6 +48,7 @@ func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 	expectedOpts := &component.ZyncOptions{
 		AppLabel:                              appLabel,
 		ImageTag:                              product.ThreescaleRelease,
+		DatabaseImageTag:                      product.ThreescaleRelease,
 		ContainerResourceRequirements:         component.DefaultZyncContainerResourceRequirements(),
 		QueContainerResourceRequirements:      component.DefaultZyncQueContainerResourceRequirements(),
 		DatabaseContainerResourceRequirements: component.DefaultZyncDatabaseContainerResourceRequirements(),

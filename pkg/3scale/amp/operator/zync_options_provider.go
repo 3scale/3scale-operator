@@ -30,6 +30,7 @@ func NewZyncOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace strin
 func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.zyncOptions.AppLabel = *z.apimanager.Spec.AppLabel
 	z.zyncOptions.ImageTag = product.ThreescaleRelease
+	z.zyncOptions.DatabaseImageTag = product.ThreescaleRelease
 
 	err := z.setSecretBasedOptions()
 	if err != nil {

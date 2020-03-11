@@ -147,6 +147,11 @@ func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, er
 		return res, err
 	}
 
+	res, err = u.upgradeDeploymentConfigImageChangeTrigger(zync.DatabaseDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -293,6 +298,11 @@ func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, er
 	}
 
 	res, err = u.deleteOldImageStreamTags(ampimages.ZyncImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.deleteOldImageStreamTags(ampimages.ZyncDatabasePostgreSQLImageStream().GetName())
 	if res.Requeue || err != nil {
 		return res, err
 	}

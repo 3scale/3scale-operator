@@ -200,16 +200,6 @@ func (ampImages *AmpImages) ZyncDatabasePostgreSQLImageStream() *imagev1.ImageSt
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
 				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "Zync PostgreSQL (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: ampImages.Options.AmpRelease,
-					},
-				},
-				imagev1.TagReference{
 					Name: ampImages.Options.AmpRelease,
 					Annotations: map[string]string{
 						"openshift.io/display-name": "Zync " + ampImages.Options.AmpRelease + " PostgreSQL",

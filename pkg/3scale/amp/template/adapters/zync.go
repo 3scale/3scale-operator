@@ -59,6 +59,7 @@ func (z *Zync) options() (*component.ZyncOptions, error) {
 	zo.DatabasePassword = "${ZYNC_DATABASE_PASSWORD}"
 	zo.SecretKeyBase = "${ZYNC_SECRET_KEY_BASE}"
 	zo.ImageTag = "${AMP_RELEASE}"
+	zo.DatabaseImageTag = "${AMP_RELEASE}"
 
 	zo.ZyncReplicas = 1
 	zo.ZyncQueReplicas = 1
