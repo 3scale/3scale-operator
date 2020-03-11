@@ -970,6 +970,10 @@ objects:
               secretKeyRef:
                 key: PASSWORD
                 name: system-events-hook
+          - name: CONFIG_WORKER_PROMETHEUS_METRICS_PORT
+            value: "9421"
+          - name: CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED
+            value: "true"
           image: amp-backend:latest
           imagePullPolicy: IfNotPresent
           name: backend-worker
