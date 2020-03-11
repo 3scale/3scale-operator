@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -64,7 +66,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "system-memcached:latest",
+							Name: fmt.Sprintf("system-memcached:%s", m.Options.ImageTag),
 						},
 					},
 				},

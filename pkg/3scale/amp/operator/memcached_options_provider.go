@@ -2,6 +2,7 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
@@ -20,6 +21,7 @@ func NewMemcachedOptionsProvider(apimanager *appsv1alpha1.APIManager) *Memcached
 
 func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOptions, error) {
 	m.memcachedOptions.AppLabel = *m.apimanager.Spec.AppLabel
+	m.memcachedOptions.ImageTag = product.ThreescaleRelease
 
 	m.setResourceRequirementsOptions()
 

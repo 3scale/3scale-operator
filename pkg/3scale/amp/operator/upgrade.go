@@ -85,6 +85,11 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 		return res, err
 	}
 
+	res, err = u.upgradeMemcachedDeploymentConfig()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
 	res, err = u.upgradeSystemDeploymentConfigs()
 	if res.Requeue || err != nil {
 		return res, err
@@ -153,6 +158,20 @@ func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, er
 	}
 
 	res, err = u.upgradeDeploymentConfigImageChangeTrigger(zync.DatabaseDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeMemcachedDeploymentConfig() (reconcile.Result, error) {
+	memcached, err := Memcached(u.Cr)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(memcached.DeploymentConfig())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -337,6 +356,11 @@ func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, er
 	}
 
 	res, err = u.deleteOldImageStreamTags(ampimages.SystemImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.deleteOldImageStreamTags(ampimages.SystemMemcachedImageStream().GetName())
 	if res.Requeue || err != nil {
 		return res, err
 	}
