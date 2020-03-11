@@ -125,6 +125,46 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcileMonitoringService(component.ZyncMonitoringService())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileMonitoringService(component.ZyncQueMonitoringService())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileServiceMonitor(component.ZyncServiceMonitor())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileServiceMonitor(component.ZyncQueServiceMonitor())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileGrafanaDashboard(component.ZyncGrafanaDashboard(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileGrafanaDashboard(component.ZyncQueGrafanaDashboard(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePrometheusRules(component.ZyncPrometheusRules(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcilePrometheusRules(component.ZyncQuePrometheusRules(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
