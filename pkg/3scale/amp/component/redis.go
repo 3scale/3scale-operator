@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -128,7 +130,7 @@ func (redis *Redis) buildDeploymentConfigTriggers() appsv1.DeploymentTriggerPoli
 				},
 				From: v1.ObjectReference{
 					Kind: "ImageStreamTag",
-					Name: "backend-redis:latest",
+					Name: fmt.Sprintf("backend-redis:%s", redis.Options.BackendImageTag),
 				},
 			},
 		},
@@ -461,16 +463,6 @@ func (redis *Redis) BackendImageStream() *imagev1.ImageStream {
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
 				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "Backend Redis (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: redis.Options.AmpRelease,
-					},
-				},
-				imagev1.TagReference{
 					Name: redis.Options.AmpRelease,
 					Annotations: map[string]string{
 						"openshift.io/display-name": "Backend " + redis.Options.AmpRelease + " Redis",
@@ -532,7 +524,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "system-redis:latest",
+							Name: fmt.Sprintf("system-redis:%s", redis.Options.SystemImageTag),
 						},
 					},
 				},
@@ -679,16 +671,6 @@ func (redis *Redis) SystemImageStream() *imagev1.ImageStream {
 		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
 		Spec: imagev1.ImageStreamSpec{
 			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
-					Name: "latest",
-					Annotations: map[string]string{
-						"openshift.io/display-name": "System Redis (latest)",
-					},
-					From: &v1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: redis.Options.AmpRelease,
-					},
-				},
 				imagev1.TagReference{
 					Name: redis.Options.AmpRelease,
 					Annotations: map[string]string{

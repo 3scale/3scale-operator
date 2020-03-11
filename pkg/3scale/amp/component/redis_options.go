@@ -10,7 +10,9 @@ type RedisOptions struct {
 	AppLabel                                  string                   `validate:"required"`
 	AmpRelease                                string                   `validate:"required"`
 	BackendImage                              string                   `validate:"required"`
+	BackendImageTag                           string                   `validate:"required"`
 	SystemImage                               string                   `validate:"required"`
+	SystemImageTag                            string                   `validate:"required"`
 	BackendRedisContainerResourceRequirements *v1.ResourceRequirements `validate:"required"`
 	SystemRedisContainerResourceRequirements  *v1.ResourceRequirements `validate:"required"`
 	InsecureImportPolicy                      *bool                    `validate:"required"`

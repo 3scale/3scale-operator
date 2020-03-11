@@ -22,6 +22,9 @@ func NewRedisOptionsProvider(apimanager *appsv1alpha1.APIManager) *RedisOptionsP
 func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error) {
 	r.options.AppLabel = *r.apimanager.Spec.AppLabel
 	r.options.AmpRelease = product.ThreescaleRelease
+	r.options.BackendImageTag = product.ThreescaleRelease
+	r.options.SystemImageTag = product.ThreescaleRelease
+
 	r.options.InsecureImportPolicy = r.apimanager.Spec.ImageStreamTagImportInsecure
 
 	r.options.BackendImage = BackendRedisImageURL()

@@ -95,6 +95,18 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 		return res, err
 	}
 
+	if !u.Cr.IsExternalDatabaseEnabled() {
+		res, err = u.upgradeBackendRedisDeploymentConfig()
+		if res.Requeue || err != nil {
+			return res, err
+		}
+
+		res, err = u.upgradeSystemRedisDeploymentConfig()
+		if res.Requeue || err != nil {
+			return res, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -172,6 +184,33 @@ func (u *UpgradeApiManager) upgradeMemcachedDeploymentConfig() (reconcile.Result
 	}
 
 	res, err := u.upgradeDeploymentConfigImageChangeTrigger(memcached.DeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Result, error) {
+	redis, err := Redis(u.Cr)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.BackendDeploymentConfig())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Result, error) {
+	redis, err := Redis(u.Cr)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.SystemDeploymentConfig())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -326,6 +365,18 @@ func (u *UpgradeApiManager) deleteOldImageStreamsTags() (reconcile.Result, error
 		return res, err
 	}
 
+	if !u.Cr.IsExternalDatabaseEnabled() {
+		res, err = u.deleteBackendRedisOldImageStreamTags()
+		if res.Requeue || err != nil {
+			return res, err
+		}
+
+		res, err = u.deleteSystemRedisOldImageStreamTags()
+		if res.Requeue || err != nil {
+			return res, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -361,6 +412,34 @@ func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, er
 	}
 
 	res, err = u.deleteOldImageStreamTags(ampimages.SystemMemcachedImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) deleteBackendRedisOldImageStreamTags() (reconcile.Result, error) {
+	redis, err := Redis(u.Cr)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.deleteOldImageStreamTags(redis.BackendImageStream().GetName())
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) deleteSystemRedisOldImageStreamTags() (reconcile.Result, error) {
+	redis, err := Redis(u.Cr)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.deleteOldImageStreamTags(redis.SystemImageStream().GetName())
 	if res.Requeue || err != nil {
 		return res, err
 	}

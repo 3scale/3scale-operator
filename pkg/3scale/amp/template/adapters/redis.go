@@ -40,8 +40,11 @@ func (r *RedisAdapter) options() (*component.RedisOptions, error) {
 	ro := component.NewRedisOptions()
 	ro.AppLabel = "${APP_LABEL}"
 	ro.AmpRelease = "${AMP_RELEASE}"
+	ro.BackendImageTag = "${AMP_RELEASE}"
 	ro.BackendImage = "${REDIS_IMAGE}"
+	ro.SystemImageTag = "${AMP_RELEASE}"
 	ro.SystemImage = "${REDIS_IMAGE}"
+
 	ro.BackendRedisContainerResourceRequirements = component.DefaultBackendRedisContainerResourceRequirements()
 	ro.SystemRedisContainerResourceRequirements = component.DefaultSystemRedisContainerResourceRequirements()
 	tmp := component.InsecureImportPolicy
