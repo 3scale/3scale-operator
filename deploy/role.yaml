@@ -46,13 +46,6 @@ rules:
   - update
   - watch
 - apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - servicemonitors
-  verbs:
-  - get
-  - create
-- apiGroups:
   - apps
   resourceNames:
   - 3scale-operator
@@ -187,3 +180,24 @@ rules:
   - update
   - watch
   - delete
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  - prometheusrules
+  verbs:
+  - list
+  - get
+  - create
+  - update
+  - watch
+- apiGroups:
+  - integreatly.org
+  resources:
+  - grafanadashboards
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - watch
