@@ -316,9 +316,14 @@ func (s *SystemOptionsProvider) setSystemMasterApicastOptions() error {
 	}
 	s.options.ApicastAccessToken = val
 
-	// TODO we do not reconcile ProxyConfigEndpoint nor BaseURL fields because they are dependant on the TenantName
-	s.options.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(s.options.ApicastAccessToken)
-	s.options.ApicastSystemMasterBaseURL = component.DefaultApicastSystemMasterBaseURL(s.options.ApicastAccessToken)
+	val, err = s.secretSource.FieldValue(
+		component.SystemSecretSystemMasterApicastSecretName,
+		component.SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName,
+		component.DefaultApicastSystemMasterProxyConfigEndpoint(s.options.ApicastAccessToken))
+	if err != nil {
+		return err
+	}
+	s.options.ApicastSystemMasterProxyConfigEndpoint = val
 
 	return nil
 }

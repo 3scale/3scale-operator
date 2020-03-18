@@ -181,7 +181,6 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.MemcachedServers = component.DefaultMemcachedServers()
 	o.EventHooksURL = component.DefaultEventHooksURL()
 	o.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(o.ApicastAccessToken)
-	o.ApicastSystemMasterBaseURL = component.DefaultApicastSystemMasterBaseURL(o.ApicastAccessToken)
 	o.AppProviderContainerResourceRequirements = component.DefaultAppProviderContainerResourceRequirements()
 	o.AppMasterContainerResourceRequirements = component.DefaultAppMasterContainerResourceRequirements()
 	o.AppDeveloperContainerResourceRequirements = component.DefaultAppDeveloperContainerResourceRequirements()

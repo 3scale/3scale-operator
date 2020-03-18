@@ -23,8 +23,6 @@ func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager) *ApicastOpti
 
 func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions, error) {
 	a.apicastOptions.AppLabel = *a.apimanager.Spec.AppLabel
-	a.apicastOptions.TenantName = *a.apimanager.Spec.TenantName
-	a.apicastOptions.WildcardDomain = a.apimanager.Spec.WildcardDomain
 	a.apicastOptions.ManagementAPI = *a.apimanager.Spec.Apicast.ApicastManagementAPI
 	a.apicastOptions.ImageTag = product.ThreescaleRelease
 	a.apicastOptions.OpenSSLVerify = strconv.FormatBool(*a.apimanager.Spec.Apicast.OpenSSLVerify)

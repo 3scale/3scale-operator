@@ -11,8 +11,6 @@ type ApicastOptions struct {
 	ManagementAPI                  string                  `validate:"required"`
 	OpenSSLVerify                  string                  `validate:"required"`
 	ResponseCodes                  string                  `validate:"required"`
-	TenantName                     string                  `validate:"required"`
-	WildcardDomain                 string                  `validate:"required"`
 	ImageTag                       string                  `validate:"required"`
 	ProductionResourceRequirements v1.ResourceRequirements `validate:"-"`
 	StagingResourceRequirements    v1.ResourceRequirements `validate:"-"`
