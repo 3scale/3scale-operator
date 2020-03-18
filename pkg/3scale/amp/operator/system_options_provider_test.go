@@ -173,7 +173,6 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 	}
 
 	expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(opts.ApicastAccessToken)
-	expectedOpts.ApicastSystemMasterBaseURL = component.DefaultApicastSystemMasterBaseURL(opts.ApicastAccessToken)
 	return expectedOpts
 }
 
@@ -294,7 +293,6 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.ApicastAccessToken = "apicastAccessToken"
 				expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint("apicastAccessToken")
-				expectedOpts.ApicastSystemMasterBaseURL = component.DefaultApicastSystemMasterBaseURL("apicastAccessToken")
 				return opts
 			},
 		},
