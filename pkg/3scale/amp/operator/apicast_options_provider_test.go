@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -51,6 +52,7 @@ func defaultApicastOptions() *component.ApicastOptions {
 		ResponseCodes:                  strconv.FormatBool(responseCodes),
 		TenantName:                     tenantName,
 		WildcardDomain:                 wildcardDomain,
+		ImageTag:                       product.ThreescaleRelease,
 		ProductionResourceRequirements: component.DefaultProductionResourceRequirements(),
 		StagingResourceRequirements:    component.DefaultStagingResourceRequirements(),
 		ProductionReplicas:             int32(productionReplicaCount),

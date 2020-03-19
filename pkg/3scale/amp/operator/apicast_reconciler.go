@@ -2,6 +2,7 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -68,7 +69,7 @@ func NewApicastReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicRecon
 }
 
 func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
-	apicast, err := r.apicast()
+	apicast, err := Apicast(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -111,15 +112,6 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (r *ApicastReconciler) apicast() (*component.Apicast, error) {
-	optsProvider := NewApicastOptionsProvider(r.apiManager)
-	opts, err := optsProvider.GetApicastOptions()
-	if err != nil {
-		return nil, err
-	}
-	return component.NewApicast(opts), nil
-}
-
 func (r *ApicastReconciler) reconcileStagingDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewApicastDCReconciler(r.BaseAPIManagerLogicReconciler))
 	return reconciler.Reconcile(desiredDeploymentConfig)
@@ -143,4 +135,13 @@ func (r *ApicastReconciler) reconcileProductionService(desiredService *v1.Servic
 func (r *ApicastReconciler) reconcileEnvironmentConfigMap(desiredConfigMap *v1.ConfigMap) error {
 	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewApicastEnvCMReconciler())
 	return reconciler.Reconcile(desiredConfigMap)
+}
+
+func Apicast(apimanager *appsv1alpha1.APIManager) (*component.Apicast, error) {
+	optsProvider := NewApicastOptionsProvider(apimanager)
+	opts, err := optsProvider.GetApicastOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewApicast(opts), nil
 }

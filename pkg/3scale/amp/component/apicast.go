@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/policy/v1beta1"
 
@@ -157,7 +159,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-apicast:latest",
+							Name: fmt.Sprintf("amp-apicast:%s", apicast.Options.ImageTag),
 						},
 					},
 				},
@@ -271,7 +273,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-apicast:latest",
+							Name: fmt.Sprintf("amp-apicast:%s", apicast.Options.ImageTag),
 						},
 					},
 				},

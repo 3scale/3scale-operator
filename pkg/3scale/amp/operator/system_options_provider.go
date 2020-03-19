@@ -32,6 +32,7 @@ func NewSystemOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace str
 func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, error) {
 	s.options.AppLabel = *s.apimanager.Spec.AppLabel
 	s.options.AmpRelease = product.ThreescaleRelease
+	s.options.ImageTag = product.ThreescaleRelease
 	s.options.ApicastRegistryURL = *s.apimanager.Spec.Apicast.RegistryURL
 	s.options.TenantName = *s.apimanager.Spec.TenantName
 	s.options.WildcardDomain = s.apimanager.Spec.WildcardDomain

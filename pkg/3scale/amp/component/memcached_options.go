@@ -8,6 +8,7 @@ import (
 
 type MemcachedOptions struct {
 	AppLabel             string                  `validate:"required"`
+	ImageTag             string                  `validate:"required"`
 	ResourceRequirements v1.ResourceRequirements `validate:"-"`
 }
 

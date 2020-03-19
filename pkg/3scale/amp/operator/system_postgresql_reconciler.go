@@ -2,8 +2,10 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -40,7 +42,7 @@ func NewSystemPostgreSQLReconciler(baseAPIManagerLogicReconciler BaseAPIManagerL
 }
 
 func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
-	systemPostgreSQL, err := r.systemPostgreSQL()
+	systemPostgreSQL, err := SystemPostgreSQL(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -68,15 +70,6 @@ func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (r *SystemPostgreSQLReconciler) systemPostgreSQL() (*component.SystemPostgreSQL, error) {
-	optsProvider := NewSystemPostgresqlOptionsProvider(r.apiManager, r.apiManager.Namespace, r.Client())
-	opts, err := optsProvider.GetSystemPostgreSQLOptions()
-	if err != nil {
-		return nil, err
-	}
-	return component.NewSystemPostgreSQL(opts), nil
-}
-
 func (r *SystemPostgreSQLReconciler) reconcileSystemPostgreSQLDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
 	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewSystemPostgresqlDCReconciler(r.BaseAPIManagerLogicReconciler))
 	return reconciler.Reconcile(desiredDeploymentConfig)
@@ -96,4 +89,13 @@ func (r *SystemPostgreSQLReconciler) reconcileSystemPostgreSQLSystemDatabaseSecr
 func (r *SystemPostgreSQLReconciler) reconcileSystemPostgreSQLDataPersistentVolumeClaim(desiredPVC *v1.PersistentVolumeClaim) error {
 	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
 	return reconciler.Reconcile(desiredPVC)
+}
+
+func SystemPostgreSQL(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.SystemPostgreSQL, error) {
+	optsProvider := NewSystemPostgresqlOptionsProvider(apimanager, apimanager.Namespace, client)
+	opts, err := optsProvider.GetSystemPostgreSQLOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewSystemPostgreSQL(opts), nil
 }

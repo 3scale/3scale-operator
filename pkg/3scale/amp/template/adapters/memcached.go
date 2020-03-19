@@ -29,6 +29,7 @@ func (m *MemcachedAdapter) Objects() ([]common.KubernetesObject, error) {
 func (m *MemcachedAdapter) options() (*component.MemcachedOptions, error) {
 	mo := component.NewMemcachedOptions()
 	mo.AppLabel = "${APP_LABEL}"
+	mo.ImageTag = "${AMP_RELEASE}"
 	mo.ResourceRequirements = component.DefaultMemcachedResourceRequirements()
 
 	err := mo.Validate()

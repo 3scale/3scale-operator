@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
@@ -32,6 +33,7 @@ func NewSystemPostgresqlOptionsProvider(apimanager *appsv1alpha1.APIManager, nam
 
 func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*component.SystemPostgreSQLOptions, error) {
 	s.options.AppLabel = *s.apimanager.Spec.AppLabel
+	s.options.ImageTag = product.ThreescaleRelease
 
 	err := s.setSecretBasedOptions()
 	if err != nil {

@@ -1,8 +1,10 @@
 package component
 
 import (
-	"k8s.io/api/policy/v1beta1"
+	"fmt"
 	"sort"
+
+	"k8s.io/api/policy/v1beta1"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
@@ -597,7 +599,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 						ContainerNames: []string{"system-provider", "system-developer", "system-master"},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-system:latest"}}},
+							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag)}}},
 			},
 			Replicas: *system.Options.AppReplicas,
 			Selector: map[string]string{"deploymentConfig": "system-app"},
@@ -848,7 +850,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 						ContainerNames: []string{"check-svc", "system-sidekiq"},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-system:latest"}}},
+							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag)}}},
 			},
 			Replicas: *system.Options.SidekiqReplicas,
 			Selector: map[string]string{"deploymentConfig": "system-sidekiq"},
@@ -1217,7 +1219,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-system:latest",
+							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag),
 						},
 					},
 				},

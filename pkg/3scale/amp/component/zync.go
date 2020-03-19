@@ -1,6 +1,8 @@
 package component
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/policy/v1beta1"
 
@@ -224,7 +226,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-zync:latest",
+							Name: fmt.Sprintf("amp-zync:%s", zync.Options.ImageTag),
 						},
 					},
 				},
@@ -387,7 +389,7 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "amp-zync:latest",
+							Name: fmt.Sprintf("amp-zync:%s", zync.Options.ImageTag),
 						},
 					},
 				},
@@ -469,7 +471,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: "zync-database-postgresql:latest",
+							Name: fmt.Sprintf("zync-database-postgresql:%s", zync.Options.DatabaseImageTag),
 						},
 					},
 				},

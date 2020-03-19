@@ -14,7 +14,7 @@ type Backend struct {
 
 func NewBackendAdapter(generatePDB bool) Adapter {
 	return NewAppenderAdapter(&Backend{
-		generatePodDisruptionBudget:generatePDB,
+		generatePodDisruptionBudget: generatePDB,
 	})
 }
 
@@ -42,6 +42,7 @@ func (b *Backend) options() (*component.BackendOptions, error) {
 	bo.SystemBackendPassword = "${SYSTEM_BACKEND_PASSWORD}"
 	bo.TenantName = "${TENANT_NAME}"
 	bo.WildcardDomain = "${WILDCARD_DOMAIN}"
+	bo.ImageTag = "${AMP_RELEASE}"
 	bo.RouteEndpoint = fmt.Sprintf("https://backend-%s.%s", "${TENANT_NAME}", "${WILDCARD_DOMAIN}")
 	bo.ServiceEndpoint = component.DefaultBackendServiceEndpoint()
 	bo.StorageURL = component.DefaultBackendRedisStorageURL()

@@ -52,6 +52,7 @@ func (r *SystemPostgreSQLAdapter) Objects() ([]common.KubernetesObject, error) {
 func (r *SystemPostgreSQLAdapter) options() (*component.SystemPostgreSQLOptions, error) {
 	o := component.NewSystemPostgreSQLOptions()
 	o.AppLabel = "${APP_LABEL}"
+	o.ImageTag = "${AMP_RELEASE}"
 	o.DatabaseName = "${SYSTEM_DATABASE}"
 	o.User = "${SYSTEM_DATABASE_USER}"
 	o.Password = "${SYSTEM_DATABASE_PASSWORD}"

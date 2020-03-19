@@ -16,10 +16,12 @@ import (
 func defaultRedisOptions() *component.RedisOptions {
 	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
-		AppLabel:     appLabel,
-		AmpRelease:   product.ThreescaleRelease,
-		BackendImage: component.BackendRedisImageURL(),
-		SystemImage:  component.SystemRedisImageURL(),
+		AppLabel:        appLabel,
+		AmpRelease:      product.ThreescaleRelease,
+		BackendImageTag: product.ThreescaleRelease,
+		SystemImageTag:  product.ThreescaleRelease,
+		BackendImage:    component.BackendRedisImageURL(),
+		SystemImage:     component.SystemRedisImageURL(),
 		BackendRedisContainerResourceRequirements: component.DefaultBackendRedisContainerResourceRequirements(),
 		SystemRedisContainerResourceRequirements:  component.DefaultSystemRedisContainerResourceRequirements(),
 		InsecureImportPolicy:                      &tmpInsecure,

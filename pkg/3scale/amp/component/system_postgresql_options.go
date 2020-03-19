@@ -12,6 +12,7 @@ import (
 type SystemPostgreSQLOptions struct {
 	ContainerResourceRequirements v1.ResourceRequirements `validate:"-"`
 	AppLabel                      string                  `validate:"required"`
+	ImageTag                      string                  `validate:"required"`
 	User                          string                  `validate:"required"`
 	Password                      string                  `validate:"required"`
 	DatabaseName                  string                  `validate:"required"`

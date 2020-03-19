@@ -2,9 +2,11 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -63,7 +65,7 @@ func NewZyncReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconcil
 }
 
 func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
-	zync, err := r.zync()
+	zync, err := Zync(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -126,15 +128,6 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (r *ZyncReconciler) zync() (*component.Zync, error) {
-	optsProvider := NewZyncOptionsProvider(r.apiManager, r.apiManager.Namespace, r.Client())
-	opts, err := optsProvider.GetZyncOptions()
-	if err != nil {
-		return nil, err
-	}
-	return component.NewZync(opts), nil
-}
-
 func (r *ZyncReconciler) reconcileQueRole(desiredRole *rbacv1.Role) error {
 	reconciler := NewRoleBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyRoleReconciler())
 	return reconciler.Reconcile(desiredRole)
@@ -180,4 +173,13 @@ func (r *ZyncReconciler) reconcileZyncSecret(desiredSecret *v1.Secret) error {
 	// Secret values are not affected by CR field values
 	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
 	return reconciler.Reconcile(desiredSecret)
+}
+
+func Zync(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.Zync, error) {
+	optsProvider := NewZyncOptionsProvider(apimanager, apimanager.Namespace, client)
+	opts, err := optsProvider.GetZyncOptions()
+	if err != nil {
+		return nil, err
+	}
+	return component.NewZync(opts), nil
 }

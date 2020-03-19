@@ -2,6 +2,7 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -39,7 +40,7 @@ func NewMemcachedReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicRec
 }
 
 func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
-	memcached, err := r.memcached()
+	memcached, err := Memcached(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -52,16 +53,16 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (r *MemcachedReconciler) memcached() (*component.Memcached, error) {
-	optsProvider := NewMemcachedOptionsProvider(r.apiManager)
+func (r *MemcachedReconciler) reconcileMemcachedDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
+	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewMemcachedDCReconciler(r.BaseAPIManagerLogicReconciler))
+	return reconciler.Reconcile(desiredDeploymentConfig)
+}
+
+func Memcached(apimanager *appsv1alpha1.APIManager) (*component.Memcached, error) {
+	optsProvider := NewMemcachedOptionsProvider(apimanager)
 	opts, err := optsProvider.GetMemcachedOptions()
 	if err != nil {
 		return nil, err
 	}
 	return component.NewMemcached(opts), nil
-}
-
-func (r *MemcachedReconciler) reconcileMemcachedDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewMemcachedDCReconciler(r.BaseAPIManagerLogicReconciler))
-	return reconciler.Reconcile(desiredDeploymentConfig)
 }

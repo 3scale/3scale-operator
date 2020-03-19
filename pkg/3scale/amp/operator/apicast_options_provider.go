@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
@@ -25,6 +26,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.TenantName = *a.apimanager.Spec.TenantName
 	a.apicastOptions.WildcardDomain = a.apimanager.Spec.WildcardDomain
 	a.apicastOptions.ManagementAPI = *a.apimanager.Spec.Apicast.ApicastManagementAPI
+	a.apicastOptions.ImageTag = product.ThreescaleRelease
 	a.apicastOptions.OpenSSLVerify = strconv.FormatBool(*a.apimanager.Spec.Apicast.OpenSSLVerify)
 	a.apicastOptions.ResponseCodes = strconv.FormatBool(*a.apimanager.Spec.Apicast.IncludeResponseCodes)
 
