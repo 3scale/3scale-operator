@@ -79,7 +79,7 @@ $(PROJECT_PATH)/_output/unit.cov:
 
 ## unit: Run unit tests in pkg directory
 .PHONY: unit
-unit: $(PROJECT_PATH)/_output/unit.cov
+unit: $(PROJECT_PATH)/_output/unit.cov clean
 
 ## coverage_analysis: Analyze coverage via a browse
 .PHONY: coverage_analysis
