@@ -30,7 +30,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: amp-zync:latest
+        name: "amp-zync:${IMAGESTREAM_TAG_NAME}"
     source:
       git:
         uri: https://github.com/3scale/zync.git
@@ -51,7 +51,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: amp-system:latest
+        name: "amp-system:${IMAGESTREAM_TAG_NAME}"
     source:
       git:
         uri: "https://github.com/3scale/porta.git"
@@ -73,7 +73,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: amp-apicast:latest
+        name: "amp-apicast:${IMAGESTREAM_TAG_NAME}"
     source:
       contextDir: gateway
       git:
@@ -120,7 +120,7 @@ objects:
       output:
           to:
               kind: ImageStreamTag
-              name: amp-backend:latest
+              name: "amp-backend:${IMAGESTREAM_TAG_NAME}"
       source:
           git:
               uri: "https://github.com/3scale/apisonator.git"
@@ -148,4 +148,8 @@ parameters:
 - name: APISONATOR_GIT_REF
   description: "Apisonator git reference to use. Can be a tag or branch."
   value: "master"
+  required: true
+- name: IMAGESTREAM_TAG_NAME
+  description: "Value of the ImageStream tags to be used"
+  value: "latest"
   required: true
