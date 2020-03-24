@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -26,6 +28,12 @@ type UpgradeApiManager struct {
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 	res, err := u.upgradeImages()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	// upgrade system-master-apicast secret
+	res, err = u.upgradeSystemMasterApicastSecret()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -580,4 +588,31 @@ func (u *UpgradeApiManager) findTagReference(tagRefName string, tagRefs []imagev
 		}
 	}
 	return -1
+}
+
+func (u *UpgradeApiManager) upgradeSystemMasterApicastSecret() (reconcile.Result, error) {
+	existing := &v1.Secret{}
+	secretNamespacedName := types.NamespacedName{
+		Name:      component.SystemSecretSystemMasterApicastSecretName,
+		Namespace: u.Cr.Namespace,
+	}
+	err := u.Client.Get(context.TODO(), secretNamespacedName, existing)
+	// NotFound also regarded as error, as secret is expected to exist
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if _, ok := existing.Data["BASE_URL"]; ok {
+		// Remove unused BASE_URL field
+		patchJSON := []byte(`[{"op": "remove", "path": "/data/BASE_URL"}]`)
+		// Apply JSON patch https://tools.ietf.org/html/rfc6902
+		patch := client.ConstantPatch(types.JSONPatchType, patchJSON)
+		err = u.Client.Patch(context.TODO(), existing, patch)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		u.Logger.Info(fmt.Sprintf("Upgrade: patch object %s", ObjectInfo(existing)))
+	}
+
+	return reconcile.Result{}, nil
 }
