@@ -404,14 +404,6 @@ jobs:
       - run: sudo gem install license_finder --version 5.7.1
       - run: make licenses-check
 
-  verify-manifest:
-    docker:
-      - image: circleci/python:3.6.4
-    steps:
-      - checkout
-      - run: sudo pip3 install operator-courier
-      - run: make verify-manifest
-
   unit-tests-coverage:
     docker:
       - image: circleci/golang:1.12.5
@@ -431,7 +423,6 @@ workflows:
       - license-check
       - test-crds
       - run-unit-tests
-      - verify-manifest
       - install-operator
       - run-operator-e2e-test:
           requires:
