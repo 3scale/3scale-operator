@@ -2845,7 +2845,6 @@ objects:
     name: system-master-apicast
   stringData:
     ACCESS_TOKEN: ${APICAST_ACCESS_TOKEN}
-    BASE_URL: http://${APICAST_ACCESS_TOKEN}@system-master:3000
     PROXY_CONFIGS_ENDPOINT: http://${APICAST_ACCESS_TOKEN}@system-master:3000/master/api/proxy/configs
   type: Opaque
 - apiVersion: v1

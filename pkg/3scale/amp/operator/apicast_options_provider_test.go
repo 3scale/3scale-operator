@@ -50,8 +50,6 @@ func defaultApicastOptions() *component.ApicastOptions {
 		ManagementAPI:                  apicastManagementAPI,
 		OpenSSLVerify:                  strconv.FormatBool(openSSLVerify),
 		ResponseCodes:                  strconv.FormatBool(responseCodes),
-		TenantName:                     tenantName,
-		WildcardDomain:                 wildcardDomain,
 		ImageTag:                       product.ThreescaleRelease,
 		ProductionResourceRequirements: component.DefaultProductionResourceRequirements(),
 		StagingResourceRequirements:    component.DefaultStagingResourceRequirements(),

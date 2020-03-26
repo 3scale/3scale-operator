@@ -39,7 +39,6 @@ type SystemOptions struct {
 	MessageBusRedisSentinelRole            *string `validate:"required"`
 	MessageBusRedisNamespace               *string `validate:"required"`
 	ApicastSystemMasterProxyConfigEndpoint string  `validate:"required"`
-	ApicastSystemMasterBaseURL             string  `validate:"required"`
 	AdminEmail                             *string `validate:"required"`
 
 	ImageTag string `validate:"required"`
@@ -87,10 +86,6 @@ func (s *SystemOptions) Validate() error {
 
 func DefaultApicastSystemMasterProxyConfigEndpoint(token string) string {
 	return fmt.Sprintf("http://%s@system-master:3000/master/api/proxy/configs", token)
-}
-
-func DefaultApicastSystemMasterBaseURL(token string) string {
-	return fmt.Sprintf("http://%s@system-master:3000", token)
 }
 
 func DefaultMemcachedServers() string {

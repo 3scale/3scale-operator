@@ -356,7 +356,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 
 func (apicast *Apicast) buildApicastCommonEnv() []v1.EnvVar {
 	return []v1.EnvVar{
-		envVarFromSecret("THREESCALE_PORTAL_ENDPOINT", "system-master-apicast", "PROXY_CONFIGS_ENDPOINT"),
+		envVarFromSecret("THREESCALE_PORTAL_ENDPOINT", "system-master-apicast", SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName),
 		envVarFromSecret("BACKEND_ENDPOINT_OVERRIDE", "backend-listener", "service_endpoint"),
 		envVarFromConfigMap("APICAST_MANAGEMENT_API", "apicast-environment", "APICAST_MANAGEMENT_API"),
 		envVarFromConfigMap("OPENSSL_VERIFY", "apicast-environment", "OPENSSL_VERIFY"),

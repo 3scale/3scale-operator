@@ -74,7 +74,6 @@ const (
 const (
 	SystemSecretSystemMasterApicastSecretName                    = "system-master-apicast"
 	SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName = "PROXY_CONFIGS_ENDPOINT"
-	SystemSecretSystemMasterApicastBaseURL                       = "BASE_URL"
 	SystemSecretSystemMasterApicastAccessToken                   = "ACCESS_TOKEN"
 )
 
@@ -497,7 +496,6 @@ func (system *System) MasterApicastSecret() *v1.Secret {
 		},
 		StringData: map[string]string{
 			SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName: system.Options.ApicastSystemMasterProxyConfigEndpoint,
-			SystemSecretSystemMasterApicastBaseURL:                       system.Options.ApicastSystemMasterBaseURL,
 			SystemSecretSystemMasterApicastAccessToken:                   system.Options.ApicastAccessToken,
 		},
 		Type: v1.SecretTypeOpaque,

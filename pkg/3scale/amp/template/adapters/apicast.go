@@ -69,8 +69,6 @@ func (a *Apicast) options() (*component.ApicastOptions, error) {
 	ao.ManagementAPI = "${APICAST_MANAGEMENT_API}"
 	ao.OpenSSLVerify = "${APICAST_OPENSSL_VERIFY}"
 	ao.ResponseCodes = "${APICAST_RESPONSE_CODES}"
-	ao.TenantName = "${TENANT_NAME}"
-	ao.WildcardDomain = "${WILDCARD_DOMAIN}"
 	ao.ImageTag = "${AMP_RELEASE}"
 
 	ao.ProductionResourceRequirements = component.DefaultProductionResourceRequirements()
