@@ -6,8 +6,6 @@ spec:
   wildcardDomain: <desired-domain>
   system:
     fileStorage:
-      amazonSimpleStorageService:
-        awsRegion: <region>
-        awsBucket: <bucket-name>
-        awsCredentialsSecret:
-          name: <credentials-secret-name>
+      simpleStorageService:
+        configurationSecretRef:
+          name: <configuration-secret-name>
