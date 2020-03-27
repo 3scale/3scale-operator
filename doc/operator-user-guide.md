@@ -109,7 +109,7 @@ Check [*APIManager*](apimanager-reference.md) custom resource for reference.
 #### External Databases Installation
 Suitable for production use where customer wants HA or to re-use DB of their own.
 
-3scale API Management 2.7 has been tested and it’s supported with the following databases:
+3scale API Management 2.8 has been tested and it’s supported with the following databases:
 
 | Database | Version |
 | :--- | :--- |

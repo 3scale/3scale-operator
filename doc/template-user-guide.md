@@ -54,14 +54,14 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale28:apisonator-3scale-2.8.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale28:zync-3scale-2.8.0-GA |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale28:apicast-3scale-2.8.0-GA |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale28:porta-3scale-2.8.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -124,14 +124,14 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale28:apisonator-3scale-2.8.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale28:zync-3scale-2.8.0-GA |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale28:apicast-3scale-2.8.0-GA |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale28:porta-3scale-2.8.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -201,13 +201,13 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-s3.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale28:apisonator-3scale-2.8.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale28:zync-3scale-2.8.0-GA |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale28:apicast-3scale-2.8.0-GA |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale28:porta-3scale-2.8.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -281,14 +281,14 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale28:apisonator-3scale-2.8.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale28:zync-3scale-2.8.0-GA |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale28:apicast-3scale-2.8.0-GA |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale28:porta-3scale-2.8.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -360,13 +360,13 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval-s3.yml \
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale28:apisonator-3scale-2.8.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale28:zync-3scale-2.8.0-GA |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale28:apicast-3scale-2.8.0-GA |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale28:porta-3scale-2.8.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -429,14 +429,14 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 
 | Parameter Name | Description | Default |
 | :--- | :---| :--- |
-| **AMP_RELEASE** | AMP release tag | 2.7 |
+| **AMP_RELEASE** | AMP release tag | 2.8 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale28:apisonator-3scale-2.8.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale28:zync-3scale-2.8.0-GA |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale28:apicast-3scale-2.8.0-GA |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale28:porta-3scale-2.8.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
