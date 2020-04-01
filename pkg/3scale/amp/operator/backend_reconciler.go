@@ -106,6 +106,16 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcileMonitoringService(component.BackendListenerMonitoringService())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.reconcileServiceMonitor(component.BackendListenerServiceMonitor())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	err = r.reconcileGrafanaDashboard(component.BackendWorkerGrafanaDashboard(r.apiManager.Namespace))
 	if err != nil {
 		return reconcile.Result{}, err
