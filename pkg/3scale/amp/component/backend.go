@@ -2,6 +2,7 @@ package component
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/policy/v1beta1"
@@ -33,6 +34,16 @@ const (
 	BackendSecretBackendListenerSecretName               = "backend-listener"
 	BackendSecretBackendListenerServiceEndpointFieldName = "service_endpoint"
 	BackendSecretBackendListenerRouteEndpointFieldName   = "route_endpoint"
+)
+
+const (
+	BackendWorkerMetricsPort   = 9421
+	BackendListenerMetricsPort = 9394
+)
+
+var (
+	BackendWorkerMetricsPortStr   = strconv.FormatInt(BackendWorkerMetricsPort, 10)
+	BackendListenerMetricsPortStr = strconv.FormatInt(BackendListenerMetricsPort, 10)
 )
 
 type Backend struct {
@@ -433,7 +444,7 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 		envVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
 		// TODO: Add as EnvVar or reference to CM?
 		// TODO: Enable metrics endpoint only when monitoring is enabled by CR? Other components have monitoring enabled no matter monitoring field is enabled or not.
-		v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_PORT", Value: "9421"},
+		v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_PORT", Value: BackendWorkerMetricsPortStr},
 		v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
 	)
 	return result
@@ -452,6 +463,10 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 		envVarFromValue("PUMA_WORKERS", "16"),
 		envVarFromSecret("CONFIG_INTERNAL_API_USER", BackendSecretInternalApiSecretName, BackendSecretInternalApiUsernameFieldName),
 		envVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
+		// TODO: Add as EnvVar or reference to CM?
+		// TODO: Enable metrics endpoint only when monitoring is enabled by CR? Other components have monitoring enabled no matter monitoring field is enabled or not.
+		v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_PORT", Value: BackendListenerMetricsPortStr},
+		v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
 	)
 	return result
 }
