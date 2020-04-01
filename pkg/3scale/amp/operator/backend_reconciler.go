@@ -175,7 +175,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileGrafanaDashboard(component.BackendWorkerGrafanaDashboard(r.apiManager.Namespace))
+	err = r.reconcileGrafanaDashboard(component.BackendGrafanaDashboard(r.apiManager.Namespace))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
