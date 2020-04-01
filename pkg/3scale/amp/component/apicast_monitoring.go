@@ -21,7 +21,7 @@ func ApicastProductionMonitoringService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-production-monitoring",
+			Name: "apicast-production-metrics",
 			Labels: map[string]string{
 				"app":                          appsv1alpha1.Default3scaleAppLabel,
 				"threescale_component":         "apicast",
@@ -50,7 +50,7 @@ func ApicastStagingMonitoringService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-staging-monitoring",
+			Name: "apicast-staging-metrics",
 			Labels: map[string]string{
 				"app":                          appsv1alpha1.Default3scaleAppLabel,
 				"threescale_component":         "apicast",

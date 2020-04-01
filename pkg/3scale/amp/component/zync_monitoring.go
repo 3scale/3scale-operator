@@ -21,7 +21,7 @@ func ZyncMonitoringService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-monitoring",
+			Name: "zync-metrics",
 			Labels: map[string]string{
 				"app":                          appsv1alpha1.Default3scaleAppLabel,
 				"threescale_component":         "zync",
@@ -50,7 +50,7 @@ func ZyncQueMonitoringService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-que-monitoring",
+			Name: "zync-que-metrics",
 			Labels: map[string]string{
 				"app":                          appsv1alpha1.Default3scaleAppLabel,
 				"threescale_component":         "zync",
