@@ -134,7 +134,7 @@ func BackendWorkerServiceMonitor() *monitoringv1.ServiceMonitor {
 	}
 }
 
-func BackendWorkerGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func BackendGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
@@ -142,14 +142,14 @@ func BackendWorkerGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard 
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-worker",
+			Name: "backend",
 			Labels: map[string]string{
 				"monitoring-key": common.MonitoringKey,
 			},
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
-			Json: assets.TemplateAsset("monitoring/backend-worker-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/backend-worker-grafana-dashboard-1.json", ns),
+			Json: assets.TemplateAsset("monitoring/backend-grafana-dashboard-1.json.tpl", data),
+			Name: fmt.Sprintf("%s/backend-grafana-dashboard-1.json", ns),
 		},
 	}
 }
