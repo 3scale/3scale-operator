@@ -21,7 +21,7 @@ func BackendWorkerMonitoringService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-worker-monitoring",
+			Name: "backend-worker-metrics",
 			Labels: map[string]string{
 				"app":                          appsv1alpha1.Default3scaleAppLabel,
 				"threescale_component":         "backend",
