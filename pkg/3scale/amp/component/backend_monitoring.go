@@ -14,6 +14,66 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+func BackendListenerMonitoringService() *v1.Service {
+	return &v1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "backend-listener-metrics",
+			Labels: map[string]string{
+				"app":                          appsv1alpha1.Default3scaleAppLabel,
+				"threescale_component":         "backend",
+				"threescale_component_element": "listener",
+				"monitoring-key":               common.MonitoringKey,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:       "metrics",
+					Protocol:   v1.ProtocolTCP,
+					Port:       BackendListenerMetricsPort,
+					TargetPort: intstr.FromInt(BackendListenerMetricsPort),
+				},
+			},
+			Selector: map[string]string{"deploymentConfig": "backend-listener"},
+		},
+	}
+}
+
+func BackendListenerServiceMonitor() *monitoringv1.ServiceMonitor {
+	return &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "backend-listener",
+			Labels: map[string]string{
+				// TODO from options
+				"monitoring-key":               common.MonitoringKey,
+				"threescale_component":         "backend",
+				"threescale_component_element": "listener",
+				"app":                          appsv1alpha1.Default3scaleAppLabel,
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Endpoints: []monitoringv1.Endpoint{{
+				Port:   "metrics",
+				Path:   "/metrics",
+				Scheme: "http",
+			}},
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					// TODO from options
+					"app":                          appsv1alpha1.Default3scaleAppLabel,
+					"threescale_component":         "backend",
+					"threescale_component_element": "listener",
+					"monitoring-key":               common.MonitoringKey,
+				},
+			},
+		},
+	}
+}
+
 func BackendWorkerMonitoringService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -34,8 +94,8 @@ func BackendWorkerMonitoringService() *v1.Service {
 				v1.ServicePort{
 					Name:       "metrics",
 					Protocol:   v1.ProtocolTCP,
-					Port:       9421,
-					TargetPort: intstr.FromInt(9421),
+					Port:       BackendWorkerMetricsPort,
+					TargetPort: intstr.FromInt(BackendWorkerMetricsPort),
 				},
 			},
 			Selector: map[string]string{"deploymentConfig": "backend-worker"},
