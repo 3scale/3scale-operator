@@ -21,7 +21,7 @@ func SystemSidekiqMonitoringService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-sidekiq-monitoring",
+			Name: "system-sidekiq-metrics",
 			Labels: map[string]string{
 				"app":                          appsv1alpha1.Default3scaleAppLabel,
 				"threescale_component":         "system",
