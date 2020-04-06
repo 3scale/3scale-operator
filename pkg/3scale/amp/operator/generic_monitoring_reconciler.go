@@ -29,5 +29,10 @@ func (r *GenericMonitoringReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.reconcilePrometheusRules(component.KubeStateMetricsPrometheusRules(r.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
