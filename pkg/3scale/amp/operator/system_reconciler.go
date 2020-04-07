@@ -248,7 +248,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileGrafanaDashboard(component.SystemSidekiqGrafanaDashboard(r.apiManager.Namespace))
+	err = r.reconcileGrafanaDashboard(component.SystemGrafanaDashboard(r.apiManager.Namespace))
 	if err != nil {
 		return reconcile.Result{}, err
 	}

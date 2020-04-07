@@ -74,7 +74,7 @@ func SystemSidekiqServiceMonitor() *monitoringv1.ServiceMonitor {
 	}
 }
 
-func SystemSidekiqGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func SystemGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
@@ -82,14 +82,14 @@ func SystemSidekiqGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard 
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-sidekiq",
+			Name: "system",
 			Labels: map[string]string{
 				"monitoring-key": common.MonitoringKey,
 			},
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
-			Json: assets.TemplateAsset("monitoring/Sidekiq-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/Sidekiq-grafana-dashboard-1.json", ns),
+			Json: assets.TemplateAsset("monitoring/system-grafana-dashboard-1.json.tpl", data),
+			Name: fmt.Sprintf("%s/system-grafana-dashboard-1.json", ns),
 		},
 	}
 }
