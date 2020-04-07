@@ -71,6 +71,12 @@
     :why: 
     :versions: []
     :when: 2019-07-08 11:40:38.041513977 Z
+- - :whitelist
+  - CC0 1.0 Universal
+  - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
+    :why: 
+    :versions: []
+    :when: 2019-11-26 10:15:34.001520959 Z
 - - :license
   - github.com/golang/glog
   - Apache 2.0
@@ -183,3 +189,10 @@
     :why: 3-clause BSD License https://github.com/evanphx/json-patch/blob/master/LICENSE
     :versions: []
     :when: 2019-10-24 09:56:58.733603332 Z
+- - :license
+  - github.com/go-bindata/go-bindata
+  - CC0 1.0 Universal
+  - :who: 
+    :why: 
+    :versions: []
+    :when: 2020-04-07 17:36:16.863446404 Z

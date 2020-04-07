@@ -22,6 +22,16 @@
                   </licenses>
       </dependency>
           <dependency>
+        <packageName>github.com/Azure/go-autorest</packageName>
+        <version>v12.2.0+incompatible</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
         <packageName>github.com/Azure/go-autorest/autorest</packageName>
         <version>v0.9.0</version>
         <licenses>
@@ -122,6 +132,16 @@
                   </licenses>
       </dependency>
           <dependency>
+        <packageName>github.com/blang/semver</packageName>
+        <version>v3.5.1+incompatible</version>
+        <licenses>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
         <packageName>github.com/cespare/xxhash/v2</packageName>
         <version>v2.1.0</version>
         <licenses>
@@ -208,6 +228,16 @@
                       <license>
               <name>New BSD</name>
               <url>http://opensource.org/licenses/BSD-3-Clause</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/go-bindata/go-bindata</packageName>
+        <version>v3.1.1+incompatible</version>
+        <licenses>
+                      <license>
+              <name>CC0 1.0 Universal</name>
+              <url>http://creativecommons.org/publicdomain/zero/1.0</url>
             </license>
                   </licenses>
       </dependency>
@@ -328,6 +358,36 @@
                       <license>
               <name>Apache 2.0</name>
               <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/go-playground/locales</packageName>
+        <version>v0.13.0</version>
+        <licenses>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/go-playground/universal-translator</packageName>
+        <version>v0.17.0</version>
+        <licenses>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/go-playground/validator/v10</packageName>
+        <version>v10.2.0</version>
+        <licenses>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
             </license>
                   </licenses>
       </dependency>
@@ -462,6 +522,16 @@
                   </licenses>
       </dependency>
           <dependency>
+        <packageName>github.com/integr8ly/grafana-operator/v3</packageName>
+        <version>v3.1.0</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
         <packageName>github.com/joho/godotenv</packageName>
         <version>v1.3.0</version>
         <licenses>
@@ -484,6 +554,16 @@
           <dependency>
         <packageName>github.com/konsorten/go-windows-terminal-sequences</packageName>
         <version>v1.0.2</version>
+        <licenses>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/leodido/go-urn</packageName>
+        <version>v1.2.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -683,7 +763,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/prometheus/procfs</packageName>
-        <version>v0.0.5</version>
+        <version>v0.0.7</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -883,7 +963,7 @@
       </dependency>
           <dependency>
         <packageName>golang.org/x/xerrors</packageName>
-        <version>v0.0.0-20190717185122-a985d3407aa7</version>
+        <version>v0.0.0-20191011141410-1b5146add898</version>
         <licenses>
                       <license>
               <name>New BSD</name>
@@ -936,12 +1016,12 @@
         <version>v2.2.4</version>
         <licenses>
                       <license>
-              <name>Apache 2.0</name>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </license>
-                      <license>
               <name>MIT</name>
               <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
             </license>
                   </licenses>
       </dependency>
