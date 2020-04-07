@@ -92,9 +92,9 @@ func KubeStateMetricsPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleReplicationControllerReplicasMismatch",
 							Annotations: map[string]string{
-								"message": `Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-ready state for longer than 5 minutes.`,
+								"message": `ReplicationController {{ $labels.namespace }}/{{ $labels.replicationcontroller }} has not matched the expected number of replicas for longer than 5 minutes.`,
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum by (namespace, pod) (max by(namespace, pod) (kube_pod_status_phase{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)", phase=~"Pending|Unknown"}) * on(namespace, pod) group_left(owner_kind) max by(namespace, pod, owner_kind) (kube_pod_owner{namespace="%s",owner_kind!="Job"})) > 0`, ns, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`kube_replicationcontroller_spec_replicas {namespace="%s",replicationcontroller=~"(apicast-.*|backend-.*|system-.*|zync-.*)"} != kube_replicationcontroller_status_ready_replicas {namespace="%s",replicationcontroller=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}`, ns, ns)),
 							For:  "5m",
 							Labels: map[string]string{
 								"severity": "critical",
