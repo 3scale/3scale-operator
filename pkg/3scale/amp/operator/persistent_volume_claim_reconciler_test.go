@@ -10,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -22,11 +21,6 @@ func TestPVCBaseReconcilerCreate(t *testing.T) {
 		namespace = "operator-unittest"
 		log       = logf.Log.WithName("operator_test")
 	)
-
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
 
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
@@ -45,7 +39,7 @@ func TestPVCBaseReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, nil)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	createOnlyReconciler := NewCreateOnlyPVCReconciler()
@@ -63,7 +57,7 @@ func TestPVCBaseReconcilerCreate(t *testing.T) {
 		},
 	}
 
-	err = reconciler.Reconcile(desired)
+	err := reconciler.Reconcile(desired)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,11 +80,6 @@ func TestPVCBaseReconcilerUpdateOwnerRef(t *testing.T) {
 		namespace = "operator-unittest"
 		log       = logf.Log.WithName("operator_test")
 	)
-
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
 
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
@@ -119,14 +108,14 @@ func TestPVCBaseReconcilerUpdateOwnerRef(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, nil)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	reconciler := NewPVCBaseReconciler(baseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
 
 	desired := existing.DeepCopy()
 
-	err = reconciler.Reconcile(desired)
+	err := reconciler.Reconcile(desired)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,11 +161,6 @@ func TestPVCBaseReconcilerUpdateNeeded(t *testing.T) {
 		log       = logf.Log.WithName("operator_test")
 	)
 
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
-
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -198,7 +182,7 @@ func TestPVCBaseReconcilerUpdateNeeded(t *testing.T) {
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
 
 	// existing does not need to be updated to set owner reference
-	err = controllerutil.SetControllerReference(apimanager, existing, s)
+	err := controllerutil.SetControllerReference(apimanager, existing, s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +194,7 @@ func TestPVCBaseReconcilerUpdateNeeded(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, nil)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	reconciler := NewPVCBaseReconciler(baseAPIManagerLogicReconciler, newCustomPVCReconciler())

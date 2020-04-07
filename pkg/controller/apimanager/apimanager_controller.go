@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"k8s.io/api/policy/v1beta1"
+	"k8s.io/client-go/discovery"
 
 	"github.com/3scale/3scale-operator/version"
 
@@ -53,6 +54,10 @@ func newAPIClientReader(mgr manager.Manager) (client.Client, error) {
 	return client.New(mgr.GetConfig(), client.Options{Mapper: mgr.GetRESTMapper(), Scheme: mgr.GetScheme()})
 }
 
+func newDiscoveryClient(mgr manager.Manager) (*discovery.DiscoveryClient, error) {
+	return discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+}
+
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 	apiClientReader, err := newAPIClientReader(mgr)
@@ -60,7 +65,12 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 		return nil, err
 	}
 
-	BaseReconciler := operator.NewBaseReconciler(mgr.GetClient(), apiClientReader, mgr.GetScheme(), log, mgr.GetConfig())
+	discoveryClient, err := newDiscoveryClient(mgr)
+	if err != nil {
+		return nil, err
+	}
+
+	BaseReconciler := operator.NewBaseReconciler(mgr.GetClient(), apiClientReader, mgr.GetScheme(), log, discoveryClient)
 	return &ReconcileAPIManager{
 		BaseControllerReconciler: operator.NewBaseControllerReconciler(BaseReconciler),
 	}, nil
@@ -125,7 +135,7 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 		Scheme:          r.Scheme(),
 		Cr:              cr,
 		Logger:          r.Logger(),
-		Cfg:             r.Config(),
+		DiscoveryClient: r.DiscoveryClient(),
 	}
 	return upgradeApiManager.Upgrade()
 }

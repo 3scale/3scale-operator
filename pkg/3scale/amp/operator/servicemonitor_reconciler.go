@@ -9,7 +9,6 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/discovery"
 )
 
 // ErrServiceMonitorsNotPresent custom error type
@@ -80,9 +79,7 @@ func (r *ServiceMonitorBaseReconciler) Reconcile(desired *monitoringv1.ServiceMo
 
 // hasServiceMonitors checks if ServiceMonitor is registered in the cluster.
 func (r *ServiceMonitorBaseReconciler) hasServiceMonitors() (bool, error) {
-	dc := discovery.NewDiscoveryClientForConfigOrDie(r.cfg)
-
-	return k8sutil.ResourceExists(dc,
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.ServiceMonitorsKind)
 }

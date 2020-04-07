@@ -9,7 +9,6 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/discovery"
 )
 
 // ErrPrometheusRulesNotPresent custom error type
@@ -79,9 +78,7 @@ func (r *PrometheusRuleBaseReconciler) Reconcile(desired *monitoringv1.Prometheu
 
 // hasPrometheusRules checks if PrometheusRule is registered in the cluster.
 func (r *PrometheusRuleBaseReconciler) hasPrometheusRules() (bool, error) {
-	dc := discovery.NewDiscoveryClientForConfigOrDie(r.cfg)
-
-	return k8sutil.ResourceExists(dc,
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.PrometheusRuleKind)
 }

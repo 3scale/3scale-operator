@@ -10,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -23,11 +22,6 @@ func TestRouteBaseReconcilerCreate(t *testing.T) {
 		log       = logf.Log.WithName("operator_test")
 	)
 
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
-
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -37,7 +31,7 @@ func TestRouteBaseReconcilerCreate(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err = routev1.AddToScheme(s)
+	err := routev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +43,7 @@ func TestRouteBaseReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, nil)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	createOnlyReconciler := NewCreateOnlyRouteReconciler()
@@ -90,10 +84,7 @@ func TestRouteBaseReconcilerUpdateOwnerRef(t *testing.T) {
 		namespace = "operator-unittest"
 		log       = logf.Log.WithName("operator_test")
 	)
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
+
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -113,7 +104,7 @@ func TestRouteBaseReconcilerUpdateOwnerRef(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err = routev1.AddToScheme(s)
+	err := routev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +116,7 @@ func TestRouteBaseReconcilerUpdateOwnerRef(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, nil)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	createOnlyReconciler := NewCreateOnlyRouteReconciler()
@@ -177,10 +168,7 @@ func TestRouteBaseReconcilerUpdateNeeded(t *testing.T) {
 		namespace = "operator-unittest"
 		log       = logf.Log.WithName("operator_test")
 	)
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
+
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -200,7 +188,7 @@ func TestRouteBaseReconcilerUpdateNeeded(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err = routev1.AddToScheme(s)
+	err := routev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,7 +205,7 @@ func TestRouteBaseReconcilerUpdateNeeded(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, cfg)
+	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log, nil)
 	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
 	saReconciler := newCustomRouteReconciler()

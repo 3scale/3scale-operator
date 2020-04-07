@@ -9,7 +9,6 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/discovery"
 )
 
 // ErrGrafanaDashboardsNotPresent custom error type
@@ -80,9 +79,7 @@ func (r *GrafanaDashboardBaseReconciler) Reconcile(desired *grafanav1alpha1.Graf
 
 // hasGrafanaDashboards checks if GrafanaDashboard is registered in the cluster.
 func (r *GrafanaDashboardBaseReconciler) hasGrafanaDashboards() (bool, error) {
-	dc := discovery.NewDiscoveryClientForConfigOrDie(r.cfg)
-
-	return k8sutil.ResourceExists(dc,
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
 		grafanav1alpha1.SchemeGroupVersion.String(),
 		grafanav1alpha1.GrafanaDashboardKind)
 }
