@@ -1,8 +1,8 @@
-package component
+package helper
 
 import v1 "k8s.io/api/core/v1"
 
-func envVarFromConfigMap(envVarName string, configMapName, configMapKey string) v1.EnvVar {
+func EnvVarFromConfigMap(envVarName string, configMapName, configMapKey string) v1.EnvVar {
 	return v1.EnvVar{
 		Name: envVarName,
 		ValueFrom: &v1.EnvVarSource{
@@ -16,7 +16,7 @@ func envVarFromConfigMap(envVarName string, configMapName, configMapKey string) 
 	}
 }
 
-func envVarFromConfigMapOptional(envVarName string, configMapName, configMapKey string) v1.EnvVar {
+func EnvVarFromConfigMapOptional(envVarName string, configMapName, configMapKey string) v1.EnvVar {
 	trueValue := true
 	return v1.EnvVar{
 		Name: envVarName,
@@ -32,14 +32,14 @@ func envVarFromConfigMapOptional(envVarName string, configMapName, configMapKey 
 	}
 }
 
-func envVarFromValue(name string, value string) v1.EnvVar {
+func EnvVarFromValue(name string, value string) v1.EnvVar {
 	return v1.EnvVar{
 		Name:  name,
 		Value: value,
 	}
 }
 
-func envVarFromSecret(envVarName string, secretName, secretKey string) v1.EnvVar {
+func EnvVarFromSecret(envVarName string, secretName, secretKey string) v1.EnvVar {
 	return v1.EnvVar{
 		Name: envVarName,
 		ValueFrom: &v1.EnvVarSource{
@@ -53,7 +53,7 @@ func envVarFromSecret(envVarName string, secretName, secretKey string) v1.EnvVar
 	}
 }
 
-func envVarFromSecretOptional(envVarName string, secretName, secretKey string) v1.EnvVar {
+func EnvVarFromSecretOptional(envVarName string, secretName, secretKey string) v1.EnvVar {
 	trueValue := true
 	return v1.EnvVar{
 		Name: envVarName,

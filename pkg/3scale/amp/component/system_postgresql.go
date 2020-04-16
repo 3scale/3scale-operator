@@ -3,6 +3,7 @@ package component
 import (
 	"fmt"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -129,12 +130,12 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 								},
 							},
 							Env: []v1.EnvVar{
-								envVarFromSecret("POSTGRESQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
-								envVarFromSecret("POSTGRESQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
+								helper.EnvVarFromSecret("POSTGRESQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
+								helper.EnvVarFromSecret("POSTGRESQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
 								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
 								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
 								// are deprecated we should be able to change this.
-								envVarFromValue("POSTGRESQL_DATABASE", p.Options.DatabaseName),
+								helper.EnvVarFromValue("POSTGRESQL_DATABASE", p.Options.DatabaseName),
 							},
 							Resources: p.Options.ContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{

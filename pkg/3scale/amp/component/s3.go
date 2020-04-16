@@ -2,6 +2,7 @@ package component
 
 import (
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	templatev1 "github.com/openshift/api/template/v1"
@@ -92,14 +93,14 @@ func (s3 *S3) RemoveRWXStorageClassParameter(template *templatev1.Template) {
 
 func (s3 *S3) getNewCfgMapElements() []v1.EnvVar {
 	return []v1.EnvVar{
-		envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-		envVarFromSecret(AwsAccessKeyID, s3.Options.AwsCredentialsSecret, AwsAccessKeyID),
-		envVarFromSecret(AwsSecretAccessKey, s3.Options.AwsCredentialsSecret, AwsSecretAccessKey),
-		envVarFromSecret(AwsBucket, s3.Options.AwsCredentialsSecret, AwsBucket),
-		envVarFromSecret(AwsRegion, s3.Options.AwsCredentialsSecret, AwsRegion),
-		envVarFromSecretOptional(AwsProtocol, s3.Options.AwsCredentialsSecret, AwsProtocol),
-		envVarFromSecretOptional(AwsHostname, s3.Options.AwsCredentialsSecret, AwsHostname),
-		envVarFromSecretOptional(AwsPathStyle, s3.Options.AwsCredentialsSecret, AwsPathStyle),
+		helper.EnvVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
+		helper.EnvVarFromSecret(AwsAccessKeyID, s3.Options.AwsCredentialsSecret, AwsAccessKeyID),
+		helper.EnvVarFromSecret(AwsSecretAccessKey, s3.Options.AwsCredentialsSecret, AwsSecretAccessKey),
+		helper.EnvVarFromSecret(AwsBucket, s3.Options.AwsCredentialsSecret, AwsBucket),
+		helper.EnvVarFromSecret(AwsRegion, s3.Options.AwsCredentialsSecret, AwsRegion),
+		helper.EnvVarFromSecretOptional(AwsProtocol, s3.Options.AwsCredentialsSecret, AwsProtocol),
+		helper.EnvVarFromSecretOptional(AwsHostname, s3.Options.AwsCredentialsSecret, AwsHostname),
+		helper.EnvVarFromSecretOptional(AwsPathStyle, s3.Options.AwsCredentialsSecret, AwsPathStyle),
 	}
 }
 

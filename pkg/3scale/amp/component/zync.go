@@ -5,6 +5,7 @@ import (
 
 	"k8s.io/api/policy/v1beta1"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -283,11 +284,11 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 
 func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
-		envVarFromValue("RAILS_LOG_TO_STDOUT", "true"),
-		envVarFromValue("RAILS_ENV", "production"),
-		envVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
-		envVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
-		envVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
+		helper.EnvVarFromValue("RAILS_LOG_TO_STDOUT", "true"),
+		helper.EnvVarFromValue("RAILS_ENV", "production"),
+		helper.EnvVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
+		helper.EnvVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
+		helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
 		v1.EnvVar{
 			Name: "POD_NAME",
 			ValueFrom: &v1.EnvVarSource{
