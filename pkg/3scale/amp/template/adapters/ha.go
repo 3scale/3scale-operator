@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -40,7 +41,18 @@ func (h *HAAdapter) postProcess(template *templatev1.Template, haComponent *comp
 }
 
 func (h *HAAdapter) addObjects(template *templatev1.Template, haComponent *component.HighAvailability) {
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(haComponent.Objects())...)
+	componentObjects := h.componentObjects(haComponent)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(componentObjects)...)
+}
+
+func (h *HAAdapter) componentObjects(c *component.HighAvailability) []common.KubernetesObject {
+	systemDatabaseSecret := c.SystemDatabaseSecret()
+
+	objects := []common.KubernetesObject{
+		systemDatabaseSecret,
+	}
+
+	return objects
 }
 
 func (h *HAAdapter) addParameters(template *templatev1.Template) {

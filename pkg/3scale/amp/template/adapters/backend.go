@@ -28,11 +28,51 @@ func (b *Backend) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	backendComponent := component.NewBackend(backendOptions)
-	objects := backendComponent.Objects()
-	if b.generatePodDisruptionBudget {
-		objects = append(objects, backendComponent.PDBObjects()...)
-	}
+	objects := b.componentObjects(backendComponent)
+
 	return objects, nil
+}
+
+func (b *Backend) componentObjects(c *component.Backend) []common.KubernetesObject {
+	cronDeploymentConfig := c.CronDeploymentConfig()
+	listenerDeploymentConfig := c.ListenerDeploymentConfig()
+	listenerService := c.ListenerService()
+	listenerRoute := c.ListenerRoute()
+	workerDeploymentConfig := c.WorkerDeploymentConfig()
+	environmentConfigMap := c.EnvironmentConfigMap()
+
+	internalAPISecretForSystem := c.InternalAPISecretForSystem()
+	redisSecret := c.RedisSecret()
+	listenerSecret := c.ListenerSecret()
+
+	objects := []common.KubernetesObject{
+		cronDeploymentConfig,
+		listenerDeploymentConfig,
+		listenerService,
+		listenerRoute,
+		workerDeploymentConfig,
+		environmentConfigMap,
+		internalAPISecretForSystem,
+		redisSecret,
+		listenerSecret,
+	}
+
+	if b.generatePodDisruptionBudget {
+		objects = append(objects, b.componentPDBObjects(c)...)
+	}
+
+	return objects
+}
+
+func (b *Backend) componentPDBObjects(c *component.Backend) []common.KubernetesObject {
+	workerPDB := c.WorkerPodDisruptionBudget()
+	cronPDB := c.CronPodDisruptionBudget()
+	listenerPDB := c.ListenerPodDisruptionBudget()
+	return []common.KubernetesObject{
+		workerPDB,
+		cronPDB,
+		listenerPDB,
+	}
 }
 
 func (b *Backend) options() (*component.BackendOptions, error) {

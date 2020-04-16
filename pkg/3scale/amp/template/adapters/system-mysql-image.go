@@ -30,7 +30,18 @@ func (r *SystemMysqlImageAdapter) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	systemMysqlImageComponent := component.NewSystemMySQLImage(systemMysqlOptions)
-	return systemMysqlImageComponent.Objects(), nil
+	objects := r.componentObjects(systemMysqlImageComponent)
+	return objects, nil
+}
+
+func (r *SystemMysqlImageAdapter) componentObjects(c *component.SystemMySQLImage) []common.KubernetesObject {
+	imageStream := c.ImageStream()
+
+	objects := []common.KubernetesObject{
+		imageStream,
+	}
+
+	return objects
 }
 
 func (r *SystemMysqlImageAdapter) options() (*component.SystemMySQLImageOptions, error) {

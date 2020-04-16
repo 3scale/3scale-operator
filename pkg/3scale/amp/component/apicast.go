@@ -3,7 +3,6 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/policy/v1beta1"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -18,32 +17,6 @@ type Apicast struct {
 
 func NewApicast(options *ApicastOptions) *Apicast {
 	return &Apicast{Options: options}
-}
-
-func (apicast *Apicast) Objects() []common.KubernetesObject {
-	stagingDeploymentConfig := apicast.StagingDeploymentConfig()
-	productionDeploymentConfig := apicast.ProductionDeploymentConfig()
-	stagingService := apicast.StagingService()
-	productionService := apicast.ProductionService()
-	environmentConfigMap := apicast.EnvironmentConfigMap()
-
-	objects := []common.KubernetesObject{
-		stagingDeploymentConfig,
-		productionDeploymentConfig,
-		stagingService,
-		productionService,
-		environmentConfigMap,
-	}
-	return objects
-}
-
-func (apicast *Apicast) PDBObjects() []common.KubernetesObject {
-	stagingPDB := apicast.StagingPodDisruptionBudget()
-	prodPDB := apicast.ProductionPodDisruptionBudget()
-	return []common.KubernetesObject{
-		stagingPDB,
-		prodPDB,
-	}
 }
 
 func (apicast *Apicast) StagingService() *v1.Service {

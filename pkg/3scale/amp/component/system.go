@@ -6,8 +6,6 @@ import (
 
 	"k8s.io/api/policy/v1beta1"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -98,66 +96,6 @@ type System struct {
 
 func NewSystem(options *SystemOptions) *System {
 	return &System{Options: options}
-}
-
-func (system *System) Objects() []common.KubernetesObject {
-	sharedStorage := system.SharedStorage()
-	providerService := system.ProviderService()
-	masterService := system.MasterService()
-	developerService := system.DeveloperService()
-	sphinxService := system.SphinxService()
-	memcachedService := system.MemcachedService()
-
-	appDeploymentConfig := system.AppDeploymentConfig()
-	sidekiqDeploymentConfig := system.SidekiqDeploymentConfig()
-	sphinxDeploymentConfig := system.SphinxDeploymentConfig()
-
-	systemConfigMap := system.SystemConfigMap()
-	environmentConfigMap := system.EnvironmentConfigMap()
-	smtpSecret := system.SMTPSecret()
-
-	eventsHookSecret := system.EventsHookSecret()
-
-	redisSecret := system.RedisSecret()
-	masterApicastSecret := system.MasterApicastSecret()
-
-	seedSecret := system.SeedSecret()
-	recaptchaSecret := system.RecaptchaSecret()
-	appSecret := system.AppSecret()
-	memcachedSecret := system.MemcachedSecret()
-
-	objects := []common.KubernetesObject{
-		sharedStorage,
-		providerService,
-		masterService,
-		developerService,
-		sphinxService,
-		memcachedService,
-		systemConfigMap,
-		smtpSecret,
-		environmentConfigMap,
-		appDeploymentConfig,
-		sidekiqDeploymentConfig,
-		sphinxDeploymentConfig,
-		eventsHookSecret,
-		redisSecret,
-		masterApicastSecret,
-		seedSecret,
-		recaptchaSecret,
-		appSecret,
-		memcachedSecret,
-	}
-	return objects
-}
-
-func (system *System) PDBObjects() []common.KubernetesObject {
-	appPDB := system.AppPodDisruptionBudget()
-	sidekiqPDB := system.SidekiqPodDisruptionBudget()
-
-	return []common.KubernetesObject{
-		appPDB,
-		sidekiqPDB,
-	}
 }
 
 func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {

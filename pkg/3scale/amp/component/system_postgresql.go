@@ -3,8 +3,6 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -18,22 +16,6 @@ type SystemPostgreSQL struct {
 
 func NewSystemPostgreSQL(options *SystemPostgreSQLOptions) *SystemPostgreSQL {
 	return &SystemPostgreSQL{Options: options}
-}
-
-func (p *SystemPostgreSQL) Objects() []common.KubernetesObject {
-	deploymentConfig := p.DeploymentConfig()
-	service := p.Service()
-	persistentVolumeClaim := p.DataPersistentVolumeClaim()
-	systemDatabaseSecret := p.SystemDatabaseSecret()
-
-	objects := []common.KubernetesObject{
-		deploymentConfig,
-		service,
-		persistentVolumeClaim,
-		systemDatabaseSecret,
-	}
-
-	return objects
 }
 
 func (p *SystemPostgreSQL) Service() *v1.Service {

@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	templatev1 "github.com/openshift/api/template/v1"
 )
@@ -40,7 +41,17 @@ func (s *S3) postProcess(template *templatev1.Template, s3Component *component.S
 }
 
 func (s *S3) addObjects(template *templatev1.Template, s3 *component.S3) {
-	template.Objects = append(template.Objects, helper.WrapRawExtensions(s3.Objects())...)
+	componentObjects := s.componentObjects(s3)
+	template.Objects = append(template.Objects, helper.WrapRawExtensions(componentObjects)...)
+}
+
+func (s *S3) componentObjects(c *component.S3) []common.KubernetesObject {
+	s3AWSSecret := c.S3AWSSecret()
+
+	objects := []common.KubernetesObject{
+		s3AWSSecret,
+	}
+	return objects
 }
 
 func (s *S3) addParameters(template *templatev1.Template) {

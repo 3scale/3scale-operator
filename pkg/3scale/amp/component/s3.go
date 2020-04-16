@@ -27,15 +27,6 @@ func NewS3(options *S3Options) *S3 {
 	return &S3{Options: options}
 }
 
-func (s3 *S3) Objects() []common.KubernetesObject {
-	s3AWSSecret := s3.S3AWSSecret()
-
-	objects := []common.KubernetesObject{
-		s3AWSSecret,
-	}
-	return objects
-}
-
 func (s3 *S3) RemoveSystemStorageReferences(objects []common.KubernetesObject) {
 	for _, obj := range objects {
 		dc, ok := obj.(*appsv1.DeploymentConfig)

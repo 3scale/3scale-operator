@@ -3,7 +3,6 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/policy/v1beta1"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -27,41 +26,6 @@ type Zync struct {
 
 func NewZync(options *ZyncOptions) *Zync {
 	return &Zync{Options: options}
-}
-
-func (zync *Zync) Objects() []common.KubernetesObject {
-	queRole := zync.QueRole()
-	queServiceAccount := zync.QueServiceAccount()
-	queRoleBinding := zync.QueRoleBinding()
-	deploymentConfig := zync.DeploymentConfig()
-	queDeploymentConfig := zync.QueDeploymentConfig()
-	databaseDeploymentConfig := zync.DatabaseDeploymentConfig()
-	service := zync.Service()
-	databaseService := zync.DatabaseService()
-	secret := zync.Secret()
-
-	objects := []common.KubernetesObject{
-		queRole,
-		queServiceAccount,
-		queRoleBinding,
-		deploymentConfig,
-		queDeploymentConfig,
-		databaseDeploymentConfig,
-		service,
-		databaseService,
-		secret,
-	}
-	return objects
-}
-
-func (zync *Zync) PDBObjects() []common.KubernetesObject {
-	zyncPDB := zync.ZyncPodDisruptionBudget()
-	quePDB := zync.QuePodDisruptionBudget()
-
-	return []common.KubernetesObject{
-		zyncPDB,
-		quePDB,
-	}
 }
 
 func (zync *Zync) Secret() *v1.Secret {

@@ -3,7 +3,6 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/policy/v1beta1"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -41,43 +40,6 @@ type Backend struct {
 
 func NewBackend(options *BackendOptions) *Backend {
 	return &Backend{Options: options}
-}
-
-func (backend *Backend) Objects() []common.KubernetesObject {
-	cronDeploymentConfig := backend.CronDeploymentConfig()
-	listenerDeploymentConfig := backend.ListenerDeploymentConfig()
-	listenerService := backend.ListenerService()
-	listenerRoute := backend.ListenerRoute()
-	workerDeploymentConfig := backend.WorkerDeploymentConfig()
-	environmentConfigMap := backend.EnvironmentConfigMap()
-
-	internalAPISecretForSystem := backend.InternalAPISecretForSystem()
-	redisSecret := backend.RedisSecret()
-	listenerSecret := backend.ListenerSecret()
-
-	objects := []common.KubernetesObject{
-		cronDeploymentConfig,
-		listenerDeploymentConfig,
-		listenerService,
-		listenerRoute,
-		workerDeploymentConfig,
-		environmentConfigMap,
-		internalAPISecretForSystem,
-		redisSecret,
-		listenerSecret,
-	}
-	return objects
-}
-
-func (backend *Backend) PDBObjects() []common.KubernetesObject {
-	workerPDB := backend.WorkerPodDisruptionBudget()
-	cronPDB := backend.CronPodDisruptionBudget()
-	listenerPDB := backend.ListenerPodDisruptionBudget()
-	return []common.KubernetesObject{
-		workerPDB,
-		cronPDB,
-		listenerPDB,
-	}
 }
 
 func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {

@@ -28,15 +28,6 @@ func NewHighAvailability(options *HighAvailabilityOptions) *HighAvailability {
 	return &HighAvailability{Options: options}
 }
 
-func (ha *HighAvailability) Objects() []common.KubernetesObject {
-	systemDatabaseSecret := ha.SystemDatabaseSecret()
-
-	objects := []common.KubernetesObject{
-		systemDatabaseSecret,
-	}
-	return objects
-}
-
 func (ha *HighAvailability) SystemDatabaseSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{

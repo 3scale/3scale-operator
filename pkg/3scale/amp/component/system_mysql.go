@@ -3,8 +3,6 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -18,26 +16,6 @@ type SystemMysql struct {
 
 func NewSystemMysql(options *SystemMysqlOptions) *SystemMysql {
 	return &SystemMysql{Options: options}
-}
-
-func (mysql *SystemMysql) Objects() []common.KubernetesObject {
-	deploymentConfig := mysql.DeploymentConfig()
-	service := mysql.Service()
-	mainConfigConfigMap := mysql.MainConfigConfigMap()
-	extraConfigconfigMap := mysql.ExtraConfigConfigMap()
-	persistentVolumeClaim := mysql.PersistentVolumeClaim()
-	systemDatabaseSecret := mysql.SystemDatabaseSecret()
-
-	objects := []common.KubernetesObject{
-		deploymentConfig,
-		service,
-		mainConfigConfigMap,
-		extraConfigconfigMap,
-		persistentVolumeClaim,
-		systemDatabaseSecret,
-	}
-
-	return objects
 }
 
 func (mysql *SystemMysql) Service() *v1.Service {

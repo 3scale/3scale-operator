@@ -46,7 +46,24 @@ func (r *SystemPostgreSQLAdapter) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	systemPostgreSQLComponent := component.NewSystemPostgreSQL(systemPostgreSQLOptions)
-	return systemPostgreSQLComponent.Objects(), nil
+	objects := r.componentObjects(systemPostgreSQLComponent)
+	return objects, nil
+}
+
+func (r *SystemPostgreSQLAdapter) componentObjects(c *component.SystemPostgreSQL) []common.KubernetesObject {
+	deploymentConfig := c.DeploymentConfig()
+	service := c.Service()
+	persistentVolumeClaim := c.DataPersistentVolumeClaim()
+	systemDatabaseSecret := c.SystemDatabaseSecret()
+
+	objects := []common.KubernetesObject{
+		deploymentConfig,
+		service,
+		persistentVolumeClaim,
+		systemDatabaseSecret,
+	}
+
+	return objects
 }
 
 func (r *SystemPostgreSQLAdapter) options() (*component.SystemPostgreSQLOptions, error) {
