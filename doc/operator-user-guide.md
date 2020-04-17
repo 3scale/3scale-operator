@@ -117,16 +117,13 @@ Check [*APIManager*](apimanager-reference.md) custom resource for reference.
 #### External Databases Installation
 Suitable for production use where customer wants HA or to re-use DB of their own.
 
-3scale API Management 2.8 has been tested and it’s supported with the following databases:
+3scale API Management has been tested and it’s supported with the following databases:
 
 | Database | Version |
 | :--- | :--- |
 | MySQL | 5.7 |
 | Redis | 3.2 |
-| Oracle DB\* | 12.2 |
 | PostgreSQL | 10.6 |
-
-In line with Oracle's recommendations, we advise using a CDB architecture. Non-CDB configurations may be unsupported in future releases.
 
 Before creating *APIManager* custom resource to deploy 3scale,
 connection settings for the external databases needs to be provided using openshift secrets.
