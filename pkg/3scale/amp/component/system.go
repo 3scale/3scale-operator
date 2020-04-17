@@ -6,8 +6,7 @@ import (
 
 	"k8s.io/api/policy/v1beta1"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -100,66 +99,6 @@ func NewSystem(options *SystemOptions) *System {
 	return &System{Options: options}
 }
 
-func (system *System) Objects() []common.KubernetesObject {
-	sharedStorage := system.SharedStorage()
-	providerService := system.ProviderService()
-	masterService := system.MasterService()
-	developerService := system.DeveloperService()
-	sphinxService := system.SphinxService()
-	memcachedService := system.MemcachedService()
-
-	appDeploymentConfig := system.AppDeploymentConfig()
-	sidekiqDeploymentConfig := system.SidekiqDeploymentConfig()
-	sphinxDeploymentConfig := system.SphinxDeploymentConfig()
-
-	systemConfigMap := system.SystemConfigMap()
-	environmentConfigMap := system.EnvironmentConfigMap()
-	smtpSecret := system.SMTPSecret()
-
-	eventsHookSecret := system.EventsHookSecret()
-
-	redisSecret := system.RedisSecret()
-	masterApicastSecret := system.MasterApicastSecret()
-
-	seedSecret := system.SeedSecret()
-	recaptchaSecret := system.RecaptchaSecret()
-	appSecret := system.AppSecret()
-	memcachedSecret := system.MemcachedSecret()
-
-	objects := []common.KubernetesObject{
-		sharedStorage,
-		providerService,
-		masterService,
-		developerService,
-		sphinxService,
-		memcachedService,
-		systemConfigMap,
-		smtpSecret,
-		environmentConfigMap,
-		appDeploymentConfig,
-		sidekiqDeploymentConfig,
-		sphinxDeploymentConfig,
-		eventsHookSecret,
-		redisSecret,
-		masterApicastSecret,
-		seedSecret,
-		recaptchaSecret,
-		appSecret,
-		memcachedSecret,
-	}
-	return objects
-}
-
-func (system *System) PDBObjects() []common.KubernetesObject {
-	appPDB := system.AppPodDisruptionBudget()
-	sidekiqPDB := system.SidekiqPodDisruptionBudget()
-
-	return []common.KubernetesObject{
-		appPDB,
-		sidekiqPDB,
-	}
-}
-
 func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 	result := []v1.EnvVar{}
 
@@ -171,7 +110,7 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 	}
 	sort.Strings(cfgmapkeys)
 	for _, key := range cfgmapkeys {
-		envvar := envVarFromConfigMap(key, "system-environment", key)
+		envvar := helper.EnvVarFromConfigMap(key, "system-environment", key)
 		result = append(result, envvar)
 	}
 
@@ -180,13 +119,13 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 
 func (system *System) getSystemSMTPEnvsFromSMTPSecret() []v1.EnvVar {
 	result := []v1.EnvVar{
-		envVarFromSecret("SMTP_ADDRESS", SystemSecretSystemSMTPSecretName, "address"),
-		envVarFromSecret("SMTP_USER_NAME", SystemSecretSystemSMTPSecretName, "username"),
-		envVarFromSecret("SMTP_PASSWORD", SystemSecretSystemSMTPSecretName, "password"),
-		envVarFromSecret("SMTP_DOMAIN", SystemSecretSystemSMTPSecretName, "domain"),
-		envVarFromSecret("SMTP_PORT", SystemSecretSystemSMTPSecretName, "port"),
-		envVarFromSecret("SMTP_AUTHENTICATION", SystemSecretSystemSMTPSecretName, "authentication"),
-		envVarFromSecret("SMTP_OPENSSL_VERIFY_MODE", SystemSecretSystemSMTPSecretName, "openssl.verify.mode"),
+		helper.EnvVarFromSecret("SMTP_ADDRESS", SystemSecretSystemSMTPSecretName, "address"),
+		helper.EnvVarFromSecret("SMTP_USER_NAME", SystemSecretSystemSMTPSecretName, "username"),
+		helper.EnvVarFromSecret("SMTP_PASSWORD", SystemSecretSystemSMTPSecretName, "password"),
+		helper.EnvVarFromSecret("SMTP_DOMAIN", SystemSecretSystemSMTPSecretName, "domain"),
+		helper.EnvVarFromSecret("SMTP_PORT", SystemSecretSystemSMTPSecretName, "port"),
+		helper.EnvVarFromSecret("SMTP_AUTHENTICATION", SystemSecretSystemSMTPSecretName, "authentication"),
+		helper.EnvVarFromSecret("SMTP_OPENSSL_VERIFY_MODE", SystemSecretSystemSMTPSecretName, "openssl.verify.mode"),
 	}
 
 	return result
@@ -196,13 +135,13 @@ func (system *System) buildSystemSphinxEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 
 	result = append(result,
-		envVarFromConfigMap("RAILS_ENV", "system-environment", "RAILS_ENV"),
-		envVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
-		envVarFromValue("THINKING_SPHINX_ADDRESS", "0.0.0.0"),
-		envVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "db/sphinx/production.conf"),
-		envVarFromValue("THINKING_SPHINX_PID_FILE", "db/sphinx/searchd.pid"),
-		envVarFromValue("DELTA_INDEX_INTERVAL", "5"),
-		envVarFromValue("FULL_REINDEX_INTERVAL", "60"),
+		helper.EnvVarFromConfigMap("RAILS_ENV", "system-environment", "RAILS_ENV"),
+		helper.EnvVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
+		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", "0.0.0.0"),
+		helper.EnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "db/sphinx/production.conf"),
+		helper.EnvVarFromValue("THINKING_SPHINX_PID_FILE", "db/sphinx/searchd.pid"),
+		helper.EnvVarFromValue("DELTA_INDEX_INTERVAL", "5"),
+		helper.EnvVarFromValue("FULL_REINDEX_INTERVAL", "60"),
 	)
 	result = append(result, system.SystemRedisEnvVars()...)
 	return result
@@ -212,14 +151,14 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 	result := []v1.EnvVar{}
 
 	result = append(result,
-		envVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
-		envVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
-		envVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
-		envVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
-		envVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
-		envVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
-		envVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelHosts),
-		envVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelRole),
+		helper.EnvVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
+		helper.EnvVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
+		helper.EnvVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
+		helper.EnvVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
+		helper.EnvVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
+		helper.EnvVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
+		helper.EnvVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelHosts),
+		helper.EnvVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelRole),
 	)
 
 	return result
@@ -232,62 +171,62 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	result = append(result, baseEnvConfigMapEnvs...)
 
 	result = append(result,
-		envVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
+		helper.EnvVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
 
-		envVarFromSecret("MASTER_DOMAIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterDomainFieldName),
-		envVarFromSecret("MASTER_USER", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterUserFieldName),
-		envVarFromSecret("MASTER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterPasswordFieldName),
+		helper.EnvVarFromSecret("MASTER_DOMAIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterDomainFieldName),
+		helper.EnvVarFromSecret("MASTER_USER", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterUserFieldName),
+		helper.EnvVarFromSecret("MASTER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterPasswordFieldName),
 
-		envVarFromSecret("ADMIN_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminAccessTokenFieldName),
-		envVarFromSecret("USER_LOGIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminUserFieldName),
-		envVarFromSecret("USER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminPasswordFieldName),
-		envVarFromSecret("USER_EMAIL", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminEmailFieldName),
-		envVarFromSecret("TENANT_NAME", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedTenantNameFieldName),
+		helper.EnvVarFromSecret("ADMIN_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminAccessTokenFieldName),
+		helper.EnvVarFromSecret("USER_LOGIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminUserFieldName),
+		helper.EnvVarFromSecret("USER_PASSWORD", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminPasswordFieldName),
+		helper.EnvVarFromSecret("USER_EMAIL", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminEmailFieldName),
+		helper.EnvVarFromSecret("TENANT_NAME", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedTenantNameFieldName),
 
-		envVarFromValue("THINKING_SPHINX_ADDRESS", "system-sphinx"),
-		envVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "/tmp/sphinx.conf"),
+		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", "system-sphinx"),
+		helper.EnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "/tmp/sphinx.conf"),
 
-		envVarFromSecret("EVENTS_SHARED_SECRET", SystemSecretSystemEventsHookSecretName, SystemSecretSystemEventsHookPasswordFieldName),
+		helper.EnvVarFromSecret("EVENTS_SHARED_SECRET", SystemSecretSystemEventsHookSecretName, SystemSecretSystemEventsHookPasswordFieldName),
 
-		envVarFromSecret("RECAPTCHA_PUBLIC_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPublicKeyFieldName),
-		envVarFromSecret("RECAPTCHA_PRIVATE_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPrivateKeyFieldName),
+		helper.EnvVarFromSecret("RECAPTCHA_PUBLIC_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPublicKeyFieldName),
+		helper.EnvVarFromSecret("RECAPTCHA_PRIVATE_KEY", SystemSecretSystemRecaptchaSecretName, SystemSecretSystemRecaptchaPrivateKeyFieldName),
 
-		envVarFromSecret("SECRET_KEY_BASE", SystemSecretSystemAppSecretName, SystemSecretSystemAppSecretKeyBaseFieldName),
+		helper.EnvVarFromSecret("SECRET_KEY_BASE", SystemSecretSystemAppSecretName, SystemSecretSystemAppSecretKeyBaseFieldName),
 
-		envVarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
+		helper.EnvVarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
 	)
 
 	result = append(result, system.SystemRedisEnvVars()...)
 	result = append(result, system.BackendRedisEnvVars()...)
-	bckListenerApicastRouteEnv := envVarFromSecret("APICAST_BACKEND_ROOT_ENDPOINT", "backend-listener", "route_endpoint")
-	bckListenerRouteEnv := envVarFromSecret("BACKEND_ROUTE", "backend-listener", "route_endpoint")
+	bckListenerApicastRouteEnv := helper.EnvVarFromSecret("APICAST_BACKEND_ROOT_ENDPOINT", "backend-listener", "route_endpoint")
+	bckListenerRouteEnv := helper.EnvVarFromSecret("BACKEND_ROUTE", "backend-listener", "route_endpoint")
 	result = append(result, bckListenerApicastRouteEnv, bckListenerRouteEnv)
 
 	smtpEnvSecretEnvs := system.getSystemSMTPEnvsFromSMTPSecret()
 	result = append(result, smtpEnvSecretEnvs...)
 
-	apicastAccessToken := envVarFromSecret("APICAST_ACCESS_TOKEN", SystemSecretSystemMasterApicastSecretName, "ACCESS_TOKEN")
+	apicastAccessToken := helper.EnvVarFromSecret("APICAST_ACCESS_TOKEN", SystemSecretSystemMasterApicastSecretName, "ACCESS_TOKEN")
 	result = append(result, apicastAccessToken)
 
 	// Add zync secret to envvars sources
-	zyncAuthTokenVar := envVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN")
+	zyncAuthTokenVar := helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN")
 	result = append(result, zyncAuthTokenVar)
 
 	// Add backend internal api data to envvars sources
-	systemBackendInternalAPIUser := envVarFromSecret("CONFIG_INTERNAL_API_USER", "backend-internal-api", "username")
-	systemBackendInternalAPIPass := envVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", "backend-internal-api", "password")
+	systemBackendInternalAPIUser := helper.EnvVarFromSecret("CONFIG_INTERNAL_API_USER", "backend-internal-api", "username")
+	systemBackendInternalAPIPass := helper.EnvVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", "backend-internal-api", "password")
 	result = append(result, systemBackendInternalAPIUser, systemBackendInternalAPIPass)
 
 	if system.Options.S3FileStorageOptions != nil {
 		result = append(result,
-			envVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-			envVarFromSecret(AwsAccessKeyID, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
-			envVarFromSecret(AwsSecretAccessKey, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
-			envVarFromSecret(AwsBucket, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsBucket),
-			envVarFromSecret(AwsRegion, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsRegion),
-			envVarFromSecretOptional(AwsProtocol, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsProtocol),
-			envVarFromSecretOptional(AwsHostname, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsHostname),
-			envVarFromSecretOptional(AwsPathStyle, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsPathStyle),
+			helper.EnvVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
+			helper.EnvVarFromSecret(AwsAccessKeyID, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
+			helper.EnvVarFromSecret(AwsSecretAccessKey, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
+			helper.EnvVarFromSecret(AwsBucket, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsBucket),
+			helper.EnvVarFromSecret(AwsRegion, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsRegion),
+			helper.EnvVarFromSecretOptional(AwsProtocol, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsProtocol),
+			helper.EnvVarFromSecretOptional(AwsHostname, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsHostname),
+			helper.EnvVarFromSecretOptional(AwsPathStyle, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsPathStyle),
 		)
 	}
 
@@ -299,16 +238,16 @@ func (system *System) buildSystemAppPreHookEnv() []v1.EnvVar {
 	baseEnv := system.buildSystemBaseEnv()
 	result = append(result, baseEnv...)
 	result = append(result,
-		envVarFromSecret("MASTER_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterAccessTokenFieldName),
+		helper.EnvVarFromSecret("MASTER_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterAccessTokenFieldName),
 	)
 	return result
 }
 
 func (system *System) BackendRedisEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
-		envVarFromSecret("BACKEND_REDIS_URL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
-		envVarFromSecret("BACKEND_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
-		envVarFromSecret("BACKEND_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
+		helper.EnvVarFromSecret("BACKEND_REDIS_URL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
+		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
+		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
 	}
 }
 
@@ -867,7 +806,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 								"-c",
 								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
 							},
-							Env: append(system.SystemRedisEnvVars(), envVarFromValue("SLEEP_SECONDS", "1")),
+							Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 						},
 					},
 					Containers: []v1.Container{
@@ -1257,7 +1196,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 							Image:   "amp-system:latest",
 							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
 							Env: []v1.EnvVar{
-								envVarFromValue("SLEEP_SECONDS", "1"),
+								helper.EnvVarFromValue("SLEEP_SECONDS", "1"),
 							},
 						},
 					},

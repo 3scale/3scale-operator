@@ -3,8 +3,6 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
@@ -19,31 +17,6 @@ type Redis struct {
 
 func NewRedis(options *RedisOptions) *Redis {
 	return &Redis{Options: options}
-}
-
-func (redis *Redis) Objects() []common.KubernetesObject {
-	backendRedisObjects := redis.buildBackendRedisObjects()
-	systemRedisObjects := redis.buildSystemRedisObjects()
-
-	objects := backendRedisObjects
-	objects = append(objects, systemRedisObjects...)
-	return objects
-}
-
-func (redis *Redis) buildBackendRedisObjects() []common.KubernetesObject {
-	dc := redis.BackendDeploymentConfig()
-	bs := redis.BackendService()
-	cm := redis.BackendConfigMap()
-	bpvc := redis.BackendPVC()
-	bis := redis.BackendImageStream()
-	objects := []common.KubernetesObject{
-		dc,
-		bs,
-		cm,
-		bpvc,
-		bis,
-	}
-	return objects
 }
 
 func (redis *Redis) BackendDeploymentConfig() *appsv1.DeploymentConfig {
@@ -481,21 +454,6 @@ func (redis *Redis) BackendImageStream() *imagev1.ImageStream {
 }
 
 ////// Begin System Redis
-func (redis *Redis) buildSystemRedisObjects() []common.KubernetesObject {
-	systemRedisDC := redis.SystemDeploymentConfig()
-	systemRedisPVC := redis.SystemPVC()
-	systemRedisService := redis.SystemService()
-	systemRedisImageStream := redis.SystemImageStream()
-
-	objects := []common.KubernetesObject{
-		systemRedisDC,
-		systemRedisPVC,
-		systemRedisService,
-		systemRedisImageStream,
-	}
-
-	return objects
-}
 
 func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{

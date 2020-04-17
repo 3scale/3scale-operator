@@ -3,9 +3,9 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/policy/v1beta1"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,32 +18,6 @@ type Apicast struct {
 
 func NewApicast(options *ApicastOptions) *Apicast {
 	return &Apicast{Options: options}
-}
-
-func (apicast *Apicast) Objects() []common.KubernetesObject {
-	stagingDeploymentConfig := apicast.StagingDeploymentConfig()
-	productionDeploymentConfig := apicast.ProductionDeploymentConfig()
-	stagingService := apicast.StagingService()
-	productionService := apicast.ProductionService()
-	environmentConfigMap := apicast.EnvironmentConfigMap()
-
-	objects := []common.KubernetesObject{
-		stagingDeploymentConfig,
-		productionDeploymentConfig,
-		stagingService,
-		productionService,
-		environmentConfigMap,
-	}
-	return objects
-}
-
-func (apicast *Apicast) PDBObjects() []common.KubernetesObject {
-	stagingPDB := apicast.StagingPodDisruptionBudget()
-	prodPDB := apicast.ProductionPodDisruptionBudget()
-	return []common.KubernetesObject{
-		stagingPDB,
-		prodPDB,
-	}
 }
 
 func (apicast *Apicast) StagingService() *v1.Service {
@@ -356,11 +330,11 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 
 func (apicast *Apicast) buildApicastCommonEnv() []v1.EnvVar {
 	return []v1.EnvVar{
-		envVarFromSecret("THREESCALE_PORTAL_ENDPOINT", "system-master-apicast", SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName),
-		envVarFromSecret("BACKEND_ENDPOINT_OVERRIDE", "backend-listener", "service_endpoint"),
-		envVarFromConfigMap("APICAST_MANAGEMENT_API", "apicast-environment", "APICAST_MANAGEMENT_API"),
-		envVarFromConfigMap("OPENSSL_VERIFY", "apicast-environment", "OPENSSL_VERIFY"),
-		envVarFromConfigMap("APICAST_RESPONSE_CODES", "apicast-environment", "APICAST_RESPONSE_CODES"),
+		helper.EnvVarFromSecret("THREESCALE_PORTAL_ENDPOINT", "system-master-apicast", SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName),
+		helper.EnvVarFromSecret("BACKEND_ENDPOINT_OVERRIDE", "backend-listener", "service_endpoint"),
+		helper.EnvVarFromConfigMap("APICAST_MANAGEMENT_API", "apicast-environment", "APICAST_MANAGEMENT_API"),
+		helper.EnvVarFromConfigMap("OPENSSL_VERIFY", "apicast-environment", "OPENSSL_VERIFY"),
+		helper.EnvVarFromConfigMap("APICAST_RESPONSE_CODES", "apicast-environment", "APICAST_RESPONSE_CODES"),
 	}
 }
 
@@ -368,9 +342,9 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, apicast.buildApicastCommonEnv()...)
 	result = append(result,
-		envVarFromValue("APICAST_CONFIGURATION_LOADER", "lazy"),
-		envVarFromValue("APICAST_CONFIGURATION_CACHE", "0"),
-		envVarFromValue("THREESCALE_DEPLOYMENT_ENV", "staging"),
+		helper.EnvVarFromValue("APICAST_CONFIGURATION_LOADER", "lazy"),
+		helper.EnvVarFromValue("APICAST_CONFIGURATION_CACHE", "0"),
+		helper.EnvVarFromValue("THREESCALE_DEPLOYMENT_ENV", "staging"),
 	)
 	return result
 }
@@ -379,9 +353,9 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, apicast.buildApicastCommonEnv()...)
 	result = append(result,
-		envVarFromValue("APICAST_CONFIGURATION_LOADER", "boot"),
-		envVarFromValue("APICAST_CONFIGURATION_CACHE", "300"),
-		envVarFromValue("THREESCALE_DEPLOYMENT_ENV", "production"),
+		helper.EnvVarFromValue("APICAST_CONFIGURATION_LOADER", "boot"),
+		helper.EnvVarFromValue("APICAST_CONFIGURATION_CACHE", "300"),
+		helper.EnvVarFromValue("THREESCALE_DEPLOYMENT_ENV", "production"),
 	)
 	return result
 }

@@ -13,7 +13,7 @@ func NewRedisAdapter() Adapter {
 	return NewAppenderAdapter(&RedisAdapter{})
 }
 
-func (a *RedisAdapter) Parameters() []templatev1.Parameter {
+func (r *RedisAdapter) Parameters() []templatev1.Parameter {
 	return []templatev1.Parameter{
 		{
 			Name:        "REDIS_IMAGE",
@@ -33,7 +33,49 @@ func (r *RedisAdapter) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	redisComponent := component.NewRedis(redisOptions)
-	return redisComponent.Objects(), nil
+	objects := r.componentObjects(redisComponent)
+	return objects, nil
+}
+
+func (r *RedisAdapter) componentObjects(c *component.Redis) []common.KubernetesObject {
+	backendRedisObjects := r.backendRedisComponentObjects(c)
+	systemRedisObjects := r.systemRedisComponentObjects(c)
+
+	objects := backendRedisObjects
+	objects = append(objects, systemRedisObjects...)
+	return objects
+}
+
+func (r *RedisAdapter) backendRedisComponentObjects(c *component.Redis) []common.KubernetesObject {
+	dc := c.BackendDeploymentConfig()
+	bs := c.BackendService()
+	cm := c.BackendConfigMap()
+	bpvc := c.BackendPVC()
+	bis := c.BackendImageStream()
+	objects := []common.KubernetesObject{
+		dc,
+		bs,
+		cm,
+		bpvc,
+		bis,
+	}
+	return objects
+}
+
+func (r *RedisAdapter) systemRedisComponentObjects(c *component.Redis) []common.KubernetesObject {
+	systemRedisDC := c.SystemDeploymentConfig()
+	systemRedisPVC := c.SystemPVC()
+	systemRedisService := c.SystemService()
+	systemRedisImageStream := c.SystemImageStream()
+
+	objects := []common.KubernetesObject{
+		systemRedisDC,
+		systemRedisPVC,
+		systemRedisService,
+		systemRedisImageStream,
+	}
+
+	return objects
 }
 
 func (r *RedisAdapter) options() (*component.RedisOptions, error) {

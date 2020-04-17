@@ -3,8 +3,6 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,15 +15,6 @@ type Memcached struct {
 
 func NewMemcached(options *MemcachedOptions) *Memcached {
 	return &Memcached{Options: options}
-}
-
-func (m *Memcached) Objects() []common.KubernetesObject {
-	deploymentConfig := m.DeploymentConfig()
-
-	objects := []common.KubernetesObject{
-		deploymentConfig,
-	}
-	return objects
 }
 
 func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {

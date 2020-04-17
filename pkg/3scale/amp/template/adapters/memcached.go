@@ -23,7 +23,17 @@ func (m *MemcachedAdapter) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	memcachedComponent := component.NewMemcached(memcachedOptions)
-	return memcachedComponent.Objects(), nil
+	objects := m.componentObjects(memcachedComponent)
+	return objects, nil
+}
+
+func (m *MemcachedAdapter) componentObjects(c *component.Memcached) []common.KubernetesObject {
+	deploymentConfig := c.DeploymentConfig()
+
+	objects := []common.KubernetesObject{
+		deploymentConfig,
+	}
+	return objects
 }
 
 func (m *MemcachedAdapter) options() (*component.MemcachedOptions, error) {

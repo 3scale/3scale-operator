@@ -56,11 +56,40 @@ func (a *Apicast) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	apicastComponent := component.NewApicast(apicastOptions)
-	objects := apicastComponent.Objects()
-	if a.generatePodDisruptionBudget {
-		objects = append(objects, apicastComponent.PDBObjects()...)
-	}
+	objects := a.componentObjects(apicastComponent)
+
 	return objects, nil
+}
+
+func (a *Apicast) componentObjects(c *component.Apicast) []common.KubernetesObject {
+	stagingDeploymentConfig := c.StagingDeploymentConfig()
+	productionDeploymentConfig := c.ProductionDeploymentConfig()
+	stagingService := c.StagingService()
+	productionService := c.ProductionService()
+	environmentConfigMap := c.EnvironmentConfigMap()
+
+	objects := []common.KubernetesObject{
+		stagingDeploymentConfig,
+		productionDeploymentConfig,
+		stagingService,
+		productionService,
+		environmentConfigMap,
+	}
+
+	if a.generatePodDisruptionBudget {
+		objects = append(objects, a.componentPDBObjects(c)...)
+	}
+
+	return objects
+}
+
+func (a *Apicast) componentPDBObjects(c *component.Apicast) []common.KubernetesObject {
+	stagingPDB := c.StagingPodDisruptionBudget()
+	prodPDB := c.ProductionPodDisruptionBudget()
+	return []common.KubernetesObject{
+		stagingPDB,
+		prodPDB,
+	}
 }
 
 func (a *Apicast) options() (*component.ApicastOptions, error) {

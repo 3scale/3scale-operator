@@ -1,8 +1,6 @@
 package component
 
 import (
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,16 +12,6 @@ type SystemMySQLImage struct {
 
 func NewSystemMySQLImage(options *SystemMySQLImageOptions) *SystemMySQLImage {
 	return &SystemMySQLImage{Options: options}
-}
-
-func (s *SystemMySQLImage) Objects() []common.KubernetesObject {
-	imageStream := s.ImageStream()
-
-	objects := []common.KubernetesObject{
-		imageStream,
-	}
-
-	return objects
 }
 
 func (s *SystemMySQLImage) ImageStream() *imagev1.ImageStream {

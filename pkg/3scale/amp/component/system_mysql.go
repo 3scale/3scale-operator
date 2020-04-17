@@ -3,8 +3,7 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -18,26 +17,6 @@ type SystemMysql struct {
 
 func NewSystemMysql(options *SystemMysqlOptions) *SystemMysql {
 	return &SystemMysql{Options: options}
-}
-
-func (mysql *SystemMysql) Objects() []common.KubernetesObject {
-	deploymentConfig := mysql.DeploymentConfig()
-	service := mysql.Service()
-	mainConfigConfigMap := mysql.MainConfigConfigMap()
-	extraConfigconfigMap := mysql.ExtraConfigConfigMap()
-	persistentVolumeClaim := mysql.PersistentVolumeClaim()
-	systemDatabaseSecret := mysql.SystemDatabaseSecret()
-
-	objects := []common.KubernetesObject{
-		deploymentConfig,
-		service,
-		mainConfigConfigMap,
-		extraConfigconfigMap,
-		persistentVolumeClaim,
-		systemDatabaseSecret,
-	}
-
-	return objects
 }
 
 func (mysql *SystemMysql) Service() *v1.Service {
@@ -177,15 +156,15 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 									Protocol:      v1.ProtocolTCP},
 							},
 							Env: []v1.EnvVar{
-								envVarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
-								envVarFromSecret("MYSQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
+								helper.EnvVarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
+								helper.EnvVarFromSecret("MYSQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
 								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
 								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
 								// are deprecated we should be able to change this.
-								envVarFromValue("MYSQL_DATABASE", mysql.Options.DatabaseName),
-								envVarFromValue("MYSQL_ROOT_PASSWORD", mysql.Options.RootPassword),
-								envVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
-								envVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
+								helper.EnvVarFromValue("MYSQL_DATABASE", mysql.Options.DatabaseName),
+								helper.EnvVarFromValue("MYSQL_ROOT_PASSWORD", mysql.Options.RootPassword),
+								helper.EnvVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
+								helper.EnvVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
 							},
 							Resources: mysql.Options.ContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{

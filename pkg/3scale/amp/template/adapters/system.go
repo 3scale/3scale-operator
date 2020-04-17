@@ -130,11 +130,74 @@ func (s *System) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	systemComponent := component.NewSystem(systemOptions)
-	objects := systemComponent.Objects()
-	if s.generatePodDisruptionBudget {
-		objects = append(objects, systemComponent.PDBObjects()...)
-	}
+	objects := s.componentObjects(systemComponent)
+
 	return objects, nil
+}
+
+func (s *System) componentObjects(c *component.System) []common.KubernetesObject {
+	sharedStorage := c.SharedStorage()
+	providerService := c.ProviderService()
+	masterService := c.MasterService()
+	developerService := c.DeveloperService()
+	sphinxService := c.SphinxService()
+	memcachedService := c.MemcachedService()
+
+	appDeploymentConfig := c.AppDeploymentConfig()
+	sidekiqDeploymentConfig := c.SidekiqDeploymentConfig()
+	sphinxDeploymentConfig := c.SphinxDeploymentConfig()
+
+	systemConfigMap := c.SystemConfigMap()
+	environmentConfigMap := c.EnvironmentConfigMap()
+	smtpSecret := c.SMTPSecret()
+
+	eventsHookSecret := c.EventsHookSecret()
+
+	redisSecret := c.RedisSecret()
+	masterApicastSecret := c.MasterApicastSecret()
+
+	seedSecret := c.SeedSecret()
+	recaptchaSecret := c.RecaptchaSecret()
+	appSecret := c.AppSecret()
+	memcachedSecret := c.MemcachedSecret()
+
+	objects := []common.KubernetesObject{
+		sharedStorage,
+		providerService,
+		masterService,
+		developerService,
+		sphinxService,
+		memcachedService,
+		systemConfigMap,
+		smtpSecret,
+		environmentConfigMap,
+		appDeploymentConfig,
+		sidekiqDeploymentConfig,
+		sphinxDeploymentConfig,
+		eventsHookSecret,
+		redisSecret,
+		masterApicastSecret,
+		seedSecret,
+		recaptchaSecret,
+		appSecret,
+		memcachedSecret,
+	}
+
+	if s.generatePodDisruptionBudget {
+		objects = append(objects, s.componentPDBObjects(c)...)
+	}
+
+	return objects
+}
+
+func (s *System) componentPDBObjects(c *component.System) []common.KubernetesObject {
+	appPDB := c.AppPodDisruptionBudget()
+	sidekiqPDB := c.SidekiqPodDisruptionBudget()
+
+	return []common.KubernetesObject{
+		appPDB,
+		sidekiqPDB,
+	}
 }
 
 func (s *System) options() (*component.SystemOptions, error) {

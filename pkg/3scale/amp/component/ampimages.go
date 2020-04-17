@@ -1,8 +1,6 @@
 package component
 
 import (
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,28 +16,6 @@ type AmpImages struct {
 
 func NewAmpImages(options *AmpImagesOptions) *AmpImages {
 	return &AmpImages{Options: options}
-}
-
-func (ampImages *AmpImages) Objects() []common.KubernetesObject {
-	backendImageStream := ampImages.BackendImageStream()
-	zyncImageStream := ampImages.ZyncImageStream()
-	apicastImageStream := ampImages.APICastImageStream()
-	systemImageStream := ampImages.SystemImageStream()
-	zyncDatabasePostgreSQLImageStream := ampImages.ZyncDatabasePostgreSQLImageStream()
-	systemMemcachedImageStream := ampImages.SystemMemcachedImageStream()
-
-	deploymentsServiceAccount := ampImages.DeploymentsServiceAccount()
-
-	objects := []common.KubernetesObject{
-		backendImageStream,
-		zyncImageStream,
-		apicastImageStream,
-		systemImageStream,
-		zyncDatabasePostgreSQLImageStream,
-		systemMemcachedImageStream,
-		deploymentsServiceAccount,
-	}
-	return objects
 }
 
 func (ampImages *AmpImages) BackendImageStream() *imagev1.ImageStream {

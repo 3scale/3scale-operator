@@ -62,7 +62,30 @@ func (i *ImagesAdapter) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	imagesComponent := component.NewAmpImages(imagesOptions)
-	return imagesComponent.Objects(), nil
+	objects := i.componentObjects(imagesComponent)
+	return objects, nil
+}
+
+func (i *ImagesAdapter) componentObjects(c *component.AmpImages) []common.KubernetesObject {
+	backendImageStream := c.BackendImageStream()
+	zyncImageStream := c.ZyncImageStream()
+	apicastImageStream := c.APICastImageStream()
+	systemImageStream := c.SystemImageStream()
+	zyncDatabasePostgreSQLImageStream := c.ZyncDatabasePostgreSQLImageStream()
+	systemMemcachedImageStream := c.SystemMemcachedImageStream()
+
+	deploymentsServiceAccount := c.DeploymentsServiceAccount()
+
+	objects := []common.KubernetesObject{
+		backendImageStream,
+		zyncImageStream,
+		apicastImageStream,
+		systemImageStream,
+		zyncDatabasePostgreSQLImageStream,
+		systemMemcachedImageStream,
+		deploymentsServiceAccount,
+	}
+	return objects
 }
 
 func (i *ImagesAdapter) options() (*component.AmpImagesOptions, error) {

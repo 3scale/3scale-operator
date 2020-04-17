@@ -45,11 +45,49 @@ func (z *Zync) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	zyncComponent := component.NewZync(zyncOptions)
-	objects := zyncComponent.Objects()
-	if z.generatePodDisruptionBudget {
-		objects = append(objects, zyncComponent.PDBObjects()...)
-	}
+	objects := z.componentObjects(zyncComponent)
+
 	return objects, nil
+}
+
+func (z *Zync) componentObjects(c *component.Zync) []common.KubernetesObject {
+	queRole := c.QueRole()
+	queServiceAccount := c.QueServiceAccount()
+	queRoleBinding := c.QueRoleBinding()
+	deploymentConfig := c.DeploymentConfig()
+	queDeploymentConfig := c.QueDeploymentConfig()
+	databaseDeploymentConfig := c.DatabaseDeploymentConfig()
+	service := c.Service()
+	databaseService := c.DatabaseService()
+	secret := c.Secret()
+
+	objects := []common.KubernetesObject{
+		queRole,
+		queServiceAccount,
+		queRoleBinding,
+		deploymentConfig,
+		queDeploymentConfig,
+		databaseDeploymentConfig,
+		service,
+		databaseService,
+		secret,
+	}
+
+	if z.generatePodDisruptionBudget {
+		objects = append(objects, z.componentPDBObjects(c)...)
+	}
+
+	return objects
+}
+
+func (z *Zync) componentPDBObjects(c *component.Zync) []common.KubernetesObject {
+	zyncPDB := c.ZyncPodDisruptionBudget()
+	quePDB := c.QuePodDisruptionBudget()
+
+	return []common.KubernetesObject{
+		zyncPDB,
+		quePDB,
+	}
 }
 
 func (z *Zync) options() (*component.ZyncOptions, error) {

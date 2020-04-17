@@ -29,8 +29,19 @@ func (r *SystemPostgreSQLImageAdapter) Objects() ([]common.KubernetesObject, err
 	if err != nil {
 		return nil, err
 	}
-	systemPostgreSQLComponent := component.NewSystemPostgreSQLImage(systemPostgreSQLOptions)
-	return systemPostgreSQLComponent.Objects(), nil
+	systemPostgreSQLImageComponent := component.NewSystemPostgreSQLImage(systemPostgreSQLOptions)
+	objects := r.componentObjects(systemPostgreSQLImageComponent)
+	return objects, nil
+}
+
+func (r *SystemPostgreSQLImageAdapter) componentObjects(c *component.SystemPostgreSQLImage) []common.KubernetesObject {
+	imageStream := c.ImageStream()
+
+	objects := []common.KubernetesObject{
+		imageStream,
+	}
+
+	return objects
 }
 
 func (r *SystemPostgreSQLImageAdapter) options() (*component.SystemPostgreSQLImageOptions, error) {

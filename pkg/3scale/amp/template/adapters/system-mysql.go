@@ -54,7 +54,28 @@ func (m *SystemMysqlAdapter) Objects() ([]common.KubernetesObject, error) {
 		return nil, err
 	}
 	mysqlComponent := component.NewSystemMysql(mysqlOptions)
-	return mysqlComponent.Objects(), nil
+	objects := m.componentObjects(mysqlComponent)
+	return objects, nil
+}
+
+func (m *SystemMysqlAdapter) componentObjects(c *component.SystemMysql) []common.KubernetesObject {
+	deploymentConfig := c.DeploymentConfig()
+	service := c.Service()
+	mainConfigConfigMap := c.MainConfigConfigMap()
+	extraConfigconfigMap := c.ExtraConfigConfigMap()
+	persistentVolumeClaim := c.PersistentVolumeClaim()
+	systemDatabaseSecret := c.SystemDatabaseSecret()
+
+	objects := []common.KubernetesObject{
+		deploymentConfig,
+		service,
+		mainConfigConfigMap,
+		extraConfigconfigMap,
+		persistentVolumeClaim,
+		systemDatabaseSecret,
+	}
+
+	return objects
 }
 
 func (a *SystemMysqlAdapter) options() (*component.SystemMysqlOptions, error) {
