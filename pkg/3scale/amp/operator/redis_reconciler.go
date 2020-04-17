@@ -3,59 +3,16 @@ package operator
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
-	imagev1 "github.com/openshift/api/image/v1"
-	v1 "k8s.io/api/core/v1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type RedisSystemDCReconciler struct {
-	BaseAPIManagerLogicReconciler
-}
-
-func NewRedisSystemDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *RedisSystemDCReconciler {
-	return &RedisSystemDCReconciler{
-		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
-	}
-}
-
-func (r *RedisSystemDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
-	update := false
-
-	tmpUpdate := DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	return update
-}
-
-type RedisBackendDCReconciler struct {
-	BaseAPIManagerLogicReconciler
-}
-
-func NewRedisBackendDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *RedisBackendDCReconciler {
-	return &RedisBackendDCReconciler{
-		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
-	}
-}
-
-func (r *RedisBackendDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
-	update := false
-
-	tmpUpdate := DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	return update
-}
-
 type RedisReconciler struct {
-	BaseAPIManagerLogicReconciler
+	*BaseAPIManagerLogicReconciler
 }
 
-// blank assignment to verify that BaseReconciler implements reconcile.Reconciler
-var _ LogicReconciler = &RedisReconciler{}
-
-func NewRedisReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) RedisReconciler {
-	return RedisReconciler{
+func NewRedisReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *RedisReconciler {
+	return &RedisReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}
 }
@@ -66,47 +23,56 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileBackendDeploymentConfig(redis.BackendDeploymentConfig())
+	// Backend redis DC
+	err = r.ReconcileDeploymentConfig(redis.BackendDeploymentConfig(), reconcilers.DeploymentConfigResourcesMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileBackendService(redis.BackendService())
+	// backend redis Service
+	err = r.ReconcileService(redis.BackendService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileBackendConfigMap(redis.BackendConfigMap())
+	// backend CM
+	err = r.ReconcileConfigMap(redis.BackendConfigMap(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileBackendPVC(redis.BackendPVC())
+	// Backenb PVC
+	err = r.ReconcilePersistentVolumeClaim(redis.BackendPVC(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileBackendImageStream(redis.BackendImageStream())
+	// Backend IS
+	err = r.ReconcileImagestream(redis.BackendImageStream(), reconcilers.GenericImagestreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemDeploymentConfig(redis.SystemDeploymentConfig())
+	// System redis DC
+	err = r.ReconcileDeploymentConfig(redis.SystemDeploymentConfig(), reconcilers.DeploymentConfigResourcesMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemPVC(redis.SystemPVC())
+	// System redis Service
+	err = r.ReconcileService(redis.SystemService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemImageStream(redis.SystemImageStream())
+	// System redis PVC
+	err = r.ReconcilePersistentVolumeClaim(redis.SystemPVC(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemService(redis.SystemService())
+	// System redis IS
+	err = r.ReconcileImagestream(redis.SystemImageStream(), reconcilers.GenericImagestreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -121,49 +87,4 @@ func Redis(apimanager *appsv1alpha1.APIManager) (*component.Redis, error) {
 		return nil, err
 	}
 	return component.NewRedis(opts), nil
-}
-
-func (r *RedisReconciler) reconcileBackendDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewRedisBackendDCReconciler(r.BaseAPIManagerLogicReconciler))
-	return reconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *RedisReconciler) reconcileBackendService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
-
-func (r *RedisReconciler) reconcileBackendConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	return reconciler.Reconcile(desiredConfigMap)
-}
-
-func (r *RedisReconciler) reconcileBackendPVC(desiredPVC *v1.PersistentVolumeClaim) error {
-	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	return reconciler.Reconcile(desiredPVC)
-}
-
-func (r *RedisReconciler) reconcileSystemDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewRedisSystemDCReconciler(r.BaseAPIManagerLogicReconciler))
-	return reconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *RedisReconciler) reconcileSystemPVC(desiredPVC *v1.PersistentVolumeClaim) error {
-	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	return reconciler.Reconcile(desiredPVC)
-}
-
-func (r *RedisReconciler) reconcileSystemService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
-
-func (r *RedisReconciler) reconcileBackendImageStream(desiredImageStream *imagev1.ImageStream) error {
-	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	return reconciler.Reconcile(desiredImageStream)
-}
-
-func (r *RedisReconciler) reconcileSystemImageStream(desiredImageStream *imagev1.ImageStream) error {
-	reconciler := NewImageStreamBaseReconciler(r.BaseAPIManagerLogicReconciler, NewImageStreamGenericReconciler())
-	return reconciler.Reconcile(desiredImageStream)
 }

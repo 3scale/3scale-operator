@@ -3,21 +3,17 @@ package operator
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type SystemMySQLReconciler struct {
-	BaseAPIManagerLogicReconciler
+	*BaseAPIManagerLogicReconciler
 }
 
-// blank assignment to verify that BaseReconciler implements reconcile.Reconciler
-var _ LogicReconciler = &SystemMySQLReconciler{}
-
-func NewSystemMySQLReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) SystemMySQLReconciler {
-	return SystemMySQLReconciler{
+func NewSystemMySQLReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemMySQLReconciler {
+	return &SystemMySQLReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}
 }
@@ -28,68 +24,43 @@ func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemMySQLDeploymentConfig(systemMySQL.DeploymentConfig())
+	// DC
+	err = r.ReconcileDeploymentConfig(systemMySQL.DeploymentConfig(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemMySQLService(systemMySQL.Service())
+	// Service
+	err = r.ReconcileService(systemMySQL.Service(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemMySQLMainConfigMap(systemMySQL.MainConfigConfigMap())
+	// Main CM
+	err = r.ReconcileConfigMap(systemMySQL.MainConfigConfigMap(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemMySQLExtraConfigMap(systemMySQL.ExtraConfigConfigMap())
+	// Extra CM
+	err = r.ReconcileConfigMap(systemMySQL.ExtraConfigConfigMap(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemMySQLPersistentVolumeClaim(systemMySQL.PersistentVolumeClaim())
+	// PCV
+	err = r.ReconcilePersistentVolumeClaim(systemMySQL.PersistentVolumeClaim(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemMySQLSystemDatabaseSecret(systemMySQL.SystemDatabaseSecret())
+	// Secret
+	err = r.ReconcileSecret(systemMySQL.SystemDatabaseSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	return reconcile.Result{}, nil
-}
-
-func (r *SystemMySQLReconciler) reconcileSystemMySQLDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyDCReconciler())
-	return reconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *SystemMySQLReconciler) reconcileSystemMySQLService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
-
-func (r *SystemMySQLReconciler) reconcileSystemMySQLMainConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	return reconciler.Reconcile(desiredConfigMap)
-}
-
-func (r *SystemMySQLReconciler) reconcileSystemMySQLExtraConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	return reconciler.Reconcile(desiredConfigMap)
-}
-
-func (r *SystemMySQLReconciler) reconcileSystemMySQLSystemDatabaseSecret(desiredSecret *v1.Secret) error {
-	// Secret values are not affected by CR field values
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemMySQLReconciler) reconcileSystemMySQLPersistentVolumeClaim(desiredPVC *v1.PersistentVolumeClaim) error {
-	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	return reconciler.Reconcile(desiredPVC)
 }
 
 func SystemMySQL(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.SystemMysql, error) {

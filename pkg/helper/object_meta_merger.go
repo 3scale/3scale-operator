@@ -1,18 +1,28 @@
 package helper
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
+import "github.com/3scale/3scale-operator/pkg/common"
 
 // From
 // https://github.com/openshift/library-go/blob/master/pkg/operator/resource/resourcemerge/object_merger.go
 
 // EnsureObjectMeta ensure Labels, Annotations
-func EnsureObjectMeta(existing, desired *metav1.ObjectMeta) bool {
+func EnsureObjectMeta(existing, desired common.KubernetesObject) bool {
 	updated := false
 
-	MergeMapStringString(&updated, &existing.Labels, desired.Labels)
-	MergeMapStringString(&updated, &existing.Annotations, desired.Annotations)
+	existingLabels := existing.GetLabels()
+	if existingLabels == nil {
+		existingLabels = map[string]string{}
+	}
+	existingAnnotations := existing.GetAnnotations()
+	if existingAnnotations == nil {
+		existingAnnotations = map[string]string{}
+	}
+
+	MergeMapStringString(&updated, &existingLabels, desired.GetLabels())
+	MergeMapStringString(&updated, &existingAnnotations, desired.GetAnnotations())
+
+	existing.SetLabels(existingLabels)
+	existing.SetAnnotations(existingAnnotations)
 
 	return updated
 }
