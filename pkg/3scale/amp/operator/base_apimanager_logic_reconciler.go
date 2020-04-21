@@ -9,6 +9,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	"github.com/go-logr/logr"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -16,20 +17,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
-
-var log = logf.Log.WithName("apimanger_reconcilers")
 
 type BaseAPIManagerLogicReconciler struct {
 	*reconcilers.BaseReconciler
 	apiManager *appsv1alpha1.APIManager
+	logger     logr.Logger
 }
 
 func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *BaseAPIManagerLogicReconciler {
 	return &BaseAPIManagerLogicReconciler{
 		BaseReconciler: b,
 		apiManager:     apiManager,
+		logger:         b.Logger().WithValues("APIManager Controller", apiManager.Name),
 	}
 }
 
@@ -144,4 +144,8 @@ func (r *BaseAPIManagerLogicReconciler) APIManagerMutator(mutateFn reconcilers.M
 
 		return updated, nil
 	}
+}
+
+func (r *BaseAPIManagerLogicReconciler) Logger() logr.Logger {
+	return r.logger
 }

@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_apimanager")
+var log = logf.Log.WithName("apimanager.controller")
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -132,7 +132,7 @@ func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (re
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	logger := r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
 
 	instance, err := r.apiManagerInstance(request.NamespacedName)
@@ -330,7 +330,7 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 	dcList := &appsv1.DeploymentConfigList{}
 	err := r.Client().List(context.TODO(), dcList, listOps...)
 	if err != nil {
-		r.Logger().Error(err, "Failed to list deployment configs")
+		log.Error(err, "Failed to list deployment configs")
 		return err
 	}
 	var dcs []appsv1.DeploymentConfig
@@ -346,11 +346,11 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 
 	deploymentStatus := olm.GetDeploymentConfigStatus(dcs)
 	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {
-		r.Logger().Info("Deployment status will be updated")
+		log.Info("Deployment status will be updated")
 		instance.Status.Deployments = deploymentStatus
 		err = r.Client().Status().Update(context.TODO(), instance)
 		if err != nil {
-			r.Logger().Error(err, "Failed to update API Manager deployment status")
+			log.Error(err, "Failed to update API Manager deployment status")
 			return err
 		}
 	}

@@ -17,51 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func SystemAppDCMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-	existing, ok := existingObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
-	}
-	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
-	}
-
-	desiredName := common.ObjectInfo(desired)
-	update := false
-
-	tmpUpdate := reconcilers.DeploymentConfigReplicasReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	//
-	// Check containers
-	//
-	if len(desired.Spec.Template.Spec.Containers) != 3 {
-		panic(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
-	}
-
-	if len(existing.Spec.Template.Spec.Containers) != 3 {
-		log.Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating dc", desiredName, len(existing.Spec.Template.Spec.Containers)))
-		existing.Spec.Template.Spec.Containers = desired.Spec.Template.Spec.Containers
-		update = true
-	}
-
-	//
-	// Check containers resource requirements
-	//
-
-	for idx := 0; idx < 3; idx++ {
-		if !helper.CmpResources(&existing.Spec.Template.Spec.Containers[idx].Resources, &desired.Spec.Template.Spec.Containers[idx].Resources) {
-			diff := cmp.Diff(existing.Spec.Template.Spec.Containers[idx].Resources, desired.Spec.Template.Spec.Containers[idx].Resources, cmpopts.IgnoreUnexported(resource.Quantity{}))
-			log.Info(fmt.Sprintf("%s spec.template.spec.containers[%d].resources have changed: %s", desiredName, idx, diff))
-			existing.Spec.Template.Spec.Containers[idx].Resources = desired.Spec.Template.Spec.Containers[idx].Resources
-			update = true
-		}
-	}
-
-	return update, nil
-}
-
 type SystemReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
@@ -127,7 +82,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// SystemApp DC
-	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), SystemAppDCMutator)
+	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), r.systemAppDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -255,6 +210,51 @@ func (r *SystemReconciler) validateS3StorageProvidedConfiguration() error {
 	}
 
 	return nil
+}
+
+func (r *SystemReconciler) systemAppDCMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	existing, ok := existingObj.(*appsv1.DeploymentConfig)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
+	}
+	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
+	}
+
+	desiredName := common.ObjectInfo(desired)
+	update := false
+
+	tmpUpdate := reconcilers.DeploymentConfigReplicasReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	//
+	// Check containers
+	//
+	if len(desired.Spec.Template.Spec.Containers) != 3 {
+		panic(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
+	}
+
+	if len(existing.Spec.Template.Spec.Containers) != 3 {
+		r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating dc", desiredName, len(existing.Spec.Template.Spec.Containers)))
+		existing.Spec.Template.Spec.Containers = desired.Spec.Template.Spec.Containers
+		update = true
+	}
+
+	//
+	// Check containers resource requirements
+	//
+
+	for idx := 0; idx < 3; idx++ {
+		if !helper.CmpResources(&existing.Spec.Template.Spec.Containers[idx].Resources, &desired.Spec.Template.Spec.Containers[idx].Resources) {
+			diff := cmp.Diff(existing.Spec.Template.Spec.Containers[idx].Resources, desired.Spec.Template.Spec.Containers[idx].Resources, cmpopts.IgnoreUnexported(resource.Quantity{}))
+			r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers[%d].resources have changed: %s", desiredName, idx, diff))
+			existing.Spec.Template.Spec.Containers[idx].Resources = desired.Spec.Template.Spec.Containers[idx].Resources
+			update = true
+		}
+	}
+
+	return update, nil
 }
 
 func System(cr *appsv1alpha1.APIManager, client client.Client) (*component.System, error) {

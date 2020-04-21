@@ -10,6 +10,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -22,12 +23,14 @@ import (
 type UpgradeApiManager struct {
 	*reconcilers.BaseReconciler
 	apiManager *appsv1alpha1.APIManager
+	logger     logr.Logger
 }
 
 func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *UpgradeApiManager {
 	return &UpgradeApiManager{
 		BaseReconciler: b,
 		apiManager:     apiManager,
+		logger:         b.Logger().WithValues("APIManager Upgrade Controller", apiManager.Name),
 	}
 }
 
@@ -609,4 +612,8 @@ func (u *UpgradeApiManager) upgradeSystemMasterApicastSecret() (reconcile.Result
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) Logger() logr.Logger {
+	return u.logger
 }
