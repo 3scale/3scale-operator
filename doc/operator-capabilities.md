@@ -1,3 +1,37 @@
+# Application Capabilities via Operator
+
+Featured capabilities:
+
+* Allow interacting with the underlying 3scale API Management solution.
+* Manage the 3scale application declaratively using openshift (custom) resources.
+* ...
+
+Existing 3scale custom object types and how they are related to each other is shown in the following diagram:
+
+![3scale Object types and ](capabilities-diagram.png)
+
+## CRD reference
+
+<table>
+  <tr>
+    <td>[Account Provider](tenant.md)</td>
+    <td>[Product](tenant.md)</td>
+    <td>[Backend](tenant.md)</td>
+    <td>[Account](tenant.md)</td>
+  </tr>
+  <tr>
+    <td>[ActiveDoc](tenant.md)</td>
+    <td>[Backend Usage](tenant.md)</td>
+    <td>[Application Plan](tenant.md)</td>
+    <td>[Application](tenant.md)</td>
+  </tr>
+</table>
+
+|  | [Product](tenant.md) | [Backend](tenant.md) | [MappingRule](tenant.md) |
+| --- | --- | --- | --- |
+| [Metric](tenant.md) | [Method](tenant.md) | [Application](tenant.md) | [ApplicationPlan](tenant.md) |
+
+
 * [Tenant reference](tenant-reference.md)
 * [Capabilities reference](api-crd-reference.md)
 
