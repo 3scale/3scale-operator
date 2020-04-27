@@ -285,13 +285,7 @@ func filterGKVsFromAddToScheme(gvks []schema.GroupVersionKind) []schema.GroupVer
 		schema.GroupVersionKind{Group: "apps.openshift.io", Kind: "DeploymentConfig", Version: matchAnyValue},
 
 		// Custom resource types
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Plan", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "API", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Limit", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "MappingRule", Version: matchAnyValue},
 		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Tenant", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Metric", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Binding", Version: matchAnyValue},
 		schema.GroupVersionKind{Group: "apps.3scale.net", Kind: "APIManager", Version: matchAnyValue},
 	}
 
