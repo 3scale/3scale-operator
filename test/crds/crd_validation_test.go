@@ -19,14 +19,8 @@ import (
 func TestSampleCustomResources(t *testing.T) {
 	root := "../../deploy/crds"
 	crdCrMap := map[string]string{
-		"apps.3scale.net_apimanagers_crd.yaml":          "apps.3scale.net_v1alpha1_apimanager_cr",
-		"capabilities.3scale.net_apis_crd.yaml":         "capabilities.3scale.net_v1alpha1_api_cr",
-		"capabilities.3scale.net_bindings_crd.yaml":     "capabilities.3scale.net_v1alpha1_binding_cr",
-		"capabilities.3scale.net_limits_crd.yaml":       "capabilities.3scale.net_v1alpha1_limit_cr",
-		"capabilities.3scale.net_mappingrules_crd.yaml": "capabilities.3scale.net_v1alpha1_mappingrule_cr",
-		"capabilities.3scale.net_metrics_crd.yaml":      "capabilities.3scale.net_v1alpha1_metric_cr",
-		"capabilities.3scale.net_plans_crd.yaml":        "capabilities.3scale.net_v1alpha1_plan_cr",
-		"capabilities.3scale.net_tenants_crd.yaml":      "capabilities.3scale.net_v1alpha1_tenant_cr",
+		"apps.3scale.net_apimanagers_crd.yaml":     "apps.3scale.net_v1alpha1_apimanager_cr",
+		"capabilities.3scale.net_tenants_crd.yaml": "capabilities.3scale.net_v1alpha1_tenant_cr",
 	}
 	for crd, prefix := range crdCrMap {
 		validateCustomResources(t, root, crd, prefix)
@@ -57,14 +51,8 @@ func validateCustomResources(t *testing.T, root string, crd string, prefix strin
 func TestCompleteCRD(t *testing.T) {
 	root := "../../deploy/crds"
 	crdStructMap := map[string]interface{}{
-		"apps.3scale.net_apimanagers_crd.yaml":          &apps.APIManager{},
-		"capabilities.3scale.net_apis_crd.yaml":         &capabilities.API{},
-		"capabilities.3scale.net_bindings_crd.yaml":     &capabilities.Binding{},
-		"capabilities.3scale.net_limits_crd.yaml":       &capabilities.Limit{},
-		"capabilities.3scale.net_mappingrules_crd.yaml": &capabilities.MappingRule{},
-		"capabilities.3scale.net_metrics_crd.yaml":      &capabilities.Metric{},
-		"capabilities.3scale.net_plans_crd.yaml":        &capabilities.Plan{},
-		"capabilities.3scale.net_tenants_crd.yaml":      &capabilities.Tenant{},
+		"apps.3scale.net_apimanagers_crd.yaml":     &apps.APIManager{},
+		"capabilities.3scale.net_tenants_crd.yaml": &capabilities.Tenant{},
 	}
 	for crd, obj := range crdStructMap {
 		schema := getSchema(t, fmt.Sprintf("%s/%s", root, crd))
