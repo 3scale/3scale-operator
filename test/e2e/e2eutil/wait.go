@@ -77,35 +77,13 @@ func WaitForSecret(t *testing.T, kubeClient kubernetes.Interface, namespace, nam
 	return nil
 }
 
-func WaitForReconciliationWith3scale(t *testing.T, c test.FrameworkClient, binding v1alpha1.Binding, retryInterval, timeout time.Duration) error {
-
-	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
-		t.Logf("Waiting for LastSucessfulSync of binding '%s'\n", binding.Name)
-
-		b := v1alpha1.Binding{}
-		err = c.Get(context.TODO(), types.NamespacedName{Name: binding.Name, Namespace: binding.Namespace}, &b)
-		if err != nil {
-			return true, err
-		}
-		if b.GetLastSuccessfulSync() != nil {
-			return true, nil
-		}
-		return false, nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-
-}
-
 func WaitForRouteFromHost(t *testing.T, kubeClient kubernetes.Interface, osRouteV1Client clientroutev1.RouteV1Interface, namespace, host string, retryInterval, timeout time.Duration) error {
 	err := wait.Poll(retryInterval, timeout, func() (done bool, err error) {
 		routeInteface := osRouteV1Client.Routes(namespace)
 		routeFieldSelector := "spec.host=" + host
 		routeList, err := routeInteface.List(
 			metav1.ListOptions{
-				FieldSelector:        routeFieldSelector},
+				FieldSelector: routeFieldSelector},
 		)
 		if err != nil {
 			if apierrors.IsNotFound(err) {

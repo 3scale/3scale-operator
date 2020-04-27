@@ -17,7 +17,6 @@ rules:
   - configmaps
   - secrets
   - serviceaccounts
-  - bindings/finalizers
   verbs:
   - create
   - delete
@@ -59,9 +58,9 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - pods/exec
+  - pods
   verbs:
-  - create
+  - get
 - apiGroups:
   - apps
   resources:
@@ -85,12 +84,6 @@ rules:
   - capabilities.3scale.net
   resources:
   - '*'
-  - bindings
-  - metrics
-  - plans
-  - limits
-  - mappingrules
-  - tenants
   verbs:
   - create
   - delete
