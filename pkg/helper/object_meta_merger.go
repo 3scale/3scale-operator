@@ -10,13 +10,7 @@ func EnsureObjectMeta(existing, desired common.KubernetesObject) bool {
 	updated := false
 
 	existingLabels := existing.GetLabels()
-	if existingLabels == nil {
-		existingLabels = map[string]string{}
-	}
 	existingAnnotations := existing.GetAnnotations()
-	if existingAnnotations == nil {
-		existingAnnotations = map[string]string{}
-	}
 
 	MergeMapStringString(&updated, &existingLabels, desired.GetLabels())
 	MergeMapStringString(&updated, &existingAnnotations, desired.GetAnnotations())
