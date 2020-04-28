@@ -48,7 +48,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Backend IS
-	err = r.ReconcileImagestream(redis.BackendImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(redis.BackendImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -72,7 +72,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// System redis IS
-	err = r.ReconcileImagestream(redis.SystemImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(redis.SystemImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

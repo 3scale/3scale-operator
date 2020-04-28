@@ -24,7 +24,7 @@ func (r *SystemPostgreSQLImageReconciler) Reconcile() (reconcile.Result, error) 
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileImagestream(systemPostgreSQLImage.ImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(systemPostgreSQLImage.ImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

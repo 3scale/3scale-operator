@@ -25,37 +25,37 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// backend IS
-	err = r.ReconcileImagestream(ampImages.BackendImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(ampImages.BackendImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// zync IS
-	err = r.ReconcileImagestream(ampImages.ZyncImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(ampImages.ZyncImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// apicast IS
-	err = r.ReconcileImagestream(ampImages.APICastImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(ampImages.APICastImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// system IS
-	err = r.ReconcileImagestream(ampImages.SystemImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(ampImages.SystemImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// zync db postresql IS
-	err = r.ReconcileImagestream(ampImages.ZyncDatabasePostgreSQLImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(ampImages.ZyncDatabasePostgreSQLImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// system memcached IS
-	err = r.ReconcileImagestream(ampImages.SystemMemcachedImageStream(), reconcilers.GenericImagestreamMutator)
+	err = r.ReconcileImagestream(ampImages.SystemMemcachedImageStream(), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

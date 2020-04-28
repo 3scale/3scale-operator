@@ -355,7 +355,7 @@ func (u *UpgradeApiManager) upgradeBackendRedisImageStream() (reconcile.Result, 
 	}
 
 	reconciler := NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager)
-	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.BackendImageStream(), reconcilers.GenericImagestreamMutator)
+	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.BackendImageStream(), reconcilers.GenericImageStreamMutator)
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, error) {
@@ -365,7 +365,7 @@ func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, e
 	}
 
 	reconciler := NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager)
-	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.SystemImageStream(), reconcilers.GenericImagestreamMutator)
+	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.SystemImageStream(), reconcilers.GenericImageStreamMutator)
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseImageStream() (reconcile.Result, error) {

@@ -8,7 +8,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 )
 
-func GenericImagestreamMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func GenericImageStreamMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*imagev1.ImageStream)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *imagev1.ImageStream", existingObj)
