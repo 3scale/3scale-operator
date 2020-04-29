@@ -1,0 +1,7 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManagerRestore
+metadata:
+  name: example-apimanagerrestore
+spec:
+  # Add fields here
+  size: 3
