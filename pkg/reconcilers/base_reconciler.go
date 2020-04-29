@@ -9,6 +9,7 @@ import (
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -101,7 +102,11 @@ func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject,
 
 	// item found successfully
 	if common.IsObjectTaggedToDelete(desired) {
-		return b.DeleteResource(desired)
+		deletePropagationPolicy := common.GetDeletePropagationPolicyAnnotation(desired)
+		if deletePropagationPolicy == nil {
+			return b.DeleteResource(desired)
+		}
+		return b.DeleteResource(desired, client.PropagationPolicy(*deletePropagationPolicy))
 	}
 
 	update, err := mutateFn(obj, desired)
@@ -116,6 +121,11 @@ func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject,
 	return nil
 }
 
+func (b *BaseReconciler) GetResource(objKey types.NamespacedName, obj common.KubernetesObject) error {
+	b.Logger().Info(fmt.Sprintf("Get object %s", common.ObjectInfo(obj)))
+	return b.Client().Get(context.TODO(), objKey, obj)
+}
+
 func (b *BaseReconciler) CreateResource(obj common.KubernetesObject) error {
 	b.Logger().Info(fmt.Sprintf("Created object %s", common.ObjectInfo(obj)))
 	return b.Client().Create(b.ctx, obj)
@@ -126,7 +136,7 @@ func (b *BaseReconciler) UpdateResource(obj common.KubernetesObject) error {
 	return b.Client().Update(b.ctx, obj)
 }
 
-func (b *BaseReconciler) DeleteResource(obj common.KubernetesObject) error {
+func (b *BaseReconciler) DeleteResource(obj common.KubernetesObject, options ...client.DeleteOption) error {
 	b.Logger().Info(fmt.Sprintf("Delete object %s", common.ObjectInfo(obj)))
 	return b.Client().Delete(context.TODO(), obj)
 }
