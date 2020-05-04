@@ -127,9 +127,3 @@ following one:
 1. At this point the restore has finished. You should see a new APIManager custom
    resource has been created and a 3scale installation deployed by it being
    deployed and eventually running.
-1. When the 3scale installation is running and ready the OpenShift routes
-   have to be restored from the existing database data. To do so execute the
-   following command:
-   ```
-   oc exec -it <a-system-app-pod> bash -- -c "bundle exec rake zync:resync:domains"
-   ```
