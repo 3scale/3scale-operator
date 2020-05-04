@@ -2,6 +2,8 @@ package apimanagerrestore
 
 import (
 	"fmt"
+	"reflect"
+	"sort"
 	"time"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -94,6 +96,16 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromPVCSource() (reco
 	}
 
 	res, err = r.reconcileRestoreAPIManager()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = r.reconcileWaitForAPIManagerReady()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = r.reconcileResynchronizeZyncDomains()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -411,4 +423,57 @@ func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecr
 	r.Logger().Info("Job and cleant up successfully. Requeuing", "Job Name", desired.Name)
 
 	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerRestoreLogicReconciler) reconcileWaitForAPIManagerReady() (reconcile.Result, error) {
+	desiredAPIManager, err := r.apiManagerFromSharedBackupSecret()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	existingAPIManager := &appsv1alpha1.APIManager{}
+	err = r.GetResource(common.ObjectKey(desiredAPIManager), existingAPIManager)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			r.Logger().Info("APIManager not found. Waiting until it exists", "APIManager", desiredAPIManager.Name)
+			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
+		}
+		return reconcile.Result{}, err
+	}
+
+	// External databases scenario assumed
+	expectedDeploymentNames := []string{
+		"apicast-production",
+		"apicast-staging",
+		"backend-listener",
+		"backend-worker",
+		"backend-cron",
+		"zync",
+		"zync-que",
+		"zync-database",
+		"system-app",
+		"system-sphinx",
+		"system-sidekiq",
+		"system-memcache",
+	}
+
+	existingReadyDeployments := existingAPIManager.Status.Deployments.Ready
+	sort.Slice(expectedDeploymentNames, func(i, j int) bool { return expectedDeploymentNames[i] < expectedDeploymentNames[j] })
+	sort.Slice(existingReadyDeployments, func(i, j int) bool { return existingReadyDeployments[i] < existingReadyDeployments[j] })
+
+	if !reflect.DeepEqual(existingReadyDeployments, expectedDeploymentNames) {
+		r.Logger().Info("all APIManager Deployments not ready. Waiting", "APIManager", desiredAPIManager.Name, "expected-ready-deployments", expectedDeploymentNames, "ready-deployments", existingReadyDeployments)
+		return reconcile.Result{RequeueAfter: 5 * time.Second, Requeue: true}, nil
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerRestoreLogicReconciler) reconcileResynchronizeZyncDomains() (reconcile.Result, error) {
+	desired := r.apiManagerRestore.ZyncResyncDomainsJob()
+	if desired == nil {
+		return reconcile.Result{}, nil
+	}
+
+	return r.reconcileJob(desired)
 }
