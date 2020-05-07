@@ -1,7 +1,0 @@
-apiVersion: capabilities.3scale.net/v1beta1
-kind: AccountProvider
-metadata:
-  name: example-accountprovider
-spec:
-  # Add fields here
-  size: 3
