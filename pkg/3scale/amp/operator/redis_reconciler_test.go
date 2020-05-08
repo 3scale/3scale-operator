@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
@@ -26,6 +27,9 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 		tenantName     = "someTenant"
 		log            = logf.Log.WithName("operator_test")
 	)
+
+	ctx := context.TODO()
+
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -59,9 +63,9 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+
 	reconciler := NewRedisReconciler(baseAPIManagerLogicReconciler)
 	_, err = reconciler.Reconcile()
 	if err != nil {

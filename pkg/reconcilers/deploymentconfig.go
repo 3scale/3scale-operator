@@ -12,10 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func CreateOnlyDeploymentConfigMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-	return false, nil
-}
-
 func DeploymentConfigResourcesMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*appsv1.DeploymentConfig)
 	if !ok {

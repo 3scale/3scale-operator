@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -26,6 +28,9 @@ func TestAMPImagesReconciler(t *testing.T) {
 		appLabel       = "someLabel"
 		trueValue      = true
 	)
+
+	ctx := context.TODO()
+
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -60,11 +65,10 @@ func TestAMPImagesReconciler(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	BaseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
-	imagesReconciler := NewAMPImagesReconciler(BaseAPIManagerLogicReconciler)
+	imagesReconciler := NewAMPImagesReconciler(baseAPIManagerLogicReconciler)
 	_, err = imagesReconciler.Reconcile()
 	if err != nil {
 		t.Fatal(err)
