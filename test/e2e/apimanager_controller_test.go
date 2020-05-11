@@ -9,13 +9,13 @@ import (
 	appsgroup "github.com/3scale/3scale-operator/pkg/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	e2eutil "github.com/3scale/3scale-operator/test/e2e/e2eutil"
+
+	clientappsv1 "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
+	clientroutev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	frameworke2eutil "github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-
-	clientappsv1 "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
-	clientroutev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 )
 
 func TestApiManagerController(t *testing.T) {

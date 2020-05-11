@@ -96,32 +96,32 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMonitoringService(component.BackendWorkerMonitoringService())
+	err = r.ReconcileMonitoringService(component.BackendWorkerMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileServiceMonitor(component.BackendWorkerServiceMonitor())
+	err = r.ReconcileServiceMonitor(component.BackendWorkerServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMonitoringService(component.BackendListenerMonitoringService())
+	err = r.ReconcileMonitoringService(component.BackendListenerMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileServiceMonitor(component.BackendListenerServiceMonitor())
+	err = r.ReconcileServiceMonitor(component.BackendListenerServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileGrafanaDashboard(component.BackendGrafanaDashboard(r.apiManager.Namespace))
+	err = r.ReconcileGrafanaDashboard(component.BackendGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcilePrometheusRules(component.BackendWorkerPrometheusRules(r.apiManager.Namespace))
+	err = r.ReconcilePrometheusRules(component.BackendWorkerPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
