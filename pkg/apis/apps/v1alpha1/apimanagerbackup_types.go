@@ -14,10 +14,7 @@ type APIManagerBackupSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-	// +optional
-	// +kubebuilder:validation:MinLength=1
-	APIManagerName *string                `json:"apiManagerName,omitemtpy"`
-	BackupSource   APIManagerBackupSource `json:"backupSource"`
+	BackupSource APIManagerBackupSource `json:"backupSource"`
 }
 
 type APIManagerBackupSource struct {

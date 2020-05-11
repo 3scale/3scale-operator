@@ -31,14 +31,11 @@ spec:
         spec:
           description: APIManagerBackupSpec defines the desired state of APIManagerBackup
           properties:
-            apiManagerName:
+            backupSource:
               description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                 Important: Run "operator-sdk generate k8s" to regenerate code after
                 modifying this file Add custom validation using kubebuilder tags:
                 https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html'
-              minLength: 1
-              type: string
-            backupSource:
               properties:
                 persistentVolumeClaim:
                   description: 'Ways to define a PVC creation: Define VolumeName OR
