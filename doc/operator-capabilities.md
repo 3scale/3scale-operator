@@ -14,23 +14,12 @@ Existing 3scale custom object types and how they are related to each other is sh
 
 <table>
   <tr>
-    <td>[Account Provider](tenant.md)</td>
-    <td>[Product](tenant.md)</td>
-    <td>[Backend](tenant.md)</td>
-    <td>[Account](tenant.md)</td>
-  </tr>
-  <tr>
-    <td>[ActiveDoc](tenant.md)</td>
-    <td>[Backend Usage](tenant.md)</td>
-    <td>[Application Plan](tenant.md)</td>
-    <td>[Application](tenant.md)</td>
+    <td>[Product](product_reference.md)</td>
+    <td>[Backend](backend_reference.md)</td>
+    <td>[Account](Account_reference.md)</td>
+    <td>[ActiveDoc](activedoc_reference.md)</td>
   </tr>
 </table>
-
-|  | [Product](tenant.md) | [Backend](tenant.md) | [MappingRule](tenant.md) |
-| --- | --- | --- | --- |
-| [Metric](tenant.md) | [Method](tenant.md) | [Application](tenant.md) | [ApplicationPlan](tenant.md) |
-
 
 * [Tenant reference](tenant-reference.md)
 * [Capabilities reference](api-crd-reference.md)

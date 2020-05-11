@@ -9,6 +9,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 
@@ -27,7 +28,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_apimanager")
+var (
+	// controllerName is the name of this controller
+	controllerName = "controller_apimanager"
+
+	// package level logger
+	log = logf.Log.WithName(controllerName)
+)
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -44,17 +51,9 @@ func Add(mgr manager.Manager) error {
 	return add(mgr, reconciler)
 }
 
-// We create an Client Reader that directly queries the API server
-// without going to the Cache provided by the Manager's Client because
-// there are some resources that do not implement Watch (like ImageStreamTag)
-// and the Manager's Client always tries to use the Cache when reading
-func newAPIClientReader(mgr manager.Manager) (client.Client, error) {
-	return client.New(mgr.GetConfig(), client.Options{Mapper: mgr.GetRESTMapper(), Scheme: mgr.GetScheme()})
-}
-
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
-	apiClientReader, err := newAPIClientReader(mgr)
+	apiClientReader, err := common.NewAPIClientReader(mgr)
 	if err != nil {
 		return nil, err
 	}
@@ -67,10 +66,10 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 	client := mgr.GetClient()
 	scheme := mgr.GetScheme()
 	ctx := context.TODO()
+	recorder := mgr.GetEventRecorderFor(controllerName)
 	return &ReconcileAPIManager{
-		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, discoveryClient),
+		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, discoveryClient, recorder),
 	}, nil
-
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -342,7 +341,7 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 	dcList := &appsv1.DeploymentConfigList{}
 	err := r.Client().List(context.TODO(), dcList, listOps...)
 	if err != nil {
-		log.Error(err, "Failed to list deployment configs")
+		r.Logger().Error(err, "Failed to list deployment configs")
 		return err
 	}
 	var dcs []appsv1.DeploymentConfig
@@ -358,11 +357,11 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 
 	deploymentStatus := olm.GetDeploymentConfigStatus(dcs)
 	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {
-		log.Info("Deployment status will be updated")
+		r.Logger().Info("Deployment status will be updated")
 		instance.Status.Deployments = deploymentStatus
 		err = r.Client().Status().Update(context.TODO(), instance)
 		if err != nil {
-			log.Error(err, "Failed to update API Manager deployment status")
+			r.Logger().Error(err, "Failed to update API Manager deployment status")
 			return err
 		}
 	}
