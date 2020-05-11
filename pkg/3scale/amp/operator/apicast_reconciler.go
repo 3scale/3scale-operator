@@ -7,6 +7,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -96,32 +97,32 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMonitoringService(component.ApicastStagingMonitoringService())
+	err = r.ReconcileMonitoringService(component.ApicastStagingMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMonitoringService(component.ApicastProductionMonitoringService())
+	err = r.ReconcileMonitoringService(component.ApicastProductionMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileGrafanaDashboard(component.ApicastGrafanaDashboard(r.apiManager.Namespace))
+	err = r.ReconcileGrafanaDashboard(component.ApicastGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcilePrometheusRules(component.ApicastPrometheusRules(r.apiManager.Namespace))
+	err = r.ReconcilePrometheusRules(component.ApicastPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileServiceMonitor(component.ApicastProductionServiceMonitor())
+	err = r.ReconcileServiceMonitor(component.ApicastProductionServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileServiceMonitor(component.ApicastStagingServiceMonitor())
+	err = r.ReconcileServiceMonitor(component.ApicastStagingServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

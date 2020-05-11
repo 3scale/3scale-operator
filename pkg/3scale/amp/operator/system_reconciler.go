@@ -171,22 +171,22 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMonitoringService(component.SystemSidekiqMonitoringService())
+	err = r.ReconcileMonitoringService(component.SystemSidekiqMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileServiceMonitor(component.SystemSidekiqServiceMonitor())
+	err = r.ReconcileServiceMonitor(component.SystemSidekiqServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileGrafanaDashboard(component.SystemGrafanaDashboard(r.apiManager.Namespace))
+	err = r.ReconcileGrafanaDashboard(component.SystemGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcilePrometheusRules(component.SystemSidekiqPrometheusRules(r.apiManager.Namespace))
+	err = r.ReconcilePrometheusRules(component.SystemSidekiqPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

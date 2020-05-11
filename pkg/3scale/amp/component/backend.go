@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-	"k8s.io/api/policy/v1beta1"
-
 	"github.com/3scale/3scale-operator/pkg/helper"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )

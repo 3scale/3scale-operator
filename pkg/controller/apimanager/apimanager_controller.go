@@ -283,7 +283,8 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		return result, err
 	}
 
-	result, err = r.reconcileGenericMonitoring(cr)
+	genericMonitoringReconciler := operator.NewGenericMonitoringReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = genericMonitoringReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
@@ -366,10 +367,4 @@ func (r *ReconcileAPIManager) externalDatabasesCheck(cr *appsv1alpha1.APIManager
 	optsProvider := operator.NewHighAvailabilityOptionsProvider(cr.Namespace, r.Client())
 	_, err := optsProvider.GetHighAvailabilityOptions()
 	return err
-}
-
-func (r *ReconcileAPIManager) reconcileGenericMonitoring(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewGenericMonitoringReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
 }
