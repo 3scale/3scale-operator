@@ -68,6 +68,10 @@ func (a *APIManagerBackupOptionsProvider) pvcBackupOptions() (*APIManagerBackupP
 	return res, res.Validate()
 }
 
+func (a *APIManagerBackupOptionsProvider) apiManager() (*appsv1alpha1.APIManager, error) {
+	return a.autodiscoveredAPIManager()
+}
+
 func (a *APIManagerBackupOptionsProvider) autodiscoveredAPIManager() (*appsv1alpha1.APIManager, error) {
 	resList := &appsv1alpha1.APIManagerList{}
 	err := a.Client.List(context.TODO(), resList, client.InNamespace(a.APIManagerBackupCR.Namespace))
@@ -86,17 +90,6 @@ func (a *APIManagerBackupOptionsProvider) autodiscoveredAPIManager() (*appsv1alp
 	res = &resList.Items[0]
 	return res, nil
 
-}
-
-func (a *APIManagerBackupOptionsProvider) apiManager() (*appsv1alpha1.APIManager, error) {
-	var apiManager *appsv1alpha1.APIManager
-	var err error
-	if a.APIManagerBackupCR.Spec.APIManagerName != nil {
-		apiManager, err = a.apiManagerFromName(*a.APIManagerBackupCR.Spec.APIManagerName)
-		return apiManager, err
-	}
-	apiManager, err = a.autodiscoveredAPIManager()
-	return apiManager, err
 }
 
 func (a *APIManagerBackupOptionsProvider) apiManagerFromName(name string) (*appsv1alpha1.APIManager, error) {
