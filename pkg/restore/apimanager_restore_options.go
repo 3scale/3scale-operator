@@ -7,8 +7,7 @@ import (
 type APIManagerRestoreOptions struct {
 	Namespace                   string                       `validate:"required"` // Namespace where the K8s related objects to the restore will be created/looked
 	APIManagerRestoreName       string                       `validate:"required"` // Name of the APIManagerRestore CR. NOT the backup or APIManager name
-	APIManagerRestorePVCOptions *APIManagerRestorePVCOptions `validate:"required_without=APIManagerRestoreS3Options"`
-	APIManagerRestoreS3Options  *APIManagerRestoreS3Options  `validate:"required_without=APIManagerRestorePVCOptions"`
+	APIManagerRestorePVCOptions *APIManagerRestorePVCOptions `validate:"required"`
 }
 
 func NewAPIManagerRestoreOptions() *APIManagerRestoreOptions {

@@ -70,7 +70,6 @@ This section controls where APIManager's backup is to be stored.
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- |
 | `persistentVolumeClaim` | [PersistentVolumeClaimBackupSource](#PersistentVolumeClaimBackupSource) | No | nil | APIManager backup destination in PVC |
-| `simpleStorageService` | [APIManagerBackupS3Source](#APIManagerBackupS3Source) | No | nil | **CURRENTLY UNSUPPORTED** APIManager backup destination in S3 api-compatible service |
 
 ### PersistentVolumeClaimBackupSource
 

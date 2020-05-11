@@ -5,7 +5,6 @@ go 1.13
 require (
 	github.com/3scale/3scale-porta-go-client v0.0.3
 	github.com/RHsyseng/operator-utils v0.0.0-20200204194854-c5b0d8533458
-	github.com/aws/aws-sdk-go v1.17.7
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.4
@@ -21,7 +20,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0
-	google.golang.org/api v0.6.1-0.20190607001116-5213b8090861
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0

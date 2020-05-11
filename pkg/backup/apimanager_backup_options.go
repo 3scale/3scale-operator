@@ -10,8 +10,7 @@ type APIManagerBackupOptions struct {
 	APIManagerBackupName       string                      `validate:"required"` // Name of the APIManager CR. NOT the APIManager cr name
 	APIManagerName             string                      `validate:"required"` // Name of the APIManager CR. NOT the backup cr name
 	APIManager                 *appsv1alpha1.APIManager    `validate:"required"` // Should we make this required?
-	APIManagerBackupPVCOptions *APIManagerBackupPVCOptions `validate:"required_without=APIManagerBackupS3Options"`
-	APIManagerBackupS3Options  *APIManagerBackupS3Options  `validate:"required_without=APIManagerBackupPVCOptions"`
+	APIManagerBackupPVCOptions *APIManagerBackupPVCOptions `validate:"required"`
 }
 
 func NewAPIManagerBackupOptions() *APIManagerBackupOptions {

@@ -44,7 +44,6 @@ Is not the scope of restore functionality of the operator:
   * In a PersistentVolumeClaim
     * When the backed up System's FileStorage data was stored in a PersistentVolumeClaim
     * **CURRENTLY UNSUPPORTED**  When the backed up System's FileStorage data was stored in a S3 API-compatible storage
-  * **CURRENTLY UNSUPPORTED** In S3 API-compatible storage
 
 ## Data that is not restored
 
@@ -92,7 +91,6 @@ This section controls from where APIManager's  is to be stored.
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- |
 | `persistentVolumeClaim` | [PersistentVolumeClaimRestoreSource](#PersistentVolumeClaimRestoreSource) | No | nil | APIManager restore source from PVC |
-| `simpleStorageService` | [APIManagerRestoreS3Source](#APIManagerRestoreS3Source) | No | nil | **CURRENTLY UNSUPPORTED** APIManager restore source from S3 api-compatible service |
 
 ### PersistentVolumeClaimRestoreSource
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
