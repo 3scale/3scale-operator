@@ -29,22 +29,12 @@ func (a *APIManagerRestoreOptionsProvider) Options() (*APIManagerRestoreOptions,
 		return nil, err
 	}
 
-	s3Options, err := a.s3RestoreOptions()
-	if err != nil {
-		return nil, err
-	}
-
 	// TODO can this checks be omitted and just rely on the validator package in the APIManagerRestore struct?
-	if pvcOptions == nil && s3Options == nil {
+	if pvcOptions == nil {
 		return nil, fmt.Errorf("At least one restore source has to be specified")
 	}
 
-	if pvcOptions != nil && s3Options != nil {
-		return nil, fmt.Errorf("Only one restore source can be specified")
-	}
-
 	res.APIManagerRestorePVCOptions = pvcOptions
-	res.APIManagerRestoreS3Options = s3Options
 
 	return res, res.Validate()
 }
@@ -57,14 +47,5 @@ func (a *APIManagerRestoreOptionsProvider) pvcRestoreOptions() (*APIManagerResto
 	res := NewAPIManagerRestorePVCOptions()
 	res.PersistentVolumeClaimVolumeSource = a.APIManagerRestoreCR.Spec.RestoreSource.PersistentVolumeClaim.ClaimSource
 
-	return res, res.Validate()
-}
-
-func (a *APIManagerRestoreOptionsProvider) s3RestoreOptions() (*APIManagerRestoreS3Options, error) {
-	if a.APIManagerRestoreCR.Spec.RestoreSource.SimpleStorageService == nil {
-		return nil, nil
-	}
-
-	res := NewAPIManagerRestoreS3Options()
 	return res, res.Validate()
 }

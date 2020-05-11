@@ -18,22 +18,7 @@ type APIManagerRestoreSpec struct {
 
 type APIManagerRestoreSource struct {
 	// +optional
-	SimpleStorageService *APIManagerRestoreS3Source `json:"simpleStorageService,omitempty"`
-	// +optional
 	PersistentVolumeClaim *PersistentVolumeClaimRestoreSource `json:"persistentVolumeClaim,omitempty"`
-}
-
-type APIManagerRestoreS3Source struct {
-	CredentialsSecretRef v1.LocalObjectReference `json:"credentialsSecretRef"`
-	Bucket               string                  `json:"bucket"`
-	// +optional
-	Endpoint *string `json:"endpoint,omitempty"`
-	// +optional
-	ForcePathStyle *bool `json:"forcePathStyle,omitempty"`
-	// +optional
-	Region *string `json:"region,omitempty"`
-	// +optional
-	Path *string `json:"path,omitempty"`
 }
 
 type PersistentVolumeClaimRestoreSource struct {

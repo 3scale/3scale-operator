@@ -61,31 +61,6 @@ spec:
                   required:
                   - claimSource
                   type: object
-                simpleStorageService:
-                  properties:
-                    bucket:
-                      type: string
-                    credentialsSecretRef:
-                      description: LocalObjectReference contains enough information
-                        to let you locate the referenced object inside the same namespace.
-                      properties:
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                            TODO: Add other useful fields. apiVersion, kind, uid?'
-                          type: string
-                      type: object
-                    endpoint:
-                      type: string
-                    forcePathStyle:
-                      type: boolean
-                    path:
-                      type: string
-                    region:
-                      type: string
-                  required:
-                  - bucket
-                  - credentialsSecretRef
-                  type: object
               type: object
           required:
           - restoreSource

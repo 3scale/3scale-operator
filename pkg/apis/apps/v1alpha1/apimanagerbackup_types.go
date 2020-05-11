@@ -22,22 +22,7 @@ type APIManagerBackupSpec struct {
 
 type APIManagerBackupSource struct {
 	// +optional
-	SimpleStorageService *APIManagerBackupS3Source `json:"simpleStorageService,omitempty"`
-	// +optional
 	PersistentVolumeClaim *PersistentVolumeClaimBackupSource `json:"persistentVolumeClaim,omitempty"`
-}
-
-type APIManagerBackupS3Source struct {
-	CredentialsSecretRef v1.LocalObjectReference `json:"credentialsSecretRef"`
-	Bucket               string                  `json:"bucket"`
-	// +optional
-	Endpoint *string `json:"endpoint,omitempty"`
-	// +optional
-	ForcePathStyle *bool `json:"forcePathStyle,omitempty"`
-	// +optional
-	Region *string `json:"region,omitempty"`
-	// +optional
-	Path *string `json:"path,omitempty"`
 }
 
 // Ways to define a PVC creation:
