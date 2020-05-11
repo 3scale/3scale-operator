@@ -5,112 +5,24 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	appsv1 "github.com/openshift/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type SystemSphinxDCReconciler struct {
-	BaseAPIManagerLogicReconciler
-}
-
-func NewSystemSphinxDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *SystemSphinxDCReconciler {
-	return &SystemSphinxDCReconciler{
-		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
-	}
-}
-
-func (r *SystemSphinxDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
-	update := false
-
-	tmpUpdate := DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	return update
-}
-
-type SystemSidekiqDCReconciler struct {
-	BaseAPIManagerLogicReconciler
-}
-
-func NewSystemSidekiqDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *SystemSidekiqDCReconciler {
-	return &SystemSidekiqDCReconciler{
-		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
-	}
-}
-
-func (r *SystemSidekiqDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
-	update := false
-
-	tmpUpdate := DeploymentConfigReconcileReplicas(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	tmpUpdate = DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	return update
-}
-
-type SystemAppDCReconciler struct {
-	BaseAPIManagerLogicReconciler
-}
-
-func NewSystemAppDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *SystemAppDCReconciler {
-	return &SystemAppDCReconciler{
-		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
-	}
-}
-
-func (r *SystemAppDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
-	desiredName := ObjectInfo(desired)
-	update := false
-
-	tmpUpdate := DeploymentConfigReconcileReplicas(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	//
-	// Check containers
-	//
-	if len(desired.Spec.Template.Spec.Containers) != 3 {
-		panic(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
-	}
-
-	if len(existing.Spec.Template.Spec.Containers) != 3 {
-		r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating dc", desiredName, len(existing.Spec.Template.Spec.Containers)))
-		existing.Spec.Template.Spec.Containers = desired.Spec.Template.Spec.Containers
-		update = true
-	}
-
-	//
-	// Check containers resource requirements
-	//
-
-	for idx := 0; idx < 3; idx++ {
-		if !helper.CmpResources(&existing.Spec.Template.Spec.Containers[idx].Resources, &desired.Spec.Template.Spec.Containers[idx].Resources) {
-			diff := cmp.Diff(existing.Spec.Template.Spec.Containers[idx].Resources, desired.Spec.Template.Spec.Containers[idx].Resources, cmpopts.IgnoreUnexported(resource.Quantity{}))
-			r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers[%d].resources have changed: %s", desiredName, idx, diff))
-			existing.Spec.Template.Spec.Containers[idx].Resources = desired.Spec.Template.Spec.Containers[idx].Resources
-			update = true
-		}
-	}
-
-	return update
-}
-
 type SystemReconciler struct {
-	BaseAPIManagerLogicReconciler
+	*BaseAPIManagerLogicReconciler
 }
 
-// blank assignment to verify that BaseReconciler implements reconcile.Reconciler
-var _ LogicReconciler = &SystemReconciler{}
-
-func NewSystemReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) SystemReconciler {
-	return SystemReconciler{
+func NewSystemReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemReconciler {
+	return &SystemReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}
 }
@@ -118,13 +30,14 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconc
 func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
 	if r.apiManager.Spec.System.FileStorageSpec != nil {
 		if r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
-			return r.reconcileS3Storage()
+			return r.validateS3StorageProvidedConfiguration()
 		}
 		if r.apiManager.Spec.System.FileStorageSpec.DeprecatedS3 != nil {
-			r.logger.Info("Warning: deprecated amazonSimpleStorageService field in CR being used. Ignoring it... Please use simpleStorageService")
+			r.Logger().Info("Warning: deprecated amazonSimpleStorageService field in CR being used. Ignoring it... Please use simpleStorageService")
 		}
 	}
-	return r.reconcileSharedStorage(system.SharedStorage())
+	// System RWX PVC, i.e. shared storage
+	return r.ReconcilePersistentVolumeClaim(system.SharedStorage(), reconcilers.CreateOnlyMutator)
 }
 
 func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
@@ -138,102 +51,122 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileProviderService(system.ProviderService())
+	// Provider Service
+	err = r.ReconcileService(system.ProviderService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMasterService(system.MasterService())
+	// Master Service
+	err = r.ReconcileService(system.MasterService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileDeveloperService(system.DeveloperService())
+	// Developer Service
+	err = r.ReconcileService(system.DeveloperService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSphinxService(system.SphinxService())
+	// Sphinx Service
+	err = r.ReconcileService(system.SphinxService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMemcachedService(system.MemcachedService())
+	// Memcached Service
+	err = r.ReconcileService(system.MemcachedService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileAppDeploymentConfig(system.AppDeploymentConfig())
+	// SystemApp DC
+	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), r.systemAppDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSidekiqDeploymentConfig(system.SidekiqDeploymentConfig())
+	// Sidekiq DC
+	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSphinxDeploymentConfig(system.SphinxDeploymentConfig())
+	// Sphinx DC
+	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), reconcilers.DeploymentConfigResourcesMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemConfigMap(system.SystemConfigMap())
+	// System CM
+	err = r.ReconcileConfigMap(system.SystemConfigMap(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileEnvironmentConfigMap(system.EnvironmentConfigMap())
+	// System CM
+	err = r.ReconcileConfigMap(system.EnvironmentConfigMap(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSMTPSecret(system.SMTPSecret())
+	// SMTP Secret
+	err = r.ReconcileSecret(system.SMTPSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileEventsHookSecret(system.EventsHookSecret())
+	// EventsHook Secret
+	err = r.ReconcileSecret(system.EventsHookSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileRedisSecret(system.RedisSecret())
+	// Redis Secret
+	err = r.ReconcileSecret(system.RedisSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMasterApicastSecret(system.MasterApicastSecret())
+	// MasterApicast  Secret
+	err = r.ReconcileSecret(system.MasterApicastSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSeedSecret(system.SeedSecret())
+	// SystemSeed Secret
+	err = r.ReconcileSecret(system.SeedSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileRecaptchaSecret(system.RecaptchaSecret())
+	// Recaptcha Secret
+	err = r.ReconcileSecret(system.RecaptchaSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileAppSecret(system.AppSecret())
+	// SystemApp Secret
+	err = r.ReconcileSecret(system.AppSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMemcachedSecret(system.MemcachedSecret())
+	// Memcached Secret
+	err = r.ReconcileSecret(system.MemcachedSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcilePodDisruptionBudget(system.AppPodDisruptionBudget())
+	// SystemApp PDB
+	err = r.ReconcilePodDisruptionBudget(system.AppPodDisruptionBudget(), reconcilers.GenericPDBMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcilePodDisruptionBudget(system.SidekiqPodDisruptionBudget())
+	// Sidekiq PDB
+	err = r.ReconcilePodDisruptionBudget(system.SidekiqPodDisruptionBudget(), reconcilers.GenericPDBMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -241,7 +174,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (r *SystemReconciler) reconcileS3Storage() error {
+func (r *SystemReconciler) validateS3StorageProvidedConfiguration() error {
 	// Nothing for reconcile.
 	// Check all required fields exist
 	awsCredentialsSecretName := r.apiManager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name
@@ -279,99 +212,49 @@ func (r *SystemReconciler) reconcileS3Storage() error {
 	return nil
 }
 
-func (r *SystemReconciler) reconcileSharedStorage(desiredPVC *v1.PersistentVolumeClaim) error {
-	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	return reconciler.Reconcile(desiredPVC)
-}
+func (r *SystemReconciler) systemAppDCMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	existing, ok := existingObj.(*appsv1.DeploymentConfig)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
+	}
+	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
+	}
 
-func (r *SystemReconciler) reconcileProviderService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
+	desiredName := common.ObjectInfo(desired)
+	update := false
 
-func (r *SystemReconciler) reconcileMasterService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
+	tmpUpdate := reconcilers.DeploymentConfigReplicasReconciler(desired, existing)
+	update = update || tmpUpdate
 
-func (r *SystemReconciler) reconcileDeveloperService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
+	//
+	// Check containers
+	//
+	if len(desired.Spec.Template.Spec.Containers) != 3 {
+		panic(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
+	}
 
-func (r *SystemReconciler) reconcileSphinxService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
+	if len(existing.Spec.Template.Spec.Containers) != 3 {
+		r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers length changed to '%d', recreating dc", desiredName, len(existing.Spec.Template.Spec.Containers)))
+		existing.Spec.Template.Spec.Containers = desired.Spec.Template.Spec.Containers
+		update = true
+	}
 
-func (r *SystemReconciler) reconcileMemcachedService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
+	//
+	// Check containers resource requirements
+	//
 
-func (r *SystemReconciler) reconcileAppDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewSystemAppDCReconciler(r.BaseAPIManagerLogicReconciler))
-	return reconciler.Reconcile(desiredDeploymentConfig)
-}
+	for idx := 0; idx < 3; idx++ {
+		if !helper.CmpResources(&existing.Spec.Template.Spec.Containers[idx].Resources, &desired.Spec.Template.Spec.Containers[idx].Resources) {
+			diff := cmp.Diff(existing.Spec.Template.Spec.Containers[idx].Resources, desired.Spec.Template.Spec.Containers[idx].Resources, cmpopts.IgnoreUnexported(resource.Quantity{}))
+			r.Logger().Info(fmt.Sprintf("%s spec.template.spec.containers[%d].resources have changed: %s", desiredName, idx, diff))
+			existing.Spec.Template.Spec.Containers[idx].Resources = desired.Spec.Template.Spec.Containers[idx].Resources
+			update = true
+		}
+	}
 
-func (r *SystemReconciler) reconcileSidekiqDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewSystemSidekiqDCReconciler(r.BaseAPIManagerLogicReconciler))
-	return reconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *SystemReconciler) reconcileSphinxDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewSystemSphinxDCReconciler(r.BaseAPIManagerLogicReconciler))
-	return reconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *SystemReconciler) reconcileSystemConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	return reconciler.Reconcile(desiredConfigMap)
-}
-
-func (r *SystemReconciler) reconcileEnvironmentConfigMap(desiredConfigMap *v1.ConfigMap) error {
-	reconciler := NewConfigMapBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyConfigMapReconciler())
-	return reconciler.Reconcile(desiredConfigMap)
-}
-
-func (r *SystemReconciler) reconcileSMTPSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemReconciler) reconcileEventsHookSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemReconciler) reconcileRedisSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemReconciler) reconcileMasterApicastSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemReconciler) reconcileSeedSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemReconciler) reconcileRecaptchaSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemReconciler) reconcileAppSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemReconciler) reconcileMemcachedSecret(desiredSecret *v1.Secret) error {
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
+	return update, nil
 }
 
 func System(cr *appsv1alpha1.APIManager, client client.Client) (*component.System, error) {

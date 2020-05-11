@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	imagev1 "github.com/openshift/api/image/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -23,6 +24,9 @@ func TestSystemMySQLImageReconciler(t *testing.T) {
 		imageUrl  = "mysql:test"
 		log       = logf.Log.WithName("operator_test")
 	)
+
+	ctx := context.TODO()
+
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -56,9 +60,9 @@ func TestSystemMySQLImageReconciler(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+
 	reconciler := NewSystemMySQLImageReconciler(baseAPIManagerLogicReconciler)
 	_, err = reconciler.Reconcile()
 	if err != nil {

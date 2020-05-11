@@ -7,23 +7,31 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type UpgradeApiManager struct {
-	Cr              *appsv1alpha1.APIManager
-	Client          client.Client
-	Logger          logr.Logger
-	ApiClientReader client.Reader
-	Scheme          *runtime.Scheme
+	*reconcilers.BaseReconciler
+	apiManager *appsv1alpha1.APIManager
+	logger     logr.Logger
+}
+
+func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *UpgradeApiManager {
+	return &UpgradeApiManager{
+		BaseReconciler: b,
+		apiManager:     apiManager,
+		logger:         b.Logger().WithValues("APIManager Upgrade Controller", apiManager.Name),
+	}
 }
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
@@ -47,7 +55,7 @@ func (u *UpgradeApiManager) upgradeImages() (reconcile.Result, error) {
 		return res, err
 	}
 
-	if !u.Cr.IsExternalDatabaseEnabled() {
+	if !u.apiManager.IsExternalDatabaseEnabled() {
 		res, err = u.upgradeBackendRedisImageStream()
 		if res.Requeue || err != nil {
 			return res, err
@@ -103,7 +111,7 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 		return res, err
 	}
 
-	if !u.Cr.IsExternalDatabaseEnabled() {
+	if !u.apiManager.IsExternalDatabaseEnabled() {
 		res, err = u.upgradeBackendRedisDeploymentConfig()
 		if res.Requeue || err != nil {
 			return res, err
@@ -124,7 +132,7 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 }
 
 func (u *UpgradeApiManager) upgradeAPIcastDeploymentConfigs() (reconcile.Result, error) {
-	apicast, err := Apicast(u.Cr)
+	apicast, err := Apicast(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -143,7 +151,7 @@ func (u *UpgradeApiManager) upgradeAPIcastDeploymentConfigs() (reconcile.Result,
 }
 
 func (u *UpgradeApiManager) upgradeBackendDeploymentConfigs() (reconcile.Result, error) {
-	backend, err := Backend(u.Cr, u.Client)
+	backend, err := Backend(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -167,7 +175,7 @@ func (u *UpgradeApiManager) upgradeBackendDeploymentConfigs() (reconcile.Result,
 }
 
 func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, error) {
-	zync, err := Zync(u.Cr, u.Client)
+	zync, err := Zync(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -191,7 +199,7 @@ func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, er
 }
 
 func (u *UpgradeApiManager) upgradeMemcachedDeploymentConfig() (reconcile.Result, error) {
-	memcached, err := Memcached(u.Cr)
+	memcached, err := Memcached(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -204,7 +212,7 @@ func (u *UpgradeApiManager) upgradeMemcachedDeploymentConfig() (reconcile.Result
 	return reconcile.Result{}, nil
 }
 func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Result, error) {
-	redis, err := Redis(u.Cr)
+	redis, err := Redis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -218,7 +226,7 @@ func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Res
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Result, error) {
-	redis, err := Redis(u.Cr)
+	redis, err := Redis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -232,7 +240,7 @@ func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Resu
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseDeploymentConfig() (reconcile.Result, error) {
-	if u.Cr.Spec.System.DatabaseSpec != nil && u.Cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if u.apiManager.Spec.System.DatabaseSpec != nil && u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
 		return u.upgradeSystemPostgreSQLDeploymentConfig()
 	}
 
@@ -241,7 +249,7 @@ func (u *UpgradeApiManager) upgradeSystemDatabaseDeploymentConfig() (reconcile.R
 }
 
 func (u *UpgradeApiManager) upgradeSystemPostgreSQLDeploymentConfig() (reconcile.Result, error) {
-	systemPostgreSQL, err := SystemPostgreSQL(u.Cr, u.Client)
+	systemPostgreSQL, err := SystemPostgreSQL(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -255,7 +263,7 @@ func (u *UpgradeApiManager) upgradeSystemPostgreSQLDeploymentConfig() (reconcile
 }
 
 func (u *UpgradeApiManager) upgradeSystemMySQLDeploymentConfig() (reconcile.Result, error) {
-	systemMySQL, err := SystemMySQL(u.Cr, u.Client)
+	systemMySQL, err := SystemMySQL(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -269,7 +277,7 @@ func (u *UpgradeApiManager) upgradeSystemMySQLDeploymentConfig() (reconcile.Resu
 }
 
 func (u *UpgradeApiManager) upgradeSystemDeploymentConfigs() (reconcile.Result, error) {
-	system, err := System(u.Cr, u.Client)
+	system, err := System(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -294,7 +302,7 @@ func (u *UpgradeApiManager) upgradeSystemDeploymentConfigs() (reconcile.Result, 
 
 func (u *UpgradeApiManager) upgradeDeploymentConfigImageChangeTrigger(desired *appsv1.DeploymentConfig) (reconcile.Result, error) {
 	existing := &appsv1.DeploymentConfig{}
-	err := u.Client.Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.Cr.Namespace}, existing)
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -304,9 +312,7 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigImageChangeTrigger(desired *a
 		return reconcile.Result{}, err
 	}
 	if changed {
-		u.Logger.Info(fmt.Sprintf("Update object %s", ObjectInfo(existing)))
-		err := u.Client.Update(context.TODO(), existing)
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{Requeue: true}, u.UpdateResource(existing)
 	}
 
 	return reconcile.Result{}, nil
@@ -328,7 +334,7 @@ func (u *UpgradeApiManager) ensureDeploymentConfigImageChangeTrigger(desired, ex
 
 	if !reflect.DeepEqual(existingDeploymentTriggerImageChangeParams.From.Name, desiredDeploymentTriggerImageChangeParams.From.Name) {
 		diff := cmp.Diff(existingDeploymentTriggerImageChangeParams.From.Name, desiredDeploymentTriggerImageChangeParams.From.Name)
-		u.Logger.V(1).Info(fmt.Sprintf("%s ImageStream tag name in imageChangeParams trigger changed: %s", desired.Name, diff))
+		u.Logger().V(1).Info(fmt.Sprintf("%s ImageStream tag name in imageChangeParams trigger changed: %s", desired.Name, diff))
 		existingDeploymentTriggerImageChangeParams.From.Name = desiredDeploymentTriggerImageChangeParams.From.Name
 		return true, nil
 	}
@@ -338,38 +344,32 @@ func (u *UpgradeApiManager) ensureDeploymentConfigImageChangeTrigger(desired, ex
 
 func (u *UpgradeApiManager) upgradeAMPImageStreams() (reconcile.Result, error) {
 	// implement upgrade procedure by reconcile procedure
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	reconciler := NewAMPImagesReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr))
+	reconciler := NewAMPImagesReconciler(NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager))
 	return reconciler.Reconcile()
 }
 
 func (u *UpgradeApiManager) upgradeBackendRedisImageStream() (reconcile.Result, error) {
-	redis, err := Redis(u.Cr)
+	redis, err := Redis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	reconciler := NewImageStreamBaseReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr), NewImageStreamGenericReconciler())
-	return reconcile.Result{}, reconciler.Reconcile(redis.BackendImageStream())
+	reconciler := NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager)
+	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.BackendImageStream(), reconcilers.GenericImageStreamMutator)
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, error) {
-	redis, err := Redis(u.Cr)
+	redis, err := Redis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	reconciler := NewImageStreamBaseReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr), NewImageStreamGenericReconciler())
-	return reconcile.Result{}, reconciler.Reconcile(redis.SystemImageStream())
+	reconciler := NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager)
+	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.SystemImageStream(), reconcilers.GenericImageStreamMutator)
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseImageStream() (reconcile.Result, error) {
-	if u.Cr.Spec.System.DatabaseSpec != nil && u.Cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if u.apiManager.Spec.System.DatabaseSpec != nil && u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
 		return u.upgradeSystemPostgreSQLImageStream()
 	}
 
@@ -378,16 +378,14 @@ func (u *UpgradeApiManager) upgradeSystemDatabaseImageStream() (reconcile.Result
 }
 
 func (u *UpgradeApiManager) upgradeSystemMySQLImageStream() (reconcile.Result, error) {
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	reconciler := NewSystemMySQLImageReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr))
+	// implement upgrade procedure by reconcile procedure
+	reconciler := NewSystemMySQLImageReconciler(NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager))
 	return reconciler.Reconcile()
 }
 
 func (u *UpgradeApiManager) upgradeSystemPostgreSQLImageStream() (reconcile.Result, error) {
-	baseReconciler := NewBaseReconciler(u.Client, u.ApiClientReader, u.Scheme, u.Logger)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	reconciler := NewSystemPostgreSQLImageReconciler(NewBaseAPIManagerLogicReconciler(baseLogicReconciler, u.Cr))
+	// implement upgrade procedure by reconcile procedure
+	reconciler := NewSystemPostgreSQLImageReconciler(NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager))
 	return reconciler.Reconcile()
 }
 
@@ -415,7 +413,7 @@ func (u *UpgradeApiManager) deleteOldImageStreamsTags() (reconcile.Result, error
 		return res, err
 	}
 
-	if !u.Cr.IsExternalDatabaseEnabled() {
+	if !u.apiManager.IsExternalDatabaseEnabled() {
 		res, err = u.deleteBackendRedisOldImageStreamTags()
 		if res.Requeue || err != nil {
 			return res, err
@@ -436,7 +434,7 @@ func (u *UpgradeApiManager) deleteOldImageStreamsTags() (reconcile.Result, error
 }
 
 func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, error) {
-	ampimages, err := AmpImages(u.Cr)
+	ampimages, err := AmpImages(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -475,7 +473,7 @@ func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, er
 }
 
 func (u *UpgradeApiManager) deleteBackendRedisOldImageStreamTags() (reconcile.Result, error) {
-	redis, err := Redis(u.Cr)
+	redis, err := Redis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -489,7 +487,7 @@ func (u *UpgradeApiManager) deleteBackendRedisOldImageStreamTags() (reconcile.Re
 }
 
 func (u *UpgradeApiManager) deleteSystemRedisOldImageStreamTags() (reconcile.Result, error) {
-	redis, err := Redis(u.Cr)
+	redis, err := Redis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -503,7 +501,7 @@ func (u *UpgradeApiManager) deleteSystemRedisOldImageStreamTags() (reconcile.Res
 }
 
 func (u *UpgradeApiManager) deleteSystemDatabaseOldImageStreamTags() (reconcile.Result, error) {
-	if u.Cr.Spec.System.DatabaseSpec != nil && u.Cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if u.apiManager.Spec.System.DatabaseSpec != nil && u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
 		return u.deleteSystemPostgreSQLOldImageStreamTags()
 	}
 
@@ -512,7 +510,7 @@ func (u *UpgradeApiManager) deleteSystemDatabaseOldImageStreamTags() (reconcile.
 }
 
 func (u *UpgradeApiManager) deleteSystemPostgreSQLOldImageStreamTags() (reconcile.Result, error) {
-	postgresqlImage, err := SystemPostgreSQLImage(u.Cr)
+	postgresqlImage, err := SystemPostgreSQLImage(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -524,7 +522,7 @@ func (u *UpgradeApiManager) deleteSystemPostgreSQLOldImageStreamTags() (reconcil
 }
 
 func (u *UpgradeApiManager) deleteSystemMySQLOldImageStreamTags() (reconcile.Result, error) {
-	mysqlImage, err := SystemMySQLImage(u.Cr)
+	mysqlImage, err := SystemMySQLImage(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -537,7 +535,7 @@ func (u *UpgradeApiManager) deleteSystemMySQLOldImageStreamTags() (reconcile.Res
 
 func (u *UpgradeApiManager) deleteOldImageStreamTags(imageStreamName string) (reconcile.Result, error) {
 	existingImageStream := &imagev1.ImageStream{}
-	err := u.Client.Get(context.TODO(), types.NamespacedName{Name: imageStreamName, Namespace: u.Cr.Namespace}, existingImageStream)
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: imageStreamName, Namespace: u.apiManager.Namespace}, existingImageStream)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -567,12 +565,11 @@ func (u *UpgradeApiManager) deleteImageStreamTag(tagRefName string, existing *im
 		// The operator-sdk Client automatically performs a Watch on all the objects
 		// That are obtained with Get, but the ImageStreamTag kind does not have
 		// the Watch verb, which caused errors.
-		err := u.ApiClientReader.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s:%s", existing.Name, tagRefName), Namespace: u.Cr.Namespace}, existingIsTag)
+		err := u.APIClientReader().Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s:%s", existing.Name, tagRefName), Namespace: u.apiManager.Namespace}, existingIsTag)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		u.Logger.Info(fmt.Sprintf("Delete object ImageStreamTag/%s", existingIsTag.GetName()))
-		err = u.Client.Delete(context.TODO(), existingIsTag)
+		err = u.DeleteResource(existingIsTag)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -594,9 +591,9 @@ func (u *UpgradeApiManager) upgradeSystemMasterApicastSecret() (reconcile.Result
 	existing := &v1.Secret{}
 	secretNamespacedName := types.NamespacedName{
 		Name:      component.SystemSecretSystemMasterApicastSecretName,
-		Namespace: u.Cr.Namespace,
+		Namespace: u.apiManager.Namespace,
 	}
-	err := u.Client.Get(context.TODO(), secretNamespacedName, existing)
+	err := u.Client().Get(context.TODO(), secretNamespacedName, existing)
 	// NotFound also regarded as error, as secret is expected to exist
 	if err != nil {
 		return reconcile.Result{}, err
@@ -607,12 +604,16 @@ func (u *UpgradeApiManager) upgradeSystemMasterApicastSecret() (reconcile.Result
 		patchJSON := []byte(`[{"op": "remove", "path": "/data/BASE_URL"}]`)
 		// Apply JSON patch https://tools.ietf.org/html/rfc6902
 		patch := client.ConstantPatch(types.JSONPatchType, patchJSON)
-		err = u.Client.Patch(context.TODO(), existing, patch)
+		err = u.Client().Patch(context.TODO(), existing, patch)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		u.Logger.Info(fmt.Sprintf("Upgrade: patch object %s", ObjectInfo(existing)))
+		u.Logger().Info(fmt.Sprintf("Upgrade: patch object %s", common.ObjectInfo(existing)))
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) Logger() logr.Logger {
+	return u.logger
 }

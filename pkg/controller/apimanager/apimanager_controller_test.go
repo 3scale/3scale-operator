@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -36,6 +36,8 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		},
 	}
 
+	ctx := context.TODO()
+
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 
@@ -59,12 +61,9 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := operator.NewBaseReconciler(cl, clientAPIReader, s, log)
-	baseControllerReconciler := operator.NewBaseControllerReconciler(baseReconciler)
-
 	// Create a ReconcileMemcached object with the scheme and fake client.
-	r := ReconcileAPIManager{
-		BaseControllerReconciler: baseControllerReconciler,
+	r := &ReconcileAPIManager{
+		BaseReconciler: reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log),
 	}
 
 	req := reconcile.Request{
@@ -74,22 +73,18 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		},
 	}
 
-	res, err := r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
+	endLoop := false
+	for i := 0; i < 100 && !endLoop; i++ {
+		res, err := r.Reconcile(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		endLoop = !res.Requeue
 	}
 
-	if !res.Requeue {
-		t.Error("reconcile did not requeue request as expected. Requeuing due to setting of defaults should have been performed")
-	}
-
-	res, err = r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
-	}
-
-	if res.Requeue {
-		t.Error("reconcile did not finish end of reconciliation as expected. APIManager should have been reconciled at this point")
+	if !endLoop {
+		t.Fatal("reconcile did not finish end of reconciliation as expected. APIManager should have been reconciled at this point")
 	}
 
 	finalAPIManager := &appsv1alpha1.APIManager{}

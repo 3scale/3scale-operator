@@ -8,6 +8,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -23,6 +24,9 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	var (
 		log = logf.Log.WithName("operator_test")
 	)
+
+	ctx := context.TODO()
+
 	apimanager := basicApimanagerSpecTestSystemOptions()
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
@@ -45,11 +49,10 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, clientAPIReader, s, log)
-	baseLogicReconciler := NewBaseLogicReconciler(baseReconciler)
-	BaseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseLogicReconciler, apimanager)
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
-	reconciler := NewSystemReconciler(BaseAPIManagerLogicReconciler)
+	reconciler := NewSystemReconciler(baseAPIManagerLogicReconciler)
 	_, err = reconciler.Reconcile()
 	if err != nil {
 		t.Fatal(err)

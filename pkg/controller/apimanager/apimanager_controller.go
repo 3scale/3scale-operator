@@ -6,17 +6,15 @@ import (
 	"reflect"
 	"sort"
 
-	"k8s.io/api/policy/v1beta1"
-
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-
-	appsv1 "github.com/openshift/api/apps/v1"
-
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
+	appsv1 "github.com/openshift/api/apps/v1"
+	"k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,9 +58,11 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 		return nil, err
 	}
 
-	BaseReconciler := operator.NewBaseReconciler(mgr.GetClient(), apiClientReader, mgr.GetScheme(), log)
+	client := mgr.GetClient()
+	scheme := mgr.GetScheme()
+	ctx := context.TODO()
 	return &ReconcileAPIManager{
-		BaseControllerReconciler: operator.NewBaseControllerReconciler(BaseReconciler),
+		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log),
 	}, nil
 
 }
@@ -104,7 +104,7 @@ var _ reconcile.Reconciler = &ReconcileAPIManager{}
 
 // ReconcileAPIManager reconciles a APIManager object
 type ReconcileAPIManager struct {
-	operator.BaseControllerReconciler
+	*reconcilers.BaseReconciler
 }
 
 func (r *ReconcileAPIManager) updateVersionAnnotations(cr *appsv1alpha1.APIManager) error {
@@ -119,14 +119,8 @@ func (r *ReconcileAPIManager) updateVersionAnnotations(cr *appsv1alpha1.APIManag
 func (r *ReconcileAPIManager) upgradeAPIManager(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
 	// The object to instantiate would change in every release of the operator
 	// that upgrades the threescale version
-	upgradeApiManager := &operator.UpgradeApiManager{
-		Client:          r.Client(),
-		ApiClientReader: r.APIClientReader(),
-		Scheme:          r.Scheme(),
-		Cr:              cr,
-		Logger:          r.Logger(),
-	}
-	return upgradeApiManager.Upgrade()
+	upgradeAPIManager := operator.NewUpgradeApiManager(r.BaseReconciler, cr)
+	return upgradeAPIManager.Upgrade()
 }
 
 // Reconcile reads that state of the cluster for a APIManager object and makes changes based on the state read
@@ -233,13 +227,15 @@ func (r *ReconcileAPIManager) setAPIManagerDefaults(cr *appsv1alpha1.APIManager)
 }
 
 func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	result, err := r.reconcileAMPImagesLogic(cr)
+	imageReconciler := operator.NewAMPImagesReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err := imageReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
 	if !cr.IsExternalDatabaseEnabled() {
-		result, err = r.reconcileRedisLogic(cr)
+		redisReconciler := operator.NewRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+		result, err = redisReconciler.Reconcile()
 		if err != nil || result.Requeue {
 			return result, err
 		}
@@ -257,50 +253,37 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		}
 	}
 
-	result, err = r.reconcileBackendLogic(cr)
+	backendReconciler := operator.NewBackendReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = backendReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	result, err = r.reconcileMemcached(cr)
+	memcachedReconciler := operator.NewMemcachedReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = memcachedReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	result, err = r.reconcileSystem(cr)
+	systemReconciler := operator.NewSystemReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = systemReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	result, err = r.reconcileZync(cr)
+	zyncReconciler := operator.NewZyncReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = zyncReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	result, err = r.reconcileApicast(cr)
+	apicastReconciler := operator.NewApicastReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = apicastReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
 	return reconcile.Result{}, nil
-}
-
-func (r *ReconcileAPIManager) reconcileAMPImagesLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewAMPImagesReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
-}
-
-func (r *ReconcileAPIManager) reconcileRedisLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
-}
-
-func (r *ReconcileAPIManager) reconcileBackendLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewBackendReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
 }
 
 func (r *ReconcileAPIManager) reconcileSystemDatabaseLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
@@ -313,53 +296,27 @@ func (r *ReconcileAPIManager) reconcileSystemDatabaseLogic(cr *appsv1alpha1.APIM
 }
 
 func (r *ReconcileAPIManager) reconcileSystemPostgreSQLLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewSystemPostgreSQLReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
+	reconciler := operator.NewSystemPostgreSQLReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
 	result, err := reconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	imageReconciler := operator.NewSystemPostgreSQLImageReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
+	imageReconciler := operator.NewSystemPostgreSQLImageReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
 	result, err = imageReconciler.Reconcile()
 	return result, err
 }
 
 func (r *ReconcileAPIManager) reconcileSystemMySQLLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewSystemMySQLReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
+	reconciler := operator.NewSystemMySQLReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
 	result, err := reconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	imageReconciler := operator.NewSystemMySQLImageReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
+	imageReconciler := operator.NewSystemMySQLImageReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
 	result, err = imageReconciler.Reconcile()
 	return result, err
-}
-
-func (r *ReconcileAPIManager) reconcileMemcached(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewMemcachedReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
-}
-
-func (r *ReconcileAPIManager) reconcileSystem(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewSystemReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
-}
-
-func (r *ReconcileAPIManager) reconcileZync(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewZyncReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
-}
-
-func (r *ReconcileAPIManager) reconcileApicast(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	baseLogicReconciler := operator.NewBaseLogicReconciler(r.BaseReconciler)
-	reconciler := operator.NewApicastReconciler(operator.NewBaseAPIManagerLogicReconciler(baseLogicReconciler, cr))
-	return reconciler.Reconcile()
 }
 
 func (r *ReconcileAPIManager) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager) error {
@@ -373,7 +330,7 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 	dcList := &appsv1.DeploymentConfigList{}
 	err := r.Client().List(context.TODO(), dcList, listOps...)
 	if err != nil {
-		r.Logger().Error(err, "Failed to list deployment configs")
+		log.Error(err, "Failed to list deployment configs")
 		return err
 	}
 	var dcs []appsv1.DeploymentConfig
@@ -389,11 +346,11 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 
 	deploymentStatus := olm.GetDeploymentConfigStatus(dcs)
 	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {
-		r.Logger().Info("Deployment status will be updated")
+		log.Info("Deployment status will be updated")
 		instance.Status.Deployments = deploymentStatus
 		err = r.Client().Status().Update(context.TODO(), instance)
 		if err != nil {
-			r.Logger().Error(err, "Failed to update API Manager deployment status")
+			log.Error(err, "Failed to update API Manager deployment status")
 			return err
 		}
 	}

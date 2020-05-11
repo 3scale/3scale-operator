@@ -3,40 +3,18 @@ package operator
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type SystemPostgresqlDCReconciler struct {
-	BaseAPIManagerLogicReconciler
-}
-
-func NewSystemPostgresqlDCReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *SystemPostgresqlDCReconciler {
-	return &SystemPostgresqlDCReconciler{
-		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
-	}
-}
-
-func (r *SystemPostgresqlDCReconciler) IsUpdateNeeded(desired, existing *appsv1.DeploymentConfig) bool {
-	update := false
-
-	tmpUpdate := DeploymentConfigReconcileContainerResources(desired, existing, r.Logger())
-	update = update || tmpUpdate
-
-	return update
-}
-
 type SystemPostgreSQLReconciler struct {
-	BaseAPIManagerLogicReconciler
+	*BaseAPIManagerLogicReconciler
 }
 
-// blank assignment to verify that BaseReconciler implements reconcile.Reconciler
-var _ LogicReconciler = &SystemPostgreSQLReconciler{}
-
-func NewSystemPostgreSQLReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) SystemPostgreSQLReconciler {
-	return SystemPostgreSQLReconciler{
+func NewSystemPostgreSQLReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemPostgreSQLReconciler {
+	return &SystemPostgreSQLReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}
 }
@@ -47,48 +25,31 @@ func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemPostgreSQLDeploymentConfig(systemPostgreSQL.DeploymentConfig())
+	// DC
+	err = r.ReconcileDeploymentConfig(systemPostgreSQL.DeploymentConfig(), reconcilers.DeploymentConfigResourcesMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemPostgreSQLService(systemPostgreSQL.Service())
+	// Service
+	err = r.ReconcileService(systemPostgreSQL.Service(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemPostgreSQLDataPersistentVolumeClaim(systemPostgreSQL.DataPersistentVolumeClaim())
+	// PVC
+	err = r.ReconcilePersistentVolumeClaim(systemPostgreSQL.DataPersistentVolumeClaim(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileSystemPostgreSQLSystemDatabaseSecret(systemPostgreSQL.SystemDatabaseSecret())
+	// DB secret
+	err = r.ReconcileSecret(systemPostgreSQL.SystemDatabaseSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	return reconcile.Result{}, nil
-}
-
-func (r *SystemPostgreSQLReconciler) reconcileSystemPostgreSQLDeploymentConfig(desiredDeploymentConfig *appsv1.DeploymentConfig) error {
-	reconciler := NewDeploymentConfigBaseReconciler(r.BaseAPIManagerLogicReconciler, NewSystemPostgresqlDCReconciler(r.BaseAPIManagerLogicReconciler))
-	return reconciler.Reconcile(desiredDeploymentConfig)
-}
-
-func (r *SystemPostgreSQLReconciler) reconcileSystemPostgreSQLService(desiredService *v1.Service) error {
-	reconciler := NewServiceBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlySvcReconciler())
-	return reconciler.Reconcile(desiredService)
-}
-
-func (r *SystemPostgreSQLReconciler) reconcileSystemPostgreSQLSystemDatabaseSecret(desiredSecret *v1.Secret) error {
-	// Secret values are not affected by CR field values
-	reconciler := NewSecretBaseReconciler(r.BaseAPIManagerLogicReconciler, NewDefaultsOnlySecretReconciler())
-	return reconciler.Reconcile(desiredSecret)
-}
-
-func (r *SystemPostgreSQLReconciler) reconcileSystemPostgreSQLDataPersistentVolumeClaim(desiredPVC *v1.PersistentVolumeClaim) error {
-	reconciler := NewPVCBaseReconciler(r.BaseAPIManagerLogicReconciler, NewCreateOnlyPVCReconciler())
-	return reconciler.Reconcile(desiredPVC)
 }
 
 func SystemPostgreSQL(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.SystemPostgreSQL, error) {
