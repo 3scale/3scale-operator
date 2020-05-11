@@ -1,20 +1,40 @@
 package v1beta1
 
 import (
+	"reflect"
+
+	"github.com/3scale/3scale-operator/pkg/common"
+
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ProductStatusError represents that the combination of configuration in the ProductSpec
-// is not supported by this cluster. This is not a transient error, but
-// indicates a state that must be fixed before progress can be made.
-// Example: the ProductSpec references non existing internal Metric refenrece
-type ProductStatusError string
-
 const (
-	InvalidInternalMetricReferenceError ProductStatusError = "InvalidInternalMetricReferenceError"
+	ProductKind = "Product"
+
+	// ProductInvalidConditionType represents that the combination of configuration in the ProductSpec
+	// is not supported. This is not a transient error, but
+	// indicates a state that must be fixed before progress can be made.
+	// Example: the ProductSpec references non existing internal Metric reference
+	ProductInvalidConditionType common.ConditionType = "Invalid"
+
+	// ProductOrphanConditionType represents that the configuration in the ProductSpec
+	// contains reference to non existing resource.
+	// This is (should be) a transient error, but
+	// indicates a state that must be fixed before progress can be made.
+	// Example: the ProductSpec references non existing backend resource
+	ProductOrphanConditionType common.ConditionType = "Orphan"
+
+	// ProductSyncedConditionType indicates the product has been successfully synchronized.
+	// Steady state
+	ProductSyncedConditionType common.ConditionType = "Synced"
+
+	// ProductFailedConditionType indicates that an error occurred during synchronization.
+	// The operator will retry.
+	ProductFailedConditionType common.ConditionType = "Failed"
 )
 
 // LimitSpec define the maximum value a metric can take on a contract before the user is no longer authorized to use resources.
@@ -200,13 +220,20 @@ type ProductDeploymentSpec struct {
 
 // ProductSpec defines the desired state of Product
 type ProductSpec struct {
+	// Name is human readable name for the product
 	Name string `json:"name,omitempty"`
+
+	// SystemName identifies uniquely the product within the account provider
+	// Default value will be sanitized Name
 	// +optional
 	SystemName string `json:"systemName,omitempty"`
+
 	// +optional
 	Description string `json:"description,omitempty"`
+
 	// +optional
 	Deployment *ProductDeploymentSpec `json:"deployment,omitempty"`
+
 	// +optional
 	MappingRules []MappingRuleSpec `json:"mappingRules,omitempty"`
 
@@ -222,6 +249,7 @@ type ProductSpec struct {
 	// In other words, if metric's system_name is A, there is no metric or method with system_name A.
 	// +optional
 	Metrics map[string]MetricSpec `json:"metrics,omitempty"`
+
 	// +optional
 	Methods map[string]Methodpec `json:"methods,omitempty"`
 
@@ -229,14 +257,21 @@ type ProductSpec struct {
 	// Application Plans
 	// Map: system_name -> Application Plan Spec
 	ApplicationPlans map[string]ApplicationPlanSpec `json:"applicationPlans,omitempty"`
+
+	// +optional
+	ProviderAccountRef *corev1.LocalObjectReference `json:"provider_account_ref, omitempty"`
 }
 
 // ProductStatus defines the observed state of Product
 type ProductStatus struct {
-	ID        int64  `json:"productId,omitempty"`
-	State     string `json:"state,omitempty"`
-	CreatedAt string `json:"createdAt,omitempty"`
-	UpdatedAt string `json:"updatedAt,omitempty"`
+	// +optional
+	ID *string `json:"productId,omitempty"`
+	// +optional
+	State *string `json:"state,omitempty"`
+
+	// ObservedGeneration reflects the generation of the most recently observed MachineSet.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// In the event that there is a terminal problem reconciling the
 	// product, both ErrorReason and ErrorMessage will be set. ErrorReason
@@ -257,9 +292,45 @@ type ProductStatus struct {
 	// can be added as events to the Product object and/or logged in the
 	// controller's output.
 	// +optional
-	ErrorReason *ProductStatusError `json:"errorReason,omitempty"`
+	// TODO enum
+	ErrorReason *string `json:"errorReason,omitempty"`
+	// A human readable message indicating details about why the resource is in this condition.
 	// +optional
 	ErrorMessage *string `json:"errorMessage,omitempty"`
+
+	// Current state of the 3scale product.
+	// Conditions represent the latest available observations of an object's state
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
+}
+
+func (p *ProductStatus) Equals(other *ProductStatus) bool {
+	if !reflect.DeepEqual(p.ID, other.ID) {
+		return false
+	}
+
+	if !reflect.DeepEqual(p.State, other.State) {
+		return false
+	}
+
+	if p.ObservedGeneration != other.ObservedGeneration {
+		return false
+	}
+
+	if !reflect.DeepEqual(p.ErrorReason, other.ErrorMessage) {
+		return false
+	}
+
+	// Marshalling sorts by condition type
+	currentMarshaledJSON, _ := p.Conditions.MarshalJSON()
+	otherMarshaledJSON, _ := other.Conditions.MarshalJSON()
+	if string(currentMarshaledJSON) != string(otherMarshaledJSON) {
+		return false
+	}
+
+	return true
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -274,6 +345,55 @@ type Product struct {
 
 	Spec   ProductSpec   `json:"spec,omitempty"`
 	Status ProductStatus `json:"status,omitempty"`
+}
+
+func (product *Product) SetDefaults() bool {
+	// TODO
+	return false
+}
+
+func (product *Product) DeploymentOption() string {
+	switch {
+	case product.IsHostedApicastDeploymentOption():
+		return "hosted"
+	case product.IsSelfManagedApicastDeploymentOption():
+		return "self_managed"
+	default:
+		return "hosted"
+	}
+}
+
+func (product *Product) IsHostedApicastDeploymentOption() bool {
+	return product.Spec.Deployment != nil && product.Spec.Deployment.ApicastHosted != nil
+}
+
+func (product *Product) IsSelfManagedApicastDeploymentOption() bool {
+	return product.Spec.Deployment != nil && product.Spec.Deployment.ApicastSelfManaged != nil
+}
+
+func (product *Product) AuthenticationMode() string {
+	// default "1"
+	mode := "1"
+	if product.IsHostedApicastDeploymentOption() {
+		authentication := product.Spec.Deployment.ApicastHosted.Authentication
+		if authentication != nil && authentication.UserKeyAuthentication != nil {
+			mode = "1"
+		}
+
+		if authentication != nil && authentication.AppKeyAppIDAuthentication != nil {
+			mode = "2"
+		}
+	} else if product.IsSelfManagedApicastDeploymentOption() {
+		authentication := product.Spec.Deployment.ApicastSelfManaged.Authentication
+		if authentication != nil && authentication.UserKeyAuthentication != nil {
+			mode = "1"
+		}
+
+		if authentication != nil && authentication.AppKeyAppIDAuthentication != nil {
+			mode = "2"
+		}
+	}
+	return mode
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
