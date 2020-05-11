@@ -83,6 +83,10 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		endLoop = !res.Requeue
 	}
 
+	if !endLoop {
+		t.Fatal("reconcile did not finish end of reconciliation as expected. APIManager should have been reconciled at this point")
+	}
+
 	finalAPIManager := &appsv1alpha1.APIManager{}
 	err = r.Client().Get(context.TODO(), req.NamespacedName, finalAPIManager)
 	if err != nil {
