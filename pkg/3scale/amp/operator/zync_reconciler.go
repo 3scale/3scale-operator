@@ -4,6 +4,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -90,42 +91,42 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMonitoringService(component.ZyncMonitoringService())
+	err = r.ReconcileMonitoringService(component.ZyncMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileMonitoringService(component.ZyncQueMonitoringService())
+	err = r.ReconcileMonitoringService(component.ZyncQueMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileServiceMonitor(component.ZyncServiceMonitor())
+	err = r.ReconcileServiceMonitor(component.ZyncServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileServiceMonitor(component.ZyncQueServiceMonitor())
+	err = r.ReconcileServiceMonitor(component.ZyncQueServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileGrafanaDashboard(component.ZyncGrafanaDashboard(r.apiManager.Namespace))
+	err = r.ReconcileGrafanaDashboard(component.ZyncGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileGrafanaDashboard(component.ZyncQueGrafanaDashboard(r.apiManager.Namespace))
+	err = r.ReconcileGrafanaDashboard(component.ZyncQueGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcilePrometheusRules(component.ZyncPrometheusRules(r.apiManager.Namespace))
+	err = r.ReconcilePrometheusRules(component.ZyncPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcilePrometheusRules(component.ZyncQuePrometheusRules(r.apiManager.Namespace))
+	err = r.ReconcilePrometheusRules(component.ZyncQuePrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

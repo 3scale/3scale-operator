@@ -1,20 +1,19 @@
 package operator
 
 import (
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/policy/v1beta1"
-
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	"github.com/go-logr/logr"
+	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -113,6 +112,34 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileRole(desired *rbacv1.Role, muta
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileRoleBinding(desired *rbacv1.RoleBinding, mutateFn reconcilers.MutateFn) error {
 	return r.ReconcileResource(&rbacv1.RoleBinding{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) ReconcileMonitoringService(desired *v1.Service, mutateFn reconcilers.MutateFn) error {
+	if !r.apiManager.IsMonitoringEnabled() {
+		common.TagObjectToDelete(desired)
+	}
+	return r.ReconcileResource(&v1.Service{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafanav1alpha1.GrafanaDashboard, mutateFn reconcilers.MutateFn) error {
+	if !r.apiManager.IsMonitoringEnabled() {
+		common.TagObjectToDelete(desired)
+	}
+	return r.ReconcileResource(&grafanav1alpha1.GrafanaDashboard{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monitoringv1.PrometheusRule, mutateFn reconcilers.MutateFn) error {
+	if !r.apiManager.IsMonitoringEnabled() {
+		common.TagObjectToDelete(desired)
+	}
+	return r.ReconcileResource(&monitoringv1.PrometheusRule{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitoringv1.ServiceMonitor, mutateFn reconcilers.MutateFn) error {
+	if !r.apiManager.IsMonitoringEnabled() {
+		common.TagObjectToDelete(desired)
+	}
+	return r.ReconcileResource(&monitoringv1.ServiceMonitor{}, desired, mutateFn)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutatefn reconcilers.MutateFn) error {

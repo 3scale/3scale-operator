@@ -2,34 +2,33 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type GenericMonitoringReconciler struct {
-	BaseAPIManagerLogicReconciler
+	*BaseAPIManagerLogicReconciler
 }
 
-// blank assignment to verify that BaseReconciler implements reconcile.Reconciler
-var _ LogicReconciler = &GenericMonitoringReconciler{}
-
-func NewGenericMonitoringReconciler(baseAPIManagerLogicReconciler BaseAPIManagerLogicReconciler) *GenericMonitoringReconciler {
+func NewGenericMonitoringReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *GenericMonitoringReconciler {
 	return &GenericMonitoringReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}
 }
 
 func (r *GenericMonitoringReconciler) Reconcile() (reconcile.Result, error) {
-	err := r.reconcileGrafanaDashboard(component.KubernetesResourcesByNamespaceGrafanaDashboard(r.apiManager.Namespace))
+	err := r.ReconcileGrafanaDashboard(component.KubernetesResourcesByNamespaceGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcileGrafanaDashboard(component.KubernetesResourcesByPodGrafanaDashboard(r.apiManager.Namespace))
+	err = r.ReconcileGrafanaDashboard(component.KubernetesResourcesByPodGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.reconcilePrometheusRules(component.KubeStateMetricsPrometheusRules(r.apiManager.Namespace))
+	err = r.ReconcilePrometheusRules(component.KubeStateMetricsPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
