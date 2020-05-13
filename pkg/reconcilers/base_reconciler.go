@@ -9,6 +9,7 @@ import (
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	restclient "k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -29,19 +30,21 @@ type BaseReconciler struct {
 	apiClientReader client.Reader
 	ctx             context.Context
 	logger          logr.Logger
+	cfg             *restclient.Config
 }
 
 // blank assignment to verify that BaseReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &BaseReconciler{}
 
 func NewBaseReconciler(client client.Client, scheme *runtime.Scheme, apiClientReader client.Reader,
-	ctx context.Context, logger logr.Logger) *BaseReconciler {
+	ctx context.Context, logger logr.Logger, config *restclient.Config) *BaseReconciler {
 	return &BaseReconciler{
 		client:          client,
 		scheme:          scheme,
 		apiClientReader: apiClientReader,
 		ctx:             ctx,
 		logger:          logger,
+		cfg:             config,
 	}
 }
 
@@ -67,6 +70,10 @@ func (b *BaseReconciler) Scheme() *runtime.Scheme {
 
 func (b *BaseReconciler) Logger() logr.Logger {
 	return b.logger
+}
+
+func (b *BaseReconciler) Config() *restclient.Config {
+	return b.cfg
 }
 
 // ReconcileResource attempts to mutate the existing state
