@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -29,13 +30,18 @@ func TestBaseReconcilerCreate(t *testing.T) {
 		namespace = "operator-unittest"
 	)
 
-	s := scheme.Scheme
-	err := appsv1.AddToScheme(s)
+	cfg, err := config.GetConfig()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Unable to get config: (%v)", err)
 	}
 
 	ctx := context.TODO()
+
+	s := scheme.Scheme
+	err = appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{}
@@ -44,7 +50,7 @@ func TestBaseReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, cfg)
 
 	desiredConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -84,13 +90,18 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 		namespace = "operator-unittest"
 	)
 
-	s := runtime.NewScheme()
-	err := appsv1.AddToScheme(s)
+	cfg, err := config.GetConfig()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Unable to get config: (%v)", err)
 	}
 
 	ctx := context.TODO()
+
+	s := runtime.NewScheme()
+	err = appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	existingConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -113,7 +124,7 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, cfg)
 
 	desiredConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -172,13 +183,18 @@ func TestBaseReconcilerDelete(t *testing.T) {
 		namespace    = "operator-unittest"
 	)
 
-	s := runtime.NewScheme()
-	err := appsv1.AddToScheme(s)
+	cfg, err := config.GetConfig()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Unable to get config: (%v)", err)
 	}
 
 	ctx := context.TODO()
+
+	s := runtime.NewScheme()
+	err = appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	existing := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -216,7 +232,7 @@ func TestBaseReconcilerDelete(t *testing.T) {
 	}
 	common.TagObjectToDelete(desired)
 
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, cfg)
 	err = baseReconciler.ReconcileResource(&v1.ConfigMap{}, desired, CreateOnlyMutator)
 	if err != nil {
 		t.Fatal(err)
