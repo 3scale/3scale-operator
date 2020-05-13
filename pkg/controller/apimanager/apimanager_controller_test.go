@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -26,6 +27,13 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		namespace      = "operator-unittest"
 		wildcardDomain = "test.3scale.net"
 	)
+
+	cfg, err := config.GetConfig()
+	if err != nil {
+		t.Fatalf("Unable to get config: (%v)", err)
+	}
+
+	ctx := context.TODO()
 
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
@@ -39,15 +47,13 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		},
 	}
 
-	ctx := context.TODO()
-
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatalf("Unable to add Apps scheme: (%v)", err)
 	}
@@ -72,7 +78,7 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 
 	// Create a ReconcileMemcached object with the scheme and fake client.
 	r := &ReconcileAPIManager{
-		BaseReconciler: reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log),
+		BaseReconciler: reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, cfg),
 	}
 
 	req := reconcile.Request{
