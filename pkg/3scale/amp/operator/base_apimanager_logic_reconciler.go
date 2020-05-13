@@ -5,6 +5,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-logr/logr"
@@ -17,6 +18,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -122,24 +124,77 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileMonitoringService(desired *v1.S
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafanav1alpha1.GrafanaDashboard, mutateFn reconcilers.MutateFn) error {
+	kindExists, err := r.hasGrafanaDashboards()
+	if err != nil {
+		return err
+	}
+
+	if !kindExists {
+		r.Logger().Info("Install grafana-operator in your cluster to create grafanadashboards objects", "Error creating grafanadashboard object", desired.Name)
+		return nil
+	}
+
 	if !r.apiManager.IsMonitoringEnabled() {
 		common.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&grafanav1alpha1.GrafanaDashboard{}, desired, mutateFn)
 }
 
+func (r *BaseAPIManagerLogicReconciler) hasGrafanaDashboards() (bool, error) {
+	dc := discovery.NewDiscoveryClientForConfigOrDie(r.Config())
+
+	return k8sutil.ResourceExists(dc,
+		grafanav1alpha1.SchemeGroupVersion.String(),
+		grafanav1alpha1.GrafanaDashboardKind)
+}
+
 func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monitoringv1.PrometheusRule, mutateFn reconcilers.MutateFn) error {
+	kindExists, err := r.hasPrometheusRules()
+	if err != nil {
+		return err
+	}
+	if !kindExists {
+		r.Logger().Info("Install prometheus-operator in your cluster to create prometheusrules objects", "Error creating prometheusrule object", desired.Name)
+		return nil
+	}
+
 	if !r.apiManager.IsMonitoringEnabled() {
 		common.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&monitoringv1.PrometheusRule{}, desired, mutateFn)
 }
 
+func (r *BaseAPIManagerLogicReconciler) hasPrometheusRules() (bool, error) {
+	dc := discovery.NewDiscoveryClientForConfigOrDie(r.Config())
+
+	return k8sutil.ResourceExists(dc,
+		monitoringv1.SchemeGroupVersion.String(),
+		monitoringv1.PrometheusRuleKind)
+}
+
 func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitoringv1.ServiceMonitor, mutateFn reconcilers.MutateFn) error {
+	kindExists, err := r.hasServiceMonitors()
+	if err != nil {
+		return err
+	}
+
+	if !kindExists {
+		r.Logger().Info("Install prometheus-operator in your cluster to create servicemonitor objects", "Error creating servicemonitor object", desired.Name)
+		return nil
+	}
+
 	if !r.apiManager.IsMonitoringEnabled() {
 		common.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&monitoringv1.ServiceMonitor{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) hasServiceMonitors() (bool, error) {
+	dc := discovery.NewDiscoveryClientForConfigOrDie(r.Config())
+
+	return k8sutil.ResourceExists(dc,
+		monitoringv1.SchemeGroupVersion.String(),
+		monitoringv1.ServiceMonitorsKind)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutatefn reconcilers.MutateFn) error {
