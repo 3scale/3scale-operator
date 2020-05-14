@@ -64,9 +64,9 @@ pull:
 tag:
 	$(DOCKER) tag $(IMAGE):$(SOURCE_VERSION) $(IMAGE):$(VERSION)
 
-## local: push operator docker image to remote repo
+## local: Run operator locally
 local:
-	OPERATOR_NAME=$(OPERATOR_NAME) $(OPERATOR_SDK) run --local --namespace $(NAMESPACE)
+	OPERATOR_NAME=$(OPERATOR_NAME) $(OPERATOR_SDK) run --local --namespace $(NAMESPACE) --operator-flags '--zap-devel=true --zap-level 1'
 
 ## e2e-setup: create OCP project for the operator
 e2e-setup:
