@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -46,7 +47,9 @@ func TestBaseReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 	clientset := fakeclientset.NewSimpleClientset()
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
+        recorder := record.NewFakeRecorder(10000)
+
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
 
 	desiredConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -114,9 +117,10 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
+        clientset := fakeclientset.NewSimpleClientset()
+	recorder := record.NewFakeRecorder(10000)
 
-	clientset := fakeclientset.NewSimpleClientset()
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
 
 	desiredConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -203,9 +207,10 @@ func TestBaseReconcilerDelete(t *testing.T) {
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
-
+	recorder := record.NewFakeRecorder(10000)
 	clientset := fakeclientset.NewSimpleClientset()
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
+
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
 
 	desired := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
