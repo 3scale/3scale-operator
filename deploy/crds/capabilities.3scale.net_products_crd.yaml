@@ -30,9 +30,420 @@ spec:
           type: object
         spec:
           description: ProductSpec defines the desired state of Product
+          properties:
+            applicationPlans:
+              additionalProperties:
+                description: ApplicationPlanSpec defines the desired state of Product's
+                  Application Plan
+                properties:
+                  appsRequireApproval:
+                    description: Set whether or not applications can be created on
+                      demand or if approval is required from you before they are activated.
+                    type: boolean
+                  costMonth:
+                    description: Cost per Month (USD)
+                    pattern: ^\d+.?\d{2}$
+                    type: string
+                  friendlyName:
+                    type: string
+                  limits:
+                    description: Limits
+                    items:
+                      description: LimitSpec define the maximum value a metric can
+                        take on a contract before the user is no longer authorized
+                        to use resources. Once a limit has been passed in a given
+                        period, reject messages will be issued if the service is accessed
+                        under this contract.
+                      properties:
+                        metricMethodRef:
+                          type: string
+                        period:
+                          enum:
+                          - eternity
+                          - year
+                          - month
+                          - week
+                          - day
+                          - hour
+                          - minute
+                          type: string
+                        value:
+                          format: int64
+                          type: integer
+                      type: object
+                    type: array
+                  pricingRules:
+                    description: Pricing Rules
+                    items:
+                      description: PricingRuleSpec defines the desired state of Application
+                        Plan's Pricing Rule
+                      properties:
+                        from:
+                          type: integer
+                        metricMethodRef:
+                          type: string
+                        pricePerUnit:
+                          description: Price per unit (USD)
+                          pattern: ^\d+.?\d{2}$
+                          type: string
+                        to:
+                          type: integer
+                      type: object
+                    type: array
+                  setupFee:
+                    description: Setup fee (USD)
+                    pattern: ^\d+.?\d{2}$
+                    type: string
+                  trialPeriod:
+                    description: Trial Period (days)
+                    minimum: 0
+                    type: integer
+                type: object
+              description: 'Application Plans Map: system_name -> Application Plan
+                Spec'
+              type: object
+            backendUsages:
+              additionalProperties:
+                description: BackendUsageSpec defines the desired state of Product's
+                  Backend Usages
+                properties:
+                  path:
+                    type: string
+                type: object
+              description: 'Backend usage will be a map of Map: backend_id -> BackendSpec
+                Having backend_id as the index, the structure ensures single backend
+                is not used multiple times.'
+              type: object
+            deployment:
+              description: ProductDeploymentSpec defines the desired state of Product
+                Deployment
+              properties:
+                apicastHosted:
+                  description: ApicastHostedSpec defines the desired state of Product
+                    Apicast Hosted
+                  properties:
+                    authentication:
+                      description: AuthenticationSpec defines the desired state of
+                        Product Authentication
+                      properties:
+                        appKeyAppID:
+                          description: AppKeyAppIDAuthenticationSpec defines the desired
+                            state of AppKey&AppId Authentication
+                          properties:
+                            appID:
+                              description: AppID is the name of the parameter that
+                                acts of behalf of app id
+                              type: string
+                            appKey:
+                              description: AppKey is the name of the parameter that
+                                acts of behalf of app key
+                              type: string
+                            credentials:
+                              description: 'Credentials Location available options:
+                                header: As HTTP Headers query: As query parameters
+                                (GET) or body parameters (POST/PUT/DELETE) basic:
+                                As HTTP Basic Authentication'
+                              enum:
+                              - header
+                              - query
+                              - basic
+                              type: string
+                            security:
+                              description: SecuritySpec defines the desired state
+                                of Authentication Security
+                              properties:
+                                hostHeader:
+                                  description: SecretToken Enables you to block any
+                                    direct developer requests to your API backend;
+                                    each 3scale API gateway call to your API backend
+                                    contains a request header called X-3scale-proxy-secret-token.
+                                    The value of this header can be set by you here.
+                                    It's up to you ensure your backend only allows
+                                    calls with this secret header.
+                                  type: string
+                              type: object
+                          type: object
+                        userkey:
+                          description: UserKeyAuthenticationSpec defines the desired
+                            state of User Key Authentication
+                          properties:
+                            authUserKey:
+                              type: string
+                            credentials:
+                              description: 'Credentials Location available options:
+                                header: As HTTP Headers query: As query parameters
+                                (GET) or body parameters (POST/PUT/DELETE) basic:
+                                As HTTP Basic Authentication'
+                              enum:
+                              - header
+                              - query
+                              - basic
+                              type: string
+                            security:
+                              description: SecuritySpec defines the desired state
+                                of Authentication Security
+                              properties:
+                                hostHeader:
+                                  description: SecretToken Enables you to block any
+                                    direct developer requests to your API backend;
+                                    each 3scale API gateway call to your API backend
+                                    contains a request header called X-3scale-proxy-secret-token.
+                                    The value of this header can be set by you here.
+                                    It's up to you ensure your backend only allows
+                                    calls with this secret header.
+                                  type: string
+                              type: object
+                          type: object
+                      type: object
+                      oneOf:
+                       - properties:
+                           userkey:
+                             type: object
+                         required: ["userkey"]
+                       - properties:
+                           appKeyAppID:
+                             type: object
+                         required: ["appKeyAppID"]
+                  type: object
+                apicastSelfManaged:
+                  description: ApicastSelfManagedSpec defines the desired state of
+                    Product Apicast Self Managed
+                  properties:
+                    authentication:
+                      description: AuthenticationSpec defines the desired state of
+                        Product Authentication
+                      properties:
+                        appKeyAppID:
+                          description: AppKeyAppIDAuthenticationSpec defines the desired
+                            state of AppKey&AppId Authentication
+                          properties:
+                            appID:
+                              description: AppID is the name of the parameter that
+                                acts of behalf of app id
+                              type: string
+                            appKey:
+                              description: AppKey is the name of the parameter that
+                                acts of behalf of app key
+                              type: string
+                            credentials:
+                              description: 'Credentials Location available options:
+                                header: As HTTP Headers query: As query parameters
+                                (GET) or body parameters (POST/PUT/DELETE) basic:
+                                As HTTP Basic Authentication'
+                              enum:
+                              - header
+                              - query
+                              - basic
+                              type: string
+                            security:
+                              description: SecuritySpec defines the desired state
+                                of Authentication Security
+                              properties:
+                                hostHeader:
+                                  description: SecretToken Enables you to block any
+                                    direct developer requests to your API backend;
+                                    each 3scale API gateway call to your API backend
+                                    contains a request header called X-3scale-proxy-secret-token.
+                                    The value of this header can be set by you here.
+                                    It's up to you ensure your backend only allows
+                                    calls with this secret header.
+                                  type: string
+                              type: object
+                          type: object
+                        userkey:
+                          description: UserKeyAuthenticationSpec defines the desired
+                            state of User Key Authentication
+                          properties:
+                            authUserKey:
+                              type: string
+                            credentials:
+                              description: 'Credentials Location available options:
+                                header: As HTTP Headers query: As query parameters
+                                (GET) or body parameters (POST/PUT/DELETE) basic:
+                                As HTTP Basic Authentication'
+                              enum:
+                              - header
+                              - query
+                              - basic
+                              type: string
+                            security:
+                              description: SecuritySpec defines the desired state
+                                of Authentication Security
+                              properties:
+                                hostHeader:
+                                  description: SecretToken Enables you to block any
+                                    direct developer requests to your API backend;
+                                    each 3scale API gateway call to your API backend
+                                    contains a request header called X-3scale-proxy-secret-token.
+                                    The value of this header can be set by you here.
+                                    It's up to you ensure your backend only allows
+                                    calls with this secret header.
+                                  type: string
+                              type: object
+                          type: object
+                      type: object
+                      oneOf:
+                       - properties:
+                           userkey:
+                             type: object
+                         required: ["userkey"]
+                       - properties:
+                           appKeyAppID:
+                             type: object
+                         required: ["appKeyAppID"]
+                    productionPublicBaseURL:
+                      pattern: ^https?:\/\/.*$
+                      type: string
+                    stagingPublicBaseURL:
+                      pattern: ^https?:\/\/.*$
+                      type: string
+                  type: object
+              type: object
+              oneOf:
+               - properties:
+                   apicastHosted:
+                     type: object
+                 required: ["apicastHosted"]
+               - properties:
+                   apicastSelfManaged:
+                     type: object
+                 required: ["apicastSelfManaged"]
+            description:
+              type: string
+            mappingRules:
+              items:
+                description: MappingRuleSpec defines the desired state of Product's
+                  MappingRule
+                properties:
+                  increment:
+                    type: integer
+                  metricMethodRef:
+                    type: string
+                  pattern:
+                    type: string
+                  position:
+                    type: integer
+                  verb:
+                    type: string
+                type: object
+              type: array
+            methods:
+              additionalProperties:
+                description: Methodpec defines the desired state of Product's Method
+                properties:
+                  description:
+                    type: string
+                  friendlyName:
+                    type: string
+                type: object
+              type: object
+            metrics:
+              additionalProperties:
+                description: MetricSpec defines the desired state of Product's Metric
+                properties:
+                  description:
+                    type: string
+                  friendlyName:
+                    type: string
+                  unit:
+                    type: string
+                type: object
+              description: 'Metrics and methods Map: system_name -> MetricSpec or
+                MethodSpec system_name attr is unique for all metrics AND methods
+                In other words, if metric''s system_name is A, there is no metric
+                or method with system_name A.'
+              type: object
+            name:
+              description: Name is human readable name for the product
+              type: string
+            provider_account_ref:
+              description: LocalObjectReference contains enough information to let
+                you locate the referenced object inside the same namespace.
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
+            systemName:
+              description: SystemName identifies uniquely the product within the account
+                provider Default value will be sanitized Name
+              type: string
           type: object
         status:
           description: ProductStatus defines the observed state of Product
+          properties:
+            conditions:
+              description: Current state of the 3scale product. Conditions represent
+                the latest available observations of an object's state
+              items:
+                description: "Condition represents an observation of an object's state.
+                  Conditions are an extension mechanism intended to be used when the
+                  details of an observation are not a priori known or would not apply
+                  to all instances of a given Kind. \n Conditions should be added
+                  to explicitly convey properties that users and components care about
+                  rather than requiring those properties to be inferred from other
+                  observations. Once defined, the meaning of a Condition can not be
+                  changed arbitrarily - it becomes part of the API, and has the same
+                  backwards- and forwards-compatibility concerns of any other part
+                  of the API."
+                properties:
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    description: ConditionReason is intended to be a one-word, CamelCase
+                      representation of the category of cause of the current status.
+                      It is intended to be used in concise output, such as one-line
+                      kubectl get output, and in summarizing occurrences of causes.
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    description: "ConditionType is the type of the condition and is
+                      typically a CamelCased word or short phrase. \n Condition types
+                      should indicate state in the \"abnormal-true\" polarity. For
+                      example, if the condition indicates when a policy is invalid,
+                      the \"is valid\" case is probably the norm, so the condition
+                      should be called \"Invalid\"."
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            errorMessage:
+              description: A human readable message indicating details about why the
+                resource is in this condition.
+              type: string
+            errorReason:
+              description: "In the event that there is a terminal problem reconciling
+                the product, both ErrorReason and ErrorMessage will be set. ErrorReason
+                will be populated with a succinct value suitable for machine interpretation,
+                while ErrorMessage will contain a more verbose string suitable for
+                logging and human consumption. \n These fields should not be set for
+                transitive errors that a controller faces that are expected to be
+                fixed automatically over time (like service outages), but instead
+                indicate that something is fundamentally wrong with the Product's
+                spec or the configuration of the product controller, and that manual
+                intervention is required. Examples of terminal errors would be invalid
+                combinations of settings in the spec, values that are unsupported
+                by the product controller, or the responsible product controller itself
+                being critically misconfigured. \n Any transient errors that occur
+                during the reconciliation of Products can be added as events to the
+                Product object and/or logged in the controller's output. TODO enum"
+              type: string
+            observedGeneration:
+              description: ObservedGeneration reflects the generation of the most
+                recently observed MachineSet.
+              format: int64
+              type: integer
+            productId:
+              type: string
+            state:
+              type: string
           type: object
       type: object
   version: v1beta1
