@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"reflect"
+	"regexp"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
@@ -37,23 +38,28 @@ const (
 	ProductFailedConditionType common.ConditionType = "Failed"
 )
 
+var (
+	//
+	productSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
+)
+
 // LimitSpec define the maximum value a metric can take on a contract before the user is no longer authorized to use resources.
 // Once a limit has been passed in a given period, reject messages will be issued if the service is accessed under this contract.
 type LimitSpec struct {
 	// +kubebuilder:validation:Enum=eternity;year;month;week;day;hour;minute
-	Period          string `json:"period,omitempty"`
-	Value           int64  `json:"value,omitempty"`
-	MetricMethodRef string `json:"metricMethodRef,omitempty"`
+	Period          string `json:"period"`
+	Value           int64  `json:"value"`
+	MetricMethodRef string `json:"metricMethodRef"`
 }
 
 // PricingRuleSpec defines the desired state of Application Plan's Pricing Rule
 type PricingRuleSpec struct {
-	From            int    `json:"from,omitempty"`
-	To              int    `json:"to,omitempty"`
-	MetricMethodRef string `json:"metricMethodRef,omitempty"`
+	From            int    `json:"from"`
+	To              int    `json:"to"`
+	MetricMethodRef string `json:"metricMethodRef"`
 	// Price per unit (USD)
-	// +kubebuilder:validation:Pattern=^\d+.?\d{2}$
-	PricePerUnit string `json:"pricePerUnit,omitempty"`
+	// +kubebuilder:validation:Pattern=`^\d+.?\d{2}$`
+	PricePerUnit string `json:"pricePerUnit"`
 }
 
 // ApplicationPlanSpec defines the desired state of Product's Application Plan
@@ -72,21 +78,21 @@ type ApplicationPlanSpec struct {
 	TrialPeriod *int `json:"trialPeriod,omitempty"`
 
 	// Setup fee (USD)
-	// +kubebuilder:validation:Pattern=^\d+.?\d{2}$
+	// +kubebuilder:validation:Pattern=`^\d+.?\d{2}$`
 	// +optional
 	SetupFee *string `json:"setupFee,omitempty"`
 
 	// Cost per Month (USD)
-	// +kubebuilder:validation:Pattern=^\d+.?\d{2}$
+	// +kubebuilder:validation:Pattern=`^\d+.?\d{2}$`
 	// +optional
 	CostMonth *string `json:"costMonth,omitempty"`
 
-	// +optional
 	// Pricing Rules
+	// +optional
 	PricingRules []PricingRuleSpec `json:"pricingRules,omitempty"`
 
-	// +optional
 	// Limits
+	// +optional
 	Limits []LimitSpec `json:"limits,omitempty"`
 
 	// TODO Features
@@ -94,27 +100,24 @@ type ApplicationPlanSpec struct {
 
 // Methodpec defines the desired state of Product's Method
 type Methodpec struct {
+	Name string `json:"friendlyName"`
 	// +optional
-	FriendlyName *string `json:"friendlyName,omitempty"`
-	// +optional
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 // MetricSpec defines the desired state of Product's Metric
 type MetricSpec struct {
+	Name string `json:"friendlyName"`
+	Unit string `json:"unit"`
 	// +optional
-	FriendlyName *string `json:"friendlyName,omitempty"`
-	// +optional
-	Description *string `json:"description,omitempty"`
-	// +optional
-	Unit *string `json:"unit,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 // MappingRuleSpec defines the desired state of Product's MappingRule
 type MappingRuleSpec struct {
-	Verb            string `json:"verb,omitempty"`
-	Pattern         string `json:"pattern,omitempty"`
-	MetricMethodRef string `json:"metricMethodRef,omitempty"`
+	Verb            string `json:"verb"`
+	Pattern         string `json:"pattern"`
+	MetricMethodRef string `json:"metricMethodRef"`
 	// +optional
 	Increment *int `json:"increment,omitempty"`
 	// +optional
@@ -123,7 +126,7 @@ type MappingRuleSpec struct {
 
 // BackendUsageSpec defines the desired state of Product's Backend Usages
 type BackendUsageSpec struct {
-	Path string `json:"path,omitempty"`
+	Path string `json:"path"`
 }
 
 // SecuritySpec defines the desired state of Authentication Security
@@ -192,10 +195,28 @@ type AuthenticationSpec struct {
 	// TODO OpenID
 }
 
+func (a *AuthenticationSpec) AuthenticationMode() string {
+	// authentication is oneOf by CRD openapiV3 validation
+	if a.UserKeyAuthentication != nil {
+		return "1"
+	}
+
+	// must be appKey&appID
+	return "2"
+}
+
 // ApicastHostedSpec defines the desired state of Product Apicast Hosted
 type ApicastHostedSpec struct {
 	// +optional
 	Authentication *AuthenticationSpec `json:"authentication,omitempty"`
+}
+
+func (a *ApicastHostedSpec) AuthenticationMode() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	authenticationMode := a.Authentication.AuthenticationMode()
+	return &authenticationMode
 }
 
 // ApicastSelfManagedSpec defines the desired state of Product Apicast Self Managed
@@ -203,11 +224,19 @@ type ApicastSelfManagedSpec struct {
 	// +optional
 	Authentication *AuthenticationSpec `json:"authentication,omitempty"`
 	// +optional
-	// +kubebuilder:validation:Pattern=^https?:\/\/.*$
+	// +kubebuilder:validation:Pattern=`^https?:\/\/.*$`
 	StagingPublicBaseURL *string `json:"stagingPublicBaseURL,omitempty"`
 	// +optional
-	// +kubebuilder:validation:Pattern=^https?:\/\/.*$
+	// +kubebuilder:validation:Pattern=`^https?:\/\/.*$`
 	ProductionPublicBaseURL *string `json:"productionPublicBaseURL,omitempty"`
+}
+
+func (a *ApicastSelfManagedSpec) AuthenticationMode() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	authenticationMode := a.Authentication.AuthenticationMode()
+	return &authenticationMode
 }
 
 // ProductDeploymentSpec defines the desired state of Product Deployment
@@ -218,10 +247,35 @@ type ProductDeploymentSpec struct {
 	ApicastSelfManaged *ApicastSelfManagedSpec `json:"apicastSelfManaged,omitempty"`
 }
 
+func (d *ProductDeploymentSpec) DeploymentOption() string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return "hosted"
+	}
+
+	// must be self managed
+	return "self_managed"
+}
+
+func (d *ProductDeploymentSpec) AuthenticationMode() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.AuthenticationMode()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	// must be self managed, a
+	return d.ApicastSelfManaged.AuthenticationMode()
+}
+
 // ProductSpec defines the desired state of Product
+// +k8s:openapi-gen=true
 type ProductSpec struct {
 	// Name is human readable name for the product
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// SystemName identifies uniquely the product within the account provider
 	// Default value will be sanitized Name
@@ -243,13 +297,17 @@ type ProductSpec struct {
 	// +optional
 	BackendUsages map[string]BackendUsageSpec `json:"backendUsages,omitempty"`
 
-	// Metrics and methods
-	// Map: system_name -> MetricSpec or MethodSpec
+	// Metrics
+	// Map: system_name -> MetricSpec
 	// system_name attr is unique for all metrics AND methods
 	// In other words, if metric's system_name is A, there is no metric or method with system_name A.
 	// +optional
 	Metrics map[string]MetricSpec `json:"metrics,omitempty"`
 
+	// Methods
+	// Map: system_name -> MethodSpec
+	// system_name attr is unique for all metrics AND methods
+	// In other words, if metric's system_name is A, there is no metric or method with system_name A.
 	// +optional
 	Methods map[string]Methodpec `json:"methods,omitempty"`
 
@@ -258,14 +316,31 @@ type ProductSpec struct {
 	// Map: system_name -> Application Plan Spec
 	ApplicationPlans map[string]ApplicationPlanSpec `json:"applicationPlans,omitempty"`
 
+	// ProviderAccountRef references account provider credentials
 	// +optional
-	ProviderAccountRef *corev1.LocalObjectReference `json:"provider_account_ref, omitempty"`
+	ProviderAccountRef *corev1.LocalObjectReference `json:"providerAccountRef,omitempty"`
+}
+
+func (s *ProductSpec) DeploymentOption() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	deploymentOption := s.Deployment.DeploymentOption()
+	return &deploymentOption
+}
+
+func (s *ProductSpec) AuthenticationMode() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.AuthenticationMode()
 }
 
 // ProductStatus defines the observed state of Product
+// +k8s:openapi-gen=true
 type ProductStatus struct {
 	// +optional
-	ID *string `json:"productId,omitempty"`
+	ID *int64 `json:"productId,omitempty"`
 	// +optional
 	State *string `json:"state,omitempty"`
 
@@ -336,6 +411,7 @@ func (p *ProductStatus) Equals(other *ProductStatus) bool {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Product is the Schema for the products API
+// +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=products,scope=Namespaced
 // +operator-sdk:gen-csv:customresourcedefinitions.displayName="3scale Product"
@@ -348,52 +424,15 @@ type Product struct {
 }
 
 func (product *Product) SetDefaults() bool {
-	// TODO
-	return false
-}
+	updated := false
 
-func (product *Product) DeploymentOption() string {
-	switch {
-	case product.IsHostedApicastDeploymentOption():
-		return "hosted"
-	case product.IsSelfManagedApicastDeploymentOption():
-		return "self_managed"
-	default:
-		return "hosted"
+	// Respect 3scale API defaults
+	if product.Spec.SystemName == "" {
+		product.Spec.SystemName = productSystemNameRegexp.ReplaceAllString(product.Spec.Name, "")
+		updated = true
 	}
-}
 
-func (product *Product) IsHostedApicastDeploymentOption() bool {
-	return product.Spec.Deployment != nil && product.Spec.Deployment.ApicastHosted != nil
-}
-
-func (product *Product) IsSelfManagedApicastDeploymentOption() bool {
-	return product.Spec.Deployment != nil && product.Spec.Deployment.ApicastSelfManaged != nil
-}
-
-func (product *Product) AuthenticationMode() string {
-	// default "1"
-	mode := "1"
-	if product.IsHostedApicastDeploymentOption() {
-		authentication := product.Spec.Deployment.ApicastHosted.Authentication
-		if authentication != nil && authentication.UserKeyAuthentication != nil {
-			mode = "1"
-		}
-
-		if authentication != nil && authentication.AppKeyAppIDAuthentication != nil {
-			mode = "2"
-		}
-	} else if product.IsSelfManagedApicastDeploymentOption() {
-		authentication := product.Spec.Deployment.ApicastSelfManaged.Authentication
-		if authentication != nil && authentication.UserKeyAuthentication != nil {
-			mode = "1"
-		}
-
-		if authentication != nil && authentication.AppKeyAppIDAuthentication != nil {
-			mode = "2"
-		}
-	}
-	return mode
+	return updated
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
