@@ -28,8 +28,6 @@ type SpecError interface {
 	FieldType() FieldTypeError
 }
 
-// invalidProductError is an error intended for consumption by a REST API server; it can also be
-// reconstructed by clients from a REST response. Public to allow easy type switches.
 type specFieldError struct {
 	errorType FieldTypeError
 	// path

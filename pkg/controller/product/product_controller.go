@@ -86,14 +86,9 @@ type ReconcileProduct struct {
 
 // Reconcile reads that state of the cluster for a Product object and makes changes based on the state read
 // and what is in the Product.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileProduct) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("ReconcileProduct", "Operator version", version.Version)
+	reqLogger.Info("Reconcile Product", "Operator version", version.Version)
 
 	// Fetch the Product instance
 	product := &capabilitiesv1beta1.Product{}
@@ -117,27 +112,32 @@ func (r *ReconcileProduct) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	result, err := r.reconcile(product)
 	if err != nil {
-		reqLogger.Error(err, "Failed to reconcile Product")
+		reqLogger.Error(err, "Failed to reconcile")
 		r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "ReconcileError", "%v", err)
 	}
-	reqLogger.Info("ReconcileProduct END", "result", result, "error", err)
+	reqLogger.Info("END", "result", result, "error", err)
 	return result, err
 }
 
 func (r *ReconcileProduct) reconcile(product *capabilitiesv1beta1.Product) (reconcile.Result, error) {
 	if product.SetDefaults() {
-		return reconcile.Result{Requeue: true}, r.Client().Update(r.Context(), product)
+		err := r.Client().Update(r.Context(), product)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("Failed setting product defaults: %w", err)
+		}
+
+		return reconcile.Result{Requeue: true}, nil
 	}
 
-	productLogicReconciler := NewProductLogicReconciler(r.BaseReconciler, product)
+	logicReconciler := NewLogicReconciler(r.BaseReconciler, product)
 
-	res, syncErr := productLogicReconciler.Reconcile()
+	res, syncErr := logicReconciler.Reconcile()
 
 	if syncErr == nil && res.Requeue {
 		return res, nil
 	}
 
-	res, statusErr := productLogicReconciler.UpdateStatus()
+	res, statusErr := logicReconciler.UpdateStatus()
 	if statusErr != nil {
 		if syncErr != nil {
 			return reconcile.Result{}, fmt.Errorf("Failed to sync product: %v. Failed to update product status: %w", syncErr, statusErr)

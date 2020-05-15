@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,9 +30,10 @@ var (
 // If no provider_account_reference is provided AND default provider account secret is not found either, then,
 // 3scale default provider account (3scale-admin) will be looked up using system-seed secret in the current namespace.
 // If nothing is successfully found, return error
-func LookupThreescaleClient(cl client.Client, ns string, providerAccountRef *corev1.LocalObjectReference) (*threescaleapi.ThreeScaleClient, error) {
-	secretSource := NewSecretSource(cl, ns)
+func LookupThreescaleClient(cl client.Client, ns string, providerAccountRef *corev1.LocalObjectReference, logger logr.Logger) (*threescaleapi.ThreeScaleClient, error) {
 	if providerAccountRef != nil {
+		logger.Info("LookupThreescaleClient", "ns", ns, "providerAccountRef", providerAccountRef)
+		secretSource := NewSecretSource(cl, ns)
 		adminURL, err := secretSource.RequiredFieldValueFromRequiredSecret(providerAccountRef.Name, providerAccountSecretURLFieldName)
 		if err != nil {
 			return nil, err
@@ -41,6 +43,7 @@ func LookupThreescaleClient(cl client.Client, ns string, providerAccountRef *cor
 			return nil, err
 		}
 
+		logger.Info("LookupThreescaleClient providerAccountRef found", "adminURL", adminURL)
 		return PortaClientFromURLString(adminURL, token)
 	}
 
@@ -63,6 +66,7 @@ func LookupThreescaleClient(cl client.Client, ns string, providerAccountRef *cor
 			return nil, fmt.Errorf("Secret field '%s' is required in secret '%s'", providerAccountSecretURLFieldName, defaulSecret.Name)
 		}
 
+		logger.Info("LookupThreescaleClient default secret found", "adminURL", adminURL)
 		return PortaClientFromURLString(*adminURL, *token)
 	}
 
@@ -70,6 +74,7 @@ func LookupThreescaleClient(cl client.Client, ns string, providerAccountRef *cor
 	// TODO: Check apimanger CR exists?
 
 	// TODO implement read from existing 3scale installation
+	logger.Info("LookupThreescaleClient no provider account found")
 	return nil, nil
 }
 

@@ -2,16 +2,17 @@ package backend
 
 import (
 	"context"
+	"fmt"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -19,7 +20,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_backend")
+var (
+	// controllerName is the name of this controller
+	controllerName = "controller_backend"
+
+	// package level logger
+	log = logf.Log.WithName(controllerName)
+)
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -29,12 +36,28 @@ var log = logf.Log.WithName("controller_backend")
 // Add creates a new Backend Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
+	reconciler, err := newReconciler(mgr)
+	if err != nil {
+		return err
+	}
+
+	return add(mgr, reconciler)
 }
 
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileBackend{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
+	apiClientReader, err := common.NewAPIClientReader(mgr)
+	if err != nil {
+		return nil, err
+	}
+
+	client := mgr.GetClient()
+	scheme := mgr.GetScheme()
+	ctx := context.TODO()
+	recorder := mgr.GetEventRecorderFor(controllerName)
+	return &ReconcileBackend{
+		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, recorder),
+	}, nil
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -51,16 +74,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner Backend
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &capabilitiesv1beta1.Backend{},
-	})
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -69,85 +82,105 @@ var _ reconcile.Reconciler = &ReconcileBackend{}
 
 // ReconcileBackend reconciles a Backend object
 type ReconcileBackend struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	*reconcilers.BaseReconciler
 }
 
 // Reconcile reads that state of the cluster for a Backend object and makes changes based on the state read
 // and what is in the Backend.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileBackend) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Backend")
+	reqLogger := r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	reqLogger.Info("Reconcile Backend", "Operator version", version.Version)
 
 	// Fetch the Backend instance
-	instance := &capabilitiesv1beta1.Backend{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	backend := &capabilitiesv1beta1.Backend{}
+	err := r.Client().Get(context.TODO(), request.NamespacedName, backend)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
-
-	// Set Backend instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
+	// Ignore deleted Backends, this can happen when foregroundDeletion is enabled
+	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
+	if backend.DeletionTimestamp != nil {
+		return reconcile.Result{}, nil
 	}
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
+	result, err := r.reconcile(backend)
+	if err != nil {
+		reqLogger.Error(err, "Failed to reconcile")
+		r.EventRecorder().Eventf(backend, corev1.EventTypeWarning, "ReconcileError", "%v", err)
+	}
+	reqLogger.Info("END", "result", result, "error", err)
+	return result, err
+}
+
+func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backend) (reconcile.Result, error) {
+	logger := r.Logger().WithValues("reconcile", backendResource.Name)
+
+	if backendResource.SetDefaults() {
+		err := r.Client().Update(r.Context(), backendResource)
 		if err != nil {
-			return reconcile.Result{}, err
+			return reconcile.Result{}, fmt.Errorf("Failed setting backend defaults: %w", err)
 		}
 
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
+		logger.Info("resource updated. Requeueing.")
+		return reconcile.Result{Requeue: true}, nil
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	backendAPI, specErr := r.reconcileSpec(backendResource)
+
+	statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, backendAPI, specErr)
+	statusErr := statusReconciler.Reconcile()
+	if statusErr != nil {
+		if specErr != nil {
+			return reconcile.Result{}, fmt.Errorf("Failed to sync backend: %v. Failed to update backend status: %w", specErr, statusErr)
+		}
+
+		return reconcile.Result{}, fmt.Errorf("Failed to update backend status: %w", statusErr)
+	}
+
+	if helper.IsInvalidSpecError(specErr) {
+		// On Validation error, no need to retry as spec is not valid and needs to be changed
+		logger.Error(specErr, "spec validation error")
+		return reconcile.Result{}, nil
+	}
+
+	if specErr != nil {
+		return reconcile.Result{}, fmt.Errorf("Failed to sync backend: %w", specErr)
+	}
+
 	return reconcile.Result{}, nil
 }
 
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *capabilitiesv1beta1.Backend) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
+func (r *ReconcileBackend) reconcileSpec(backendResource *capabilitiesv1beta1.Backend) (*helper.BackendAPIEntity, error) {
+	err := r.validateSpec(backendResource)
+	if err != nil {
+		return nil, err
 	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
+
+	threescaleAPIClient, err := helper.LookupThreescaleClient(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return nil, fmt.Errorf("Error looking up threescale client: %w", err)
 	}
+
+	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient)
+	backendAPIEntity, err := reconciler.Reconcile()
+	if err != nil {
+		return nil, fmt.Errorf("Error 3scale sync: %w", err)
+	}
+
+	return backendAPIEntity, nil
+}
+
+func (r *ReconcileBackend) validateSpec(backendResource *capabilitiesv1beta1.Backend) error {
+	// internal validation
+	// TODO
+	return nil
 }

@@ -1,7 +1,6 @@
 package product
 
 import (
-	"context"
 	"fmt"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
@@ -15,27 +14,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type ProductLogicReconciler struct {
+type LogicReconciler struct {
 	*reconcilers.BaseReconciler
 	product *capabilitiesv1beta1.Product
 	logger  logr.Logger
 
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
-	productObj          *threescaleapi.Service
+	productObj          *threescaleapi.Product
 	syncError           error
 }
 
-func NewProductLogicReconciler(b *reconcilers.BaseReconciler, product *capabilitiesv1beta1.Product) *ProductLogicReconciler {
-	return &ProductLogicReconciler{
+func NewLogicReconciler(b *reconcilers.BaseReconciler, product *capabilitiesv1beta1.Product) *LogicReconciler {
+	return &LogicReconciler{
 		BaseReconciler: b,
 		product:        product,
 		logger:         b.Logger().WithValues("Product Controller", product.Name),
 	}
 }
 
-func (p *ProductLogicReconciler) Reconcile() (reconcile.Result, error) {
-	p.logger.Info("Reconcile Product Logic")
-	threescaleAPIClient, err := helper.LookupThreescaleClient(p.Client(), p.product.Namespace, p.product.Spec.ProviderAccountRef)
+func (p *LogicReconciler) Reconcile() (reconcile.Result, error) {
+	threescaleAPIClient, err := helper.LookupThreescaleClient(p.Client(), p.product.Namespace, p.product.Spec.ProviderAccountRef, p.logger)
 	if err != nil {
 		//Unkown Error - requeue the request.
 		p.syncError = err
@@ -46,30 +44,41 @@ func (p *ProductLogicReconciler) Reconcile() (reconcile.Result, error) {
 	err = p.validate()
 	if err != nil {
 		p.syncError = err
-		// Validation error
-		// No need to retry as spec is not valid and needs to be changed
+		p.logger.Error(err, "validate error")
+
+		if !helper.IsInvalidSpecError(err) {
+			return reconcile.Result{}, err
+		}
+
+		// On Validation error, no need to retry as spec is not valid and needs to be changed
 		return reconcile.Result{}, nil
 	}
 
 	err = p.checkExternalReferences()
 	if err != nil {
+		p.logger.Error(err, "External references")
 		p.syncError = err
-		// should retry
+
+		// should retry anyway
 		return reconcile.Result{}, err
 	}
 
 	productObj, err := p.sync3scale()
 	if err != nil {
 		p.syncError = err
-		// should retry
+		p.logger.Error(err, "3scale sync error")
+
+		// should retry anyway
 		return reconcile.Result{}, err
 	}
+
+	p.logger.V(1).Info("3scale synchronized correctly")
 	p.productObj = productObj
 
 	return reconcile.Result{}, nil
 }
 
-func (p *ProductLogicReconciler) UpdateStatus() (reconcile.Result, error) {
+func (p *LogicReconciler) UpdateStatus() (reconcile.Result, error) {
 	p.logger.Info("Update Status")
 	newStatus := p.calculateStatus()
 
@@ -91,7 +100,7 @@ func (p *ProductLogicReconciler) UpdateStatus() (reconcile.Result, error) {
 	p.logger.V(1).Info("Status", "sequence no:", fmt.Sprintf("sequence No: %v->%v", p.product.Status.ObservedGeneration, newStatus.ObservedGeneration))
 
 	p.product.Status = *newStatus
-	updateErr := p.Client().Status().Update(context.TODO(), p.product)
+	updateErr := p.Client().Status().Update(p.Context(), p.product)
 	if updateErr != nil {
 		return reconcile.Result{}, updateErr
 	}
@@ -99,16 +108,21 @@ func (p *ProductLogicReconciler) UpdateStatus() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (p *ProductLogicReconciler) validate() error {
+func (p *LogicReconciler) validate() error {
 	// internal validation
+
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	// spec.deployment.apicastSelfManaged.authentication is oneOf by CRD openapiV3 validation
 	return nil
 }
 
-func (p *ProductLogicReconciler) checkExternalReferences() error {
+func (p *LogicReconciler) checkExternalReferences() error {
+	// Check backend usages
+	// build map[backendResourceName] -> backendID
 	return nil
 }
 
-func (p *ProductLogicReconciler) sync3scale() (*threescaleapi.Service, error) {
+func (p *LogicReconciler) sync3scale() (*threescaleapi.Product, error) {
 	ctx := &Context{}
 	taskRunner := helper.NewTaskRunner(ctx, p.logger)
 
@@ -131,11 +145,11 @@ func (p *ProductLogicReconciler) sync3scale() (*threescaleapi.Service, error) {
 	return ctx.Product(), nil
 }
 
-func (p *ProductLogicReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus {
+func (p *LogicReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus {
 	newStatus := &capabilitiesv1beta1.ProductStatus{}
 	if p.productObj != nil {
-		newStatus.ID = &p.productObj.ID
-		newStatus.State = &p.productObj.State
+		newStatus.ID = &p.productObj.Element.ID
+		newStatus.State = &p.productObj.Element.State
 	}
 
 	newStatus.ObservedGeneration = p.product.Status.ObservedGeneration
@@ -155,7 +169,7 @@ func (p *ProductLogicReconciler) calculateStatus() *capabilitiesv1beta1.ProductS
 	return newStatus
 }
 
-func (p *ProductLogicReconciler) syncCondition() common.Condition {
+func (p *LogicReconciler) syncCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProductSyncedConditionType,
 		Status: corev1.ConditionFalse,
@@ -168,7 +182,7 @@ func (p *ProductLogicReconciler) syncCondition() common.Condition {
 	return condition
 }
 
-func (p *ProductLogicReconciler) orphanCondition() common.Condition {
+func (p *LogicReconciler) orphanCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProductOrphanConditionType,
 		Status: corev1.ConditionFalse,
@@ -182,7 +196,7 @@ func (p *ProductLogicReconciler) orphanCondition() common.Condition {
 	return condition
 }
 
-func (p *ProductLogicReconciler) invalidCondition() common.Condition {
+func (p *LogicReconciler) invalidCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProductInvalidConditionType,
 		Status: corev1.ConditionFalse,
@@ -196,7 +210,7 @@ func (p *ProductLogicReconciler) invalidCondition() common.Condition {
 	return condition
 }
 
-func (p *ProductLogicReconciler) failedCondition() common.Condition {
+func (p *LogicReconciler) failedCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProductFailedConditionType,
 		Status: corev1.ConditionFalse,
@@ -211,7 +225,7 @@ func (p *ProductLogicReconciler) failedCondition() common.Condition {
 	return condition
 }
 
-func (p *ProductLogicReconciler) wrappedContext(f func(ctx *Context) error) func(interface{}) error {
+func (p *LogicReconciler) wrappedContext(f func(ctx *Context) error) func(interface{}) error {
 	return func(ctxI interface{}) error {
 		switch ctx := ctxI.(type) {
 		case *Context:
@@ -222,59 +236,68 @@ func (p *ProductLogicReconciler) wrappedContext(f func(ctx *Context) error) func
 	}
 }
 
-func (p *ProductLogicReconciler) syncProduct(ctx *Context) error {
-	serviceList, err := p.threescaleAPIClient.ListServices()
+func (p *LogicReconciler) syncProduct(ctx *Context) error {
+	productList, err := p.threescaleAPIClient.ListProducts()
 	if err != nil {
 		return fmt.Errorf("Error reading product list: %w", err)
 	}
 
-	// Find service in the list by system name
-	idx, serviceExists := func(sList []threescaleapi.Service) (int, bool) {
-		for i, service := range sList {
-			if service.SystemName == p.product.Spec.SystemName {
+	// Find product in the list by system name
+	idx, productExists := func(pList []threescaleapi.Product) (int, bool) {
+		for i, product := range pList {
+			if product.Element.SystemName == p.product.Spec.SystemName {
 				return i, true
 			}
 		}
 		return -1, false
-	}(serviceList.Services)
+	}(productList.Products)
 
-	var productObj *threescaleapi.Service
-	if serviceExists {
-		productObj = &serviceList.Services[idx]
+	var productObj *threescaleapi.Product
+	if productExists {
+		productObj = &productList.Products[idx]
 	} else {
-		// Create service using system_name.
-		// 3scale API will use passed attr as system name and it cannot be modified later
-		service, err := p.threescaleAPIClient.CreateService(p.product.Spec.SystemName)
+		// Create product using system_name.
+		// it cannot be modified later
+		params := threescaleapi.Params{
+			"system_name": p.product.Spec.SystemName,
+		}
+		product, err := p.threescaleAPIClient.CreateProduct(p.product.Spec.Name, params)
 		if err != nil {
 			return fmt.Errorf("Error creating product %s: %w", p.product.Spec.SystemName, err)
 		}
 
-		productObj = &service
+		productObj = product
 	}
 
 	updatedParams := threescaleapi.Params{}
-	if productObj.Name != p.product.Spec.Name {
+	if productObj.Element.Name != p.product.Spec.Name {
 		updatedParams["name"] = p.product.Spec.Name
 	}
 
-	if productObj.Description != p.product.Spec.Description {
+	if productObj.Element.Description != p.product.Spec.Description {
 		updatedParams["description"] = p.product.Spec.Description
 	}
 
-	if productObj.DeploymentOption != p.product.DeploymentOption() {
-		updatedParams["deployment_option"] = p.product.DeploymentOption()
-	}
+	specDeploymentOption := p.product.Spec.DeploymentOption()
+	if specDeploymentOption != nil {
+		if productObj.Element.DeploymentOption != *specDeploymentOption {
+			updatedParams["deployment_option"] = *specDeploymentOption
+		}
+	} // only update deployment_option when set in the CR
 
-	if productObj.BackendVersion != p.product.AuthenticationMode() {
-		updatedParams["backend_version"] = p.product.AuthenticationMode()
-	}
+	specAuthMode := p.product.Spec.AuthenticationMode()
+	if specAuthMode != nil {
+		if productObj.Element.BackendVersion != *specAuthMode {
+			updatedParams["backend_version"] = *specAuthMode
+		}
+	} // only update backend_version when set in the CR
 
 	if len(updatedParams) > 0 {
-		updatedService, err := p.threescaleAPIClient.UpdateService(productObj.ID, updatedParams)
+		updatedProduct, err := p.threescaleAPIClient.UpdateProduct(productObj.Element.ID, updatedParams)
 		if err != nil {
-			return fmt.Errorf("Error updating product %s: %w", productObj.SystemName, err)
+			return fmt.Errorf("Error updating product %s: %w", productObj.Element.SystemName, err)
 		}
-		productObj = &updatedService
+		productObj = updatedProduct
 	}
 
 	ctx.SetProduct(productObj)
@@ -282,34 +305,34 @@ func (p *ProductLogicReconciler) syncProduct(ctx *Context) error {
 	return nil
 }
 
-func (p *ProductLogicReconciler) syncBackendUsage(ctx *Context) error {
+func (p *LogicReconciler) syncBackendUsage(ctx *Context) error {
 	return nil
 }
 
-func (p *ProductLogicReconciler) syncProxy(ctx *Context) error {
+func (p *LogicReconciler) syncProxy(ctx *Context) error {
 	return nil
 }
 
-func (p *ProductLogicReconciler) syncMethods(ctx *Context) error {
+func (p *LogicReconciler) syncMethods(ctx *Context) error {
 	return nil
 }
 
-func (p *ProductLogicReconciler) syncMetrics(ctx *Context) error {
+func (p *LogicReconciler) syncMetrics(ctx *Context) error {
 	return nil
 }
 
-func (p *ProductLogicReconciler) syncMappingRules(ctx *Context) error {
+func (p *LogicReconciler) syncMappingRules(ctx *Context) error {
 	return nil
 }
 
-func (p *ProductLogicReconciler) syncApplicationPlans(ctx *Context) error {
+func (p *LogicReconciler) syncApplicationPlans(ctx *Context) error {
 	return nil
 }
 
-func (p *ProductLogicReconciler) syncPolicies(ctx *Context) error {
+func (p *LogicReconciler) syncPolicies(ctx *Context) error {
 	return nil
 }
 
-func (p *ProductLogicReconciler) bumpProxyVersion(ctx *Context) error {
+func (p *LogicReconciler) bumpProxyVersion(ctx *Context) error {
 	return nil
 }

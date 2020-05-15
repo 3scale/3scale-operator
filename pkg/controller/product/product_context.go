@@ -5,13 +5,13 @@ import (
 )
 
 type Context struct {
-	product *threescaleapi.Service
+	product *threescaleapi.Product
 }
 
-func (c *Context) SetProduct(p *threescaleapi.Service) {
+func (c *Context) SetProduct(p *threescaleapi.Product) {
 	c.product = p
 }
 
-func (c *Context) Product() *threescaleapi.Service {
+func (c *Context) Product() *threescaleapi.Product {
 	return c.product
 }

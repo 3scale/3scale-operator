@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -60,10 +61,11 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
+	recorder := record.NewFakeRecorder(10000)
 
 	// Create a ReconcileMemcached object with the scheme and fake client.
 	r := &ReconcileAPIManager{
-		BaseReconciler: reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log),
+		BaseReconciler: reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, recorder),
 	}
 
 	req := reconcile.Request{
