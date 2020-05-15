@@ -16,7 +16,7 @@ objects:
     tags:
     - from:
         kind: DockerImage
-        name: registry.access.redhat.com/ubi7/ruby-25
+        name: registry.redhat.io/ubi7/ruby-25
       name: latest
 
 - apiVersion: v1

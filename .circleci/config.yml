@@ -195,6 +195,16 @@ commands:
             done) 172.30.1.1:5000/$project/amp-backend:${imagestream_tag_name}=quay.io/3scale/apisonator:nightly \
             172.30.1.1:5000/$project/amp-system:${imagestream_tag_name}=quay.io/3scale/porta:nightly --insecure
 
+  create-redhat-registry-io-secret:
+    steps:
+      - run:
+          name: Create registry.redhat.io secret
+          command: |
+            oc create secret docker-registry threescale-registry-auth \
+              --docker-password="${REGISTRY_REDHAT_IO_PASSWORD}" \
+              --docker-username="${REGISTRY_REDHAT_IO_USERNAME}" \
+              --docker-server="${REGISTRY_REDHAT_IO_SERVER}"
+
   create-secrets:
     steps:
       - run:
@@ -377,6 +387,7 @@ jobs:
       - checkout
       - install-openshift
       - create-secrets
+      - create-redhat-registry-io-secret
       - build-nightly-amp:
           components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
       - oc-observe
