@@ -13,6 +13,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	HTTP_VERBOSE_ENVVAR = "THREESCALE_DEBUG"
+)
+
 var (
 	// controllerName is the name of this controller
 	providerAccountDefaultSecretName = "threescale-provider-account"
@@ -96,9 +100,13 @@ func PortaClient(url *url.URL, masterAccessToken string) (*threescaleapi.ThreeSc
 
 	// TODO By default should not skip verification
 	// Activated by some env var or Spec param
-	tr := &http.Transport{
+	var transport http.RoundTripper = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	return threescaleapi.NewThreeScale(adminPortal, masterAccessToken, &http.Client{Transport: tr}), nil
+	if GetEnvVar(HTTP_VERBOSE_ENVVAR, "0") == "1" {
+		transport = &Transport{Transport: transport}
+	}
+
+	return threescaleapi.NewThreeScale(adminPortal, masterAccessToken, &http.Client{Transport: transport}), nil
 }

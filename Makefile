@@ -66,7 +66,7 @@ tag:
 
 ## local: Run operator locally
 local:
-	OPERATOR_NAME=$(OPERATOR_NAME) $(OPERATOR_SDK) run --local --namespace $(NAMESPACE) --operator-flags '--zap-devel=true --zap-level 1'
+	OPERATOR_NAME=$(OPERATOR_NAME) THREESCALE_DEBUG=1 $(OPERATOR_SDK) run --local --namespace $(NAMESPACE) --operator-flags '--zap-devel=true --zap-level 1'
 
 ## e2e-setup: create OCP project for the operator
 e2e-setup:
