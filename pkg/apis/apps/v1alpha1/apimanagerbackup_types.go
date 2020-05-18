@@ -64,24 +64,6 @@ type APIManagerBackupStatus struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
-	// Alternatives to keep track of backup state:
-	// 1 - Use bools in top-level of status section. Requires namespacing of the names of the variables. PVC and S3 backup share same "space"
-	// 2 - Use conditions to codify the same as point 1. Requires namespacing of the names of the variables. PVC and S3 backup share same "space"
-	// 3 - Create a struct to represent a state. All
-	// In all cases all fields should be optional to avoid backward-incompatible changes
-
-	// +optional
-	SecretsAndConfigMapsBackupSubStepFinished *bool `json:"secretsAndConfigMapsBackupSubStepFinished,omitempty"`
-	// +optional
-	SecretsAndConfigMapsCleanupSubStepFinished *bool `json:"secretsAndConfigMapsCleanupSubStepFinished,omitempty"`
-	// +optional
-	APIManagerCustomResourceBackupSubStepFinished *bool `json:"apiManagerCustomResourceBackupSubStepFinished,omitempty"`
-	// +optional
-	APIManagerCustomResourceCleanupSubStepFinished *bool `json:"apiManagerCustomResourceCleanupSubStepFinished,omitempty"`
-	// +optional
-	SystemFileStorageBackupSubStepFinished *bool `json:"systemFileStorageBackupSubStepFinished,omitempty"`
-	// +optional
-	SystemFileStorageCleanupSubStepFinished *bool `json:"systemFileStorageCleanupSubStepFinished,omitempty"`
 	// +optional
 	Completed *bool `json:"completed,omitempty"`
 
@@ -117,42 +99,6 @@ type APIManagerBackup struct {
 
 func (a *APIManagerBackup) SetDefaults() (bool, error) {
 	return false, nil
-}
-
-func (a *APIManagerBackup) SecretsAndConfigMapsBackupStepFinished() bool {
-	return a.SecretsAndConfigMapsBackupSubStepFinished() && a.SecretsAndConfigMapsCleanupSubStepFinished()
-}
-
-func (a *APIManagerBackup) SecretsAndConfigMapsBackupSubStepFinished() bool {
-	return a.Status.SecretsAndConfigMapsBackupSubStepFinished != nil && *a.Status.SecretsAndConfigMapsBackupSubStepFinished
-}
-
-func (a *APIManagerBackup) SecretsAndConfigMapsCleanupSubStepFinished() bool {
-	return a.Status.SecretsAndConfigMapsCleanupSubStepFinished != nil && *a.Status.SecretsAndConfigMapsCleanupSubStepFinished
-}
-
-func (a *APIManagerBackup) APIManagerCustomResourceBackupStepFinished() bool {
-	return a.APIManagerCustomResourceBackupSubStepFinished() && a.APIManagerCustomResourceCleanupSubStepFinished()
-}
-
-func (a *APIManagerBackup) APIManagerCustomResourceBackupSubStepFinished() bool {
-	return a.Status.APIManagerCustomResourceBackupSubStepFinished != nil && *a.Status.APIManagerCustomResourceBackupSubStepFinished
-}
-
-func (a *APIManagerBackup) APIManagerCustomResourceCleanupSubStepFinished() bool {
-	return a.Status.APIManagerCustomResourceCleanupSubStepFinished != nil && *a.Status.APIManagerCustomResourceCleanupSubStepFinished
-}
-
-func (a *APIManagerBackup) SystemFileStorageBackupStepFinished() bool {
-	return a.SystemFileStorageBackupSubStepFinished() && a.SystemFileStorageCleanupSubStepFinished()
-}
-
-func (a *APIManagerBackup) SystemFileStorageBackupSubStepFinished() bool {
-	return a.Status.SystemFileStorageBackupSubStepFinished != nil && *a.Status.SystemFileStorageBackupSubStepFinished
-}
-
-func (a *APIManagerBackup) SystemFileStorageCleanupSubStepFinished() bool {
-	return a.Status.SystemFileStorageCleanupSubStepFinished != nil && *a.Status.SystemFileStorageCleanupSubStepFinished
 }
 
 func (a *APIManagerBackup) BackupCompleted() bool {

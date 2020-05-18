@@ -61,10 +61,6 @@ spec:
         status:
           description: APIManagerBackupStatus defines the observed state of APIManagerBackup
           properties:
-            apiManagerCustomResourceBackupSubStepFinished:
-              type: boolean
-            apiManagerCustomResourceCleanupSubStepFinished:
-              type: boolean
             apiManagerSourceName:
               type: string
             backupPersistentVolumeClaimName:
@@ -104,17 +100,9 @@ spec:
                 - type
                 type: object
               type: array
-            secretsAndConfigMapsBackupSubStepFinished:
-              type: boolean
-            secretsAndConfigMapsCleanupSubStepFinished:
-              type: boolean
             startTime:
               format: date-time
               type: string
-            systemFileStorageBackupSubStepFinished:
-              type: boolean
-            systemFileStorageCleanupSubStepFinished:
-              type: boolean
           type: object
       type: object
   version: v1alpha1
