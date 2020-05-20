@@ -123,7 +123,7 @@ commands:
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
             oc get events | egrep ' Failed ' || :
-            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'
           no_output_timeout: 30m
 
   deploy-3scale-eval-from-template:
@@ -136,7 +136,7 @@ commands:
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
             oc get events | egrep ' Failed ' || :
-            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'
           no_output_timeout: 30m
 
   push-3scale-images-to-quay:
