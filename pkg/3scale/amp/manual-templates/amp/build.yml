@@ -38,6 +38,8 @@ objects:
       type: Git
     strategy:
       dockerStrategy:
+        pullSecret:
+          name: threescale-registry-auth
         from:
           kind: ImageStreamTag
           name: ruby-25-ubi7:latest
@@ -60,6 +62,8 @@ objects:
     strategy:
       type: Docker
       dockerStrategy:
+        pullSecret:
+          name: threescale-registry-auth
         dockerfilePath: openshift/system/Dockerfile.on_prem
         forcePull: true
 
@@ -129,6 +133,8 @@ objects:
       strategy:
           type: Docker
           dockerStrategy:
+              pullSecret:
+                  name: threescale-registry-auth
               contextDir: /
               dockerfilePath: openshift/distro/centos/7/release/Dockerfile
 
