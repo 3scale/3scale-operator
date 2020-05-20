@@ -38,6 +38,8 @@ objects:
       type: Git
     strategy:
       dockerStrategy:
+        pullSecret:
+          name: "${PULLSECRET_NAME}"
         from:
           kind: ImageStreamTag
           name: ruby-25-ubi7:latest
@@ -60,6 +62,8 @@ objects:
     strategy:
       type: Docker
       dockerStrategy:
+        pullSecret:
+          name: "${PULLSECRET_NAME}"
         dockerfilePath: openshift/system/Dockerfile.on_prem
         forcePull: true
 
@@ -129,6 +133,8 @@ objects:
       strategy:
           type: Docker
           dockerStrategy:
+              pullSecret:
+                  name: "${PULLSECRET_NAME}"
               contextDir: /
               dockerfilePath: openshift/distro/centos/7/release/Dockerfile
 
@@ -152,4 +158,8 @@ parameters:
 - name: IMAGESTREAM_TAG_NAME
   description: "Value of the ImageStream tags to be used"
   value: "latest"
+  required: true
+- name: PULLSECRET_NAME
+  description: PullSecret is the name of a Secret that would be used for setting up the authentication for pulling the Docker images from the private Docker egistries 
+  value: "threescale-registry-auth"
   required: true
