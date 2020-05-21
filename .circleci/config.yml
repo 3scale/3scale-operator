@@ -127,7 +127,7 @@ commands:
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
             oc get events | egrep ' Failed ' || :
-            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'
           no_output_timeout: 30m
       - check-3scale-templates-deployed-routes
 
@@ -174,7 +174,7 @@ commands:
             oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
 
             oc get events | egrep ' Failed ' || :
-            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'  --exit-status
+            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'
           no_output_timeout: 30m
       - check-3scale-templates-deployed-routes
   push-3scale-images-to-quay:
