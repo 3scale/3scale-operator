@@ -10,6 +10,7 @@
     * [S3 Filestorage Installation](#s3-filestorage-installation)
     * [PostgreSQL Installation](#postgresql-installation)
     * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
+    * [Enabling monitoring resources](operator-monitoring-resources.md)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
 * [Feature Operator (in *TechPreview*)](operator-capabilities.md)
