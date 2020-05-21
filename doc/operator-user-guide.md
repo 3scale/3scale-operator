@@ -11,6 +11,7 @@
     * [Setting a custom Storage Class for System FileStorage RWX PVC-based installations](#setting-a-custom-storage-class-for-system-filestorage-rwx-pvc-based-installations)
     * [PostgreSQL Installation](#postgresql-installation)
     * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
+    * [Enabling monitoring resources](operator-monitoring-resources.md)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
 * [Feature Operator (in *TechPreview*)](operator-capabilities.md)
