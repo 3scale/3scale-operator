@@ -7,7 +7,6 @@ import (
 )
 
 type ApicastOptions struct {
-	AppLabel                       string                  `validate:"required"`
 	ManagementAPI                  string                  `validate:"required"`
 	OpenSSLVerify                  string                  `validate:"required"`
 	ResponseCodes                  string                  `validate:"required"`
@@ -16,6 +15,11 @@ type ApicastOptions struct {
 	StagingResourceRequirements    v1.ResourceRequirements `validate:"-"`
 	ProductionReplicas             int32
 	StagingReplicas                int32
+	CommonLabels                   map[string]string `validate:"required"`
+	CommonStagingLabels            map[string]string `validate:"required"`
+	CommonProductionLabels         map[string]string `validate:"required"`
+	StagingPodTemplateLabels       map[string]string `validate:"required"`
+	ProductionPodTemplateLabels    map[string]string `validate:"required"`
 }
 
 func NewApicastOptions() *ApicastOptions {
