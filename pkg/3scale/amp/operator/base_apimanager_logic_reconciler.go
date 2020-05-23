@@ -18,7 +18,6 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -141,9 +140,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafa
 }
 
 func (r *BaseAPIManagerLogicReconciler) hasGrafanaDashboards() (bool, error) {
-	dc := discovery.NewDiscoveryClientForConfigOrDie(r.Config())
-
-	return k8sutil.ResourceExists(dc,
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
 		grafanav1alpha1.SchemeGroupVersion.String(),
 		grafanav1alpha1.GrafanaDashboardKind)
 }
@@ -165,9 +162,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monito
 }
 
 func (r *BaseAPIManagerLogicReconciler) hasPrometheusRules() (bool, error) {
-	dc := discovery.NewDiscoveryClientForConfigOrDie(r.Config())
-
-	return k8sutil.ResourceExists(dc,
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.PrometheusRuleKind)
 }
@@ -190,9 +185,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 }
 
 func (r *BaseAPIManagerLogicReconciler) hasServiceMonitors() (bool, error) {
-	dc := discovery.NewDiscoveryClientForConfigOrDie(r.Config())
-
-	return k8sutil.ResourceExists(dc,
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.ServiceMonitorsKind)
 }
