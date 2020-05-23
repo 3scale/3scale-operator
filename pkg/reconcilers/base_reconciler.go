@@ -10,8 +10,7 @@ import (
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -32,21 +31,21 @@ type BaseReconciler struct {
 	apiClientReader client.Reader
 	ctx             context.Context
 	logger          logr.Logger
-	cfg             *restclient.Config
+	discoveryClient discovery.DiscoveryInterface
 }
 
 // blank assignment to verify that BaseReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &BaseReconciler{}
 
 func NewBaseReconciler(client client.Client, scheme *runtime.Scheme, apiClientReader client.Reader,
-	ctx context.Context, logger logr.Logger, config *restclient.Config) *BaseReconciler {
+	ctx context.Context, logger logr.Logger, discoveryClient discovery.DiscoveryInterface) *BaseReconciler {
 	return &BaseReconciler{
 		client:          client,
 		scheme:          scheme,
 		apiClientReader: apiClientReader,
 		ctx:             ctx,
 		logger:          logger,
-		cfg:             config,
+		discoveryClient: discoveryClient,
 	}
 }
 
@@ -74,8 +73,8 @@ func (b *BaseReconciler) Logger() logr.Logger {
 	return b.logger
 }
 
-func (b *BaseReconciler) Config() *restclient.Config {
-	return b.cfg
+func (b *BaseReconciler) DiscoveryClient() discovery.DiscoveryInterface {
+	return b.discoveryClient
 }
 
 // ReconcileResource attempts to mutate the existing state
