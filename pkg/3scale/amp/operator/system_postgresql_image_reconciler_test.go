@@ -11,8 +11,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -26,11 +26,6 @@ func TestSystemPostgreSQLImageReconcilerCreate(t *testing.T) {
 		imageURL  = "postgresql:test"
 		log       = logf.Log.WithName("operator_test")
 	)
-
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
 
 	ctx := context.TODO()
 
@@ -55,7 +50,7 @@ func TestSystemPostgreSQLImageReconcilerCreate(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err = imagev1.AddToScheme(s)
+	err := imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,8 +61,9 @@ func TestSystemPostgreSQLImageReconcilerCreate(t *testing.T) {
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
+	clientset := fakeclientset.NewSimpleClientset()
 
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, cfg)
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	reconciler := NewSystemPostgreSQLImageReconciler(baseAPIManagerLogicReconciler)
