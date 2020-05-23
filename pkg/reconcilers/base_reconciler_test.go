@@ -6,14 +6,15 @@ import (
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/common"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -30,15 +31,10 @@ func TestBaseReconcilerCreate(t *testing.T) {
 		namespace = "operator-unittest"
 	)
 
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
-
 	ctx := context.TODO()
 
 	s := scheme.Scheme
-	err = appsv1.AddToScheme(s)
+	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,8 +45,8 @@ func TestBaseReconcilerCreate(t *testing.T) {
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
-
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, cfg)
+	clientset := fakeclientset.NewSimpleClientset()
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
 
 	desiredConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -90,15 +86,10 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 		namespace = "operator-unittest"
 	)
 
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
-
 	ctx := context.TODO()
 
 	s := runtime.NewScheme()
-	err = appsv1.AddToScheme(s)
+	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +115,8 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, cfg)
+	clientset := fakeclientset.NewSimpleClientset()
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
 
 	desiredConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -183,15 +175,10 @@ func TestBaseReconcilerDelete(t *testing.T) {
 		namespace    = "operator-unittest"
 	)
 
-	cfg, err := config.GetConfig()
-	if err != nil {
-		t.Fatalf("Unable to get config: (%v)", err)
-	}
-
 	ctx := context.TODO()
 
 	s := runtime.NewScheme()
-	err = appsv1.AddToScheme(s)
+	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,6 +204,9 @@ func TestBaseReconcilerDelete(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 
+	clientset := fakeclientset.NewSimpleClientset()
+	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
+
 	desired := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -232,7 +222,6 @@ func TestBaseReconcilerDelete(t *testing.T) {
 	}
 	common.TagObjectToDelete(desired)
 
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, cfg)
 	err = baseReconciler.ReconcileResource(&v1.ConfigMap{}, desired, CreateOnlyMutator)
 	if err != nil {
 		t.Fatal(err)
