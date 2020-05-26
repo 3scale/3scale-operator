@@ -39,3 +39,7 @@ func SystemMemcachedImageURL() string {
 func ZyncPostgreSQLImageURL() string {
 	return "centos/postgresql-10-centos7"
 }
+
+func OCCLIImageURL() string {
+	return "quay.io/openshift/origin-cli:4.2"
+}
