@@ -3,7 +3,9 @@ package restore
 import (
 	"fmt"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -23,6 +25,8 @@ func (a *APIManagerRestoreOptionsProvider) Options() (*APIManagerRestoreOptions,
 	res := NewAPIManagerRestoreOptions()
 	res.APIManagerRestoreName = a.APIManagerRestoreCR.Name
 	res.Namespace = a.APIManagerRestoreCR.Namespace
+
+	res.OCCLIImageURL = a.ocCLIImageURL()
 
 	pvcOptions, err := a.pvcRestoreOptions()
 	if err != nil {
@@ -48,4 +52,8 @@ func (a *APIManagerRestoreOptionsProvider) pvcRestoreOptions() (*APIManagerResto
 	res.PersistentVolumeClaimVolumeSource = a.APIManagerRestoreCR.Spec.RestoreSource.PersistentVolumeClaim.ClaimSource
 
 	return res, res.Validate()
+}
+
+func (a *APIManagerRestoreOptionsProvider) ocCLIImageURL() string {
+	return helper.GetEnvVar("OC_CLI_IMAGE", component.OCCLIImageURL())
 }

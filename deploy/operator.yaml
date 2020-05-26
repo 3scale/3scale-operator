@@ -40,3 +40,5 @@ spec:
               value: "quay.io/3scale/zync:nightly"
             - name: SYSTEM_MEMCACHED_IMAGE
               value: "memcached:1.5"
+            - name: OC_CLI_IMAGE
+              value: "quay.io/openshift/origin-cli:4.2"

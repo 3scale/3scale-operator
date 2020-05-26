@@ -11,6 +11,7 @@ type APIManagerBackupOptions struct {
 	APIManagerName             string                      `validate:"required"` // Name of the APIManager CR. NOT the backup cr name
 	APIManager                 *appsv1alpha1.APIManager    `validate:"required"` // Should we make this required?
 	APIManagerBackupPVCOptions *APIManagerBackupPVCOptions `validate:"required"`
+	OCCLIImageURL              string                      `validate:"required"`
 }
 
 func NewAPIManagerBackupOptions() *APIManagerBackupOptions {

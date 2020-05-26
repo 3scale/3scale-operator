@@ -117,7 +117,7 @@ func (b *APIManagerBackup) BackupSecretsAndConfigMapsToPVCJob() *batchv1.Job {
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "backup-cfgmaps-secrets",
-							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
+							Image: b.options.OCCLIImageURL,
 							Command: []string{
 								"/bin/bash",
 							},
@@ -166,7 +166,7 @@ func (b *APIManagerBackup) BackupAPIManagerCustomResourceToPVCJob() *batchv1.Job
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "backup-apimanager-cr",
-							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
+							Image: b.options.OCCLIImageURL,
 							Command: []string{
 								"/bin/bash",
 							},
@@ -216,7 +216,7 @@ func (b *APIManagerBackup) BackupSystemFileStoragePVCToPVCJob() *batchv1.Job {
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "backup-system-filestorage-pvc",
-							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
+							Image: b.options.OCCLIImageURL,
 							Command: []string{
 								"/bin/bash",
 							},
