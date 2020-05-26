@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -36,6 +38,7 @@ func (a *APIManagerBackupOptionsProvider) Options() (*APIManagerBackupOptions, e
 	}
 	res.APIManager = apiManager
 	res.APIManagerName = apiManager.Name
+	res.OCCLIImageURL = a.ocCLIImageURL()
 
 	pvcOptions, err := a.pvcBackupOptions()
 	if err != nil {
@@ -96,4 +99,8 @@ func (a *APIManagerBackupOptionsProvider) apiManagerFromName(name string) (*apps
 	res := &appsv1alpha1.APIManager{}
 	err := a.Client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: a.APIManagerBackupCR.Namespace}, res)
 	return res, err
+}
+
+func (a *APIManagerBackupOptionsProvider) ocCLIImageURL() string {
+	return helper.GetEnvVar("OSE_CLI_IMAGE", component.OCCLIImageURL())
 }

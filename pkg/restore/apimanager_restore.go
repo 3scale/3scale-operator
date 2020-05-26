@@ -109,7 +109,7 @@ func (b *APIManagerRestore) RestoreSecretsAndConfigMapsFromPVCJob() *batchv1.Job
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "restore-cfgmaps-secrets",
-							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
+							Image: b.options.OCCLIImageURL,
 							Command: []string{
 								"/bin/bash",
 							},
@@ -159,7 +159,7 @@ func (b *APIManagerRestore) RestoreSystemFileStoragePVCFromPVCJob() *batchv1.Job
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "backup-system-filestorage-pvc",
-							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
+							Image: b.options.OCCLIImageURL,
 							Command: []string{
 								"/bin/bash",
 							},
@@ -209,7 +209,7 @@ func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "job",
-							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
+							Image: b.options.OCCLIImageURL,
 							Command: []string{
 								"/bin/bash",
 							},
@@ -255,7 +255,7 @@ func (b *APIManagerRestore) ZyncResyncDomainsJob() *batchv1.Job {
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "job",
-							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
+							Image: b.options.OCCLIImageURL,
 							Command: []string{
 								"/bin/bash",
 							},
