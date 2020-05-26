@@ -55,3 +55,5 @@ spec:
               value: "centos/postgresql-10-centos7"
             - name: ZYNC_POSTGRESQL_IMAGE
               value: "centos/postgresql-10-centos7"
+            - name: OC_CLI_IMAGE
+              value: "quay.io/openshift/origin-cli:4.2"

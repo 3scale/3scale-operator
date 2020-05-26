@@ -8,6 +8,7 @@ type APIManagerRestoreOptions struct {
 	Namespace                   string                       `validate:"required"` // Namespace where the K8s related objects to the restore will be created/looked
 	APIManagerRestoreName       string                       `validate:"required"` // Name of the APIManagerRestore CR. NOT the backup or APIManager name
 	APIManagerRestorePVCOptions *APIManagerRestorePVCOptions `validate:"required"`
+	OCCLIImageURL               string                       `validate:"required"`
 }
 
 func NewAPIManagerRestoreOptions() *APIManagerRestoreOptions {
