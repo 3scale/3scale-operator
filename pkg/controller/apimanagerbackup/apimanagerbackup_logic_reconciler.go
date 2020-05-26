@@ -1,6 +1,8 @@
 package apimanagerbackup
 
 import (
+	"time"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/backup"
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -10,7 +12,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	kubeclock "k8s.io/apimachinery/pkg/util/clock"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -141,74 +145,57 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupDestinationPVC() error 
 	return err
 }
 
+func (r *APIManagerBackupLogicReconciler) setOwnerReference(obj common.KubernetesObject) error {
+	err := controllerutil.SetControllerReference(r.cr, obj, r.BaseReconciler.Scheme())
+	if err != nil {
+		r.Logger().Error(err, "Error setting OwnerReference on object",
+			"Kind", obj.GetObjectKind().GroupVersionKind().String(),
+			"Namespace", obj.GetNamespace(),
+			"Name", obj.GetName(),
+		)
+	}
+	return err
+}
+
+func (r *APIManagerBackupLogicReconciler) reconcileJob(desired *batchv1.Job) (reconcile.Result, error) {
+	if err := r.setOwnerReference(desired); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	existing := &batchv1.Job{}
+	err := r.GetResource(types.NamespacedName{Name: desired.Name, Namespace: desired.Namespace}, existing)
+	if err != nil && !errors.IsNotFound(err) {
+		return reconcile.Result{}, err
+	}
+
+	if errors.IsNotFound(err) {
+		err := r.CreateResource(desired)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
+	}
+
+	// TODO We do not reconcile ownerReference or labels nor annotations
+	// should we do it? Jobs are one-shot so there's not much point on
+	// making updates to them
+
+	if existing.Status.Succeeded != *desired.Spec.Completions {
+		r.Logger().Info("Job has still not finished", "Job Name", desired.Name, "Actively running Pods", existing.Status.Active, "Failed pods", existing.Status.Failed)
+		return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
+	}
+
+	r.Logger().Info("Job finished successfully", "Job Name", desired.Name)
+	return reconcile.Result{}, nil
+}
+
 func (r *APIManagerBackupLogicReconciler) reconcileBackupSecretsAndConfigMapsToPVCJob() (reconcile.Result, error) {
 	desired := r.apiManagerBackup.BackupSecretsAndConfigMapsToPVCJob()
 	if desired == nil {
 		return reconcile.Result{}, nil
 	}
 
-	// TODO create Mutator function for Jobs??
-	existing := &batchv1.Job{}
-	// Check if this step has finished
-	if r.cr.SecretsAndConfigMapsBackupStepFinished() {
-		return reconcile.Result{}, nil
-	}
-
-	// Check if backup substep has completed
-	if !r.cr.SecretsAndConfigMapsBackupSubStepFinished() {
-		err := r.ReconcileResource(existing, desired, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		substepFinished := true
-		if existing.Status.Succeeded != *desired.Spec.Completions {
-			r.Logger().Info("Job has still not finished", "Job Name", desired.Name, "Actively running Pods", existing.Status.Active, "Failed pods", existing.Status.Failed)
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		r.cr.Status.SecretsAndConfigMapsBackupSubStepFinished = &substepFinished
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.Logger().Info("Job finished successfully. Requeing", "Job Name", desired.Name)
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	// Check if cleanup substep has completed
-	if !r.cr.SecretsAndConfigMapsCleanupSubStepFinished() {
-		common.TagToObjectDeleteWithPropagationPolicy(desired, metav1.DeletePropagationForeground)
-		err := r.ReconcileResource(existing, desired, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// TODO is this needed or it's somehow handled correctly in ReconcileResource?
-		// The behavior we want is that we only update the state of the CR when we are
-		// sure the object does not exist anymore. The reason of that is that
-		// if we do not do it this way it could happen that we mark the state of this
-		// substep as completed but the Job is not completely deleted and we move to the
-		// next step, which would fail because Job is not deleted nor the PVC associated
-		// to it, which would provoke an error when trying to reuse it for the next job PVC
-		err = r.GetResource(common.ObjectKey(desired), existing)
-		if err != nil && !errors.IsNotFound(err) {
-			return reconcile.Result{}, err
-		}
-		if err == nil {
-			r.Logger().Info("Job still not completely deleted. Requeuing", "Job Name", desired.Name)
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		substepFinished := true
-		r.cr.Status.SecretsAndConfigMapsCleanupSubStepFinished = &substepFinished
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.Logger().Info("Job cleant up successfully. Requeuing", "Job Name", desired.Name)
-	}
-
-	return reconcile.Result{}, nil
+	return r.reconcileJob(desired)
 }
 
 func (r *APIManagerBackupLogicReconciler) reconcileAPIManagerCustomResourceBackupToPVCJob() (reconcile.Result, error) {
@@ -217,61 +204,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileAPIManagerCustomResourceBacku
 		return reconcile.Result{}, nil
 	}
 
-	// TODO create Mutator function for Jobs??
-	existing := &batchv1.Job{}
-	// Check if this step has finished
-	if r.cr.APIManagerCustomResourceBackupStepFinished() {
-		return reconcile.Result{}, nil
-	}
-
-	// Check if backup substep has completed
-	if !r.cr.APIManagerCustomResourceBackupSubStepFinished() {
-		err := r.ReconcileResource(existing, desired, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		substepFinished := true
-		if existing.Status.Succeeded != *desired.Spec.Completions {
-			r.Logger().Info("Job has still not finished", "Job Name", desired.Name, "Actively running Pods", existing.Status.Active, "Failed pods", existing.Status.Failed)
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		r.cr.Status.APIManagerCustomResourceBackupSubStepFinished = &substepFinished
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.Logger().Info("Job finished successfully. Requeing", "Job Name", desired.Name)
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	// Check if cleanup substep has completed
-	if !r.cr.APIManagerCustomResourceCleanupSubStepFinished() {
-		common.TagToObjectDeleteWithPropagationPolicy(desired, metav1.DeletePropagationForeground)
-		err := r.ReconcileResource(existing, desired, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		err = r.GetResource(common.ObjectKey(desired), existing)
-		if err != nil && !errors.IsNotFound(err) {
-			return reconcile.Result{}, err
-		}
-		if err == nil {
-			r.Logger().Info("Job still not completely deleted. Requeuing", "Job Name", desired.Name)
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		substepFinished := true
-		r.cr.Status.APIManagerCustomResourceCleanupSubStepFinished = &substepFinished
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.Logger().Info("Job cleant up successfully. Requeuing", "Job Name", desired.Name)
-	}
-
-	return reconcile.Result{}, nil
+	return r.reconcileJob(desired)
 }
 
 func (r *APIManagerBackupLogicReconciler) reconcileBackupSystemFileStoragePVCToPVCJob() (reconcile.Result, error) {
@@ -280,71 +213,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupSystemFileStoragePVCToP
 		return reconcile.Result{}, nil
 	}
 
-	// TODO create Mutator function for Jobs??
-	existing := &batchv1.Job{}
-	if r.cr.SystemFileStorageBackupStepFinished() {
-		return reconcile.Result{}, nil
-	}
-
-	// Check if backup substep has completed
-	if !r.cr.SystemFileStorageBackupSubStepFinished() {
-		err := r.ReconcileResource(existing, desired, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		backupFinished := true
-		if existing.Status.Succeeded != *desired.Spec.Completions {
-			r.Logger().Info("Job has still not finished", "Job Name", desired.Name, "Actively running Pods", existing.Status.Active, "Failed pods", existing.Status.Failed)
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		r.cr.Status.SystemFileStorageBackupSubStepFinished = &backupFinished
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.Logger().Info("Job finished successfully. Requeing", "Job Name", desired.Name)
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	// Check if cleanup substep has completed
-	if !r.cr.SystemFileStorageCleanupSubStepFinished() {
-		// TODO delete performed with ReconcileResource does not have the option to delete
-		// dependants which means that if the Job is deleted the Pod is left there
-		// Think of a way to do this. Maybe instead of using ReconcileResource perform
-		// the manual deletion.
-		// Apparently leaving the pod in terminated is not a problem regarding the volume
-		// It seems that the volume can be specified in several Pods if only one of them
-		// is really using (this is, the others are terminated)
-		// In any case we should fix it. I've observed for example that you
-		// cannot delete the pvc manually if it's being used by some Pod, even if
-		// it is terminated
-		common.TagToObjectDeleteWithPropagationPolicy(desired, metav1.DeletePropagationForeground)
-
-		err := r.ReconcileResource(existing, desired, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		err = r.GetResource(common.ObjectKey(desired), existing)
-		if err != nil && !errors.IsNotFound(err) {
-			return reconcile.Result{}, err
-		}
-		if err == nil {
-			r.Logger().Info("Job still not completely deleted. Requeuing", "Job Name", desired.Name)
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		backupFinished := true
-		r.cr.Status.SystemFileStorageCleanupSubStepFinished = &backupFinished
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.Logger().Info("Job cleant up successfully. Requeuing", "Job Name", desired.Name)
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	return reconcile.Result{}, nil
+	return r.reconcileJob(desired)
 }
 
 func (r *APIManagerBackupLogicReconciler) reconcileBackupCompletion() (reconcile.Result, error) {
