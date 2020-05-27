@@ -183,55 +183,6 @@ func (b *APIManagerRestore) RestoreSystemFileStoragePVCFromPVCJob() *batchv1.Job
 	}
 }
 
-func (b *APIManagerRestore) RestoreAPIManagerFromPVCJob() *batchv1.Job {
-	if b.options.APIManagerRestorePVCOptions == nil {
-		return nil
-	}
-
-	var completions int32 = 1
-	return &batchv1.Job{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "batch/v1",
-			Kind:       "Job",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("job-restore-apimanager-%s", b.options.APIManagerRestoreName),
-			Namespace: b.options.Namespace,
-		},
-		Spec: batchv1.JobSpec{
-			Completions: &completions,
-			// TODO BackoffLimit field controls how many times the job is retried. Should we limit to 1?
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Volumes: []v1.Volume{
-						b.restoreSourcePVCPodVolume(),
-					},
-					Containers: []v1.Container{
-						v1.Container{
-							Name:  "restore-apimanager",
-							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
-							Command: []string{
-								"/bin/bash",
-							},
-							Args: []string{
-								"-c",
-								"-e",
-								b.restoreAPIManagerContainerFromPVCContainerArgs(),
-							},
-							//Env: []v1.EnvVar{},
-							VolumeMounts: []v1.VolumeMount{
-								b.restoreSourcePVCContainerVolumeMount(),
-							},
-						},
-					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
-					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
-				},
-			},
-		},
-	}
-}
-
 func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 	if b.options.APIManagerRestorePVCOptions == nil {
 		return nil

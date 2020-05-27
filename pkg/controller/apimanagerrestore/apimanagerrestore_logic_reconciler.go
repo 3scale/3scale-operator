@@ -19,7 +19,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
 	kubeclock "k8s.io/apimachinery/pkg/util/clock"
@@ -276,43 +275,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerInSharedSec
 	return reconcile.Result{}, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerFromPVCJob() (reconcile.Result, error) {
-	desired := r.apiManagerRestore.RestoreAPIManagerFromPVCJob()
-	if desired == nil {
-		return reconcile.Result{}, nil
-	}
-
-	// TODO create Mutator function for Jobs??
-	existing := &batchv1.Job{}
-	// Check if this step has finished
-	if r.cr.APIManagerRestoreStepFinished() {
-		return reconcile.Result{}, nil
-	}
-
-	// Check if backup substep has completed
-	if !r.cr.APIManagerRestoreStepFinished() {
-		err := r.ReconcileResource(existing, desired, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		substepFinished := true
-		if existing.Status.Succeeded != *desired.Spec.Completions {
-			r.Logger().Info("Job has still not finished", "Job Name", desired.Name, "Actively running Pods", existing.Status.Active, "Failed pods", existing.Status.Failed)
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		r.cr.Status.APIManagerRestoreStepFinished = &substepFinished
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.Logger().Info("Job finished successfully. Requeing", "Job Name", desired.Name)
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	return reconcile.Result{}, nil
-}
-
 func (r *APIManagerRestoreLogicReconciler) sharedBackupSecret() (*v1.Secret, error) {
 	secret := &v1.Secret{}
 	err := r.GetResource(types.NamespacedName{Name: r.apiManagerRestore.SecretToShareName(), Namespace: r.cr.Namespace}, secret)
@@ -371,27 +333,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() (reconci
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecretCleanup() (reconcile.Result, error) {
-	if r.cr.APIManagerBackupSharedInSecretCleanupFinished() {
-		return reconcile.Result{}, nil
-	}
-	desired := r.apiManagerRestore.CreateAPIManagerSharedSecretJob()
-	existing := &batchv1.Job{}
-	common.TagToObjectDeleteWithPropagationPolicy(desired, metav1.DeletePropagationForeground)
-
-	err := r.ReconcileResource(&batchv1.Job{}, desired, reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	err = r.GetResource(common.ObjectKey(desired), existing)
-	if err != nil && !errors.IsNotFound(err) {
-		return reconcile.Result{}, err
-	}
-	if err == nil {
-		r.Logger().Info("Job still not completely deleted. Requeuing", "Job Name", desired.Name)
-		return reconcile.Result{Requeue: true}, nil
-	}
-
 	desiredSecret, err := r.sharedBackupSecret()
 	existingSecret := &v1.Secret{}
 	if err != nil {
@@ -413,14 +354,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecr
 			return reconcile.Result{Requeue: true}, nil
 		}
 	}
-
-	stepFinished := true
-	r.cr.Status.APIManagerBackupSharedInSecretCleanup = &stepFinished
-	err = r.UpdateResourceStatus(r.cr)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	r.Logger().Info("Job and cleant up successfully. Requeuing", "Job Name", desired.Name)
 
 	return reconcile.Result{}, nil
 }

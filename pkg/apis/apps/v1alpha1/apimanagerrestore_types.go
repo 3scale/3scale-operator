@@ -31,21 +31,6 @@ type APIManagerRestoreStatus struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 	// +optional
-	SecretsAndConfigMapsRestoreSubStepFinished *bool `json:"secretsAndConfigMapsRestoreSubStepFinished,omitempty"`
-	// +optional
-	SecretsAndConfigMapsCleanupSubStepFinished *bool `json:"secretsAndConfigMapsCleanupSubStepFinished,omitempty"`
-	// +optional
-	SystemFileStorageRestoreSubStepFinished *bool `json:"systemFileStorageRestoreSubStepFinished,omitempty"`
-	// +optional
-	SystemFileStorageCleanupSubStepFinished *bool `json:"systemFileStorageCleanupSubStepFinished,omitempty"`
-
-	//+optional
-	APIManagerBackupSharedInSecret *bool `json:"apiManagerBackupSharedInSecret,omitempty"`
-	//+optional
-	APIManagerBackupSharedInSecretCleanup *bool `json:"apiManagerBackupSharedInSecretCleanup,omitempty"`
-	// +optional
-	APIManagerRestoreStepFinished *bool `json:"apiManagerRestoreStepFinished,omitempty"`
-	// +optional
 	Completed *bool `json:"completed,omitempty"`
 }
 
@@ -64,42 +49,6 @@ type APIManagerRestore struct {
 
 func (a *APIManagerRestore) SetDefaults() (bool, error) {
 	return false, nil
-}
-
-func (a *APIManagerRestore) SecretsAndConfigMapsRestoreStepFinished() bool {
-	return a.SecretsAndConfigMapsRestoreSubStepFinished() && a.SecretsAndConfigMapsCleanupSubStepFinished()
-}
-
-func (a *APIManagerRestore) SecretsAndConfigMapsRestoreSubStepFinished() bool {
-	return a.Status.SecretsAndConfigMapsRestoreSubStepFinished != nil && *a.Status.SecretsAndConfigMapsRestoreSubStepFinished
-}
-
-func (a *APIManagerRestore) SecretsAndConfigMapsCleanupSubStepFinished() bool {
-	return a.Status.SecretsAndConfigMapsCleanupSubStepFinished != nil && *a.Status.SecretsAndConfigMapsCleanupSubStepFinished
-}
-
-func (a *APIManagerRestore) SystemFileStorageRestoreStepFinished() bool {
-	return a.SystemFileStorageRestoreSubStepFinished() && a.SystemFileStorageCleanupSubStepFinished()
-}
-
-func (a *APIManagerRestore) SystemFileStorageRestoreSubStepFinished() bool {
-	return a.Status.SystemFileStorageRestoreSubStepFinished != nil && *a.Status.SystemFileStorageRestoreSubStepFinished
-}
-
-func (a *APIManagerRestore) SystemFileStorageCleanupSubStepFinished() bool {
-	return a.Status.SystemFileStorageCleanupSubStepFinished != nil && *a.Status.SystemFileStorageCleanupSubStepFinished
-}
-
-func (a *APIManagerRestore) APIManagerRestoreStepFinished() bool {
-	return a.Status.APIManagerRestoreStepFinished != nil && *a.Status.APIManagerRestoreStepFinished
-}
-
-func (a *APIManagerRestore) APIManagerBackupSharedInSecret() bool {
-	return a.Status.APIManagerBackupSharedInSecret != nil && *a.Status.APIManagerBackupSharedInSecret
-}
-
-func (a *APIManagerRestore) APIManagerBackupSharedInSecretCleanupFinished() bool {
-	return a.Status.APIManagerBackupSharedInSecretCleanup != nil && *a.Status.APIManagerBackupSharedInSecretCleanup
 }
 
 func (a *APIManagerRestore) RestoreCompleted() bool {
