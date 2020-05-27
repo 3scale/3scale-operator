@@ -13,11 +13,34 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+func testMemcachedDeploymentLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "memcache",
+	}
+}
+
+func testPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "memcache",
+		"com.redhat.component-name":    "system-memcache",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "1.5",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "system-memcache",
+	}
+}
+
 func defaultMemcachedOptions() *component.MemcachedOptions {
 	return &component.MemcachedOptions{
-		AppLabel:             appLabel,
 		ImageTag:             product.ThreescaleRelease,
 		ResourceRequirements: component.DefaultMemcachedResourceRequirements(),
+		DeploymentLabels:     testMemcachedDeploymentLabels(),
+		PodTemplateLabels:    testPodTemplateLabels(),
 	}
 }
 
