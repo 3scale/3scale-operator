@@ -281,6 +281,49 @@ func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 	}
 }
 
+func (b *APIManagerRestore) ZyncResyncDomainsJob() *batchv1.Job {
+	if b.options.APIManagerRestorePVCOptions == nil {
+		return nil
+	}
+
+	var completions int32 = 1
+	return &batchv1.Job{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "batch/v1",
+			Kind:       "Job",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("job-resync-domains-%s", b.options.APIManagerRestoreName),
+			Namespace: b.options.Namespace,
+		},
+		Spec: batchv1.JobSpec{
+			Completions: &completions,
+			// TODO BackoffLimit field controls how many times the job is retried
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						v1.Container{
+							Name:  "job",
+							Image: "registry.redhat.io/openshift4/ose-cli:4.2",
+							Command: []string{
+								"/bin/bash",
+							},
+							Args: []string{
+								"-c",
+								"-e",
+								b.zyncResyncDomainsContainerArgs(),
+							},
+							//Env: []v1.EnvVar{},
+						},
+					},
+					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
+					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+				},
+			},
+		},
+	}
+}
+
 func (b *APIManagerRestore) SystemStoragePVC(restoreInfo *RuntimeAPIManagerRestoreInfo) *v1.PersistentVolumeClaim {
 	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
@@ -388,4 +431,17 @@ func (b *APIManagerRestore) restoreSecretsAndConfigMapsContainerArgs() string {
 		strings.Join(helper.SortedMapStringStringValues(configMapsToRestore), " "),
 		RestorePVCMountPath,
 	)
+}
+
+func (b *APIManagerRestore) zyncResyncDomainsContainerArgs() string {
+	return fmt.Sprintf(`
+	dcname="system-sidekiq"
+	dcpods=$(oc get pods --ignore-not-found=true -l deploymentconfig=${dcname} --no-headers=true -o custom-columns=:metadata.name)
+	if [ -z "${dcpods}" ]; then
+		echo "No pods found for Deployment ${dcname}"
+		exit 1
+	fi
+	podname=$(echo -n $dcpods | awk '{print $1}')
+	oc exec ${podname} bash -- -c "bundle exec rake zync:resync:domains"
+`)
 }

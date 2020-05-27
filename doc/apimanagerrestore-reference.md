@@ -45,6 +45,8 @@ Is not the scope of restore functionality of the operator:
     * When the backed up System's FileStorage data was stored in a PersistentVolumeClaim
     * **CURRENTLY UNSUPPORTED**  When the backed up System's FileStorage data was stored in a S3 API-compatible storage
 
+* 3scale related OpenShift routes (master, tenants, ...)
+
 ## Data that is not restored
 
 Restore of the backed up external databases data used by 3scale is not part of
@@ -59,15 +61,6 @@ and has to be performed by the user appropriately:
 
 The reason of this is to allow the user to configure different database endpoints
 than the ones used in the previous 3scale installation that was backed up
-
-Currently recreation of OpenShift routes is not automatically performed during
-the restore process. To manually restore them execute the following command
-when the restored 3scale API Management solution has been restored and is running
-and ready:
-
-```
-oc exec -it <a-system-app-pod> bash -- -c "bundle exec rake zync:resync:domains"
-```
 
 ## APIManagerRestore
 
