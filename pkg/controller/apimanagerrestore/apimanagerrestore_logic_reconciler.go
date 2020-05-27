@@ -258,19 +258,28 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerInSharedSec
 		return res, err
 	}
 
-	// TODO placing this check means that we cannot perform cleanup at the end
-	// because otherwise each time is reconciled it will fail because it won't be able
-	// to find the secret
-	//secret, err := r.sharedBackupSecret()
-	//if err != nil {
-	//	return reconcile.Result{}, err
-	//}
-	//if secret == nil {
-	//	r.Logger().Info("shared APIManager backup secret has not been created", "secret", r.apiManagerRestore.SecretToShareName())
-	// TODO at this point the job was terminated successfully but the secret would not be here.
-	// This could happen if there's some bug in the Job code logic. Should we requeue?
-	//	return reconcile.Result{Requeue: true}, nil
-	//}
+	if r.cr.Status.APIManagerToRestoreRef == nil {
+		secret, err := r.sharedBackupSecret()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if secret == nil {
+			r.Logger().Info("Shared secret '%s' not found. Waiting...", r.apiManagerRestore.SecretToShareName())
+			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
+		}
+		apimanager, err := r.apiManagerFromSharedBackupSecret()
+
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		r.cr.Status.APIManagerToRestoreRef = &v1.LocalObjectReference{
+			Name: apimanager.Name,
+		}
+		err = r.UpdateResourceStatus(r.cr)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
 
 	return reconcile.Result{}, nil
 }
@@ -321,6 +330,21 @@ func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() (reconcile.Result, error) {
+	// At this point and subsequent steps APIManagerToRestoreRef should never be
+	// nil and Name should be a non-empty string. Thus, no checks related to
+	// that are performed each time the attribute is referenced in steps that
+	// are after the step that should set this status value
+	apiManagerToRestoreName := r.cr.Status.APIManagerToRestoreRef.Name
+
+	err := r.GetResource(types.NamespacedName{Name: apiManagerToRestoreName, Namespace: r.cr.Namespace}, &appsv1alpha1.APIManager{})
+	if err != nil && !errors.IsNotFound(err) {
+		return reconcile.Result{}, err
+	}
+	if err == nil {
+		return reconcile.Result{}, nil
+	}
+
+	// We proceed here when APIManager has not been found
 	apimanager, err := r.apiManagerFromSharedBackupSecret()
 	if err != nil {
 		return reconcile.Result{}, err
@@ -329,7 +353,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() (reconci
 	existing := &appsv1alpha1.APIManager{}
 	err = r.ReconcileResource(existing, apimanager, reconcilers.CreateOnlyMutator)
 	return reconcile.Result{}, err
-
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecretCleanup() (reconcile.Result, error) {
@@ -359,16 +382,11 @@ func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecr
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileWaitForAPIManagerReady() (reconcile.Result, error) {
-	desiredAPIManager, err := r.apiManagerFromSharedBackupSecret()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	existingAPIManager := &appsv1alpha1.APIManager{}
-	err = r.GetResource(common.ObjectKey(desiredAPIManager), existingAPIManager)
+	err := r.GetResource(types.NamespacedName{Name: r.cr.Status.APIManagerToRestoreRef.Name, Namespace: r.cr.Namespace}, existingAPIManager)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			r.Logger().Info("APIManager not found. Waiting until it exists", "APIManager", desiredAPIManager.Name)
+			r.Logger().Info("APIManager not found. Waiting until it exists", "APIManager", r.cr.Status.APIManagerToRestoreRef.Name)
 			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
 		}
 		return reconcile.Result{}, err
@@ -395,7 +413,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileWaitForAPIManagerReady() (re
 	sort.Slice(existingReadyDeployments, func(i, j int) bool { return existingReadyDeployments[i] < existingReadyDeployments[j] })
 
 	if !reflect.DeepEqual(existingReadyDeployments, expectedDeploymentNames) {
-		r.Logger().Info("all APIManager Deployments not ready. Waiting", "APIManager", desiredAPIManager.Name, "expected-ready-deployments", expectedDeploymentNames, "ready-deployments", existingReadyDeployments)
+		r.Logger().Info("all APIManager Deployments not ready. Waiting", "APIManager", existingAPIManager.Name, "expected-ready-deployments", expectedDeploymentNames, "ready-deployments", existingReadyDeployments)
 		return reconcile.Result{RequeueAfter: 5 * time.Second, Requeue: true}, nil
 	}
 
