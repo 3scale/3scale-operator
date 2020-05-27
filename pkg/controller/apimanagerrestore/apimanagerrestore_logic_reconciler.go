@@ -276,43 +276,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerInSharedSec
 	return reconcile.Result{}, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerFromPVCJob() (reconcile.Result, error) {
-	desired := r.apiManagerRestore.RestoreAPIManagerFromPVCJob()
-	if desired == nil {
-		return reconcile.Result{}, nil
-	}
-
-	// TODO create Mutator function for Jobs??
-	existing := &batchv1.Job{}
-	// Check if this step has finished
-	if r.cr.APIManagerRestoreStepFinished() {
-		return reconcile.Result{}, nil
-	}
-
-	// Check if backup substep has completed
-	if !r.cr.APIManagerRestoreStepFinished() {
-		err := r.ReconcileResource(existing, desired, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		substepFinished := true
-		if existing.Status.Succeeded != *desired.Spec.Completions {
-			r.Logger().Info("Job has still not finished", "Job Name", desired.Name, "Actively running Pods", existing.Status.Active, "Failed pods", existing.Status.Failed)
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		r.cr.Status.APIManagerRestoreStepFinished = &substepFinished
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.Logger().Info("Job finished successfully. Requeing", "Job Name", desired.Name)
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	return reconcile.Result{}, nil
-}
-
 func (r *APIManagerRestoreLogicReconciler) sharedBackupSecret() (*v1.Secret, error) {
 	secret := &v1.Secret{}
 	err := r.GetResource(types.NamespacedName{Name: r.apiManagerRestore.SecretToShareName(), Namespace: r.cr.Namespace}, secret)
