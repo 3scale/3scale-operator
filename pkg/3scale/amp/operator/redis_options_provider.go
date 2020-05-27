@@ -4,6 +4,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/helper"
+
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -20,11 +22,9 @@ func NewRedisOptionsProvider(apimanager *appsv1alpha1.APIManager) *RedisOptionsP
 }
 
 func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error) {
-	r.options.AppLabel = *r.apimanager.Spec.AppLabel
 	r.options.AmpRelease = product.ThreescaleRelease
 	r.options.BackendImageTag = product.ThreescaleRelease
 	r.options.SystemImageTag = product.ThreescaleRelease
-
 	r.options.InsecureImportPolicy = r.apimanager.Spec.ImageStreamTagImportInsecure
 
 	r.options.BackendImage = BackendRedisImageURL()
@@ -36,6 +36,13 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	if r.apimanager.Spec.System != nil && r.apimanager.Spec.System.RedisImage != nil {
 		r.options.SystemImage = *r.apimanager.Spec.System.RedisImage
 	}
+
+	r.options.SystemCommonLabels = r.systemCommonLabels()
+	r.options.SystemRedisLabels = r.systemRedisLabels()
+	r.options.SystemRedisPodTemplateLabels = r.systemRedisPodTemplateLabels(r.options.SystemImage)
+	r.options.BackendCommonLabels = r.backendCommonLabels()
+	r.options.BackendRedisLabels = r.backendRedisLabels()
+	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels(r.options.BackendImage)
 
 	r.setResourceRequirementsOptions()
 
@@ -51,4 +58,54 @@ func (r *RedisOptionsProvider) setResourceRequirementsOptions() {
 		r.options.BackendRedisContainerResourceRequirements = &v1.ResourceRequirements{}
 		r.options.SystemRedisContainerResourceRequirements = &v1.ResourceRequirements{}
 	}
+}
+
+func (r *RedisOptionsProvider) systemCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  *r.apimanager.Spec.AppLabel,
+		"threescale_component": "system",
+	}
+}
+
+func (r *RedisOptionsProvider) backendCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  *r.apimanager.Spec.AppLabel,
+		"threescale_component": "backend",
+	}
+}
+
+func (r *RedisOptionsProvider) systemRedisLabels() map[string]string {
+	labels := r.systemCommonLabels()
+	labels["threescale_component_element"] = "redis"
+	return labels
+}
+
+func (r *RedisOptionsProvider) backendRedisLabels() map[string]string {
+	labels := r.backendCommonLabels()
+	labels["threescale_component_element"] = "redis"
+	return labels
+}
+
+func (r *RedisOptionsProvider) systemRedisPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("system-redis", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range r.systemRedisLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "system-redis"
+
+	return labels
+}
+
+func (r *RedisOptionsProvider) backendRedisPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("backend-redis", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range r.backendRedisLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "backend-redis"
+
+	return labels
 }

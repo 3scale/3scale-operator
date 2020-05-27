@@ -7,7 +7,6 @@ import (
 )
 
 type RedisOptions struct {
-	AppLabel                                  string                   `validate:"required"`
 	AmpRelease                                string                   `validate:"required"`
 	BackendImage                              string                   `validate:"required"`
 	BackendImageTag                           string                   `validate:"required"`
@@ -16,6 +15,13 @@ type RedisOptions struct {
 	BackendRedisContainerResourceRequirements *v1.ResourceRequirements `validate:"required"`
 	SystemRedisContainerResourceRequirements  *v1.ResourceRequirements `validate:"required"`
 	InsecureImportPolicy                      *bool                    `validate:"required"`
+
+	SystemCommonLabels            map[string]string `validate:"required"`
+	SystemRedisLabels             map[string]string `validate:"required"`
+	SystemRedisPodTemplateLabels  map[string]string `validate:"required"`
+	BackendCommonLabels           map[string]string `validate:"required"`
+	BackendRedisLabels            map[string]string `validate:"required"`
+	BackendRedisPodTemplateLabels map[string]string `validate:"required"`
 }
 
 func NewRedisOptions() *RedisOptions {
