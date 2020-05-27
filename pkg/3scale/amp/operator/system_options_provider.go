@@ -30,14 +30,30 @@ func NewSystemOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace str
 }
 
 func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, error) {
-	s.options.AppLabel = *s.apimanager.Spec.AppLabel
 	s.options.AmpRelease = product.ThreescaleRelease
 	s.options.ImageTag = product.ThreescaleRelease
 	s.options.ApicastRegistryURL = *s.apimanager.Spec.Apicast.RegistryURL
 	s.options.TenantName = *s.apimanager.Spec.TenantName
 	s.options.WildcardDomain = s.apimanager.Spec.WildcardDomain
 
-	err := s.setSecretBasedOptions()
+	imageOpts, err := NewAmpImagesOptionsProvider(s.apimanager).GetAmpImagesOptions()
+	if err != nil {
+		return nil, err
+	}
+	s.options.CommonLabels = s.commonLabels()
+	s.options.CommonAppLabels = s.commonAppLabels()
+	s.options.AppPodTemplateLabels = s.appPodTemplateLabels(imageOpts.SystemImage)
+	s.options.CommonSidekiqLabels = s.commonSidekiqLabels()
+	s.options.SidekiqPodTemplateLabels = s.sidekiqPodTemplateLabels(imageOpts.SystemImage)
+	s.options.ProviderUILabels = s.providerUILabels()
+	s.options.MasterUILabels = s.masterUILabels()
+	s.options.DeveloperUILabels = s.developerUILabels()
+	s.options.SphinxLabels = s.sphinxLabels()
+	s.options.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels(imageOpts.SystemImage)
+	s.options.MemcachedLabels = s.memcachedLabels()
+	s.options.SMTPLabels = s.smtpLabels()
+
+	err = s.setSecretBasedOptions()
 	if err != nil {
 		return nil, err
 	}
@@ -435,4 +451,95 @@ func (s *SystemOptionsProvider) setReplicas() {
 	s.options.AppReplicas = &appSecReplicas
 	sidekiqReplicas := int32(*s.apimanager.Spec.System.SidekiqSpec.Replicas)
 	s.options.SidekiqReplicas = &sidekiqReplicas
+}
+
+func (s *SystemOptionsProvider) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  *s.apimanager.Spec.AppLabel,
+		"threescale_component": "system",
+	}
+}
+
+func (s *SystemOptionsProvider) commonAppLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "app"
+	return labels
+}
+
+func (s *SystemOptionsProvider) appPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("system-app", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range s.commonAppLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "system-app"
+
+	return labels
+}
+
+func (s *SystemOptionsProvider) commonSidekiqLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "sidekiq"
+	return labels
+}
+
+func (s *SystemOptionsProvider) sidekiqPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("system-sidekiq", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range s.commonSidekiqLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "system-sidekiq"
+
+	return labels
+}
+
+func (s *SystemOptionsProvider) providerUILabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "provider-ui"
+	return labels
+}
+
+func (s *SystemOptionsProvider) masterUILabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "master-ui"
+	return labels
+}
+
+func (s *SystemOptionsProvider) developerUILabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "developer-ui"
+	return labels
+}
+
+func (s *SystemOptionsProvider) sphinxLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "sphinx"
+	return labels
+}
+
+func (s *SystemOptionsProvider) memcachedLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "memcache"
+	return labels
+}
+
+func (s *SystemOptionsProvider) smtpLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "smtp"
+	return labels
+}
+
+func (s *SystemOptionsProvider) sphinxPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("system-sphinx", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range s.sphinxLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "system-sphinx"
+
+	return labels
 }

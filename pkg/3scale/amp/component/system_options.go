@@ -61,7 +61,6 @@ type SystemOptions struct {
 	AmpRelease          string  `validate:"required"`
 	ApicastAccessToken  string  `validate:"required"`
 	ApicastRegistryURL  string  `validate:"required"`
-	AppLabel            string  `validate:"required"`
 	MasterAccessToken   string  `validate:"required"`
 	MasterName          string  `validate:"required"`
 	MasterUsername      string  `validate:"required"`
@@ -73,6 +72,19 @@ type SystemOptions struct {
 	TenantName          string  `validate:"required"`
 	WildcardDomain      string  `validate:"required"`
 	SmtpSecretOptions   SystemSMTPSecretOptions
+
+	CommonLabels             map[string]string `validate:"required"`
+	CommonAppLabels          map[string]string `validate:"required"`
+	AppPodTemplateLabels     map[string]string `validate:"required"`
+	CommonSidekiqLabels      map[string]string `validate:"required"`
+	SidekiqPodTemplateLabels map[string]string `validate:"required"`
+	ProviderUILabels         map[string]string `validate:"required"`
+	MasterUILabels           map[string]string `validate:"required"`
+	DeveloperUILabels        map[string]string `validate:"required"`
+	SphinxLabels             map[string]string `validate:"required"`
+	SphinxPodTemplateLabels  map[string]string `validate:"required"`
+	MemcachedLabels          map[string]string `validate:"required"`
+	SMTPLabels               map[string]string `validate:"required"`
 }
 
 func NewSystemOptions() *SystemOptions {
