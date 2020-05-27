@@ -9,6 +9,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // APIManagerRestoreSpec defines the desired state of APIManagerRestore
+// +k8s:openapi-gen=true
 type APIManagerRestoreSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -26,6 +27,7 @@ type PersistentVolumeClaimRestoreSource struct {
 }
 
 // APIManagerRestoreStatus defines the observed state of APIManagerRestore
+// +k8s:openapi-gen=true
 type APIManagerRestoreStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -37,6 +39,7 @@ type APIManagerRestoreStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // APIManagerRestore is the Schema for the apimanagerrestores API
+// +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=apimanagerrestores,scope=Namespaced
 type APIManagerRestore struct {
