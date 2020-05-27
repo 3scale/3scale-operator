@@ -16,10 +16,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Missing fields path omissions
+const (
+	backupSourcePVCResourceRequestsPath = "/spec/backupSource/persistentVolumeClaim/resources/requests"
+	startTimePath                       = "/status/startTime"
+	completionTimePath                  = "/status/completionTime"
+	lastTransitionTimePath              = "/status/conditions/lastTransitionTime"
+)
+
 func TestSampleCustomResources(t *testing.T) {
 	root := "../../deploy/crds"
 	crdCrMap := map[string]string{
 		"apps.3scale.net_apimanagers_crd.yaml":          "apps.3scale.net_v1alpha1_apimanager_cr",
+		"apps.3scale.net_apimanagerbackups_crd.yaml":    "apps.3scale.net_v1alpha1_apimanagerbackup_cr.yaml",
+		"apps.3scale.net_apimanagerrestores_crd.yaml":   "apps.3scale.net_v1alpha1_apimanagerrestore_cr.yaml",
 		"capabilities.3scale.net_apis_crd.yaml":         "capabilities.3scale.net_v1alpha1_api_cr",
 		"capabilities.3scale.net_bindings_crd.yaml":     "capabilities.3scale.net_v1alpha1_binding_cr",
 		"capabilities.3scale.net_limits_crd.yaml":       "capabilities.3scale.net_v1alpha1_limit_cr",
@@ -58,6 +68,8 @@ func TestCompleteCRD(t *testing.T) {
 	root := "../../deploy/crds"
 	crdStructMap := map[string]interface{}{
 		"apps.3scale.net_apimanagers_crd.yaml":          &apps.APIManager{},
+		"apps.3scale.net_apimanagerbackups_crd.yaml":    &apps.APIManagerBackup{},
+		"apps.3scale.net_apimanagerrestores_crd.yaml":   &apps.APIManagerRestore{},
 		"capabilities.3scale.net_apis_crd.yaml":         &capabilities.API{},
 		"capabilities.3scale.net_bindings_crd.yaml":     &capabilities.Binding{},
 		"capabilities.3scale.net_limits_crd.yaml":       &capabilities.Limit{},
@@ -66,10 +78,23 @@ func TestCompleteCRD(t *testing.T) {
 		"capabilities.3scale.net_plans_crd.yaml":        &capabilities.Plan{},
 		"capabilities.3scale.net_tenants_crd.yaml":      &capabilities.Tenant{},
 	}
+
+	pathOmissions := []string{
+		backupSourcePVCResourceRequestsPath,
+		startTimePath,
+		completionTimePath,
+		lastTransitionTimePath,
+	}
+
 	for crd, obj := range crdStructMap {
 		schema := getSchema(t, fmt.Sprintf("%s/%s", root, crd))
 		missingEntries := schema.GetMissingEntries(obj)
 		for _, missing := range missingEntries {
+
+			filtered := missingFieldPathInPathOmissions(missing.Path, pathOmissions)
+			if filtered {
+				continue
+			}
 			assert.Fail(t, "Discrepancy between CRD and Struct", "CRD: %s: Missing or incorrect schema validation at %s, expected type %s", crd, missing.Path, missing.Type)
 		}
 	}
@@ -81,4 +106,13 @@ func getSchema(t *testing.T, crd string) validation.Schema {
 	schema, err := validation.New(bytes)
 	assert.NoError(t, err)
 	return schema
+}
+
+func missingFieldPathInPathOmissions(path string, omissions []string) bool {
+	for _, omit := range omissions {
+		if strings.HasPrefix(path, omit) {
+			return true
+		}
+	}
+	return false
 }

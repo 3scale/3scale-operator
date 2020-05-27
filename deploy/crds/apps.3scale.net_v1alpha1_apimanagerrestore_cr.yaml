@@ -3,5 +3,7 @@ kind: APIManagerRestore
 metadata:
   name: example-apimanagerrestore
 spec:
-  # Add fields here
-  size: 3
+  restoreSource:
+    persistentVolumeClaim:
+      claimSource:
+        claimName: "mybackeduppvc"
