@@ -80,7 +80,6 @@ func (m *SystemMysqlAdapter) componentObjects(c *component.SystemMysql) []common
 
 func (a *SystemMysqlAdapter) options() (*component.SystemMysqlOptions, error) {
 	mo := component.NewSystemMysqlOptions()
-	mo.AppLabel = "${APP_LABEL}"
 	mo.ImageTag = "${AMP_RELEASE}"
 	mo.DatabaseName = "${SYSTEM_DATABASE}"
 	mo.User = "${SYSTEM_DATABASE_USER}"
@@ -88,8 +87,31 @@ func (a *SystemMysqlAdapter) options() (*component.SystemMysqlOptions, error) {
 	mo.RootPassword = "${SYSTEM_DATABASE_ROOT_PASSWORD}"
 	mo.DatabaseURL = "mysql2://root:" + "${SYSTEM_DATABASE_ROOT_PASSWORD}" + "@system-mysql/" + "${SYSTEM_DATABASE}"
 
+	mo.CommonLabels = a.commonLabels()
+	mo.DeploymentLabels = a.deploymentLabels()
+	mo.PodTemplateLabels = a.podTemplateLabels()
+
 	mo.ContainerResourceRequirements = component.DefaultSystemMysqlResourceRequirements()
 
 	err := mo.Validate()
 	return mo, err
+}
+
+func (a *SystemMysqlAdapter) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "system",
+	}
+}
+
+func (a *SystemMysqlAdapter) deploymentLabels() map[string]string {
+	labels := a.commonLabels()
+	labels["threescale_component_element"] = "mysql"
+	return labels
+}
+
+func (a *SystemMysqlAdapter) podTemplateLabels() map[string]string {
+	labels := a.deploymentLabels()
+	labels["deploymentConfig"] = "system-mysql"
+	return labels
 }
