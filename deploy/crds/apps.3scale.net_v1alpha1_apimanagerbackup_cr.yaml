@@ -3,5 +3,6 @@ kind: APIManagerBackup
 metadata:
   name: example-apimanagerbackup
 spec:
-  # Add fields here
-  size: 3
+  backupSource:
+    persistentVolumeClaim:
+      volumeName: "mypreexistingvolume"
