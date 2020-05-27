@@ -36,11 +36,8 @@ func (zync *Zync) Secret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: ZyncSecretName,
-			Labels: map[string]string{
-				"app":                  zync.Options.AppLabel,
-				"threescale_component": "zync",
-			},
+			Name:   ZyncSecretName,
+			Labels: zync.Options.CommonLabels,
 		},
 		StringData: map[string]string{
 			ZyncSecretKeyBaseFieldName:             zync.Options.SecretKeyBase,
@@ -166,11 +163,8 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync",
-			Labels: map[string]string{
-				"app":                  zync.Options.AppLabel,
-				"threescale_component": "zync",
-			},
+			Name:   "zync",
+			Labels: zync.Options.CommonZyncLabels,
 			Annotations: map[string]string{
 				"prometheus.io/port":   "9393",
 				"prometheus.io/scrape": "true",
@@ -200,11 +194,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": "zync"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app":                  zync.Options.AppLabel,
-						"deploymentConfig":     "zync",
-						"threescale_component": "zync",
-					},
+					Labels: zync.Options.ZyncPodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp",
@@ -316,11 +306,8 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-que",
-			Labels: map[string]string{
-				"app":                  zync.Options.AppLabel,
-				"threescale_component": "zync",
-			},
+			Name:   "zync-que",
+			Labels: zync.Options.CommonZyncQueLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: zync.Options.ZyncQueReplicas,
@@ -365,10 +352,7 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 						"prometheus.io/port":   "9394",
 						"prometheus.io/scrape": "true",
 					},
-					Labels: map[string]string{
-						"app":              zync.Options.AppLabel,
-						"deploymentConfig": "zync-que",
-					},
+					Labels: zync.Options.ZyncQuePodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName:            "zync-que-sa",
@@ -415,12 +399,8 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-database",
-			Labels: map[string]string{
-				"app":                          zync.Options.AppLabel,
-				"threescale_component":         "zync",
-				"threescale_component_element": "database",
-			},
+			Name:   "zync-database",
+			Labels: zync.Options.CommonZyncDatabaseLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Triggers: appsv1.DeploymentTriggerPolicies{
@@ -448,12 +428,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"deploymentConfig":             "zync-database",
-						"app":                          zync.Options.AppLabel,
-						"threescale_component":         "zync",
-						"threescale_component_element": "database",
-					},
+					Labels: zync.Options.ZyncDatabasePodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
 					RestartPolicy:      v1.RestartPolicyAlways,
@@ -537,11 +512,8 @@ func (zync *Zync) Service() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync",
-			Labels: map[string]string{
-				"app":                  zync.Options.AppLabel,
-				"threescale_component": "zync",
-			},
+			Name:   "zync",
+			Labels: zync.Options.CommonZyncLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -564,12 +536,8 @@ func (zync *Zync) DatabaseService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-database",
-			Labels: map[string]string{
-				"app":                          zync.Options.AppLabel,
-				"threescale_component":         "zync",
-				"threescale_component_element": "database",
-			},
+			Name:   "zync-database",
+			Labels: zync.Options.CommonZyncDatabaseLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -592,11 +560,8 @@ func (zync *Zync) ZyncPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync",
-			Labels: map[string]string{
-				"app":                  zync.Options.AppLabel,
-				"threescale_component": "zync",
-			},
+			Name:   "zync",
+			Labels: zync.Options.CommonZyncLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
@@ -614,11 +579,8 @@ func (zync *Zync) QuePodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-que",
-			Labels: map[string]string{
-				"app":                  zync.Options.AppLabel,
-				"threescale_component": "zync",
-			},
+			Name:   "zync-que",
+			Labels: zync.Options.CommonZyncQueLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{

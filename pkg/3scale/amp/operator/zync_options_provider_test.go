@@ -23,6 +23,79 @@ const (
 	zyncAuthToken               = "someToken5252"
 )
 
+func testZyncCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "zync",
+	}
+}
+
+func testZyncZyncCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "zync",
+		"threescale_component_element": "zync",
+	}
+}
+
+func testZyncQueCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "zync",
+		"threescale_component_element": "zync-que",
+	}
+}
+
+func testZyncDatabaseCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "zync",
+		"threescale_component_element": "database",
+	}
+}
+
+func testZyncPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "zync",
+		"threescale_component_element": "zync",
+		"com.redhat.component-name":    "zync",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "zync",
+	}
+}
+
+func testZyncQuePodTemplateCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "zync",
+		"threescale_component_element": "zync-que",
+		"com.redhat.component-name":    "zync-que",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "zync-que",
+	}
+}
+
+func testZyncDatabasePodTemplateCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "zync",
+		"threescale_component_element": "database",
+		"com.redhat.component-name":    "zync-database",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "10",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "zync-database",
+	}
+}
+
 func getZyncSecret() *v1.Secret {
 	data := map[string]string{
 		component.ZyncSecretKeyBaseFieldName:             zyncSecretKeyBasename,
@@ -46,7 +119,6 @@ func basicApimanagerSpecTestZyncOptions() *appsv1alpha1.APIManager {
 
 func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 	expectedOpts := &component.ZyncOptions{
-		AppLabel:                              appLabel,
 		ImageTag:                              product.ThreescaleRelease,
 		DatabaseImageTag:                      product.ThreescaleRelease,
 		ContainerResourceRequirements:         component.DefaultZyncContainerResourceRequirements(),
@@ -57,6 +129,13 @@ func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 		SecretKeyBase:                         opts.SecretKeyBase,
 		ZyncReplicas:                          int32(zyncReplica),
 		ZyncQueReplicas:                       int32(zyncQueReplica),
+		CommonLabels:                          testZyncCommonLabels(),
+		CommonZyncLabels:                      testZyncZyncCommonLabels(),
+		CommonZyncQueLabels:                   testZyncQueCommonLabels(),
+		CommonZyncDatabaseLabels:              testZyncDatabaseCommonLabels(),
+		ZyncPodTemplateLabels:                 testZyncPodTemplateLabels(),
+		ZyncQuePodTemplateLabels:              testZyncQuePodTemplateCommonLabels(),
+		ZyncDatabasePodTemplateLabels:         testZyncDatabasePodTemplateCommonLabels(),
 	}
 
 	expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(expectedOpts.DatabasePassword)

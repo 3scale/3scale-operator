@@ -17,12 +17,18 @@ type ZyncOptions struct {
 	ContainerResourceRequirements         v1.ResourceRequirements `validate:"-"`
 	QueContainerResourceRequirements      v1.ResourceRequirements `validate:"-"`
 	DatabaseContainerResourceRequirements v1.ResourceRequirements `validate:"-"`
-	AppLabel                              string                  `validate:"required"`
 	AuthenticationToken                   string                  `validate:"required"`
 	DatabasePassword                      string                  `validate:"required"`
 	SecretKeyBase                         string                  `validate:"required"`
 	ZyncReplicas                          int32
 	ZyncQueReplicas                       int32
+	CommonLabels                          map[string]string `validate:"required"`
+	CommonZyncLabels                      map[string]string `validate:"required"`
+	CommonZyncQueLabels                   map[string]string `validate:"required"`
+	CommonZyncDatabaseLabels              map[string]string `validate:"required"`
+	ZyncPodTemplateLabels                 map[string]string `validate:"required"`
+	ZyncQuePodTemplateLabels              map[string]string `validate:"required"`
+	ZyncDatabasePodTemplateLabels         map[string]string `validate:"required"`
 }
 
 func NewZyncOptions() *ZyncOptions {

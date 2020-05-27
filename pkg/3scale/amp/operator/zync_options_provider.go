@@ -28,7 +28,6 @@ func NewZyncOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace strin
 }
 
 func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
-	z.zyncOptions.AppLabel = *z.apimanager.Spec.AppLabel
 	z.zyncOptions.ImageTag = product.ThreescaleRelease
 	z.zyncOptions.DatabaseImageTag = product.ThreescaleRelease
 
@@ -43,6 +42,18 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 
 	z.setResourceRequirementsOptions()
 	z.setReplicas()
+
+	imageOpts, err := NewAmpImagesOptionsProvider(z.apimanager).GetAmpImagesOptions()
+	if err != nil {
+		return nil, err
+	}
+	z.zyncOptions.CommonLabels = z.commonLabels()
+	z.zyncOptions.CommonZyncLabels = z.commonZyncLabels()
+	z.zyncOptions.CommonZyncQueLabels = z.commonZyncQueLabels()
+	z.zyncOptions.CommonZyncDatabaseLabels = z.commonZyncDatabaseLabels()
+	z.zyncOptions.ZyncPodTemplateLabels = z.zyncPodTemplateLabels(imageOpts.ZyncImage)
+	z.zyncOptions.ZyncQuePodTemplateLabels = z.zyncQuePodTemplateLabels(imageOpts.ZyncImage)
+	z.zyncOptions.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels(imageOpts.ZyncDatabasePostgreSQLImage)
 
 	err = z.zyncOptions.Validate()
 	return z.zyncOptions, err
@@ -101,4 +112,65 @@ func (z *ZyncOptionsProvider) setResourceRequirementsOptions() {
 func (z *ZyncOptionsProvider) setReplicas() {
 	z.zyncOptions.ZyncReplicas = int32(*z.apimanager.Spec.Zync.AppSpec.Replicas)
 	z.zyncOptions.ZyncQueReplicas = int32(*z.apimanager.Spec.Zync.QueSpec.Replicas)
+}
+
+func (z *ZyncOptionsProvider) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  *z.apimanager.Spec.AppLabel,
+		"threescale_component": "zync",
+	}
+}
+
+func (z *ZyncOptionsProvider) commonZyncLabels() map[string]string {
+	labels := z.commonLabels()
+	labels["threescale_component_element"] = "zync"
+	return labels
+}
+
+func (z *ZyncOptionsProvider) commonZyncQueLabels() map[string]string {
+	labels := z.commonLabels()
+	labels["threescale_component_element"] = "zync-que"
+	return labels
+}
+
+func (z *ZyncOptionsProvider) commonZyncDatabaseLabels() map[string]string {
+	labels := z.commonLabels()
+	labels["threescale_component_element"] = "database"
+	return labels
+}
+
+func (z *ZyncOptionsProvider) zyncPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("zync", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range z.commonZyncLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "zync"
+
+	return labels
+}
+
+func (z *ZyncOptionsProvider) zyncQuePodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("zync-que", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range z.commonZyncQueLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "zync-que"
+
+	return labels
+}
+
+func (z *ZyncOptionsProvider) zyncDatabasePodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("zync-database", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range z.commonZyncDatabaseLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "zync-database"
+
+	return labels
 }
