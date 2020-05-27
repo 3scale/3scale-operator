@@ -10,6 +10,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // APIManagerBackupSpec defines the desired state of APIManagerBackup
+// +k8s:openapi-gen=true
 type APIManagerBackupSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -59,6 +60,7 @@ type APIManagerBackupCondition struct {
 }
 
 // APIManagerBackupStatus defines the observed state of APIManagerBackup
+// +k8s:openapi-gen=true
 type APIManagerBackupStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -87,6 +89,7 @@ type APIManagerBackupStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // APIManagerBackup is the Schema for the apimanagerbackups API
+// +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=apimanagerbackups,scope=Namespaced
 type APIManagerBackup struct {
