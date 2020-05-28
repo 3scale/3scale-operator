@@ -617,3 +617,9 @@ func (apimanager *APIManager) IsExternalDatabaseEnabled() bool {
 func (apimanager *APIManager) IsPDBEnabled() bool {
 	return apimanager.Spec.PodDisruptionBudget != nil && apimanager.Spec.PodDisruptionBudget.Enabled
 }
+
+func (apimanager *APIManager) IsSystemPostgreSQLEnabled() bool {
+	return !apimanager.IsExternalDatabaseEnabled() &&
+		apimanager.Spec.System.DatabaseSpec != nil &&
+		apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil
+}

@@ -36,14 +36,28 @@ func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1alpha
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 	res, err := u.upgradeImages()
-	if res.Requeue || err != nil {
-		return res, err
+	if err != nil {
+		return res, fmt.Errorf("Upgrading images: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
 	}
 
 	// upgrade system-master-apicast secret
 	res, err = u.upgradeSystemMasterApicastSecret()
-	if res.Requeue || err != nil {
-		return res, err
+	if err != nil {
+		return res, fmt.Errorf("Upgrading system master apicast secret: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
+	}
+
+	res, err = u.upgradePodTemplateLabels()
+	if err != nil {
+		return res, fmt.Errorf("Upgrading pod template labels: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
 	}
 
 	return reconcile.Result{}, nil
@@ -612,6 +626,97 @@ func (u *UpgradeApiManager) upgradeSystemMasterApicastSecret() (reconcile.Result
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error) {
+	apicast, err := Apicast(u.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	backend, err := Backend(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	zync, err := Zync(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	memcached, err := Memcached(u.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	system, err := System(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	deploymentConfigs := []*appsv1.DeploymentConfig{
+		apicast.StagingDeploymentConfig(),
+		apicast.ProductionDeploymentConfig(),
+		backend.ListenerDeploymentConfig(),
+		backend.WorkerDeploymentConfig(),
+		backend.CronDeploymentConfig(),
+		zync.DeploymentConfig(),
+		zync.QueDeploymentConfig(),
+		zync.DatabaseDeploymentConfig(),
+		memcached.DeploymentConfig(),
+		system.AppDeploymentConfig(),
+		system.SidekiqDeploymentConfig(),
+		system.SphinxDeploymentConfig(),
+	}
+
+	if !u.apiManager.IsExternalDatabaseEnabled() {
+		redis, err := Redis(u.apiManager)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		deploymentConfigs = append(deploymentConfigs, redis.SystemDeploymentConfig())
+		deploymentConfigs = append(deploymentConfigs, redis.BackendDeploymentConfig())
+	}
+
+	if u.apiManager.IsSystemPostgreSQLEnabled() {
+		systemPostgreSQL, err := SystemPostgreSQL(u.apiManager, u.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		deploymentConfigs = append(deploymentConfigs, systemPostgreSQL.DeploymentConfig())
+	} else {
+		systemMySQL, err := SystemMySQL(u.apiManager, u.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		deploymentConfigs = append(deploymentConfigs, systemMySQL.DeploymentConfig())
+	}
+
+	for _, desired := range deploymentConfigs {
+		err = u.ensurePodTemplateLabels(desired)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentConfig) error {
+	u.Logger().V(1).Info(fmt.Sprintf("ensurePodTemplateLabels object %s", common.ObjectInfo(desired)))
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return err
+	}
+
+	if !reflect.DeepEqual(existing.Spec.Template.Labels, desired.Spec.Template.Labels) {
+		diff := cmp.Diff(existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+		u.Logger().V(1).Info(fmt.Sprintf("DC %s template lables changed: %s", desired.Name, diff))
+		existing.Spec.Template.Labels = desired.Spec.Template.Labels
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {
