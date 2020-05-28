@@ -99,7 +99,7 @@ coverage_total_report: $(PROJECT_PATH)/_output/unit.cov
 test-crds:
 	cd $(PROJECT_PATH)/test/crds && $(GO) test -v
 
-## test-manifest-version: Run manifest version checks
+## test-manifests-version: Run manifest version checks
 test-manifests-version:
 	cd $(PROJECT_PATH)/test/manifests-version && $(GO) test -v
 
