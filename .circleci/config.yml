@@ -450,6 +450,14 @@ jobs:
       - install-dependencies
       - run: make test-crds
 
+  test-manifests-version:
+    docker:
+      - image: circleci/golang:1.13.7
+    steps:
+      - checkout
+      - install-dependencies
+      - run: make test-manifests-version
+
   license-check:
     docker:
       - image: circleci/golang:1.13.7
@@ -503,6 +511,7 @@ workflows:
     jobs:
       - license-check
       - test-crds
+      - test-manifests-version
       - run-unit-tests
       - verify-manifest
       - install-operator

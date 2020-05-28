@@ -11,6 +11,11 @@ spec:
     metadata:
       labels:
         name: threescale-operator
+        com.redhat.product-name: 3scale
+        com.redhat.component-name: 3scale-operator
+        com.redhat.product-version: master
+        com.redhat.component-version: 0.6.0
+        com.redhat.component-type: infrastructure
     spec:
       serviceAccountName: 3scale-operator
       containers:
@@ -40,3 +45,13 @@ spec:
               value: "quay.io/3scale/zync:nightly"
             - name: SYSTEM_MEMCACHED_IMAGE
               value: "memcached:1.5"
+            - name: BACKEND_REDIS_IMAGE
+              value: "centos/redis-32-centos7"
+            - name: SYSTEM_REDIS_IMAGE
+              value: "centos/redis-32-centos7"
+            - name: SYSTEM_MYSQL_IMAGE
+              value: "centos/mysql-57-centos7"
+            - name: SYSTEM_POSTGRESQL_IMAGE
+              value: "centos/postgresql-10-centos7"
+            - name: ZYNC_POSTGRESQL_IMAGE
+              value: "centos/postgresql-10-centos7"
