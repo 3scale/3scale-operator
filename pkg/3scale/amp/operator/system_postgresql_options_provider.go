@@ -32,10 +32,17 @@ func NewSystemPostgresqlOptionsProvider(apimanager *appsv1alpha1.APIManager, nam
 }
 
 func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*component.SystemPostgreSQLOptions, error) {
-	s.options.AppLabel = *s.apimanager.Spec.AppLabel
 	s.options.ImageTag = product.ThreescaleRelease
 
-	err := s.setSecretBasedOptions()
+	imageOpts, err := NewSystemPostgreSQLImageOptionsProvider(s.apimanager).GetSystemPostgreSQLImageOptions()
+	if err != nil {
+		return nil, err
+	}
+	s.options.CommonLabels = s.commonLabels()
+	s.options.DeploymentLabels = s.deploymentLabels()
+	s.options.PodTemplateLabels = s.podTemplateLabels(imageOpts.Image)
+
+	err = s.setSecretBasedOptions()
 	if err != nil {
 		return nil, err
 	}
@@ -121,4 +128,29 @@ func (s *SystemPostgresqlOptionsProvider) setResourceRequirementsOptions() {
 	} else {
 		s.options.ContainerResourceRequirements = v1.ResourceRequirements{}
 	}
+}
+
+func (s *SystemPostgresqlOptionsProvider) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  *s.apimanager.Spec.AppLabel,
+		"threescale_component": "system",
+	}
+}
+
+func (s *SystemPostgresqlOptionsProvider) deploymentLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "postgresql"
+	return labels
+}
+
+func (s *SystemPostgresqlOptionsProvider) podTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("system-postgresql", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range s.deploymentLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "system-postgresql"
+
+	return labels
 }

@@ -26,12 +26,8 @@ func (p *SystemPostgreSQL) Service() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-postgresql",
-			Labels: map[string]string{
-				"app":                          p.Options.AppLabel,
-				"threescale_component":         "system",
-				"threescale_component_element": "postgresql",
-			},
+			Name:   "system-postgresql",
+			Labels: p.Options.DeploymentLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -55,7 +51,7 @@ func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "postgresql-data",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.AppLabel},
+			Labels: p.Options.DeploymentLabels,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -78,7 +74,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-postgresql",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.AppLabel},
+			Labels: p.Options.DeploymentLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -105,7 +101,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": "system-postgresql"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "postgresql", "app": p.Options.AppLabel, "deploymentConfig": "system-postgresql"},
+					Labels: p.Options.PodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp", //TODO make this configurable via flag
@@ -187,11 +183,8 @@ func (p *SystemPostgreSQL) SystemDatabaseSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: SystemSecretSystemDatabaseSecretName,
-			Labels: map[string]string{
-				"app":                  p.Options.AppLabel,
-				"threescale_component": "system",
-			},
+			Name:   SystemSecretSystemDatabaseSecretName,
+			Labels: p.Options.CommonLabels,
 		},
 		StringData: map[string]string{
 			SystemSecretSystemDatabaseUserFieldName:     p.Options.User,

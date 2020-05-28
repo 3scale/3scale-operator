@@ -23,15 +23,46 @@ const (
 	systemPostgreSQLDatabaseName = "system"
 )
 
+func testSystemPostgreSQLCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "system",
+	}
+}
+
+func testSystemPostgreSQLDeploymentLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "postgresql",
+	}
+}
+
+func testSystemPostgreSQLPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "postgresql",
+		"com.redhat.component-name":    "system-postgresql",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "10",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "system-postgresql",
+	}
+}
+
 func defaultSystemPostgreSQLOptions(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
 	return &component.SystemPostgreSQLOptions{
-		AppLabel:                      appLabel,
 		ImageTag:                      product.ThreescaleRelease,
 		DatabaseName:                  component.DefaultSystemPostgresqlDatabaseName(),
 		User:                          component.DefaultSystemPostgresqlUser(),
 		Password:                      opts.Password,
 		DatabaseURL:                   component.DefaultSystemPostgresqlDatabaseURL(component.DefaultSystemPostgresqlUser(), opts.Password, component.DefaultSystemPostgresqlDatabaseName()),
 		ContainerResourceRequirements: component.DefaultSystemPostgresqlResourceRequirements(),
+		CommonLabels:                  testSystemPostgreSQLCommonLabels(),
+		DeploymentLabels:              testSystemPostgreSQLDeploymentLabels(),
+		PodTemplateLabels:             testSystemPostgreSQLPodTemplateLabels(),
 	}
 }
 
