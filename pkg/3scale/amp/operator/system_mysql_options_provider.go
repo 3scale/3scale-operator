@@ -37,21 +37,25 @@ func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOp
 
 	imageOpts, err := NewSystemMysqlImageOptionsProvider(s.apimanager).GetSystemMySQLImageOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetMysqlOptions reading image options: %w", err)
 	}
+
 	s.mysqlOptions.CommonLabels = s.commonLabels()
 	s.mysqlOptions.DeploymentLabels = s.deploymentLabels()
 	s.mysqlOptions.PodTemplateLabels = s.podTemplateLabels(imageOpts.Image)
 
 	err = s.setSecretBasedOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetMysqlOptions reading secret options: %w", err)
 	}
 
 	s.setResourceRequirementsOptions()
 
 	err = s.mysqlOptions.Validate()
-	return s.mysqlOptions, err
+	if err != nil {
+		return nil, fmt.Errorf("GetMysqlOptions reading secret options: %w", err)
+	}
+	return s.mysqlOptions, nil
 }
 
 func (s *SystemMysqlOptionsProvider) setSecretBasedOptions() error {

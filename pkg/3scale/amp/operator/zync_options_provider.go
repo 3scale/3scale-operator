@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -33,7 +35,7 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 
 	err := z.setSecretBasedOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetZyncOptions reading secret options: %w", err)
 	}
 
 	// must be done after reading from secret
@@ -45,8 +47,9 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 
 	imageOpts, err := NewAmpImagesOptionsProvider(z.apimanager).GetAmpImagesOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetZyncOptions reading image options: %w", err)
 	}
+
 	z.zyncOptions.CommonLabels = z.commonLabels()
 	z.zyncOptions.CommonZyncLabels = z.commonZyncLabels()
 	z.zyncOptions.CommonZyncQueLabels = z.commonZyncQueLabels()
@@ -56,7 +59,10 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.zyncOptions.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels(imageOpts.ZyncDatabasePostgreSQLImage)
 
 	err = z.zyncOptions.Validate()
-	return z.zyncOptions, err
+	if err != nil {
+		return nil, fmt.Errorf("GetZyncOptions validating: %w", err)
+	}
+	return z.zyncOptions, nil
 }
 
 func (z *ZyncOptionsProvider) setSecretBasedOptions() error {

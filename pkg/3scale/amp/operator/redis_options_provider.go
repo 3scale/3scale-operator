@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -47,7 +49,10 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.setResourceRequirementsOptions()
 
 	err := r.options.Validate()
-	return r.options, err
+	if err != nil {
+		return nil, fmt.Errorf("GetRedisOptions validating: %w", err)
+	}
+	return r.options, nil
 }
 
 func (r *RedisOptionsProvider) setResourceRequirementsOptions() {

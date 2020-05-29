@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -26,7 +28,7 @@ func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOp
 
 	imageOpts, err := NewAmpImagesOptionsProvider(m.apimanager).GetAmpImagesOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetMemcachedOptions reading image options: %w", err)
 	}
 	m.memcachedOptions.DeploymentLabels = m.deploymentLabels()
 	m.memcachedOptions.PodTemplateLabels = m.podTemplateLabels(imageOpts.SystemMemcachedImage)
@@ -34,7 +36,10 @@ func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOp
 	m.setResourceRequirementsOptions()
 
 	err = m.memcachedOptions.Validate()
-	return m.memcachedOptions, err
+	if err != nil {
+		return nil, fmt.Errorf("GetMemcachedOptions validating: %w", err)
+	}
+	return m.memcachedOptions, nil
 }
 
 func (m *MemcachedOptionsProvider) setResourceRequirementsOptions() {

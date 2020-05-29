@@ -37,7 +37,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 
 	err := o.setSecretBasedOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetBackendOptions reading secret options: %w", err)
 	}
 
 	o.setResourceRequirementsOptions()
@@ -45,7 +45,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 
 	imageOpts, err := NewAmpImagesOptionsProvider(o.apimanager).GetAmpImagesOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetBackendOptions reading image options: %w", err)
 	}
 	o.backendOptions.CommonLabels = o.commonLabels()
 	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
@@ -56,6 +56,9 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.backendOptions.CronPodTemplateLabels = o.cronPodTemplateLabels(imageOpts.BackendImage)
 
 	err = o.backendOptions.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("GetBackendOptions validating: %w", err)
+	}
 	return o.backendOptions, err
 }
 

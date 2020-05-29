@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -26,7 +27,7 @@ func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager) *ApicastOpti
 func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions, error) {
 	imageOpts, err := NewAmpImagesOptionsProvider(a.apimanager).GetAmpImagesOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetApicastOptions reading image options: %w", err)
 	}
 
 	a.apicastOptions.ManagementAPI = *a.apimanager.Spec.Apicast.ApicastManagementAPI
@@ -43,7 +44,10 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.setReplicas()
 
 	err = a.apicastOptions.Validate()
-	return a.apicastOptions, err
+	if err != nil {
+		return nil, fmt.Errorf("GetApicastOptions validating: %w", err)
+	}
+	return a.apicastOptions, nil
 }
 
 func (a *ApicastOptionsProvider) setResourceRequirementsOptions() {

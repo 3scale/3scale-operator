@@ -38,7 +38,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 
 	imageOpts, err := NewAmpImagesOptionsProvider(s.apimanager).GetAmpImagesOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetSystemOptions reading image options: %w", err)
 	}
 	s.options.CommonLabels = s.commonLabels()
 	s.options.CommonAppLabels = s.commonAppLabels()
@@ -55,7 +55,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 
 	err = s.setSecretBasedOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetSystemOptions reading secret options: %w", err)
 	}
 
 	s.setResourceRequirementsOptions()
@@ -63,7 +63,11 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.setReplicas()
 
 	err = s.options.Validate()
-	return s.options, err
+	if err != nil {
+		return nil, fmt.Errorf("GetSystemOptions validating: %w", err)
+	}
+
+	return s.options, nil
 }
 
 func (s *SystemOptionsProvider) setSecretBasedOptions() error {

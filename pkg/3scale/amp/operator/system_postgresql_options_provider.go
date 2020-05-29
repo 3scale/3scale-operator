@@ -36,7 +36,7 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 
 	imageOpts, err := NewSystemPostgreSQLImageOptionsProvider(s.apimanager).GetSystemPostgreSQLImageOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetSystemPostgreSQLOptions reading image options: %w", err)
 	}
 	s.options.CommonLabels = s.commonLabels()
 	s.options.DeploymentLabels = s.deploymentLabels()
@@ -44,13 +44,16 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 
 	err = s.setSecretBasedOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetSystemPostgreSQLOptions reading secret options: %w", err)
 	}
 
 	s.setResourceRequirementsOptions()
 
 	err = s.options.Validate()
-	return s.options, err
+	if err != nil {
+		return nil, fmt.Errorf("GetSystemPostgreSQLOptions validating: %w", err)
+	}
+	return s.options, nil
 }
 
 func (s *SystemPostgresqlOptionsProvider) setSecretBasedOptions() error {
