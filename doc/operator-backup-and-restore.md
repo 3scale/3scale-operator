@@ -74,7 +74,12 @@ workflow is the following one:
    the [APIManagerBackup reference](apimanagerbackup-reference.md#data-that-is-backed-up).
    Other fields in the `status` section of the APIManagerBackup show details of the backup,
    like the name of the PersistentVolumeClaim where the data has been backed up when
-   the configured backup destination has been a PersistentVolumeClaim
+   the configured backup destination has been a PersistentVolumeClaim. Make sure
+   you take note of the value of `status.backupPersistentVolumeClaimName` field
+1. Delete the created APIManagerBackup custom resource created previously. This
+   action is required to cleanup elements used by APIManagerBackup. The
+   backup PersistentVolumeClaim will still exist after deleting the custom
+   resource
 
 ## Restoring 3scale
 
