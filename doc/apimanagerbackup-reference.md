@@ -60,18 +60,18 @@ Backups of the external databases used by 3scale is not part of the
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | `apiManagerName` | string | No | Name of the APIManager deployed in the same namespace as the deployed APIManagerBackup | Name of the APIManager to backup |
-| `backupSource` | [APIManagerBackupSourceSpec](#APIManagerBackupSourceSpec) | Yes | See [APIManagerBackupSourceSpec](#APIManagerBackupSourceSpec) | Configuration related to where the backup is performed |
+| `backupSource` | [APIManagerBackupDestinationSpec](#APIManagerBackupDestinationSpec) | Yes | See [APIManagerBackupDestinationSpec](#APIManagerBackupDestinationSpec) | Configuration related to where the backup is performed |
 
-### APIManagerBackupSourceSpec
+### APIManagerBackupDestinationSpec
 
 This section controls where APIManager's backup is to be stored.
 **One of the fields is mandatory to be set. Only one of the fields can be set. The fields are mutually exclusive.**
 
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- |
-| `persistentVolumeClaim` | [PersistentVolumeClaimBackupSource](#PersistentVolumeClaimBackupSource) | No | nil | APIManager backup destination in PVC |
+| `persistentVolumeClaim` | [PersistentVolumeClaimBackupDestination](#PersistentVolumeClaimBackupDestination) | No | nil | APIManager backup destination in PVC |
 
-### PersistentVolumeClaimBackupSource
+### PersistentVolumeClaimBackupDestination
 
 There are two main ways to provide a PersistentVolumeClaim for the backup:
 * Providing the volume name of an already existing Kubernetes PersistentVolume

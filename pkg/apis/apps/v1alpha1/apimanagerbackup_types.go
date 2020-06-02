@@ -15,19 +15,19 @@ type APIManagerBackupSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-	BackupSource APIManagerBackupSource `json:"backupSource"`
+	BackupDestination APIManagerBackupDestination `json:"backupDestination"`
 }
 
-type APIManagerBackupSource struct {
+type APIManagerBackupDestination struct {
 	// +optional
-	PersistentVolumeClaim *PersistentVolumeClaimBackupSource `json:"persistentVolumeClaim,omitempty"`
+	PersistentVolumeClaim *PersistentVolumeClaimBackupDestination `json:"persistentVolumeClaim,omitempty"`
 }
 
 // Ways to define a PVC creation:
 // Define VolumeName OR Define Resources. When VolumeName is specified resources is not needed:
 // Detailed info:
 // https://docs.okd.io/3.11/dev_guide/persistent_volumes.html#persistent-volumes-volumes-and-claim-prebinding
-type PersistentVolumeClaimBackupSource struct {
+type PersistentVolumeClaimBackupDestination struct {
 	// +optional
 	Resources *PersistentVolumeClaimResources `json:"resources,omitempty"`
 	// +optional

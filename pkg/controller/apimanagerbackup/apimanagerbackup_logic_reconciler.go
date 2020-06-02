@@ -267,7 +267,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileStartTimeField() (reconcile.R
 }
 
 func (r *APIManagerBackupLogicReconciler) reconcileBackupDestinationPVCStatus() (reconcile.Result, error) {
-	if r.cr.Spec.BackupSource.PersistentVolumeClaim == nil {
+	if r.cr.Spec.BackupDestination.PersistentVolumeClaim == nil {
 		return reconcile.Result{}, nil
 	}
 

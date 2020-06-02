@@ -18,10 +18,10 @@ import (
 
 // Missing fields path omissions
 const (
-	backupSourcePVCResourceRequestsPath = "/spec/backupSource/persistentVolumeClaim/resources/requests"
-	startTimePath                       = "/status/startTime"
-	completionTimePath                  = "/status/completionTime"
-	lastTransitionTimePath              = "/status/conditions/lastTransitionTime"
+	backupDestinationPVCResourceRequestsPath = "/spec/backupDestination/persistentVolumeClaim/resources/requests"
+	startTimePath                            = "/status/startTime"
+	completionTimePath                       = "/status/completionTime"
+	lastTransitionTimePath                   = "/status/conditions/lastTransitionTime"
 )
 
 func TestSampleCustomResources(t *testing.T) {
@@ -80,7 +80,7 @@ func TestCompleteCRD(t *testing.T) {
 	}
 
 	pathOmissions := []string{
-		backupSourcePVCResourceRequestsPath,
+		backupDestinationPVCResourceRequestsPath,
 		startTimePath,
 		completionTimePath,
 		lastTransitionTimePath,
