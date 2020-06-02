@@ -56,16 +56,16 @@ func (a *APIManagerBackupOptionsProvider) Options() (*APIManagerBackupOptions, e
 }
 
 func (a *APIManagerBackupOptionsProvider) pvcBackupOptions() (*APIManagerBackupPVCOptions, error) {
-	if a.APIManagerBackupCR.Spec.BackupSource.PersistentVolumeClaim == nil {
+	if a.APIManagerBackupCR.Spec.BackupDestination.PersistentVolumeClaim == nil {
 		return nil, nil
 	}
 
 	res := NewAPIManagerBackupPVCOptions()
 	res.BackupDestinationPVC.Name = fmt.Sprintf("apimanager-backup-%s", a.APIManagerBackupCR.Name)
-	res.BackupDestinationPVC.StorageClass = a.APIManagerBackupCR.Spec.BackupSource.PersistentVolumeClaim.StorageClass
-	res.BackupDestinationPVC.VolumeName = a.APIManagerBackupCR.Spec.BackupSource.PersistentVolumeClaim.VolumeName
-	if a.APIManagerBackupCR.Spec.BackupSource.PersistentVolumeClaim.Resources != nil {
-		res.BackupDestinationPVC.StorageRequests = &a.APIManagerBackupCR.Spec.BackupSource.PersistentVolumeClaim.Resources.Requests
+	res.BackupDestinationPVC.StorageClass = a.APIManagerBackupCR.Spec.BackupDestination.PersistentVolumeClaim.StorageClass
+	res.BackupDestinationPVC.VolumeName = a.APIManagerBackupCR.Spec.BackupDestination.PersistentVolumeClaim.VolumeName
+	if a.APIManagerBackupCR.Spec.BackupDestination.PersistentVolumeClaim.Resources != nil {
+		res.BackupDestinationPVC.StorageRequests = &a.APIManagerBackupCR.Spec.BackupDestination.PersistentVolumeClaim.Resources.Requests
 	}
 
 	return res, res.Validate()

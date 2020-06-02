@@ -118,18 +118,18 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackupSpec(ref common.ReferenceCall
 				Description: "APIManagerBackupSpec defines the desired state of APIManagerBackup",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"backupSource": {
+					"backupDestination": {
 						SchemaProps: spec.SchemaProps{
 							Description: "INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
-							Ref:         ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupSource"),
+							Ref:         ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupDestination"),
 						},
 					},
 				},
-				Required: []string{"backupSource"},
+				Required: []string{"backupDestination"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupSource"},
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupDestination"},
 	}
 }
 
@@ -268,16 +268,22 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerRestoreStatus(ref common.ReferenceC
 				Description: "APIManagerRestoreStatus defines the observed state of APIManagerRestore",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"apimanagerToRestore": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/core/v1.LocalObjectReference"),
+						},
+					},
 					"completed": {
 						SchemaProps: spec.SchemaProps{
-							Description: "INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
-							Type:        []string{"boolean"},
-							Format:      "",
+							Type:   []string{"boolean"},
+							Format: "",
 						},
 					},
 				},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.LocalObjectReference"},
 	}
 }
 
