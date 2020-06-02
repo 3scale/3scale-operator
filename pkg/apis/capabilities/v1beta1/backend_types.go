@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -181,7 +182,26 @@ func (backend *Backend) SetDefaults() bool {
 		updated = true
 	}
 
+	// Create Hits metric
+	// TODO
+
 	return updated
+}
+
+func (backend *Backend) Validate() field.ErrorList {
+	errors := field.ErrorList{}
+
+	// validate hits metric exists
+	specFldPath := field.NewPath("spec")
+	metricsFldPath := specFldPath.Child("metrics")
+	if backend.Spec.Metrics == nil {
+		errors = append(errors, field.Required(metricsFldPath, "empty metrics is not valid for Backend."))
+	} else {
+		if _, ok := backend.Spec.Metrics["hits"]; !ok {
+			errors = append(errors, field.Invalid(metricsFldPath, backend.Spec.Metrics, "metrics map not valid for Backend. 'hits' metric must exist."))
+		}
+	}
+	return errors
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

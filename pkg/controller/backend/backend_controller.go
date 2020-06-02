@@ -12,6 +12,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -180,7 +181,19 @@ func (r *ReconcileBackend) reconcileSpec(backendResource *capabilitiesv1beta1.Ba
 }
 
 func (r *ReconcileBackend) validateSpec(backendResource *capabilitiesv1beta1.Backend) error {
+	errors := field.ErrorList{}
 	// internal validation
+	errors = append(errors, backendResource.Validate()...)
+
+	// external references validation
 	// TODO
-	return nil
+
+	if len(errors) == 0 {
+		return nil
+	}
+
+	return &specFieldError{
+		errorType:      helper.InvalidError,
+		fieldErrorList: errors,
+	}
 }
