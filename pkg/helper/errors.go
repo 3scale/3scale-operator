@@ -1,9 +1,5 @@
 package helper
 
-import (
-	"k8s.io/apimachinery/pkg/util/validation/field"
-)
-
 type FieldTypeError int
 
 const (
@@ -26,24 +22,6 @@ const (
 type SpecError interface {
 	error
 	FieldType() FieldTypeError
-}
-
-type specFieldError struct {
-	errorType FieldTypeError
-	// path
-	fieldErrorList field.ErrorList
-}
-
-var _ SpecError = &specFieldError{}
-
-// Error implements the Error interface.
-func (s *specFieldError) Error() string {
-	return s.fieldErrorList.ToAggregate().Error()
-}
-
-// FieldType implements the SpecError interface.
-func (s *specFieldError) FieldType() FieldTypeError {
-	return s.errorType
 }
 
 func IsInvalidSpecError(err error) bool {

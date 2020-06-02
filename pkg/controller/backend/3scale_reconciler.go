@@ -11,6 +11,11 @@ import (
 	"github.com/go-logr/logr"
 )
 
+type methodData struct {
+	methodAPIItem threescaleapi.MethodItem
+	methodSpec    capabilitiesv1beta1.Methodpec
+}
+
 type ThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	backendResource     *capabilitiesv1beta1.Backend
@@ -31,6 +36,10 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler, backendResource *cap
 func (t *ThreescaleReconciler) Reconcile() (*helper.BackendAPIEntity, error) {
 	taskRunner := helper.NewTaskRunner(nil, t.logger)
 	taskRunner.AddTask("SyncBackend", t.syncBackend)
+	// First methods and metrics, then mapping rules.
+	// Mapping rules reference methods and metrics.
+	// When a method/metric is deleted,
+	// any orphan mapping rule will be deleted automatically by 3scale
 	taskRunner.AddTask("SyncMethods", t.syncMethods)
 	taskRunner.AddTask("SyncMetrics", t.syncMetrics)
 	taskRunner.AddTask("SyncMappingRules", t.syncMappingRules)
@@ -79,7 +88,7 @@ func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
 	}
 
 	// Will be used by coming steps
-	t.backendAPIEntity = helper.NewBackendAPIEntity(backendAPIObj, t.threescaleAPIClient)
+	t.backendAPIEntity = helper.NewBackendAPIEntity(backendAPIObj, t.threescaleAPIClient, t.logger)
 
 	updatedParams := threescaleapi.Params{}
 
@@ -106,41 +115,58 @@ func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
 }
 
 func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
-	desiredMethodsKeys := make([]string, len(t.backendResource.Spec.Methods))
-	for methodSystemName := range t.backendResource.Spec.Methods {
-		desiredMethodsKeys = append(desiredMethodsKeys, methodSystemName)
+	desiredKeys := make([]string, len(t.backendResource.Spec.Methods))
+	for systemName := range t.backendResource.Spec.Methods {
+		desiredKeys = append(desiredKeys, systemName)
 	}
 
-	existingMethods := map[string]threescaleapi.MethodItem{}
-	existingMethodList, err := t.backendAPIEntity.Methods()
+	existingMap := map[string]threescaleapi.MethodItem{}
+	existingList, err := t.backendAPIEntity.Methods()
 	if err != nil {
 		return fmt.Errorf("Error reading backend methods: %w", err)
 	}
 
-	for _, existingMethod := range existingMethodList.Methods {
-		systemName := existingMethod.Element.SystemName
-		existingMethods[systemName] = existingMethod.Element
+	existingKeys := make([]string, len(existingList.Methods))
+	for _, existing := range existingList.Methods {
+		systemName := existing.Element.SystemName
+		existingKeys = append(existingKeys, systemName)
+		existingMap[systemName] = existing.Element
 	}
 
-	existingMethodsKeys := make([]string, len(existingMethods))
-	for methodSystemName := range existingMethods {
-		existingMethodsKeys = append(existingMethodsKeys, methodSystemName)
+	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	desiredNewMap := map[string]capabilitiesv1beta1.Methodpec{}
+	for _, systemName := range desiredNewKeys {
+		// key is expected to exist
+		// desiredNewMethods is a subset of the Spec.Method map key set
+		desiredNewMap[systemName] = t.backendResource.Spec.Methods[systemName]
 	}
-
-	desiredNewMethods := helper.ArrayStringDifference(desiredMethodsKeys, existingMethodsKeys)
-	err = t.createNewMethods(desiredNewMethods)
+	err = t.createNewMethods(desiredNewMap)
 	if err != nil {
 		return fmt.Errorf("Error creating backend methods: %w", err)
 	}
 
-	notDesiresExistingMethods := helper.ArrayStringDifference(existingMethodsKeys, desiredMethodsKeys)
-	err = t.processNotDesiredMethods(notDesiresExistingMethods)
+	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	notDesiredMap := map[string]threescaleapi.MethodItem{}
+	for _, systemName := range notDesiredExistingKeys {
+		// key is expected to exist
+		// notDesiredExistingKeys is a subset of the existingMap key set
+		notDesiredMap[systemName] = existingMap[systemName]
+	}
+	err = t.processNotDesiredMethods(notDesiredMap)
 	if err != nil {
 		return fmt.Errorf("Error processing not desired backend methods: %w", err)
 	}
 
-	matchedMethods := helper.ArrayStringIntersection(existingMethodsKeys, desiredMethodsKeys)
-	err = t.reconcileMatchedMethods(matchedMethods)
+	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
+	matchedMap := map[string]methodData{}
+	for _, systemName := range matchedKeys {
+		matchedMap[systemName] = methodData{
+			methodAPIItem: existingMap[systemName],
+			methodSpec:    t.backendResource.Spec.Methods[systemName],
+		}
+	}
+
+	err = t.reconcileMatchedMethods(matchedMap)
 	if err != nil {
 		return fmt.Errorf("Error reconciling matched backend methods: %w", err)
 	}
@@ -148,18 +174,52 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewMethods(_newMethodNames []string) error {
-	// TODO
+func (t *ThreescaleReconciler) createNewMethods(newMethodSystemNames map[string]capabilitiesv1beta1.Methodpec) error {
+	for systemName, method := range newMethodSystemNames {
+		params := threescaleapi.Params{
+			"friendly_name": method.Name,
+			"system_name":   systemName,
+		}
+		if len(method.Description) > 0 {
+			params["description"] = method.Description
+		}
+		err := t.backendAPIEntity.CreateMethod(params)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (t *ThreescaleReconciler) processNotDesiredMethods(_newMethodNames []string) error {
-	// TODO
+func (t *ThreescaleReconciler) processNotDesiredMethods(methodMap map[string]threescaleapi.MethodItem) error {
+	for _, method := range methodMap {
+		err := t.backendAPIEntity.DeleteMethod(method.ID)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (t *ThreescaleReconciler) reconcileMatchedMethods(_newMethodNames []string) error {
-	// TODO
+func (t *ThreescaleReconciler) reconcileMatchedMethods(matchedMap map[string]methodData) error {
+	for _, methodData := range matchedMap {
+		params := threescaleapi.Params{}
+		if methodData.methodSpec.Name != methodData.methodAPIItem.Name {
+			params["friendly_name"] = methodData.methodSpec.Name
+		}
+
+		if methodData.methodSpec.Description != methodData.methodAPIItem.Description {
+			params["description"] = methodData.methodSpec.Description
+		}
+
+		if len(params) > 0 {
+			err := t.backendAPIEntity.UpdateMethod(methodData.methodAPIItem.ID, params)
+			if err != nil {
+				return fmt.Errorf("Error updating backendAPI method: %w", err)
+			}
+		}
+	}
+
 	return nil
 }
 
