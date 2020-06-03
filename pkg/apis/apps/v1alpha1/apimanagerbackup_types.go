@@ -9,34 +9,52 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
 // APIManagerBackupSpec defines the desired state of APIManagerBackup
 // +k8s:openapi-gen=true
 type APIManagerBackupSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	// Backup data destination configuration
 	BackupDestination APIManagerBackupDestination `json:"backupDestination"`
 }
 
+// APIManagerBackupDestination defines the backup data destination
+// configurability. It is a union type. Only one of the fields can be
+// set
 type APIManagerBackupDestination struct {
+	// PersistentVolumeClaim as backup data destination configuration
 	// +optional
 	PersistentVolumeClaim *PersistentVolumeClaimBackupDestination `json:"persistentVolumeClaim,omitempty"`
 }
 
+// PersistentVolumeClaimBackupDestination defines the configuration
+// of the PersistentVolumeClaim to be used as the backup data destination
 // Ways to define a PVC creation:
 // Define VolumeName OR Define Resources. When VolumeName is specified resources is not needed:
-// Detailed info:
+// Detailed information:
 // https://docs.okd.io/3.11/dev_guide/persistent_volumes.html#persistent-volumes-volumes-and-claim-prebinding
 type PersistentVolumeClaimBackupDestination struct {
+	// Resources configuration for the backup data PersistentVolumeClaim.
+	// Ignored when VolumeName field is set
 	// +optional
 	Resources *PersistentVolumeClaimResources `json:"resources,omitempty"`
+	// Name of an existing PersistentVolume to be bound to the
+	// backup data PersistentVolumeClaim
 	// +optional
 	VolumeName *string `json:"volumeName,omitempty"`
+	// Storage class to be used by the PersistentVolumeClaim. Ignored
+	// when VolumeName field is set
 	// +optional
 	StorageClass *string `json:"storageClass,omitempty"`
 }
 
+// PersistentVolumeClaimResources defines the resources configuration
+// of the backup data destination PersistentVolumeClaim
 type PersistentVolumeClaimResources struct {
+	// Storage Resource requests to be used on the PersistentVolumeClaim.
+	// To learn more about resource requests see:
+	// https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 	Requests resource.Quantity `json:"requests"` // Should this be a string or a resoure.Quantity? it seems it is serialized as a string
 }
 
@@ -66,17 +84,23 @@ type APIManagerBackupStatus struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
+	// Set to true when backup has been completed
 	// +optional
 	Completed *bool `json:"completed,omitempty"`
 
+	// Name of the APIManager from which the backup has been performed
 	// +optional
 	APIManagerSourceName *string `json:"apiManagerSourceName,omitempty"`
 
+	// Start time of the backup
 	// +optional
 	StartTime *metav1.Time `json:"startTime,omitempty"`
+	// Completion time of the backup
 	// +optional
 	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
 
+	// Name of the backup data PersistentVolumeClaim. Only set when
+	// PersistentVolumeClaim is used as the backup data destination
 	// +optional
 	BackupPersistentVolumeClaimName *string `json:"backupPersistentVolumeClaimName,omitempty"`
 
@@ -88,7 +112,7 @@ type APIManagerBackupStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// APIManagerBackup is the Schema for the apimanagerbackups API
+// APIManagerBackup represents an APIManager backup
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=apimanagerbackups,scope=Namespaced
