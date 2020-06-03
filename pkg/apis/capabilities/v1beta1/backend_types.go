@@ -182,8 +182,26 @@ func (backend *Backend) SetDefaults() bool {
 		updated = true
 	}
 
-	// Create Hits metric
-	// TODO
+	if backend.Spec.Metrics == nil {
+		backend.Spec.Metrics = map[string]MetricSpec{}
+		updated = true
+	}
+
+	// Hits metric
+	hitsFound := false
+	for systemName := range backend.Spec.Metrics {
+		if systemName == "hits" {
+			hitsFound = true
+		}
+	}
+	if !hitsFound {
+		backend.Spec.Metrics["hits"] = MetricSpec{
+			Name:        "Hits",
+			Unit:        "hit",
+			Description: "Number of API hits",
+		}
+		updated = true
+	}
 
 	return updated
 }
