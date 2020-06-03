@@ -19,6 +19,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
 	kubeclock "k8s.io/apimachinery/pkg/util/clock"
@@ -52,7 +53,12 @@ func (r *APIManagerRestoreLogicReconciler) Reconcile() (reconcile.Result, error)
 		return reconcile.Result{}, nil
 	}
 
-	result, err := r.reconcileRestoreFromS3Source()
+	result, err := r.reconcileStartTimeField()
+	if result.Requeue || err != nil {
+		return result, err
+	}
+
+	result, err = r.reconcileRestoreFromS3Source()
 	if result.Requeue || err != nil {
 		return result, err
 	}
@@ -68,6 +74,16 @@ func (r *APIManagerRestoreLogicReconciler) Reconcile() (reconcile.Result, error)
 	}
 
 	return result, err
+}
+
+func (r *APIManagerRestoreLogicReconciler) reconcileStartTimeField() (reconcile.Result, error) {
+	if r.cr.Status.StartTime == nil {
+		startTimeUTC := metav1.Time{Time: clock.Now().UTC()}
+		r.cr.Status.StartTime = &startTimeUTC
+		err := r.UpdateResourceStatus(r.cr)
+		return reconcile.Result{Requeue: true}, err
+	}
+	return reconcile.Result{}, nil
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromS3Source() (reconcile.Result, error) {
@@ -237,8 +253,10 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreCompletion() (reconci
 	if !r.cr.RestoreCompleted() {
 		// TODO make this more robust only setting it in case all substeps have been completed?
 		// It might be a little bit redundant because the steps are checked during the reconciliation
-		backupFinished := true
-		r.cr.Status.Completed = &backupFinished
+		completionTimeUTC := metav1.Time{Time: clock.Now().UTC()}
+		restoreFinished := true
+		r.cr.Status.Completed = &restoreFinished
+		r.cr.Status.CompletionTime = &completionTimeUTC
 		err := r.UpdateResourceStatus(r.cr)
 		if err != nil {
 			return reconcile.Result{}, err
