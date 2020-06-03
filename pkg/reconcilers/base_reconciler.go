@@ -3,6 +3,7 @@ package reconcilers
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
@@ -122,26 +123,26 @@ func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject,
 }
 
 func (b *BaseReconciler) GetResource(objKey types.NamespacedName, obj common.KubernetesObject) error {
-	b.Logger().Info(fmt.Sprintf("Get object %s", common.ObjectInfo(obj)))
+	b.Logger().Info(fmt.Sprintf("Get object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), objKey.Name))
 	return b.Client().Get(context.TODO(), objKey, obj)
 }
 
 func (b *BaseReconciler) CreateResource(obj common.KubernetesObject) error {
-	b.Logger().Info(fmt.Sprintf("Created object %s", common.ObjectInfo(obj)))
+	b.Logger().Info(fmt.Sprintf("Created object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Create(b.ctx, obj)
 }
 
 func (b *BaseReconciler) UpdateResource(obj common.KubernetesObject) error {
-	b.Logger().Info(fmt.Sprintf("Updated object %s", common.ObjectInfo(obj)))
+	b.Logger().Info(fmt.Sprintf("Updated object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Update(b.ctx, obj)
 }
 
 func (b *BaseReconciler) DeleteResource(obj common.KubernetesObject, options ...client.DeleteOption) error {
-	b.Logger().Info(fmt.Sprintf("Delete object %s", common.ObjectInfo(obj)))
+	b.Logger().Info(fmt.Sprintf("Delete object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Delete(context.TODO(), obj)
 }
 
 func (b *BaseReconciler) UpdateResourceStatus(obj common.KubernetesObject) error {
-	b.Logger().Info(fmt.Sprintf("Updated status of object %s", common.ObjectInfo(obj)))
+	b.Logger().Info(fmt.Sprintf("Updated status of object object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Status().Update(context.TODO(), obj)
 }
