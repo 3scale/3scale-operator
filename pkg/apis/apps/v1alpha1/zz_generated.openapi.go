@@ -71,7 +71,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackup(ref common.ReferenceCallback
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "APIManagerBackup is the Schema for the apimanagerbackups API",
+				Description: "APIManagerBackup represents an APIManager backup",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -120,7 +120,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackupSpec(ref common.ReferenceCall
 				Properties: map[string]spec.Schema{
 					"backupDestination": {
 						SchemaProps: spec.SchemaProps{
-							Description: "INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
+							Description: "Backup data destination configuration",
 							Ref:         ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupDestination"),
 						},
 					},
@@ -142,30 +142,35 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackupStatus(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"completed": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "Set to true when backup has been completed",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 					"apiManagerSourceName": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Name of the APIManager from which the backup has been performed",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"startTime": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+							Description: "Start time of the backup",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"completionTime": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+							Description: "Completion time of the backup",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"backupPersistentVolumeClaimName": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Name of the backup data PersistentVolumeClaim. Only set when PersistentVolumeClaim is used as the backup data destination",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"conditions": {
@@ -199,7 +204,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerRestore(ref common.ReferenceCallbac
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "APIManagerRestore is the Schema for the apimanagerrestores API",
+				Description: "APIManagerRestore represents an APIManager restore",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -268,15 +273,17 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerRestoreStatus(ref common.ReferenceC
 				Description: "APIManagerRestoreStatus defines the observed state of APIManagerRestore",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"apimanagerToRestore": {
+					"apiManagerToRestoreRef": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/api/core/v1.LocalObjectReference"),
+							Description: "Name of the APIManager to be restored",
+							Ref:         ref("k8s.io/api/core/v1.LocalObjectReference"),
 						},
 					},
 					"completed": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "Set to true when backup has been completed",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 				},

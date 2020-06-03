@@ -14,7 +14,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: APIManagerRestore is the Schema for the apimanagerrestores API
+      description: APIManagerRestore represents an APIManager restore
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -38,13 +38,11 @@ spec:
                 https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html'
               properties:
                 persistentVolumeClaim:
+                  description: Restore data soure configuration
                   properties:
                     claimSource:
-                      description: PersistentVolumeClaimVolumeSource references the
-                        user's PVC in the same namespace. This volume finds the bound
-                        PV and mounts that volume for the pod. A PersistentVolumeClaimVolumeSource
-                        is, essentially, a wrapper around another type of volume that
-                        is owned by someone else (the system).
+                      description: PersistentVolumeClaim source of an existing PersistentVolumeClaim.
+                        See
                       properties:
                         claimName:
                           description: 'ClaimName is the name of a PersistentVolumeClaim
@@ -68,9 +66,8 @@ spec:
         status:
           description: APIManagerRestoreStatus defines the observed state of APIManagerRestore
           properties:
-            apimanagerToRestore:
-              description: LocalObjectReference contains enough information to let
-                you locate the referenced object inside the same namespace.
+            apiManagerToRestoreRef:
+              description: Name of the APIManager to be restored
               properties:
                 name:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -78,6 +75,7 @@ spec:
                   type: string
               type: object
             completed:
+              description: Set to true when backup has been completed
               type: boolean
           type: object
       type: object
