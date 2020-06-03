@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
@@ -107,6 +108,12 @@ func (r *ReconcileBackend) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
+	backendJSONData, err := json.MarshalIndent(backend, "", "  ")
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	reqLogger.V(1).Info(string(backendJSONData))
+
 	// Ignore deleted Backends, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if backend.DeletionTimestamp != nil {
@@ -131,7 +138,7 @@ func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backen
 			return reconcile.Result{}, fmt.Errorf("Failed setting backend defaults: %w", err)
 		}
 
-		logger.Info("resource updated. Requeueing.")
+		logger.Info("resource defaults updated. Requeueing.")
 		return reconcile.Result{Requeue: true}, nil
 	}
 
