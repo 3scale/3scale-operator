@@ -17,12 +17,21 @@ type APIManagerRestoreSpec struct {
 	RestoreSource APIManagerRestoreSource `json:"restoreSource"`
 }
 
+// APIManagerRestoreSource defines the backup data restore source
+// configurability. It is a union type. Only one of the fields can be
+// set
 type APIManagerRestoreSource struct {
 	// +optional
+	// Restore data soure configuration
 	PersistentVolumeClaim *PersistentVolumeClaimRestoreSource `json:"persistentVolumeClaim,omitempty"`
 }
 
+// PersistentVolumeClaimRestoreSource defines the configuration
+// of the PersistentVolumeClaim to be used as the restore data source
+// for an APIManager restore
 type PersistentVolumeClaimRestoreSource struct {
+	// PersistentVolumeClaim source of an existing PersistentVolumeClaim.
+	// See
 	ClaimSource v1.PersistentVolumeClaimVolumeSource `json:"claimSource"`
 }
 
@@ -33,16 +42,18 @@ type APIManagerRestoreStatus struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
+	// Name of the APIManager to be restored
 	// +optional
-	APIManagerToRestoreRef *v1.LocalObjectReference `json:"apimanagerToRestore,omitempty"`
+	APIManagerToRestoreRef *v1.LocalObjectReference `json:"apiManagerToRestoreRef,omitempty"`
 
+	// Set to true when backup has been completed
 	// +optional
 	Completed *bool `json:"completed,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// APIManagerRestore is the Schema for the apimanagerrestores API
+// APIManagerRestore represents an APIManager restore
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=apimanagerrestores,scope=Namespaced

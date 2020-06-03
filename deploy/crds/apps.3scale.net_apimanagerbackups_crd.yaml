@@ -14,7 +14,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: APIManagerBackup is the Schema for the apimanagerbackups API
+      description: APIManagerBackup represents an APIManager backup
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -32,26 +32,30 @@ spec:
           description: APIManagerBackupSpec defines the desired state of APIManagerBackup
           properties:
             backupDestination:
-              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                Important: Run "operator-sdk generate k8s" to regenerate code after
-                modifying this file Add custom validation using kubebuilder tags:
-                https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html'
+              description: Backup data destination configuration
               properties:
                 persistentVolumeClaim:
-                  description: 'Ways to define a PVC creation: Define VolumeName OR
-                    Define Resources. When VolumeName is specified resources is not
-                    needed: Detailed info: https://docs.okd.io/3.11/dev_guide/persistent_volumes.html#persistent-volumes-volumes-and-claim-prebinding'
+                  description: PersistentVolumeClaim as backup data destination configuration
                   properties:
                     resources:
+                      description: Resources configuration for the backup data PersistentVolumeClaim.
+                        Ignored when VolumeName field is set
                       properties:
                         requests:
+                          description: 'Storage Resource requests to be used on the
+                            PersistentVolumeClaim. To learn more about resource requests
+                            see: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                           type: string
                       required:
                       - requests
                       type: object
                     storageClass:
+                      description: Storage class to be used by the PersistentVolumeClaim.
+                        Ignored when VolumeName field is set
                       type: string
                     volumeName:
+                      description: Name of an existing PersistentVolume to be bound
+                        to the backup data PersistentVolumeClaim
                       type: string
                   type: object
               type: object
@@ -62,12 +66,17 @@ spec:
           description: APIManagerBackupStatus defines the observed state of APIManagerBackup
           properties:
             apiManagerSourceName:
+              description: Name of the APIManager from which the backup has been performed
               type: string
             backupPersistentVolumeClaimName:
+              description: Name of the backup data PersistentVolumeClaim. Only set
+                when PersistentVolumeClaim is used as the backup data destination
               type: string
             completed:
+              description: Set to true when backup has been completed
               type: boolean
             completionTime:
+              description: Completion time of the backup
               format: date-time
               type: string
             conditions:
@@ -101,6 +110,7 @@ spec:
                 type: object
               type: array
             startTime:
+              description: Start time of the backup
               format: date-time
               type: string
           type: object
