@@ -92,10 +92,10 @@ type APIManagerBackupStatus struct {
 	// +optional
 	APIManagerSourceName *string `json:"apiManagerSourceName,omitempty"`
 
-	// Start time of the backup
+	// Backup start time. It is represented in RFC3339 form and is in UTC.
 	// +optional
 	StartTime *metav1.Time `json:"startTime,omitempty"`
-	// Completion time of the backup
+	// Backup completion time. It is represented in RFC3339 form and is in UTC.
 	// +optional
 	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
 
