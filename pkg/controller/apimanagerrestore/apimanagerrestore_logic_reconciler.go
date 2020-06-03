@@ -2,11 +2,8 @@ package apimanagerrestore
 
 import (
 	"fmt"
-	"reflect"
-	"sort"
 	"time"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/backup"
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -19,7 +16,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
 	kubeclock "k8s.io/apimachinery/pkg/util/clock"
@@ -53,84 +49,48 @@ func (r *APIManagerRestoreLogicReconciler) Reconcile() (reconcile.Result, error)
 		return reconcile.Result{}, nil
 	}
 
-	result, err := r.reconcileStartTimeField()
-	if result.Requeue || err != nil {
-		return result, err
+	pipeline, err := r.buildPipeline()
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
-	result, err = r.reconcileRestoreFromS3Source()
-	if result.Requeue || err != nil {
-		return result, err
+	pipelineCompleted, err := pipeline.Completed()
+	if err != nil {
+		return reconcile.Result{}, err
 	}
-
-	result, err = r.reconcileRestoreFromPVCSource()
-	if result.Requeue || err != nil {
-		return result, err
+	if pipelineCompleted {
+		return reconcile.Result{}, nil
 	}
-
-	result, err = r.reconcileRestoreCompletion()
-	if result.Requeue || err != nil {
-		return result, err
-	}
-
-	return result, err
+	return pipeline.Execute()
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileStartTimeField() (reconcile.Result, error) {
-	if r.cr.Status.StartTime == nil {
-		startTimeUTC := metav1.Time{Time: clock.Now().UTC()}
-		r.cr.Status.StartTime = &startTimeUTC
-		err := r.UpdateResourceStatus(r.cr)
-		return reconcile.Result{Requeue: true}, err
-	}
-	return reconcile.Result{}, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromS3Source() (reconcile.Result, error) {
-	// TODO implement
-	return reconcile.Result{}, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromPVCSource() (reconcile.Result, error) {
-	var res reconcile.Result
-	var err error
-
-	res, err = r.reconcileRestoreSecretsAndConfigMapsFromPVCJob()
-	if res.Requeue || err != nil {
-		return res, err
+func (r *APIManagerRestoreLogicReconciler) buildPipeline() (Pipeline, error) {
+	// TODO in the future probably different pipelines will be built depending on
+	// restore source (pvc, s3, ...)
+	pipelineBuilder := NewRestorePipelineBuilder()
+	apiManagerRestoreBaseStep := APIManagerRestoreBaseStep{
+		APIManagerRestoreLogicReconciler: r,
 	}
 
-	res, err = r.reconcileRestoreAPIManagerInSharedSecret()
-	if res.Requeue || err != nil {
-		return res, err
+	steps := []Step{
+		&ReconcileStartTimeStep{apiManagerRestoreBaseStep},
+		&ReconcileSecretsAndCfgMapsFromPVCStep{apiManagerRestoreBaseStep},
+		&ReconcileAPIManagerInSharedSecretStep{apiManagerRestoreBaseStep},
+		&ReconcileCreateSystemFileStoragePVCStep{apiManagerRestoreBaseStep},
+		&ReconcileRestoreSystemFileStoragePVCFromPVCStep{apiManagerRestoreBaseStep},
+		&ReconcileCreateAPIManagerStep{apiManagerRestoreBaseStep},
+		&ReconcileWaitForAPIManagerReadyStep{apiManagerRestoreBaseStep},
+		&ReconcileResyncZyncDomainsStep{apiManagerRestoreBaseStep},
+		&ReconcileCleanupAPIManagerBackupSharedSecretStep{apiManagerRestoreBaseStep},
+		&ReconcileRestoreCompletionStep{apiManagerRestoreBaseStep},
 	}
-
-	res, err = r.reconcileRestoreSystemFileStoragePVCFromPVCJob()
-	if res.Requeue || err != nil {
-		return res, err
+	for _, step := range steps {
+		err := pipelineBuilder.AddStep(step)
+		if err != nil {
+			return nil, nil
+		}
 	}
-
-	res, err = r.reconcileRestoreAPIManager()
-	if res.Requeue || err != nil {
-		return res, err
-	}
-
-	res, err = r.reconcileWaitForAPIManagerReady()
-	if res.Requeue || err != nil {
-		return res, err
-	}
-
-	res, err = r.reconcileResynchronizeZyncDomains()
-	if res.Requeue || err != nil {
-		return res, err
-	}
-
-	res, err = r.reconcileAPIManagerBackupSharedInSecretCleanup()
-	if res.Requeue || err != nil {
-		return res, err
-	}
-
-	return res, err
+	return pipelineBuilder.Build()
 }
 
 func (r *APIManagerRestoreLogicReconciler) setOwnerReference(obj common.KubernetesObject) error {
@@ -177,131 +137,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileJob(desired *batchv1.Job) (r
 	return reconcile.Result{}, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreSecretsAndConfigMapsFromPVCJob() (reconcile.Result, error) {
-	desired := r.apiManagerRestore.RestoreSecretsAndConfigMapsFromPVCJob()
-	if desired == nil {
-		return reconcile.Result{}, nil
-	}
-
-	return r.reconcileJob(desired)
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileSystemStoragePVC() (reconcile.Result, error) {
-	// TODO is it enough with just calling ReconcileResource???
-	exists, err := r.systemStoragePVCExists()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !exists {
-		apimanager, apiManagerErr := r.apiManagerFromSharedBackupSecret()
-		if apiManagerErr != nil {
-			return reconcile.Result{}, apiManagerErr
-		}
-		restoreInfo, restoreInfoErr := r.runtimeRestoreInfoFromAPIManager(apimanager)
-		if restoreInfoErr != nil {
-			return reconcile.Result{}, restoreInfoErr
-		}
-		err := r.ReconcileResource(&v1.PersistentVolumeClaim{}, r.apiManagerRestore.SystemStoragePVC(restoreInfo), reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apimanager *appsv1alpha1.APIManager) (*restore.RuntimeAPIManagerRestoreInfo, error) {
-	var storageClass *string
-	if apimanager.Spec.System != nil && apimanager.Spec.System.FileStorageSpec != nil && apimanager.Spec.System.FileStorageSpec.PVC != nil {
-		storageClass = apimanager.Spec.System.FileStorageSpec.PVC.StorageClassName
-	}
-	restoreInfo := &restore.RuntimeAPIManagerRestoreInfo{
-		PVCStorageClass: storageClass,
-	}
-	return restoreInfo, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreSystemFileStoragePVCFromPVCJob() (reconcile.Result, error) {
-	desired := r.apiManagerRestore.RestoreSystemFileStoragePVCFromPVCJob()
-	if desired == nil {
-		return reconcile.Result{}, nil
-	}
-
-	res, err := r.reconcileSystemStoragePVC()
-	if res.Requeue || err != nil {
-		return res, err
-	}
-
-	return r.reconcileJob(desired)
-}
-
-func (r *APIManagerRestoreLogicReconciler) systemStoragePVCExists() (bool, error) {
-	pvc := &v1.PersistentVolumeClaim{}
-	err := r.GetResource(types.NamespacedName{Name: component.SystemFileStoragePVCName, Namespace: r.cr.Namespace}, pvc)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	return true, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreCompletion() (reconcile.Result, error) {
-	if !r.cr.RestoreCompleted() {
-		// TODO make this more robust only setting it in case all substeps have been completed?
-		// It might be a little bit redundant because the steps are checked during the reconciliation
-		completionTimeUTC := metav1.Time{Time: clock.Now().UTC()}
-		restoreFinished := true
-		r.cr.Status.Completed = &restoreFinished
-		r.cr.Status.CompletionTime = &completionTimeUTC
-		err := r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-	return reconcile.Result{}, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManagerInSharedSecret() (reconcile.Result, error) {
-	desired := r.apiManagerRestore.CreateAPIManagerSharedSecretJob()
-	if desired == nil {
-		return reconcile.Result{}, nil
-	}
-
-	res, err := r.reconcileJob(desired)
-	if res.Requeue || err != nil {
-		return res, err
-	}
-
-	if r.cr.Status.APIManagerToRestoreRef == nil {
-		secret, err := r.sharedBackupSecret()
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		if secret == nil {
-			r.Logger().Info("Shared secret '%s' not found. Waiting...", r.apiManagerRestore.SecretToShareName())
-			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
-		}
-		apimanager, err := r.apiManagerFromSharedBackupSecret()
-
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		r.cr.Status.APIManagerToRestoreRef = &v1.LocalObjectReference{
-			Name: apimanager.Name,
-		}
-		err = r.UpdateResourceStatus(r.cr)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
-	return reconcile.Result{}, nil
-}
-
 func (r *APIManagerRestoreLogicReconciler) sharedBackupSecret() (*v1.Secret, error) {
 	secret := &v1.Secret{}
 	err := r.GetResource(types.NamespacedName{Name: r.apiManagerRestore.SecretToShareName(), Namespace: r.cr.Namespace}, secret)
@@ -345,104 +180,4 @@ func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*
 	apimanager.Namespace = r.cr.Namespace
 
 	return apimanager, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() (reconcile.Result, error) {
-	// At this point and subsequent steps APIManagerToRestoreRef should never be
-	// nil and Name should be a non-empty string. Thus, no checks related to
-	// that are performed each time the attribute is referenced in steps that
-	// are after the step that should set this status value
-	apiManagerToRestoreName := r.cr.Status.APIManagerToRestoreRef.Name
-
-	err := r.GetResource(types.NamespacedName{Name: apiManagerToRestoreName, Namespace: r.cr.Namespace}, &appsv1alpha1.APIManager{})
-	if err != nil && !errors.IsNotFound(err) {
-		return reconcile.Result{}, err
-	}
-	if err == nil {
-		return reconcile.Result{}, nil
-	}
-
-	// We proceed here when APIManager has not been found
-	apimanager, err := r.apiManagerFromSharedBackupSecret()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	existing := &appsv1alpha1.APIManager{}
-	err = r.ReconcileResource(existing, apimanager, reconcilers.CreateOnlyMutator)
-	return reconcile.Result{}, err
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecretCleanup() (reconcile.Result, error) {
-	desiredSecret, err := r.sharedBackupSecret()
-	existingSecret := &v1.Secret{}
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if desiredSecret != nil {
-		common.TagObjectToDelete(desiredSecret)
-		err = r.ReconcileResource(&v1.Secret{}, desiredSecret, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		err = r.GetResource(common.ObjectKey(desiredSecret), existingSecret)
-		if err != nil && !errors.IsNotFound(err) {
-			return reconcile.Result{}, err
-		}
-		if err == nil {
-			r.Logger().Info("Secret still not completely deleted. Requeuing", "Secret Name", desiredSecret.Name)
-			return reconcile.Result{Requeue: true}, nil
-		}
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileWaitForAPIManagerReady() (reconcile.Result, error) {
-	existingAPIManager := &appsv1alpha1.APIManager{}
-	err := r.GetResource(types.NamespacedName{Name: r.cr.Status.APIManagerToRestoreRef.Name, Namespace: r.cr.Namespace}, existingAPIManager)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			r.Logger().Info("APIManager not found. Waiting until it exists", "APIManager", r.cr.Status.APIManagerToRestoreRef.Name)
-			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
-		}
-		return reconcile.Result{}, err
-	}
-
-	// External databases scenario assumed
-	expectedDeploymentNames := []string{
-		"apicast-production",
-		"apicast-staging",
-		"backend-listener",
-		"backend-worker",
-		"backend-cron",
-		"zync",
-		"zync-que",
-		"zync-database",
-		"system-app",
-		"system-sphinx",
-		"system-sidekiq",
-		"system-memcache",
-	}
-
-	existingReadyDeployments := existingAPIManager.Status.Deployments.Ready
-	sort.Slice(expectedDeploymentNames, func(i, j int) bool { return expectedDeploymentNames[i] < expectedDeploymentNames[j] })
-	sort.Slice(existingReadyDeployments, func(i, j int) bool { return existingReadyDeployments[i] < existingReadyDeployments[j] })
-
-	if !reflect.DeepEqual(existingReadyDeployments, expectedDeploymentNames) {
-		r.Logger().Info("all APIManager Deployments not ready. Waiting", "APIManager", existingAPIManager.Name, "expected-ready-deployments", expectedDeploymentNames, "ready-deployments", existingReadyDeployments)
-		return reconcile.Result{RequeueAfter: 5 * time.Second, Requeue: true}, nil
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileResynchronizeZyncDomains() (reconcile.Result, error) {
-	desired := r.apiManagerRestore.ZyncResyncDomainsJob()
-	if desired == nil {
-		return reconcile.Result{}, nil
-	}
-
-	return r.reconcileJob(desired)
 }
