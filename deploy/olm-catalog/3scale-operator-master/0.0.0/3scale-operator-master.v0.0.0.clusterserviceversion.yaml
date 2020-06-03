@@ -84,6 +84,36 @@ metadata:
           }
         },
         {
+          "apiVersion": "apps.3scale.net/v1alpha1",
+          "kind": "APIManagerBackup",
+          "metadata": {
+            "name": "example-apimanagerbackup"
+          },
+          "spec": {
+            "backupDestination": {
+              "persistentVolumeClaim": {
+                "volumeName": "mypreexistingvolume"
+              }
+            }
+          }
+        },
+        {
+          "apiVersion": "apps.3scale.net/v1alpha1",
+          "kind": "APIManagerRestore",
+          "metadata": {
+            "name": "example-apimanagerrestore"
+          },
+          "spec": {
+            "restoreSource": {
+              "persistentVolumeClaim": {
+                "claimSource": {
+                  "claimName": "mybackeduppvc"
+                }
+              }
+            }
+          }
+        },
+        {
           "apiVersion": "capabilities.3scale.net/v1alpha1",
           "kind": "API",
           "metadata": {
@@ -279,8 +309,18 @@ spec:
     image: centos/postgresql-10-centos7
   - name: "Zync Postgresql"
     image: centos/postgresql-10-centos7
+  - name: "OpenShift CLI"
+    image: quay.io/openshift/origin-cli:4.2
   customresourcedefinitions:
     owned:
+    - description: APIManagerBackup represents an APIManager backup
+      kind: APIManagerBackup
+      name: apimanagerbackups.apps.3scale.net
+      version: v1alpha1
+    - description: APIManagerRestore represents an APIManager restore
+      kind: APIManagerRestore
+      name: apimanagerrestores.apps.3scale.net
+      version: v1alpha1
     - description: APIManager is the Schema for the apimanagers API
       displayName: APIManager
       kind: APIManager
@@ -429,6 +469,8 @@ spec:
                   value: "centos/postgresql-10-centos7"
                 - name: ZYNC_POSTGRESQL_IMAGE
                   value: "centos/postgresql-10-centos7"
+                - name: OC_CLI_IMAGE
+                  value: quay.io/openshift/origin-cli:4.2
                 image: quay.io/3scale/3scale-operator:master
                 name: 3scale-operator
                 resources: {}
@@ -494,6 +536,12 @@ spec:
           verbs:
           - get
         - apiGroups:
+          - ""
+          resources:
+          - pods/exec
+          verbs:
+          - create
+        - apiGroups:
           - apps
           resources:
           - replicasets
@@ -504,6 +552,8 @@ spec:
           - apps.3scale.net
           resources:
           - '*'
+          - apimanagerbackups
+          - apimanagerrestores
           verbs:
           - create
           - delete
