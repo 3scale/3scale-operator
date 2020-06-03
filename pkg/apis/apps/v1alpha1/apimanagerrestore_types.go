@@ -49,6 +49,13 @@ type APIManagerRestoreStatus struct {
 	// Set to true when backup has been completed
 	// +optional
 	Completed *bool `json:"completed,omitempty"`
+
+	// Restore start time. It is represented in RFC3339 form and is in UTC.
+	// +optional
+	StartTime *metav1.Time `json:"startTime,omitempty"`
+	// Restore completion time. It is represented in RFC3339 form and is in UTC.
+	// +optional
+	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

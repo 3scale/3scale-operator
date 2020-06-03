@@ -406,6 +406,14 @@ func (in *APIManagerRestoreStatus) DeepCopyInto(out *APIManagerRestoreStatus) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.StartTime != nil {
+		in, out := &in.StartTime, &out.StartTime
+		*out = (*in).DeepCopy()
+	}
+	if in.CompletionTime != nil {
+		in, out := &in.CompletionTime, &out.CompletionTime
+		*out = (*in).DeepCopy()
+	}
 	return
 }
 

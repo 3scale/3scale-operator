@@ -156,13 +156,13 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackupStatus(ref common.ReferenceCa
 					},
 					"startTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Start time of the backup",
+							Description: "Backup start time. It is represented in RFC3339 form and is in UTC.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"completionTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Completion time of the backup",
+							Description: "Backup completion time. It is represented in RFC3339 form and is in UTC.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
@@ -286,11 +286,23 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerRestoreStatus(ref common.ReferenceC
 							Format:      "",
 						},
 					},
+					"startTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Restore start time. It is represented in RFC3339 form and is in UTC.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"completionTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Restore completion time. It is represented in RFC3339 form and is in UTC.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.LocalObjectReference"},
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
