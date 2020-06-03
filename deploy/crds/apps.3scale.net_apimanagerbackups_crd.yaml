@@ -76,7 +76,8 @@ spec:
               description: Set to true when backup has been completed
               type: boolean
             completionTime:
-              description: Completion time of the backup
+              description: Backup completion time. It is represented in RFC3339 form
+                and is in UTC.
               format: date-time
               type: string
             conditions:
@@ -110,7 +111,8 @@ spec:
                 type: object
               type: array
             startTime:
-              description: Start time of the backup
+              description: Backup start time. It is represented in RFC3339 form and
+                is in UTC.
               format: date-time
               type: string
           type: object
