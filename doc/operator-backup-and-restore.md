@@ -62,7 +62,7 @@ workflow is the following one:
      metadata:
       name: example-apimanagerbackup-pvc
      spec:
-       backupSource:
+       backupDestination:
          persistentVolumeClaim:
            resources:
              requests: "10Gi"

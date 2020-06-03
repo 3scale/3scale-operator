@@ -31,7 +31,7 @@ spec:
         spec:
           description: APIManagerBackupSpec defines the desired state of APIManagerBackup
           properties:
-            backupSource:
+            backupDestination:
               description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                 Important: Run "operator-sdk generate k8s" to regenerate code after
                 modifying this file Add custom validation using kubebuilder tags:
@@ -56,7 +56,7 @@ spec:
                   type: object
               type: object
           required:
-          - backupSource
+          - backupDestination
           type: object
         status:
           description: APIManagerBackupStatus defines the observed state of APIManagerBackup
