@@ -690,35 +690,39 @@ func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error)
 		deploymentConfigs = append(deploymentConfigs, systemMySQL.DeploymentConfig())
 	}
 
+	updated := false
 	for _, desired := range deploymentConfigs {
-		err = u.ensurePodTemplateLabels(desired)
+		updatedTmp, err := u.ensurePodTemplateLabels(desired)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		updated = updated || updatedTmp
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{Requeue: updated}, nil
 }
 
-func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentConfig) error {
+func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentConfig) (bool, error) {
 	u.Logger().V(1).Info(fmt.Sprintf("ensurePodTemplateLabels object %s", common.ObjectInfo(desired)))
 	existing := &appsv1.DeploymentConfig{}
 	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
 	if err != nil {
-		return err
+		return false, err
 	}
 
+	updated := false
 	if !reflect.DeepEqual(existing.Spec.Template.Labels, desired.Spec.Template.Labels) {
 		diff := cmp.Diff(existing.Spec.Template.Labels, desired.Spec.Template.Labels)
 		u.Logger().V(1).Info(fmt.Sprintf("DC %s template lables changed: %s", desired.Name, diff))
 		existing.Spec.Template.Labels = desired.Spec.Template.Labels
 		err = u.UpdateResource(existing)
 		if err != nil {
-			return err
+			return false, err
 		}
+		updated = true
 	}
 
-	return nil
+	return updated, nil
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {
