@@ -680,7 +680,9 @@ func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error)
 			return reconcile.Result{}, err
 		}
 		deploymentConfigs = append(deploymentConfigs, systemPostgreSQL.DeploymentConfig())
-	} else {
+	}
+
+	if u.apiManager.IsSystemMysqlEnabled() {
 		systemMySQL, err := SystemMySQL(u.apiManager, u.Client())
 		if err != nil {
 			return reconcile.Result{}, err

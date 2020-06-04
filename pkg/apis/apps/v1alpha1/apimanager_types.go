@@ -623,3 +623,9 @@ func (apimanager *APIManager) IsSystemPostgreSQLEnabled() bool {
 		apimanager.Spec.System.DatabaseSpec != nil &&
 		apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil
 }
+
+func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
+	return !apimanager.IsExternalDatabaseEnabled() &&
+		apimanager.Spec.System.DatabaseSpec != nil &&
+		apimanager.Spec.System.DatabaseSpec.MySQL != nil
+}
