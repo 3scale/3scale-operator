@@ -11,9 +11,15 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManager":       schema_pkg_apis_apps_v1alpha1_APIManager(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec":   schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus": schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManager":              schema_pkg_apis_apps_v1alpha1_APIManager(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackup":        schema_pkg_apis_apps_v1alpha1_APIManagerBackup(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupSpec":    schema_pkg_apis_apps_v1alpha1_APIManagerBackupSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupStatus":  schema_pkg_apis_apps_v1alpha1_APIManagerBackupStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestore":       schema_pkg_apis_apps_v1alpha1_APIManagerRestore(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSpec":   schema_pkg_apis_apps_v1alpha1_APIManagerRestoreSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreStatus": schema_pkg_apis_apps_v1alpha1_APIManagerRestoreStatus(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec":          schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref),
+		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus":        schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref),
 	}
 }
 
@@ -58,6 +64,245 @@ func schema_pkg_apis_apps_v1alpha1_APIManager(ref common.ReferenceCallback) comm
 		},
 		Dependencies: []string{
 			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIManagerBackup(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIManagerBackup represents an APIManager backup",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIManagerBackupSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIManagerBackupSpec defines the desired state of APIManagerBackup",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"backupDestination": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Backup data destination configuration",
+							Ref:         ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupDestination"),
+						},
+					},
+				},
+				Required: []string{"backupDestination"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupDestination"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIManagerBackupStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIManagerBackupStatus defines the observed state of APIManagerBackup",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"completed": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Set to true when backup has been completed",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"apiManagerSourceName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the APIManager from which the backup has been performed",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"startTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Backup start time. It is represented in RFC3339 form and is in UTC.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"completionTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Backup completion time. It is represented in RFC3339 form and is in UTC.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"backupPersistentVolumeClaimName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the backup data PersistentVolumeClaim. Only set when PersistentVolumeClaim is used as the backup data destination",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-patch-merge-key": "type",
+								"x-kubernetes-patch-strategy":  "merge",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Represents the latest available observations of an APIManagerBackup's current state.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupCondition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupCondition", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIManagerRestore(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIManagerRestore represents an APIManager restore",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIManagerRestoreSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIManagerRestoreSpec defines the desired state of APIManagerRestore",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"restoreSource": {
+						SchemaProps: spec.SchemaProps{
+							Description: "INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
+							Ref:         ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSource"),
+						},
+					},
+				},
+				Required: []string{"restoreSource"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSource"},
+	}
+}
+
+func schema_pkg_apis_apps_v1alpha1_APIManagerRestoreStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIManagerRestoreStatus defines the observed state of APIManagerRestore",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"apiManagerToRestoreRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the APIManager to be restored",
+							Ref:         ref("k8s.io/api/core/v1.LocalObjectReference"),
+						},
+					},
+					"completed": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Set to true when backup has been completed",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"startTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Restore start time. It is represented in RFC3339 form and is in UTC.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"completionTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Restore completion time. It is represented in RFC3339 form and is in UTC.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.LocalObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 

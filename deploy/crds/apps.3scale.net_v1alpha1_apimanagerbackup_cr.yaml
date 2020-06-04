@@ -1,0 +1,8 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManagerBackup
+metadata:
+  name: example-apimanagerbackup
+spec:
+  backupDestination:
+    persistentVolumeClaim:
+      volumeName: "mypreexistingvolume"
