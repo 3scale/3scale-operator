@@ -1,5 +1,9 @@
 package helper
 
+import (
+	"k8s.io/apimachinery/pkg/util/validation/field"
+)
+
 type FieldTypeError int
 
 const (
@@ -16,6 +20,23 @@ const (
 	// Example: the product Spec references non existing backend resource
 	OrphanError
 )
+
+type SpecFieldError struct {
+	ErrorType      FieldTypeError
+	FieldErrorList field.ErrorList
+}
+
+var _ SpecError = &SpecFieldError{}
+
+// Error implements the Error interface.
+func (s *SpecFieldError) Error() string {
+	return s.FieldErrorList.ToAggregate().Error()
+}
+
+// FieldType implements the SpecError interface.
+func (s *SpecFieldError) FieldType() FieldTypeError {
+	return s.ErrorType
+}
 
 // SpecError is exposed by errors that can be converted to an api.Status object
 // for finer grained details.
