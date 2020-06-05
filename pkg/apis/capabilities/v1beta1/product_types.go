@@ -115,7 +115,8 @@ type MetricSpec struct {
 
 // MappingRuleSpec defines the desired state of Product's MappingRule
 type MappingRuleSpec struct {
-	Verb            string `json:"verb"`
+	// +kubebuilder:validation:Enum=GET;HEAD;POST;PUT;DELETE;OPTIONS;TRACE;PATCH;CONNECT
+	HTTPMethod      string `json:"httpMethod"`
 	Pattern         string `json:"pattern"`
 	MetricMethodRef string `json:"metricMethodRef"`
 	// +optional
