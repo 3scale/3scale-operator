@@ -156,7 +156,7 @@ func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backen
 
 	if helper.IsInvalidSpecError(specErr) {
 		// On Validation error, no need to retry as spec is not valid and needs to be changed
-		logger.Error(specErr, "spec validation error")
+		logger.Info("ERROR", "spec validation error", specErr)
 		return reconcile.Result{}, nil
 	}
 
@@ -191,9 +191,6 @@ func (r *ReconcileBackend) validateSpec(backendResource *capabilitiesv1beta1.Bac
 	errors := field.ErrorList{}
 	// internal validation
 	errors = append(errors, backendResource.Validate()...)
-
-	// external references validation
-	// TODO
 
 	if len(errors) == 0 {
 		return nil

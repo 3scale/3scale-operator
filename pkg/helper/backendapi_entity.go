@@ -15,6 +15,7 @@ type BackendAPIEntity struct {
 	metrics           *threescaleapi.MetricJSONList
 	metricsAndMethods *threescaleapi.MetricJSONList
 	methods           *threescaleapi.MethodList
+	mappingRules      *threescaleapi.MappingRuleJSONList
 	logger            logr.Logger
 }
 
@@ -159,6 +160,65 @@ func SanitizeBackendSystemName(systemName string) string {
 	return systemName[:lastIndex]
 }
 
+func (b *BackendAPIEntity) MappingRules() (*threescaleapi.MappingRuleJSONList, error) {
+	b.logger.V(1).Info("MappingRules")
+	if b.mappingRules == nil {
+		mappingRules, err := b.getMappingRules()
+		if err != nil {
+			return nil, err
+		}
+		b.mappingRules = mappingRules
+	}
+	return b.mappingRules, nil
+}
+
+func (b *BackendAPIEntity) DeleteMappingRule(id int64) error {
+	b.logger.V(1).Info("DeleteMappingRule", "ID", id)
+	err := b.client.DeleteBackendapiMappingRule(b.backendAPIObj.Element.ID, id)
+	if err != nil {
+		return fmt.Errorf("backend [%s] delete mapping rule: %w", b.backendAPIObj.Element.SystemName, err)
+	}
+	b.resetMappingRules()
+	return nil
+}
+
+func (b *BackendAPIEntity) CreateMappingRule(params threescaleapi.Params) error {
+	b.logger.V(1).Info("CreateMappingRule", "params", params)
+	_, err := b.client.CreateBackendapiMappingRule(b.backendAPIObj.Element.ID, params)
+	if err != nil {
+		return fmt.Errorf("backend [%s] create mappingrule: %w", b.backendAPIObj.Element.SystemName, err)
+	}
+	b.resetMappingRules()
+	return nil
+}
+
+func (b *BackendAPIEntity) UpdateMappingRule(id int64, params threescaleapi.Params) error {
+	b.logger.V(1).Info("UpdateMappingRule", "ID", id, "params", params)
+	_, err := b.client.UpdateBackendapiMappingRule(b.backendAPIObj.Element.ID, id, params)
+	if err != nil {
+		return fmt.Errorf("backend [%s] update mappingrule: %w", b.backendAPIObj.Element.SystemName, err)
+	}
+	b.resetMappingRules()
+	return nil
+}
+
+// FindMethodMetricIDBySystemName returns metric or method ID from system name.
+// -1 if metric and method is not found
+func (b *BackendAPIEntity) FindMethodMetricIDBySystemName(systemName string) (int64, error) {
+	metricsMethodList, err := b.MetricsAndMethods()
+	if err != nil {
+		return -1, err
+	}
+
+	for _, metric := range metricsMethodList.Metrics {
+		if metric.Element.SystemName == systemName {
+			return metric.Element.ID, nil
+		}
+	}
+
+	return -1, nil
+}
+
 //
 // PRIVATE
 //
@@ -172,6 +232,10 @@ func (b *BackendAPIEntity) resetMethods() {
 func (b *BackendAPIEntity) resetMetrics() {
 	b.metricsAndMethods = nil
 	b.metrics = nil
+}
+
+func (b *BackendAPIEntity) resetMappingRules() {
+	b.mappingRules = nil
 }
 
 func (b *BackendAPIEntity) getMethods() (*threescaleapi.MethodList, error) {
@@ -267,4 +331,14 @@ func sanitizeMethodList(list *threescaleapi.MethodList) {
 	for i := range list.Methods {
 		list.Methods[i].Element.SystemName = SanitizeBackendSystemName(list.Methods[i].Element.SystemName)
 	}
+}
+
+func (b *BackendAPIEntity) getMappingRules() (*threescaleapi.MappingRuleJSONList, error) {
+	b.logger.V(1).Info("getMappingRules")
+	list, err := b.client.ListBackendapiMappingRules(b.backendAPIObj.Element.ID)
+	if err != nil {
+		return nil, fmt.Errorf("backend [%s] get mapping rules: %w", b.backendAPIObj.Element.SystemName, err)
+	}
+
+	return list, nil
 }

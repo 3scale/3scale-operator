@@ -299,6 +299,18 @@ spec:
                 description: MappingRuleSpec defines the desired state of Product's
                   MappingRule
                 properties:
+                  httpMethod:
+                    enum:
+                    - GET
+                    - HEAD
+                    - POST
+                    - PUT
+                    - DELETE
+                    - OPTIONS
+                    - TRACE
+                    - PATCH
+                    - CONNECT
+                    type: string
                   increment:
                     type: integer
                   metricMethodRef:
@@ -307,12 +319,10 @@ spec:
                     type: string
                   position:
                     type: integer
-                  verb:
-                    type: string
                 required:
+                - httpMethod
                 - metricMethodRef
                 - pattern
-                - verb
                 type: object
               type: array
             methods:
@@ -323,7 +333,12 @@ spec:
                     type: string
                   friendlyName:
                     type: string
+                required:
+                - friendlyName
                 type: object
+              description: 'Methods Map: system_name -> MethodSpec system_name attr
+                is unique for all metrics AND methods In other words, if metric''s
+                system_name is A, there is no metric or method with system_name A.'
               type: object
             metrics:
               additionalProperties:
@@ -335,11 +350,13 @@ spec:
                     type: string
                   unit:
                     type: string
+                required:
+                - friendlyName
+                - unit
                 type: object
-              description: 'Metrics and methods Map: system_name -> MetricSpec or
-                MethodSpec system_name attr is unique for all metrics AND methods
-                In other words, if metric''s system_name is A, there is no metric
-                or method with system_name A.'
+              description: 'Metrics Map: system_name -> MetricSpec system_name attr
+                is unique for all metrics AND methods In other words, if metric''s
+                system_name is A, there is no metric or method with system_name A.'
               type: object
             name:
               description: Name is human readable name for the product

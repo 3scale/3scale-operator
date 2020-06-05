@@ -203,23 +203,55 @@ func (backend *Backend) SetDefaults() bool {
 		updated = true
 	}
 
+	// Mapping rules defauult values for increment
+	if len(backend.Spec.MappingRules) > 0 {
+		for idx := range backend.Spec.MappingRules {
+			if backend.Spec.MappingRules[idx].Increment == nil {
+				defaultIncrement := 1
+				backend.Spec.MappingRules[idx].Increment = &defaultIncrement
+				updated = true
+			}
+		}
+	}
+
 	return updated
 }
 
 func (backend *Backend) Validate() field.ErrorList {
 	errors := field.ErrorList{}
 
-	// validate hits metric exists
+	// check hits metric exists
 	specFldPath := field.NewPath("spec")
 	metricsFldPath := specFldPath.Child("metrics")
-	if backend.Spec.Metrics == nil {
+	if len(backend.Spec.Metrics) == 0 {
 		errors = append(errors, field.Required(metricsFldPath, "empty metrics is not valid for Backend."))
 	} else {
 		if _, ok := backend.Spec.Metrics["hits"]; !ok {
 			errors = append(errors, field.Invalid(metricsFldPath, backend.Spec.Metrics, "metrics map not valid for Backend. 'hits' metric must exist."))
 		}
 	}
+
+	// Check mapping rules metrics and method refs exists
+	mappingRulesFldPath := specFldPath.Child("mappingRules")
+	for idx, spec := range backend.Spec.MappingRules {
+		if !backend.findMetricOrMethod(spec.MetricMethodRef) {
+			mappingRulesIdxFldPath := mappingRulesFldPath.Index(idx)
+			errors = append(errors, field.Invalid(mappingRulesIdxFldPath, backend.Spec.MappingRules[idx], "mappingrule does not have valid metric or method reference."))
+		}
+	}
 	return errors
+}
+
+func (backend *Backend) findMetricOrMethod(ref string) bool {
+	if _, ok := backend.Spec.Metrics[ref]; ok {
+		return true
+	}
+
+	if _, ok := backend.Spec.Methods[ref]; ok {
+		return true
+	}
+
+	return false
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
