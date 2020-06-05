@@ -243,12 +243,16 @@ func (backend *Backend) Validate() field.ErrorList {
 }
 
 func (backend *Backend) findMetricOrMethod(ref string) bool {
-	if _, ok := backend.Spec.Metrics[ref]; ok {
-		return true
+	if len(backend.Spec.Metrics) > 0 {
+		if _, ok := backend.Spec.Metrics[ref]; ok {
+			return true
+		}
 	}
 
-	if _, ok := backend.Spec.Methods[ref]; ok {
-		return true
+	if len(backend.Spec.Methods) > 0 {
+		if _, ok := backend.Spec.Methods[ref]; ok {
+			return true
+		}
 	}
 
 	return false

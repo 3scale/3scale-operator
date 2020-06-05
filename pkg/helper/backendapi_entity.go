@@ -248,7 +248,7 @@ func (b *BackendAPIEntity) getMethods() (*threescaleapi.MethodList, error) {
 	if err != nil {
 		return nil, fmt.Errorf("backend [%s] get methods: %w", b.backendAPIObj.Element.SystemName, err)
 	}
-	sanitizeMethodList(methodList)
+	sanitizeBackendMethodList(methodList)
 
 	return methodList, nil
 }
@@ -295,7 +295,7 @@ func (b *BackendAPIEntity) getMetricsAndMethods() (*threescaleapi.MetricJSONList
 		return nil, fmt.Errorf("backend [%s] get metrics: %w", b.backendAPIObj.Element.SystemName, err)
 	}
 
-	sanitizeMetricList(metricList)
+	sanitizeBackendMetricList(metricList)
 	return metricList, nil
 }
 
@@ -315,19 +315,19 @@ func (b *BackendAPIEntity) getHitsID() (int64, error) {
 	return 0, fmt.Errorf("backend [%s] hits not found", b.backendAPIObj.Element.SystemName)
 }
 
-// sanitizeMetricList sanitizes systemName from backend metrics
+// sanitizeBackendMetricList sanitizes systemName from backend metrics
 // Update is made in place
 // "system_name": "hits.45498" -> "system_name": "hits"
-func sanitizeMetricList(list *threescaleapi.MetricJSONList) {
+func sanitizeBackendMetricList(list *threescaleapi.MetricJSONList) {
 	for i := range list.Metrics {
 		list.Metrics[i].Element.SystemName = SanitizeBackendSystemName(list.Metrics[i].Element.SystemName)
 	}
 }
 
-// sanitizeMethodList sanitizes systemName from backend methods
+// sanitizeBackendMethodList sanitizes systemName from backend methods
 // Update is made in place
 // "system_name": "backend01.45498" -> "system_name": "backend01"
-func sanitizeMethodList(list *threescaleapi.MethodList) {
+func sanitizeBackendMethodList(list *threescaleapi.MethodList) {
 	for i := range list.Methods {
 		list.Methods[i].Element.SystemName = SanitizeBackendSystemName(list.Methods[i].Element.SystemName)
 	}

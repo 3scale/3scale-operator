@@ -108,11 +108,13 @@ func (r *ReconcileBackend) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	backendJSONData, err := json.MarshalIndent(backend, "", "  ")
-	if err != nil {
-		return reconcile.Result{}, err
+	if reqLogger.V(1).Enabled() {
+		jsonData, err := json.MarshalIndent(backend, "", "  ")
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		reqLogger.V(1).Info(string(jsonData))
 	}
-	reqLogger.V(1).Info(string(backendJSONData))
 
 	// Ignore deleted Backends, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
@@ -196,8 +198,8 @@ func (r *ReconcileBackend) validateSpec(backendResource *capabilitiesv1beta1.Bac
 		return nil
 	}
 
-	return &specFieldError{
-		errorType:      helper.InvalidError,
-		fieldErrorList: errors,
+	return &helper.SpecFieldError{
+		ErrorType:      helper.InvalidError,
+		FieldErrorList: errors,
 	}
 }

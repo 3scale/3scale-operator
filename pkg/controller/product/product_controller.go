@@ -2,15 +2,18 @@ package product
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -98,10 +101,19 @@ func (r *ReconcileProduct) Reconcile(request reconcile.Request) (reconcile.Resul
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
+	}
+
+	if reqLogger.V(1).Enabled() {
+		jsonData, err := json.MarshalIndent(product, "", "  ")
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		reqLogger.V(1).Info(string(jsonData))
 	}
 
 	// Ignore deleted Products, this can happen when foregroundDeletion is enabled
@@ -119,9 +131,11 @@ func (r *ReconcileProduct) Reconcile(request reconcile.Request) (reconcile.Resul
 	return result, err
 }
 
-func (r *ReconcileProduct) reconcile(product *capabilitiesv1beta1.Product) (reconcile.Result, error) {
-	if product.SetDefaults() {
-		err := r.Client().Update(r.Context(), product)
+func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Product) (reconcile.Result, error) {
+	logger := r.Logger().WithValues("reconcile", productResource.Name)
+
+	if productResource.SetDefaults() {
+		err := r.Client().Update(r.Context(), productResource)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("Failed setting product defaults: %w", err)
 		}
@@ -129,26 +143,64 @@ func (r *ReconcileProduct) reconcile(product *capabilitiesv1beta1.Product) (reco
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	logicReconciler := NewLogicReconciler(r.BaseReconciler, product)
+	productEntity, specErr := r.reconcileSpec(productResource)
 
-	res, syncErr := logicReconciler.Reconcile()
-
-	if syncErr == nil && res.Requeue {
-		return res, nil
-	}
-
-	res, statusErr := logicReconciler.UpdateStatus()
+	statusReconciler := NewStatusReconciler(r.BaseReconciler, productResource, productEntity, specErr)
+	statusErr := statusReconciler.Reconcile()
 	if statusErr != nil {
-		if syncErr != nil {
-			return reconcile.Result{}, fmt.Errorf("Failed to sync product: %v. Failed to update product status: %w", syncErr, statusErr)
+		if specErr != nil {
+			return reconcile.Result{}, fmt.Errorf("Failed to sync product: %v. Failed to update product status: %w", specErr, statusErr)
 		}
 
 		return reconcile.Result{}, fmt.Errorf("Failed to update product status: %w", statusErr)
 	}
 
-	if syncErr != nil {
-		return reconcile.Result{}, fmt.Errorf("Failed to sync product: %w", syncErr)
+	if helper.IsInvalidSpecError(specErr) {
+		// On Validation error, no need to retry as spec is not valid and needs to be changed
+		logger.Info("ERROR", "spec validation error", specErr)
+		return reconcile.Result{}, nil
+	}
+
+	if specErr != nil {
+		return reconcile.Result{}, fmt.Errorf("Failed to sync product: %w", specErr)
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileProduct) reconcileSpec(resource *capabilitiesv1beta1.Product) (*helper.ProductEntity, error) {
+	err := r.validateSpec(resource)
+	if err != nil {
+		return nil, fmt.Errorf("reconcile product spec: %w", err)
+	}
+
+	threescaleAPIClient, err := helper.LookupThreescaleClient(r.Client(), resource.Namespace, resource.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return nil, fmt.Errorf("reconcile product spec: %w", err)
+	}
+
+	reconciler := NewThreescaleReconciler(r.BaseReconciler, resource, threescaleAPIClient)
+	entity, err := reconciler.Reconcile()
+	if err != nil {
+		return nil, fmt.Errorf("reconcile product spec: %w", err)
+	}
+
+	return entity, nil
+}
+
+func (r *ReconcileProduct) validateSpec(resource *capabilitiesv1beta1.Product) error {
+	errors := field.ErrorList{}
+	// internal validation
+	errors = append(errors, resource.Validate()...)
+
+	// external validation
+
+	if len(errors) == 0 {
+		return nil
+	}
+
+	return &helper.SpecFieldError{
+		ErrorType:      helper.InvalidError,
+		FieldErrorList: errors,
+	}
 }
