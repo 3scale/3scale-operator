@@ -1,7 +1,9 @@
 package backend
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -12,13 +14,18 @@ import (
 )
 
 type methodData struct {
-	methodAPIItem threescaleapi.MethodItem
-	methodSpec    capabilitiesv1beta1.Methodpec
+	item threescaleapi.MethodItem
+	spec capabilitiesv1beta1.Methodpec
 }
 
 type metricData struct {
-	metricAPIItem threescaleapi.MetricItem
-	metricSpec    capabilitiesv1beta1.MetricSpec
+	item threescaleapi.MetricItem
+	spec capabilitiesv1beta1.MetricSpec
+}
+
+type mappingRuleData struct {
+	item threescaleapi.MappingRuleItem
+	spec capabilitiesv1beta1.MappingRuleSpec
 }
 
 type ThreescaleReconciler struct {
@@ -86,7 +93,7 @@ func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
 		}
 		backend, err := t.threescaleAPIClient.CreateBackendApi(params)
 		if err != nil {
-			return fmt.Errorf("Error creating product %s: %w", t.backendResource.Spec.SystemName, err)
+			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err)
 		}
 
 		backendAPIObj = backend
@@ -112,7 +119,7 @@ func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
 	if len(updatedParams) > 0 {
 		err = t.backendAPIEntity.Update(updatedParams)
 		if err != nil {
-			return fmt.Errorf("Error updating backendAPI: %w", err)
+			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err)
 		}
 	}
 
@@ -128,7 +135,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	existingMap := map[string]threescaleapi.MethodItem{}
 	existingList, err := t.backendAPIEntity.Methods()
 	if err != nil {
-		return fmt.Errorf("Error reading backend methods: %w", err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
 
 	existingKeys := make([]string, 0, len(existingList.Methods))
@@ -147,7 +154,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 	err = t.createNewMethods(desiredNewMap)
 	if err != nil {
-		return fmt.Errorf("Error creating backend methods: %w", err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
 
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
@@ -159,21 +166,21 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 	err = t.processNotDesiredMethods(notDesiredMap)
 	if err != nil {
-		return fmt.Errorf("Error processing not desired backend methods: %w", err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
 
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
 	matchedMap := map[string]methodData{}
 	for _, systemName := range matchedKeys {
 		matchedMap[systemName] = methodData{
-			methodAPIItem: existingMap[systemName],
-			methodSpec:    t.backendResource.Spec.Methods[systemName],
+			item: existingMap[systemName],
+			spec: t.backendResource.Spec.Methods[systemName],
 		}
 	}
 
 	err = t.reconcileMatchedMethods(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error reconciling matched backend methods: %w", err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
 
 	return nil
@@ -209,18 +216,18 @@ func (t *ThreescaleReconciler) processNotDesiredMethods(notDesiredMap map[string
 func (t *ThreescaleReconciler) reconcileMatchedMethods(matchedMap map[string]methodData) error {
 	for _, data := range matchedMap {
 		params := threescaleapi.Params{}
-		if data.methodSpec.Name != data.methodAPIItem.Name {
-			params["friendly_name"] = data.methodSpec.Name
+		if data.spec.Name != data.item.Name {
+			params["friendly_name"] = data.spec.Name
 		}
 
-		if data.methodSpec.Description != data.methodAPIItem.Description {
-			params["description"] = data.methodSpec.Description
+		if data.spec.Description != data.item.Description {
+			params["description"] = data.spec.Description
 		}
 
 		if len(params) > 0 {
-			err := t.backendAPIEntity.UpdateMethod(data.methodAPIItem.ID, params)
+			err := t.backendAPIEntity.UpdateMethod(data.item.ID, params)
 			if err != nil {
-				return fmt.Errorf("Error updating backendAPI method: %w", err)
+				return fmt.Errorf("Error reconcile backendAPI methods: %w", err)
 			}
 		}
 	}
@@ -237,7 +244,7 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 	existingMap := map[string]threescaleapi.MetricItem{}
 	existingList, err := t.backendAPIEntity.Metrics()
 	if err != nil {
-		return fmt.Errorf("Error reading backend metrics: %w", err)
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
 
 	existingKeys := make([]string, 0, len(existingList.Metrics))
@@ -247,17 +254,9 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 		existingMap[systemName] = existing.Element
 	}
 
-	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
-	desiredNewMap := map[string]capabilitiesv1beta1.MetricSpec{}
-	for _, systemName := range desiredNewKeys {
-		// key is expected to exist
-		// desiredNewKeys is a subset of the Spec.Metrics map key set
-		desiredNewMap[systemName] = t.backendResource.Spec.Metrics[systemName]
-	}
-	err = t.createNewMetrics(desiredNewMap)
-	if err != nil {
-		return fmt.Errorf("Error creating backend metrics: %w", err)
-	}
+	//
+	// Deleted existing and not desired metrics
+	//
 
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
 	notDesiredMap := map[string]threescaleapi.MetricItem{}
@@ -268,21 +267,41 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 	err = t.processNotDesiredMetrics(notDesiredMap)
 	if err != nil {
-		return fmt.Errorf("Error processing not desired backend metrics: %w", err)
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
+
+	//
+	// Reconcile existing and changed metrics
+	//
 
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
 	matchedMap := map[string]metricData{}
 	for _, systemName := range matchedKeys {
 		matchedMap[systemName] = metricData{
-			metricAPIItem: existingMap[systemName],
-			metricSpec:    t.backendResource.Spec.Metrics[systemName],
+			item: existingMap[systemName],
+			spec: t.backendResource.Spec.Metrics[systemName],
 		}
 	}
 
 	err = t.reconcileMatchedMetrics(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error reconciling matched backend metrics: %w", err)
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	//
+	// Create not existing and desired metrics
+	//
+
+	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	desiredNewMap := map[string]capabilitiesv1beta1.MetricSpec{}
+	for _, systemName := range desiredNewKeys {
+		// key is expected to exist
+		// desiredNewKeys is a subset of the Spec.Metrics map key set
+		desiredNewMap[systemName] = t.backendResource.Spec.Metrics[systemName]
+	}
+	err = t.createNewMetrics(desiredNewMap)
+	if err != nil {
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
 
 	return nil
@@ -319,20 +338,20 @@ func (t *ThreescaleReconciler) processNotDesiredMetrics(notDesiredMap map[string
 func (t *ThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]metricData) error {
 	for _, data := range matchedMap {
 		params := threescaleapi.Params{}
-		if data.metricSpec.Name != data.metricAPIItem.Name {
-			params["friendly_name"] = data.metricSpec.Name
+		if data.spec.Name != data.item.Name {
+			params["friendly_name"] = data.spec.Name
 		}
 
-		if data.metricSpec.Unit != data.metricAPIItem.Unit {
-			params["unit"] = data.metricSpec.Unit
+		if data.spec.Unit != data.item.Unit {
+			params["unit"] = data.spec.Unit
 		}
 
-		if data.metricSpec.Description != data.metricAPIItem.Description {
-			params["description"] = data.metricSpec.Description
+		if data.spec.Description != data.item.Description {
+			params["description"] = data.spec.Description
 		}
 
 		if len(params) > 0 {
-			err := t.backendAPIEntity.UpdateMetric(data.metricAPIItem.ID, params)
+			err := t.backendAPIEntity.UpdateMetric(data.item.ID, params)
 			if err != nil {
 				return fmt.Errorf("Error updating backendAPI metric: %w", err)
 			}
@@ -343,6 +362,152 @@ func (t *ThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]met
 }
 
 func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
-	// TODO
+	desiredKeys := make([]string, 0, len(t.backendResource.Spec.MappingRules))
+	desiredMap := map[string]capabilitiesv1beta1.MappingRuleSpec{}
+	for _, spec := range t.backendResource.Spec.MappingRules {
+		key := fmt.Sprintf("%s:%s", spec.HTTPMethod, spec.Pattern)
+		desiredKeys = append(desiredKeys, key)
+		desiredMap[key] = spec
+	}
+
+	existingKeys := []string{}
+	existingMap := map[string]threescaleapi.MappingRuleItem{}
+	existingList, err := t.backendAPIEntity.MappingRules()
+	if err != nil {
+		return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+	}
+	for _, item := range existingList.MappingRules {
+		key := fmt.Sprintf("%s:%s", item.Element.HTTPMethod, item.Element.Pattern)
+		existingKeys = append(existingKeys, key)
+		existingMap[key] = item.Element
+	}
+
+	//
+	// Deleted existing and not desired mapping rules
+	//
+
+	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	notDesiredList := make([]threescaleapi.MappingRuleItem, 0, len(notDesiredExistingKeys))
+	for _, key := range notDesiredExistingKeys {
+		// key is expected to exist
+		// notDesiredExistingKeys is a subset of the existingKeys set
+		notDesiredList = append(notDesiredList, existingMap[key])
+	}
+	err = t.processNotDesiredMappingRules(notDesiredList)
+	if err != nil {
+		return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	//
+	// Reconcile existing and changed mapping rules
+	//
+
+	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
+	matchedList := make([]mappingRuleData, 0, len(matchedKeys))
+	for _, key := range matchedKeys {
+		matchedList = append(matchedList, mappingRuleData{
+			item: existingMap[key],
+			spec: desiredMap[key],
+		})
+	}
+
+	err = t.reconcileMatchedMappingRules(matchedList)
+	if err != nil {
+		return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	//
+	// Create not existing and desired mapping rules
+	//
+
+	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	desiredNewList := make([]capabilitiesv1beta1.MappingRuleSpec, 0, len(desiredNewKeys))
+	for _, key := range desiredNewKeys {
+		// key is expected to exist
+		// desiredNewKeys is a subset of the desiredKeys set
+		desiredNewList = append(desiredNewList, desiredMap[key])
+	}
+	err = t.createNewMappingRules(desiredNewList)
+	if err != nil {
+		return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	return nil
+}
+
+func (t *ThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
+	for _, mappingRule := range notDesiredList {
+		err := t.backendAPIEntity.DeleteMappingRule(mappingRule.ID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *ThreescaleReconciler) reconcileMatchedMappingRules(matchedList []mappingRuleData) error {
+	for _, data := range matchedList {
+		params := threescaleapi.Params{}
+
+		//
+		// Reconcile metric or method
+		//
+		metricID, err := t.backendAPIEntity.FindMethodMetricIDBySystemName(data.spec.MetricMethodRef)
+		if err != nil {
+			return fmt.Errorf("Error reconcile backend mapping rule: %w", err)
+		}
+
+		if metricID < 0 {
+			// Should not happen as metric and method references have been validated and should exists
+			return errors.New("backend metric method ref for mapping rule not found")
+		}
+
+		if metricID != data.item.MetricID {
+			params["metric_id"] = strconv.FormatInt(metricID, 10)
+		}
+
+		//
+		// Reconcile delta
+		//
+		if *data.spec.Increment != data.item.Delta {
+			params["delta"] = strconv.Itoa(*data.spec.Increment)
+		}
+
+		if len(params) > 0 {
+			err := t.backendAPIEntity.UpdateMappingRule(data.item.ID, params)
+			if err != nil {
+				return fmt.Errorf("Error reconcile backend mapping rule: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (t *ThreescaleReconciler) createNewMappingRules(desiredList []capabilitiesv1beta1.MappingRuleSpec) error {
+	for _, spec := range desiredList {
+		metricID, err := t.backendAPIEntity.FindMethodMetricIDBySystemName(spec.MetricMethodRef)
+		if err != nil {
+			return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err)
+		}
+
+		if metricID < 0 {
+			// Should not happen as metric and method references have been validated and should exists
+			return errors.New("backend metric method ref for mapping rule not found")
+		}
+
+		params := threescaleapi.Params{
+			"pattern":     spec.Pattern,
+			"http_method": spec.HTTPMethod,
+			"metric_id":   strconv.FormatInt(metricID, 10),
+			// Defaults are set in the spec, should not be nil
+			"delta": strconv.Itoa(*spec.Increment),
+		}
+
+		err = t.backendAPIEntity.CreateMappingRule(params)
+		if err != nil {
+			return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err)
+		}
+	}
 	return nil
 }
