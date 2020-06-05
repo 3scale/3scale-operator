@@ -6,8 +6,11 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
+	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -382,20 +385,28 @@ type ProductStatus struct {
 	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
-func (p *ProductStatus) Equals(other *ProductStatus) bool {
+func (p *ProductStatus) Equals(other *ProductStatus, logger logr.Logger) bool {
 	if !reflect.DeepEqual(p.ID, other.ID) {
+		diff := cmp.Diff(p.ID, other.ID)
+		logger.V(1).Info("ID not equal", "difference", diff)
 		return false
 	}
 
 	if !reflect.DeepEqual(p.State, other.State) {
+		diff := cmp.Diff(p.State, other.State)
+		logger.V(1).Info("State not equal", "difference", diff)
 		return false
 	}
 
 	if p.ObservedGeneration != other.ObservedGeneration {
+		diff := cmp.Diff(p.ObservedGeneration, other.ObservedGeneration)
+		logger.V(1).Info("ObservedGeneration not equal", "difference", diff)
 		return false
 	}
 
 	if !reflect.DeepEqual(p.ErrorReason, other.ErrorMessage) {
+		diff := cmp.Diff(p.ErrorReason, other.ErrorReason)
+		logger.V(1).Info("ErrorReason not equal", "difference", diff)
 		return false
 	}
 
@@ -403,6 +414,8 @@ func (p *ProductStatus) Equals(other *ProductStatus) bool {
 	currentMarshaledJSON, _ := p.Conditions.MarshalJSON()
 	otherMarshaledJSON, _ := other.Conditions.MarshalJSON()
 	if string(currentMarshaledJSON) != string(otherMarshaledJSON) {
+		diff := cmp.Diff(string(currentMarshaledJSON), string(otherMarshaledJSON))
+		logger.V(1).Info("Conditions not equal", "difference", diff)
 		return false
 	}
 
@@ -433,7 +446,69 @@ func (product *Product) SetDefaults() bool {
 		updated = true
 	}
 
+	if product.Spec.Metrics == nil {
+		product.Spec.Metrics = map[string]MetricSpec{}
+		updated = true
+	}
+
+	// Hits metric
+	hitsFound := false
+	for systemName := range product.Spec.Metrics {
+		if systemName == "hits" {
+			hitsFound = true
+		}
+	}
+	if !hitsFound {
+		product.Spec.Metrics["hits"] = MetricSpec{
+			Name:        "Hits",
+			Unit:        "hit",
+			Description: "Number of API hits",
+		}
+		updated = true
+	}
+
 	return updated
+}
+
+func (product *Product) Validate() field.ErrorList {
+	errors := field.ErrorList{}
+
+	// check hits metric exists
+	specFldPath := field.NewPath("spec")
+	metricsFldPath := specFldPath.Child("metrics")
+	if len(product.Spec.Metrics) == 0 {
+		errors = append(errors, field.Required(metricsFldPath, "Product spec does not allow empty metrics."))
+	} else {
+		if _, ok := product.Spec.Metrics["hits"]; !ok {
+			errors = append(errors, field.Invalid(metricsFldPath, product.Spec.Metrics, "metrics map not valid for Product. 'hits' metric must exist."))
+		}
+	}
+
+	// Check mapping rules metrics and method refs exists
+	mappingRulesFldPath := specFldPath.Child("mappingRules")
+	for idx, spec := range product.Spec.MappingRules {
+		if !product.findMetricOrMethod(spec.MetricMethodRef) {
+			mappingRulesIdxFldPath := mappingRulesFldPath.Index(idx)
+			errors = append(errors, field.Invalid(mappingRulesIdxFldPath, product.Spec.MappingRules[idx], "mappingrule does not have valid metric or method reference."))
+		}
+	}
+	return errors
+}
+
+func (product *Product) findMetricOrMethod(ref string) bool {
+	if len(product.Spec.Metrics) > 0 {
+		if _, ok := product.Spec.Metrics[ref]; ok {
+			return true
+		}
+	}
+
+	if len(product.Spec.Methods) > 0 {
+		if _, ok := product.Spec.Methods[ref]; ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
