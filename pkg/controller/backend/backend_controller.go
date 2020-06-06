@@ -175,9 +175,14 @@ func (r *ReconcileBackend) reconcileSpec(backendResource *capabilitiesv1beta1.Ba
 		return nil, err
 	}
 
-	threescaleAPIClient, err := helper.LookupThreescaleClient(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, r.Logger())
+	providerAccount, err := helper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, r.Logger())
 	if err != nil {
-		return nil, fmt.Errorf("Error looking up threescale client: %w", err)
+		return nil, fmt.Errorf("reconcile backend spec: %w", err)
+	}
+
+	threescaleAPIClient, err := helper.PortaClient(providerAccount)
+	if err != nil {
+		return nil, fmt.Errorf("reconcile backend spec: %w", err)
 	}
 
 	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient)

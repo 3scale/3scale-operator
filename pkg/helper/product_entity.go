@@ -16,6 +16,7 @@ type ProductEntity struct {
 	metricsAndMethods *threescaleapi.MetricJSONList
 	methods           *threescaleapi.MethodList
 	mappingRules      *threescaleapi.MappingRuleJSONList
+	backendUsages     threescaleapi.BackendAPIUsageList
 	logger            logr.Logger
 }
 
@@ -223,10 +224,56 @@ func (b *ProductEntity) FindMethodMetricIDBySystemName(systemName string) (int64
 	return -1, nil
 }
 
+func (b *ProductEntity) BackendUsages() (threescaleapi.BackendAPIUsageList, error) {
+	b.logger.V(1).Info("BackendUsages")
+	if b.backendUsages == nil {
+		backendUsages, err := b.getBackendUsages()
+		if err != nil {
+			return nil, err
+		}
+		b.backendUsages = backendUsages
+	}
+	return b.backendUsages, nil
+}
+
+func (b *ProductEntity) DeleteBackendUsage(id int64) error {
+	b.logger.V(1).Info("DeleteBackendUsage", "ID", id)
+	err := b.client.DeleteBackendapiUsage(b.productObj.Element.ID, id)
+	if err != nil {
+		return fmt.Errorf("product [%s] delete backendusage: %w", b.productObj.Element.SystemName, err)
+	}
+	b.resetBackendUsages()
+	return nil
+}
+
+func (b *ProductEntity) UpdateBackendUsage(id int64, params threescaleapi.Params) error {
+	b.logger.V(1).Info("UpdateBackendUsage", "ID", id, "params", params)
+	_, err := b.client.UpdateBackendapiUsage(b.productObj.Element.ID, id, params)
+	if err != nil {
+		return fmt.Errorf("product [%s] update backendusage: %w", b.productObj.Element.SystemName, err)
+	}
+	b.resetBackendUsages()
+	return nil
+}
+
+func (b *ProductEntity) CreateBackendUsage(params threescaleapi.Params) error {
+	b.logger.V(1).Info("CreateBackendUsage", "params", params)
+	_, err := b.client.CreateBackendapiUsage(b.productObj.Element.ID, params)
+	if err != nil {
+		return fmt.Errorf("product [%s] update backendusage: %w", b.productObj.Element.SystemName, err)
+	}
+	b.resetBackendUsages()
+	return nil
+}
+
 //
 // PRIVATE
 //
 //
+
+func (b *ProductEntity) resetBackendUsages() {
+	b.backendUsages = nil
+}
 
 func (b *ProductEntity) resetMethods() {
 	b.metricsAndMethods = nil
@@ -322,6 +369,16 @@ func (b *ProductEntity) getMappingRules() (*threescaleapi.MappingRuleJSONList, e
 	list, err := b.client.ListProductMappingRules(b.productObj.Element.ID)
 	if err != nil {
 		return nil, fmt.Errorf("product [%s] get mapping rules: %w", b.productObj.Element.SystemName, err)
+	}
+
+	return list, nil
+}
+
+func (b *ProductEntity) getBackendUsages() (threescaleapi.BackendAPIUsageList, error) {
+	b.logger.V(1).Info("getBackendUsages")
+	list, err := b.client.ListBackendapiUsages(b.productObj.Element.ID)
+	if err != nil {
+		return nil, fmt.Errorf("product [%s] get backendUsages: %w", b.productObj.Element.SystemName, err)
 	}
 
 	return list, nil

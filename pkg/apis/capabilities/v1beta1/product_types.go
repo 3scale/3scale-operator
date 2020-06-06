@@ -296,8 +296,8 @@ type ProductSpec struct {
 	MappingRules []MappingRuleSpec `json:"mappingRules,omitempty"`
 
 	// Backend usage will be a map of
-	// Map: backend_id -> BackendSpec
-	// Having backend_id as the index, the structure ensures single backend is not used multiple times.
+	// Map: system_name -> BackendUsageSpec
+	// Having system_name as the index, the structure ensures one backend is not used multiple times.
 	// +optional
 	BackendUsages map[string]BackendUsageSpec `json:"backendUsages,omitempty"`
 
