@@ -242,6 +242,10 @@ func (backend *Backend) Validate() field.ErrorList {
 	return errors
 }
 
+func (backend *Backend) IsSynced() bool {
+	return backend.Status.Conditions.IsTrueFor(BackendSyncedConditionType)
+}
+
 func (backend *Backend) findMetricOrMethod(ref string) bool {
 	if len(backend.Spec.Metrics) > 0 {
 		if _, ok := backend.Spec.Metrics[ref]; ok {
