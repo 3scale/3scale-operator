@@ -102,6 +102,11 @@ func (b *APIManagerBackup) BackupSecretsAndConfigMapsToPVCJob() *batchv1.Job {
 		return nil
 	}
 
+	jobName, err := helper.UIDBasedJobName("backup-cfgmaps-secrets", b.options.APIManagerBackupUID)
+	if err != nil {
+		panic(err)
+	}
+
 	var completions int32 = 1
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -109,7 +114,7 @@ func (b *APIManagerBackup) BackupSecretsAndConfigMapsToPVCJob() *batchv1.Job {
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("job-backup-cfgmaps-secrets-%s", b.options.APIManagerBackupName),
+			Name:      jobName,
 			Namespace: b.options.Namespace,
 		},
 		Spec: batchv1.JobSpec{
@@ -151,6 +156,11 @@ func (b *APIManagerBackup) BackupAPIManagerCustomResourceToPVCJob() *batchv1.Job
 		return nil
 	}
 
+	jobName, err := helper.UIDBasedJobName("backup-apimanager-cr", b.options.APIManagerBackupUID)
+	if err != nil {
+		panic(err)
+	}
+
 	var completions int32 = 1
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -158,7 +168,7 @@ func (b *APIManagerBackup) BackupAPIManagerCustomResourceToPVCJob() *batchv1.Job
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("job-backup-apimanager-cr-%s", b.options.APIManagerBackupName),
+			Name:      jobName,
 			Namespace: b.options.Namespace,
 		},
 		Spec: batchv1.JobSpec{
@@ -200,6 +210,11 @@ func (b *APIManagerBackup) BackupSystemFileStoragePVCToPVCJob() *batchv1.Job {
 		return nil
 	}
 
+	jobName, err := helper.UIDBasedJobName("backup-system-fs-pvc", b.options.APIManagerBackupUID)
+	if err != nil {
+		panic(err)
+	}
+
 	var completions int32 = 1
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -207,7 +222,7 @@ func (b *APIManagerBackup) BackupSystemFileStoragePVCToPVCJob() *batchv1.Job {
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("job-backup-system-filestorage-pvc-%s", b.options.APIManagerBackupName),
+			Name:      jobName,
 			Namespace: b.options.Namespace,
 		},
 		Spec: batchv1.JobSpec{

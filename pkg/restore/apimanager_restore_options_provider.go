@@ -24,6 +24,7 @@ func NewAPIManagerRestoreOptionsProvider(cr *appsv1alpha1.APIManagerRestore, cli
 func (a *APIManagerRestoreOptionsProvider) Options() (*APIManagerRestoreOptions, error) {
 	res := NewAPIManagerRestoreOptions()
 	res.APIManagerRestoreName = a.APIManagerRestoreCR.Name
+	res.APIManagerRestoreUID = a.APIManagerRestoreCR.UID
 	res.Namespace = a.APIManagerRestoreCR.Namespace
 
 	res.OCCLIImageURL = a.ocCLIImageURL()
