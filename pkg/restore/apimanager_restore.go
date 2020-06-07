@@ -88,6 +88,11 @@ func (b *APIManagerRestore) RestoreSecretsAndConfigMapsFromPVCJob() *batchv1.Job
 		return nil
 	}
 
+	jobName, err := helper.UIDBasedJobName("restore-cfgmaps-secrets", b.options.APIManagerRestoreUID)
+	if err != nil {
+		panic(err)
+	}
+
 	var completions int32 = 1
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -95,7 +100,7 @@ func (b *APIManagerRestore) RestoreSecretsAndConfigMapsFromPVCJob() *batchv1.Job
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("job-restore-cfgmaps-secrets-%s", b.options.APIManagerRestoreName),
+			Name:      jobName,
 			Namespace: b.options.Namespace,
 		},
 		Spec: batchv1.JobSpec{
@@ -137,6 +142,11 @@ func (b *APIManagerRestore) RestoreSystemFileStoragePVCFromPVCJob() *batchv1.Job
 		return nil
 	}
 
+	jobName, err := helper.UIDBasedJobName("restore-system-fs", b.options.APIManagerRestoreUID)
+	if err != nil {
+		panic(err)
+	}
+
 	var completions int32 = 1
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -144,7 +154,7 @@ func (b *APIManagerRestore) RestoreSystemFileStoragePVCFromPVCJob() *batchv1.Job
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("restore-system-fs-%s", b.options.APIManagerRestoreName),
+			Name:      jobName,
 			Namespace: b.options.Namespace,
 		},
 		Spec: batchv1.JobSpec{
@@ -188,6 +198,11 @@ func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 		return nil
 	}
 
+	jobName, err := helper.UIDBasedJobName("restore-apm-tosecret", b.options.APIManagerRestoreUID)
+	if err != nil {
+		panic(err)
+	}
+
 	var completions int32 = 1
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -195,7 +210,7 @@ func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("job-restore-apimanager-tosecret-%s", b.options.APIManagerRestoreName),
+			Name:      jobName,
 			Namespace: b.options.Namespace,
 		},
 		Spec: batchv1.JobSpec{
@@ -237,6 +252,11 @@ func (b *APIManagerRestore) ZyncResyncDomainsJob() *batchv1.Job {
 		return nil
 	}
 
+	jobName, err := helper.UIDBasedJobName("resync-domains", b.options.APIManagerRestoreUID)
+	if err != nil {
+		panic(err)
+	}
+
 	var completions int32 = 1
 	return &batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
@@ -244,7 +264,7 @@ func (b *APIManagerRestore) ZyncResyncDomainsJob() *batchv1.Job {
 			Kind:       "Job",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("job-resync-domains-%s", b.options.APIManagerRestoreName),
+			Name:      jobName,
 			Namespace: b.options.Namespace,
 		},
 		Spec: batchv1.JobSpec{
