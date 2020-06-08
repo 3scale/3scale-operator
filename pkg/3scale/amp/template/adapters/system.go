@@ -216,7 +216,6 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.MasterName = "${MASTER_NAME}"
 	o.MasterUsername = "${MASTER_USER}"
 	o.MasterPassword = "${MASTER_PASSWORD}"
-	o.AppLabel = "${APP_LABEL}"
 	recaptchaPublicKey := "${RECAPTCHA_PUBLIC_KEY}"
 	o.RecaptchaPublicKey = &recaptchaPublicKey
 	recaptchaPrivateKey := "${RECAPTCHA_PRIVATE_KEY}"
@@ -268,6 +267,92 @@ func (s *System) options() (*component.SystemOptions, error) {
 		Username:          &defaultSystemSMTPUsername,
 	}
 
+	o.CommonLabels = s.commonLabels()
+	o.CommonAppLabels = s.commonAppLabels()
+	o.AppPodTemplateLabels = s.appPodTemplateLabels()
+	o.CommonSidekiqLabels = s.commonSidekiqLabels()
+	o.SidekiqPodTemplateLabels = s.sidekiqPodTemplateLabels()
+	o.ProviderUILabels = s.providerUILabels()
+	o.MasterUILabels = s.masterUILabels()
+	o.DeveloperUILabels = s.developerUILabels()
+	o.SphinxLabels = s.sphinxLabels()
+	o.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels()
+	o.MemcachedLabels = s.memcachedLabels()
+	o.SMTPLabels = s.smtpLabels()
+
 	err := o.Validate()
 	return o, err
+}
+
+func (s *System) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "system",
+	}
+}
+
+func (s *System) commonAppLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "app"
+	return labels
+}
+
+func (s *System) appPodTemplateLabels() map[string]string {
+	labels := s.commonAppLabels()
+	labels["deploymentConfig"] = "system-app"
+	return labels
+}
+
+func (s *System) commonSidekiqLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "sidekiq"
+	return labels
+}
+
+func (s *System) sidekiqPodTemplateLabels() map[string]string {
+	labels := s.commonSidekiqLabels()
+	labels["deploymentConfig"] = "system-sidekiq"
+	return labels
+}
+
+func (s *System) providerUILabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "provider-ui"
+	return labels
+}
+
+func (s *System) masterUILabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "master-ui"
+	return labels
+}
+
+func (s *System) developerUILabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "developer-ui"
+	return labels
+}
+
+func (s *System) sphinxLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "sphinx"
+	return labels
+}
+
+func (s *System) sphinxPodTemplateLabels() map[string]string {
+	labels := s.sphinxLabels()
+	labels["deploymentConfig"] = "system-sphinx"
+	return labels
+}
+
+func (s *System) memcachedLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "memcache"
+	return labels
+}
+
+func (s *System) smtpLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "smtp"
+	return labels
 }

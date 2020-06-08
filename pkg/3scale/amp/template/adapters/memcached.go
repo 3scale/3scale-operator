@@ -38,10 +38,26 @@ func (m *MemcachedAdapter) componentObjects(c *component.Memcached) []common.Kub
 
 func (m *MemcachedAdapter) options() (*component.MemcachedOptions, error) {
 	mo := component.NewMemcachedOptions()
-	mo.AppLabel = "${APP_LABEL}"
 	mo.ImageTag = "${AMP_RELEASE}"
 	mo.ResourceRequirements = component.DefaultMemcachedResourceRequirements()
 
+	mo.DeploymentLabels = m.deploymentLabels()
+	mo.PodTemplateLabels = m.podTemplateLabels()
+
 	err := mo.Validate()
 	return mo, err
+}
+
+func (m *MemcachedAdapter) deploymentLabels() map[string]string {
+	return map[string]string{
+		"app":                          "${APP_LABEL}",
+		"threescale_component":         "system",
+		"threescale_component_element": "memcache",
+	}
+}
+
+func (m *MemcachedAdapter) podTemplateLabels() map[string]string {
+	labels := m.deploymentLabels()
+	labels["deploymentConfig"] = "system-memcache"
+	return labels
 }

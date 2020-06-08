@@ -77,7 +77,6 @@ func (b *Backend) componentPDBObjects(c *component.Backend) []common.KubernetesO
 
 func (b *Backend) options() (*component.BackendOptions, error) {
 	bo := component.NewBackendOptions()
-	bo.AppLabel = "${APP_LABEL}"
 	bo.SystemBackendUsername = "${SYSTEM_BACKEND_USERNAME}"
 	bo.SystemBackendPassword = "${SYSTEM_BACKEND_PASSWORD}"
 	bo.TenantName = "${TENANT_NAME}"
@@ -93,6 +92,58 @@ func (b *Backend) options() (*component.BackendOptions, error) {
 	bo.ListenerResourceRequirements = component.DefaultBackendListenerResourceRequirements()
 	bo.WorkerResourceRequirements = component.DefaultBackendWorkerResourceRequirements()
 	bo.CronResourceRequirements = component.DefaultCronResourceRequirements()
+
+	bo.CommonLabels = b.commonLabels()
+	bo.CommonListenerLabels = b.commonListenerLabels()
+	bo.CommonWorkerLabels = b.commonWorkerLabels()
+	bo.CommonCronLabels = b.commonCronLabels()
+	bo.ListenerPodTemplateLabels = b.listenerPodTemplateLabels()
+	bo.WorkerPodTemplateLabels = b.workerPodTemplateLabels()
+	bo.CronPodTemplateLabels = b.cronPodTemplateLabels()
+
 	err := bo.Validate()
 	return bo, err
+}
+
+func (b *Backend) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "backend",
+	}
+}
+
+func (b *Backend) commonListenerLabels() map[string]string {
+	labels := b.commonLabels()
+	labels["threescale_component_element"] = "listener"
+	return labels
+}
+
+func (b *Backend) commonWorkerLabels() map[string]string {
+	labels := b.commonLabels()
+	labels["threescale_component_element"] = "worker"
+	return labels
+}
+
+func (b *Backend) commonCronLabels() map[string]string {
+	labels := b.commonLabels()
+	labels["threescale_component_element"] = "cron"
+	return labels
+}
+
+func (b *Backend) listenerPodTemplateLabels() map[string]string {
+	labels := b.commonListenerLabels()
+	labels["deploymentConfig"] = "backend-listener"
+	return labels
+}
+
+func (b *Backend) workerPodTemplateLabels() map[string]string {
+	labels := b.commonWorkerLabels()
+	labels["deploymentConfig"] = "backend-worker"
+	return labels
+}
+
+func (b *Backend) cronPodTemplateLabels() map[string]string {
+	labels := b.commonCronLabels()
+	labels["deploymentConfig"] = "backend-cron"
+	return labels
 }

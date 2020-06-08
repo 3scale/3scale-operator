@@ -25,7 +25,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-memcache",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.AppLabel},
+			Labels: m.Options.DeploymentLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -64,7 +64,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": "system-memcache"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "memcache", "app": m.Options.AppLabel, "deploymentConfig": "system-memcache"},
+					Labels: m.Options.PodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp", //TODO make this configurable via flag

@@ -7,6 +7,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
+
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -30,20 +31,34 @@ func NewOperatorBackendOptionsProvider(apimanager *appsv1alpha1.APIManager, name
 }
 
 func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.BackendOptions, error) {
-	o.backendOptions.AppLabel = *o.apimanager.Spec.AppLabel
 	o.backendOptions.TenantName = *o.apimanager.Spec.TenantName
 	o.backendOptions.WildcardDomain = o.apimanager.Spec.WildcardDomain
 	o.backendOptions.ImageTag = product.ThreescaleRelease
 
 	err := o.setSecretBasedOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetBackendOptions reading secret options: %w", err)
 	}
 
 	o.setResourceRequirementsOptions()
 	o.setReplicas()
 
+	imageOpts, err := NewAmpImagesOptionsProvider(o.apimanager).GetAmpImagesOptions()
+	if err != nil {
+		return nil, fmt.Errorf("GetBackendOptions reading image options: %w", err)
+	}
+	o.backendOptions.CommonLabels = o.commonLabels()
+	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
+	o.backendOptions.CommonWorkerLabels = o.commonWorkerLabels()
+	o.backendOptions.CommonCronLabels = o.commonCronLabels()
+	o.backendOptions.ListenerPodTemplateLabels = o.listenerPodTemplateLabels(imageOpts.BackendImage)
+	o.backendOptions.WorkerPodTemplateLabels = o.workerPodTemplateLabels(imageOpts.BackendImage)
+	o.backendOptions.CronPodTemplateLabels = o.cronPodTemplateLabels(imageOpts.BackendImage)
+
 	err = o.backendOptions.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("GetBackendOptions validating: %w", err)
+	}
 	return o.backendOptions, err
 }
 
@@ -143,4 +158,65 @@ func (o *OperatorBackendOptionsProvider) setReplicas() {
 	o.backendOptions.ListenerReplicas = int32(*o.apimanager.Spec.Backend.ListenerSpec.Replicas)
 	o.backendOptions.WorkerReplicas = int32(*o.apimanager.Spec.Backend.WorkerSpec.Replicas)
 	o.backendOptions.CronReplicas = int32(*o.apimanager.Spec.Backend.CronSpec.Replicas)
+}
+
+func (o *OperatorBackendOptionsProvider) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  *o.apimanager.Spec.AppLabel,
+		"threescale_component": "backend",
+	}
+}
+
+func (o *OperatorBackendOptionsProvider) commonListenerLabels() map[string]string {
+	labels := o.commonLabels()
+	labels["threescale_component_element"] = "listener"
+	return labels
+}
+
+func (o *OperatorBackendOptionsProvider) commonWorkerLabels() map[string]string {
+	labels := o.commonLabels()
+	labels["threescale_component_element"] = "worker"
+	return labels
+}
+
+func (o *OperatorBackendOptionsProvider) commonCronLabels() map[string]string {
+	labels := o.commonLabels()
+	labels["threescale_component_element"] = "cron"
+	return labels
+}
+
+func (o *OperatorBackendOptionsProvider) listenerPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("backend-listener", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range o.commonListenerLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "backend-listener"
+
+	return labels
+}
+
+func (o *OperatorBackendOptionsProvider) workerPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("backend-worker", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range o.commonWorkerLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "backend-worker"
+
+	return labels
+}
+
+func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("backend-cron", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range o.commonCronLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "backend-cron"
+
+	return labels
 }

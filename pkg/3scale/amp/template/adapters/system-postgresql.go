@@ -68,15 +68,37 @@ func (r *SystemPostgreSQLAdapter) componentObjects(c *component.SystemPostgreSQL
 
 func (r *SystemPostgreSQLAdapter) options() (*component.SystemPostgreSQLOptions, error) {
 	o := component.NewSystemPostgreSQLOptions()
-	o.AppLabel = "${APP_LABEL}"
 	o.ImageTag = "${AMP_RELEASE}"
 	o.DatabaseName = "${SYSTEM_DATABASE}"
 	o.User = "${SYSTEM_DATABASE_USER}"
 	o.Password = "${SYSTEM_DATABASE_PASSWORD}"
 	o.DatabaseURL = "postgresql://${SYSTEM_DATABASE_USER}:" + "${SYSTEM_DATABASE_PASSWORD}" + "@system-postgresql/" + "${SYSTEM_DATABASE}"
 
+	o.CommonLabels = r.commonLabels()
+	o.DeploymentLabels = r.deploymentLabels()
+	o.PodTemplateLabels = r.podTemplateLabels()
+
 	o.ContainerResourceRequirements = component.DefaultSystemPostgresqlResourceRequirements()
 
 	err := o.Validate()
 	return o, err
+}
+
+func (r *SystemPostgreSQLAdapter) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "system",
+	}
+}
+
+func (r *SystemPostgreSQLAdapter) deploymentLabels() map[string]string {
+	labels := r.commonLabels()
+	labels["threescale_component_element"] = "postgresql"
+	return labels
+}
+
+func (r *SystemPostgreSQLAdapter) podTemplateLabels() map[string]string {
+	labels := r.deploymentLabels()
+	labels["deploymentConfig"] = "system-postgresql"
+	return labels
 }

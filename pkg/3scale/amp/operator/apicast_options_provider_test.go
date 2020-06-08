@@ -22,6 +22,57 @@ const (
 	responseCodes                = true
 )
 
+func testApicastCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "apicast",
+	}
+}
+
+func testApicastStagingLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "apicast",
+		"threescale_component_element": "staging",
+	}
+}
+
+func testApicastProductionLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "apicast",
+		"threescale_component_element": "production",
+	}
+}
+
+func testApicastStagingPodLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "apicast",
+		"threescale_component_element": "staging",
+		"com.redhat.component-name":    "apicast-staging",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "apicast-staging",
+	}
+}
+
+func testApicastProductionPodLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "apicast",
+		"threescale_component_element": "production",
+		"com.redhat.component-name":    "apicast-production",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "apicast-production",
+	}
+}
+
 func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 	tmpApicastManagementAPI := apicastManagementAPI
 	tmpOpenSSLVerify := openSSLVerify
@@ -46,7 +97,6 @@ func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 
 func defaultApicastOptions() *component.ApicastOptions {
 	return &component.ApicastOptions{
-		AppLabel:                       appLabel,
 		ManagementAPI:                  apicastManagementAPI,
 		OpenSSLVerify:                  strconv.FormatBool(openSSLVerify),
 		ResponseCodes:                  strconv.FormatBool(responseCodes),
@@ -55,6 +105,11 @@ func defaultApicastOptions() *component.ApicastOptions {
 		StagingResourceRequirements:    component.DefaultStagingResourceRequirements(),
 		ProductionReplicas:             int32(productionReplicaCount),
 		StagingReplicas:                int32(stagingReplicaCount),
+		CommonLabels:                   testApicastCommonLabels(),
+		CommonStagingLabels:            testApicastStagingLabels(),
+		CommonProductionLabels:         testApicastProductionLabels(),
+		StagingPodTemplateLabels:       testApicastStagingPodLabels(),
+		ProductionPodTemplateLabels:    testApicastProductionPodLabels(),
 	}
 }
 

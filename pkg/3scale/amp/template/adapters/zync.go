@@ -92,7 +92,15 @@ func (z *Zync) componentPDBObjects(c *component.Zync) []common.KubernetesObject 
 
 func (z *Zync) options() (*component.ZyncOptions, error) {
 	zo := component.NewZyncOptions()
-	zo.AppLabel = "${APP_LABEL}"
+
+	zo.CommonLabels = z.commonLabels()
+	zo.CommonZyncLabels = z.commonZyncLabels()
+	zo.CommonZyncQueLabels = z.commonZyncQueLabels()
+	zo.CommonZyncDatabaseLabels = z.commonZyncDatabaseLabels()
+	zo.ZyncPodTemplateLabels = z.zyncPodTemplateLabels()
+	zo.ZyncQuePodTemplateLabels = z.zyncQuePodTemplateLabels()
+	zo.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels()
+
 	zo.AuthenticationToken = "${ZYNC_AUTHENTICATION_TOKEN}"
 	zo.DatabasePassword = "${ZYNC_DATABASE_PASSWORD}"
 	zo.SecretKeyBase = "${ZYNC_SECRET_KEY_BASE}"
@@ -110,4 +118,45 @@ func (z *Zync) options() (*component.ZyncOptions, error) {
 
 	err := zo.Validate()
 	return zo, err
+}
+
+func (z *Zync) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "zync",
+	}
+}
+
+func (z *Zync) commonZyncLabels() map[string]string {
+	return z.commonLabels()
+}
+
+func (z *Zync) commonZyncQueLabels() map[string]string {
+	labels := z.commonLabels()
+	return labels
+}
+
+func (z *Zync) commonZyncDatabaseLabels() map[string]string {
+	labels := z.commonLabels()
+	labels["threescale_component_element"] = "database"
+	return labels
+}
+
+func (z *Zync) zyncPodTemplateLabels() map[string]string {
+	labels := z.commonZyncLabels()
+	labels["deploymentConfig"] = "zync"
+	return labels
+}
+
+func (z *Zync) zyncQuePodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":              "${APP_LABEL}",
+		"deploymentConfig": "zync-que",
+	}
+}
+
+func (z *Zync) zyncDatabasePodTemplateLabels() map[string]string {
+	labels := z.commonZyncDatabaseLabels()
+	labels["deploymentConfig"] = "zync-database"
+	return labels
 }

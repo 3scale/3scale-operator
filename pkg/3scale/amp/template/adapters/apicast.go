@@ -94,7 +94,6 @@ func (a *Apicast) componentPDBObjects(c *component.Apicast) []common.KubernetesO
 
 func (a *Apicast) options() (*component.ApicastOptions, error) {
 	ao := component.NewApicastOptions()
-	ao.AppLabel = "${APP_LABEL}"
 	ao.ManagementAPI = "${APICAST_MANAGEMENT_API}"
 	ao.OpenSSLVerify = "${APICAST_OPENSSL_VERIFY}"
 	ao.ResponseCodes = "${APICAST_RESPONSE_CODES}"
@@ -106,6 +105,43 @@ func (a *Apicast) options() (*component.ApicastOptions, error) {
 	ao.ProductionReplicas = 1
 	ao.StagingReplicas = 1
 
+	ao.CommonLabels = a.commonLabels()
+	ao.CommonStagingLabels = a.commonStagingLabels()
+	ao.CommonProductionLabels = a.commonProductionLabels()
+	ao.StagingPodTemplateLabels = a.stagingPodTemplateLabels()
+	ao.ProductionPodTemplateLabels = a.productionPodTemplateLabels()
+
 	err := ao.Validate()
 	return ao, err
+}
+
+func (a *Apicast) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "apicast",
+	}
+}
+
+func (a *Apicast) commonStagingLabels() map[string]string {
+	labels := a.commonLabels()
+	labels["threescale_component_element"] = "staging"
+	return labels
+}
+
+func (a *Apicast) commonProductionLabels() map[string]string {
+	labels := a.commonLabels()
+	labels["threescale_component_element"] = "production"
+	return labels
+}
+
+func (a *Apicast) stagingPodTemplateLabels() map[string]string {
+	labels := a.commonStagingLabels()
+	labels["deploymentConfig"] = "apicast-staging"
+	return labels
+}
+
+func (a *Apicast) productionPodTemplateLabels() map[string]string {
+	labels := a.commonProductionLabels()
+	labels["deploymentConfig"] = "apicast-production"
+	return labels
 }

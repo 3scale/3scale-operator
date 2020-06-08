@@ -22,6 +22,79 @@ const (
 	cronReplicaCount     int64 = 5
 )
 
+func testBackendCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "backend",
+	}
+}
+
+func testBackendCommonListenerLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "listener",
+	}
+}
+
+func testBackendCommonWorkerLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "worker",
+	}
+}
+
+func testBackendCommonCronLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "cron",
+	}
+}
+
+func testBackendListenerPodLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "listener",
+		"com.redhat.component-name":    "backend-listener",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "backend-listener",
+	}
+}
+
+func testBackendWorkerPodLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "worker",
+		"com.redhat.component-name":    "backend-worker",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "backend-worker",
+	}
+}
+
+func testBackendCronPodLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "cron",
+		"com.redhat.component-name":    "backend-cron",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "backend-cron",
+	}
+}
+
 func getInternalSecret() *v1.Secret {
 	data := map[string]string{
 		component.BackendSecretInternalApiUsernameFieldName: "someUserName",
@@ -79,12 +152,18 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 		ListenerReplicas:             int32(listenerReplicaCount),
 		WorkerReplicas:               int32(workerReplicaCount),
 		CronReplicas:                 int32(cronReplicaCount),
-		AppLabel:                     appLabel,
 		SystemBackendUsername:        component.DefaultSystemBackendUsername(),
 		SystemBackendPassword:        opts.SystemBackendPassword,
 		TenantName:                   tenantName,
 		WildcardDomain:               wildcardDomain,
 		ImageTag:                     product.ThreescaleRelease,
+		CommonLabels:                 testBackendCommonLabels(),
+		CommonListenerLabels:         testBackendCommonListenerLabels(),
+		CommonWorkerLabels:           testBackendCommonWorkerLabels(),
+		CommonCronLabels:             testBackendCommonCronLabels(),
+		ListenerPodTemplateLabels:    testBackendListenerPodLabels(),
+		WorkerPodTemplateLabels:      testBackendWorkerPodLabels(),
+		CronPodTemplateLabels:        testBackendCronPodLabels(),
 	}
 }
 

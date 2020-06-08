@@ -9,6 +9,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
+
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -32,18 +33,29 @@ func NewSystemMysqlOptionsProvider(apimanager *appsv1alpha1.APIManager, namespac
 }
 
 func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOptions, error) {
-	s.mysqlOptions.AppLabel = *s.apimanager.Spec.AppLabel
 	s.mysqlOptions.ImageTag = product.ThreescaleRelease
 
-	err := s.setSecretBasedOptions()
+	imageOpts, err := NewSystemMysqlImageOptionsProvider(s.apimanager).GetSystemMySQLImageOptions()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetMysqlOptions reading image options: %w", err)
+	}
+
+	s.mysqlOptions.CommonLabels = s.commonLabels()
+	s.mysqlOptions.DeploymentLabels = s.deploymentLabels()
+	s.mysqlOptions.PodTemplateLabels = s.podTemplateLabels(imageOpts.Image)
+
+	err = s.setSecretBasedOptions()
+	if err != nil {
+		return nil, fmt.Errorf("GetMysqlOptions reading secret options: %w", err)
 	}
 
 	s.setResourceRequirementsOptions()
 
 	err = s.mysqlOptions.Validate()
-	return s.mysqlOptions, err
+	if err != nil {
+		return nil, fmt.Errorf("GetMysqlOptions reading secret options: %w", err)
+	}
+	return s.mysqlOptions, nil
 }
 
 func (s *SystemMysqlOptionsProvider) setSecretBasedOptions() error {
@@ -133,4 +145,29 @@ func (s *SystemMysqlOptionsProvider) setResourceRequirementsOptions() {
 	} else {
 		s.mysqlOptions.ContainerResourceRequirements = v1.ResourceRequirements{}
 	}
+}
+
+func (s *SystemMysqlOptionsProvider) commonLabels() map[string]string {
+	return map[string]string{
+		"app":                  *s.apimanager.Spec.AppLabel,
+		"threescale_component": "system",
+	}
+}
+
+func (s *SystemMysqlOptionsProvider) deploymentLabels() map[string]string {
+	labels := s.commonLabels()
+	labels["threescale_component_element"] = "mysql"
+	return labels
+}
+
+func (s *SystemMysqlOptionsProvider) podTemplateLabels(image string) map[string]string {
+	labels := helper.MeteringLabels("system-mysql", helper.ParseVersion(image), helper.ApplicationType)
+
+	for k, v := range s.deploymentLabels() {
+		labels[k] = v
+	}
+
+	labels["deploymentConfig"] = "system-mysql"
+
+	return labels
 }

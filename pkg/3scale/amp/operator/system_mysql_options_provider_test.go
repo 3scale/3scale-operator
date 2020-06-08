@@ -9,6 +9,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
@@ -22,9 +23,37 @@ const (
 	systemMysqlPassword = "password1"
 )
 
+func testSystemMysqlCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "system",
+	}
+}
+
+func testSystemMysqlDeploymentLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "mysql",
+	}
+}
+
+func testSystemMysqlPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "mysql",
+		"com.redhat.component-name":    "system-mysql",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "57",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "system-mysql",
+	}
+}
+
 func defaultSystemMysqlOptions(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
 	return &component.SystemMysqlOptions{
-		AppLabel:                      appLabel,
 		ImageTag:                      product.ThreescaleRelease,
 		DatabaseName:                  component.DefaultSystemMysqlDatabaseName(),
 		User:                          component.DefaultSystemMysqlUser(),
@@ -32,6 +61,9 @@ func defaultSystemMysqlOptions(opts *component.SystemMysqlOptions) *component.Sy
 		RootPassword:                  opts.RootPassword,
 		DatabaseURL:                   component.DefaultSystemMysqlDatabaseURL(opts.RootPassword, component.DefaultSystemMysqlDatabaseName()),
 		ContainerResourceRequirements: component.DefaultSystemMysqlResourceRequirements(),
+		CommonLabels:                  testSystemMysqlCommonLabels(),
+		DeploymentLabels:              testSystemMysqlDeploymentLabels(),
+		PodTemplateLabels:             testSystemMysqlPodTemplateLabels(),
 	}
 }
 

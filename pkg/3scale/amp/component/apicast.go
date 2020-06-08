@@ -27,12 +27,8 @@ func (apicast *Apicast) StagingService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-staging",
-			Labels: map[string]string{
-				"app":                          apicast.Options.AppLabel,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "staging",
-			},
+			Name:   "apicast-staging",
+			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -61,12 +57,8 @@ func (apicast *Apicast) ProductionService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-production",
-			Labels: map[string]string{
-				"app":                          apicast.Options.AppLabel,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "production",
-			},
+			Name:   "apicast-production",
+			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -92,12 +84,8 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-staging",
-			Labels: map[string]string{
-				"app":                          apicast.Options.AppLabel,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "staging",
-			},
+			Name:   "apicast-staging",
+			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: apicast.Options.StagingReplicas,
@@ -140,12 +128,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"deploymentConfig":             "apicast-staging",
-						"app":                          apicast.Options.AppLabel,
-						"threescale_component":         "apicast",
-						"threescale_component_element": "staging",
-					},
+					Labels: apicast.Options.StagingPodTemplateLabels,
 					Annotations: map[string]string{
 						"prometheus.io/scrape": "true",
 						"prometheus.io/port":   "9421",
@@ -205,12 +188,8 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-production",
-			Labels: map[string]string{
-				"app":                          apicast.Options.AppLabel,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "production",
-			},
+			Name:   "apicast-production",
+			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: apicast.Options.ProductionReplicas,
@@ -254,12 +233,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"deploymentConfig":             "apicast-production",
-						"app":                          apicast.Options.AppLabel,
-						"threescale_component":         "apicast",
-						"threescale_component_element": "production",
-					},
+					Labels: apicast.Options.ProductionPodTemplateLabels,
 					Annotations: map[string]string{
 						"prometheus.io/scrape": "true",
 						"prometheus.io/port":   "9421",
@@ -368,7 +342,7 @@ func (apicast *Apicast) EnvironmentConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-environment",
-			Labels: map[string]string{"threescale_component": "apicast", "app": apicast.Options.AppLabel},
+			Labels: apicast.Options.CommonLabels,
 		},
 		Data: map[string]string{
 			"APICAST_MANAGEMENT_API": apicast.Options.ManagementAPI,
@@ -385,12 +359,8 @@ func (apicast *Apicast) StagingPodDisruptionBudget() *v1beta1.PodDisruptionBudge
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-staging",
-			Labels: map[string]string{
-				"app":                          apicast.Options.AppLabel,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "staging",
-			},
+			Name:   "apicast-staging",
+			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
@@ -408,12 +378,8 @@ func (apicast *Apicast) ProductionPodDisruptionBudget() *v1beta1.PodDisruptionBu
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-production",
-			Labels: map[string]string{
-				"app":                          apicast.Options.AppLabel,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "production",
-			},
+			Name:   "apicast-production",
+			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{

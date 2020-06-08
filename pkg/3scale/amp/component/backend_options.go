@@ -23,11 +23,17 @@ type BackendOptions struct {
 	ListenerReplicas             int32
 	WorkerReplicas               int32
 	CronReplicas                 int32
-	AppLabel                     string `validate:"required"`
-	SystemBackendUsername        string `validate:"required"`
-	SystemBackendPassword        string `validate:"required"`
-	TenantName                   string `validate:"required"`
-	WildcardDomain               string `validate:"required"`
+	SystemBackendUsername        string            `validate:"required"`
+	SystemBackendPassword        string            `validate:"required"`
+	TenantName                   string            `validate:"required"`
+	WildcardDomain               string            `validate:"required"`
+	CommonLabels                 map[string]string `validate:"required"`
+	CommonListenerLabels         map[string]string `validate:"required"`
+	CommonWorkerLabels           map[string]string `validate:"required"`
+	CommonCronLabels             map[string]string `validate:"required"`
+	ListenerPodTemplateLabels    map[string]string `validate:"required"`
+	WorkerPodTemplateLabels      map[string]string `validate:"required"`
+	CronPodTemplateLabels        map[string]string `validate:"required"`
 }
 
 func NewBackendOptions() *BackendOptions {

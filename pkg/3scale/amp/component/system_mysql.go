@@ -26,12 +26,8 @@ func (mysql *SystemMysql) Service() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-mysql",
-			Labels: map[string]string{
-				"app":                          mysql.Options.AppLabel,
-				"threescale_component":         "system",
-				"threescale_component_element": "mysql",
-			},
+			Name:   "system-mysql",
+			Labels: mysql.Options.DeploymentLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -55,7 +51,7 @@ func (mysql *SystemMysql) MainConfigConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-main-conf",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel},
+			Labels: mysql.Options.DeploymentLabels,
 		},
 		Data: map[string]string{"my.cnf": "!include /etc/my.cnf\n!includedir /etc/my-extra.d\n"}}
 }
@@ -68,7 +64,7 @@ func (mysql *SystemMysql) ExtraConfigConfigMap() *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-extra-conf",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel},
+			Labels: mysql.Options.DeploymentLabels,
 		},
 		Data: map[string]string{"mysql-charset.cnf": "[client]\ndefault-character-set = utf8\n\n[mysql]\ndefault-character-set = utf8\n\n[mysqld]\ncharacter-set-server = utf8\ncollation-server = utf8_unicode_ci\n"}}
 }
@@ -81,7 +77,7 @@ func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "mysql-storage",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel},
+			Labels: mysql.Options.DeploymentLabels,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -98,7 +94,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-mysql",
-			Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel},
+			Labels: mysql.Options.DeploymentLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Strategy: appsv1.DeploymentStrategy{
@@ -125,7 +121,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": "system-mysql"},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"threescale_component": "system", "threescale_component_element": "mysql", "app": mysql.Options.AppLabel, "deploymentConfig": "system-mysql"},
+					Labels: mysql.Options.PodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "amp", //TODO make this configurable via flag
@@ -221,11 +217,8 @@ func (mysql *SystemMysql) SystemDatabaseSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: SystemSecretSystemDatabaseSecretName,
-			Labels: map[string]string{
-				"app":                  mysql.Options.AppLabel,
-				"threescale_component": "system",
-			},
+			Name:   SystemSecretSystemDatabaseSecretName,
+			Labels: mysql.Options.CommonLabels,
 		},
 		StringData: map[string]string{
 			SystemSecretSystemDatabaseUserFieldName:     mysql.Options.User,

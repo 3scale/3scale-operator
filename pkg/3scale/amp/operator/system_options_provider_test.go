@@ -21,6 +21,119 @@ const (
 	apicastRegistryURL          = "http://otherapicast:8090/policies"
 )
 
+func testSystemCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "system",
+	}
+}
+
+func testSystemCommonAppLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "app",
+	}
+}
+
+func testSystemAppPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "app",
+		"com.redhat.component-name":    "system-app",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "system-app",
+	}
+}
+
+func testSystemCommonSidekiqLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "sidekiq",
+	}
+}
+
+func testSystemSidekiqPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "sidekiq",
+		"com.redhat.component-name":    "system-sidekiq",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "system-sidekiq",
+	}
+}
+
+func testSystemProviderUILabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "provider-ui",
+	}
+}
+
+func testSystemMasterUILabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "master-ui",
+	}
+}
+
+func testSystemDeveloperUILabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "developer-ui",
+	}
+}
+
+func testSystemSphinxLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "sphinx",
+	}
+}
+
+func testSystemSphinxPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "sphinx",
+		"com.redhat.component-name":    "system-sphinx",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "nightly",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "system-sphinx",
+	}
+}
+
+func testSystemMemcachedLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "memcache",
+	}
+}
+
+func testSystemSMTPLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "smtp",
+	}
+}
+
 func basicApimanagerSpecTestSystemOptions() *appsv1alpha1.APIManager {
 	tmpSystemAppReplicas := systemAppReplicas
 	tmpSystemSideKiqReplicas := systemSidekiqReplicas
@@ -124,7 +237,6 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 	tmpSMTPUsername := component.DefaultSystemSMTPUsername()
 
 	expectedOpts := &component.SystemOptions{
-		AppLabel:                                 appLabel,
 		TenantName:                               tenantName,
 		WildcardDomain:                           wildcardDomain,
 		AmpRelease:                               product.ThreescaleRelease,
@@ -170,6 +282,18 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 			Port:              &tmpSMTPPort,
 			Username:          &tmpSMTPUsername,
 		},
+		CommonLabels:             testSystemCommonLabels(),
+		CommonAppLabels:          testSystemCommonAppLabels(),
+		AppPodTemplateLabels:     testSystemAppPodTemplateLabels(),
+		CommonSidekiqLabels:      testSystemCommonSidekiqLabels(),
+		SidekiqPodTemplateLabels: testSystemSidekiqPodTemplateLabels(),
+		ProviderUILabels:         testSystemProviderUILabels(),
+		MasterUILabels:           testSystemMasterUILabels(),
+		DeveloperUILabels:        testSystemDeveloperUILabels(),
+		SphinxLabels:             testSystemSphinxLabels(),
+		SphinxPodTemplateLabels:  testSystemSphinxPodTemplateLabels(),
+		MemcachedLabels:          testSystemMemcachedLabels(),
+		SMTPLabels:               testSystemSMTPLabels(),
 	}
 
 	expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(opts.ApicastAccessToken)

@@ -13,10 +13,67 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+func testRedisSystemCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "system",
+	}
+}
+
+func testRedisSystemRedisLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "redis",
+	}
+}
+
+func testRedisSystemRedisPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "system",
+		"threescale_component_element": "redis",
+		"com.redhat.component-name":    "system-redis",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "32",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "system-redis",
+	}
+}
+
+func testRedisBackendCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "backend",
+	}
+}
+
+func testRedisBackendRedisLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "redis",
+	}
+}
+
+func testRedisBackendRedisPodTemplateLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "redis",
+		"com.redhat.component-name":    "backend-redis",
+		"com.redhat.component-type":    "application",
+		"com.redhat.component-version": "32",
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.product-version":   "master",
+		"deploymentConfig":             "backend-redis",
+	}
+}
+
 func defaultRedisOptions() *component.RedisOptions {
 	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
-		AppLabel:        appLabel,
 		AmpRelease:      product.ThreescaleRelease,
 		BackendImageTag: product.ThreescaleRelease,
 		SystemImageTag:  product.ThreescaleRelease,
@@ -25,13 +82,19 @@ func defaultRedisOptions() *component.RedisOptions {
 		BackendRedisContainerResourceRequirements: component.DefaultBackendRedisContainerResourceRequirements(),
 		SystemRedisContainerResourceRequirements:  component.DefaultSystemRedisContainerResourceRequirements(),
 		InsecureImportPolicy:                      &tmpInsecure,
+		SystemCommonLabels:                        testRedisSystemCommonLabels(),
+		SystemRedisLabels:                         testRedisSystemRedisLabels(),
+		SystemRedisPodTemplateLabels:              testRedisSystemRedisPodTemplateLabels(),
+		BackendCommonLabels:                       testRedisBackendCommonLabels(),
+		BackendRedisLabels:                        testRedisBackendRedisLabels(),
+		BackendRedisPodTemplateLabels:             testRedisBackendRedisPodTemplateLabels(),
 	}
 }
 
 func TestGetRedisOptionsProvider(t *testing.T) {
 	tmpFalseValue := false
-	backendRedisImageURL := "redis:backend"
-	systemRedisImageURL := "redis:system"
+	backendRedisImageURL := "redis:backendCustomVersion"
+	systemRedisImageURL := "redis:systemCustomVersion"
 
 	cases := []struct {
 		testName               string
@@ -63,6 +126,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			func() *component.RedisOptions {
 				opts := defaultRedisOptions()
 				opts.BackendImage = backendRedisImageURL
+				opts.BackendRedisPodTemplateLabels["com.redhat.component-version"] = "backendCustomVersion"
 				return opts
 			},
 		},
@@ -77,6 +141,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			func() *component.RedisOptions {
 				opts := defaultRedisOptions()
 				opts.SystemImage = systemRedisImageURL
+				opts.SystemRedisPodTemplateLabels["com.redhat.component-version"] = "systemCustomVersion"
 				return opts
 			},
 		},

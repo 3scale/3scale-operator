@@ -80,7 +80,6 @@ func (r *RedisAdapter) systemRedisComponentObjects(c *component.Redis) []common.
 
 func (r *RedisAdapter) options() (*component.RedisOptions, error) {
 	ro := component.NewRedisOptions()
-	ro.AppLabel = "${APP_LABEL}"
 	ro.AmpRelease = "${AMP_RELEASE}"
 	ro.BackendImageTag = "${AMP_RELEASE}"
 	ro.BackendImage = "${REDIS_IMAGE}"
@@ -92,6 +91,51 @@ func (r *RedisAdapter) options() (*component.RedisOptions, error) {
 	tmp := component.InsecureImportPolicy
 	ro.InsecureImportPolicy = &tmp
 
+	ro.SystemCommonLabels = r.systemCommonLabels()
+	ro.SystemRedisLabels = r.systemRedisLabels()
+	ro.SystemRedisPodTemplateLabels = r.systemRedisPodTemplateLabels()
+	ro.BackendCommonLabels = r.backendCommonLabels()
+	ro.BackendRedisLabels = r.backendRedisLabels()
+	ro.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels()
+
 	err := ro.Validate()
 	return ro, err
+}
+
+func (r *RedisAdapter) systemCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "system",
+	}
+}
+
+func (r *RedisAdapter) systemRedisLabels() map[string]string {
+	labels := r.systemCommonLabels()
+	labels["threescale_component_element"] = "redis"
+	return labels
+}
+
+func (r *RedisAdapter) systemRedisPodTemplateLabels() map[string]string {
+	labels := r.systemRedisLabels()
+	labels["deploymentConfig"] = "system-redis"
+	return labels
+}
+
+func (r *RedisAdapter) backendCommonLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "backend",
+	}
+}
+
+func (r *RedisAdapter) backendRedisLabels() map[string]string {
+	labels := r.backendCommonLabels()
+	labels["threescale_component_element"] = "redis"
+	return labels
+}
+
+func (r *RedisAdapter) backendRedisPodTemplateLabels() map[string]string {
+	labels := r.backendRedisLabels()
+	labels["deploymentConfig"] = "backend-redis"
+	return labels
 }
