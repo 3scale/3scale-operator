@@ -147,6 +147,13 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackupStatus(ref common.ReferenceCa
 							Format:      "",
 						},
 					},
+					"mainStepsCompleted": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Set to true when main steps have been completed. At this point backup still cannot be considered  fully completed due to some remaining post-backup tasks are pending (cleanup, ...)",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"apiManagerSourceName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Name of the APIManager from which the backup has been performed",
@@ -282,6 +289,13 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerRestoreStatus(ref common.ReferenceC
 					"completed": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Set to true when backup has been completed",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"mainStepsCompleted": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Set to true when main steps have been completed. At this point restore still cannot be considered fully completed due to some remaining post-backup tasks are pending (cleanup, ...)",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},

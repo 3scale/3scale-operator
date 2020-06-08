@@ -110,6 +110,11 @@ spec:
                 - type
                 type: object
               type: array
+            mainStepsCompleted:
+              description: Set to true when main steps have been completed. At this
+                point backup still cannot be considered  fully completed due to some
+                remaining post-backup tasks are pending (cleanup, ...)
+              type: boolean
             startTime:
               description: Backup start time. It is represented in RFC3339 form and
                 is in UTC.
