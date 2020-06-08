@@ -171,6 +171,11 @@ func (in *APIManagerBackupStatus) DeepCopyInto(out *APIManagerBackupStatus) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.MainStepsCompleted != nil {
+		in, out := &in.MainStepsCompleted, &out.MainStepsCompleted
+		*out = new(bool)
+		**out = **in
+	}
 	if in.APIManagerSourceName != nil {
 		in, out := &in.APIManagerSourceName, &out.APIManagerSourceName
 		*out = new(string)
@@ -403,6 +408,11 @@ func (in *APIManagerRestoreStatus) DeepCopyInto(out *APIManagerRestoreStatus) {
 	}
 	if in.Completed != nil {
 		in, out := &in.Completed, &out.Completed
+		*out = new(bool)
+		**out = **in
+	}
+	if in.MainStepsCompleted != nil {
+		in, out := &in.MainStepsCompleted, &out.MainStepsCompleted
 		*out = new(bool)
 		**out = **in
 	}

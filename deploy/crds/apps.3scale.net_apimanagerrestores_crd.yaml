@@ -82,6 +82,11 @@ spec:
                 and is in UTC.
               format: date-time
               type: string
+            mainStepsCompleted:
+              description: Set to true when main steps have been completed. At this
+                point restore still cannot be considered fully completed due to some
+                remaining post-backup tasks are pending (cleanup, ...)
+              type: boolean
             startTime:
               description: Restore start time. It is represented in RFC3339 form and
                 is in UTC.
