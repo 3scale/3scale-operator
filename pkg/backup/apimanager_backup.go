@@ -72,6 +72,12 @@ func (b *APIManagerBackup) BackupDestinationPVC() *v1.PersistentVolumeClaim {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      b.options.APIManagerBackupName,
 			Namespace: b.options.Namespace,
+			Annotations: map[string]string{
+				"apiManagerName":       b.APIManager().Name,
+				"apiManagerUID":        string(b.APIManager().GetUID()),
+				"apiManagerBackupName": b.options.APIManagerBackupName,
+				"apiManagerBackupUID":  string(b.options.APIManagerBackupUID),
+			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
