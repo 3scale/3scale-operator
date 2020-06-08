@@ -139,7 +139,7 @@ func (b *BaseReconciler) UpdateResource(obj common.KubernetesObject) error {
 
 func (b *BaseReconciler) DeleteResource(obj common.KubernetesObject, options ...client.DeleteOption) error {
 	b.Logger().Info(fmt.Sprintf("Delete object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
-	return b.Client().Delete(context.TODO(), obj)
+	return b.Client().Delete(context.TODO(), obj, options...)
 }
 
 func (b *BaseReconciler) UpdateResourceStatus(obj common.KubernetesObject) error {
