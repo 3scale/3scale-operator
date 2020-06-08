@@ -88,6 +88,12 @@ type APIManagerBackupStatus struct {
 	// +optional
 	Completed *bool `json:"completed,omitempty"`
 
+	// Set to true when main steps have been completed. At this point
+	// backup still cannot be considered  fully completed due to some remaining
+	// post-backup tasks are pending (cleanup, ...)
+	// +optional
+	MainStepsCompleted *bool `json:"mainStepsCompleted,omitempty"`
+
 	// Name of the APIManager from which the backup has been performed
 	// +optional
 	APIManagerSourceName *string `json:"apiManagerSourceName,omitempty"`
@@ -130,6 +136,10 @@ func (a *APIManagerBackup) SetDefaults() (bool, error) {
 
 func (a *APIManagerBackup) BackupCompleted() bool {
 	return a.Status.Completed != nil && *a.Status.Completed
+}
+
+func (a *APIManagerBackup) MainStepsCompleted() bool {
+	return a.Status.MainStepsCompleted != nil && *a.Status.MainStepsCompleted
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

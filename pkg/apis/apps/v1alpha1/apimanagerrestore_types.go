@@ -50,6 +50,12 @@ type APIManagerRestoreStatus struct {
 	// +optional
 	Completed *bool `json:"completed,omitempty"`
 
+	// Set to true when main steps have been completed. At this point
+	// restore still cannot be considered fully completed due to some remaining
+	// post-backup tasks are pending (cleanup, ...)
+	// +optional
+	MainStepsCompleted *bool `json:"mainStepsCompleted,omitempty"`
+
 	// Restore start time. It is represented in RFC3339 form and is in UTC.
 	// +optional
 	StartTime *metav1.Time `json:"startTime,omitempty"`
@@ -78,6 +84,10 @@ func (a *APIManagerRestore) SetDefaults() (bool, error) {
 
 func (a *APIManagerRestore) RestoreCompleted() bool {
 	return a.Status.Completed != nil && *a.Status.Completed
+}
+
+func (a *APIManagerRestore) MainStepsCompleted() bool {
+	return a.Status.MainStepsCompleted != nil && *a.Status.MainStepsCompleted
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

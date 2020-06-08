@@ -68,6 +68,25 @@ func (r *APIManagerBackupLogicReconciler) Reconcile() (reconcile.Result, error) 
 		return reconcile.Result{}, nil
 	}
 
+	if !r.cr.MainStepsCompleted() {
+		r.Logger().Info("Reconciling backup steps")
+		result, err := r.reconcileMainSteps()
+		if result.Requeue || err != nil {
+			return result, err
+		}
+		return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
+	}
+
+	r.Logger().Info("Reconciling post-backup steps")
+	result, err := r.reconcilePostBackupSteps()
+	if result.Requeue || err != nil {
+		return result, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerBackupLogicReconciler) reconcileMainSteps() (reconcile.Result, error) {
 	result, err := r.reconcileAPIManagerSourceStatusField()
 	if result.Requeue || err != nil {
 		return result, err
@@ -88,12 +107,40 @@ func (r *APIManagerBackupLogicReconciler) Reconcile() (reconcile.Result, error) 
 		return result, err
 	}
 
+	result, err = r.reconcileSetMainStepsCompleted()
+	if result.Requeue || err != nil {
+		return result, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerBackupLogicReconciler) reconcilePostBackupSteps() (reconcile.Result, error) {
+	result, err := r.reconcileJobsCleanup()
+	if result.Requeue || err != nil {
+		return result, err
+	}
+
 	result, err = r.reconcileBackupCompletion()
 	if result.Requeue || err != nil {
 		return result, err
 	}
 
-	return result, err
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerBackupLogicReconciler) reconcileSetMainStepsCompleted() (reconcile.Result, error) {
+	if !r.cr.MainStepsCompleted() {
+		mainStepsCompleted := true
+		r.cr.Status.MainStepsCompleted = &mainStepsCompleted
+		err := r.UpdateResourceStatus(r.cr)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{Requeue: true}, nil
+
+	}
+	return reconcile.Result{}, nil
 }
 
 func (r *APIManagerBackupLogicReconciler) reconcileBackupInS3Destination() (reconcile.Result, error) {
@@ -276,5 +323,41 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupDestinationPVCStatus() 
 		err := r.UpdateResourceStatus(r.cr)
 		return reconcile.Result{Requeue: true}, err
 	}
+	return reconcile.Result{}, nil
+}
+
+// Delete all K8s jobs created during the backup. The reason for this is that
+// some PVCs are referenced in the K8s Jobs and those PVCs cannot be deleted
+// while some pods reference them, even if in state Completed. By deleting the
+// K8s jobs we allow the cleanup to be possible
+func (r *APIManagerBackupLogicReconciler) reconcileJobsCleanup() (reconcile.Result, error) {
+	jobsToDelete := []*batchv1.Job{
+		r.apiManagerBackup.BackupSecretsAndConfigMapsToPVCJob(),
+		r.apiManagerBackup.BackupAPIManagerCustomResourceToPVCJob(),
+		r.apiManagerBackup.BackupSystemFileStoragePVCToPVCJob(),
+	}
+
+	existingJobFound := false
+	for _, job := range jobsToDelete {
+		existingJob := &batchv1.Job{}
+		err := r.GetResource(types.NamespacedName{Name: job.Name, Namespace: job.Namespace}, existingJob)
+		if err != nil && !errors.IsNotFound(err) {
+			return reconcile.Result{}, err
+		}
+		if err != nil && errors.IsNotFound(err) {
+			continue
+		}
+		existingJobFound = true
+		common.TagToObjectDeleteWithPropagationPolicy(job, metav1.DeletePropagationForeground)
+		err = r.ReconcileResource(&batchv1.Job{}, job, reconcilers.CreateOnlyMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	if existingJobFound {
+		return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
+	}
+
 	return reconcile.Result{}, nil
 }
