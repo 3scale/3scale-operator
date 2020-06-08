@@ -26,6 +26,7 @@ func NewAPIManagerBackupOptionsProvider(cr *appsv1alpha1.APIManagerBackup, clien
 func (a *APIManagerBackupOptionsProvider) Options() (*APIManagerBackupOptions, error) {
 	res := NewAPIManagerBackupOptions()
 	res.APIManagerBackupName = a.APIManagerBackupCR.Name
+	res.APIManagerBackupUID = a.APIManagerBackupCR.UID
 	res.Namespace = a.APIManagerBackupCR.Namespace
 
 	// Should we rely on always having the APIManager existing before doing something?
