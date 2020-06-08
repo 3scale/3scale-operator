@@ -8,6 +8,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/go-logr/logr"
@@ -711,15 +712,16 @@ func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentCo
 	}
 
 	updated := false
-	if !reflect.DeepEqual(existing.Spec.Template.Labels, desired.Spec.Template.Labels) {
-		diff := cmp.Diff(existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+
+	diff := cmp.Diff(existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+	helper.MergeMapStringString(&updated, &existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+
+	if updated {
 		u.Logger().V(1).Info(fmt.Sprintf("DC %s template lables changed: %s", desired.Name, diff))
-		existing.Spec.Template.Labels = desired.Spec.Template.Labels
 		err = u.UpdateResource(existing)
 		if err != nil {
 			return false, err
 		}
-		updated = true
 	}
 
 	return updated, nil
