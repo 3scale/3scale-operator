@@ -74,7 +74,18 @@ spec:
                       format: int64
                       type: integer
                   type: object
+                redisDatabase:
+                  properties:
+                    embedded:
+                      properties:
+                        image:
+                          type: string
+                      type: object
+                    external:
+                      type: object
+                  type: object
                 redisImage:
+                  description: Deprecated
                   type: string
                 workerSpec:
                   properties:
@@ -84,6 +95,7 @@ spec:
                   type: object
               type: object
             highAvailability:
+              description: Deprecated
               properties:
                 enabled:
                   type: boolean
@@ -107,13 +119,34 @@ spec:
                   type: object
                 database:
                   properties:
+                    embedded:
+                      properties:
+                        mysql:
+                          properties:
+                            image:
+                              type: string
+                          type: object
+                        postgresql:
+                          properties:
+                            image:
+                              type: string
+                          type: object
+                      type: object
+                    external:
+                      properties:
+                        mysql:
+                          type: object
+                        postgresql:
+                          type: object
+                      type: object
                     mysql:
-                      description: Union type. Only one of the fields can be set
+                      description: Deprecated
                       properties:
                         image:
                           type: string
                       type: object
                     postgresql:
+                      description: Deprecated
                       properties:
                         image:
                           type: string
@@ -169,7 +202,18 @@ spec:
                   type: string
                 memcachedImage:
                   type: string
+                redisDatabase:
+                  properties:
+                    embedded:
+                      properties:
+                        image:
+                          type: string
+                      type: object
+                    external:
+                      type: object
+                  type: object
                 redisImage:
+                  description: Deprecated
                   type: string
                 sidekiqSpec:
                   properties:

@@ -46,6 +46,7 @@ type APIManagerSpec struct {
 	System *SystemSpec `json:"system,omitempty"`
 	// +optional
 	Zync *ZyncSpec `json:"zync,omitempty"`
+	// Deprecated
 	// +optional
 	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 	// +optional
@@ -169,14 +170,55 @@ type ApicastStagingSpec struct {
 type BackendSpec struct {
 	// +optional
 	Image *string `json:"image,omitempty"`
+	// Deprecated
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
+	// +optional
+	RedisDatabaseSpec *BackendRedisDatabaseSpec `json:"redisDatabase,omitempty"`
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
 	WorkerSpec *BackendWorkerSpec `json:"workerSpec,omitempty"`
 	// +optional
 	CronSpec *BackendCronSpec `json:"cronSpec,omitempty"`
+}
+
+type BackendRedisDatabaseSpec struct {
+	BackendRedisDatabaseModeSpec `json:",inline"`
+}
+
+type BackendRedisDatabaseModeSpec struct {
+	// +optional
+	EmbeddedDatabaseSpec *BackendRedisDatabaseEmbeddedSpec `json:"embedded,omitempty"`
+	// +optional
+	ExternalDatabaseSpec *BackendRedisDatabaseExternalSpec `json:"external,omitempty"`
+}
+
+type BackendRedisDatabaseEmbeddedSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+}
+
+type BackendRedisDatabaseExternalSpec struct {
+}
+
+type SystemRedisDatabaseSpec struct {
+	SystemRedisDatabaseModeSpec `json:",inline"`
+}
+
+type SystemRedisDatabaseModeSpec struct {
+	// +optional
+	EmbeddedDatabaseSpec *SystemRedisDatabaseEmbeddedSpec `json:"embedded,omitempty"`
+	// +optional
+	ExternalDatabaseSpec *SystemRedisDatabaseExternalSpec `json:"external,omitempty"`
+}
+
+type SystemRedisDatabaseEmbeddedSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+}
+
+type SystemRedisDatabaseExternalSpec struct {
 }
 
 type BackendListenerSpec struct {
@@ -201,6 +243,7 @@ type SystemSpec struct {
 	// +optional
 	MemcachedImage *string `json:"memcachedImage,omitempty"`
 
+	// Deprecated
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
 
@@ -212,7 +255,6 @@ type SystemSpec struct {
 	// something)
 
 	// +optional
-
 	FileStorageSpec *SystemFileStorageSpec `json:"fileStorage,omitempty"`
 
 	// TODO should union fields be optional?
@@ -220,8 +262,9 @@ type SystemSpec struct {
 	// +optional
 	DatabaseSpec *SystemDatabaseSpec `json:"database,omitempty"`
 
-	AppSpec     *SystemAppSpec     `json:"appSpec,omitempty"`
-	SidekiqSpec *SystemSidekiqSpec `json:"sidekiqSpec,omitempty"`
+	RedisDatabaseSpec *SystemRedisDatabaseSpec `json:"redisDatabase,omitempty"`
+	AppSpec           *SystemAppSpec           `json:"appSpec,omitempty"`
+	SidekiqSpec       *SystemSidekiqSpec       `json:"sidekiqSpec,omitempty"`
 }
 
 type SystemAppSpec struct {
@@ -264,11 +307,53 @@ type SystemS3Spec struct {
 }
 
 type SystemDatabaseSpec struct {
-	// Union type. Only one of the fields can be set
+	// Deprecated
 	// +optional
 	MySQL *SystemMySQLSpec `json:"mysql,omitempty"`
+	// Deprecated
 	// +optional
 	PostgreSQL *SystemPostgreSQLSpec `json:"postgresql,omitempty"`
+
+	// SystemDatabaseModeSpec represents the location of the
+	// system database
+	SystemDatabaseModeSpec `json:",inline"`
+}
+
+type SystemDatabaseModeSpec struct {
+	// +optional
+	EmbeddedDatabaseSpec *SystemDatabaseEmbeddedSpec `json:"embedded,omitempty"`
+	// +optional
+	ExternalDatabaseSpec *SystemDatabaseExternalSpec `json:"external,omitempty"`
+}
+
+type SystemDatabaseEmbeddedSpec struct {
+	// +optional
+	MySQLSpec *SystemDatabaseEmbeddedMySQLSpec `json:"mysql,omitempty"`
+	// +optional
+	PostgreSQLSpec *SystemDatabaseEmbeddedPostgreSQLSpec `json:"postgresql,omitempty"`
+}
+
+type SystemDatabaseExternalSpec struct {
+	// +optional
+	MySQLSpec *SystemDatabaseExternalMySQLSpec `json:"mysql,omitempty"`
+	// +optional
+	PostgreSQLSpec *SystemDatabaseExternalPostgreSQLSpec `json:"postgresql,omitempty"`
+}
+
+type SystemDatabaseEmbeddedMySQLSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+}
+
+type SystemDatabaseEmbeddedPostgreSQLSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+}
+
+type SystemDatabaseExternalMySQLSpec struct {
+}
+
+type SystemDatabaseExternalPostgreSQLSpec struct {
 }
 
 type SystemMySQLSpec struct {

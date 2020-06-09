@@ -121,7 +121,8 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref common.ReferenceCallback) 
 					},
 					"highAvailability": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.HighAvailabilitySpec"),
+							Description: "Deprecated",
+							Ref:         ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.HighAvailabilitySpec"),
 						},
 					},
 					"podDisruptionBudget": {
