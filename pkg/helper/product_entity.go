@@ -17,6 +17,7 @@ type ProductEntity struct {
 	methods           *threescaleapi.MethodList
 	mappingRules      *threescaleapi.MappingRuleJSONList
 	backendUsages     threescaleapi.BackendAPIUsageList
+	proxy             *threescaleapi.ProxyJSON
 	logger            logr.Logger
 }
 
@@ -266,10 +267,36 @@ func (b *ProductEntity) CreateBackendUsage(params threescaleapi.Params) error {
 	return nil
 }
 
+func (b *ProductEntity) Proxy() (*threescaleapi.ProxyJSON, error) {
+	b.logger.V(1).Info("Proxy")
+	if b.proxy == nil {
+		proxy, err := b.getProxy()
+		if err != nil {
+			return nil, err
+		}
+		b.proxy = proxy
+	}
+	return b.proxy, nil
+}
+
+func (b *ProductEntity) UpdateProxy(params threescaleapi.Params) error {
+	b.logger.V(1).Info("UpdateProxy", "params", params)
+	_, err := b.client.UpdateProductProxy(b.productObj.Element.ID, params)
+	if err != nil {
+		return fmt.Errorf("product [%s] update proxy: %w", b.productObj.Element.SystemName, err)
+	}
+	b.resetProxy()
+	return nil
+}
+
 //
 // PRIVATE
 //
 //
+
+func (b *ProductEntity) resetProxy() {
+	b.proxy = nil
+}
 
 func (b *ProductEntity) resetBackendUsages() {
 	b.backendUsages = nil
@@ -382,4 +409,14 @@ func (b *ProductEntity) getBackendUsages() (threescaleapi.BackendAPIUsageList, e
 	}
 
 	return list, nil
+}
+
+func (b *ProductEntity) getProxy() (*threescaleapi.ProxyJSON, error) {
+	b.logger.V(1).Info("getProxy")
+	obj, err := b.client.ProductProxy(b.productObj.Element.ID)
+	if err != nil {
+		return nil, fmt.Errorf("product [%s] get proxy: %w", b.productObj.Element.SystemName, err)
+	}
+
+	return obj, nil
 }
