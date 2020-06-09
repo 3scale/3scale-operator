@@ -20,6 +20,8 @@ type ApicastOptions struct {
 	CommonProductionLabels         map[string]string `validate:"required"`
 	StagingPodTemplateLabels       map[string]string `validate:"required"`
 	ProductionPodTemplateLabels    map[string]string `validate:"required"`
+	StagingMonitoringLabels        map[string]string `validate:"required"`
+	ProductionMonitoringLabels     map[string]string `validate:"required"`
 }
 
 func NewApicastOptions() *ApicastOptions {

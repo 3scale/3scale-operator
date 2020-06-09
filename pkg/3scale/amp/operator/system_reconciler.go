@@ -171,12 +171,12 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(component.SystemSidekiqMonitoringService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileMonitoringService(system.SystemSidekiqMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(component.SystemSidekiqServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceMonitor(system.SystemSidekiqServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

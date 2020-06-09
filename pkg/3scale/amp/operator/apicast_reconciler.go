@@ -97,12 +97,12 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(component.ApicastStagingMonitoringService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileMonitoringService(apicast.ApicastStagingMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(component.ApicastProductionMonitoringService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileMonitoringService(apicast.ApicastProductionMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -117,12 +117,12 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(component.ApicastProductionServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceMonitor(apicast.ApicastProductionServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(component.ApicastStagingServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceMonitor(apicast.ApicastStagingServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

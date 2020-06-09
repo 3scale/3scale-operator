@@ -3,7 +3,6 @@ package component
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -14,20 +13,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func SystemSidekiqMonitoringService() *v1.Service {
+func (system *System) SystemSidekiqMonitoringService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-sidekiq-metrics",
-			Labels: map[string]string{
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-				"threescale_component":         "system",
-				"threescale_component_element": "sidekiq",
-				"monitoring-key":               common.MonitoringKey,
-			},
+			Name:   "system-sidekiq-metrics",
+			Labels: system.Options.SidekiqMonitoringLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -43,17 +37,11 @@ func SystemSidekiqMonitoringService() *v1.Service {
 	}
 }
 
-func SystemSidekiqServiceMonitor() *monitoringv1.ServiceMonitor {
+func (system *System) SystemSidekiqServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-sidekiq",
-			Labels: map[string]string{
-				// TODO from options
-				"threescale_component":         "system",
-				"threescale_component_element": "sidekiq",
-				"monitoring-key":               common.MonitoringKey,
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-			},
+			Name:   "system-sidekiq",
+			Labels: system.Options.SidekiqMonitoringLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -62,13 +50,7 @@ func SystemSidekiqServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					// TODO from options
-					"app":                          appsv1alpha1.Default3scaleAppLabel,
-					"threescale_component":         "system",
-					"threescale_component_element": "sidekiq",
-					"monitoring-key":               common.MonitoringKey,
-				},
+				MatchLabels: system.Options.SidekiqMonitoringLabels,
 			},
 		},
 	}

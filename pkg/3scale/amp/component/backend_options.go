@@ -34,6 +34,8 @@ type BackendOptions struct {
 	ListenerPodTemplateLabels    map[string]string `validate:"required"`
 	WorkerPodTemplateLabels      map[string]string `validate:"required"`
 	CronPodTemplateLabels        map[string]string `validate:"required"`
+	ListenerMonitoringLabels     map[string]string `validate:"required"`
+	WorkerMonitoringLabels       map[string]string `validate:"required"`
 }
 
 func NewBackendOptions() *BackendOptions {
