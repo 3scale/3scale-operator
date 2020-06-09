@@ -64,8 +64,140 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
+func (u *UpgradeApiManager) migrateCRFields() (reconcile.Result, error) {
+	// Migration of CR fields is in two ordered steps:
+	// 1 - Migrate highAvailability field in case is set
+	// 2 - After and only after the completion of the migration of the
+	//     highAvailability field  we migrate the possible obsolete fields used
+	//     for the old databases sections and the obsolete database images fields
+
+	// We try to migrate the highAvailability field in case is set.
+	// If it is set, we change all appropriate fields before submitting an update
+	// so we have an atomic set of changes. After the update we requeue
+	if u.apiManager.Spec.HighAvailability != nil {
+		if u.apiManager.Spec.HighAvailability.Enabled {
+			u.apiManager.Spec.System.DatabaseSpec = &appsv1alpha1.SystemDatabaseSpec{
+				SystemDatabaseModeSpec: appsv1alpha1.SystemDatabaseModeSpec{
+					ExternalDatabaseSpec: &appsv1alpha1.SystemDatabaseExternalSpec{},
+				},
+			}
+
+			u.apiManager.Spec.System.RedisDatabaseSpec = &appsv1alpha1.SystemRedisDatabaseSpec{
+				SystemRedisDatabaseModeSpec: appsv1alpha1.SystemRedisDatabaseModeSpec{
+					ExternalDatabaseSpec: &appsv1alpha1.SystemRedisDatabaseExternalSpec{},
+				},
+			}
+
+			u.apiManager.Spec.Backend.RedisDatabaseSpec = &appsv1alpha1.BackendRedisDatabaseSpec{
+				BackendRedisDatabaseModeSpec: appsv1alpha1.BackendRedisDatabaseModeSpec{
+					ExternalDatabaseSpec: &appsv1alpha1.BackendRedisDatabaseExternalSpec{},
+				},
+			}
+		}
+
+		u.apiManager.Spec.HighAvailability = nil
+		u.Logger().V(1).Info(fmt.Sprintf("APIManager CR '%s' has obsolete 'spec.highAvailability' field enabled. Updating to new database mode format...", u.apiManager.Name))
+		err := u.UpdateResource(u.apiManager)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	// At this point we know if highAvailability was originally set before migration
+	// now it is unset and the database-specific external database mode attributes
+	// are set.
+	// We can check whether the CR had external databases mode enabled originally
+	// by looking at the corresponding new 'external' section for each of the
+	// databases. In case it is set it means the databases were originally external
+	// so we don't worry about migrating the obsolete embedded fields. If it is
+	// not set it means that originally the databases  were embedded. In this
+	// last case we have to migrate the obsolete embedded-related fields.
+	// This code assumes that the obsolete sections were not originally set with
+	// the zero-value when in case external database were originally used.
+	// TODO is the previous assumption correct or should we always set to null
+	// the deprecated fields?
+	systemDatabaseSpec := u.apiManager.Spec.System.DatabaseSpec
+	changed := false
+	if systemDatabaseSpec != nil && systemDatabaseSpec.ExternalDatabaseSpec == nil {
+		if systemDatabaseSpec.DeprecatedMySQL != nil {
+			u.Logger().V(1).Info(fmt.Sprintf("APIManager CR '%s' has obsolete 'spec.system.database.mysql' field set. Updating to new database mode format...", u.apiManager.Name))
+			changed = true
+			if systemDatabaseSpec.DeprecatedMySQL.Image != nil {
+				systemDatabaseSpec.SystemDatabaseModeSpec = appsv1alpha1.SystemDatabaseModeSpec{
+					EmbeddedDatabaseSpec: &appsv1alpha1.SystemDatabaseEmbeddedSpec{
+						MySQLSpec: &appsv1alpha1.SystemDatabaseEmbeddedMySQLSpec{
+							Image: systemDatabaseSpec.DeprecatedMySQL.Image,
+						},
+					},
+				}
+			}
+			systemDatabaseSpec.DeprecatedMySQL = nil
+		}
+
+		if systemDatabaseSpec.DeprecatedPostgreSQL != nil {
+			u.Logger().V(1).Info(fmt.Sprintf("APIManager CR '%s' has obsolete 'spec.system.database.postgresql' field set. Updating to new database mode format...", u.apiManager.Name))
+			changed = true
+			if systemDatabaseSpec.DeprecatedPostgreSQL.Image != nil {
+				systemDatabaseSpec.SystemDatabaseModeSpec = appsv1alpha1.SystemDatabaseModeSpec{
+					EmbeddedDatabaseSpec: &appsv1alpha1.SystemDatabaseEmbeddedSpec{
+						PostgreSQLSpec: &appsv1alpha1.SystemDatabaseEmbeddedPostgreSQLSpec{
+							Image: systemDatabaseSpec.DeprecatedPostgreSQL.Image,
+						},
+					},
+				}
+			}
+			systemDatabaseSpec.DeprecatedPostgreSQL = nil
+		}
+	}
+
+	systemRedisDatabaseSpec := u.apiManager.Spec.System.RedisDatabaseSpec
+	if systemRedisDatabaseSpec != nil && systemRedisDatabaseSpec.ExternalDatabaseSpec == nil {
+		u.Logger().V(1).Info(fmt.Sprintf("APIManager CR '%s' has obsolete 'spec.system.redisImage' field set. Updating to new database mode format...", u.apiManager.Name))
+		if u.apiManager.Spec.System.DeprecatedRedisImage != nil {
+			changed = true
+			systemRedisDatabaseSpec.SystemRedisDatabaseModeSpec = appsv1alpha1.SystemRedisDatabaseModeSpec{
+				EmbeddedDatabaseSpec: &appsv1alpha1.SystemRedisDatabaseEmbeddedSpec{
+					Image: u.apiManager.Spec.System.DeprecatedRedisImage,
+				},
+			}
+			u.apiManager.Spec.System.DeprecatedRedisImage = nil
+		}
+	}
+
+	backendRedisDatabaseSpec := u.apiManager.Spec.Backend.RedisDatabaseSpec
+	if backendRedisDatabaseSpec != nil && backendRedisDatabaseSpec.ExternalDatabaseSpec == nil {
+		u.Logger().V(1).Info(fmt.Sprintf("APIManager CR '%s' has obsolete 'spec.backend.redisImage' field set. Updating to new database mode format...", u.apiManager.Name))
+		if u.apiManager.Spec.Backend.DeprecatedRedisImage != nil {
+			changed = true
+			backendRedisDatabaseSpec.BackendRedisDatabaseModeSpec = appsv1alpha1.BackendRedisDatabaseModeSpec{
+				EmbeddedDatabaseSpec: &appsv1alpha1.BackendRedisDatabaseEmbeddedSpec{
+					Image: u.apiManager.Spec.Backend.DeprecatedRedisImage,
+				},
+			}
+			u.apiManager.Spec.Backend.DeprecatedRedisImage = nil
+		}
+	}
+
+	if changed {
+		u.Logger().V(1).Info(fmt.Sprintf("APIManager CR '%s' had obsolete embedded fields images. Migrating to new database mode format...", u.apiManager.Name))
+		err := u.UpdateResource(u.apiManager)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	return reconcile.Result{}, nil
+}
+
 func (u *UpgradeApiManager) upgradeImages() (reconcile.Result, error) {
-	res, err := u.upgradeAMPImageStreams()
+	res, err := u.migrateCRFields()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = u.upgradeAMPImageStreams()
 	if res.Requeue || err != nil {
 		return res, err
 	}
