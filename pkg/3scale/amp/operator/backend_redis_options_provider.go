@@ -29,8 +29,9 @@ func (r *BackendRedisOptionsProvider) GetBackendRedisOptions() (*component.Backe
 	r.options.InsecureImportPolicy = r.apimanager.Spec.ImageStreamTagImportInsecure
 
 	r.options.Image = BackendRedisImageURL()
-	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisImage != nil {
-		r.options.Image = *r.apimanager.Spec.Backend.RedisImage
+	if r.apimanager.IsBackendRedisDatabaseEmbedded() && r.apimanager.Spec.Backend.RedisDatabaseSpec.EmbeddedDatabaseSpec.Image != nil {
+		r.options.Image = *r.apimanager.Spec.Backend.RedisDatabaseSpec.EmbeddedDatabaseSpec.Image
+
 	}
 
 	r.options.BackendCommonLabels = r.backendCommonLabels()

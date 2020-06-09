@@ -39,8 +39,12 @@ func TestSystemMySQLImageReconciler(t *testing.T) {
 			},
 			System: &appsv1alpha1.SystemSpec{
 				DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-					MySQL: &appsv1alpha1.SystemMySQLSpec{
-						Image: &imageUrl,
+					SystemDatabaseModeSpec: appsv1alpha1.SystemDatabaseModeSpec{
+						EmbeddedDatabaseSpec: &appsv1alpha1.SystemDatabaseEmbeddedSpec{
+							MySQLSpec: &appsv1alpha1.SystemDatabaseEmbeddedMySQLSpec{
+								Image: &imageUrl,
+							},
+						},
 					},
 				},
 			},

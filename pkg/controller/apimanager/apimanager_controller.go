@@ -6,9 +6,11 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 
@@ -233,33 +235,35 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		return result, err
 	}
 
-	if !cr.IsExternalDatabaseEnabled() {
-		commonEmbeddedRedisReconciler := operator.NewBackendRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	if !cr.IsBackendRedisDatabaseExternal() || !cr.IsSystemRedisDatabaseExternal() {
+		commonEmbeddedRedisReconciler := operator.NewCommonEmbeddedRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
 		result, err = commonEmbeddedRedisReconciler.Reconcile()
 		if err != nil || result.Requeue {
 			return result, err
 		}
-		backendRedisReconciler := operator.NewBackendRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
-		result, err = backendRedisReconciler.Reconcile()
-		if err != nil || result.Requeue {
-			return result, err
-		}
-		systemRedisReconciler := operator.NewSystemRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
-		result, err = systemRedisReconciler.Reconcile()
-		if err != nil || result.Requeue {
-			return result, err
-		}
+	}
 
+	backendRedisReconciler := operator.NewBackendRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = backendRedisReconciler.Reconcile()
+	if err != nil || result.Requeue {
+		return result, err
+	}
+
+	systemRedisReconciler := operator.NewSystemRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = systemRedisReconciler.Reconcile()
+	if err != nil || result.Requeue {
+		return result, err
+	}
+
+	if cr.IsSystemDatabaseExternal() {
+		err := r.checkExternalSystemDatabaseSecret(cr)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else {
 		result, err = r.reconcileSystemDatabaseLogic(cr)
 		if err != nil || result.Requeue {
 			return result, err
-		}
-	} else {
-		// External databases
-		// validate required secrets exist
-		err := r.externalDatabasesCheck(cr)
-		if err != nil {
-			return reconcile.Result{}, err
 		}
 	}
 
@@ -297,10 +301,9 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 }
 
 func (r *ReconcileAPIManager) reconcileSystemDatabaseLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	if cr.Spec.System.DatabaseSpec != nil && cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if cr.IsSystemDatabaseEmbeddedPostgreSQL() {
 		return r.reconcileSystemPostgreSQLLogic(cr)
 	}
-
 	// Defaults to MySQL
 	return r.reconcileSystemMySQLLogic(cr)
 }
@@ -365,6 +368,13 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 		}
 	}
 	return nil
+}
+
+func (r *ReconcileAPIManager) checkExternalSystemDatabaseSecret(cr *appsv1alpha1.APIManager) error {
+	secretSource := helper.NewSecretSource(r.Client(), cr.Namespace)
+
+	_, err := secretSource.RequiredFieldValueFromRequiredSecret(component.SystemSecretSystemDatabaseSecretName, component.SystemSecretSystemDatabaseURLFieldName)
+	return err
 }
 
 func (r *ReconcileAPIManager) externalDatabasesCheck(cr *appsv1alpha1.APIManager) error {

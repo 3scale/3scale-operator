@@ -82,7 +82,13 @@ func TestGetBackendRedisOptionsProvider(t *testing.T) {
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
-					RedisImage: &backendRedisImageURL,
+					RedisDatabaseSpec: &appsv1alpha1.BackendRedisDatabaseSpec{
+						BackendRedisDatabaseModeSpec: appsv1alpha1.BackendRedisDatabaseModeSpec{
+							EmbeddedDatabaseSpec: &appsv1alpha1.BackendRedisDatabaseEmbeddedSpec{
+								Image: &backendRedisImageURL,
+							},
+						},
+					},
 				}
 				return apimanager
 			},

@@ -82,7 +82,13 @@ func TestGetSystemRedisOptionsProvider(t *testing.T) {
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					RedisImage: &systemRedisImageURL,
+					RedisDatabaseSpec: &appsv1alpha1.SystemRedisDatabaseSpec{
+						SystemRedisDatabaseModeSpec: appsv1alpha1.SystemRedisDatabaseModeSpec{
+							EmbeddedDatabaseSpec: &appsv1alpha1.SystemRedisDatabaseEmbeddedSpec{
+								Image: &systemRedisImageURL,
+							},
+						},
+					},
 				}
 				return apimanager
 			},

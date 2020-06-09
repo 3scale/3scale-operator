@@ -70,17 +70,21 @@ func (u *UpgradeApiManager) upgradeImages() (reconcile.Result, error) {
 		return res, err
 	}
 
-	if !u.apiManager.IsExternalDatabaseEnabled() {
+	if !u.apiManager.IsBackendRedisDatabaseExternal() {
 		res, err = u.upgradeBackendRedisImageStream()
 		if res.Requeue || err != nil {
 			return res, err
 		}
+	}
 
+	if !u.apiManager.IsSystemRedisDatabaseExternal() {
 		res, err = u.upgradeSystemRedisImageStream()
 		if res.Requeue || err != nil {
 			return res, err
 		}
+	}
 
+	if !u.apiManager.IsSystemDatabaseExternal() {
 		res, err = u.upgradeSystemDatabaseImageStream()
 		if res.Requeue || err != nil {
 			return res, err
@@ -126,17 +130,21 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 		return res, err
 	}
 
-	if !u.apiManager.IsExternalDatabaseEnabled() {
+	if !u.apiManager.IsBackendRedisDatabaseExternal() {
 		res, err = u.upgradeBackendRedisDeploymentConfig()
 		if res.Requeue || err != nil {
 			return res, err
 		}
+	}
 
+	if !u.apiManager.IsSystemRedisDatabaseExternal() {
 		res, err = u.upgradeSystemRedisDeploymentConfig()
 		if res.Requeue || err != nil {
 			return res, err
 		}
+	}
 
+	if !u.apiManager.IsSystemDatabaseExternal() {
 		res, err = u.upgradeSystemDatabaseDeploymentConfig()
 		if res.Requeue || err != nil {
 			return res, err
@@ -255,7 +263,7 @@ func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Resu
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseDeploymentConfig() (reconcile.Result, error) {
-	if u.apiManager.Spec.System.DatabaseSpec != nil && u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if u.apiManager.IsSystemDatabaseEmbeddedPostgreSQL() {
 		return u.upgradeSystemPostgreSQLDeploymentConfig()
 	}
 
@@ -384,7 +392,7 @@ func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, e
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseImageStream() (reconcile.Result, error) {
-	if u.apiManager.Spec.System.DatabaseSpec != nil && u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if u.apiManager.IsSystemDatabaseEmbeddedPostgreSQL() {
 		return u.upgradeSystemPostgreSQLImageStream()
 	}
 
@@ -428,17 +436,21 @@ func (u *UpgradeApiManager) deleteOldImageStreamsTags() (reconcile.Result, error
 		return res, err
 	}
 
-	if !u.apiManager.IsExternalDatabaseEnabled() {
+	if !u.apiManager.IsBackendRedisDatabaseExternal() {
 		res, err = u.deleteBackendRedisOldImageStreamTags()
 		if res.Requeue || err != nil {
 			return res, err
 		}
+	}
 
+	if !u.apiManager.IsSystemRedisDatabaseExternal() {
 		res, err = u.deleteSystemRedisOldImageStreamTags()
 		if res.Requeue || err != nil {
 			return res, err
 		}
+	}
 
+	if !u.apiManager.IsSystemDatabaseExternal() {
 		res, err = u.deleteSystemDatabaseOldImageStreamTags()
 		if res.Requeue || err != nil {
 			return res, err
@@ -516,7 +528,7 @@ func (u *UpgradeApiManager) deleteSystemRedisOldImageStreamTags() (reconcile.Res
 }
 
 func (u *UpgradeApiManager) deleteSystemDatabaseOldImageStreamTags() (reconcile.Result, error) {
-	if u.apiManager.Spec.System.DatabaseSpec != nil && u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if u.apiManager.IsSystemDatabaseEmbeddedPostgreSQL() {
 		return u.deleteSystemPostgreSQLOldImageStreamTags()
 	}
 
@@ -666,34 +678,36 @@ func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error)
 		system.SphinxDeploymentConfig(),
 	}
 
-	if !u.apiManager.IsExternalDatabaseEnabled() {
+	if !u.apiManager.IsSystemRedisDatabaseExternal() {
 		systemRedis, err := SystemRedis(u.apiManager)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		deploymentConfigs = append(deploymentConfigs, systemRedis.DeploymentConfig())
+	}
+
+	if !u.apiManager.IsBackendRedisDatabaseExternal() {
 		backendRedis, err := BackendRedis(u.apiManager)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-
-		deploymentConfigs = append(deploymentConfigs, systemRedis.DeploymentConfig())
 		deploymentConfigs = append(deploymentConfigs, backendRedis.DeploymentConfig())
 	}
 
-	if u.apiManager.IsSystemPostgreSQLEnabled() {
-		systemPostgreSQL, err := SystemPostgreSQL(u.apiManager, u.Client())
-		if err != nil {
-			return reconcile.Result{}, err
+	if !u.apiManager.IsSystemDatabaseExternal() {
+		if u.apiManager.IsSystemDatabaseEmbeddedPostgreSQL() {
+			systemPostgreSQL, err := SystemPostgreSQL(u.apiManager, u.Client())
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			deploymentConfigs = append(deploymentConfigs, systemPostgreSQL.DeploymentConfig())
+		} else {
+			systemMySQL, err := SystemMySQL(u.apiManager, u.Client())
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			deploymentConfigs = append(deploymentConfigs, systemMySQL.DeploymentConfig())
 		}
-		deploymentConfigs = append(deploymentConfigs, systemPostgreSQL.DeploymentConfig())
-	}
-
-	if u.apiManager.IsSystemMysqlEnabled() {
-		systemMySQL, err := SystemMySQL(u.apiManager, u.Client())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		deploymentConfigs = append(deploymentConfigs, systemMySQL.DeploymentConfig())
 	}
 
 	updated := false

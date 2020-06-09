@@ -38,8 +38,12 @@ func TestGetSystemPostgreSQLImageOptionsProvider(t *testing.T) {
 				apimanager := basicApimanager()
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
 					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
-							Image: &tmpImageURL,
+						SystemDatabaseModeSpec: appsv1alpha1.SystemDatabaseModeSpec{
+							EmbeddedDatabaseSpec: &appsv1alpha1.SystemDatabaseEmbeddedSpec{
+								PostgreSQLSpec: &appsv1alpha1.SystemDatabaseEmbeddedPostgreSQLSpec{
+									Image: &tmpImageURL,
+								},
+							},
 						},
 					},
 				}

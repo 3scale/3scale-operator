@@ -644,21 +644,15 @@ func (apimanager *APIManager) setSystemFileStorageSpecDefaults() (bool, error) {
 
 func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	changed := false
-	systemSpec := apimanager.Spec.System
 
-	if apimanager.IsExternalDatabaseEnabled() {
-		if systemSpec.DatabaseSpec != nil {
-			systemSpec.DatabaseSpec = nil
-			changed = true
-		}
-		return changed, nil
+	if apimanager.IsSystemDatabaseEmbedded() && apimanager.IsSystemDatabaseExternal() {
+		return changed, fmt.Errorf("Only one System Database mode can be chosen")
 	}
-
-	// databases managed internally
-	if systemSpec.DatabaseSpec != nil &&
-		systemSpec.DatabaseSpec.MySQL != nil &&
-		systemSpec.DatabaseSpec.PostgreSQL != nil {
-		return changed, fmt.Errorf("Only one System Database can be chosen at the same time")
+	if apimanager.IsSystemDatabaseEmbeddedMySQL() && apimanager.IsSystemDatabaseEmbeddedPostgreSQL() {
+		return changed, fmt.Errorf("Only one embedded System Database type can be chosen at the same time")
+	}
+	if apimanager.IsSystemDatabaseExternalMySQL() && apimanager.IsSystemDatabaseExternalPostgreSQL() {
+		return changed, fmt.Errorf("Only one external System Database type can be chosen at the same time")
 	}
 
 	return changed, nil
@@ -695,24 +689,8 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 	return changed
 }
 
-func (apimanager *APIManager) IsExternalDatabaseEnabled() bool {
-	return apimanager.Spec.HighAvailability != nil && apimanager.Spec.HighAvailability.Enabled
-}
-
 func (apimanager *APIManager) IsPDBEnabled() bool {
 	return apimanager.Spec.PodDisruptionBudget != nil && apimanager.Spec.PodDisruptionBudget.Enabled
-}
-
-func (apimanager *APIManager) IsSystemPostgreSQLEnabled() bool {
-	return !apimanager.IsExternalDatabaseEnabled() &&
-		apimanager.Spec.System.DatabaseSpec != nil &&
-		apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil
-}
-
-func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
-	return !apimanager.IsExternalDatabaseEnabled() &&
-		apimanager.Spec.System.DatabaseSpec != nil &&
-		apimanager.Spec.System.DatabaseSpec.MySQL != nil
 }
 
 func (apimanager *APIManager) IsSystemDatabaseExternal() bool {

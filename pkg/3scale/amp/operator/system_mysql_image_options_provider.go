@@ -24,10 +24,8 @@ func (s *SystemMysqlImageOptionsProvider) GetSystemMySQLImageOptions() (*compone
 	s.mysqlImageOptions.InsecureImportPolicy = s.apimanager.Spec.ImageStreamTagImportInsecure
 
 	s.mysqlImageOptions.Image = SystemMySQLImageURL()
-	if s.apimanager.Spec.System.DatabaseSpec != nil &&
-		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
-		s.apimanager.Spec.System.DatabaseSpec.MySQL.Image != nil {
-		s.mysqlImageOptions.Image = *s.apimanager.Spec.System.DatabaseSpec.MySQL.Image
+	if s.apimanager.IsSystemDatabaseEmbeddedMySQL() && s.apimanager.Spec.System.DatabaseSpec.EmbeddedDatabaseSpec.MySQLSpec.Image != nil {
+		s.mysqlImageOptions.Image = *s.apimanager.Spec.System.DatabaseSpec.EmbeddedDatabaseSpec.MySQLSpec.Image
 	}
 
 	err := s.mysqlImageOptions.Validate()

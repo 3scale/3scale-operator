@@ -3,6 +3,7 @@ package operator
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -18,6 +19,11 @@ func NewBackendRedisReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogi
 }
 
 func (r *BackendRedisReconciler) Reconcile() (reconcile.Result, error) {
+	if r.apiManager.IsBackendRedisDatabaseExternal() {
+		err := r.checkBackendRedisSecretFields()
+		return reconcile.Result{}, err
+	}
+
 	redis, err := BackendRedis(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -57,4 +63,31 @@ func BackendRedis(apimanager *appsv1alpha1.APIManager) (*component.BackendRedis,
 		return nil, err
 	}
 	return component.NewBackendRedis(opts), nil
+}
+
+func (r *BackendRedisReconciler) checkBackendRedisSecretFields() error {
+	secretSource := helper.NewSecretSource(r.Client(), r.apiManager.Namespace)
+
+	cases := []struct {
+		secretName  string
+		secretField string
+	}{
+		{
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisStorageURLFieldName,
+		},
+		{
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisQueuesURLFieldName,
+		},
+	}
+
+	for _, option := range cases {
+		_, err := secretSource.RequiredFieldValueFromRequiredSecret(option.secretName, option.secretField)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -29,8 +29,8 @@ func (r *SystemRedisOptionsProvider) GetSystemRedisOptions() (*component.SystemR
 	r.options.InsecureImportPolicy = r.apimanager.Spec.ImageStreamTagImportInsecure
 
 	r.options.Image = SystemRedisImageURL()
-	if r.apimanager.Spec.System != nil && r.apimanager.Spec.System.RedisImage != nil {
-		r.options.Image = *r.apimanager.Spec.System.RedisImage
+	if r.apimanager.IsSystemRedisDatabaseEmbedded() && r.apimanager.Spec.System.RedisDatabaseSpec.EmbeddedDatabaseSpec.Image != nil {
+		r.options.Image = *r.apimanager.Spec.System.RedisDatabaseSpec.EmbeddedDatabaseSpec.Image
 	}
 
 	r.options.SystemCommonLabels = r.systemCommonLabels()

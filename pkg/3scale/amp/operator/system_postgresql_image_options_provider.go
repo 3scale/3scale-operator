@@ -24,10 +24,8 @@ func (s *SystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageOptions()
 	s.options.InsecureImportPolicy = s.apimanager.Spec.ImageStreamTagImportInsecure
 
 	s.options.Image = SystemPostgreSQLImageURL()
-	if s.apimanager.Spec.System.DatabaseSpec != nil &&
-		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil &&
-		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Image != nil {
-		s.options.Image = *s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Image
+	if s.apimanager.IsSystemDatabaseEmbeddedPostgreSQL() && s.apimanager.Spec.System.DatabaseSpec.EmbeddedDatabaseSpec.PostgreSQLSpec.Image != nil {
+		s.options.Image = *s.apimanager.Spec.System.DatabaseSpec.EmbeddedDatabaseSpec.PostgreSQLSpec.Image
 	}
 
 	err := s.options.Validate()
