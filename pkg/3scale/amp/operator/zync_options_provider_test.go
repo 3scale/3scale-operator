@@ -120,6 +120,24 @@ func testZyncDatabaseTolerations() []v1.Toleration {
 	return getTestTolerations("zync-database")
 }
 
+func testZyncZyncMonitoringLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "zync",
+		"threescale_component_element": "zync",
+		"monitoring-key":               "middleware",
+	}
+}
+
+func testZyncQueMonitoringLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "zync",
+		"threescale_component_element": "zync-que",
+		"monitoring-key":               "middleware",
+	}
+}
+
 func getZyncSecret() *v1.Secret {
 	data := map[string]string{
 		component.ZyncSecretKeyBaseFieldName:             zyncSecretKeyBasename,
@@ -160,6 +178,8 @@ func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 		ZyncPodTemplateLabels:                 testZyncPodTemplateLabels(),
 		ZyncQuePodTemplateLabels:              testZyncQuePodTemplateCommonLabels(),
 		ZyncDatabasePodTemplateLabels:         testZyncDatabasePodTemplateCommonLabels(),
+		ZyncMonitoringLabels:                  testZyncZyncMonitoringLabels(),
+		ZyncQueMonitoringLabels:               testZyncQueMonitoringLabels(),
 	}
 
 	expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(expectedOpts.DatabasePassword)

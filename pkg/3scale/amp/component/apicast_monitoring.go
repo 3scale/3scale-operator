@@ -3,7 +3,6 @@ package component
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -14,20 +13,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func ApicastProductionMonitoringService() *v1.Service {
+func (apicast *Apicast) ApicastProductionMonitoringService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-production-metrics",
-			Labels: map[string]string{
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "production",
-				"monitoring-key":               common.MonitoringKey,
-			},
+			Name:   "apicast-production-metrics",
+			Labels: apicast.Options.ProductionMonitoringLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -43,20 +37,15 @@ func ApicastProductionMonitoringService() *v1.Service {
 	}
 }
 
-func ApicastStagingMonitoringService() *v1.Service {
+func (apicast *Apicast) ApicastStagingMonitoringService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-staging-metrics",
-			Labels: map[string]string{
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "staging",
-				"monitoring-key":               common.MonitoringKey,
-			},
+			Name:   "apicast-staging-metrics",
+			Labels: apicast.Options.StagingMonitoringLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -72,17 +61,11 @@ func ApicastStagingMonitoringService() *v1.Service {
 	}
 }
 
-func ApicastProductionServiceMonitor() *monitoringv1.ServiceMonitor {
+func (apicast *Apicast) ApicastProductionServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-production",
-			Labels: map[string]string{
-				// TODO from options
-				"monitoring-key":               common.MonitoringKey,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "production",
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-			},
+			Name:   "apicast-production",
+			Labels: apicast.Options.ProductionMonitoringLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -91,29 +74,17 @@ func ApicastProductionServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					// TODO from options
-					"app":                          appsv1alpha1.Default3scaleAppLabel,
-					"threescale_component":         "apicast",
-					"threescale_component_element": "production",
-					"monitoring-key":               common.MonitoringKey,
-				},
+				MatchLabels: apicast.Options.ProductionMonitoringLabels,
 			},
 		},
 	}
 }
 
-func ApicastStagingServiceMonitor() *monitoringv1.ServiceMonitor {
+func (apicast *Apicast) ApicastStagingServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-staging",
-			Labels: map[string]string{
-				// TODO from options
-				"monitoring-key":               common.MonitoringKey,
-				"threescale_component":         "apicast",
-				"threescale_component_element": "staging",
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-			},
+			Name:   "apicast-staging",
+			Labels: apicast.Options.StagingMonitoringLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -122,13 +93,7 @@ func ApicastStagingServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					// TODO from options
-					"app":                          appsv1alpha1.Default3scaleAppLabel,
-					"threescale_component":         "apicast",
-					"threescale_component_element": "staging",
-					"monitoring-key":               common.MonitoringKey,
-				},
+				MatchLabels: apicast.Options.StagingMonitoringLabels,
 			},
 		},
 	}

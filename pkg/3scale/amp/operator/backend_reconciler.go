@@ -96,22 +96,22 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(component.BackendWorkerMonitoringService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileMonitoringService(backend.BackendWorkerMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(component.BackendWorkerServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceMonitor(backend.BackendWorkerServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(component.BackendListenerMonitoringService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileMonitoringService(backend.BackendListenerMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(component.BackendListenerServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceMonitor(backend.BackendListenerServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
