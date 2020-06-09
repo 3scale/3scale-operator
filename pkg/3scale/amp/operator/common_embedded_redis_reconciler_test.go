@@ -17,7 +17,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func TestRedisBackendDCReconcilerCreate(t *testing.T) {
+func TestCommonEmbeddedRedisConfigMapReconcilerCreate(t *testing.T) {
 	var (
 		appLabel       = "someLabel"
 		name           = "example-apimanager"
@@ -66,7 +66,7 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
-	reconciler := NewBackendRedisReconciler(baseAPIManagerLogicReconciler)
+	reconciler := NewCommonEmbeddedRedisReconciler(baseAPIManagerLogicReconciler)
 	_, err = reconciler.Reconcile()
 	if err != nil {
 		t.Fatal(err)
@@ -77,10 +77,7 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 		objName  string
 		obj      runtime.Object
 	}{
-		{"backendRedisDC", "backend-redis", &appsv1.DeploymentConfig{}},
-		{"backendRedisService", "backend-redis", &v1.Service{}},
-		{"backendRedisPVC", "backend-redis-storage", &v1.PersistentVolumeClaim{}},
-		{"backendRedisIS", "backend-redis", &imagev1.ImageStream{}},
+		{"redisCM", "redis-config", &v1.ConfigMap{}},
 	}
 
 	for _, tc := range cases {

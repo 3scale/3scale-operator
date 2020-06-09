@@ -38,6 +38,7 @@ func (f *AmpPostgresqlTemplateFactory) Adapters() []adapters.Adapter {
 	return []adapters.Adapter{
 		adapters.NewImagesAdapter(),
 		adapters.NewSystemPostgreSQLImageAdapter(),
+		adapters.NewCommonEmbeddedRedisAdapter(),
 		adapters.NewBackendRedisAdapter(),
 		adapters.NewSystemRedisAdapter(),
 		adapters.NewBackendAdapter(false),

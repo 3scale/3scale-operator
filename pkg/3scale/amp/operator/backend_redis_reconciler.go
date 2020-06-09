@@ -35,12 +35,6 @@ func (r *BackendRedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// backend CM
-	err = r.ReconcileConfigMap(redis.ConfigMap(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	// Backenb PVC
 	err = r.ReconcilePersistentVolumeClaim(redis.PersistentVolumeClaim(), reconcilers.CreateOnlyMutator)
 	if err != nil {

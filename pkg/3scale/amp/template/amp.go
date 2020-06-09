@@ -25,6 +25,7 @@ func (f *AmpTemplateFactory) Adapters() []adapters.Adapter {
 	return []adapters.Adapter{
 		adapters.NewImagesAdapter(),
 		adapters.NewSystemMysqlImageAdapter(),
+		adapters.NewCommonEmbeddedRedisAdapter(),
 		adapters.NewBackendRedisAdapter(),
 		adapters.NewSystemRedisAdapter(),
 		adapters.NewBackendAdapter(false),

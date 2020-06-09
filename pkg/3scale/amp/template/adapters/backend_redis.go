@@ -14,17 +14,7 @@ func NewBackendRedisAdapter() Adapter {
 }
 
 func (r *BackendRedisAdapter) Parameters() []templatev1.Parameter {
-	return []templatev1.Parameter{
-		{
-			Name:        "REDIS_IMAGE",
-			Description: "Redis image to use",
-			Required:    true,
-			// We use backend-redis image because we have to choose one
-			// but in templates there's no distinction between Backend Redis image
-			// used and System Redis image. They are always the same
-			Value: component.BackendRedisImageURL(),
-		},
-	}
+	return []templatev1.Parameter{}
 }
 
 func (r *BackendRedisAdapter) Objects() ([]common.KubernetesObject, error) {
@@ -46,13 +36,11 @@ func (r *BackendRedisAdapter) componentObjects(c *component.BackendRedis) []comm
 func (r *BackendRedisAdapter) backendRedisComponentObjects(c *component.BackendRedis) []common.KubernetesObject {
 	dc := c.DeploymentConfig()
 	bs := c.Service()
-	cm := c.ConfigMap()
 	bpvc := c.PersistentVolumeClaim()
 	bis := c.ImageStream()
 	objects := []common.KubernetesObject{
 		dc,
 		bs,
-		cm,
 		bpvc,
 		bis,
 	}
