@@ -234,8 +234,13 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 	}
 
 	if !cr.IsExternalDatabaseEnabled() {
-		redisReconciler := operator.NewRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
-		result, err = redisReconciler.Reconcile()
+		backendRedisReconciler := operator.NewBackendRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+		result, err = backendRedisReconciler.Reconcile()
+		if err != nil || result.Requeue {
+			return result, err
+		}
+		systemRedisReconciler := operator.NewSystemRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+		result, err = systemRedisReconciler.Reconcile()
 		if err != nil || result.Requeue {
 			return result, err
 		}

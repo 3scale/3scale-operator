@@ -13,7 +13,8 @@ type AmpHATemplateFactory struct {
 func (f *AmpHATemplateFactory) Adapters() []adapters.Adapter {
 	return []adapters.Adapter{
 		adapters.NewImagesAdapter(),
-		adapters.NewRedisAdapter(),
+		adapters.NewBackendRedisAdapter(),
+		adapters.NewSystemRedisAdapter(),
 		adapters.NewBackendAdapter(true),
 		adapters.NewMemcachedAdapter(),
 		adapters.NewSystemAdapter(true),

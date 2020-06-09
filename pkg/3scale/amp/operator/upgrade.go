@@ -227,12 +227,12 @@ func (u *UpgradeApiManager) upgradeMemcachedDeploymentConfig() (reconcile.Result
 	return reconcile.Result{}, nil
 }
 func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := BackendRedis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.BackendDeploymentConfig())
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.DeploymentConfig())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -241,12 +241,12 @@ func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Res
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := SystemRedis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.SystemDeploymentConfig())
+	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.DeploymentConfig())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -364,23 +364,23 @@ func (u *UpgradeApiManager) upgradeAMPImageStreams() (reconcile.Result, error) {
 }
 
 func (u *UpgradeApiManager) upgradeBackendRedisImageStream() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := BackendRedis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	reconciler := NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager)
-	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.BackendImageStream(), reconcilers.GenericImageStreamMutator)
+	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.ImageStream(), reconcilers.GenericImageStreamMutator)
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := SystemRedis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	reconciler := NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager)
-	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.SystemImageStream(), reconcilers.GenericImageStreamMutator)
+	return reconcile.Result{}, reconciler.ReconcileImagestream(redis.ImageStream(), reconcilers.GenericImageStreamMutator)
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseImageStream() (reconcile.Result, error) {
@@ -488,12 +488,12 @@ func (u *UpgradeApiManager) deleteAmpOldImageStreamsTags() (reconcile.Result, er
 }
 
 func (u *UpgradeApiManager) deleteBackendRedisOldImageStreamTags() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := BackendRedis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	res, err := u.deleteOldImageStreamTags(redis.BackendImageStream().GetName())
+	res, err := u.deleteOldImageStreamTags(redis.ImageStream().GetName())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -502,12 +502,12 @@ func (u *UpgradeApiManager) deleteBackendRedisOldImageStreamTags() (reconcile.Re
 }
 
 func (u *UpgradeApiManager) deleteSystemRedisOldImageStreamTags() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := SystemRedis(u.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	res, err := u.deleteOldImageStreamTags(redis.SystemImageStream().GetName())
+	res, err := u.deleteOldImageStreamTags(redis.ImageStream().GetName())
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -667,12 +667,17 @@ func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error)
 	}
 
 	if !u.apiManager.IsExternalDatabaseEnabled() {
-		redis, err := Redis(u.apiManager)
+		systemRedis, err := SystemRedis(u.apiManager)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		deploymentConfigs = append(deploymentConfigs, redis.SystemDeploymentConfig())
-		deploymentConfigs = append(deploymentConfigs, redis.BackendDeploymentConfig())
+		backendRedis, err := BackendRedis(u.apiManager)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		deploymentConfigs = append(deploymentConfigs, systemRedis.DeploymentConfig())
+		deploymentConfigs = append(deploymentConfigs, backendRedis.DeploymentConfig())
 	}
 
 	if u.apiManager.IsSystemPostgreSQLEnabled() {

@@ -66,7 +66,7 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
-	reconciler := NewRedisReconciler(baseAPIManagerLogicReconciler)
+	reconciler := NewBackendRedisReconciler(baseAPIManagerLogicReconciler)
 	_, err = reconciler.Reconcile()
 	if err != nil {
 		t.Fatal(err)
@@ -82,10 +82,6 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 		{"backendRedisCM", "redis-config", &v1.ConfigMap{}},
 		{"backendRedisPVC", "backend-redis-storage", &v1.PersistentVolumeClaim{}},
 		{"backendRedisIS", "backend-redis", &imagev1.ImageStream{}},
-		{"systemRedisDC", "system-redis", &appsv1.DeploymentConfig{}},
-		{"systemRedisPVC", "system-redis-storage", &v1.PersistentVolumeClaim{}},
-		{"systemRedisIS", "system-redis", &imagev1.ImageStream{}},
-		{"systemRedisService", "system-redis", &v1.Service{}},
 	}
 
 	for _, tc := range cases {
