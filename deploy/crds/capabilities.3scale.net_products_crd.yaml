@@ -121,8 +121,8 @@ spec:
                 required:
                 - path
                 type: object
-              description: 'Backend usage will be a map of Map: backend_id -> BackendSpec
-                Having backend_id as the index, the structure ensures single backend
+              description: 'Backend usage will be a map of Map: system_name -> BackendUsageSpec
+                Having system_name as the index, the structure ensures one backend
                 is not used multiple times.'
               type: object
             deployment:
@@ -206,6 +206,15 @@ spec:
                               type: object
                           type: object
                       type: object
+                      oneOf:
+                       - properties:
+                           userkey:
+                             type: object
+                         required: ["userkey"]
+                       - properties:
+                           appKeyAppID:
+                             type: object
+                         required: ["appKeyAppID"]
                   type: object
                 apicastSelfManaged:
                   description: ApicastSelfManagedSpec defines the desired state of
@@ -284,6 +293,15 @@ spec:
                               type: object
                           type: object
                       type: object
+                      oneOf:
+                       - properties:
+                           userkey:
+                             type: object
+                         required: ["userkey"]
+                       - properties:
+                           appKeyAppID:
+                             type: object
+                         required: ["appKeyAppID"]
                     productionPublicBaseURL:
                       pattern: ^https?:\/\/.*$
                       type: string
@@ -292,6 +310,15 @@ spec:
                       type: string
                   type: object
               type: object
+              oneOf:
+                - properties:
+                  apicastHosted:
+                    type: object
+                  required: ["apicastHosted"]
+                - properties:
+                  apicastSelfManaged:
+                    type: object
+                  required: ["apicastSelfManaged"]
             description:
               type: string
             mappingRules:
