@@ -714,3 +714,59 @@ func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
 		apimanager.Spec.System.DatabaseSpec != nil &&
 		apimanager.Spec.System.DatabaseSpec.MySQL != nil
 }
+
+func (apimanager *APIManager) IsSystemDatabaseExternal() bool {
+	return apimanager.Spec.System != nil &&
+		apimanager.Spec.System.DatabaseSpec != nil &&
+		apimanager.Spec.System.DatabaseSpec.ExternalDatabaseSpec != nil
+}
+
+func (apimanager *APIManager) IsSystemDatabaseExternalMySQL() bool {
+	return apimanager.IsSystemDatabaseExternal() &&
+		apimanager.Spec.System.DatabaseSpec.ExternalDatabaseSpec.MySQLSpec != nil
+}
+
+func (apimanager *APIManager) IsSystemDatabaseExternalPostgreSQL() bool {
+	return apimanager.IsSystemDatabaseExternal() &&
+		apimanager.Spec.System.DatabaseSpec.ExternalDatabaseSpec.PostgreSQLSpec != nil
+}
+
+func (apimanager *APIManager) IsSystemDatabaseEmbedded() bool {
+	return apimanager.Spec.System != nil &&
+		apimanager.Spec.System.DatabaseSpec != nil &&
+		apimanager.Spec.System.DatabaseSpec.EmbeddedDatabaseSpec != nil
+}
+
+func (apimanager *APIManager) IsSystemDatabaseEmbeddedMySQL() bool {
+	return apimanager.IsSystemDatabaseEmbedded() &&
+		apimanager.Spec.System.DatabaseSpec.EmbeddedDatabaseSpec.MySQLSpec != nil
+}
+
+func (apimanager *APIManager) IsSystemDatabaseEmbeddedPostgreSQL() bool {
+	return apimanager.IsSystemDatabaseEmbedded() &&
+		apimanager.Spec.System.DatabaseSpec.EmbeddedDatabaseSpec.PostgreSQLSpec != nil
+}
+
+func (apimanager *APIManager) IsSystemRedisDatabaseExternal() bool {
+	return apimanager.Spec.System != nil &&
+		apimanager.Spec.System.RedisDatabaseSpec != nil &&
+		apimanager.Spec.System.RedisDatabaseSpec.ExternalDatabaseSpec != nil
+}
+
+func (apimanager *APIManager) IsSystemRedisDatabaseEmbedded() bool {
+	return apimanager.Spec.System != nil &&
+		apimanager.Spec.System.RedisDatabaseSpec != nil &&
+		apimanager.Spec.System.RedisDatabaseSpec.EmbeddedDatabaseSpec != nil
+}
+
+func (apimanager *APIManager) IsBackendRedisDatabaseExternal() bool {
+	return apimanager.Spec.Backend != nil &&
+		apimanager.Spec.Backend.RedisDatabaseSpec != nil &&
+		apimanager.Spec.Backend.RedisDatabaseSpec.ExternalDatabaseSpec != nil
+}
+
+func (apimanager *APIManager) IsBackendRedisDatabaseEmbedded() bool {
+	return apimanager.Spec.Backend != nil &&
+		apimanager.Spec.Backend.RedisDatabaseSpec != nil &&
+		apimanager.Spec.Backend.RedisDatabaseSpec.EmbeddedDatabaseSpec != nil
+}
