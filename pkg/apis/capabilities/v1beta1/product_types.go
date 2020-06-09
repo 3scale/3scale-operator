@@ -143,7 +143,15 @@ type SecuritySpec struct {
 	// each 3scale API gateway call to your API backend contains a request header called X-3scale-proxy-secret-token.
 	// The value of this header can be set by you here. It's up to you ensure your backend only allows calls with this secret header.
 	// +optional
-	SecretToken *string `json:"hostHeader,omitempty"`
+	SecretToken *string `json:"secretToken,omitempty"`
+}
+
+func (s *SecuritySpec) SecuritySecretToken() *string {
+	return s.SecretToken
+}
+
+func (s *SecuritySpec) HostRewrite() *string {
+	return s.HostHeader
 }
 
 // AppKeyAppIDAuthenticationSpec defines the desired state of AppKey&AppId Authentication
@@ -156,13 +164,13 @@ type AppKeyAppIDAuthenticationSpec struct {
 	// +optional
 	AppKey *string `json:"appKey,omitempty"`
 
-	// Credentials Location available options:
-	// header: As HTTP Headers
+	// CredentialsLoc available options:
+	// headers: As HTTP Headers
 	// query: As query parameters (GET) or body parameters (POST/PUT/DELETE)
-	// basic: As HTTP Basic Authentication
+	// authorization: As HTTP Basic Authentication
 	// +optional
-	// +kubebuilder:validation:Enum=header;query;basic
-	CredentialsLocation *string `json:"credentials,omitempty"`
+	// +kubebuilder:validation:Enum=headers;query;authorization
+	CredentialsLoc *string `json:"credentials,omitempty"`
 
 	// +optional
 	Security *SecuritySpec `json:"security,omitempty"`
@@ -170,23 +178,75 @@ type AppKeyAppIDAuthenticationSpec struct {
 	// TODO GATEWAY RESPONSE
 }
 
+func (a *AppKeyAppIDAuthenticationSpec) SecuritySecretToken() *string {
+	if a.Security == nil {
+		return nil
+	}
+
+	return a.Security.SecuritySecretToken()
+}
+
+func (a *AppKeyAppIDAuthenticationSpec) HostRewrite() *string {
+	if a.Security == nil {
+		return nil
+	}
+
+	return a.Security.HostRewrite()
+}
+
+func (a *AppKeyAppIDAuthenticationSpec) CredentialsLocation() *string {
+	return a.CredentialsLoc
+}
+
+func (a *AppKeyAppIDAuthenticationSpec) AuthAppID() *string {
+	return a.AppID
+}
+
+func (a *AppKeyAppIDAuthenticationSpec) AuthAppKey() *string {
+	return a.AppKey
+}
+
 // UserKeyAuthenticationSpec defines the desired state of User Key Authentication
 type UserKeyAuthenticationSpec struct {
 	// +optional
-	AuthUserKey *string `json:"authUserKey,omitempty"`
+	Key *string `json:"authUserKey,omitempty"`
 
 	// Credentials Location available options:
-	// header: As HTTP Headers
+	// headers: As HTTP Headers
 	// query: As query parameters (GET) or body parameters (POST/PUT/DELETE)
-	// basic: As HTTP Basic Authentication
+	// authorization: As HTTP Basic Authentication
 	// +optional
-	// +kubebuilder:validation:Enum=header;query;basic
-	CredentialsLocation *string `json:"credentials,omitempty"`
+	// +kubebuilder:validation:Enum=headers;query;authorization
+	CredentialsLoc *string `json:"credentials,omitempty"`
 
 	// +optional
 	Security *SecuritySpec `json:"security,omitempty"`
 
 	// TODO GATEWAY RESPONSE
+}
+
+func (u *UserKeyAuthenticationSpec) SecuritySecretToken() *string {
+	if u.Security == nil {
+		return nil
+	}
+
+	return u.Security.SecuritySecretToken()
+}
+
+func (u *UserKeyAuthenticationSpec) HostRewrite() *string {
+	if u.Security == nil {
+		return nil
+	}
+
+	return u.Security.HostRewrite()
+}
+
+func (u *UserKeyAuthenticationSpec) CredentialsLocation() *string {
+	return u.CredentialsLoc
+}
+
+func (u *UserKeyAuthenticationSpec) AuthUserKey() *string {
+	return u.Key
 }
 
 // AuthenticationSpec defines the desired state of Product Authentication
@@ -209,6 +269,72 @@ func (a *AuthenticationSpec) AuthenticationMode() string {
 	return "2"
 }
 
+func (a *AuthenticationSpec) SecuritySecretToken() *string {
+	// authentication is oneOf by CRD openapiV3 validation
+	if a.UserKeyAuthentication != nil {
+		return a.UserKeyAuthentication.SecuritySecretToken()
+	}
+
+	if a.AppKeyAppIDAuthentication == nil {
+		panic("product authenticationspec: both userkey and appid_appkeyare nil")
+	}
+
+	return a.AppKeyAppIDAuthentication.SecuritySecretToken()
+}
+
+func (a *AuthenticationSpec) HostRewrite() *string {
+	// authentication is oneOf by CRD openapiV3 validation
+	if a.UserKeyAuthentication != nil {
+		return a.UserKeyAuthentication.HostRewrite()
+	}
+
+	if a.AppKeyAppIDAuthentication == nil {
+		panic("product authenticationspec: both userkey and appid_appkeyare nil")
+	}
+
+	return a.AppKeyAppIDAuthentication.HostRewrite()
+}
+
+func (a *AuthenticationSpec) CredentialsLocation() *string {
+	// authentication is oneOf by CRD openapiV3 validation
+	if a.UserKeyAuthentication != nil {
+		return a.UserKeyAuthentication.CredentialsLocation()
+	}
+
+	if a.AppKeyAppIDAuthentication == nil {
+		panic("product authenticationspec: both userkey and appid_appkeyare nil")
+	}
+
+	return a.AppKeyAppIDAuthentication.CredentialsLocation()
+}
+
+func (a *AuthenticationSpec) AuthUserKey() *string {
+	// authentication is oneOf by CRD openapiV3 validation
+	if a.UserKeyAuthentication != nil {
+		return a.UserKeyAuthentication.AuthUserKey()
+	}
+
+	return nil
+}
+
+func (a *AuthenticationSpec) AuthAppID() *string {
+	// authentication is oneOf by CRD openapiV3 validation
+	if a.AppKeyAppIDAuthentication != nil {
+		return a.AppKeyAppIDAuthentication.AuthAppID()
+	}
+
+	return nil
+}
+
+func (a *AuthenticationSpec) AuthAppKey() *string {
+	// authentication is oneOf by CRD openapiV3 validation
+	if a.AppKeyAppIDAuthentication != nil {
+		return a.AppKeyAppIDAuthentication.AuthAppKey()
+	}
+
+	return nil
+}
+
 // ApicastHostedSpec defines the desired state of Product Apicast Hosted
 type ApicastHostedSpec struct {
 	// +optional
@@ -221,6 +347,48 @@ func (a *ApicastHostedSpec) AuthenticationMode() *string {
 	}
 	authenticationMode := a.Authentication.AuthenticationMode()
 	return &authenticationMode
+}
+
+func (a *ApicastHostedSpec) SecuritySecretToken() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.SecuritySecretToken()
+}
+
+func (a *ApicastHostedSpec) HostRewrite() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.HostRewrite()
+}
+
+func (a *ApicastHostedSpec) CredentialsLocation() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.CredentialsLocation()
+}
+
+func (a *ApicastHostedSpec) AuthUserKey() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.AuthUserKey()
+}
+
+func (a *ApicastHostedSpec) AuthAppID() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.AuthAppID()
+}
+
+func (a *ApicastHostedSpec) AuthAppKey() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.AuthAppKey()
 }
 
 // ApicastSelfManagedSpec defines the desired state of Product Apicast Self Managed
@@ -241,6 +409,56 @@ func (a *ApicastSelfManagedSpec) AuthenticationMode() *string {
 	}
 	authenticationMode := a.Authentication.AuthenticationMode()
 	return &authenticationMode
+}
+
+func (a *ApicastSelfManagedSpec) ProdPublicBaseURL() *string {
+	return a.ProductionPublicBaseURL
+}
+
+func (a *ApicastSelfManagedSpec) StagPublicBaseURL() *string {
+	return a.StagingPublicBaseURL
+}
+
+func (a *ApicastSelfManagedSpec) SecuritySecretToken() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.SecuritySecretToken()
+}
+
+func (a *ApicastSelfManagedSpec) HostRewrite() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.HostRewrite()
+}
+
+func (a *ApicastSelfManagedSpec) CredentialsLocation() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.CredentialsLocation()
+}
+
+func (a *ApicastSelfManagedSpec) AuthUserKey() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.AuthUserKey()
+}
+
+func (a *ApicastSelfManagedSpec) AuthAppID() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.AuthAppID()
+}
+
+func (a *ApicastSelfManagedSpec) AuthAppKey() *string {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.AuthAppKey()
 }
 
 // ProductDeploymentSpec defines the desired state of Product Deployment
@@ -273,6 +491,112 @@ func (d *ProductDeploymentSpec) AuthenticationMode() *string {
 
 	// must be self managed, a
 	return d.ApicastSelfManaged.AuthenticationMode()
+}
+
+func (d *ProductDeploymentSpec) ProdPublicBaseURL() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		// Hosted deployment mode does not allow updating public base urls
+		return nil
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.ProdPublicBaseURL()
+}
+
+func (d *ProductDeploymentSpec) StagingPublicBaseURL() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		// Hosted deployment mode does not allow updating public base urls
+		return nil
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.StagPublicBaseURL()
+}
+
+func (d *ProductDeploymentSpec) SecuritySecretToken() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.SecuritySecretToken()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.SecuritySecretToken()
+}
+
+func (d *ProductDeploymentSpec) HostRewrite() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.HostRewrite()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.HostRewrite()
+}
+
+func (d *ProductDeploymentSpec) CredentialsLocation() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.CredentialsLocation()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.CredentialsLocation()
+}
+
+func (d *ProductDeploymentSpec) AuthUserKey() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.AuthUserKey()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.AuthUserKey()
+}
+
+func (d *ProductDeploymentSpec) AuthAppID() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.AuthAppID()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.AuthAppID()
+}
+
+func (d *ProductDeploymentSpec) AuthAppKey() *string {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.AuthAppKey()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.AuthAppKey()
 }
 
 // ProductSpec defines the desired state of Product
@@ -338,6 +662,62 @@ func (s *ProductSpec) AuthenticationMode() *string {
 		return nil
 	}
 	return s.Deployment.AuthenticationMode()
+}
+
+func (s *ProductSpec) ProdPublicBaseURL() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.ProdPublicBaseURL()
+}
+
+func (s *ProductSpec) StagingPublicBaseURL() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.StagingPublicBaseURL()
+}
+
+func (s *ProductSpec) SecuritySecretToken() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.SecuritySecretToken()
+}
+
+func (s *ProductSpec) HostRewrite() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.HostRewrite()
+}
+
+func (s *ProductSpec) CredentialsLocation() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.CredentialsLocation()
+}
+
+func (s *ProductSpec) AuthUserKey() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.AuthUserKey()
+}
+
+func (s *ProductSpec) AuthAppID() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.AuthAppID()
+}
+
+func (s *ProductSpec) AuthAppKey() *string {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.AuthAppKey()
 }
 
 // ProductStatus defines the observed state of Product

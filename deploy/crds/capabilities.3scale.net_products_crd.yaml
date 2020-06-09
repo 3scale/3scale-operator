@@ -150,20 +150,25 @@ spec:
                                 acts of behalf of app key
                               type: string
                             credentials:
-                              description: 'Credentials Location available options:
-                                header: As HTTP Headers query: As query parameters
-                                (GET) or body parameters (POST/PUT/DELETE) basic:
-                                As HTTP Basic Authentication'
+                              description: 'CredentialsLoc available options: headers:
+                                As HTTP Headers query: As query parameters (GET) or
+                                body parameters (POST/PUT/DELETE) authorization: As
+                                HTTP Basic Authentication'
                               enum:
-                              - header
+                              - headers
                               - query
-                              - basic
+                              - authorization
                               type: string
                             security:
                               description: SecuritySpec defines the desired state
                                 of Authentication Security
                               properties:
                                 hostHeader:
+                                  description: HostHeader Lets you define a custom
+                                    Host request header. This is needed if your API
+                                    backend only accepts traffic from a specific host.
+                                  type: string
+                                secretToken:
                                   description: SecretToken Enables you to block any
                                     direct developer requests to your API backend;
                                     each 3scale API gateway call to your API backend
@@ -182,19 +187,24 @@ spec:
                               type: string
                             credentials:
                               description: 'Credentials Location available options:
-                                header: As HTTP Headers query: As query parameters
-                                (GET) or body parameters (POST/PUT/DELETE) basic:
+                                headers: As HTTP Headers query: As query parameters
+                                (GET) or body parameters (POST/PUT/DELETE) authorization:
                                 As HTTP Basic Authentication'
                               enum:
-                              - header
+                              - headers
                               - query
-                              - basic
+                              - authorization
                               type: string
                             security:
                               description: SecuritySpec defines the desired state
                                 of Authentication Security
                               properties:
                                 hostHeader:
+                                  description: HostHeader Lets you define a custom
+                                    Host request header. This is needed if your API
+                                    backend only accepts traffic from a specific host.
+                                  type: string
+                                secretToken:
                                   description: SecretToken Enables you to block any
                                     direct developer requests to your API backend;
                                     each 3scale API gateway call to your API backend
@@ -237,20 +247,25 @@ spec:
                                 acts of behalf of app key
                               type: string
                             credentials:
-                              description: 'Credentials Location available options:
-                                header: As HTTP Headers query: As query parameters
-                                (GET) or body parameters (POST/PUT/DELETE) basic:
-                                As HTTP Basic Authentication'
+                              description: 'CredentialsLoc available options: headers:
+                                As HTTP Headers query: As query parameters (GET) or
+                                body parameters (POST/PUT/DELETE) authorization: As
+                                HTTP Basic Authentication'
                               enum:
-                              - header
+                              - headers
                               - query
-                              - basic
+                              - authorization
                               type: string
                             security:
                               description: SecuritySpec defines the desired state
                                 of Authentication Security
                               properties:
                                 hostHeader:
+                                  description: HostHeader Lets you define a custom
+                                    Host request header. This is needed if your API
+                                    backend only accepts traffic from a specific host.
+                                  type: string
+                                secretToken:
                                   description: SecretToken Enables you to block any
                                     direct developer requests to your API backend;
                                     each 3scale API gateway call to your API backend
@@ -269,19 +284,24 @@ spec:
                               type: string
                             credentials:
                               description: 'Credentials Location available options:
-                                header: As HTTP Headers query: As query parameters
-                                (GET) or body parameters (POST/PUT/DELETE) basic:
+                                headers: As HTTP Headers query: As query parameters
+                                (GET) or body parameters (POST/PUT/DELETE) authorization:
                                 As HTTP Basic Authentication'
                               enum:
-                              - header
+                              - headers
                               - query
-                              - basic
+                              - authorization
                               type: string
                             security:
                               description: SecuritySpec defines the desired state
                                 of Authentication Security
                               properties:
                                 hostHeader:
+                                  description: HostHeader Lets you define a custom
+                                    Host request header. This is needed if your API
+                                    backend only accepts traffic from a specific host.
+                                  type: string
+                                secretToken:
                                   description: SecretToken Enables you to block any
                                     direct developer requests to your API backend;
                                     each 3scale API gateway call to your API backend
