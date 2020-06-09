@@ -172,7 +172,7 @@ type BackendSpec struct {
 	Image *string `json:"image,omitempty"`
 	// Deprecated
 	// +optional
-	RedisImage *string `json:"redisImage,omitempty"`
+	DeprecatedRedisImage *string `json:"redisImage,omitempty"`
 	// +optional
 	RedisDatabaseSpec *BackendRedisDatabaseSpec `json:"redisDatabase,omitempty"`
 	// +optional
@@ -245,7 +245,7 @@ type SystemSpec struct {
 
 	// Deprecated
 	// +optional
-	RedisImage *string `json:"redisImage,omitempty"`
+	DeprecatedRedisImage *string `json:"redisImage,omitempty"`
 
 	// TODO should this field be optional? We have different approaches in Kubernetes.
 	// For example, in v1.Volume it is optional and there's an implied behaviour
@@ -309,10 +309,10 @@ type SystemS3Spec struct {
 type SystemDatabaseSpec struct {
 	// Deprecated
 	// +optional
-	MySQL *SystemMySQLSpec `json:"mysql,omitempty"`
+	DeprecatedMySQL *DeprecatedSystemMySQLSpec `json:"mysql,omitempty"`
 	// Deprecated
 	// +optional
-	PostgreSQL *SystemPostgreSQLSpec `json:"postgresql,omitempty"`
+	DeprecatedPostgreSQL *DeprecatedSystemPostgreSQLSpec `json:"postgresql,omitempty"`
 
 	// SystemDatabaseModeSpec represents the location of the
 	// system database
@@ -356,12 +356,12 @@ type SystemDatabaseExternalMySQLSpec struct {
 type SystemDatabaseExternalPostgreSQLSpec struct {
 }
 
-type SystemMySQLSpec struct {
+type DeprecatedSystemMySQLSpec struct {
 	// +optional
 	Image *string `json:"image,omitempty"`
 }
 
-type SystemPostgreSQLSpec struct {
+type DeprecatedSystemPostgreSQLSpec struct {
 	// +optional
 	Image *string `json:"image,omitempty"`
 }
