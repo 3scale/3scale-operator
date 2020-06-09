@@ -91,22 +91,22 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(component.ZyncMonitoringService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileMonitoringService(zync.ZyncMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(component.ZyncQueMonitoringService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileMonitoringService(zync.ZyncQueMonitoringService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(component.ZyncServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceMonitor(zync.ZyncServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(component.ZyncQueServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceMonitor(zync.ZyncQueServiceMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

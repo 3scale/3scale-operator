@@ -3,7 +3,6 @@ package component
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -14,20 +13,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func ZyncMonitoringService() *v1.Service {
+func (zync *Zync) ZyncMonitoringService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-metrics",
-			Labels: map[string]string{
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-				"threescale_component":         "zync",
-				"threescale_component_element": "zync",
-				"monitoring-key":               common.MonitoringKey,
-			},
+			Name:   "zync-metrics",
+			Labels: zync.Options.ZyncMonitoringLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -43,20 +37,15 @@ func ZyncMonitoringService() *v1.Service {
 	}
 }
 
-func ZyncQueMonitoringService() *v1.Service {
+func (zync *Zync) ZyncQueMonitoringService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-que-metrics",
-			Labels: map[string]string{
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-				"threescale_component":         "zync",
-				"threescale_component_element": "zync-que",
-				"monitoring-key":               common.MonitoringKey,
-			},
+			Name:   "zync-que-metrics",
+			Labels: zync.Options.ZyncQueMonitoringLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -72,17 +61,11 @@ func ZyncQueMonitoringService() *v1.Service {
 	}
 }
 
-func ZyncServiceMonitor() *monitoringv1.ServiceMonitor {
+func (zync *Zync) ZyncServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync",
-			Labels: map[string]string{
-				// TODO from options
-				"monitoring-key":               common.MonitoringKey,
-				"threescale_component":         "zync",
-				"threescale_component_element": "zync",
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-			},
+			Name:   "zync",
+			Labels: zync.Options.ZyncMonitoringLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -91,29 +74,17 @@ func ZyncServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					// TODO from options
-					"app":                          appsv1alpha1.Default3scaleAppLabel,
-					"threescale_component":         "zync",
-					"threescale_component_element": "zync",
-					"monitoring-key":               common.MonitoringKey,
-				},
+				MatchLabels: zync.Options.ZyncMonitoringLabels,
 			},
 		},
 	}
 }
 
-func ZyncQueServiceMonitor() *monitoringv1.ServiceMonitor {
+func (zync *Zync) ZyncQueServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-que",
-			Labels: map[string]string{
-				// TODO from options
-				"monitoring-key":               common.MonitoringKey,
-				"threescale_component":         "zync",
-				"threescale_component_element": "zync-que",
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-			},
+			Name:   "zync-que",
+			Labels: zync.Options.ZyncQueMonitoringLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -122,13 +93,7 @@ func ZyncQueServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					// TODO from options
-					"app":                          appsv1alpha1.Default3scaleAppLabel,
-					"threescale_component":         "zync",
-					"threescale_component_element": "zync-que",
-					"monitoring-key":               common.MonitoringKey,
-				},
+				MatchLabels: zync.Options.ZyncQueMonitoringLabels,
 			},
 		},
 	}

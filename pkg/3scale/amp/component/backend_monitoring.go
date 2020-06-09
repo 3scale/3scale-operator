@@ -3,7 +3,6 @@ package component
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -14,20 +13,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func BackendListenerMonitoringService() *v1.Service {
+func (backend *Backend) BackendListenerMonitoringService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-listener-metrics",
-			Labels: map[string]string{
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-				"threescale_component":         "backend",
-				"threescale_component_element": "listener",
-				"monitoring-key":               common.MonitoringKey,
-			},
+			Name:   "backend-listener-metrics",
+			Labels: backend.Options.ListenerMonitoringLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -43,17 +37,11 @@ func BackendListenerMonitoringService() *v1.Service {
 	}
 }
 
-func BackendListenerServiceMonitor() *monitoringv1.ServiceMonitor {
+func (backend *Backend) BackendListenerServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-listener",
-			Labels: map[string]string{
-				// TODO from options
-				"monitoring-key":               common.MonitoringKey,
-				"threescale_component":         "backend",
-				"threescale_component_element": "listener",
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-			},
+			Name:   "backend-listener",
+			Labels: backend.Options.ListenerMonitoringLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -62,32 +50,21 @@ func BackendListenerServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					// TODO from options
-					"app":                          appsv1alpha1.Default3scaleAppLabel,
-					"threescale_component":         "backend",
-					"threescale_component_element": "listener",
-					"monitoring-key":               common.MonitoringKey,
-				},
+				MatchLabels: backend.Options.ListenerMonitoringLabels,
 			},
 		},
 	}
 }
 
-func BackendWorkerMonitoringService() *v1.Service {
+func (backend *Backend) BackendWorkerMonitoringService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-worker-metrics",
-			Labels: map[string]string{
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-				"threescale_component":         "backend",
-				"threescale_component_element": "worker",
-				"monitoring-key":               common.MonitoringKey,
-			},
+			Name:   "backend-worker-metrics",
+			Labels: backend.Options.WorkerMonitoringLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -103,17 +80,11 @@ func BackendWorkerMonitoringService() *v1.Service {
 	}
 }
 
-func BackendWorkerServiceMonitor() *monitoringv1.ServiceMonitor {
+func (backend *Backend) BackendWorkerServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-worker",
-			Labels: map[string]string{
-				// TODO from options
-				"monitoring-key":               common.MonitoringKey,
-				"threescale_component":         "backend",
-				"threescale_component_element": "worker",
-				"app":                          appsv1alpha1.Default3scaleAppLabel,
-			},
+			Name:   "backend-worker",
+			Labels: backend.Options.WorkerMonitoringLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -122,13 +93,7 @@ func BackendWorkerServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					// TODO from options
-					"app":                          appsv1alpha1.Default3scaleAppLabel,
-					"threescale_component":         "backend",
-					"threescale_component_element": "worker",
-					"monitoring-key":               common.MonitoringKey,
-				},
+				MatchLabels: backend.Options.WorkerMonitoringLabels,
 			},
 		},
 	}

@@ -110,6 +110,9 @@ func (a *Apicast) options() (*component.ApicastOptions, error) {
 	ao.CommonProductionLabels = a.commonProductionLabels()
 	ao.StagingPodTemplateLabels = a.stagingPodTemplateLabels()
 	ao.ProductionPodTemplateLabels = a.productionPodTemplateLabels()
+	// Not used, can be anything
+	ao.StagingMonitoringLabels = map[string]string{"a": "a"}
+	ao.ProductionMonitoringLabels = map[string]string{"a": "a"}
 
 	err := ao.Validate()
 	return ao, err
