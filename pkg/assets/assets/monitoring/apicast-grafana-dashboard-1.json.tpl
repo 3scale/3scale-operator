@@ -242,28 +242,28 @@
             "steppedLine": false,
             "targets": [
                 {
-                    "expr": "sum(rate(apicast_status{namespace=\"$namespace\", pod=~'apicast-$env.*', status=~'5.*'}[1m]))",
+                    "expr": "sum(rate(apicast_status{namespace='$namespace', pod=~'apicast-$env.*', status=~'5.*'}[1m]))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "5XX",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum(rate(apicast_status{namespace=\"$namespace\", pod=~'apicast-$env.*', status=~'4.*'}[1m]))",
+                    "expr": "sum(rate(apicast_status{namespace='$namespace', pod=~'apicast-$env.*', status=~'4.*'}[1m]))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "4XX",
                     "refId": "B"
                 },
                 {
-                    "expr": "sum(rate(apicast_status{namespace=\"$namespace\", pod=~'apicast-$env.*', status=~'3.*'}[1m]))",
+                    "expr": "sum(rate(apicast_status{namespace='$namespace', pod=~'apicast-$env.*', status=~'3.*'}[1m]))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "3XX",
                     "refId": "C"
                 },
                 {
-                    "expr": "sum(rate(apicast_status{namespace=\"$namespace\", pod=~'apicast-$env.*', status=~'2.*'}[1m]))",
+                    "expr": "sum(rate(apicast_status{namespace='$namespace', pod=~'apicast-$env.*', status=~'2.*'}[1m]))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "2XX",
@@ -350,28 +350,28 @@
             "steppedLine": false,
             "targets": [
                 {
-                    "expr": "rate(apicast_status{namespace=\"$namespace\", pod=~'$pod', status=~'5.*'}[1m])",
+                    "expr": "rate(apicast_status{namespace='$namespace', pod=~'$pod', status=~'5.*'}[1m])",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "{{`{{pod}}`}}: 5XX",
                     "refId": "A"
                 },
                 {
-                    "expr": "rate(apicast_status{namespace=\"$namespace\", pod=~'$pod', status=~'4.*'}[1m])",
+                    "expr": "rate(apicast_status{namespace='$namespace', pod=~'$pod', status=~'4.*'}[1m])",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "{{`{{pod}}`}}: 4XX",
                     "refId": "B"
                 },
                 {
-                    "expr": "rate(apicast_status{namespace=\"$namespace\", pod=~'$pod', status=~'3.*'}[1m])",
+                    "expr": "rate(apicast_status{namespace='$namespace', pod=~'$pod', status=~'3.*'}[1m])",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "{{`{{pod}}`}}: 3XX",
                     "refId": "C"
                 },
                 {
-                    "expr": "rate(apicast_status{namespace=\"$namespace\", pod=~'$pod', status=~'2.*'}[1m])",
+                    "expr": "rate(apicast_status{namespace='$namespace', pod=~'$pod', status=~'2.*'}[1m])",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "{{`{{pod}}`}}: 2XX",
@@ -458,28 +458,28 @@
             "steppedLine": false,
             "targets": [
                 {
-                    "expr": "sum(rate(upstream_status{namespace=\"$namespace\", pod=~'apicast-$env.*', status=~\"5.*\"}[1m]))",
+                    "expr": "sum(rate(upstream_status{namespace='$namespace', pod=~'apicast-$env.*', status=~'5.*'}[1m]))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "5XX",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum(rate(upstream_status{namespace=\"$namespace\", pod=~'apicast-$env.*', status=~\"4.*\"}[1m]))",
+                    "expr": "sum(rate(upstream_status{namespace='$namespace', pod=~'apicast-$env.*', status=~'4.*'}[1m]))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "4XX",
                     "refId": "B"
                 },
                 {
-                    "expr": "sum(rate(upstream_status{namespace=\"$namespace\", pod=~'apicast-$env.*', status=~\"3.*\"}[1m]))",
+                    "expr": "sum(rate(upstream_status{namespace='$namespace', pod=~'apicast-$env.*', status=~'3.*'}[1m]))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "3XX",
                     "refId": "C"
                 },
                 {
-                    "expr": "sum(rate(upstream_status{namespace=\"$namespace\", pod=~'apicast-$env.*', status=~\"2.*\"}[1m]))",
+                    "expr": "sum(rate(upstream_status{namespace='$namespace', pod=~'apicast-$env.*', status=~'2.*'}[1m]))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "2XX",
@@ -2264,7 +2264,7 @@
                     "decimals": 2,
                     "link": true,
                     "linkTooltip": "Drill down",
-                    "linkUrl": "/d/6581e46e4e5c7ba40a07646395ef7b55/3scale-kubernetes-compute-resources-pod?var-namespace=$namespace&var-pod=$__cell",
+                    "linkUrl": "/d/{{ .Namespace }}/{{ .Namespace }}-3scale-kubernetes-compute-resources-pod?var-namespace=$namespace&var-pod=$__cell",
                     "pattern": "pod",
                     "thresholds": [],
                     "type": "number",
@@ -2635,14 +2635,14 @@
                     ]
                 },
                 "datasource": "$datasource",
-                "definition": "label_values(nginx_http_connections{pod=~'apicast-$env.*'}, pod)",
+                "definition": "label_values(nginx_http_connections{namespace='$namespace', pod=~'apicast-$env.*'}, pod)",
                 "hide": 0,
                 "includeAll": true,
                 "label": null,
                 "multi": true,
                 "name": "pod",
                 "options": [],
-                "query": "label_values(nginx_http_connections{pod=~'apicast-$env.*'}, pod)",
+                "query": "label_values(nginx_http_connections{namespace='$namespace', pod=~'apicast-$env.*'}, pod)",
                 "refresh": 2,
                 "regex": "",
                 "skipUrlSync": false,
