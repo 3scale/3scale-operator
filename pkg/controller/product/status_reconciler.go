@@ -25,6 +25,7 @@ func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1
 		BaseReconciler: b,
 		resource:       resource,
 		entity:         entity,
+		syncError:      syncError,
 		logger:         b.Logger().WithValues("Status Reconciler", resource.Name),
 	}
 }
@@ -39,7 +40,7 @@ func (s *StatusReconciler) Reconcile() error {
 	s.logger.V(1).Info("Status", "generation is different", s.resource.Generation != s.resource.Status.ObservedGeneration)
 	if equalStatus && s.resource.Generation == s.resource.Status.ObservedGeneration {
 		// Steady state
-		s.logger.V(1).Info("Status was not updated")
+		s.logger.V(1).Info("Status steady state, status was not updated")
 		return nil
 	}
 
@@ -70,7 +71,7 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus 
 
 	newStatus.ObservedGeneration = s.resource.Status.ObservedGeneration
 
-	newStatus.Conditions = s.resource.Status.Conditions
+	newStatus.Conditions = common.NewConditions(s.resource.Status.Conditions...)
 	newStatus.Conditions.SetCondition(s.syncCondition())
 	newStatus.Conditions.SetCondition(s.orphanCondition())
 	newStatus.Conditions.SetCondition(s.invalidCondition())

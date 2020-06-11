@@ -44,8 +44,6 @@ spec:
                     description: Cost per Month (USD)
                     pattern: ^\d+.?\d{2}$
                     type: string
-                  friendlyName:
-                    type: string
                   limits:
                     description: Limits
                     items:
@@ -90,6 +88,8 @@ spec:
                       - value
                       type: object
                     type: array
+                  name:
+                    type: string
                   pricingRules:
                     description: Pricing Rules
                     items:

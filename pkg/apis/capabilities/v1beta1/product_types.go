@@ -92,7 +92,7 @@ type PricingRuleSpec struct {
 // ApplicationPlanSpec defines the desired state of Product's Application Plan
 type ApplicationPlanSpec struct {
 	// +optional
-	FriendlyName *string `json:"friendlyName,omitempty"`
+	Name *string `json:"name,omitempty"`
 
 	// Set whether or not applications can be created on demand
 	// or if approval is required from you before they are activated.
