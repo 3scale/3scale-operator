@@ -191,3 +191,13 @@ func (conditions Conditions) MarshalJSON() ([]byte, error) {
 	})
 	return json.Marshal(conds)
 }
+
+func (conditions Conditions) Copy() Conditions {
+	newConditions := Conditions{}
+	for _, c := range conditions {
+		newCondition := Condition{}
+		c.DeepCopyInto(&newCondition)
+		newConditions = append(newConditions, newCondition)
+	}
+	return newConditions
+}

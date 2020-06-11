@@ -68,7 +68,7 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.BackendStatus 
 
 	newStatus.ObservedGeneration = s.backendResource.Status.ObservedGeneration
 
-	newStatus.Conditions = s.backendResource.Status.Conditions
+	newStatus.Conditions = s.backendResource.Status.Conditions.Copy()
 	newStatus.Conditions.SetCondition(s.syncCondition())
 	newStatus.Conditions.SetCondition(s.invalidCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
