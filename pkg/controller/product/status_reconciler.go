@@ -71,7 +71,7 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus 
 
 	newStatus.ObservedGeneration = s.resource.Status.ObservedGeneration
 
-	newStatus.Conditions = common.NewConditions(s.resource.Status.Conditions...)
+	newStatus.Conditions = s.resource.Status.Conditions.Copy()
 	newStatus.Conditions.SetCondition(s.syncCondition())
 	newStatus.Conditions.SetCondition(s.orphanCondition())
 	newStatus.Conditions.SetCondition(s.invalidCondition())
