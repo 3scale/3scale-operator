@@ -47,7 +47,7 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
 	for _, systemName := range matchedKeys {
 		// interface to remote entity
-		planEntity := helper.NewApplicationPlanEntity(existingMap[systemName], t.threescaleAPIClient, t.logger)
+		planEntity := helper.NewApplicationPlanEntity(t.productEntity.ID(), existingMap[systemName], t.threescaleAPIClient, t.logger)
 		// desired spec
 		planSpec := t.resource.Spec.ApplicationPlans[systemName]
 		reconciler := newApplicationPlanReconciler(t.BaseReconciler, systemName, planSpec, t.threescaleAPIClient, t.productEntity, planEntity, t.logger)
@@ -69,13 +69,13 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 
 		// Create Application Plan using system_name.
 		// it cannot be modified later
-		params := threescaleapi.Params{"system_name": systemName}
+		params := threescaleapi.Params{"system_name": systemName, "name": systemName}
 		obj, err := t.productEntity.CreateApplicationPlan(params)
 		if err != nil {
 			return fmt.Errorf("Error sync product [%s] plan [%s]: %w", t.resource.Spec.SystemName, systemName, err)
 		}
 		// interface to remote entity
-		planEntity := helper.NewApplicationPlanEntity(obj.Element, t.threescaleAPIClient, t.logger)
+		planEntity := helper.NewApplicationPlanEntity(t.productEntity.ID(), obj.Element, t.threescaleAPIClient, t.logger)
 
 		reconciler := newApplicationPlanReconciler(t.BaseReconciler, systemName, planSpec, t.threescaleAPIClient, t.productEntity, planEntity, t.logger)
 		err = reconciler.Reconcile()
