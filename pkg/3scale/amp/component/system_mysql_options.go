@@ -17,9 +17,10 @@ type SystemMysqlOptions struct {
 	RootPassword                  string                  `validate:"required"`
 	DatabaseURL                   string                  `validate:"required"`
 	ContainerResourceRequirements v1.ResourceRequirements `validate:"-"`
-	CommonLabels                  map[string]string       `validate:"required"`
-	DeploymentLabels              map[string]string       `validate:"required"`
-	PodTemplateLabels             map[string]string       `validate:"required"`
+	PVCStorageClass               *string
+	CommonLabels                  map[string]string `validate:"required"`
+	DeploymentLabels              map[string]string `validate:"required"`
+	PodTemplateLabels             map[string]string `validate:"required"`
 }
 
 func NewSystemMysqlOptions() *SystemMysqlOptions {

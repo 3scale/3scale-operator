@@ -95,6 +95,8 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 	tmpFalseValue := false
 	backendRedisImageURL := "redis:backendCustomVersion"
 	systemRedisImageURL := "redis:systemCustomVersion"
+	backendRedisCustomStorageClass := "backendrediscustomstorageclass"
+	systemRedisCustomStorageClass := "systemrediscustomstorageclass"
 
 	cases := []struct {
 		testName               string
@@ -142,6 +144,64 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				opts := defaultRedisOptions()
 				opts.SystemImage = systemRedisImageURL
 				opts.SystemRedisPodTemplateLabels["com.redhat.component-version"] = "systemCustomVersion"
+				return opts
+			},
+		},
+		{"SystemRedisOnlyPVCSpecSet",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					RedisPersistentVolumeClaimSpec: &appsv1alpha1.SystemRedisPersistentVolumeClaimSpec{},
+				}
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				return opts
+			},
+		},
+		{"BackendRedisOnlyPVCSpecSet",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
+					RedisPersistentVolumeClaimSpec: &appsv1alpha1.BackendRedisPersistentVolumeClaimSpec{},
+				}
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				return opts
+			},
+		},
+		{"BackendRedisStoragePVCStorageClassSet",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
+					RedisPersistentVolumeClaimSpec: &appsv1alpha1.BackendRedisPersistentVolumeClaimSpec{
+						StorageClassName: &backendRedisCustomStorageClass,
+					},
+				}
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.BackendRedisPVCStorageClass = &backendRedisCustomStorageClass
+				return opts
+			},
+		},
+		{"SystemRedisStoragePVCStorageClassSet",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					RedisPersistentVolumeClaimSpec: &appsv1alpha1.SystemRedisPersistentVolumeClaimSpec{
+						StorageClassName: &systemRedisCustomStorageClass,
+					},
+				}
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.SystemRedisPVCStorageClass = &systemRedisCustomStorageClass
 				return opts
 			},
 		},

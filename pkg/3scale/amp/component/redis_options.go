@@ -15,6 +15,8 @@ type RedisOptions struct {
 	BackendRedisContainerResourceRequirements *v1.ResourceRequirements `validate:"required"`
 	SystemRedisContainerResourceRequirements  *v1.ResourceRequirements `validate:"required"`
 	InsecureImportPolicy                      *bool                    `validate:"required"`
+	BackendRedisPVCStorageClass               *string
+	SystemRedisPVCStorageClass                *string
 
 	SystemCommonLabels            map[string]string `validate:"required"`
 	SystemRedisLabels             map[string]string `validate:"required"`

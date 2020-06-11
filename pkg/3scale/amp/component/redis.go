@@ -372,6 +372,7 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 				v1.ResourceStorage: resource.MustParse("1Gi"),
 			},
 		},
+		StorageClassName: redis.Options.BackendRedisPVCStorageClass,
 	}
 }
 
@@ -554,6 +555,7 @@ func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")},
 			},
+			StorageClassName: redis.Options.SystemRedisPVCStorageClass,
 		},
 	}
 }

@@ -76,6 +76,11 @@ spec:
                   type: object
                 redisImage:
                   type: string
+                redisPersistentVolumeClaim:
+                  properties:
+                    storageClassName:
+                      type: string
+                  type: object
                 workerSpec:
                   properties:
                     replicas:
@@ -112,11 +117,21 @@ spec:
                       properties:
                         image:
                           type: string
+                        persistentVolumeClaim:
+                          properties:
+                            storageClassName:
+                              type: string
+                          type: object
                       type: object
                     postgresql:
                       properties:
                         image:
                           type: string
+                        persistentVolumeClaim:
+                          properties:
+                            storageClassName:
+                              type: string
+                          type: object
                       type: object
                   type: object
                 fileStorage:
@@ -171,6 +186,11 @@ spec:
                   type: string
                 redisImage:
                   type: string
+                redisPersistentVolumeClaim:
+                  properties:
+                    storageClassName:
+                      type: string
+                  type: object
                 sidekiqSpec:
                   properties:
                     replicas:

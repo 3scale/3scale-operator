@@ -16,9 +16,10 @@ type SystemPostgreSQLOptions struct {
 	Password                      string                  `validate:"required"`
 	DatabaseName                  string                  `validate:"required"`
 	DatabaseURL                   string                  `validate:"required"`
-	CommonLabels                  map[string]string       `validate:"required"`
-	DeploymentLabels              map[string]string       `validate:"required"`
-	PodTemplateLabels             map[string]string       `validate:"required"`
+	PVCStorageClass               *string
+	CommonLabels                  map[string]string `validate:"required"`
+	DeploymentLabels              map[string]string `validate:"required"`
+	PodTemplateLabels             map[string]string `validate:"required"`
 }
 
 func NewSystemPostgreSQLOptions() *SystemPostgreSQLOptions {
