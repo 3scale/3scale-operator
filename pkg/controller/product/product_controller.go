@@ -162,6 +162,12 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 		return reconcile.Result{}, nil
 	}
 
+	if helper.IsOrphanSpecError(specErr) {
+		// On Orphan spec error, retry
+		logger.Info("ERROR", "spec orphan error", specErr)
+		return reconcile.Result{Requeue: true}, nil
+	}
+
 	if specErr != nil {
 		return reconcile.Result{}, fmt.Errorf("Failed to sync product: %w", specErr)
 	}
@@ -172,7 +178,8 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 func (r *ReconcileProduct) reconcileSpec(resource *capabilitiesv1beta1.Product) (*helper.ProductEntity, error) {
 	err := r.validateSpec(resource)
 	if err != nil {
-		return nil, fmt.Errorf("reconcile product spec: %w", err)
+		// Do not wrap error
+		return nil, err
 	}
 
 	providerAccount, err := helper.LookupProviderAccount(r.Client(), resource.Namespace, resource.Spec.ProviderAccountRef, r.Logger())
@@ -182,7 +189,8 @@ func (r *ReconcileProduct) reconcileSpec(resource *capabilitiesv1beta1.Product) 
 
 	err = r.checkExternalRefs(resource, providerAccount)
 	if err != nil {
-		return nil, fmt.Errorf("reconcile product spec: %w", err)
+		// Do not wrap error
+		return nil, err
 	}
 
 	threescaleAPIClient, err := helper.PortaClient(providerAccount)
