@@ -18,6 +18,7 @@ type ProductEntity struct {
 	mappingRules      *threescaleapi.MappingRuleJSONList
 	backendUsages     threescaleapi.BackendAPIUsageList
 	proxy             *threescaleapi.ProxyJSON
+	plans             *threescaleapi.ApplicationPlanJSONList
 	logger            logr.Logger
 }
 
@@ -305,6 +306,38 @@ func (b *ProductEntity) UpdateProxy(params threescaleapi.Params) error {
 	return nil
 }
 
+func (b *ProductEntity) ApplicationPlans() (*threescaleapi.ApplicationPlanJSONList, error) {
+	b.logger.V(1).Info("ApplicationPlans")
+	if b.plans == nil {
+		plans, err := b.getApplicationPlans()
+		if err != nil {
+			return nil, err
+		}
+		b.plans = plans
+	}
+	return b.plans, nil
+}
+
+func (b *ProductEntity) DeleteApplicationPlan(id int64) error {
+	b.logger.V(1).Info("DeleteApplicationPlan", "ID", id)
+	err := b.client.DeleteApplicationPlan(b.productObj.Element.ID, id)
+	if err != nil {
+		return fmt.Errorf("product [%s] delete applicationPlan: %w", b.productObj.Element.SystemName, err)
+	}
+	b.resetApplicationPlans()
+	return nil
+}
+
+func (b *ProductEntity) CreateApplicationPlan(params threescaleapi.Params) (*threescaleapi.ApplicationPlan, error) {
+	b.logger.V(1).Info("CreateApplicationPlan", "params", params)
+	obj, err := b.client.CreateApplicationPlan(b.productObj.Element.ID, params)
+	if err != nil {
+		return nil, fmt.Errorf("product [%s] create plan: %w", b.productObj.Element.SystemName, err)
+	}
+	b.resetApplicationPlans()
+	return obj, nil
+}
+
 //
 // PRIVATE
 //
@@ -330,6 +363,10 @@ func (b *ProductEntity) resetMetrics() {
 
 func (b *ProductEntity) resetMappingRules() {
 	b.mappingRules = nil
+}
+
+func (b *ProductEntity) resetApplicationPlans() {
+	b.plans = nil
 }
 
 func (b *ProductEntity) getMethods() (*threescaleapi.MethodList, error) {
@@ -435,4 +472,14 @@ func (b *ProductEntity) getProxy() (*threescaleapi.ProxyJSON, error) {
 	}
 
 	return obj, nil
+}
+
+func (b *ProductEntity) getApplicationPlans() (*threescaleapi.ApplicationPlanJSONList, error) {
+	b.logger.V(1).Info("getApplicationPlans")
+	list, err := b.client.ListApplicationPlansByProduct(b.productObj.Element.ID)
+	if err != nil {
+		return nil, fmt.Errorf("product [%s] get plans: %w", b.productObj.Element.SystemName, err)
+	}
+
+	return list, nil
 }
