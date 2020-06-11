@@ -69,7 +69,7 @@
             "steppedLine": false,
             "targets": [
                 {
-                    "expr": "sum(rate(upstream_status{namespace=\"$namespace\", pod=~'apicast-$env.*', service_id=\"$service_id\"}[1m])) by (status)",
+                    "expr": "sum(rate(upstream_status{namespace='$namespace', pod=~'apicast-$env.*', service_id='$service_id'}[1m])) by (status)",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "{{`{{status}}`}}",
@@ -155,14 +155,14 @@
             "steppedLine": false,
             "targets": [
                 {
-                    "expr": "histogram_quantile($percentile/100, sum(rate(total_response_time_seconds_bucket{namespace=\"$namespace\", pod=~'apicast-$env.*', service_id=\"$service_id\"}[1m])) by (le))",
+                    "expr": "histogram_quantile($percentile/100, sum(rate(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*', service_id='$service_id'}[1m])) by (le))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "Total request time",
                     "refId": "A"
                 },
                 {
-                    "expr": "histogram_quantile($percentile/100, sum(rate(upstream_response_time_seconds_bucket{namespace=\"$namespace\", pod=~'apicast-$env.*', service_id=\"$service_id\"}[1m])) by (le))",
+                    "expr": "histogram_quantile($percentile/100, sum(rate(upstream_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*', service_id='$service_id'}[1m])) by (le))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "Upstream request time",
@@ -243,7 +243,7 @@
             "reverseYBuckets": false,
             "targets": [
                 {
-                    "expr": "sum(rate(total_response_time_seconds_bucket{namespace=\"$namespace\", pod=~\"apicast-$env-.*\", service_id=\"$service_id\"}[1m])) by (le)",
+                    "expr": "sum(rate(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env-.*', service_id='$service_id'}[1m])) by (le)",
                     "format": "heatmap",
                     "instant": false,
                     "intervalFactor": 10,
@@ -309,7 +309,7 @@
             "reverseYBuckets": false,
             "targets": [
                 {
-                    "expr": "sum(rate(upstream_response_time_seconds_bucket{namespace=\"$namespace\", pod=~'apicast-$env.*', service_id=\"$service_id\"}[1m])) by (le)",
+                    "expr": "sum(rate(upstream_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*', service_id='$service_id'}[1m])) by (le)",
                     "format": "heatmap",
                     "intervalFactor": 10,
                     "legendFormat": "{{`{{le}}`}}",
@@ -420,23 +420,23 @@
             {
                 "allValue": null,
                 "datasource": "$datasource",
-                "definition": "label_values(total_response_time_seconds_bucket{pod=~'apicast-$env.*'}, service_id)",
+                "definition": "label_values(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*'}, service_id)",
                 "hide": 0,
                 "includeAll": false,
                 "label": "",
                 "multi": true,
                 "name": "service_id",
                 "options": [],
-                "query": "label_values(total_response_time_seconds_bucket{pod=~'apicast-$env.*'}, service_id)",
+                "query": "label_values(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*'}, service_id)",
                 "refresh": 2,
                 "regex": "",
                 "skipUrlSync": false,
                 "sort": 0,
-                "tagValuesQuery": "label_values(total_response_time_seconds_bucket{pod=~'apicast-$env.*', service_system_name=\"$tag\"}, service_id}",
+                "tagValuesQuery": "label_values(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*', service_system_name='$tag'}, service_id}",
                 "tags": [
                     "api"
                 ],
-                "tagsQuery": "label_values(total_response_time_seconds_bucket{pod=~'apicast-$env.*'}, service_system_name)",
+                "tagsQuery": "label_values(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*'}, service_system_name)",
                 "type": "query",
                 "useTags": true
             },
@@ -447,7 +447,7 @@
                     "value": "api"
                 },
                 "datasource": "$datasource",
-                "definition": "label_values(total_response_time_seconds_bucket{pod=~\"apicast-$env-.*\", service_id=\"$service_id\"}, service_system_name)",
+                "definition": "label_values(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env-.*', service_id='$service_id'}, service_system_name)",
                 "hide": 2,
                 "includeAll": false,
                 "label": "",
@@ -460,7 +460,7 @@
                         "value": "api"
                     }
                 ],
-                "query": "label_values(total_response_time_seconds_bucket{pod=~\"apicast-$env-.*\", service_id=\"$service_id\"}, service_system_name)",
+                "query": "label_values(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env-.*', service_id='$service_id'}, service_system_name)",
                 "refresh": 0,
                 "regex": "",
                 "skipUrlSync": false,
