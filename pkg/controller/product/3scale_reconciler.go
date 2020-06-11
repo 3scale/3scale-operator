@@ -1,6 +1,8 @@
 package product
 
 import (
+	"fmt"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -12,7 +14,7 @@ import (
 type ThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	resource            *capabilitiesv1beta1.Product
-	entity              *helper.ProductEntity
+	productEntity       *helper.ProductEntity
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
@@ -27,6 +29,12 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabiliti
 }
 
 func (t *ThreescaleReconciler) Reconcile() (*helper.ProductEntity, error) {
+	productEntity, err := t.reconcile3scaleProduct()
+	if err != nil {
+		return nil, err
+	}
+	t.productEntity = productEntity
+
 	taskRunner := helper.NewTaskRunner(nil, t.logger)
 	taskRunner.AddTask("SyncProduct", t.syncProduct)
 	taskRunner.AddTask("SyncBackendUsage", t.syncBackendUsage)
@@ -44,20 +52,52 @@ func (t *ThreescaleReconciler) Reconcile() (*helper.ProductEntity, error) {
 	// This should be the last step
 	taskRunner.AddTask("BumbProxyVersion", t.bumpProxyVersion)
 
-	err := taskRunner.Run()
+	err = taskRunner.Run()
 	if err != nil {
 		return nil, err
 	}
 
-	return t.entity, nil
-}
-
-func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
-	return nil
+	return t.productEntity, nil
 }
 
 func (t *ThreescaleReconciler) bumpProxyVersion(_ interface{}) error {
 	// POST /admin/api/services/{service_id}/proxy/deploy.json ????
 	// if proxy.lock  != latest proxy config latest (sandbox) -> Post Proxy deploy endpoint
 	return nil
+}
+
+func (t *ThreescaleReconciler) reconcile3scaleProduct() (*helper.ProductEntity, error) {
+	productList, err := t.threescaleAPIClient.ListProducts()
+	if err != nil {
+		return nil, fmt.Errorf("reconcile3scaleProduct product [%s]: %w", t.resource.Spec.SystemName, err)
+	}
+
+	// Find product in the list by system name
+	idx, exists := func(pList []threescaleapi.Product) (int, bool) {
+		for i, item := range pList {
+			if item.Element.SystemName == t.resource.Spec.SystemName {
+				return i, true
+			}
+		}
+		return -1, false
+	}(productList.Products)
+
+	var productObj *threescaleapi.Product
+	if exists {
+		productObj = &productList.Products[idx]
+	} else {
+		// Create product using system_name.
+		// it cannot be modified later
+		params := threescaleapi.Params{
+			"system_name": t.resource.Spec.SystemName,
+		}
+		product, err := t.threescaleAPIClient.CreateProduct(t.resource.Spec.Name, params)
+		if err != nil {
+			return nil, fmt.Errorf("reconcile3scaleProduct product [%s]: %w", t.resource.Spec.SystemName, err)
+		}
+
+		productObj = product
+	}
+
+	return helper.NewProductEntity(productObj, t.threescaleAPIClient, t.logger), nil
 }

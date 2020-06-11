@@ -27,7 +27,7 @@ func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
 
 	existingKeys := []string{}
 	existingMap := map[string]threescaleapi.MappingRuleItem{}
-	existingList, err := t.entity.MappingRules()
+	existingList, err := t.productEntity.MappingRules()
 	if err != nil {
 		return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 	}
@@ -92,7 +92,7 @@ func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
 
 func (t *ThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
 	for _, mappingRule := range notDesiredList {
-		err := t.entity.DeleteMappingRule(mappingRule.ID)
+		err := t.productEntity.DeleteMappingRule(mappingRule.ID)
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func (t *ThreescaleReconciler) reconcileMatchedMappingRules(matchedList []mappin
 		//
 		// Reconcile metric or method
 		//
-		metricID, err := t.entity.FindMethodMetricIDBySystemName(data.spec.MetricMethodRef)
+		metricID, err := t.productEntity.FindMethodMetricIDBySystemName(data.spec.MetricMethodRef)
 		if err != nil {
 			return fmt.Errorf("Error reconcile product mapping rule: %w", err)
 		}
@@ -129,7 +129,7 @@ func (t *ThreescaleReconciler) reconcileMatchedMappingRules(matchedList []mappin
 		}
 
 		if len(params) > 0 {
-			err := t.entity.UpdateMappingRule(data.item.ID, params)
+			err := t.productEntity.UpdateMappingRule(data.item.ID, params)
 			if err != nil {
 				return fmt.Errorf("Error reconcile product mapping rule: %w", err)
 			}
@@ -141,7 +141,7 @@ func (t *ThreescaleReconciler) reconcileMatchedMappingRules(matchedList []mappin
 
 func (t *ThreescaleReconciler) createNewMappingRules(desiredList []capabilitiesv1beta1.MappingRuleSpec) error {
 	for _, spec := range desiredList {
-		metricID, err := t.entity.FindMethodMetricIDBySystemName(spec.MetricMethodRef)
+		metricID, err := t.productEntity.FindMethodMetricIDBySystemName(spec.MetricMethodRef)
 		if err != nil {
 			return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
 		}
@@ -159,7 +159,7 @@ func (t *ThreescaleReconciler) createNewMappingRules(desiredList []capabilitiesv
 			"delta": strconv.Itoa(*spec.Increment),
 		}
 
-		err = t.entity.CreateMappingRule(params)
+		err = t.productEntity.CreateMappingRule(params)
 		if err != nil {
 			return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
 		}

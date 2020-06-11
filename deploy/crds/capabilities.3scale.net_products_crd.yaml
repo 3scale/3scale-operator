@@ -49,15 +49,28 @@ spec:
                   limits:
                     description: Limits
                     items:
-                      description: LimitSpec define the maximum value a metric can
+                      description: LimitSpec defines the maximum value a metric can
                         take on a contract before the user is no longer authorized
                         to use resources. Once a limit has been passed in a given
                         period, reject messages will be issued if the service is accessed
                         under this contract.
                       properties:
                         metricMethodRef:
-                          type: string
+                          description: Metric or Method Reference
+                          properties:
+                            backend:
+                              description: BackendSystemName identifies uniquely the
+                                backend Backend reference must be used by the product
+                              type: string
+                            systemName:
+                              description: SystemName identifies uniquely the metric
+                                or methods
+                              type: string
+                          required:
+                          - systemName
+                          type: object
                         period:
+                          description: Limit Period
                           enum:
                           - eternity
                           - year
@@ -68,6 +81,7 @@ spec:
                           - minute
                           type: string
                         value:
+                          description: Limit Value
                           format: int64
                           type: integer
                       required:
@@ -79,18 +93,33 @@ spec:
                   pricingRules:
                     description: Pricing Rules
                     items:
-                      description: PricingRuleSpec defines the desired state of Application
-                        Plan's Pricing Rule
+                      description: PricingRuleSpec defines the cost of each operation
+                        performed on an API. Multiple pricing rules on the same metric
+                        divide up the ranges of when a pricing rule applies.
                       properties:
                         from:
+                          description: Range From
                           type: integer
                         metricMethodRef:
-                          type: string
+                          description: Metric or Method Reference
+                          properties:
+                            backend:
+                              description: BackendSystemName identifies uniquely the
+                                backend Backend reference must be used by the product
+                              type: string
+                            systemName:
+                              description: SystemName identifies uniquely the metric
+                                or methods
+                              type: string
+                          required:
+                          - systemName
+                          type: object
                         pricePerUnit:
                           description: Price per unit (USD)
                           pattern: ^\d+.?\d{2}$
                           type: string
                         to:
+                          description: Range To
                           type: integer
                       required:
                       - from
