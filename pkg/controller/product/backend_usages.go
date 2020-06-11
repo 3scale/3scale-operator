@@ -38,7 +38,7 @@ func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 		desiredKeys = append(desiredKeys, systemName)
 	}
 
-	existingList, err := t.entity.BackendUsages()
+	existingList, err := t.productEntity.BackendUsages()
 	if err != nil {
 		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err)
 	}
@@ -109,7 +109,7 @@ func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 
 func (t *ThreescaleReconciler) processNotDesiredBackendUsages(notDesiredList []threescaleapi.BackendAPIUsageItem) error {
 	for _, item := range notDesiredList {
-		err := t.entity.DeleteBackendUsage(item.ID)
+		err := t.productEntity.DeleteBackendUsage(item.ID)
 		if err != nil {
 			return fmt.Errorf("Error deleting product backendusage: %w", err)
 		}
@@ -125,7 +125,7 @@ func (t *ThreescaleReconciler) reconcileMatchedBackendUsages(matchedMap map[stri
 		}
 
 		if len(params) > 0 {
-			err := t.entity.UpdateBackendUsage(data.item.ID, params)
+			err := t.productEntity.UpdateBackendUsage(data.item.ID, params)
 			if err != nil {
 				return fmt.Errorf("Error updating product backendusage: %w", err)
 			}
@@ -141,7 +141,7 @@ func (t *ThreescaleReconciler) createNewBackendUsage(matchedList []newBackendUsa
 			"path":           data.spec.Path,
 			"backend_api_id": strconv.FormatInt(data.item.ID, 10),
 		}
-		err := t.entity.CreateBackendUsage(params)
+		err := t.productEntity.CreateBackendUsage(params)
 		if err != nil {
 			return fmt.Errorf("Error creating product backendusage: %w", err)
 		}

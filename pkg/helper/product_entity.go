@@ -33,8 +33,24 @@ func (b *ProductEntity) ID() int64 {
 	return b.productObj.Element.ID
 }
 
+func (b *ProductEntity) Name() string {
+	return b.productObj.Element.Name
+}
+
 func (b *ProductEntity) State() string {
 	return b.productObj.Element.State
+}
+
+func (b *ProductEntity) Description() string {
+	return b.productObj.Element.Description
+}
+
+func (b *ProductEntity) DeploymentOption() string {
+	return b.productObj.Element.DeploymentOption
+}
+
+func (b *ProductEntity) BackendVersion() string {
+	return b.productObj.Element.DeploymentOption
 }
 
 func (b *ProductEntity) Update(params threescaleapi.Params) error {

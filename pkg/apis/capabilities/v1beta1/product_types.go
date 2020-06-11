@@ -46,20 +46,44 @@ var (
 	productSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
 )
 
-// LimitSpec define the maximum value a metric can take on a contract before the user is no longer authorized to use resources.
-// Once a limit has been passed in a given period, reject messages will be issued if the service is accessed under this contract.
-type LimitSpec struct {
-	// +kubebuilder:validation:Enum=eternity;year;month;week;day;hour;minute
-	Period          string `json:"period"`
-	Value           int64  `json:"value"`
-	MetricMethodRef string `json:"metricMethodRef"`
+// MetricMethodRefSpec defines method or metric reference
+// Metric or method can optionally belong to used backends
+type MetricMethodRefSpec struct {
+	// SystemName identifies uniquely the metric or methods
+	SystemName string `json:"systemName"`
+
+	// BackendSystemName identifies uniquely the backend
+	// Backend reference must be used by the product
+	// +optional
+	BackendSystemName *string `json:"backend,omitempty"`
 }
 
-// PricingRuleSpec defines the desired state of Application Plan's Pricing Rule
+// LimitSpec defines the maximum value a metric can take on a contract before the user is no longer authorized to use resources.
+// Once a limit has been passed in a given period, reject messages will be issued if the service is accessed under this contract.
+type LimitSpec struct {
+	// Limit Period
+	// +kubebuilder:validation:Enum=eternity;year;month;week;day;hour;minute
+	Period string `json:"period"`
+
+	// Limit Value
+	Value int64 `json:"value"`
+
+	// Metric or Method Reference
+	MetricMethodRef MetricMethodRefSpec `json:"metricMethodRef"`
+}
+
+// PricingRuleSpec defines the cost of each operation performed on an API.
+// Multiple pricing rules on the same metric divide up the ranges of when a pricing rule applies.
 type PricingRuleSpec struct {
-	From            int    `json:"from"`
-	To              int    `json:"to"`
-	MetricMethodRef string `json:"metricMethodRef"`
+	// Range From
+	From int `json:"from"`
+
+	// Range To
+	To int `json:"to"`
+
+	// Metric or Method Reference
+	MetricMethodRef MetricMethodRefSpec `json:"metricMethodRef"`
+
 	// Price per unit (USD)
 	// +kubebuilder:validation:Pattern=`^\d+.?\d{2}$`
 	PricePerUnit string `json:"pricePerUnit"`

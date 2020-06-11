@@ -21,7 +21,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 
 	existingMap := map[string]threescaleapi.MethodItem{}
-	existingList, err := t.entity.Methods()
+	existingList, err := t.productEntity.Methods()
 	if err != nil {
 		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
 	}
@@ -83,7 +83,7 @@ func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabil
 		if len(method.Description) > 0 {
 			params["description"] = method.Description
 		}
-		err := t.entity.CreateMethod(params)
+		err := t.productEntity.CreateMethod(params)
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabil
 
 func (t *ThreescaleReconciler) processNotDesiredMethods(notDesiredMap map[string]threescaleapi.MethodItem) error {
 	for _, notDesiredMethod := range notDesiredMap {
-		err := t.entity.DeleteMethod(notDesiredMethod.ID)
+		err := t.productEntity.DeleteMethod(notDesiredMethod.ID)
 		if err != nil {
 			return err
 		}
@@ -113,7 +113,7 @@ func (t *ThreescaleReconciler) reconcileMatchedMethods(matchedMap map[string]met
 		}
 
 		if len(params) > 0 {
-			err := t.entity.UpdateMethod(data.item.ID, params)
+			err := t.productEntity.UpdateMethod(data.item.ID, params)
 			if err != nil {
 				return fmt.Errorf("Error reconcile product methods: %w", err)
 			}
