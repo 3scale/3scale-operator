@@ -9,7 +9,7 @@ import (
 )
 
 func (t *ThreescaleReconciler) syncProxy(_ interface{}) error {
-	existing, err := t.entity.Proxy()
+	existing, err := t.productEntity.Proxy()
 	if err != nil {
 		return fmt.Errorf("Error sync product [%s] proxy: %w", t.resource.Spec.SystemName, err)
 	}
@@ -84,7 +84,7 @@ func (t *ThreescaleReconciler) syncProxy(_ interface{}) error {
 	}
 
 	if len(params) > 0 {
-		err := t.entity.UpdateProxy(params)
+		err := t.productEntity.UpdateProxy(params)
 		if err != nil {
 			return fmt.Errorf("Error updating product proxy: %w", err)
 		}

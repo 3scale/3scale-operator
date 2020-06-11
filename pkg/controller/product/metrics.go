@@ -21,7 +21,7 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 
 	existingMap := map[string]threescaleapi.MetricItem{}
-	existingList, err := t.entity.Metrics()
+	existingList, err := t.productEntity.Metrics()
 	if err != nil {
 		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
 	}
@@ -88,7 +88,7 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 
 func (t *ThreescaleReconciler) processNotDesiredMetrics(notDesiredMap map[string]threescaleapi.MetricItem) error {
 	for _, metric := range notDesiredMap {
-		err := t.entity.DeleteMetric(metric.ID)
+		err := t.productEntity.DeleteMetric(metric.ID)
 		if err != nil {
 			return err
 		}
@@ -112,7 +112,7 @@ func (t *ThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]met
 		}
 
 		if len(params) > 0 {
-			err := t.entity.UpdateMetric(data.item.ID, params)
+			err := t.productEntity.UpdateMetric(data.item.ID, params)
 			if err != nil {
 				return fmt.Errorf("Error updating product metric: %w", err)
 			}
@@ -132,7 +132,7 @@ func (t *ThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabil
 		if len(metric.Description) > 0 {
 			params["description"] = metric.Description
 		}
-		err := t.entity.CreateMetric(params)
+		err := t.productEntity.CreateMetric(params)
 		if err != nil {
 			return err
 		}
