@@ -121,7 +121,7 @@ endif
 	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier verify --ui_validate_io 3scale-operator-master/
 
 ## licenses.xml: Generate licenses.xml file
-licenses.xml:
+licenses.xml: doc/dependency_decisions.yml
 ifndef LICENSEFINDERBINARY
 	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
 endif
