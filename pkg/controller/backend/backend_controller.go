@@ -159,6 +159,7 @@ func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backen
 	if helper.IsInvalidSpecError(specErr) {
 		// On Validation error, no need to retry as spec is not valid and needs to be changed
 		logger.Info("ERROR", "spec validation error", specErr)
+		r.EventRecorder().Eventf(backendResource, corev1.EventTypeWarning, "Invalid Backend Spec", "%v", specErr)
 		return reconcile.Result{}, nil
 	}
 
@@ -172,6 +173,7 @@ func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backen
 func (r *ReconcileBackend) reconcileSpec(backendResource *capabilitiesv1beta1.Backend) (*helper.BackendAPIEntity, error) {
 	err := r.validateSpec(backendResource)
 	if err != nil {
+		// Do not wrap error
 		return nil, err
 	}
 
@@ -185,7 +187,12 @@ func (r *ReconcileBackend) reconcileSpec(backendResource *capabilitiesv1beta1.Ba
 		return nil, fmt.Errorf("reconcile backend spec: %w", err)
 	}
 
-	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient)
+	backendRemoteIndex, err := helper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
+	if err != nil {
+		return nil, fmt.Errorf("reconcile backend spec: %w", err)
+	}
+
+	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient, backendRemoteIndex)
 	backendAPIEntity, err := reconciler.Reconcile()
 	if err != nil {
 		return nil, fmt.Errorf("Error 3scale sync: %w", err)

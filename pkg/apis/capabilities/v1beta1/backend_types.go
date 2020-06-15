@@ -227,16 +227,57 @@ func (backend *Backend) Validate() field.ErrorList {
 		errors = append(errors, field.Required(metricsFldPath, "empty metrics is not valid for Backend."))
 	} else {
 		if _, ok := backend.Spec.Metrics["hits"]; !ok {
-			errors = append(errors, field.Invalid(metricsFldPath, backend.Spec.Metrics, "metrics map not valid for Backend. 'hits' metric must exist."))
+			errors = append(errors, field.Invalid(metricsFldPath, nil, "metrics map not valid for Backend. 'hits' metric must exist."))
+		}
+	}
+
+	metricSystemNameMap := map[string]interface{}{}
+	// Check metric systemNames are unique for all metric and methods
+	for systemName := range backend.Spec.Metrics {
+		if _, ok := metricSystemNameMap[systemName]; ok {
+			metricIdxFldPath := metricsFldPath.Key(systemName)
+			errors = append(errors, field.Invalid(metricIdxFldPath, systemName, "metric system_name not unique."))
+		} else {
+			metricSystemNameMap[systemName] = nil
+		}
+	}
+	// Check method systemNames are unique for all metric and methods
+	methodsFldPath := specFldPath.Child("methods")
+	for systemName := range backend.Spec.Methods {
+		if _, ok := metricSystemNameMap[systemName]; ok {
+			methodIdxFldPath := methodsFldPath.Key(systemName)
+			errors = append(errors, field.Invalid(methodIdxFldPath, systemName, "method system_name not unique."))
+		} else {
+			metricSystemNameMap[systemName] = nil
+		}
+	}
+
+	metricFirendlyNameMap := map[string]interface{}{}
+	// Check metric names are unique for all metric and methods
+	for systemName, metricSpec := range backend.Spec.Metrics {
+		if _, ok := metricFirendlyNameMap[metricSpec.Name]; ok {
+			metricIdxFldPath := metricsFldPath.Key(systemName)
+			errors = append(errors, field.Invalid(metricIdxFldPath, metricSpec.Name, "metric name not unique."))
+		} else {
+			metricFirendlyNameMap[systemName] = nil
+		}
+	}
+	// Check method names are unique for all metric and methods
+	for systemName, methodSpec := range backend.Spec.Methods {
+		if _, ok := metricFirendlyNameMap[methodSpec.Name]; ok {
+			methodIdxFldPath := methodsFldPath.Key(systemName)
+			errors = append(errors, field.Invalid(methodIdxFldPath, methodSpec.Name, "method name not unique."))
+		} else {
+			metricFirendlyNameMap[systemName] = nil
 		}
 	}
 
 	// Check mapping rules metrics and method refs exists
 	mappingRulesFldPath := specFldPath.Child("mappingRules")
 	for idx, spec := range backend.Spec.MappingRules {
-		if !backend.findMetricOrMethod(spec.MetricMethodRef) {
+		if !backend.FindMetricOrMethod(spec.MetricMethodRef) {
 			mappingRulesIdxFldPath := mappingRulesFldPath.Index(idx)
-			errors = append(errors, field.Invalid(mappingRulesIdxFldPath, backend.Spec.MappingRules[idx], "mappingrule does not have valid metric or method reference."))
+			errors = append(errors, field.Invalid(mappingRulesIdxFldPath, spec.MetricMethodRef, "mappingrule does not have valid metric or method reference."))
 		}
 	}
 	return errors
@@ -246,7 +287,7 @@ func (backend *Backend) IsSynced() bool {
 	return backend.Status.Conditions.IsTrueFor(BackendSyncedConditionType)
 }
 
-func (backend *Backend) findMetricOrMethod(ref string) bool {
+func (backend *Backend) FindMetricOrMethod(ref string) bool {
 	if len(backend.Spec.Metrics) > 0 {
 		if _, ok := backend.Spec.Metrics[ref]; ok {
 			return true

@@ -151,7 +151,6 @@ func (b *ProductEntity) UpdateMetric(id int64, params threescaleapi.Params) erro
 }
 
 func (b *ProductEntity) MetricsAndMethods() (*threescaleapi.MetricJSONList, error) {
-	b.logger.V(1).Info("metricsAndMethods")
 	if b.metricsAndMethods == nil {
 		metricsAndMethods, err := b.getMetricsAndMethods()
 		if err != nil {
@@ -163,7 +162,6 @@ func (b *ProductEntity) MetricsAndMethods() (*threescaleapi.MetricJSONList, erro
 }
 
 func (b *ProductEntity) Metrics() (*threescaleapi.MetricJSONList, error) {
-	b.logger.V(1).Info("Metrics")
 	if b.metrics == nil {
 		metrics, err := b.getMetrics()
 		if err != nil {
@@ -184,7 +182,6 @@ func SanitizeProductSystemName(systemName string) string {
 }
 
 func (b *ProductEntity) MappingRules() (*threescaleapi.MappingRuleJSONList, error) {
-	b.logger.V(1).Info("MappingRules")
 	if b.mappingRules == nil {
 		mappingRules, err := b.getMappingRules()
 		if err != nil {

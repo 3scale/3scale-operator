@@ -50,7 +50,7 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 		planEntity := helper.NewApplicationPlanEntity(t.productEntity.ID(), existingMap[systemName], t.threescaleAPIClient, t.logger)
 		// desired spec
 		planSpec := t.resource.Spec.ApplicationPlans[systemName]
-		reconciler := newApplicationPlanReconciler(t.BaseReconciler, systemName, planSpec, t.threescaleAPIClient, t.productEntity, planEntity, t.logger)
+		reconciler := newApplicationPlanReconciler(t.BaseReconciler, systemName, planSpec, t.threescaleAPIClient, t.productEntity, t.backendRemoteIndex, planEntity, t.logger)
 		err := reconciler.Reconcile()
 		if err != nil {
 			return fmt.Errorf("Error sync product [%s] plan [%s]: %w", t.resource.Spec.SystemName, systemName, err)
@@ -77,7 +77,7 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 		// interface to remote entity
 		planEntity := helper.NewApplicationPlanEntity(t.productEntity.ID(), obj.Element, t.threescaleAPIClient, t.logger)
 
-		reconciler := newApplicationPlanReconciler(t.BaseReconciler, systemName, planSpec, t.threescaleAPIClient, t.productEntity, planEntity, t.logger)
+		reconciler := newApplicationPlanReconciler(t.BaseReconciler, systemName, planSpec, t.threescaleAPIClient, t.productEntity, t.backendRemoteIndex, planEntity, t.logger)
 		err = reconciler.Reconcile()
 		if err != nil {
 			return fmt.Errorf("Error sync product [%s] plan [%s]: %w", t.resource.Spec.SystemName, systemName, err)

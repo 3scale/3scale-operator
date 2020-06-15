@@ -1,6 +1,8 @@
 package v1beta1
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"regexp"
 
@@ -58,6 +60,14 @@ type MetricMethodRefSpec struct {
 	BackendSystemName *string `json:"backend,omitempty"`
 }
 
+func (m *MetricMethodRefSpec) String() string {
+	backendPrefix := ""
+	if m.BackendSystemName != nil {
+		backendPrefix = fmt.Sprintf("%s.", *m.BackendSystemName)
+	}
+	return fmt.Sprintf("%s%s", backendPrefix, m.SystemName)
+}
+
 // LimitSpec defines the maximum value a metric can take on a contract before the user is no longer authorized to use resources.
 // Once a limit has been passed in a given period, reject messages will be issued if the service is accessed under this contract.
 type LimitSpec struct {
@@ -66,7 +76,7 @@ type LimitSpec struct {
 	Period string `json:"period"`
 
 	// Limit Value
-	Value int64 `json:"value"`
+	Value int `json:"value"`
 
 	// Metric or Method Reference
 	MetricMethodRef MetricMethodRefSpec `json:"metricMethodRef"`
@@ -808,7 +818,7 @@ func (p *ProductStatus) Equals(other *ProductStatus, logger logr.Logger) bool {
 		return false
 	}
 
-	if !reflect.DeepEqual(p.ErrorReason, other.ErrorMessage) {
+	if !reflect.DeepEqual(p.ErrorReason, other.ErrorReason) {
 		diff := cmp.Diff(p.ErrorReason, other.ErrorReason)
 		logger.V(1).Info("ErrorReason not equal", "difference", diff)
 		return false
@@ -876,30 +886,142 @@ func (product *Product) SetDefaults() bool {
 
 func (product *Product) Validate() field.ErrorList {
 	errors := field.ErrorList{}
-
-	// check hits metric exists
 	specFldPath := field.NewPath("spec")
 	metricsFldPath := specFldPath.Child("metrics")
+	mappingRulesFldPath := specFldPath.Child("mappingRules")
+	applicationPlansFldPath := specFldPath.Child("applicationPlans")
+	methodsFldPath := specFldPath.Child("methods")
+
+	// check hits metric exists
 	if len(product.Spec.Metrics) == 0 {
 		errors = append(errors, field.Required(metricsFldPath, "Product spec does not allow empty metrics."))
 	} else {
 		if _, ok := product.Spec.Metrics["hits"]; !ok {
-			errors = append(errors, field.Invalid(metricsFldPath, product.Spec.Metrics, "metrics map not valid for Product. 'hits' metric must exist."))
+			errors = append(errors, field.Invalid(metricsFldPath, nil, "metrics map not valid for Product. 'hits' metric must exist."))
+		}
+	}
+
+	metricSystemNameMap := map[string]interface{}{}
+	// Check metric systemNames are unique for all metric and methods
+	for systemName := range product.Spec.Metrics {
+		if _, ok := metricSystemNameMap[systemName]; ok {
+			metricIdxFldPath := metricsFldPath.Key(systemName)
+			errors = append(errors, field.Invalid(metricIdxFldPath, product.Spec.Metrics[systemName], "metric system_name not unique."))
+		} else {
+			metricSystemNameMap[systemName] = nil
+		}
+	}
+	// Check method systemNames are unique for all metric and methods
+	for systemName := range product.Spec.Methods {
+		if _, ok := metricSystemNameMap[systemName]; ok {
+			methodIdxFldPath := methodsFldPath.Key(systemName)
+			errors = append(errors, field.Invalid(methodIdxFldPath, product.Spec.Methods[systemName], "method system_name not unique."))
+		} else {
+			metricSystemNameMap[systemName] = nil
+		}
+	}
+
+	metricFirendlyNameMap := map[string]interface{}{}
+	// Check metric names are unique for all metric and methods
+	for systemName, metricSpec := range product.Spec.Metrics {
+		if _, ok := metricFirendlyNameMap[metricSpec.Name]; ok {
+			metricIdxFldPath := metricsFldPath.Key(systemName)
+			errors = append(errors, field.Invalid(metricIdxFldPath, metricSpec, "metric name not unique."))
+		} else {
+			metricFirendlyNameMap[systemName] = nil
+		}
+	}
+	// Check method names are unique for all metric and methods
+	for systemName, methodSpec := range product.Spec.Methods {
+		if _, ok := metricFirendlyNameMap[methodSpec.Name]; ok {
+			methodIdxFldPath := methodsFldPath.Key(systemName)
+			errors = append(errors, field.Invalid(methodIdxFldPath, methodSpec, "method name not unique."))
+		} else {
+			metricFirendlyNameMap[systemName] = nil
 		}
 	}
 
 	// Check mapping rules metrics and method refs exists
-	mappingRulesFldPath := specFldPath.Child("mappingRules")
 	for idx, spec := range product.Spec.MappingRules {
-		if !product.findMetricOrMethod(spec.MetricMethodRef) {
+		if !product.FindMetricOrMethod(spec.MetricMethodRef) {
 			mappingRulesIdxFldPath := mappingRulesFldPath.Index(idx)
-			errors = append(errors, field.Invalid(mappingRulesIdxFldPath, product.Spec.MappingRules[idx], "mappingrule does not have valid metric or method reference."))
+			errors = append(errors, field.Invalid(mappingRulesIdxFldPath, spec.MetricMethodRef, "mappingrule does not have valid metric or method reference."))
 		}
 	}
+
+	// Check application plan limits local metricOrMethod ref exists
+	for planSystemName, planSpec := range product.Spec.ApplicationPlans {
+		planFldPath := applicationPlansFldPath.Key(planSystemName)
+		limitsFldPath := planFldPath.Child("limits")
+		for idx, limitSpec := range planSpec.Limits {
+			// Only local references
+			if limitSpec.MetricMethodRef.BackendSystemName == nil && !product.FindMetricOrMethod(limitSpec.MetricMethodRef.SystemName) {
+				limitFldPath := limitsFldPath.Index(idx)
+				metricRefFldPath := limitFldPath.Child("metricMethodRef")
+				errors = append(errors, field.Invalid(metricRefFldPath, limitSpec.MetricMethodRef.SystemName, "limit does not have valid local metric or method reference."))
+			}
+		}
+	}
+
+	// Check application plan limits keys (periods, metric) are unique
+	for planSystemName, planSpec := range product.Spec.ApplicationPlans {
+		planFldPath := applicationPlansFldPath.Key(planSystemName)
+		limitsFldPath := planFldPath.Child("limits")
+		periods := map[string]interface{}{}
+		for idx, limitSpec := range planSpec.Limits {
+			key := fmt.Sprintf("%s:%s", limitSpec.Period, limitSpec.MetricMethodRef.String())
+			if _, ok := periods[key]; ok {
+				limitFldPath := limitsFldPath.Index(idx)
+				errors = append(errors, field.Invalid(limitFldPath, key, "limit period is not unique for the same metric."))
+			} else {
+				periods[key] = nil
+			}
+		}
+	}
+
+	// Check application plan pricing rule local metricOrMethod ref exists
+	for planSystemName, planSpec := range product.Spec.ApplicationPlans {
+		planFldPath := applicationPlansFldPath.Key(planSystemName)
+		rulesFldPath := planFldPath.Child("pricingRules")
+		for idx, pruleSpec := range planSpec.PricingRules {
+			// Only local references
+			if pruleSpec.MetricMethodRef.BackendSystemName == nil && !product.FindMetricOrMethod(pruleSpec.MetricMethodRef.SystemName) {
+				ruleFldPath := rulesFldPath.Index(idx)
+				metricRefFldPath := ruleFldPath.Child("metricMethodRef")
+				errors = append(errors, field.Invalid(metricRefFldPath, pruleSpec.MetricMethodRef.SystemName, "Pricing rule does not have valid local metric or method reference."))
+			}
+		}
+	}
+
+	// Check application plan pricing rules From < To
+	for planSystemName, planSpec := range product.Spec.ApplicationPlans {
+		planFldPath := applicationPlansFldPath.Key(planSystemName)
+		rulesFldPath := planFldPath.Child("pricingRules")
+		for idx, ruleSpec := range planSpec.PricingRules {
+			if ruleSpec.From > ruleSpec.To {
+				ruleFldPath := rulesFldPath.Index(idx)
+				bytes, _ := json.Marshal(ruleSpec)
+				errors = append(errors, field.Invalid(ruleFldPath, string(bytes), "'To' value cannot be less than your 'From' value."))
+			}
+		}
+	}
+
+	// Check application plan pricing rules ranges are not overlapping
+	for planSystemName, planSpec := range product.Spec.ApplicationPlans {
+		planFldPath := applicationPlansFldPath.Key(planSystemName)
+		rulesFldPath := planFldPath.Child("pricingRules")
+		overlappedIndex := detectOverlappingPricingRuleRanges(planSpec.PricingRules)
+		if overlappedIndex >= 0 {
+			ruleFldPath := rulesFldPath.Index(overlappedIndex)
+			bytes, _ := json.Marshal(planSpec.PricingRules[overlappedIndex])
+			errors = append(errors, field.Invalid(ruleFldPath, string(bytes), "'From' value cannot be less than 'To' values of current rules for the same metric."))
+		}
+	}
+
 	return errors
 }
 
-func (product *Product) findMetricOrMethod(ref string) bool {
+func (product *Product) FindMetricOrMethod(ref string) bool {
 	if len(product.Spec.Metrics) > 0 {
 		if _, ok := product.Spec.Metrics[ref]; ok {
 			return true
@@ -913,6 +1035,51 @@ func (product *Product) findMetricOrMethod(ref string) bool {
 	}
 
 	return false
+}
+
+func detectOverlappingPricingRuleRanges(rules []PricingRuleSpec) int {
+	rulesPerMetricMap := make(map[string][]PricingRuleSpec)
+	for _, spec := range rules {
+		key := spec.MetricMethodRef.String()
+		rulesPerMetricMap[key] = append(rulesPerMetricMap[key], spec)
+	}
+
+	for _, rulesPerMetric := range rulesPerMetricMap {
+		idx := isOverlappingRanges(rulesPerMetric)
+		if idx >= 0 {
+			ruleSpec := rulesPerMetric[idx]
+			// search and return index
+			for idx, spec := range rules {
+				if spec == ruleSpec {
+					return idx
+				}
+			}
+		}
+	}
+	return -1
+}
+
+func isOverlappingRanges(rules []PricingRuleSpec) int {
+	// Naive implementation: check rule X with all predecessors if there is overlapping
+	if len(rules) < 2 {
+		return -1
+	}
+
+	for a := 1; a < len(rules); a++ {
+		for b := 0; b < a; b++ {
+			// Assume for all rules From <= To
+			// Let Condition A Mean that ruleRange A Completely After ruleRange B: true if ToB <= FromA
+			// Let Condition B Mean that ruleRange A Completely Before ruleRange B: true if ToA <= FromB
+			// Then Overlap exists if Neither A Nor B is true
+			//  ~(A or B) <=> ~a and ~b
+			// Thus: Overlap <=> ToB > FromA && ToA > FromB
+			if rules[a].From < rules[b].To && rules[a].To > rules[b].From {
+				return a
+			}
+		}
+	}
+
+	return -1
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
