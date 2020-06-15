@@ -303,13 +303,19 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 }
 
 func (apicast *Apicast) buildApicastCommonEnv() []v1.EnvVar {
-	return []v1.EnvVar{
+	result := []v1.EnvVar{
 		helper.EnvVarFromSecret("THREESCALE_PORTAL_ENDPOINT", "system-master-apicast", SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName),
 		helper.EnvVarFromSecret("BACKEND_ENDPOINT_OVERRIDE", "backend-listener", "service_endpoint"),
 		helper.EnvVarFromConfigMap("APICAST_MANAGEMENT_API", "apicast-environment", "APICAST_MANAGEMENT_API"),
 		helper.EnvVarFromConfigMap("OPENSSL_VERIFY", "apicast-environment", "OPENSSL_VERIFY"),
 		helper.EnvVarFromConfigMap("APICAST_RESPONSE_CODES", "apicast-environment", "APICAST_RESPONSE_CODES"),
 	}
+
+	if apicast.Options.ExtendedMetrics != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_EXTENDED_METRICS", fmt.Sprintf("%t", *apicast.Options.ExtendedMetrics)))
+	}
+
+	return result
 }
 
 func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
