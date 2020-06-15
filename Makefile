@@ -44,9 +44,9 @@ install-tools: download
 	@echo Installing tools from tools.go
 	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
 
-## generate: Go generate
-generate:
-	@echo Generate Go files by processing source
+## assets: Generate embedded assets
+assets:
+	@echo Generate Go embedded assets files by processing source
 	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
 ## build: Build operator
