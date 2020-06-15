@@ -33,18 +33,9 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 		existingMap[systemName] = existing.Element
 	}
 
-	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
-	desiredNewMap := map[string]capabilitiesv1beta1.Methodpec{}
-	for _, systemName := range desiredNewKeys {
-		// key is expected to exist
-		// desiredNewKeys is a subset of the Spec.Method map key set
-		desiredNewMap[systemName] = t.resource.Spec.Methods[systemName]
-	}
-	err = t.createNewMethods(desiredNewMap)
-	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
-	}
-
+	//
+	// Deleted existing and not desired
+	//
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
 	notDesiredMap := map[string]threescaleapi.MethodItem{}
 	for _, systemName := range notDesiredExistingKeys {
@@ -57,6 +48,9 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
+	//
+	// Reconcile existing and changed
+	//
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
 	matchedMap := map[string]methodData{}
 	for _, systemName := range matchedKeys {
@@ -67,6 +61,21 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 
 	err = t.reconcileMatchedMethods(matchedMap)
+	if err != nil {
+		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+	}
+
+	//
+	// Create not existing and desired
+	//
+	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	desiredNewMap := map[string]capabilitiesv1beta1.Methodpec{}
+	for _, systemName := range desiredNewKeys {
+		// key is expected to exist
+		// desiredNewKeys is a subset of the Spec.Method map key set
+		desiredNewMap[systemName] = t.resource.Spec.Methods[systemName]
+	}
+	err = t.createNewMethods(desiredNewMap)
 	if err != nil {
 		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
 	}

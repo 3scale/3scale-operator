@@ -141,6 +141,7 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 			return reconcile.Result{}, fmt.Errorf("Failed setting product defaults: %w", err)
 		}
 
+		logger.Info("resource defaults updated. Requeueing.")
 		return reconcile.Result{Requeue: true}, nil
 	}
 
@@ -159,6 +160,7 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 	if helper.IsInvalidSpecError(specErr) {
 		// On Validation error, no need to retry as spec is not valid and needs to be changed
 		logger.Info("ERROR", "spec validation error", specErr)
+		r.EventRecorder().Eventf(productResource, corev1.EventTypeWarning, "Invalid Product Spec", "%v", specErr)
 		return reconcile.Result{}, nil
 	}
 
@@ -198,7 +200,12 @@ func (r *ReconcileProduct) reconcileSpec(resource *capabilitiesv1beta1.Product) 
 		return nil, fmt.Errorf("reconcile product spec: %w", err)
 	}
 
-	reconciler := NewThreescaleReconciler(r.BaseReconciler, resource, threescaleAPIClient)
+	backendRemoteIndex, err := helper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
+	if err != nil {
+		return nil, fmt.Errorf("reconcile product spec: %w", err)
+	}
+
+	reconciler := NewThreescaleReconciler(r.BaseReconciler, resource, threescaleAPIClient, backendRemoteIndex)
 	entity, err := reconciler.Reconcile()
 	if err != nil {
 		return nil, fmt.Errorf("reconcile product spec: %w", err)
@@ -223,13 +230,22 @@ func (r *ReconcileProduct) validateSpec(resource *capabilitiesv1beta1.Product) e
 
 func (r *ReconcileProduct) checkExternalRefs(resource *capabilitiesv1beta1.Product, providerAccount *helper.ProviderAccount) error {
 	errors := field.ErrorList{}
-	// external validation
-	backendUsageErrors, err := r.checkBackendUsages(resource, providerAccount)
+
+	backendList, err := r.backendList(resource, providerAccount)
 	if err != nil {
-		return fmt.Errorf("check product external refs: %w", err)
+		return fmt.Errorf("checking backend usage references: %w", err)
 	}
 
+	backendUsageErrors := r.checkBackendUsages(resource, backendList)
 	errors = append(errors, backendUsageErrors...)
+
+	backendUsageList := computeBackendUsageList(backendList, resource.Spec.BackendUsages)
+
+	limitBackendMetricRefErrors := checkAppLimitsExternalRefs(resource, backendUsageList)
+	errors = append(errors, limitBackendMetricRefErrors...)
+
+	pricingRulesBackendMetricRefErrors := checkAppPricingRulesExternalRefs(resource, backendUsageList)
+	errors = append(errors, pricingRulesBackendMetricRefErrors...)
 
 	if len(errors) == 0 {
 		return nil
@@ -241,25 +257,97 @@ func (r *ReconcileProduct) checkExternalRefs(resource *capabilitiesv1beta1.Produ
 	}
 }
 
-func (r *ReconcileProduct) checkBackendUsages(resource *capabilitiesv1beta1.Product, providerAccount *helper.ProviderAccount) (field.ErrorList, error) {
+func (r *ReconcileProduct) checkBackendUsages(resource *capabilitiesv1beta1.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
 	errors := field.ErrorList{}
-	backendList, err := r.backendList(resource, providerAccount)
-	if err != nil {
-		return nil, fmt.Errorf("checking backend usage references: %w", err)
-	}
 
 	specFldPath := field.NewPath("spec")
 	backendUsageFldPath := specFldPath.Child("backendUsages")
 	for systemName := range resource.Spec.BackendUsages {
-		if !findBackendBySystemName(backendList, systemName) {
+		idx := findBackendBySystemName(backendList, systemName)
+		if idx < 0 {
 			keyFldPath := backendUsageFldPath.Key(systemName)
 			errors = append(errors, field.Invalid(keyFldPath, resource.Spec.BackendUsages[systemName], "backend usage does not have valid backend reference."))
 		}
 	}
 
-	return errors, nil
+	return errors
 }
 
+func checkAppLimitsExternalRefs(resource *capabilitiesv1beta1.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
+	// backendList param is expected to be valid product's backendUsageList
+	errors := field.ErrorList{}
+
+	specFldPath := field.NewPath("spec")
+	applicationPlansFldPath := specFldPath.Child("applicationPlans")
+	for planSystemName, planSpec := range resource.Spec.ApplicationPlans {
+		planFldPath := applicationPlansFldPath.Key(planSystemName)
+		limitsFldPath := planFldPath.Child("limits")
+		for idx, limitSpec := range planSpec.Limits {
+			if limitSpec.MetricMethodRef.BackendSystemName == nil {
+				continue
+			}
+
+			limitFldPath := limitsFldPath.Index(idx)
+			metricRefFldPath := limitFldPath.Child("metricMethodRef")
+			backendIdx := findBackendBySystemName(backendList, *limitSpec.MetricMethodRef.BackendSystemName)
+			// Check backend reference is one of the backend usage list
+			if backendIdx < 0 {
+				backendRefFldPath := metricRefFldPath.Child("backend")
+				errors = append(errors, field.Invalid(backendRefFldPath, limitSpec.MetricMethodRef.BackendSystemName, "plan limit has invalid backend reference."))
+				continue
+			}
+
+			// check backend metric reference
+			backendResource := backendList[backendIdx]
+			if !backendResource.FindMetricOrMethod(limitSpec.MetricMethodRef.SystemName) {
+				metricRefSystemNameFldPath := metricRefFldPath.Child("systemName")
+				errors = append(errors, field.Invalid(metricRefSystemNameFldPath, limitSpec.MetricMethodRef.SystemName, "plan limit has invalid backend metric or method reference."))
+			}
+		}
+	}
+
+	return errors
+}
+
+func checkAppPricingRulesExternalRefs(resource *capabilitiesv1beta1.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
+	// backendList param is expected to be valid product's backendUsageList
+	errors := field.ErrorList{}
+
+	specFldPath := field.NewPath("spec")
+	applicationPlansFldPath := specFldPath.Child("applicationPlans")
+	for planSystemName, planSpec := range resource.Spec.ApplicationPlans {
+		planFldPath := applicationPlansFldPath.Key(planSystemName)
+		rulesFldPath := planFldPath.Child("pricingRules")
+		for idx, ruleSpec := range planSpec.PricingRules {
+			if ruleSpec.MetricMethodRef.BackendSystemName == nil {
+				continue
+			}
+
+			ruleFldPath := rulesFldPath.Index(idx)
+			metricRefFldPath := ruleFldPath.Child("metricMethodRef")
+			backendIdx := findBackendBySystemName(backendList, *ruleSpec.MetricMethodRef.BackendSystemName)
+			// Check backend reference is one of the backend usage list
+			if backendIdx < 0 {
+				backendRefFldPath := metricRefFldPath.Child("backend")
+				errors = append(errors, field.Invalid(backendRefFldPath, ruleSpec.MetricMethodRef.BackendSystemName, "plan pricing rule has invalid backend reference."))
+				continue
+			}
+
+			// check backend metric reference
+			backendResource := backendList[backendIdx]
+			if !backendResource.FindMetricOrMethod(ruleSpec.MetricMethodRef.SystemName) {
+				metricRefSystemNameFldPath := metricRefFldPath.Child("systemName")
+				errors = append(errors, field.Invalid(metricRefSystemNameFldPath, ruleSpec.MetricMethodRef.SystemName, "plan pricing rule has invalid backend metric or method reference."))
+			}
+		}
+	}
+
+	return errors
+}
+
+// Returns a list of k8s backend list where all elements meet the following conditions:
+// - Sync state (ensure remote backend exist and in sync)
+// - Same 3scale provider Account as the product
 func (r *ReconcileProduct) backendList(resource *capabilitiesv1beta1.Product, productProviderAccount *helper.ProviderAccount) ([]capabilitiesv1beta1.Backend, error) {
 	logger := r.Logger().WithValues("reconcile", resource.Name)
 	backendList := &capabilitiesv1beta1.BackendList{}
@@ -296,11 +384,27 @@ func (r *ReconcileProduct) backendList(resource *capabilitiesv1beta1.Product, pr
 	return validBackends, nil
 }
 
-func findBackendBySystemName(list []capabilitiesv1beta1.Backend, systemName string) bool {
+func findBackendBySystemName(list []capabilitiesv1beta1.Backend, systemName string) int {
 	for idx := range list {
 		if list[idx].Spec.SystemName == systemName {
-			return true
+			return idx
 		}
 	}
-	return false
+	return -1
+}
+
+func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap map[string]capabilitiesv1beta1.BackendUsageSpec) []capabilitiesv1beta1.Backend {
+	target := map[string]bool{}
+	for systemName := range backendUsageMap {
+		target[systemName] = true
+	}
+
+	result := make([]capabilitiesv1beta1.Backend, 0)
+	for _, backend := range list {
+		if _, ok := target[backend.Spec.SystemName]; ok {
+			result = append(result, backend)
+		}
+	}
+
+	return result
 }
