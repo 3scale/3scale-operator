@@ -179,7 +179,20 @@
 - - :license
   - github.com/evanphx/json-patch
   - 3-clause BSD License
-  - :who:
+  - :who: 
     :why: 3-clause BSD License https://github.com/evanphx/json-patch/blob/master/LICENSE
     :versions: []
     :when: 2019-10-24 09:56:58.733603332 Z
+- - :whitelist
+  - CC0 1.0 Universal
+  - :who: Jeff Kaufmann and Richard Fontana (Red Hat Legal)
+    :why: 
+    :versions: []
+    :when: 2019-11-26 10:15:34.001520959 Z
+- - :license
+  - github.com/go-bindata/go-bindata
+  - CC0 1.0 Universal
+  - :who: 
+    :why: https://github.com/go-bindata/go-bindata/blob/master/LICENSE
+    :versions: []
+    :when: 2020-06-15 09:58:31.161619176 Z
