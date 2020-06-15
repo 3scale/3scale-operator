@@ -15,15 +15,17 @@ type ThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	resource            *capabilitiesv1beta1.Product
 	productEntity       *helper.ProductEntity
+	backendRemoteIndex  *helper.BackendAPIRemoteIndex
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
 
-func NewThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient) *ThreescaleReconciler {
+func NewThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient, backendRemoteIndex *helper.BackendAPIRemoteIndex) *ThreescaleReconciler {
 	return &ThreescaleReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
 		threescaleAPIClient: threescaleAPIClient,
+		backendRemoteIndex:  backendRemoteIndex,
 		logger:              b.Logger().WithValues("3scale Reconciler", resource.Name),
 	}
 }
@@ -62,7 +64,6 @@ func (t *ThreescaleReconciler) Reconcile() (*helper.ProductEntity, error) {
 
 func (t *ThreescaleReconciler) bumpProxyVersion(_ interface{}) error {
 	// POST /admin/api/services/{service_id}/proxy/deploy.json ????
-	// if proxy.lock  != latest proxy config latest (sandbox) -> Post Proxy deploy endpoint
 	return nil
 }
 

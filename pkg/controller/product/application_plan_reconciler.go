@@ -12,11 +12,25 @@ import (
 	"github.com/go-logr/logr"
 )
 
+type limitKey struct {
+	Period   string
+	Value    int
+	MetricID int64
+}
+
+type pricingRuleKey struct {
+	From         int
+	To           int
+	PricePerUnit string
+	MetricID     int64
+}
+
 type applicationPlanReconciler struct {
 	*reconcilers.BaseReconciler
 	systemName          string
 	resource            capabilitiesv1beta1.ApplicationPlanSpec
 	productEntity       *helper.ProductEntity
+	backendRemoteIndex  *helper.BackendAPIRemoteIndex
 	planEntity          *helper.ApplicationPlanEntity
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
@@ -27,15 +41,18 @@ func newApplicationPlanReconciler(b *reconcilers.BaseReconciler,
 	resource capabilitiesv1beta1.ApplicationPlanSpec,
 	threescaleAPIClient *threescaleapi.ThreeScaleClient,
 	productEntity *helper.ProductEntity,
+	backendRemoteIndex *helper.BackendAPIRemoteIndex,
 	planEntity *helper.ApplicationPlanEntity,
 	logger logr.Logger,
 ) *applicationPlanReconciler {
+
 	return &applicationPlanReconciler{
 		BaseReconciler:      b,
 		systemName:          systemName,
 		resource:            resource,
 		threescaleAPIClient: threescaleAPIClient,
 		productEntity:       productEntity,
+		backendRemoteIndex:  backendRemoteIndex,
 		planEntity:          planEntity,
 		logger:              logger.WithValues("Plan", systemName),
 	}
@@ -104,9 +121,271 @@ func (a *applicationPlanReconciler) syncPlan(_ interface{}) error {
 }
 
 func (a *applicationPlanReconciler) syncLimits(_ interface{}) error {
+	// desired Limits
+	desiredList := a.resource.Limits
+
+	// existing Limits
+	existingList, err := a.planEntity.Limits()
+	if err != nil {
+		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err)
+	}
+
+	// item is not updated, either created or deleted.
+	// computeUnDesiredLimits should match the entire object
+	undesiredLimits, err := a.computeUnDesiredLimits(existingList.Limits, desiredList)
+	if err != nil {
+		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err)
+	}
+	for idx := range undesiredLimits {
+		err := a.planEntity.DeleteLimit(undesiredLimits[idx].Element.MetricID, undesiredLimits[idx].Element.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// item is not updated, either created or deleted.
+	// computeDesiredLimits should match the entire object
+	desiredLimits, err := a.computeDesiredLimits(desiredList, existingList.Limits)
+	if err != nil {
+		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err)
+	}
+
+	for idx := range desiredLimits {
+		params := threescaleapi.Params{
+			"period": desiredLimits[idx].Period,
+			"value":  strconv.Itoa(desiredLimits[idx].Value),
+		}
+
+		metricID, err := a.findID(desiredLimits[idx].MetricMethodRef)
+		if err != nil {
+			return err
+		}
+
+		err = a.planEntity.CreateLimit(metricID, params)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (a *applicationPlanReconciler) syncPricingRules(_ interface{}) error {
+	// desired pricing rules
+	desiredList := a.resource.PricingRules
+
+	// existing pricing rules
+	existingList, err := a.planEntity.PricingRules()
+	if err != nil {
+		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err)
+	}
+
+	// item is not updated, either created or deleted.
+	// computeUnDesiredPricingRules should match the entire object
+	undesiredRules, err := a.computeUnDesiredPricingRules(existingList.Rules, desiredList)
+	if err != nil {
+		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err)
+	}
+	for idx := range undesiredRules {
+		err := a.planEntity.DeletePricingRule(undesiredRules[idx].Element.MetricID, undesiredRules[idx].Element.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// item is not updated, either created or deleted.
+	// computeDesiredPricingRules should match the entire object
+	desiredRules, err := a.computeDesiredPricingRules(desiredList, existingList.Rules)
+	if err != nil {
+		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err)
+	}
+
+	for idx := range desiredRules {
+		params := threescaleapi.Params{
+			"min":           strconv.Itoa(desiredRules[idx].From),
+			"max":           strconv.Itoa(desiredRules[idx].To),
+			"cost_per_unit": desiredRules[idx].PricePerUnit,
+		}
+
+		metricID, err := a.findID(desiredRules[idx].MetricMethodRef)
+		if err != nil {
+			return err
+		}
+
+		err = a.planEntity.CreatePricingRule(metricID, params)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func (a *applicationPlanReconciler) computeUnDesiredLimits(
+	existingList []threescaleapi.ApplicationPlanLimit,
+	desiredList []capabilitiesv1beta1.LimitSpec) ([]threescaleapi.ApplicationPlanLimit, error) {
+
+	target := map[limitKey]bool{}
+	for _, desired := range desiredList {
+		metricID, err := a.findID(desired.MetricMethodRef)
+		if err != nil {
+			return nil, err
+		}
+
+		desiredKey := limitKey{
+			Period:   desired.Period,
+			Value:    desired.Value,
+			MetricID: metricID,
+		}
+
+		target[desiredKey] = true
+	}
+
+	result := make([]threescaleapi.ApplicationPlanLimit, 0)
+	for _, existing := range existingList {
+		existingKey := limitKey{
+			Period:   existing.Element.Period,
+			Value:    existing.Element.Value,
+			MetricID: existing.Element.MetricID,
+		}
+
+		if _, ok := target[existingKey]; !ok {
+			result = append(result, existing)
+		}
+	}
+
+	return result, nil
+}
+
+func (a *applicationPlanReconciler) computeDesiredLimits(
+	desiredList []capabilitiesv1beta1.LimitSpec,
+	existingList []threescaleapi.ApplicationPlanLimit) ([]capabilitiesv1beta1.LimitSpec, error) {
+
+	target := map[limitKey]bool{}
+	for _, existing := range existingList {
+		existingKey := limitKey{
+			Period:   existing.Element.Period,
+			Value:    existing.Element.Value,
+			MetricID: existing.Element.MetricID,
+		}
+
+		target[existingKey] = true
+	}
+
+	result := make([]capabilitiesv1beta1.LimitSpec, 0)
+	for _, desired := range desiredList {
+		metricID, err := a.findID(desired.MetricMethodRef)
+		if err != nil {
+			return nil, err
+		}
+		desiredKey := limitKey{
+			Period:   desired.Period,
+			Value:    desired.Value,
+			MetricID: metricID,
+		}
+
+		if _, ok := target[desiredKey]; !ok {
+			result = append(result, desired)
+		}
+	}
+
+	return result, nil
+}
+
+func (a *applicationPlanReconciler) findID(ref capabilitiesv1beta1.MetricMethodRefSpec) (int64, error) {
+	var (
+		metricID int64
+		err      error
+	)
+	if ref.BackendSystemName == nil {
+		metricID, err = a.productEntity.FindMethodMetricIDBySystemName(ref.SystemName)
+		if err != nil {
+			return metricID, err
+		}
+	} else {
+		backendEntity, ok := a.backendRemoteIndex.FindBySystemName(*ref.BackendSystemName)
+		if !ok {
+			panic(fmt.Sprintf("Backend SystemName %s not found in backend index", *ref.BackendSystemName))
+		}
+		metricID, err = backendEntity.FindMethodMetricIDBySystemName(ref.SystemName)
+		if err != nil {
+			return metricID, err
+		}
+	}
+	return metricID, nil
+}
+
+func (a *applicationPlanReconciler) computeUnDesiredPricingRules(
+	existingList []threescaleapi.ApplicationPlanPricingRule,
+	desiredList []capabilitiesv1beta1.PricingRuleSpec) ([]threescaleapi.ApplicationPlanPricingRule, error) {
+
+	target := map[pricingRuleKey]bool{}
+	for _, desired := range desiredList {
+		metricID, err := a.findID(desired.MetricMethodRef)
+		if err != nil {
+			return nil, err
+		}
+
+		desiredKey := pricingRuleKey{
+			From:         desired.From,
+			To:           desired.To,
+			PricePerUnit: desired.PricePerUnit,
+			MetricID:     metricID,
+		}
+
+		target[desiredKey] = true
+	}
+
+	result := make([]threescaleapi.ApplicationPlanPricingRule, 0)
+	for _, existing := range existingList {
+		existingKey := pricingRuleKey{
+			From:         existing.Element.Min,
+			To:           existing.Element.Max,
+			PricePerUnit: existing.Element.CostPerUnit,
+			MetricID:     existing.Element.MetricID,
+		}
+
+		if _, ok := target[existingKey]; !ok {
+			result = append(result, existing)
+		}
+	}
+
+	return result, nil
+}
+
+func (a *applicationPlanReconciler) computeDesiredPricingRules(
+	desiredList []capabilitiesv1beta1.PricingRuleSpec,
+	existingList []threescaleapi.ApplicationPlanPricingRule) ([]capabilitiesv1beta1.PricingRuleSpec, error) {
+
+	target := map[pricingRuleKey]bool{}
+	for _, existing := range existingList {
+		existingKey := pricingRuleKey{
+			From:         existing.Element.Min,
+			To:           existing.Element.Max,
+			PricePerUnit: existing.Element.CostPerUnit,
+			MetricID:     existing.Element.MetricID,
+		}
+
+		target[existingKey] = true
+	}
+
+	result := make([]capabilitiesv1beta1.PricingRuleSpec, 0)
+	for _, desired := range desiredList {
+		metricID, err := a.findID(desired.MetricMethodRef)
+		if err != nil {
+			return nil, err
+		}
+		desiredKey := pricingRuleKey{
+			From:         desired.From,
+			To:           desired.To,
+			PricePerUnit: desired.PricePerUnit,
+			MetricID:     metricID,
+		}
+
+		if _, ok := target[desiredKey]; !ok {
+			result = append(result, desired)
+		}
+	}
+
+	return result, nil
 }

@@ -31,6 +31,22 @@ func (b *BackendAPIEntity) ID() int64 {
 	return b.backendAPIObj.Element.ID
 }
 
+func (b *BackendAPIEntity) SystemName() string {
+	return b.backendAPIObj.Element.SystemName
+}
+
+func (b *BackendAPIEntity) Name() string {
+	return b.backendAPIObj.Element.Name
+}
+
+func (b *BackendAPIEntity) Description() string {
+	return b.backendAPIObj.Element.Description
+}
+
+func (b *BackendAPIEntity) PrivateEndpoint() string {
+	return b.backendAPIObj.Element.PrivateEndpoint
+}
+
 func (b *BackendAPIEntity) Update(params threescaleapi.Params) error {
 	b.logger.V(1).Info("Update", "params", params)
 	updatedBackendAPI, err := b.client.UpdateBackendApi(b.backendAPIObj.Element.ID, params)

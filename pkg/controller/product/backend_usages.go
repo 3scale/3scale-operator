@@ -16,23 +16,11 @@ type backendUsageData struct {
 }
 
 type newBackendUsageData struct {
-	item threescaleapi.BackendApiItem
+	item *helper.BackendAPIEntity
 	spec capabilitiesv1beta1.BackendUsageSpec
 }
 
 func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
-	backendAPIs, err := t.threescaleAPIClient.ListBackendApis()
-	if err != nil {
-		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err)
-	}
-
-	backendMapByID := map[int64]threescaleapi.BackendApiItem{}
-	backendMapBySystemName := map[string]threescaleapi.BackendApiItem{}
-	for _, backend := range backendAPIs.Backends {
-		backendMapByID[backend.Element.ID] = backend.Element
-		backendMapBySystemName[backend.Element.SystemName] = backend.Element
-	}
-
 	desiredKeys := make([]string, 0, len(t.resource.Spec.BackendUsages))
 	for systemName := range t.resource.Spec.BackendUsages {
 		desiredKeys = append(desiredKeys, systemName)
@@ -47,9 +35,12 @@ func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	existingMap := map[string]threescaleapi.BackendAPIUsageItem{}
 	for _, existing := range existingList {
 		// backend usage ID should exist in the backend list
-		systemName := backendMapByID[existing.Element.BackendAPIID].SystemName
-		existingKeys = append(existingKeys, systemName)
-		existingMap[systemName] = existing.Element
+		backend, ok := t.backendRemoteIndex.FindByID(existing.Element.BackendAPIID)
+		if !ok {
+			panic(fmt.Sprintf("Backend ID %d not found in backend index", existing.Element.BackendAPIID))
+		}
+		existingKeys = append(existingKeys, backend.SystemName())
+		existingMap[backend.SystemName()] = existing.Element
 	}
 
 	//
@@ -90,14 +81,16 @@ func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
 	desiredNewList := make([]newBackendUsageData, 0, len(desiredNewKeys))
 	for _, backendSystemName := range desiredNewKeys {
-		// backendSystemName is expected to exist
-		// desiredNewKeys is a subset of the Spec.BackendUsages map key set
+		// desiredNewKeys is a set of backend resources systemName's
+		// which have been validated of being sync'ed.
+		// Thus, existing Backend entities should contain desired systemName
+		backend, ok := t.backendRemoteIndex.FindBySystemName(backendSystemName)
+		if !ok {
+			panic(fmt.Sprintf("Backend SystemName %s not found in backend index", backendSystemName))
+		}
 		desiredNewList = append(desiredNewList, newBackendUsageData{
 			spec: t.resource.Spec.BackendUsages[backendSystemName],
-			// desiredNewKeys is a set of backend resources systemName's
-			// which have been validated of being sync'ed.
-			// Thus, the map of existing Backend entities should contain desired systemName
-			item: backendMapBySystemName[backendSystemName],
+			item: backend,
 		})
 	}
 	err = t.createNewBackendUsage(desiredNewList)
@@ -111,7 +104,7 @@ func (t *ThreescaleReconciler) processNotDesiredBackendUsages(notDesiredList []t
 	for _, item := range notDesiredList {
 		err := t.productEntity.DeleteBackendUsage(item.ID)
 		if err != nil {
-			return fmt.Errorf("Error deleting product backendusage: %w", err)
+			return err
 		}
 	}
 	return nil
@@ -139,11 +132,11 @@ func (t *ThreescaleReconciler) createNewBackendUsage(matchedList []newBackendUsa
 	for _, data := range matchedList {
 		params := threescaleapi.Params{
 			"path":           data.spec.Path,
-			"backend_api_id": strconv.FormatInt(data.item.ID, 10),
+			"backend_api_id": strconv.FormatInt(data.item.ID(), 10),
 		}
 		err := t.productEntity.CreateBackendUsage(params)
 		if err != nil {
-			return fmt.Errorf("Error creating product backendusage: %w", err)
+			return err
 		}
 	}
 

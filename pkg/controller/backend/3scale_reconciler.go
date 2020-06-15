@@ -32,14 +32,20 @@ type ThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	backendResource     *capabilitiesv1beta1.Backend
 	backendAPIEntity    *helper.BackendAPIEntity
+	backendRemoteIndex  *helper.BackendAPIRemoteIndex
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
 
-func NewThreescaleReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, threescaleAPIClient *threescaleapi.ThreeScaleClient) *ThreescaleReconciler {
+func NewThreescaleReconciler(b *reconcilers.BaseReconciler,
+	backendResource *capabilitiesv1beta1.Backend,
+	threescaleAPIClient *threescaleapi.ThreeScaleClient,
+	backendRemoteIndex *helper.BackendAPIRemoteIndex) *ThreescaleReconciler {
+
 	return &ThreescaleReconciler{
 		BaseReconciler:      b,
 		backendResource:     backendResource,
+		backendRemoteIndex:  backendRemoteIndex,
 		threescaleAPIClient: threescaleAPIClient,
 		logger:              b.Logger().WithValues("3scale Reconciler", backendResource.Name),
 	}
@@ -65,25 +71,14 @@ func (t *ThreescaleReconciler) Reconcile() (*helper.BackendAPIEntity, error) {
 }
 
 func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
-	listObj, err := t.threescaleAPIClient.ListBackendApis()
-	if err != nil {
-		return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err)
-	}
+	var (
+		err              error
+		backendAPIEntity *helper.BackendAPIEntity
+	)
 
-	// Find backend in the list by system name
-	idx, exists := func(pList []threescaleapi.BackendApi) (int, bool) {
-		for i, item := range pList {
-			if item.Element.SystemName == t.backendResource.Spec.SystemName {
-				return i, true
-			}
-		}
-		return -1, false
-	}(listObj.Backends)
+	backendAPIEntity, exists := t.backendRemoteIndex.FindBySystemName(t.backendResource.Spec.SystemName)
 
-	var backendAPIObj *threescaleapi.BackendApi
-	if exists {
-		backendAPIObj = &listObj.Backends[idx]
-	} else {
+	if !exists {
 		// Create backend using system_name.
 		// it cannot be modified later
 		params := threescaleapi.Params{
@@ -91,28 +86,23 @@ func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
 			"name":             t.backendResource.Spec.Name,
 			"private_endpoint": t.backendResource.Spec.PrivateBaseURL,
 		}
-		backend, err := t.threescaleAPIClient.CreateBackendApi(params)
-		if err != nil {
-			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err)
-		}
-
-		backendAPIObj = backend
+		backendAPIEntity, err = t.backendRemoteIndex.CreateBackendAPI(params)
 	}
 
 	// Will be used by coming steps
-	t.backendAPIEntity = helper.NewBackendAPIEntity(backendAPIObj, t.threescaleAPIClient, t.logger)
+	t.backendAPIEntity = backendAPIEntity
 
 	updatedParams := threescaleapi.Params{}
 
-	if backendAPIObj.Element.Name != t.backendResource.Spec.Name {
+	if t.backendAPIEntity.Name() != t.backendResource.Spec.Name {
 		updatedParams["name"] = t.backendResource.Spec.Name
 	}
 
-	if backendAPIObj.Element.Description != t.backendResource.Spec.Description {
+	if t.backendAPIEntity.Description() != t.backendResource.Spec.Description {
 		updatedParams["description"] = t.backendResource.Spec.Description
 	}
 
-	if backendAPIObj.Element.PrivateEndpoint != t.backendResource.Spec.PrivateBaseURL {
+	if t.backendAPIEntity.PrivateEndpoint() != t.backendResource.Spec.PrivateBaseURL {
 		updatedParams["private_endpoint"] = t.backendResource.Spec.PrivateBaseURL
 	}
 
@@ -145,18 +135,9 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 		existingMap[systemName] = existing.Element
 	}
 
-	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
-	desiredNewMap := map[string]capabilitiesv1beta1.Methodpec{}
-	for _, systemName := range desiredNewKeys {
-		// key is expected to exist
-		// desiredNewKeys is a subset of the Spec.Method map key set
-		desiredNewMap[systemName] = t.backendResource.Spec.Methods[systemName]
-	}
-	err = t.createNewMethods(desiredNewMap)
-	if err != nil {
-		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
-	}
-
+	//
+	// Deleted existing and not desired
+	//
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
 	notDesiredMap := map[string]threescaleapi.MethodItem{}
 	for _, systemName := range notDesiredExistingKeys {
@@ -169,6 +150,9 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
 
+	//
+	// Reconcile existing and changed
+	//
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
 	matchedMap := map[string]methodData{}
 	for _, systemName := range matchedKeys {
@@ -179,6 +163,21 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 
 	err = t.reconcileMatchedMethods(matchedMap)
+	if err != nil {
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	//
+	// Create not existing and desired
+	//
+	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	desiredNewMap := map[string]capabilitiesv1beta1.Methodpec{}
+	for _, systemName := range desiredNewKeys {
+		// key is expected to exist
+		// desiredNewKeys is a subset of the Spec.Method map key set
+		desiredNewMap[systemName] = t.backendResource.Spec.Methods[systemName]
+	}
+	err = t.createNewMethods(desiredNewMap)
 	if err != nil {
 		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
