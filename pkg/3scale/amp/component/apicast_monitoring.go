@@ -99,7 +99,7 @@ func (apicast *Apicast) ApicastStagingServiceMonitor() *monitoringv1.ServiceMoni
 	}
 }
 
-func ApicastGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func ApicastMainAppGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
@@ -107,7 +107,7 @@ func ApicastGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast",
+			Name: "apicast-mainapp",
 			Labels: map[string]string{
 				"monitoring-key": common.MonitoringKey,
 			},
@@ -115,6 +115,26 @@ func ApicastGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/apicast-grafana-dashboard-1.json.tpl", data),
 			Name: fmt.Sprintf("%s/apicast-grafana-dashboard-1.json", ns),
+		},
+	}
+}
+
+func ApicastServicesGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+	data := &struct {
+		Namespace string
+	}{
+		ns,
+	}
+	return &grafanav1alpha1.GrafanaDashboard{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "apicast-services",
+			Labels: map[string]string{
+				"monitoring-key": common.MonitoringKey,
+			},
+		},
+		Spec: grafanav1alpha1.GrafanaDashboardSpec{
+			Json: assets.TemplateAsset("monitoring/apicast-grafana-dashboard-2.json.tpl", data),
+			Name: fmt.Sprintf("%s/apicast-grafana-dashboard-2.json", ns),
 		},
 	}
 }
