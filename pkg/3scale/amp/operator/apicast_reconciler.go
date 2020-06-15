@@ -107,7 +107,12 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.ApicastGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileGrafanaDashboard(component.ApicastMainAppGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.ReconcileGrafanaDashboard(component.ApicastServicesGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
