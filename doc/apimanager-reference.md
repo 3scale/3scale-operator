@@ -63,9 +63,16 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Backend |
 | RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by backend |
+| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[BackendRedisPersistentVolumeClaimSpec](#BackendRedisPersistentVolumeClaimSpec) | No | nil | Backend's Redis PersistentVolumeClaim configuration options. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
 | ListenerSpec | `listenerSpec` | \*BackendListenerSpec | No | See [BackendListenerSpec](#BackendListenerSpec) reference | Spec of Backend Listener part |
 | WorkerSpec | `workerSpec` | \*BackendWorkerSpec | No | See [BackendWorkerSpec](#BackendWorkerSpec) reference | Spec of Backend Worker part |
 | CronSpec | `cronSpec` | \*BackendCronSpec | No | See [BackendCronSpec](#BackendCronSpec) reference | Spec of Backend Cron part |
+
+#### BackendRedisPersistentVolumeClaimSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
 
 #### BackendListenerSpec
 
@@ -91,11 +98,18 @@ This resource is the resource used to deploy a 3scale API Management solution.
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System |
 | RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by System |
+| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[SystemRedisPersistentVolumeClaimSpec](#SystemRedisPersistentVolumeClaimSpec) | No | nil | System's Redis PersistentVolumeClaim configuration options. Only takes effect when `.spec.highAvailability.enabled` is not set to true  |
 | MemcachedImage | `memcachedImage` | string | No | nil | Used to overwrite the desired Memcached image for the Memcached used by System |
 | FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification | Spec of the System's File Storage part |
 | DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [DatabaseSpec](#DatabaseSpec) specification | Spec of the System's Database part |
 | AppSpec | `appSpec` | \*SystemAppSpec | No | See [SystemAppSpec](#SystemAppSpec) reference | Spec of System App part |
 | SidekiqSpec | `sidekiqSpec` | \*SystemSidekiqSpec | No | See [SystemSidekiqSpec](#SystemSidekiqSpec) reference | Spec of System Sidekiq part |
+
+#### SystemRedisPersistentVolumeClaimSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
 
 #### FileStorageSpec
 
@@ -139,20 +153,34 @@ that should be set on it.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| MySQL | `mysql`| \*SystemMySQLSpec | No | nil | Enable MySQL database as System's database. See [MySQLSpec](#MySQLSpec) specification |
-| PostgreSQL | `postgresql` | \*SystemPostgreSQLSpec | No | nil | Enable PostgreSQL database as System's database. See [PostgreSQLSpec](#PostgreSQLSpec)
+| MySQL | `mysql`| \*SystemMySQLSpec | No | nil | Enable MySQL database as System's database. Only takes effect when `.spec.highAvailability.enabled` is not set to true. See [MySQLSpec](#MySQLSpec) specification |
+| PostgreSQL | `postgresql` | \*SystemPostgreSQLSpec | No | nil | Enable PostgreSQL database as System's database. Only takes effect when `.spec.highAvailability.enabled` is not set to true. See [PostgreSQLSpec](#PostgreSQLSpec)
 
 #### MySQLSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's MySQL database |
+| PersistentVolumeClaimSpec | `persistentVolumeClaim` | \*[SystemMySQLPVCSpec](#SystemMySQLPVCSpec) | No | nil | System's MySQL PersistentVolumeClaim configuration options |
+
+#### SystemMySQLPVCSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
 
 #### PostgreSQLSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's PostgreSQL database |
+| PersistentVolumeClaimSpec | `persistentVolumeClaim` | \*[SystemPostgreSQLPVCSpec](#SystemPostgreSQLPVCSpec) | No | nil | System's PostgreSQL PersistentVolumeClaim configuration options |
+
+#### SystemPostgreSQLPVCSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
 
 #### SystemAppSpec
 
