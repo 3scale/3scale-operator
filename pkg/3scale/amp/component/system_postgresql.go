@@ -11,6 +11,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	SystemPostgreSQLPVCName = "postgresql-data"
+)
+
 type SystemPostgreSQL struct {
 	Options *SystemPostgreSQLOptions
 }
@@ -50,7 +54,7 @@ func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "postgresql-data",
+			Name:   SystemPostgreSQLPVCName,
 			Labels: p.Options.DeploymentLabels,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{

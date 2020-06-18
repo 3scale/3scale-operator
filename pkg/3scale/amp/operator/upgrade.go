@@ -16,6 +16,7 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -36,7 +37,15 @@ func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1alpha
 }
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
-	res, err := u.upgradeImages()
+	res, err := u.upgradePVCSizes()
+	if err != nil {
+		return res, fmt.Errorf("Upgrading pvc sizes: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
+	}
+
+	res, err = u.upgradeImages()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading images: %w", err)
 	}
@@ -725,6 +734,72 @@ func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentCo
 	}
 
 	return updated, nil
+}
+
+func (u *UpgradeApiManager) upgradePVCSizes() (reconcile.Result, error) {
+	if !u.apiManager.IsExternalDatabaseEnabled() {
+		if u.apiManager.IsSystemPostgreSQLEnabled() {
+			err := u.updatePVCSize(component.SystemPostgreSQLPVCName, resource.MustParse("10Gi"))
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+
+		if u.apiManager.IsSystemMysqlEnabled() {
+			err := u.updatePVCSize(component.SystemMysqlPVCName, resource.MustParse("10Gi"))
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+
+		// Backend redis PVC
+		err := u.updatePVCSize(component.BackendRedisStorageVolumeName, resource.MustParse("10Gi"))
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// System redis PVC
+		err = u.updatePVCSize(component.SystemRedisStorageVolumeName, resource.MustParse("10Gi"))
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	if !u.apiManager.IsSystemS3Enabled() {
+		err := u.updatePVCSize(component.SystemFileStoragePVCName, resource.MustParse("10Gi"))
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) updatePVCSize(pvcName string, desiredSize resource.Quantity) error {
+	existing := &v1.PersistentVolumeClaim{}
+	namespacedName := types.NamespacedName{
+		Name:      pvcName,
+		Namespace: u.apiManager.Namespace,
+	}
+	err := u.Client().Get(context.TODO(), namespacedName, existing)
+	// NotFound also regarded as error, as pvc is expected to exist
+	if err != nil {
+		return err
+	}
+
+	// v1.ResourceStorage must exist, otherwise PVC is regarded as invalid
+	existingSize := existing.Spec.Resources.Requests[v1.ResourceStorage]
+
+	if existingSize.Cmp(desiredSize) != 0 {
+		u.Logger().Info(fmt.Sprintf("PVC %s resized from %s to %s", pvcName, existingSize.String(), desiredSize.String()))
+		existing.Spec.Resources.Requests[v1.ResourceStorage] = desiredSize
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {

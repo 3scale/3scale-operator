@@ -44,11 +44,15 @@ func (redis *Redis) buildDeploymentConfigObjectMeta() metav1.ObjectMeta {
 const (
 	backendRedisObjectMetaName    = "backend-redis"
 	backendRedisDCSelectorName    = backendRedisObjectMetaName
-	backendRedisStorageVolumeName = "backend-redis-storage"
+	BackendRedisStorageVolumeName = "backend-redis-storage"
 	backendRedisConfigVolumeName  = "redis-config"
 	backendRedisConfigMapKey      = "redis.conf"
 	backendRedisContainerName     = "backend-redis"
 	backendRedisContainerCommand  = "/opt/rh/rh-redis32/root/usr/bin/redis-server"
+)
+
+const (
+	SystemRedisStorageVolumeName = "system-redis-storage"
 )
 
 func (redis *Redis) buildDeploymentConfigSpec() appsv1.DeploymentConfigSpec {
@@ -114,10 +118,10 @@ func (redis *Redis) buildPodTemplateSpec() *v1.PodTemplateSpec {
 func (redis *Redis) buildPodVolumes() []v1.Volume {
 	return []v1.Volume{
 		v1.Volume{
-			Name: backendRedisStorageVolumeName,
+			Name: BackendRedisStorageVolumeName,
 			VolumeSource: v1.VolumeSource{
 				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-					ClaimName: backendRedisStorageVolumeName,
+					ClaimName: BackendRedisStorageVolumeName,
 				},
 			},
 		},
@@ -207,7 +211,7 @@ func (redis *Redis) buildPodContainerLivenessProbe() *v1.Probe {
 func (redis *Redis) buildPodContainerVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
 		v1.VolumeMount{
-			Name:      backendRedisStorageVolumeName,
+			Name:      BackendRedisStorageVolumeName,
 			MountPath: "/var/lib/redis/data",
 		},
 		v1.VolumeMount{
@@ -350,7 +354,7 @@ func (redis *Redis) BackendPVC() *v1.PersistentVolumeClaim {
 
 func (redis *Redis) buildPVCObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name:   backendRedisStorageVolumeName,
+		Name:   BackendRedisStorageVolumeName,
 		Labels: redis.Options.BackendRedisLabels,
 	}
 }
@@ -449,9 +453,9 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
 						v1.Volume{
-							Name: "system-redis-storage",
+							Name: SystemRedisStorageVolumeName,
 							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: "system-redis-storage",
+								ClaimName: SystemRedisStorageVolumeName,
 								ReadOnly:  false}},
 						}, v1.Volume{
 							Name: "redis-config",
@@ -473,7 +477,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources: *redis.Options.SystemRedisContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
-									Name:      "system-redis-storage",
+									Name:      SystemRedisStorageVolumeName,
 									ReadOnly:  false,
 									MountPath: "/var/lib/redis/data",
 								}, v1.VolumeMount{
@@ -544,7 +548,7 @@ func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-redis-storage",
+			Name:   SystemRedisStorageVolumeName,
 			Labels: redis.Options.SystemRedisLabels,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{

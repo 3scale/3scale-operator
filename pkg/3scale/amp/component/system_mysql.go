@@ -11,6 +11,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	SystemMysqlPVCName = "mysql-storage"
+)
+
 type SystemMysql struct {
 	Options *SystemMysqlOptions
 }
@@ -76,7 +80,7 @@ func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "mysql-storage",
+			Name:   SystemMysqlPVCName,
 			Labels: mysql.Options.DeploymentLabels,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{

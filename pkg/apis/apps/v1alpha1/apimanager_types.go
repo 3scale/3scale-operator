@@ -629,3 +629,8 @@ func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
 		apimanager.Spec.System.DatabaseSpec != nil &&
 		apimanager.Spec.System.DatabaseSpec.MySQL != nil
 }
+
+func (apimanager *APIManager) IsSystemS3Enabled() bool {
+	return apimanager.Spec.System.FileStorageSpec != nil &&
+		apimanager.Spec.System.FileStorageSpec.S3 != nil
+}

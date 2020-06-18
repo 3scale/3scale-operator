@@ -28,14 +28,16 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicRecon
 }
 
 func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
+	if r.apiManager.IsSystemPostgreSQLEnabled() {
+		return r.validateS3StorageProvidedConfiguration()
+	}
+
 	if r.apiManager.Spec.System.FileStorageSpec != nil {
-		if r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
-			return r.validateS3StorageProvidedConfiguration()
-		}
 		if r.apiManager.Spec.System.FileStorageSpec.DeprecatedS3 != nil {
 			r.Logger().Info("Warning: deprecated amazonSimpleStorageService field in CR being used. Ignoring it... Please use simpleStorageService")
 		}
 	}
+
 	// System RWX PVC, i.e. shared storage
 	return r.ReconcilePersistentVolumeClaim(system.SharedStorage(), reconcilers.CreateOnlyMutator)
 }

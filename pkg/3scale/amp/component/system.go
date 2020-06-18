@@ -867,7 +867,7 @@ func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
 			Kind:       "PersistentVolumeClaim",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-storage",
+			Name:   SystemFileStoragePVCName,
 			Labels: system.Options.CommonAppLabels,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
