@@ -32,6 +32,16 @@ in [quickstart guide](quickstart-guide.md) about *Install the 3scale operator*
 * Some [Deployment Configuration Options](#deployment-configuration-options) require OpenShift infraestructure to provide availablity for the following persistent volumes (PV):
   * 3 RWO (ReadWriteOnce) persistent volumes
   * 1 RWX (ReadWriteMany) persistent volume
+    * 3scale's System component needs a RWX(ReadWriteMany) PersistentVolume for
+      its FileStorage when System's FileStorage is configured to be
+      a PVC (default behavior). System's FileStorage characteristics:
+      * Contains configuration files read by the System component at run-time
+      * Stores Static files (HTML, CSS, JS, etc) uploaded to System by its
+        CMS feature, for the purpose of creating a Developer Portal
+      * System can be scaled horizontally with multiple pods uploading and
+        reading said static files, hence the need for a RWX PersistentVolume
+        when APIManager is configured to use PVC as System's FileStorage
+
 
 The RWX persistent volume must be configured to be group writable.
 For a list of persistent volume types that support the required access modes,
