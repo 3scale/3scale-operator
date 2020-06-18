@@ -859,7 +859,7 @@ objects:
     - ReadWriteMany
     resources:
       requests:
-        storage: 100Mi
+        storage: 10Gi
     storageClassName: ${{RWX_STORAGE_CLASS}}
   status: {}
 - apiVersion: v1

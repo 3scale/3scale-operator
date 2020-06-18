@@ -381,7 +381,7 @@ objects:
     - ReadWriteOnce
     resources:
       requests:
-        storage: 1Gi
+        storage: 10Gi
   status: {}
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
@@ -510,7 +510,7 @@ objects:
     - ReadWriteOnce
     resources:
       requests:
-        storage: 1Gi
+        storage: 10Gi
   status: {}
 - apiVersion: v1
   kind: Service
@@ -1239,7 +1239,7 @@ objects:
     - ReadWriteOnce
     resources:
       requests:
-        storage: 1Gi
+        storage: 10Gi
   status: {}
 - apiVersion: v1
   kind: Secret
