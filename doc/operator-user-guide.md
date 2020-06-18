@@ -8,6 +8,7 @@
     * [Evaluation Installation](#evaluation-installation)
     * [External Databases Installation](#external-databases-installation)
     * [S3 Filestorage Installation](#s3-filestorage-installation)
+    * [Setting a custom Storage Class for System FileStorage RWX PVC-based installations](#setting-a-custom-storage-class-for-system-filestorage-rwx-pvc-based-installations)
     * [PostgreSQL Installation](#postgresql-installation)
     * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
 * [Reconciliation](#reconciliation)
@@ -31,6 +32,16 @@ in [quickstart guide](quickstart-guide.md) about *Install the 3scale operator*
 * Some [Deployment Configuration Options](#deployment-configuration-options) require OpenShift infraestructure to provide availablity for the following persistent volumes (PV):
   * 3 RWO (ReadWriteOnce) persistent volumes
   * 1 RWX (ReadWriteMany) persistent volume
+    * 3scale's System component needs a RWX(ReadWriteMany) PersistentVolume for
+      its FileStorage when System's FileStorage is configured to be
+      a PVC (default behavior). System's FileStorage characteristics:
+      * Contains configuration files read by the System component at run-time
+      * Stores Static files (HTML, CSS, JS, etc) uploaded to System by its
+        CMS feature, for the purpose of creating a Developer Portal
+      * System can be scaled horizontally with multiple pods uploading and
+        reading said static files, hence the need for a RWX PersistentVolume
+        when APIManager is configured to use PVC as System's FileStorage
+
 
 The RWX persistent volume must be configured to be group writable.
 For a list of persistent volume types that support the required access modes,
@@ -76,7 +87,11 @@ All required access credentials are stored in `system-seed` secret.
 By default, the following deployment configuration options will be applied:
 * Containers will have [k8s resources limits and requests](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) specified. The advantage is twofold: ensure a minimum performance level and limit resources to allow external services and solutions to be allocated.
 * Internal databases will be deployed.
-* Filestorage will be based on *Persistence Volumes*, one of them requiring *RWX* access mode. Openshift must be configured to provide them when requested.
+* Filestorage will be based on *Persistent Volumes*, one of them requiring
+  *RWX* access mode. Openshift must be configured to provide them when
+  requested. For the  RWX persistent volume, a preexisting custom storage
+  class to be used can be specified by the user if desired
+  (see [Setting a custom Storage Class for System FileStorage RWX PVC-based installations](#setting-a-custom-storage-class-for-system-filestorage-rwx-pvc-based-installations))
 * Mysql will be the internal relational database deployed.
 
 Default configuration option is suitable for PoC or evaluation by a customer.
@@ -259,6 +274,43 @@ spec:
 Note that S3 secret name is provided directly in the APIManager custom resource.
 
 Check [*APIManager SystemS3Spec*](apimanager-reference.md#SystemS3Spec) for reference.
+
+#### Setting a custom Storage Class for System FileStorage RWX PVC-based installations
+
+When deploying an APIManager using PVC as System's FileStorage (default behavior), the
+[default storage class configured in the user's cluster](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#defaultstorageclass) is automatically used to provision System's FileStorage
+RWX(ReadWriteMany) PVC.
+
+It's sometimes the case that a user might want to provision System's FileStorage
+PVC with another [storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/) different than the default one, either because it
+does not want to use the default storage class or because the default storage
+class does not provision persistent volumes compatible with ReadWriteMany(RWX)
+access modes.
+
+For this reason, APIManager allows a user to configure an existing custom storage
+class for System's FileStorage PVC.
+
+Important: When specifying a custom storage class for System's PVC, The
+specified storage class must be able to provision ReadWriteMany(RWX) Persistent
+Volumes (see [Prerequisites](#Prerequisites))
+
+To configure System's FileStorage PVC Storage Class to be used:
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  wildcardDomain: lvh.me
+  system:
+    fileStorage:
+      persistentVolumeClaim:
+        storageClassName: <existing-storage-class-name>
+```
+
+For example, if a user has deployed and configured a storage class that
+provisions PVC volumes through NFS, and has named this storage class `nfs`,
+the value of `<existing-storage-class-name>` should be `nfs`
 
 #### PostgreSQL Installation
 
