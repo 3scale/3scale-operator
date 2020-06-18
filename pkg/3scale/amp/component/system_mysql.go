@@ -83,7 +83,7 @@ func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
 			},
-			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")}}}}
+			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("10Gi")}}}}
 }
 
 func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {

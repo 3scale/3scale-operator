@@ -877,7 +877,7 @@ func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
 			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
-					v1.ResourceStorage: resource.MustParse("100Mi"),
+					v1.ResourceStorage: resource.MustParse("10Gi"),
 				},
 			},
 		},

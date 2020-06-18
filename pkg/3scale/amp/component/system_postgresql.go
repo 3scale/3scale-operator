@@ -59,7 +59,7 @@ func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim
 			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
-					"storage": resource.MustParse("1Gi"),
+					"storage": resource.MustParse("10Gi"),
 				},
 			},
 		},

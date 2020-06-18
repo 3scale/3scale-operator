@@ -369,7 +369,7 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 		},
 		Resources: v1.ResourceRequirements{
 			Requests: v1.ResourceList{
-				v1.ResourceStorage: resource.MustParse("1Gi"),
+				v1.ResourceStorage: resource.MustParse("10Gi"),
 			},
 		},
 	}
@@ -552,7 +552,7 @@ func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
 				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
 			},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")},
+				Requests: v1.ResourceList{"storage": resource.MustParse("10Gi")},
 			},
 		},
 	}
