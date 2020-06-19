@@ -4,62 +4,78 @@ Featured capabilities:
 
 * Allow interacting with the underlying 3scale API Management solution.
 * Manage the 3scale application declaratively using openshift (custom) resources.
-* ...
 
-Existing 3scale custom object types and how they are related to each other is shown in the following diagram:
+The following diagram shows 3scale entities and relations that will be eligible for management using openshift (custom) resources in  a declarative way.
 
-![3scale Object types and ](capabilities-diagram.png)
+![3scale Object types](3scale-diagram.png)
 
-## CRD reference
+The following diagram shows available custom resource definitions and their relations provided by the 3scale operator.
 
-<table>
-  <tr>
-    <td>[Product](product_reference.md)</td>
-    <td>[Backend](backend_reference.md)</td>
-    <td>[Account](Account_reference.md)</td>
-    <td>[ActiveDoc](activedoc_reference.md)</td>
-  </tr>
-</table>
+![3scale Custom Resources](capabilities-diagram.png)
 
-* [Tenant reference](tenant-reference.md)
-* [Capabilities reference](api-crd-reference.md)
+## Table of contents
 
-Deploy the Capabilities custom resources. The Capabilities custom resources
-allow you to define 3scale [Porta](https://github.com/3scale/porta) API definitions and set
-them into a Porta installation. This Porta installation does not necessarily
-need to be the same than the one deployed from the deployment of
-an APIManager resource. The available Capabilities custom resources are:
-* API
-* Binding
-* Limit
-* MappingRule
-* Metric
-* Plan
-* Tenant
+* [Tenant custom resource](#tenant-custom-resource)
+  * [Tenant CRD reference](tenant-reference.md)
+* [Backend custom resource](#backend-custom-resource)
+  * [Backend CRD reference](backend-reference.md)
+* WIP [Product](product_reference.md)
+* WIP [Account](Account_reference.md)
+* WIP [ActiveDoc](activedoc_reference.md)
 
-## Deploy Tenants custom resource
+## Tenant custom resource
 
-Deploying the *APIManager* custom resource (see section above) creates a default tenant.
-Optionally, you may create other tenants deploying **Tenant custom resource** objects.
+Tenant is also known as Provider Account.
 
-To deploy a new tenant in your 3scale instance, first, create secret to store admin password:
+Creating the [*APIManager*](apimanager-reference.md) custom resource tells the operator to deploy 3scale.
+Default 3scale installation includes a default tenant ready to be used. Optionally,
+you may create other tenants creating [Tenant](tenant_reference.md) custom resource objects.
+
+### Preparation before deploying the new tenant
+
+To deploy a new tenant in your 3scale instance, first you need some preparation steps:
+
+* Create or local 3scale Master credentials secret: *MASTER_SECRET*
+* Create a new secret to store the password for the admin account of the new tenant: *ADMIN_SECRET*
+* Get the 3scale master account hostname: *MASTER_HOSTNAME*
+
+
+A) *3scale Master credentials secret: MASTER_SECRET*
+
+Tenant management can only be done using 3scale *master* account. You need *master* account credentials (preferably and access token). 
+
+* If the tenant resource is created in the same namespace as 3scale,
+the secret with *master* account credentials has been created already and it is called **system-seed**.
+
+* If the tenant resource is not created in the same namespace as 3scale,
+you need to create a secret with the *master* account credentials.
 
 ```sh
-$ cat ecorp-admin-secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ecorp-admin-secret
-type: Opaque
-stringData:
-  admin_password: <admin password value>
-
-
-$ oc create -f ecorp-admin-secret.yaml
-secret/ecorp-admin-secret created
+oc create secret generic system-seed --from-literal=MASTER_ACCESS_TOKEN=<master access token>
 ```
 
-then, create a new Tenant CR YAML file with the following content:
+Note: the name of the secret is optional. The secret name will be used in the tenant custom resource.
+
+B) *Create a new secret to store the password for the admin account of the new tenant: ADMIN_SECRET*
+
+```sh
+oc create secret generic ecorp-admin-secret --from-literal=admin_password=<admin password value>
+```
+
+Note: the name of the secret is optional. The secret name will be used in the tenant custom resource.
+
+C) *Get 3scale master account hostname: MASTER_HOSTNAME* 
+
+When you deploy 3scale using the operator, the master account has a fixed URL: `master.${wildcardDomain}`
+
+* If you have access to the namespace where 3scale is installed,
+the master account hostname can be easily obtained:
+
+```
+oc get routes --field-selector=spec.to.name==system-master -o jsonpath="{.items[].spec.host}"
+```
+
+### Deploy the new tenant custom resource
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1alpha1
@@ -68,172 +84,41 @@ metadata:
   name: ecorp-tenant
 spec:
   username: admin
-  systemMasterUrl: https://master.<wildcardDomain>
+  systemMasterUrl: https://<MASTER_HOSTNAME>
   email: admin@ecorp.com
   organizationName: ECorp
   masterCredentialsRef:
-    name: system-seed
+    name: <MASTER_SECRET>
   passwordCredentialsRef:
-    name: ecorp-admin-secret
+    name: <ADMIN_SECRET*>
   tenantSecretRef:
-    name: ecorp-tenant-secret
-    namespace: operator-test
+    name: tenant-secret
 ```
 
-To look at more information on what the Tenant Custom Resource fields and
-possible values are refer to
-the [Tenant CRD Reference](tenant-reference.md) documentation.
+Check on the fields of Tenant Custom Resource and possible values in the [Tenant CRD Reference](tenant-reference.md) documentation.
+
+Create the tenant resource:
 
 ```sh
-export NAMESPACE="operator-test"
-oc project ${NAMESPACE}
 oc create -f <yaml-name>
 ```
 
-This should trigger the creation of a new tenant in your 3scale API Management
-solution in the "operator-test" project.
+This should trigger the creation of a new tenant in your 3scale API Management solution.
 
-Tenant *provider_key* and *admin domain url* will be stored in a secret.
+The 3scale operator will create a new secret and store new tenant's credentials in it. The new tenant *provider_key* and *admin domain url* will be stored in a secret.
 The secret location can be specified using *tenantSecretRef* tenant spec key.
+
+Example of the created secret content:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tenant-secret
+type: Opaque
+stringData:
+  adminURL: https://my3scale-admin.example.com:443
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
 Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more information.
-
-## Deploy the Capabilities related custom resources
-
-Here, we will start to configure APIs, metrics, mappingrules... in our newly created tenant by only using Openshift Objects!
-
-So let's create our first API:
-
-```yaml
-apiVersion: capabilities.3scale.net/v1alpha1
-kind: API
-metadata:
-  creationTimestamp: 2019-01-25T13:28:41Z
-  generation: 1
-  labels:
-    environment: testing
-  name: api01
-spec:
-  planSelector:
-    matchLabels:
-      api: api01
-  description: api01
-  integrationMethod:
-    apicastHosted:
-      apiTestGetRequest: /
-      authenticationSettings:
-        credentials:
-          apiKey:
-            authParameterName: user-key
-            credentialsLocation: headers
-        errors:
-          authenticationFailed:
-            contentType: text/plain; charset=us-ascii
-            responseBody: Authentication failed
-            responseCode: 403
-          authenticationMissing:
-            contentType: text/plain; charset=us-ascii
-            responseBody: Authentication Missing
-            responseCode: 403
-        hostHeader: ""
-        secretToken: Shared_secret_sent_from_proxy_to_API_backend_9603f637ca51ccfe
-      mappingRulesSelector:
-        matchLabels:
-          api: api01
-      privateBaseURL: https://echo-api.3scale.net:443
-  metricSelector:
-    matchLabels:
-      api: api01
-```
-
-In all the Selectors (metric, plan, mappingrules...) we use a specific label "api: api01", you can change that and add as many labels and play with the selectors to cover really complex scenarios.
-
-We should add a Plan:
-
-```yaml
-apiVersion: capabilities.3scale.net/v1alpha1
-kind: Plan
-metadata:
-  labels:
-    api: api01
-  name: plan01
-spec:
-  approvalRequired: false
-  default: true
-  costs:
-    costMonth: 0
-    setupFee: 0
-  limitSelector:
-    matchLabels:
-      api: api01
-  trialPeriod: 0
-```
-
-A metric called metric01:
-
-```yaml
-apiVersion: capabilities.3scale.net/v1alpha1
-kind: Metric
-metadata:
-  labels:
-    api: api01
-  name: metric01
-spec:
-  description: metric01
-  unit: hit
-  incrementHits: false
-
-```
-
-A simple limit with a limit of 10 hits per day for the previous metric:
-
-```yaml
-apiVersion: capabilities.3scale.net/v1alpha1
-kind: Limit
-metadata:
-  labels:
-    api: api01
-  name: plan01-metric01-day-10
-spec:
-  description: Limit for metric01 in plan01
-  maxValue: 10
-  metricRef:
-    name: metric01
-  period: day
-```
-
-And a MappingRule to increment the metric01:
-
-```yaml
-apiVersion: capabilities.3scale.net/v1alpha1
-kind: MappingRule
-metadata:
-  labels:
-    api: api01
-  name: metric01-get-path01
-spec:
-  increment: 1
-  method: GET
-  metricRef:
-    name: metric01
-  path: /path01
-```
-
-And now, let's "bind" all together with the binding object, we will use the credential created by the Tenant Controller:
-```yaml
-apiVersion: capabilities.3scale.net/v1alpha1
-kind: Binding
-metadata:
-  name: mytestingbinding
-spec:
-  credentialsRef:
-    name: ecorp-tenant-secret
-  APISelector:
-    matchLabels:
-      environment: testing
-```
-
-As you can see, the binding object will reference the `ecorp-tenant-secret` and just create the API objects that are labeled as "environment: staging
-
-Now, navigate to your new created 3scale Tenant, and check that everything has been created!
-
-For more information, check the reference doc: [Capabilities CRD Reference](api-crd-reference.md)
