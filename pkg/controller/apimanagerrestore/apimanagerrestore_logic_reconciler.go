@@ -366,6 +366,10 @@ func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*
 		return nil, fmt.Errorf("Secret '%s' not found", r.apiManagerRestore.SecretToShareName())
 	}
 
+	// Deserialize APIManager using K8s apimachinery decoder in order to
+	// deserialize using GKV information (from Scheme) and into
+	// a K8s runtime.Object
+
 	// https://godoc.org/k8s.io/apimachinery/pkg/runtime/serializer#CodecFactory
 	codecFactory := k8sserializer.NewCodecFactory(r.Scheme())
 	// https://godoc.org/k8s.io/apimachinery/pkg/runtime#Dec
