@@ -222,7 +222,6 @@ type SystemSpec struct {
 	// something)
 
 	// +optional
-
 	FileStorageSpec *SystemFileStorageSpec `json:"fileStorage,omitempty"`
 
 	// TODO should union fields be optional?
@@ -230,7 +229,9 @@ type SystemSpec struct {
 	// +optional
 	DatabaseSpec *SystemDatabaseSpec `json:"database,omitempty"`
 
-	AppSpec     *SystemAppSpec     `json:"appSpec,omitempty"`
+	// +optional
+	AppSpec *SystemAppSpec `json:"appSpec,omitempty"`
+	// +optional
 	SidekiqSpec *SystemSidekiqSpec `json:"sidekiqSpec,omitempty"`
 }
 
