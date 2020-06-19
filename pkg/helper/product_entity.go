@@ -295,11 +295,12 @@ func (b *ProductEntity) Proxy() (*threescaleapi.ProxyJSON, error) {
 
 func (b *ProductEntity) UpdateProxy(params threescaleapi.Params) error {
 	b.logger.V(1).Info("UpdateProxy", "params", params)
-	_, err := b.client.UpdateProductProxy(b.productObj.Element.ID, params)
+	updated, err := b.client.UpdateProductProxy(b.productObj.Element.ID, params)
 	if err != nil {
 		return fmt.Errorf("product [%s] update proxy: %w", b.productObj.Element.SystemName, err)
 	}
-	b.resetProxy()
+
+	b.proxy = updated
 	return nil
 }
 
@@ -335,14 +336,21 @@ func (b *ProductEntity) CreateApplicationPlan(params threescaleapi.Params) (*thr
 	return obj, nil
 }
 
+func (b *ProductEntity) PromoteProxyToStaging() error {
+	b.logger.V(1).Info("PromoteProxyToStaging")
+	proxyObj, err := b.client.DeployProductProxy(b.productObj.Element.ID)
+	if err != nil {
+		return fmt.Errorf("product [%s] promote proxy to staging: %w", b.productObj.Element.SystemName, err)
+	}
+
+	b.proxy = proxyObj
+	return nil
+}
+
 //
 // PRIVATE
 //
 //
-
-func (b *ProductEntity) resetProxy() {
-	b.proxy = nil
-}
 
 func (b *ProductEntity) resetBackendUsages() {
 	b.backendUsages = nil
