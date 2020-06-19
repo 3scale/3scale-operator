@@ -62,6 +62,7 @@ func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim
 					"storage": resource.MustParse("1Gi"),
 				},
 			},
+			StorageClassName: p.Options.PVCStorageClass,
 		},
 	}
 }

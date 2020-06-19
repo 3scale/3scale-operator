@@ -172,11 +172,18 @@ type BackendSpec struct {
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
 	// +optional
+	RedisPersistentVolumeClaimSpec *BackendRedisPersistentVolumeClaimSpec `json:"redisPersistentVolumeClaim,omitempty"`
+	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
 	WorkerSpec *BackendWorkerSpec `json:"workerSpec,omitempty"`
 	// +optional
 	CronSpec *BackendCronSpec `json:"cronSpec,omitempty"`
+}
+
+type BackendRedisPersistentVolumeClaimSpec struct {
+	// +optional
+	StorageClassName *string `json:"storageClassName,omitempty"`
 }
 
 type BackendListenerSpec struct {
@@ -203,6 +210,9 @@ type SystemSpec struct {
 
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
+
+	// +optional
+	RedisPersistentVolumeClaimSpec *SystemRedisPersistentVolumeClaimSpec `json:"redisPersistentVolumeClaim,omitempty"`
 
 	// TODO should this field be optional? We have different approaches in Kubernetes.
 	// For example, in v1.Volume it is optional and there's an implied behaviour
@@ -245,6 +255,11 @@ type SystemFileStorageSpec struct {
 	S3 *SystemS3Spec `json:"simpleStorageService,omitempty"`
 }
 
+type SystemRedisPersistentVolumeClaimSpec struct {
+	// +optional
+	StorageClassName *string `json:"storageClassName,omitempty"`
+}
+
 type SystemPVCSpec struct {
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
@@ -274,11 +289,27 @@ type SystemDatabaseSpec struct {
 type SystemMySQLSpec struct {
 	// +optional
 	Image *string `json:"image,omitempty"`
+
+	// +optional
+	PersistentVolumeClaimSpec *SystemMySQLPVCSpec `json:"persistentVolumeClaim,omitempty"`
 }
 
 type SystemPostgreSQLSpec struct {
 	// +optional
 	Image *string `json:"image,omitempty"`
+
+	// +optional
+	PersistentVolumeClaimSpec *SystemPostgreSQLPVCSpec `json:"persistentVolumeClaim,omitempty"`
+}
+
+type SystemMySQLPVCSpec struct {
+	// +optional
+	StorageClassName *string `json:"storageClassName,omitempty"`
+}
+
+type SystemPostgreSQLPVCSpec struct {
+	// +optional
+	StorageClassName *string `json:"storageClassName,omitempty"`
 }
 
 type ZyncSpec struct {

@@ -50,6 +50,7 @@ func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOp
 	}
 
 	s.setResourceRequirementsOptions()
+	s.setPersistentVolumeClaimOptions()
 
 	err = s.mysqlOptions.Validate()
 	if err != nil {
@@ -144,6 +145,14 @@ func (s *SystemMysqlOptionsProvider) setResourceRequirementsOptions() {
 		s.mysqlOptions.ContainerResourceRequirements = component.DefaultSystemMysqlResourceRequirements()
 	} else {
 		s.mysqlOptions.ContainerResourceRequirements = v1.ResourceRequirements{}
+	}
+}
+
+func (s *SystemMysqlOptionsProvider) setPersistentVolumeClaimOptions() {
+	if s.apimanager.Spec.System.DatabaseSpec != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec != nil {
+		s.mysqlOptions.PVCStorageClass = s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec.StorageClassName
 	}
 }
 

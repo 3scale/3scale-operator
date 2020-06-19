@@ -48,6 +48,8 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 
 	r.setResourceRequirementsOptions()
 
+	r.setPersistentVolumeClaimOptions()
+
 	err := r.options.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("GetRedisOptions validating: %w", err)
@@ -62,6 +64,17 @@ func (r *RedisOptionsProvider) setResourceRequirementsOptions() {
 	} else {
 		r.options.BackendRedisContainerResourceRequirements = &v1.ResourceRequirements{}
 		r.options.SystemRedisContainerResourceRequirements = &v1.ResourceRequirements{}
+	}
+}
+
+func (r *RedisOptionsProvider) setPersistentVolumeClaimOptions() {
+	if r.apimanager.Spec.System != nil &&
+		r.apimanager.Spec.System.RedisPersistentVolumeClaimSpec != nil {
+		r.options.SystemRedisPVCStorageClass = r.apimanager.Spec.System.RedisPersistentVolumeClaimSpec.StorageClassName
+	}
+	if r.apimanager.Spec.Backend != nil &&
+		r.apimanager.Spec.Backend.RedisPersistentVolumeClaimSpec != nil {
+		r.options.BackendRedisPVCStorageClass = r.apimanager.Spec.Backend.RedisPersistentVolumeClaimSpec.StorageClassName
 	}
 }
 

@@ -48,6 +48,7 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 	}
 
 	s.setResourceRequirementsOptions()
+	s.setPersistentVolumeClaimOptions()
 
 	err = s.options.Validate()
 	if err != nil {
@@ -130,6 +131,14 @@ func (s *SystemPostgresqlOptionsProvider) setResourceRequirementsOptions() {
 		s.options.ContainerResourceRequirements = component.DefaultSystemPostgresqlResourceRequirements()
 	} else {
 		s.options.ContainerResourceRequirements = v1.ResourceRequirements{}
+	}
+}
+
+func (s *SystemPostgresqlOptionsProvider) setPersistentVolumeClaimOptions() {
+	if s.apimanager.Spec.System.DatabaseSpec != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec != nil {
+		s.options.PVCStorageClass = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec.StorageClassName
 	}
 }
 

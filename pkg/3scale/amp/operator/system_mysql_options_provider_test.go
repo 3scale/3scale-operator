@@ -72,6 +72,7 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 	systemMysqlRootPassword := "rootPassw1"
 	systemMysqlDatabaseName := "myDatabaseName"
 	databaseURL := fmt.Sprintf("mysql2://root:%s@system-mysql/%s", systemMysqlRootPassword, systemMysqlDatabaseName)
+	customStorageClass := "custommysqlstorageclass"
 
 	cases := []struct {
 		testName               string
@@ -104,6 +105,43 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 				expecteOpts.DatabaseURL = databaseURL
 				expecteOpts.DatabaseName = systemMysqlDatabaseName
 				expecteOpts.RootPassword = systemMysqlRootPassword
+				return expecteOpts
+			},
+		},
+		{"PVCSpecSet", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						MySQL: &appsv1alpha1.SystemMySQLSpec{
+							PersistentVolumeClaimSpec: &appsv1alpha1.SystemMySQLPVCSpec{},
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
+				expecteOpts := defaultSystemMysqlOptions(opts)
+				return expecteOpts
+			},
+		},
+		{"PVCStorageClassSet", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						MySQL: &appsv1alpha1.SystemMySQLSpec{
+							PersistentVolumeClaimSpec: &appsv1alpha1.SystemMySQLPVCSpec{
+								StorageClassName: &customStorageClass,
+							},
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
+				expecteOpts := defaultSystemMysqlOptions(opts)
+				expecteOpts.PVCStorageClass = &customStorageClass
 				return expecteOpts
 			},
 		},

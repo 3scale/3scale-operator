@@ -69,6 +69,7 @@ func defaultSystemPostgreSQLOptions(opts *component.SystemPostgreSQLOptions) *co
 func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 	falseValue := false
 	databaseURL := fmt.Sprintf("postgresql://%s:%s@postgresql.example.com/%s", systemPostgreSQLUsername, systemPostgreSQLPassword, systemPostgreSQLDatabaseName)
+	customStorageClass := "custompostgresqlstorageclass"
 
 	cases := []struct {
 		testName               string
@@ -96,6 +97,43 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 				expecteOpts.Password = systemPostgreSQLPassword
 				expecteOpts.DatabaseURL = databaseURL
 				expecteOpts.DatabaseName = systemPostgreSQLDatabaseName
+				return expecteOpts
+			},
+		},
+		{"PVCSpecSet", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+							PersistentVolumeClaimSpec: &appsv1alpha1.SystemPostgreSQLPVCSpec{},
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				expecteOpts := defaultSystemPostgreSQLOptions(opts)
+				return expecteOpts
+			},
+		},
+		{"PVCStorageClassSet", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+							PersistentVolumeClaimSpec: &appsv1alpha1.SystemPostgreSQLPVCSpec{
+								StorageClassName: &customStorageClass,
+							},
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				expecteOpts := defaultSystemPostgreSQLOptions(opts)
+				expecteOpts.PVCStorageClass = &customStorageClass
 				return expecteOpts
 			},
 		},
