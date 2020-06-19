@@ -212,9 +212,8 @@ func (r *APIManagerRestoreLogicReconciler) reconcileJob(desired *batchv1.Job) (r
 		return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
 	}
 
-	// TODO We do not reconcile ownerReference or labels nor annotations
-	// should we do it? Jobs are one-shot so there's not much point on
-	// making updates to them
+	// Jobs ownerReference or labels nor annotations not reconciled
+	// Jobs are one-shot so there's not much point on making updates to them
 
 	if existing.Status.Succeeded != *desired.Spec.Completions {
 		r.Logger().Info("Job has still not finished", "Job Name", desired.Name, "Actively running Pods", existing.Status.Active, "Failed pods", existing.Status.Failed)
