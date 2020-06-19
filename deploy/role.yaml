@@ -73,8 +73,6 @@ rules:
   - apps.3scale.net
   resources:
   - '*'
-  - apimanagerbackups
-  - apimanagerrestores
   verbs:
   - create
   - delete

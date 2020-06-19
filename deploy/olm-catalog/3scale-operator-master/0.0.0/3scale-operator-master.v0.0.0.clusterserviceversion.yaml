@@ -538,12 +538,6 @@ spec:
         - apiGroups:
           - ""
           resources:
-          - pods
-          verbs:
-          - get
-        - apiGroups:
-          - ""
-          resources:
           - pods/exec
           verbs:
           - create
@@ -558,8 +552,6 @@ spec:
           - apps.3scale.net
           resources:
           - '*'
-          - apimanagerbackups
-          - apimanagerrestores
           verbs:
           - create
           - delete
