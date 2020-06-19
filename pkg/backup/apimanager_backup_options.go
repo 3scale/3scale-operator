@@ -11,7 +11,7 @@ type APIManagerBackupOptions struct {
 	APIManagerBackupName       string                      `validate:"required"` // Name of the APIManagerBackup CR. NOT the APIManager cr name
 	APIManagerBackupUID        types.UID                   `validate:"required"` // UID of the APIManagerBackup CR
 	APIManagerName             string                      `validate:"required"` // Name of the APIManager CR. NOT the APIManagerBackup cr name
-	APIManager                 *appsv1alpha1.APIManager    `validate:"required"` // Should we make this required?
+	APIManager                 *appsv1alpha1.APIManager    `validate:"required"`
 	APIManagerBackupPVCOptions *APIManagerBackupPVCOptions `validate:"required"`
 	OCCLIImageURL              string                      `validate:"required"`
 }
