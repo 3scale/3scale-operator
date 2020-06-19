@@ -80,36 +80,6 @@ spec:
                 and is in UTC.
               format: date-time
               type: string
-            conditions:
-              description: Represents the latest available observations of an APIManagerBackup's
-                current state.
-              items:
-                description: APIManagerBackupCondition describes the state of an APIManagerBackup
-                  at a certain point.
-                properties:
-                  lastTransitionTime:
-                    description: Last time the condition transitioned from one status
-                      to another.
-                    format: date-time
-                    type: string
-                  message:
-                    description: A human readable message indicating details about
-                      the transition.
-                    type: string
-                  reason:
-                    description: The reason for the condition's last transition.
-                    type: string
-                  status:
-                    description: Status of the condition, one of True, False, Unknown
-                    type: string
-                  type:
-                    description: Type of APIManagerBackup condition
-                    type: string
-                required:
-                - status
-                - type
-                type: object
-              type: array
             mainStepsCompleted:
               description: Set to true when main steps have been completed. At this
                 point backup still cannot be considered  fully completed due to some

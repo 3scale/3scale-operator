@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -58,25 +57,6 @@ type PersistentVolumeClaimResources struct {
 	Requests resource.Quantity `json:"requests"` // Should this be a string or a resoure.Quantity? it seems it is serialized as a string
 }
 
-type APIManagerBackupConditionType string
-
-// APIManagerBackupCondition describes the state of an APIManagerBackup at a certain point.
-type APIManagerBackupCondition struct {
-	// Type of APIManagerBackup condition
-	Type APIManagerBackupConditionType `json:"type"`
-	// Status of the condition, one of True, False, Unknown
-	Status v1.ConditionStatus `json:"status"`
-	// The reason for the condition's last transition.
-	// +optional
-	Reason *string `json:"reason,omitempty" description:"one-word CamelCase reason for the condition's last transition"`
-	// A human readable message indicating details about the transition.
-	// +optional
-	Message *string `json:"message,omitempty" description:"human-readable message indicating details about last transition"`
-	// Last time the condition transitioned from one status to another.
-	// +optional
-	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" protobuf:"bytes,7,opt,name=lastTransitionTime"`
-}
-
 // APIManagerBackupStatus defines the observed state of APIManagerBackup
 // +k8s:openapi-gen=true
 type APIManagerBackupStatus struct {
@@ -109,11 +89,6 @@ type APIManagerBackupStatus struct {
 	// PersistentVolumeClaim is used as the backup data destination
 	// +optional
 	BackupPersistentVolumeClaimName *string `json:"backupPersistentVolumeClaimName,omitempty"`
-
-	// Represents the latest available observations of an APIManagerBackup's current state.
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	Conditions []APIManagerBackupCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
