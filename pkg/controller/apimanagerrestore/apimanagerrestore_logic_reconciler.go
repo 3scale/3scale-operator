@@ -78,11 +78,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileMainSteps() (reconcile.Resul
 		return result, err
 	}
 
-	result, err = r.reconcileRestoreFromS3Source()
-	if result.Requeue || err != nil {
-		return result, err
-	}
-
 	result, err = r.reconcileRestoreFromPVCSource()
 	if result.Requeue || err != nil {
 		return result, err
@@ -131,11 +126,6 @@ func (r *APIManagerRestoreLogicReconciler) reconcileStartTimeField() (reconcile.
 		err := r.UpdateResourceStatus(r.cr)
 		return reconcile.Result{Requeue: true}, err
 	}
-	return reconcile.Result{}, nil
-}
-
-func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromS3Source() (reconcile.Result, error) {
-	// TODO implement
 	return reconcile.Result{}, nil
 }
 

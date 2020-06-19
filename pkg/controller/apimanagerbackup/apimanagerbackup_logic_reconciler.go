@@ -97,11 +97,6 @@ func (r *APIManagerBackupLogicReconciler) reconcileMainSteps() (reconcile.Result
 		return result, err
 	}
 
-	result, err = r.reconcileBackupInS3Destination()
-	if result.Requeue || err != nil {
-		return result, err
-	}
-
 	result, err = r.reconcileBackupInPVCDestination()
 	if result.Requeue || err != nil {
 		return result, err
@@ -140,11 +135,6 @@ func (r *APIManagerBackupLogicReconciler) reconcileSetMainStepsCompleted() (reco
 		return reconcile.Result{Requeue: true}, nil
 
 	}
-	return reconcile.Result{}, nil
-}
-
-func (r *APIManagerBackupLogicReconciler) reconcileBackupInS3Destination() (reconcile.Result, error) {
-	// TODO implement
 	return reconcile.Result{}, nil
 }
 
