@@ -7,7 +7,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -94,12 +93,6 @@ func (a *APIManagerBackupOptionsProvider) autodiscoveredAPIManager() (*appsv1alp
 	res = &resList.Items[0]
 	return res, nil
 
-}
-
-func (a *APIManagerBackupOptionsProvider) apiManagerFromName(name string) (*appsv1alpha1.APIManager, error) {
-	res := &appsv1alpha1.APIManager{}
-	err := a.Client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: a.APIManagerBackupCR.Namespace}, res)
-	return res, err
 }
 
 func (a *APIManagerBackupOptionsProvider) ocCLIImageURL() string {
