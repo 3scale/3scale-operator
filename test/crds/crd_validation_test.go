@@ -31,6 +31,7 @@ func TestSampleCustomResources(t *testing.T) {
 		"apps.3scale.net_apimanagerbackups_crd.yaml":    "apps.3scale.net_v1alpha1_apimanagerbackup_cr.yaml",
 		"apps.3scale.net_apimanagerrestores_crd.yaml":   "apps.3scale.net_v1alpha1_apimanagerrestore_cr.yaml",
 		"capabilities.3scale.net_tenants_crd.yaml":      "capabilities.3scale.net_v1alpha1_tenant_cr",
+		"capabilities.3scale.net_backends_crd.yaml": "capabilities.3scale.net_v1beta1_backend_cr",
 	}
 	for crd, prefix := range crdCrMap {
 		validateCustomResources(t, root, crd, prefix)
