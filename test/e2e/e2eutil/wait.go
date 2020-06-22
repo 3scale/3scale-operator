@@ -1,14 +1,9 @@
 package e2eutil
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
-	"github.com/operator-framework/operator-sdk/pkg/test"
-	"k8s.io/apimachinery/pkg/types"
 
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
