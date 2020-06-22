@@ -131,7 +131,7 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Configuration | `configurationSecretRef` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS configuration is stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
+| Configuration | `configurationSecretRef` | [corev1.LocalObjectReference](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS configuration is stored. See [LocalObjectReference](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
 
 The secret name specified in the `configurationSecretRef` field must be
 pre-created by the user before creating the APIManager custom resource.
