@@ -89,7 +89,7 @@ func TestValidateProductNotUniqueLimitPeriods(t *testing.T) {
 	}
 
 	errors := product.Validate()
-	if len(errors) == 0 || !strings.Contains(errors.ToAggregate().Error(), "limit period is not unique.") {
+	if len(errors) == 0 || !strings.Contains(errors.ToAggregate().Error(), "limit period is not unique") {
 		t.Error("product plan validation fails when limit period is not unique")
 	}
 }
@@ -195,7 +195,7 @@ func TestValidateProductPlanPricingRuleOverlappingRange(t *testing.T) {
 	}
 
 	errors := product.Validate()
-	if len(errors) == 0 || !strings.Contains(errors.ToAggregate().Error(), "'From' value cannot be less than 'To' values of current rules.") {
+	if len(errors) == 0 || !strings.Contains(errors.ToAggregate().Error(), "'From' value cannot be less than 'To' values of current rules") {
 		t.Error("valition passes and pricing rule ranges overlap.")
 	}
 }
