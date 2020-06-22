@@ -1,7 +1,8 @@
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
-  name: example-backend
+  name: backend1
 spec:
-  # Add fields here
-  size: 3
+  name: "Operated Backend 1"
+  systemName: "backend1"
+  privateBaseURL: "https://api.example.com"
