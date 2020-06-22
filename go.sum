@@ -15,7 +15,12 @@ dmitri.shuralyov.com/state v0.0.0-20180228185332-28bcc343414c/go.mod h1:0PRwlb0D
 git.apache.org/thrift.git v0.0.0-20180902110319-2566ecd5d999/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 github.com/3scale/3scale-porta-go-client v0.0.3 h1:/jcEnBQqBDuJYQKvvmKUw6c4LoF4PWq57EAD4q6HiJ8=
 github.com/3scale/3scale-porta-go-client v0.0.3/go.mod h1:eXz9JDFNrbJRqJkDs39bMxO+m/L5pz51JMof3A8jQ1k=
+<<<<<<< HEAD
 github.com/Azure/azure-sdk-for-go v21.4.0+incompatible/go.mod h1:9XXNKU+eRnpl9moKnB4QOLf1HestfXbmab5FXxiDBjc=
+=======
+github.com/3scale/3scale-porta-go-client v0.0.4 h1:xzqOa3L/4RGzQJsBpPTjFvJiSrwmkYan4ZZUJZVz6nM=
+github.com/3scale/3scale-porta-go-client v0.0.4/go.mod h1:nUbuVh0fU2rs/lJfowmS5YhEk2tQoybL4htDIdxxMaM=
+>>>>>>> 3scale-porta-go-client updated to 0.0.4
 github.com/Azure/azure-sdk-for-go v32.5.0+incompatible/go.mod h1:9XXNKU+eRnpl9moKnB4QOLf1HestfXbmab5FXxiDBjc=
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78/go.mod h1:LmzpDX56iTiv29bbRTIsUNlaFfuhWRQBWjQdVyAevI8=
 github.com/Azure/go-autorest v11.1.2+incompatible h1:viZ3tV5l4gE2Sw0xrasFHytCGtzYCrT+um/rrSQ1BfA=
