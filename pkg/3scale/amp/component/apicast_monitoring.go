@@ -155,15 +155,39 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 					Name: fmt.Sprintf("%s/apicast.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "ApicastDroppedConnections",
+							Alert: "ApicastRequestTime",
 							Annotations: map[string]string{
-								"summary":     "{{$labels.container_name}} replica controller on {{$labels.namespace}}: Has more than 10 dropped connections in the last 5 minutes",
-								"description": "{{$labels.container_name}} replica controller on {{$labels.namespace}} project: Has more than 10 dropped connections in the last 5 minutes",
+								"summary":     "Request on instance {{ $labels.instance }} is taking more than one second to process the requests",
+								"description": "High number of request taking more than a second to be processed",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum (increase(nginx_http_connections{namespace="%s",job=~"apicast-(production|staging)-monitoring",state="accepted"}[5m])) - sum (increase(nginx_http_connections{namespace="%s",job=~"apicast-(production|staging)-monitoring",state="handled"}[5m])) > 10`, ns, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(total_response_time_seconds_bucket{namespace='%s', pod=~'apicast-staging.*'}[1m])) - sum(rate(upstream_response_time_seconds_bucket{namespace='%s', pod=~'apicast-staging.*'}[1m])) > 1`, ns, ns)),
 							For:  "2m",
 							Labels: map[string]string{
+								"severity": "warning",
+							},
+						},
+						{
+							Alert: "APICastHttp4xxErrorRate",
+							Annotations: map[string]string{
+								"summary":     "APICast high HTTP 4XX error rate (instance {{ $labels.instance }})",
+								"description": "The number of request with 4XX is bigger than the 5% of total request.",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(apicast_status{namespace='%s', status=~"^4.."}[1m])) / sum(rate(apicast_status{namespace='%s'}[1m])) * 100 > 5`, ns, ns)),
+							For:  "5m",
+							Labels: map[string]string{
 								"severity": "critical",
+							},
+						},
+						{
+							Alert: "APICAstLatencyHigh",
+							Annotations: map[string]string{
+								"summary":     "APICast latency high (instance {{ $labels.instance }})",
+								"description": "APIcast p99 latency is higher than 5 seconds\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`histogram_quantile(0.99, sum(rate(total_response_time_seconds_bucket{namespace='%s',}[30m])) by (le)) > 5`, ns)),
+							For:  "5m",
+							Labels: map[string]string{
+								"severity": "warning",
 							},
 						},
 					},
