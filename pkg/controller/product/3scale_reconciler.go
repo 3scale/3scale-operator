@@ -49,8 +49,6 @@ func (t *ThreescaleReconciler) Reconcile() (*helper.ProductEntity, error) {
 	taskRunner.AddTask("SyncMetrics", t.syncMetrics)
 	taskRunner.AddTask("SyncMappingRules", t.syncMappingRules)
 	taskRunner.AddTask("SyncApplicationPlans", t.syncApplicationPlans)
-	// This should be the last step
-	taskRunner.AddTask("PromoteProxyToStaging", t.promoteProxyToStaging)
 
 	err = taskRunner.Run()
 	if err != nil {
@@ -58,12 +56,6 @@ func (t *ThreescaleReconciler) Reconcile() (*helper.ProductEntity, error) {
 	}
 
 	return t.productEntity, nil
-}
-
-func (t *ThreescaleReconciler) promoteProxyToStaging(_ interface{}) error {
-	// 3scale API does not expose a way to check if promotion is necessary
-	// PromoteProxyToStaging operation is idempotent and not expensive, though.
-	return t.productEntity.PromoteProxyToStaging()
 }
 
 func (t *ThreescaleReconciler) reconcile3scaleProduct() (*helper.ProductEntity, error) {
