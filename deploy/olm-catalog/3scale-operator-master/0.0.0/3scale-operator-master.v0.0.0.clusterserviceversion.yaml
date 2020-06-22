@@ -103,6 +103,48 @@ metadata:
             },
             "username": "admin"
           }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Account",
+          "metadata": {
+            "name": "example-account"
+          },
+          "spec": {
+            "size": 3
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "ActiveDoc",
+          "metadata": {
+            "name": "example-activedoc"
+          },
+          "spec": {
+            "size": 3
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Backend",
+          "metadata": {
+            "name": "backend1"
+          },
+          "spec": {
+            "name": "Operated Backend 1",
+            "privateBaseURL": "https://api.example.com",
+            "systemName": "backend1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
+            "name": "example-product"
+          },
+          "spec": {
+            "size": 3
+          }
         }
       ]
     capabilities: Full Lifecycle
@@ -141,6 +183,14 @@ spec:
     image: centos/postgresql-10-centos7
   customresourcedefinitions:
     owned:
+    - description: Account is the Schema for the accounts API
+      kind: Account
+      name: accounts.capabilities.3scale.net
+      version: v1beta1
+    - description: ActiveDoc is the Schema for the activedocs API
+      kind: ActiveDoc
+      name: activedocs.capabilities.3scale.net
+      version: v1beta1
     - description: APIManager is the Schema for the apimanagers API
       displayName: APIManager
       kind: APIManager
@@ -174,6 +224,15 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
+    - description: Backend is the Schema for the backends API
+      kind: Backend
+      name: backends.capabilities.3scale.net
+      version: v1beta1
+    - description: Product is the Schema for the products API
+      displayName: 3scale Product
+      kind: Product
+      name: products.capabilities.3scale.net
+      version: v1beta1
     - description: Tenant is the Schema for the tenants API
       displayName: Tenant
       kind: Tenant
@@ -267,7 +326,7 @@ spec:
                   value: centos/postgresql-10-centos7
                 - name: ZYNC_POSTGRESQL_IMAGE
                   value: centos/postgresql-10-centos7
-                image: quay.io/3scale/3scale-operator:master
+                image: REPLACE_IMAGE
                 name: 3scale-operator
                 resources: {}
               serviceAccountName: 3scale-operator

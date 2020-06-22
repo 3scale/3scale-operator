@@ -80,7 +80,6 @@ spec:
                           type: string
                         value:
                           description: Limit Value
-                          format: int64
                           type: integer
                       required:
                       - metricMethodRef
