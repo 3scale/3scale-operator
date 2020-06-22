@@ -1276,7 +1276,7 @@
             "tableColumn": "",
             "targets": [
                 {
-                    "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'})",
+                    "expr": "kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'} - kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}",,
                     "format": "time_series",
                     "intervalFactor": 1,
                     "refId": "A"
@@ -1518,14 +1518,14 @@
                     "step": 10
                 },
                 {
-                    "expr":"kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env-.*'}",
+                    "expr":"kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "{{`{{replicationcontroller}}`}}-avail-pods",
                     "refId": "B"
                 },
                 {
-                    "expr": "kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env-.*'}",
+                    "expr": "kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'} - kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}",
                     "format": "time_series",
                     "interval": "",
                     "intervalFactor": 1,
@@ -1533,7 +1533,7 @@
                     "refId": "C"
                 },
                 {
-                    "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'apicast-$env-.*'}) by (node))",
+                    "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'apicast-$env.*'}) by (node))",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "legendFormat": "used-hosts",
@@ -2685,5 +2685,5 @@
         ]
     },
     "timezone": "",
-    "title": "{{ .Namespace }}/ Apicast"
+    "title": "{{ .Namespace }}/ 3scale / Apicast"
 }
