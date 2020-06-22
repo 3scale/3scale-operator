@@ -88,7 +88,7 @@ This section controls from where APIManager's  is to be stored.
 ### PersistentVolumeClaimRestoreSource
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- |
-| `claimSource` | [v1 PersistentVolumeClaimSource](#https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#persistentvolumeclaimvolumesource-v1-core) | Yes | N/A | PersistentvolumeClaim source where the backup is to be restored from |
+| `claimSource` | [v1 PersistentVolumeClaimVolumeSource](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaimvolumesource-v1-core) | Yes | N/A | PersistentvolumeClaim source where the backup is to be restored from |
 
 ## APIManagerRestoreStatusSpec
 

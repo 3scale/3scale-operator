@@ -87,14 +87,14 @@ There are two main ways to provide a PersistentVolumeClaim for the backup:
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- |
 | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | See [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | 
-| `volumeName` | string | No | N/A | A binding reference to the PersistentVolume backing this claim. This is not the persistentVolumeClaim name. See the field `volumeName` in the [Kubernetes PersistentVolumeClaim API reference](#https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#persistentvolumeclaimspec-v1-core) for more information |
+| `volumeName` | string | No | N/A | A binding reference to the PersistentVolume backing this claim. This is not the persistentVolumeClaim name. See the field `volumeName` in the [Kubernetes PersistentVolumeClaim API reference](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaimspec-v1-core) for more information |
 | `storageClass` | string | No | N/A | Name of the StorageClass required by the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1 |
 
 ### PersistentVolumeClaimResourcesSpec
 
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- |
-| `requests` | [v1 Quantity](#https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#quantity-resource-core) | Yes | N/A | Size of the PersistentVolumeClaim where the backup is to be performed. Set enough size to contain all [data that is backed up](#data-that-is-backed-up).
+| `requests` | [v1 Quantity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#quantity-resource-core) | Yes | N/A | Size of the PersistentVolumeClaim where the backup is to be performed. Set enough size to contain all [data that is backed up](#data-that-is-backed-up).
 
 ## APIManagerBackupStatusSpec
 
@@ -105,6 +105,6 @@ and they are not that important for the end-user point of view.
 | --- | --- | --- | --- | --- | --- |
 | `completed` | bool | No | false | `true` when APIManager's backup has finished |
 | `apiManagerSourceName` | string | No | `""` | Name of the APIManager that APIManagerBackup handles |
-| `startTime` | [meta/v1 Time](#https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#time-v1-meta) | No | N/A | Start time of the backup (in UTC) |
-| `completionTime` | [meta/v1 Time](#https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#time-v1-meta) | No | `""` | Represents the time the backup was completed | 
+| `startTime` | [meta/v1 Time](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#time-v1-meta) | No | N/A | Start time of the backup (in UTC) |
+| `completionTime` | [meta/v1 Time](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#time-v1-meta) | No | `""` | Represents the time the backup was completed | 
 | `backupPersistentVolumeClaimName` | string | No | `""` | Name of the PersistentVolumeClaim where the backup has been stored |
