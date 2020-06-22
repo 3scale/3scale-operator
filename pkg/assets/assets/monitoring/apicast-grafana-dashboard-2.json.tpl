@@ -432,13 +432,11 @@
                 "regex": "",
                 "skipUrlSync": false,
                 "sort": 0,
-                "tagValuesQuery": "label_values(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*', service_system_name='$tag'}, service_id}",
-                "tags": [
-                    "api"
-                ],
-                "tagsQuery": "label_values(total_response_time_seconds_bucket{namespace='$namespace', pod=~'apicast-$env.*'}, service_system_name)",
+                "tagValuesQuery": "",
+                "tags": [],
+                "tagsQuery": "",
                 "type": "query",
-                "useTags": true
+                "useTags": false
             },
             {
                 "allValue": null,
