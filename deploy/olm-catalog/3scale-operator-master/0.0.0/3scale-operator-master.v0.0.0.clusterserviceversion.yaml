@@ -298,7 +298,7 @@ spec:
                   value: centos/postgresql-10-centos7
                 - name: ZYNC_POSTGRESQL_IMAGE
                   value: centos/postgresql-10-centos7
-                image: REPLACE_IMAGE
+                image: quay.io/3scale/3scale-operator:master
                 name: 3scale-operator
                 resources: {}
               serviceAccountName: 3scale-operator
