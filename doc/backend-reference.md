@@ -27,7 +27,7 @@ Specifies backend mapping rule
 | HTTPMethod | `httpMethod` | string | Valid values: GET;HEAD;POST;PUT;DELETE;OPTIONS;TRACE;PATCH;CONNECT | Yes |
 | Pattern | `pattern` | string | Mapping Rule pattern | Yes |
 | Metric Method Reference | `metricMethodRef` | string | Existing method or metric **system name** | Yes |
-| Increment | `increment` | int | Increase the metric by this delta | No |
+| Increment | `increment` | int | Increase the metric by this delta | Yes |
 | Position | `position` | int | Mapping Rule position | No |
 
 ### MetricSpec
@@ -86,7 +86,17 @@ stringData:
 
 ### ConditionSpec
 
-Specifies backend status condition
+The status object has an array of Conditions through which the Backend has or has not passed.
+Each element of the Condition array has the following fields:
+
+* The *lastTransitionTime* field provides a timestamp for when the entity last transitioned from one status to another.
+* The *message* field is a human-readable message indicating details about the transition.
+* The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
+* The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
+* The *type* field is a string with the following possible values:
+  * Synced: the backend has been synchronized with 3scale;
+  * Invalid: the backend spec is semantically wrong and has to be changed;
+  * Failed: An error occurred during synchronization.
 
 | **Field** | **json field**| **Type** | **Info** 
 | --- | --- | --- | --- | 
