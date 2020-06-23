@@ -625,9 +625,10 @@ func (apimanager *APIManager) IsSystemPostgreSQLEnabled() bool {
 }
 
 func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
+	// Mysql is the default one
+	// If it happens to be more DB's, they should also be included
 	return !apimanager.IsExternalDatabaseEnabled() &&
-		apimanager.Spec.System.DatabaseSpec != nil &&
-		apimanager.Spec.System.DatabaseSpec.MySQL != nil
+		!apimanager.IsSystemPostgreSQLEnabled()
 }
 
 func (apimanager *APIManager) IsSystemS3Enabled() bool {
