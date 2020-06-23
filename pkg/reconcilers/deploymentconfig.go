@@ -26,6 +26,30 @@ func DeploymentConfigResourcesMutator(existingObj, desiredObj common.KubernetesO
 	return DeploymentConfigContainerResourcesReconciler(desired, existing), nil
 }
 
+func DeploymentConfigResourcesAndAffinityAndTolerationsMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	existing, ok := existingObj.(*appsv1.DeploymentConfig)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
+	}
+	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
+	}
+
+	update := false
+
+	tmpUpdate := DeploymentConfigContainerResourcesReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	tmpUpdate = DeploymentConfigAffinityReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	tmpUpdate = DeploymentConfigTolerationsReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	return update, nil
+}
+
 func GenericDeploymentConfigMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*appsv1.DeploymentConfig)
 	if !ok {
