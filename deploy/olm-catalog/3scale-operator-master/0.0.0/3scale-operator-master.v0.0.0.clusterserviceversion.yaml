@@ -149,26 +149,6 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "Account",
-          "metadata": {
-            "name": "example-account"
-          },
-          "spec": {
-            "size": 3
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "ActiveDoc",
-          "metadata": {
-            "name": "example-activedoc"
-          },
-          "spec": {
-            "size": 3
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Backend",
           "metadata": {
             "name": "backend1"
