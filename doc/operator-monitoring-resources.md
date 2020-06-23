@@ -1,6 +1,6 @@
 # 3scale Monitoring Resources
 
-The 3scale monitoring resources get installed when 3scale is installed on Openshift using the 3scale Operator.
+The 3scale monitoring resources are (optionally) installed when 3scale is installed on Openshift using the 3scale Operator.
 
 ## Prerequirements
 
