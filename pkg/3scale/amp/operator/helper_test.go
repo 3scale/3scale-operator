@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -25,7 +27,7 @@ func basicApimanager() *appsv1alpha1.APIManager {
 	tmpInsecureImportPolicy := insecureImportPolicy
 	tmpTrueValue := trueValue
 
-	return &appsv1alpha1.APIManager{
+	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: namespace,
@@ -41,6 +43,12 @@ func basicApimanager() *appsv1alpha1.APIManager {
 			System: &appsv1alpha1.SystemSpec{},
 		},
 	}
+
+	_, err := apimanager.SetDefaults()
+	if err != nil {
+		panic(fmt.Errorf("Error creating Basic APIManager: %v", err))
+	}
+	return apimanager
 }
 
 func GetTestSecret(namespace, secretName string, data map[string]string) *v1.Secret {
