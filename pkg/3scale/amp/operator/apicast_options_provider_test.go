@@ -73,6 +73,22 @@ func testApicastProductionPodLabels() map[string]string {
 	}
 }
 
+func testApicastStagingAffinity() *v1.Affinity {
+	return getTestAffinity("apicast-staging")
+}
+
+func testApicastProductionAffinity() *v1.Affinity {
+	return getTestAffinity("apicast-production")
+}
+
+func testApicastStagingTolerations() []v1.Toleration {
+	return getTestTolerations("apicast-staging")
+}
+
+func testApicastProductionTolerations() []v1.Toleration {
+	return getTestTolerations("apicast-production")
+}
+
 func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 	tmpApicastManagementAPI := apicastManagementAPI
 	tmpOpenSSLVerify := openSSLVerify
@@ -132,6 +148,34 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				opts := defaultApicastOptions()
 				opts.ProductionResourceRequirements = v1.ResourceRequirements{}
 				opts.StagingResourceRequirements = v1.ResourceRequirements{}
+				return opts
+			},
+		},
+		{"WithAffinity",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestApicastOptions()
+				apimanager.Spec.Apicast.ProductionSpec.Affinity = testApicastProductionAffinity()
+				apimanager.Spec.Apicast.StagingSpec.Affinity = testApicastStagingAffinity()
+				return apimanager
+			},
+			func() *component.ApicastOptions {
+				opts := defaultApicastOptions()
+				opts.ProductionAffinity = testApicastProductionAffinity()
+				opts.StagingAffinity = testApicastStagingAffinity()
+				return opts
+			},
+		},
+		{"WithTolerations",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestApicastOptions()
+				apimanager.Spec.Apicast.ProductionSpec.Tolerations = testApicastProductionTolerations()
+				apimanager.Spec.Apicast.StagingSpec.Tolerations = testApicastStagingTolerations()
+				return apimanager
+			},
+			func() *component.ApicastOptions {
+				opts := defaultApicastOptions()
+				opts.ProductionTolerations = testApicastProductionTolerations()
+				opts.StagingTolerations = testApicastStagingTolerations()
 				return opts
 			},
 		},

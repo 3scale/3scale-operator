@@ -95,6 +95,30 @@ func testBackendCronPodLabels() map[string]string {
 	}
 }
 
+func testBackendListenerAffinity() *v1.Affinity {
+	return getTestAffinity("backend-listener")
+}
+
+func testBackendWorkerAffinity() *v1.Affinity {
+	return getTestAffinity("backend-worker")
+}
+
+func testBackendCronAffinity() *v1.Affinity {
+	return getTestAffinity("backend-cron")
+}
+
+func testBackendListenerTolerations() []v1.Toleration {
+	return getTestTolerations("backend-listener")
+}
+
+func testBackendWorkerTolerations() []v1.Toleration {
+	return getTestTolerations("backend-worker")
+}
+
+func testBackendCronTolerations() []v1.Toleration {
+	return getTestTolerations("backend-cron")
+}
+
 func getInternalSecret() *v1.Secret {
 	data := map[string]string{
 		component.BackendSecretInternalApiUsernameFieldName: "someUserName",
@@ -222,6 +246,39 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				opts.StorageSentinelRole = "storageSentinelRoleValue"
 				opts.QueuesSentinelHosts = "queueSentinelHostsValue"
 				opts.QueuesSentinelRole = "queueSentinelRoleValue"
+				return opts
+			},
+		},
+		{"WithAffinity", nil, nil, nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestBackendOptions()
+				apimanager.Spec.Backend.ListenerSpec.Affinity = testBackendListenerAffinity()
+				apimanager.Spec.Backend.WorkerSpec.Affinity = testBackendWorkerAffinity()
+				apimanager.Spec.Backend.CronSpec.Affinity = testBackendCronAffinity()
+				return apimanager
+			},
+			func(in *component.BackendOptions) *component.BackendOptions {
+				opts := defaultBackendOptions(in)
+				opts.ListenerAffinity = testBackendListenerAffinity()
+				opts.WorkerAffinity = testBackendWorkerAffinity()
+				opts.CronAffinity = testBackendCronAffinity()
+				return opts
+			},
+		},
+		{"WithTolerations", nil, nil, nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestBackendOptions()
+				apimanager.Spec.Backend.ListenerSpec.Tolerations = testBackendListenerTolerations()
+				apimanager.Spec.Backend.WorkerSpec.Tolerations = testBackendWorkerTolerations()
+				apimanager.Spec.Backend.CronSpec.Tolerations = testBackendCronTolerations()
+				return apimanager
+			},
+			func(in *component.BackendOptions) *component.BackendOptions {
+				opts := defaultBackendOptions(in)
+
+				opts.ListenerTolerations = testBackendListenerTolerations()
+				opts.WorkerTolerations = testBackendWorkerTolerations()
+				opts.CronTolerations = testBackendCronTolerations()
 				return opts
 			},
 		},

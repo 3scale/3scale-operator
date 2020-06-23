@@ -71,6 +71,22 @@ func testRedisBackendRedisPodTemplateLabels() map[string]string {
 	}
 }
 
+func testBackendRedisAffinity() *v1.Affinity {
+	return getTestAffinity("backend-redis")
+}
+
+func testSystemRedisAffinity() *v1.Affinity {
+	return getTestAffinity("system-redis")
+}
+
+func testBackendRedisTolerations() []v1.Toleration {
+	return getTestTolerations("backend-redis")
+}
+
+func testSystemRedisTolerations() []v1.Toleration {
+	return getTestTolerations("system-redis")
+}
+
 func defaultRedisOptions() *component.RedisOptions {
 	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
@@ -202,6 +218,34 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			func() *component.RedisOptions {
 				opts := defaultRedisOptions()
 				opts.SystemRedisPVCStorageClass = &systemRedisCustomStorageClass
+				return opts
+			},
+		},
+		{"WithAffinity",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System.RedisAffinity = testSystemRedisAffinity()
+				apimanager.Spec.Backend.RedisAffinity = testBackendRedisAffinity()
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.SystemRedisAffinity = testSystemRedisAffinity()
+				opts.BackendRedisAffinity = testBackendRedisAffinity()
+				return opts
+			},
+		},
+		{"WithTolerations",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System.RedisTolerations = testSystemRedisTolerations()
+				apimanager.Spec.Backend.RedisTolerations = testBackendRedisTolerations()
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.SystemRedisTolerations = testSystemRedisTolerations()
+				opts.BackendRedisTolerations = testBackendRedisTolerations()
 				return opts
 			},
 		},

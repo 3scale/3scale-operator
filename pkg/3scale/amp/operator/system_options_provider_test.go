@@ -134,6 +134,30 @@ func testSystemSMTPLabels() map[string]string {
 	}
 }
 
+func testSystemAppAffinity() *v1.Affinity {
+	return getTestAffinity("system-app")
+}
+
+func testSystemSidekiqAffinity() *v1.Affinity {
+	return getTestAffinity("system-sidekiq")
+}
+
+func testSystemSphinxAffinity() *v1.Affinity {
+	return getTestAffinity("system-sphinx")
+}
+
+func testSystemAppTolerations() []v1.Toleration {
+	return getTestTolerations("system-app")
+}
+
+func testSystemSidekiqTolerations() []v1.Toleration {
+	return getTestTolerations("system-sidekiq")
+}
+
+func testSystemSphinxTolerations() []v1.Toleration {
+	return getTestTolerations("system-sphinx")
+}
+
 func basicApimanagerSpecTestSystemOptions() *appsv1alpha1.APIManager {
 	tmpSystemAppReplicas := systemAppReplicas
 	tmpSystemSideKiqReplicas := systemSidekiqReplicas
@@ -452,6 +476,38 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				tmp := "mystorageclassname"
 				expectedOpts.PvcFileStorageOptions = &component.PVCFileStorageOptions{StorageClass: &tmp}
 				expectedOpts.S3FileStorageOptions = nil
+				return expectedOpts
+			},
+		},
+		{"WithAffinity",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.System.AppSpec.Affinity = testSystemAppAffinity()
+				apimanager.Spec.System.SidekiqSpec.Affinity = testSystemSidekiqAffinity()
+				apimanager.Spec.System.SphinxSpec.Affinity = testSystemSphinxAffinity()
+				return apimanager
+			}, nil, nil, nil, nil, nil, nil, nil,
+			func(opts *component.SystemOptions) *component.SystemOptions {
+				expectedOpts := defaultSystemOptions(opts)
+				expectedOpts.AppAffinity = testSystemAppAffinity()
+				expectedOpts.SidekiqAffinity = testSystemSidekiqAffinity()
+				expectedOpts.SphinxAffinity = testSystemSphinxAffinity()
+				return expectedOpts
+			},
+		},
+		{"WithTolerations",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.System.AppSpec.Tolerations = testSystemAppTolerations()
+				apimanager.Spec.System.SidekiqSpec.Tolerations = testSystemSidekiqTolerations()
+				apimanager.Spec.System.SphinxSpec.Tolerations = testSystemSphinxTolerations()
+				return apimanager
+			}, nil, nil, nil, nil, nil, nil, nil,
+			func(opts *component.SystemOptions) *component.SystemOptions {
+				expectedOpts := defaultSystemOptions(opts)
+				expectedOpts.AppTolerations = testSystemAppTolerations()
+				expectedOpts.SidekiqTolerations = testSystemSidekiqTolerations()
+				expectedOpts.SphinxTolerations = testSystemSphinxTolerations()
 				return expectedOpts
 			},
 		},

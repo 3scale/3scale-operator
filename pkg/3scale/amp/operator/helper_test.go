@@ -73,3 +73,40 @@ func getSystemDBSecret(databaseURL, username, password string) *v1.Secret {
 	}
 	return GetTestSecret(namespace, component.SystemSecretSystemDatabaseSecretName, data)
 }
+
+func getTestAffinity(prefix string) *v1.Affinity {
+	return &v1.Affinity{
+		NodeAffinity: &v1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
+				NodeSelectorTerms: []v1.NodeSelectorTerm{
+					v1.NodeSelectorTerm{
+						MatchFields: []v1.NodeSelectorRequirement{
+							v1.NodeSelectorRequirement{
+								Key:      fmt.Sprintf("%s-%s", prefix, "key2"),
+								Operator: v1.NodeSelectorOpIn,
+								Values:   []string{fmt.Sprintf("%s-%s", prefix, "val2")},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func getTestTolerations(prefix string) []v1.Toleration {
+	return []v1.Toleration{
+		v1.Toleration{
+			Key:      fmt.Sprintf("%s-%s", prefix, "key1"),
+			Effect:   v1.TaintEffectNoExecute,
+			Operator: v1.TolerationOpEqual,
+			Value:    fmt.Sprintf("%s-%s", prefix, "val1"),
+		},
+		v1.Toleration{
+			Key:      fmt.Sprintf("%s-%s", prefix, "key2"),
+			Effect:   v1.TaintEffectNoExecute,
+			Operator: v1.TolerationOpEqual,
+			Value:    fmt.Sprintf("%s-%s", prefix, "val2"),
+		},
+	}
+}
