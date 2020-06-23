@@ -106,26 +106,6 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "Account",
-          "metadata": {
-            "name": "example-account"
-          },
-          "spec": {
-            "size": 3
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "ActiveDoc",
-          "metadata": {
-            "name": "example-activedoc"
-          },
-          "spec": {
-            "size": 3
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Backend",
           "metadata": {
             "name": "backend1"
@@ -183,14 +163,6 @@ spec:
     image: centos/postgresql-10-centos7
   customresourcedefinitions:
     owned:
-    - description: Account is the Schema for the accounts API
-      kind: Account
-      name: accounts.capabilities.3scale.net
-      version: v1beta1
-    - description: ActiveDoc is the Schema for the activedocs API
-      kind: ActiveDoc
-      name: activedocs.capabilities.3scale.net
-      version: v1beta1
     - description: APIManager is the Schema for the apimanagers API
       displayName: APIManager
       kind: APIManager
