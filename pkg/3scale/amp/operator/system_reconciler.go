@@ -28,7 +28,7 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicRecon
 }
 
 func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
-	if r.apiManager.IsSystemPostgreSQLEnabled() {
+	if r.apiManager.IsSystemS3Enabled() {
 		return r.validateS3StorageProvidedConfiguration()
 	}
 
