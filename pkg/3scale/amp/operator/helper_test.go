@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -25,7 +27,7 @@ func basicApimanager() *appsv1alpha1.APIManager {
 	tmpInsecureImportPolicy := insecureImportPolicy
 	tmpTrueValue := trueValue
 
-	return &appsv1alpha1.APIManager{
+	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: namespace,
@@ -41,6 +43,12 @@ func basicApimanager() *appsv1alpha1.APIManager {
 			System: &appsv1alpha1.SystemSpec{},
 		},
 	}
+
+	_, err := apimanager.SetDefaults()
+	if err != nil {
+		panic(fmt.Errorf("Error creating Basic APIManager: %v", err))
+	}
+	return apimanager
 }
 
 func GetTestSecret(namespace, secretName string, data map[string]string) *v1.Secret {
@@ -64,4 +72,41 @@ func getSystemDBSecret(databaseURL, username, password string) *v1.Secret {
 		component.SystemSecretSystemDatabaseURLFieldName:      databaseURL,
 	}
 	return GetTestSecret(namespace, component.SystemSecretSystemDatabaseSecretName, data)
+}
+
+func getTestAffinity(prefix string) *v1.Affinity {
+	return &v1.Affinity{
+		NodeAffinity: &v1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
+				NodeSelectorTerms: []v1.NodeSelectorTerm{
+					v1.NodeSelectorTerm{
+						MatchFields: []v1.NodeSelectorRequirement{
+							v1.NodeSelectorRequirement{
+								Key:      fmt.Sprintf("%s-%s", prefix, "key2"),
+								Operator: v1.NodeSelectorOpIn,
+								Values:   []string{fmt.Sprintf("%s-%s", prefix, "val2")},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func getTestTolerations(prefix string) []v1.Toleration {
+	return []v1.Toleration{
+		v1.Toleration{
+			Key:      fmt.Sprintf("%s-%s", prefix, "key1"),
+			Effect:   v1.TaintEffectNoExecute,
+			Operator: v1.TolerationOpEqual,
+			Value:    fmt.Sprintf("%s-%s", prefix, "val1"),
+		},
+		v1.Toleration{
+			Key:      fmt.Sprintf("%s-%s", prefix, "key2"),
+			Effect:   v1.TaintEffectNoExecute,
+			Operator: v1.TolerationOpEqual,
+			Value:    fmt.Sprintf("%s-%s", prefix, "val2"),
+		},
+	}
 }

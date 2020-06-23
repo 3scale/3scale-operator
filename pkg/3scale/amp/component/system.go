@@ -524,7 +524,9 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: system.Options.AppPodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
-					Volumes: system.appPodVolumes(),
+					Affinity:    system.Options.AppAffinity,
+					Tolerations: system.Options.AppTolerations,
+					Volumes:     system.appPodVolumes(),
 					Containers: []v1.Container{
 						v1.Container{
 							Name:  "system-master",
@@ -775,7 +777,9 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: system.Options.SidekiqPodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
-					Volumes: system.SidekiqPodVolumes(),
+					Affinity:    system.Options.SidekiqAffinity,
+					Tolerations: system.Options.SidekiqTolerations,
+					Volumes:     system.SidekiqPodVolumes(),
 					InitContainers: []v1.Container{
 						v1.Container{
 							Name:  "check-svc",
@@ -1132,6 +1136,8 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: system.Options.SphinxPodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:           system.Options.SphinxAffinity,
+					Tolerations:        system.Options.SphinxTolerations,
 					ServiceAccountName: "amp",
 					InitContainers: []v1.Container{
 						v1.Container{

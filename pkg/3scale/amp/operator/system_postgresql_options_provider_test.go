@@ -52,6 +52,14 @@ func testSystemPostgreSQLPodTemplateLabels() map[string]string {
 	}
 }
 
+func testSystemPostgreSQLAffinity() *v1.Affinity {
+	return getTestAffinity("system-postgresql")
+}
+
+func testSystemPostgreSQLTolerations() []v1.Toleration {
+	return getTestTolerations("system-postgresql")
+}
+
 func defaultSystemPostgreSQLOptions(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
 	return &component.SystemPostgreSQLOptions{
 		ImageTag:                      product.ThreescaleRelease,
@@ -134,6 +142,42 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
 				expecteOpts := defaultSystemPostgreSQLOptions(opts)
 				expecteOpts.PVCStorageClass = &customStorageClass
+				return expecteOpts
+			},
+		},
+		{"WithAffinity", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+							Affinity: testSystemPostgreSQLAffinity(),
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				expecteOpts := defaultSystemPostgreSQLOptions(opts)
+				expecteOpts.Affinity = testSystemPostgreSQLAffinity()
+				return expecteOpts
+			},
+		},
+		{"WithTolerations", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+							Tolerations: testSystemPostgreSQLTolerations(),
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				expecteOpts := defaultSystemPostgreSQLOptions(opts)
+				expecteOpts.Tolerations = testSystemPostgreSQLTolerations()
 				return expecteOpts
 			},
 		},

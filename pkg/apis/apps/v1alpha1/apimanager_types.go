@@ -159,11 +159,19 @@ type ApicastSpec struct {
 type ApicastProductionSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type ApicastStagingSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type BackendSpec struct {
@@ -173,6 +181,10 @@ type BackendSpec struct {
 	RedisImage *string `json:"redisImage,omitempty"`
 	// +optional
 	RedisPersistentVolumeClaimSpec *BackendRedisPersistentVolumeClaimSpec `json:"redisPersistentVolumeClaim,omitempty"`
+	// +optional
+	RedisAffinity *v1.Affinity `json:"redisAffinity,omitempty"`
+	// +optional
+	RedisTolerations []v1.Toleration `json:"redisTolerations,omitempty"`
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
@@ -189,16 +201,28 @@ type BackendRedisPersistentVolumeClaimSpec struct {
 type BackendListenerSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type BackendWorkerSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type BackendCronSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type SystemSpec struct {
@@ -209,10 +233,19 @@ type SystemSpec struct {
 	MemcachedImage *string `json:"memcachedImage,omitempty"`
 
 	// +optional
+	MemcachedAffinity *v1.Affinity `json:"memcachedAffinity,omitempty"`
+	// +optional
+	MemcachedTolerations []v1.Toleration `json:"memcachedTolerations,omitempty"`
+
+	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
 
 	// +optional
 	RedisPersistentVolumeClaimSpec *SystemRedisPersistentVolumeClaimSpec `json:"redisPersistentVolumeClaim,omitempty"`
+	// +optional
+	RedisAffinity *v1.Affinity `json:"redisAffinity,omitempty"`
+	// +optional
+	RedisTolerations []v1.Toleration `json:"redisTolerations,omitempty"`
 
 	// TODO should this field be optional? We have different approaches in Kubernetes.
 	// For example, in v1.Volume it is optional and there's an implied behaviour
@@ -233,16 +266,33 @@ type SystemSpec struct {
 	AppSpec *SystemAppSpec `json:"appSpec,omitempty"`
 	// +optional
 	SidekiqSpec *SystemSidekiqSpec `json:"sidekiqSpec,omitempty"`
+	// +optional
+	SphinxSpec *SystemSphinxSpec `json:"sphinxSpec,omitempty"`
 }
 
 type SystemAppSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type SystemSidekiqSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+}
+
+type SystemSphinxSpec struct {
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type SystemFileStorageSpec struct {
@@ -293,6 +343,10 @@ type SystemMySQLSpec struct {
 
 	// +optional
 	PersistentVolumeClaimSpec *SystemMySQLPVCSpec `json:"persistentVolumeClaim,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type SystemPostgreSQLSpec struct {
@@ -301,6 +355,10 @@ type SystemPostgreSQLSpec struct {
 
 	// +optional
 	PersistentVolumeClaimSpec *SystemPostgreSQLPVCSpec `json:"persistentVolumeClaim,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type SystemMySQLPVCSpec struct {
@@ -311,6 +369,10 @@ type SystemMySQLPVCSpec struct {
 type SystemPostgreSQLPVCSpec struct {
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type ZyncSpec struct {
@@ -318,6 +380,11 @@ type ZyncSpec struct {
 	Image *string `json:"image,omitempty"`
 	// +optional
 	PostgreSQLImage *string `json:"postgreSQLImage,omitempty"`
+
+	// +optional
+	DatabaseAffinity *v1.Affinity `json:"databaseAffinity,omitempty"`
+	// +optional
+	DatabaseTolerations []v1.Toleration `json:"databaseTolerations,omitempty"`
 
 	// +optional
 	AppSpec *ZyncAppSpec `json:"appSpec,omitempty"`
@@ -329,11 +396,19 @@ type ZyncSpec struct {
 type ZyncAppSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type ZyncQueSpec struct {
 	// +optional
 	Replicas *int64 `json:"replicas,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type HighAvailabilitySpec struct {
@@ -564,6 +639,11 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 		changed = true
 	}
 
+	if spec.System.SphinxSpec == nil {
+		spec.System.SphinxSpec = &SystemSphinxSpec{}
+		changed = true
+	}
+
 	if spec.System.AppSpec.Replicas == nil {
 		spec.System.AppSpec.Replicas = apimanager.defaultReplicas()
 		changed = true
@@ -627,6 +707,7 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 
 	if spec.Zync.QueSpec == nil {
 		spec.Zync.QueSpec = &ZyncQueSpec{}
+		changed = true
 	}
 
 	if spec.Zync.AppSpec.Replicas == nil {

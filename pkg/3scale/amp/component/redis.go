@@ -101,6 +101,8 @@ func (redis *Redis) buildDeploymentConfigTriggers() appsv1.DeploymentTriggerPoli
 func (redis *Redis) buildPodTemplateSpec() *v1.PodTemplateSpec {
 	return &v1.PodTemplateSpec{
 		Spec: v1.PodSpec{
+			Affinity:           redis.Options.BackendRedisAffinity,
+			Tolerations:        redis.Options.BackendRedisTolerations,
 			ServiceAccountName: "amp", //TODO make this configurable via flag
 			Volumes:            redis.buildPodVolumes(),
 			Containers:         redis.buildPodContainers(),
@@ -447,6 +449,8 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: redis.Options.SystemRedisPodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:           redis.Options.SystemRedisAffinity,
+					Tolerations:        redis.Options.SystemRedisTolerations,
 					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
 						v1.Volume{

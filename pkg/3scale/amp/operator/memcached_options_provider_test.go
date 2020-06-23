@@ -35,6 +35,14 @@ func testPodTemplateLabels() map[string]string {
 	}
 }
 
+func testMemcachedAffinity() *v1.Affinity {
+	return getTestAffinity("memcached")
+}
+
+func testMemcachedTolerations() []v1.Toleration {
+	return getTestTolerations("memcached")
+}
+
 func defaultMemcachedOptions() *component.MemcachedOptions {
 	return &component.MemcachedOptions{
 		ImageTag:             product.ThreescaleRelease,
@@ -62,6 +70,30 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 			func() *component.MemcachedOptions {
 				opts := defaultMemcachedOptions()
 				opts.ResourceRequirements = v1.ResourceRequirements{}
+				return opts
+			},
+		},
+		{"WithAffinity",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System.MemcachedAffinity = testMemcachedAffinity()
+				return apimanager
+			},
+			func() *component.MemcachedOptions {
+				opts := defaultMemcachedOptions()
+				opts.Affinity = testMemcachedAffinity()
+				return opts
+			},
+		},
+		{"WithTolerations",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System.MemcachedTolerations = testMemcachedTolerations()
+				return apimanager
+			},
+			func() *component.MemcachedOptions {
+				opts := defaultMemcachedOptions()
+				opts.Tolerations = testMemcachedTolerations()
 				return opts
 			},
 		},

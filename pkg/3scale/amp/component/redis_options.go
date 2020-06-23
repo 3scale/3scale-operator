@@ -18,6 +18,11 @@ type RedisOptions struct {
 	BackendRedisPVCStorageClass               *string
 	SystemRedisPVCStorageClass                *string
 
+	BackendRedisAffinity    *v1.Affinity    `validate:"-"`
+	BackendRedisTolerations []v1.Toleration `validate:"-"`
+	SystemRedisAffinity     *v1.Affinity    `validate:"-"`
+	SystemRedisTolerations  []v1.Toleration `validate:"-"`
+
 	SystemCommonLabels            map[string]string `validate:"required"`
 	SystemRedisLabels             map[string]string `validate:"required"`
 	SystemRedisPodTemplateLabels  map[string]string `validate:"required"`

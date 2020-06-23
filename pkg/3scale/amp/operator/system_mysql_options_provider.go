@@ -51,6 +51,7 @@ func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOp
 
 	s.setResourceRequirementsOptions()
 	s.setPersistentVolumeClaimOptions()
+	s.setNodeAffinityAndTolerationsOptions()
 
 	err = s.mysqlOptions.Validate()
 	if err != nil {
@@ -153,6 +154,13 @@ func (s *SystemMysqlOptionsProvider) setPersistentVolumeClaimOptions() {
 		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec != nil {
 		s.mysqlOptions.PVCStorageClass = s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec.StorageClassName
+	}
+}
+
+func (s *SystemMysqlOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	if s.apimanager.Spec.System.DatabaseSpec != nil && s.apimanager.Spec.System.DatabaseSpec.MySQL != nil {
+		s.mysqlOptions.Affinity = s.apimanager.Spec.System.DatabaseSpec.MySQL.Affinity
+		s.mysqlOptions.Tolerations = s.apimanager.Spec.System.DatabaseSpec.MySQL.Tolerations
 	}
 }
 

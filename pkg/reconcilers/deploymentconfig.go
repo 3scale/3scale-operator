@@ -2,6 +2,7 @@ package reconcilers
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -25,6 +26,30 @@ func DeploymentConfigResourcesMutator(existingObj, desiredObj common.KubernetesO
 	return DeploymentConfigContainerResourcesReconciler(desired, existing), nil
 }
 
+func DeploymentConfigResourcesAndAffinityAndTolerationsMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	existing, ok := existingObj.(*appsv1.DeploymentConfig)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
+	}
+	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
+	}
+
+	update := false
+
+	tmpUpdate := DeploymentConfigContainerResourcesReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	tmpUpdate = DeploymentConfigAffinityReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	tmpUpdate = DeploymentConfigTolerationsReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	return update, nil
+}
+
 func GenericDeploymentConfigMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*appsv1.DeploymentConfig)
 	if !ok {
@@ -43,6 +68,12 @@ func GenericDeploymentConfigMutator(existingObj, desiredObj common.KubernetesObj
 	tmpUpdate = DeploymentConfigContainerResourcesReconciler(desired, existing)
 	update = update || tmpUpdate
 
+	tmpUpdate = DeploymentConfigAffinityReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	tmpUpdate = DeploymentConfigTolerationsReconciler(desired, existing)
+	update = update || tmpUpdate
+
 	return update, nil
 }
 
@@ -55,6 +86,32 @@ func DeploymentConfigReplicasReconciler(desired, existing *appsv1.DeploymentConf
 	}
 
 	return update
+}
+
+func DeploymentConfigAffinityReconciler(desired, existing *appsv1.DeploymentConfig) bool {
+	updated := false
+
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity) {
+		diff := cmp.Diff(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity)
+		log.Info(fmt.Sprintf("%s spec.template.spec.Affinity has changed: %s", common.ObjectInfo(desired), diff))
+		existing.Spec.Template.Spec.Affinity = desired.Spec.Template.Spec.Affinity
+		updated = true
+	}
+
+	return updated
+}
+
+func DeploymentConfigTolerationsReconciler(desired, existing *appsv1.DeploymentConfig) bool {
+	updated := false
+
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations) {
+		diff := cmp.Diff(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations)
+		log.Info(fmt.Sprintf("%s spec.template.spec.Tolerations has changed: %s", common.ObjectInfo(desired), diff))
+		existing.Spec.Template.Spec.Tolerations = desired.Spec.Template.Spec.Tolerations
+		updated = true
+	}
+
+	return updated
 }
 
 func DeploymentConfigContainerResourcesReconciler(desired, existing *appsv1.DeploymentConfig) bool {

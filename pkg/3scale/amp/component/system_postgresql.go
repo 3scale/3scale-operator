@@ -105,6 +105,8 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: p.Options.PodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:           p.Options.Affinity,
+					Tolerations:        p.Options.Tolerations,
 					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
 						v1.Volume{

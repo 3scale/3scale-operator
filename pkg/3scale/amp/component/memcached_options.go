@@ -10,6 +10,9 @@ type MemcachedOptions struct {
 	ImageTag             string                  `validate:"required"`
 	ResourceRequirements v1.ResourceRequirements `validate:"-"`
 
+	Affinity    *v1.Affinity    `validate:"-"`
+	Tolerations []v1.Toleration `validate:"-"`
+
 	DeploymentLabels  map[string]string `validate:"required"`
 	PodTemplateLabels map[string]string `validate:"required"`
 }

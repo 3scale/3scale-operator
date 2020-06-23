@@ -94,7 +94,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Sphinx DC
-	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), reconcilers.DeploymentConfigResourcesMutator)
+	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -225,7 +225,15 @@ func (r *SystemReconciler) systemAppDCMutator(existingObj, desiredObj common.Kub
 	desiredName := common.ObjectInfo(desired)
 	update := false
 
-	tmpUpdate := reconcilers.DeploymentConfigReplicasReconciler(desired, existing)
+	// Check node affinity and tolerations
+
+	tmpUpdate := reconcilers.DeploymentConfigAffinityReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	tmpUpdate = reconcilers.DeploymentConfigTolerationsReconciler(desired, existing)
+	update = update || tmpUpdate
+
+	tmpUpdate = reconcilers.DeploymentConfigReplicasReconciler(desired, existing)
 	update = update || tmpUpdate
 
 	//

@@ -52,6 +52,14 @@ func testSystemMysqlPodTemplateLabels() map[string]string {
 	}
 }
 
+func testSystemMySQLAffinity() *v1.Affinity {
+	return getTestAffinity("system-mysql")
+}
+
+func testSystemMySQLTolerations() []v1.Toleration {
+	return getTestTolerations("system-mysql")
+}
+
 func defaultSystemMysqlOptions(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
 	return &component.SystemMysqlOptions{
 		ImageTag:                      product.ThreescaleRelease,
@@ -142,6 +150,40 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
 				expecteOpts := defaultSystemMysqlOptions(opts)
 				expecteOpts.PVCStorageClass = &customStorageClass
+				return expecteOpts
+			},
+		},
+		{"WithAffinity", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System.DatabaseSpec = &appsv1alpha1.SystemDatabaseSpec{
+					MySQL: &appsv1alpha1.SystemMySQLSpec{
+						Affinity: testSystemMySQLAffinity(),
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
+				expecteOpts := defaultSystemMysqlOptions(opts)
+				expecteOpts.Affinity = testSystemMySQLAffinity()
+				return expecteOpts
+			},
+		},
+		{"WithTolerations", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						MySQL: &appsv1alpha1.SystemMySQLSpec{
+							Tolerations: testSystemMySQLTolerations(),
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
+				expecteOpts := defaultSystemMysqlOptions(opts)
+				expecteOpts.Tolerations = testSystemMySQLTolerations()
 				return expecteOpts
 			},
 		},

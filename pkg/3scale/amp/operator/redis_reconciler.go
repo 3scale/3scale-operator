@@ -24,7 +24,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Backend redis DC
-	err = r.ReconcileDeploymentConfig(redis.BackendDeploymentConfig(), reconcilers.DeploymentConfigResourcesMutator)
+	err = r.ReconcileDeploymentConfig(redis.BackendDeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -54,7 +54,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// System redis DC
-	err = r.ReconcileDeploymentConfig(redis.SystemDeploymentConfig(), reconcilers.DeploymentConfigResourcesMutator)
+	err = r.ReconcileDeploymentConfig(redis.SystemDeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

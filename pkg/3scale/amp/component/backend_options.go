@@ -27,6 +27,12 @@ type BackendOptions struct {
 	SystemBackendPassword        string            `validate:"required"`
 	TenantName                   string            `validate:"required"`
 	WildcardDomain               string            `validate:"required"`
+	ListenerAffinity             *v1.Affinity      `validate:"-"`
+	ListenerTolerations          []v1.Toleration   `validate:"-"`
+	WorkerAffinity               *v1.Affinity      `validate:"-"`
+	WorkerTolerations            []v1.Toleration   `validate:"-"`
+	CronAffinity                 *v1.Affinity      `validate:"-"`
+	CronTolerations              []v1.Toleration   `validate:"-"`
 	CommonLabels                 map[string]string `validate:"required"`
 	CommonListenerLabels         map[string]string `validate:"required"`
 	CommonWorkerLabels           map[string]string `validate:"required"`

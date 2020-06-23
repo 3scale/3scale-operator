@@ -25,7 +25,7 @@ func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// DC
-	err = r.ReconcileDeploymentConfig(systemMySQL.DeploymentConfig(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileDeploymentConfig(systemMySQL.DeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

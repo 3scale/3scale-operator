@@ -11,6 +11,7 @@
     * [Setting a custom Storage Class for System FileStorage RWX PVC-based installations](#setting-a-custom-storage-class-for-system-filestorage-rwx-pvc-based-installations)
     * [PostgreSQL Installation](#postgresql-installation)
     * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
+    * [Setting custom affinity and tolerations](#setting-custom-affinity-and-tolerations)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
 * [Feature Operator (in *TechPreview*)](operator-capabilities.md)
@@ -390,6 +391,54 @@ spec:
   podDisruptionBudget:
     enabled: true
 ```
+
+#### Setting custom affinity and tolerations
+
+Kubernetes [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+) and [Tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+can be customized in a 3scale API Management solution through APIManager
+CR attributes in order to customize where/how the different 3scale components of
+an installation are scheduled onto Kubernetes Nodes.
+
+For example, setting a custom node affinity for backend listener
+and custom tolerations for system's memcached would be done in the
+following way:
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  backend:
+    listenerSpec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "kubernetes.io/hostname"
+                operator: In
+                values:
+                - ip-10-96-1-105
+              - key: "beta.kubernetes.io/arch"
+                operator: In
+                values:
+                - amd64
+  system:
+    memcachedTolerations:
+    - key: key1
+      value: value1
+      operator: Equal
+      effect: NoSchedule
+    - key: key2
+      value: value2
+      operator: Equal
+      effect: NoSchedule
+```
+
+See [APIManager reference](apimanager-reference.md) for a full list of
+attributes related to affinity and tolerations.
 
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set

@@ -127,6 +127,8 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: mysql.Options.PodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:           mysql.Options.Affinity,
+					Tolerations:        mysql.Options.Tolerations,
 					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
 						v1.Volume{

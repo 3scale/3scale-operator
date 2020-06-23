@@ -49,6 +49,7 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 
 	s.setResourceRequirementsOptions()
 	s.setPersistentVolumeClaimOptions()
+	s.setNodeAffinityAndTolerationsOptions()
 
 	err = s.options.Validate()
 	if err != nil {
@@ -139,6 +140,13 @@ func (s *SystemPostgresqlOptionsProvider) setPersistentVolumeClaimOptions() {
 		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec != nil {
 		s.options.PVCStorageClass = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec.StorageClassName
+	}
+}
+
+func (s *SystemPostgresqlOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	if s.apimanager.Spec.System.DatabaseSpec != nil && s.apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil {
+		s.options.Affinity = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Affinity
+		s.options.Tolerations = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Tolerations
 	}
 }
 

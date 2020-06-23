@@ -96,6 +96,30 @@ func testZyncDatabasePodTemplateCommonLabels() map[string]string {
 	}
 }
 
+func testZyncAffinity() *v1.Affinity {
+	return getTestAffinity("zync")
+}
+
+func testZyncQueAffinity() *v1.Affinity {
+	return getTestAffinity("zync-que")
+}
+
+func testZyncDatabaseAffinity() *v1.Affinity {
+	return getTestAffinity("zync-database")
+}
+
+func testZyncTolerations() []v1.Toleration {
+	return getTestTolerations("zync")
+}
+
+func testZyncQueTolerations() []v1.Toleration {
+	return getTestTolerations("znc-que")
+}
+
+func testZyncDatabaseTolerations() []v1.Toleration {
+	return getTestTolerations("zync-database")
+}
+
 func getZyncSecret() *v1.Secret {
 	data := map[string]string{
 		component.ZyncSecretKeyBaseFieldName:             zyncSecretKeyBasename,
@@ -179,6 +203,38 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				expectedOpts.AuthenticationToken = zyncAuthToken
 				expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(zyncDatabasePasswd)
 				return opts
+			},
+		},
+		{"WithAffinity", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestZyncOptions()
+				apimanager.Spec.Zync.AppSpec.Affinity = testZyncAffinity()
+				apimanager.Spec.Zync.QueSpec.Affinity = testZyncQueAffinity()
+				apimanager.Spec.Zync.DatabaseAffinity = testZyncDatabaseAffinity()
+				return apimanager
+			},
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				expectedOpts := defaultZyncOptions(opts)
+				expectedOpts.ZyncAffinity = testZyncAffinity()
+				expectedOpts.ZyncQueAffinity = testZyncQueAffinity()
+				expectedOpts.ZyncDatabaseAffinity = testZyncDatabaseAffinity()
+				return expectedOpts
+			},
+		},
+		{"WithTolerations", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestZyncOptions()
+				apimanager.Spec.Zync.AppSpec.Tolerations = testZyncTolerations()
+				apimanager.Spec.Zync.QueSpec.Tolerations = testZyncQueTolerations()
+				apimanager.Spec.Zync.DatabaseTolerations = testZyncDatabaseTolerations()
+				return apimanager
+			},
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				expectedOpts := defaultZyncOptions(opts)
+				expectedOpts.ZyncTolerations = testZyncTolerations()
+				expectedOpts.ZyncQueTolerations = testZyncQueTolerations()
+				expectedOpts.ZyncDatabaseTolerations = testZyncDatabaseTolerations()
+				return expectedOpts
 			},
 		},
 	}
