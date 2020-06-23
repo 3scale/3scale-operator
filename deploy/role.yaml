@@ -84,11 +84,6 @@ rules:
   - capabilities.3scale.net
   resources:
   - '*'
-  - products
-  - accountproviders
-  - accounts
-  - backends
-  - activedocs
   verbs:
   - create
   - delete

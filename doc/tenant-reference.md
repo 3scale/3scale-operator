@@ -117,6 +117,18 @@ Fields available in tenant secret:
 | *token* | Tenant's provider key |
 | *adminURL* | Tenant's admin domain URL |
 
+**Example Secret:**
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tenant-secret
+type: Opaque
+stringData:
+  adminURL: https://my3scale-admin.3scale.net:443
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
 ### TenantStatus
 
 | **Field** | **json field**| **Type** | **Info** |

@@ -103,6 +103,28 @@ metadata:
             },
             "username": "admin"
           }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Backend",
+          "metadata": {
+            "name": "backend1"
+          },
+          "spec": {
+            "name": "Operated Backend 1",
+            "privateBaseURL": "https://api.example.com",
+            "systemName": "backend1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
+            "name": "example-product"
+          },
+          "spec": {
+            "size": 3
+          }
         }
       ]
     capabilities: Full Lifecycle
@@ -174,6 +196,15 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
+    - description: Backend is the Schema for the backends API
+      kind: Backend
+      name: backends.capabilities.3scale.net
+      version: v1beta1
+    - description: Product is the Schema for the products API
+      displayName: 3scale Product
+      kind: Product
+      name: products.capabilities.3scale.net
+      version: v1beta1
     - description: Tenant is the Schema for the tenants API
       displayName: Tenant
       kind: Tenant
