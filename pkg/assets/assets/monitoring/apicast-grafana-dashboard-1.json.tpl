@@ -1276,7 +1276,7 @@
             "tableColumn": "",
             "targets": [
                 {
-                    "expr": "kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'} - kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}",,
+                    "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'})",
                     "format": "time_series",
                     "intervalFactor": 1,
                     "refId": "A"
@@ -1509,27 +1509,27 @@
             "steppedLine": false,
             "targets": [
                 {
-                    "expr": "kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}",
+                    "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'})",
                     "format": "time_series",
                     "intervalFactor": 2,
-                    "legendFormat": "{{`{{replicationcontroller}}`}}-total-pods",
+                    "legendFormat": "total-pods",
                     "legendLink": null,
                     "refId": "A",
                     "step": 10
                 },
                 {
-                    "expr":"kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}",
+                    "expr":"sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'})",
                     "format": "time_series",
                     "intervalFactor": 1,
-                    "legendFormat": "{{`{{replicationcontroller}}`}}-avail-pods",
+                    "legendFormat": "avail-pods",
                     "refId": "B"
                 },
                 {
-                    "expr": "kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'} - kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}",
+                    "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'apicast-$env.*'})",
                     "format": "time_series",
                     "interval": "",
                     "intervalFactor": 1,
-                    "legendFormat": "{{`{{replicationcontroller}}`}}-unavail-pods",
+                    "legendFormat": "unavail-pods",
                     "refId": "C"
                 },
                 {
