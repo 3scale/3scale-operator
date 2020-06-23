@@ -41,6 +41,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.ProductionPodTemplateLabels = a.productionPodTemplateLabels(imageOpts.ApicastImage)
 
 	a.setResourceRequirementsOptions()
+	a.setNodeAffinityAndTolerationsOptions()
 	a.setReplicas()
 
 	err = a.apicastOptions.Validate()
@@ -58,6 +59,13 @@ func (a *ApicastOptionsProvider) setResourceRequirementsOptions() {
 		a.apicastOptions.ProductionResourceRequirements = v1.ResourceRequirements{}
 		a.apicastOptions.StagingResourceRequirements = v1.ResourceRequirements{}
 	}
+}
+
+func (a *ApicastOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	a.apicastOptions.StagingAffinity = a.apimanager.Spec.Apicast.StagingSpec.Affinity
+	a.apicastOptions.StagingTolerations = a.apimanager.Spec.Apicast.StagingSpec.Tolerations
+	a.apicastOptions.ProductionAffinity = a.apimanager.Spec.Apicast.ProductionSpec.Affinity
+	a.apicastOptions.ProductionTolerations = a.apimanager.Spec.Apicast.ProductionSpec.Tolerations
 }
 
 func (a *ApicastOptionsProvider) setReplicas() {

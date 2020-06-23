@@ -73,6 +73,13 @@ type SystemOptions struct {
 	WildcardDomain      string  `validate:"required"`
 	SmtpSecretOptions   SystemSMTPSecretOptions
 
+	AppAffinity        *v1.Affinity    `validate:"-"`
+	AppTolerations     []v1.Toleration `validate:"-"`
+	SidekiqAffinity    *v1.Affinity    `validate:"-"`
+	SidekiqTolerations []v1.Toleration `validate:"-"`
+	SphinxAffinity     *v1.Affinity    `validate:"-"`
+	SphinxTolerations  []v1.Toleration `validate:"-"`
+
 	CommonLabels             map[string]string `validate:"required"`
 	CommonAppLabels          map[string]string `validate:"required"`
 	AppPodTemplateLabels     map[string]string `validate:"required"`

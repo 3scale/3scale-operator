@@ -47,6 +47,7 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels(r.options.BackendImage)
 
 	r.setResourceRequirementsOptions()
+	r.setNodeAffinityAndTolerationsOptions()
 
 	r.setPersistentVolumeClaimOptions()
 
@@ -76,6 +77,13 @@ func (r *RedisOptionsProvider) setPersistentVolumeClaimOptions() {
 		r.apimanager.Spec.Backend.RedisPersistentVolumeClaimSpec != nil {
 		r.options.BackendRedisPVCStorageClass = r.apimanager.Spec.Backend.RedisPersistentVolumeClaimSpec.StorageClassName
 	}
+}
+
+func (r *RedisOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	r.options.BackendRedisAffinity = r.apimanager.Spec.Backend.RedisAffinity
+	r.options.BackendRedisTolerations = r.apimanager.Spec.Backend.RedisTolerations
+	r.options.SystemRedisAffinity = r.apimanager.Spec.System.RedisAffinity
+	r.options.SystemRedisTolerations = r.apimanager.Spec.System.RedisTolerations
 }
 
 func (r *RedisOptionsProvider) systemCommonLabels() map[string]string {

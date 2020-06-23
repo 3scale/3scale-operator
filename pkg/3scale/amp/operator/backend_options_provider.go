@@ -41,6 +41,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	}
 
 	o.setResourceRequirementsOptions()
+	o.setNodeAffinityAndTolerationsOptions()
 	o.setReplicas()
 
 	imageOpts, err := NewAmpImagesOptionsProvider(o.apimanager).GetAmpImagesOptions()
@@ -152,6 +153,15 @@ func (o *OperatorBackendOptionsProvider) setResourceRequirementsOptions() {
 		o.backendOptions.WorkerResourceRequirements = v1.ResourceRequirements{}
 		o.backendOptions.CronResourceRequirements = v1.ResourceRequirements{}
 	}
+}
+
+func (o *OperatorBackendOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	o.backendOptions.ListenerAffinity = o.apimanager.Spec.Backend.ListenerSpec.Affinity
+	o.backendOptions.ListenerTolerations = o.apimanager.Spec.Backend.ListenerSpec.Tolerations
+	o.backendOptions.WorkerAffinity = o.apimanager.Spec.Backend.WorkerSpec.Affinity
+	o.backendOptions.WorkerTolerations = o.apimanager.Spec.Backend.WorkerSpec.Tolerations
+	o.backendOptions.CronAffinity = o.apimanager.Spec.Backend.CronSpec.Affinity
+	o.backendOptions.CronTolerations = o.apimanager.Spec.Backend.CronSpec.Tolerations
 }
 
 func (o *OperatorBackendOptionsProvider) setReplicas() {

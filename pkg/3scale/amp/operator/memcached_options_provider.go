@@ -34,6 +34,7 @@ func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOp
 	m.memcachedOptions.PodTemplateLabels = m.podTemplateLabels(imageOpts.SystemMemcachedImage)
 
 	m.setResourceRequirementsOptions()
+	m.setNodeAffinityAndTolerationsOptions()
 
 	err = m.memcachedOptions.Validate()
 	if err != nil {
@@ -48,6 +49,11 @@ func (m *MemcachedOptionsProvider) setResourceRequirementsOptions() {
 	} else {
 		m.memcachedOptions.ResourceRequirements = v1.ResourceRequirements{}
 	}
+}
+
+func (m *MemcachedOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	m.memcachedOptions.Affinity = m.apimanager.Spec.System.MemcachedAffinity
+	m.memcachedOptions.Tolerations = m.apimanager.Spec.System.MemcachedTolerations
 }
 
 func (m *MemcachedOptionsProvider) deploymentLabels() map[string]string {

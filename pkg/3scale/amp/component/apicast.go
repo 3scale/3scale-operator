@@ -135,6 +135,8 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 				},
 				Spec: v1.PodSpec{
+					Affinity:           apicast.Options.StagingAffinity,
+					Tolerations:        apicast.Options.StagingTolerations,
 					ServiceAccountName: "amp",
 					Containers: []v1.Container{
 						v1.Container{
@@ -240,6 +242,8 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 				},
 				Spec: v1.PodSpec{
+					Affinity:           apicast.Options.ProductionAffinity,
+					Tolerations:        apicast.Options.ProductionTolerations,
 					ServiceAccountName: "amp",
 					InitContainers: []v1.Container{
 						v1.Container{

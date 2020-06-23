@@ -480,6 +480,18 @@ func (in *ApicastProductionSpec) DeepCopyInto(out *ApicastProductionSpec) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -552,6 +564,18 @@ func (in *ApicastStagingSpec) DeepCopyInto(out *ApicastStagingSpec) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -573,6 +597,18 @@ func (in *BackendCronSpec) DeepCopyInto(out *BackendCronSpec) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -593,6 +629,18 @@ func (in *BackendListenerSpec) DeepCopyInto(out *BackendListenerSpec) {
 		in, out := &in.Replicas, &out.Replicas
 		*out = new(int64)
 		**out = **in
+	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -646,6 +694,18 @@ func (in *BackendSpec) DeepCopyInto(out *BackendSpec) {
 		*out = new(BackendRedisPersistentVolumeClaimSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.RedisAffinity != nil {
+		in, out := &in.RedisAffinity, &out.RedisAffinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.RedisTolerations != nil {
+		in, out := &in.RedisTolerations, &out.RedisTolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.ListenerSpec != nil {
 		in, out := &in.ListenerSpec, &out.ListenerSpec
 		*out = new(BackendListenerSpec)
@@ -681,6 +741,18 @@ func (in *BackendWorkerSpec) DeepCopyInto(out *BackendWorkerSpec) {
 		in, out := &in.Replicas, &out.Replicas
 		*out = new(int64)
 		**out = **in
+	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -817,6 +889,18 @@ func (in *SystemAppSpec) DeepCopyInto(out *SystemAppSpec) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -921,6 +1005,18 @@ func (in *SystemMySQLSpec) DeepCopyInto(out *SystemMySQLSpec) {
 		*out = new(SystemMySQLPVCSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -963,6 +1059,18 @@ func (in *SystemPostgreSQLPVCSpec) DeepCopyInto(out *SystemPostgreSQLPVCSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -988,6 +1096,18 @@ func (in *SystemPostgreSQLSpec) DeepCopyInto(out *SystemPostgreSQLSpec) {
 		in, out := &in.PersistentVolumeClaimSpec, &out.PersistentVolumeClaimSpec
 		*out = new(SystemPostgreSQLPVCSpec)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -1048,6 +1168,18 @@ func (in *SystemSidekiqSpec) DeepCopyInto(out *SystemSidekiqSpec) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -1074,6 +1206,18 @@ func (in *SystemSpec) DeepCopyInto(out *SystemSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.MemcachedAffinity != nil {
+		in, out := &in.MemcachedAffinity, &out.MemcachedAffinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.MemcachedTolerations != nil {
+		in, out := &in.MemcachedTolerations, &out.MemcachedTolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.RedisImage != nil {
 		in, out := &in.RedisImage, &out.RedisImage
 		*out = new(string)
@@ -1083,6 +1227,18 @@ func (in *SystemSpec) DeepCopyInto(out *SystemSpec) {
 		in, out := &in.RedisPersistentVolumeClaimSpec, &out.RedisPersistentVolumeClaimSpec
 		*out = new(SystemRedisPersistentVolumeClaimSpec)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.RedisAffinity != nil {
+		in, out := &in.RedisAffinity, &out.RedisAffinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.RedisTolerations != nil {
+		in, out := &in.RedisTolerations, &out.RedisTolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	if in.FileStorageSpec != nil {
 		in, out := &in.FileStorageSpec, &out.FileStorageSpec
@@ -1104,6 +1260,11 @@ func (in *SystemSpec) DeepCopyInto(out *SystemSpec) {
 		*out = new(SystemSidekiqSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.SphinxSpec != nil {
+		in, out := &in.SphinxSpec, &out.SphinxSpec
+		*out = new(SystemSphinxSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1118,12 +1279,52 @@ func (in *SystemSpec) DeepCopy() *SystemSpec {
 }
 
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *SystemSphinxSpec) DeepCopyInto(out *SystemSphinxSpec) {
+	*out = *in
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	return
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SystemSphinxSpec.
+func (in *SystemSphinxSpec) DeepCopy() *SystemSphinxSpec {
+	if in == nil {
+		return nil
+	}
+	out := new(SystemSphinxSpec)
+	in.DeepCopyInto(out)
+	return out
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *ZyncAppSpec) DeepCopyInto(out *ZyncAppSpec) {
 	*out = *in
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
 		*out = new(int64)
 		**out = **in
+	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -1145,6 +1346,18 @@ func (in *ZyncQueSpec) DeepCopyInto(out *ZyncQueSpec) {
 		in, out := &in.Replicas, &out.Replicas
 		*out = new(int64)
 		**out = **in
+	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -1171,6 +1384,18 @@ func (in *ZyncSpec) DeepCopyInto(out *ZyncSpec) {
 		in, out := &in.PostgreSQLImage, &out.PostgreSQLImage
 		*out = new(string)
 		**out = **in
+	}
+	if in.DatabaseAffinity != nil {
+		in, out := &in.DatabaseAffinity, &out.DatabaseAffinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.DatabaseTolerations != nil {
+		in, out := &in.DatabaseTolerations, &out.DatabaseTolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	if in.AppSpec != nil {
 		in, out := &in.AppSpec, &out.AppSpec

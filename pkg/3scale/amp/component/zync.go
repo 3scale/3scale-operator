@@ -197,6 +197,8 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: zync.Options.ZyncPodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:           zync.Options.ZyncAffinity,
+					Tolerations:        zync.Options.ZyncTolerations,
 					ServiceAccountName: "amp",
 					InitContainers: []v1.Container{
 						v1.Container{
@@ -355,6 +357,8 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: zync.Options.ZyncQuePodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:                      zync.Options.ZyncQueAffinity,
+					Tolerations:                   zync.Options.ZyncQueTolerations,
 					ServiceAccountName:            "zync-que-sa",
 					RestartPolicy:                 v1.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &[]int64{30}[0],
@@ -431,6 +435,8 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: zync.Options.ZyncDatabasePodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:           zync.Options.ZyncDatabaseAffinity,
+					Tolerations:        zync.Options.ZyncDatabaseTolerations,
 					RestartPolicy:      v1.RestartPolicyAlways,
 					ServiceAccountName: "amp",
 					Containers: []v1.Container{

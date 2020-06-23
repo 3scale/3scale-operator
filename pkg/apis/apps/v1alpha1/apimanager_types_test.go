@@ -75,6 +75,7 @@ func TestSetDefaults(t *testing.T) {
 				SidekiqSpec: &SystemSidekiqSpec{
 					Replicas: &tmpDefaultReplicas,
 				},
+				SphinxSpec: &SystemSphinxSpec{},
 			},
 			Zync: &ZyncSpec{
 				AppSpec: &ZyncAppSpec{

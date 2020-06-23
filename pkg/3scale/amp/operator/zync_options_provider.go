@@ -43,6 +43,7 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.zyncOptions.DatabaseURL = component.DefaultZyncDatabaseURL(z.zyncOptions.DatabasePassword)
 
 	z.setResourceRequirementsOptions()
+	z.setNodeAffinityAndTolerationsOptions()
 	z.setReplicas()
 
 	imageOpts, err := NewAmpImagesOptionsProvider(z.apimanager).GetAmpImagesOptions()
@@ -113,6 +114,15 @@ func (z *ZyncOptionsProvider) setResourceRequirementsOptions() {
 		z.zyncOptions.QueContainerResourceRequirements = v1.ResourceRequirements{}
 		z.zyncOptions.DatabaseContainerResourceRequirements = v1.ResourceRequirements{}
 	}
+}
+
+func (z *ZyncOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	z.zyncOptions.ZyncAffinity = z.apimanager.Spec.Zync.AppSpec.Affinity
+	z.zyncOptions.ZyncTolerations = z.apimanager.Spec.Zync.AppSpec.Tolerations
+	z.zyncOptions.ZyncQueAffinity = z.apimanager.Spec.Zync.QueSpec.Affinity
+	z.zyncOptions.ZyncQueTolerations = z.apimanager.Spec.Zync.QueSpec.Tolerations
+	z.zyncOptions.ZyncDatabaseAffinity = z.apimanager.Spec.Zync.DatabaseAffinity
+	z.zyncOptions.ZyncDatabaseTolerations = z.apimanager.Spec.Zync.DatabaseTolerations
 }
 
 func (z *ZyncOptionsProvider) setReplicas() {

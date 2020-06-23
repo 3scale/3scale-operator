@@ -88,6 +88,8 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: backend.Options.WorkerPodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:    backend.Options.WorkerAffinity,
+					Tolerations: backend.Options.WorkerTolerations,
 					InitContainers: []v1.Container{
 						v1.Container{
 							Name:  "backend-redis-svc",
@@ -160,6 +162,8 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: backend.Options.CronPodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:    backend.Options.CronAffinity,
+					Tolerations: backend.Options.CronTolerations,
 					InitContainers: []v1.Container{
 						v1.Container{
 							Name:  "backend-redis-svc",
@@ -232,46 +236,49 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: backend.Options.ListenerPodTemplateLabels,
 				},
-				Spec: v1.PodSpec{Containers: []v1.Container{
-					v1.Container{
-						Name:  "backend-listener",
-						Image: "amp-backend:latest",
-						Args:  []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
-						Ports: []v1.ContainerPort{
-							v1.ContainerPort{HostPort: 0,
-								ContainerPort: 3000,
-								Protocol:      v1.ProtocolTCP},
-						},
-						Env:       backend.buildBackendListenerEnv(),
-						Resources: backend.Options.ListenerResourceRequirements,
-						LivenessProbe: &v1.Probe{
-							Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
-								Port: intstr.IntOrString{
-									Type:   intstr.Type(intstr.Int),
-									IntVal: 3000}},
+				Spec: v1.PodSpec{
+					Affinity:    backend.Options.ListenerAffinity,
+					Tolerations: backend.Options.ListenerTolerations,
+					Containers: []v1.Container{
+						v1.Container{
+							Name:  "backend-listener",
+							Image: "amp-backend:latest",
+							Args:  []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
+							Ports: []v1.ContainerPort{
+								v1.ContainerPort{HostPort: 0,
+									ContainerPort: 3000,
+									Protocol:      v1.ProtocolTCP},
 							},
-							InitialDelaySeconds: 30,
-							TimeoutSeconds:      0,
-							PeriodSeconds:       10,
-							SuccessThreshold:    0,
-							FailureThreshold:    0,
-						},
-						ReadinessProbe: &v1.Probe{
-							Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
-								Path: "/status",
-								Port: intstr.IntOrString{
-									Type:   intstr.Type(intstr.Int),
-									IntVal: 3000}},
+							Env:       backend.buildBackendListenerEnv(),
+							Resources: backend.Options.ListenerResourceRequirements,
+							LivenessProbe: &v1.Probe{
+								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+									Port: intstr.IntOrString{
+										Type:   intstr.Type(intstr.Int),
+										IntVal: 3000}},
+								},
+								InitialDelaySeconds: 30,
+								TimeoutSeconds:      0,
+								PeriodSeconds:       10,
+								SuccessThreshold:    0,
+								FailureThreshold:    0,
 							},
-							InitialDelaySeconds: 30,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       0,
-							SuccessThreshold:    0,
-							FailureThreshold:    0,
+							ReadinessProbe: &v1.Probe{
+								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+									Path: "/status",
+									Port: intstr.IntOrString{
+										Type:   intstr.Type(intstr.Int),
+										IntVal: 3000}},
+								},
+								InitialDelaySeconds: 30,
+								TimeoutSeconds:      5,
+								PeriodSeconds:       0,
+								SuccessThreshold:    0,
+								FailureThreshold:    0,
+							},
+							ImagePullPolicy: v1.PullIfNotPresent,
 						},
-						ImagePullPolicy: v1.PullIfNotPresent,
 					},
-				},
 					ServiceAccountName: "amp",
 				}},
 		},

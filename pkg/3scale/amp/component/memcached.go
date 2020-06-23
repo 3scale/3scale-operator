@@ -67,6 +67,8 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 					Labels: m.Options.PodTemplateLabels,
 				},
 				Spec: v1.PodSpec{
+					Affinity:           m.Options.Affinity,
+					Tolerations:        m.Options.Tolerations,
 					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Containers: []v1.Container{
 						v1.Container{

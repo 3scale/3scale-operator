@@ -20,6 +20,10 @@ type ApicastOptions struct {
 	CommonProductionLabels         map[string]string `validate:"required"`
 	StagingPodTemplateLabels       map[string]string `validate:"required"`
 	ProductionPodTemplateLabels    map[string]string `validate:"required"`
+	ProductionAffinity             *v1.Affinity      `validate:"-"`
+	ProductionTolerations          []v1.Toleration   `validate:"-"`
+	StagingAffinity                *v1.Affinity      `validate:"-"`
+	StagingTolerations             []v1.Toleration   `validate:"-"`
 }
 
 func NewApicastOptions() *ApicastOptions {

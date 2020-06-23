@@ -17,6 +17,8 @@ type SystemPostgreSQLOptions struct {
 	DatabaseName                  string                  `validate:"required"`
 	DatabaseURL                   string                  `validate:"required"`
 	PVCStorageClass               *string
+	Affinity                      *v1.Affinity      `validate:"-"`
+	Tolerations                   []v1.Toleration   `validate:"-"`
 	CommonLabels                  map[string]string `validate:"required"`
 	DeploymentLabels              map[string]string `validate:"required"`
 	PodTemplateLabels             map[string]string `validate:"required"`

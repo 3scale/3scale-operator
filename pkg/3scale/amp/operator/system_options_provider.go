@@ -59,6 +59,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	}
 
 	s.setResourceRequirementsOptions()
+	s.setNodeAffinityAndTolerationsOptions()
 	s.setFileStorageOptions()
 	s.setReplicas()
 
@@ -426,6 +427,15 @@ func (s *SystemOptionsProvider) setResourceRequirementsOptions() {
 		s.options.SidekiqContainerResourceRequirements = &v1.ResourceRequirements{}
 		s.options.SphinxContainerResourceRequirements = &v1.ResourceRequirements{}
 	}
+}
+
+func (s *SystemOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	s.options.AppAffinity = s.apimanager.Spec.System.AppSpec.Affinity
+	s.options.AppTolerations = s.apimanager.Spec.System.AppSpec.Tolerations
+	s.options.SidekiqAffinity = s.apimanager.Spec.System.SidekiqSpec.Affinity
+	s.options.SidekiqTolerations = s.apimanager.Spec.System.SidekiqSpec.Tolerations
+	s.options.SphinxAffinity = s.apimanager.Spec.System.SphinxSpec.Affinity
+	s.options.SphinxTolerations = s.apimanager.Spec.System.SphinxSpec.Tolerations
 }
 
 func (s *SystemOptionsProvider) setFileStorageOptions() {
