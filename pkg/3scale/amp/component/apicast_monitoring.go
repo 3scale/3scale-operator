@@ -160,7 +160,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Request on instance {{ $labels.instance }} is taking more than one second to process the requests",
 								"description": "High number of request taking more than a second to be processed",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(total_response_time_seconds_bucket{namespace='%s', pod=~'apicast-staging.*'}[1m])) - sum(rate(upstream_response_time_seconds_bucket{namespace='%s', pod=~'apicast-staging.*'}[1m])) > 1`, ns, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(total_response_time_seconds_bucket{namespace='%s', pod=~'apicast-production.*'}[1m])) - sum(rate(upstream_response_time_seconds_bucket{namespace='%s', pod=~'apicast-production.*'}[1m])) > 1`, ns, ns)),
 							For:  "2m",
 							Labels: map[string]string{
 								"severity": "warning",
