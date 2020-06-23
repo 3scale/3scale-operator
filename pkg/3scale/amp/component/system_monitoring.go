@@ -9,7 +9,6 @@ import (
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -78,7 +77,7 @@ func SystemGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 
 func SystemSidekiqPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
-		ObjectMeta: v12.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-sidekiq",
 			Labels: map[string]string{
 				"monitoring-key": common.MonitoringKey,
