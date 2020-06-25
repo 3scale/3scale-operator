@@ -37,6 +37,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	// Deleted existing and not desired
 	//
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncMethods", "notDesiredExistingKeys", notDesiredExistingKeys)
 	notDesiredMap := map[string]threescaleapi.MethodItem{}
 	for _, systemName := range notDesiredExistingKeys {
 		// key is expected to exist
@@ -52,6 +53,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	// Reconcile existing and changed
 	//
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncMethods", "matchedKeys", matchedKeys)
 	matchedMap := map[string]methodData{}
 	for _, systemName := range matchedKeys {
 		matchedMap[systemName] = methodData{
@@ -69,6 +71,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	// Create not existing and desired
 	//
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	t.logger.V(1).Info("syncMethods", "desiredNewKeys", desiredNewKeys)
 	desiredNewMap := map[string]capabilitiesv1beta1.Methodpec{}
 	for _, systemName := range desiredNewKeys {
 		// key is expected to exist
