@@ -156,8 +156,7 @@ type MappingRuleSpec struct {
 	HTTPMethod      string `json:"httpMethod"`
 	Pattern         string `json:"pattern"`
 	MetricMethodRef string `json:"metricMethodRef"`
-	// +optional
-	Increment *int `json:"increment,omitempty"`
+	Increment       int    `json:"increment"`
 	// +optional
 	Position *int `json:"position,omitempty"`
 }
