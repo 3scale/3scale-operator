@@ -203,17 +203,6 @@ func (backend *Backend) SetDefaults() bool {
 		updated = true
 	}
 
-	// Mapping rules defauult values for increment
-	if len(backend.Spec.MappingRules) > 0 {
-		for idx := range backend.Spec.MappingRules {
-			if backend.Spec.MappingRules[idx].Increment == nil {
-				defaultIncrement := 1
-				backend.Spec.MappingRules[idx].Increment = &defaultIncrement
-				updated = true
-			}
-		}
-	}
-
 	return updated
 }
 

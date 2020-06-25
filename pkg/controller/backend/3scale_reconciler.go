@@ -468,8 +468,8 @@ func (t *ThreescaleReconciler) reconcileMatchedMappingRules(matchedList []mappin
 		//
 		// Reconcile delta
 		//
-		if *data.spec.Increment != data.item.Delta {
-			params["delta"] = strconv.Itoa(*data.spec.Increment)
+		if data.spec.Increment != data.item.Delta {
+			params["delta"] = strconv.Itoa(data.spec.Increment)
 		}
 
 		if len(params) > 0 {
@@ -499,8 +499,7 @@ func (t *ThreescaleReconciler) createNewMappingRules(desiredList []capabilitiesv
 			"pattern":     spec.Pattern,
 			"http_method": spec.HTTPMethod,
 			"metric_id":   strconv.FormatInt(metricID, 10),
-			// Defaults are set in the spec, should not be nil
-			"delta": strconv.Itoa(*spec.Increment),
+			"delta":       strconv.Itoa(spec.Increment),
 		}
 
 		err = t.backendAPIEntity.CreateMappingRule(params)
