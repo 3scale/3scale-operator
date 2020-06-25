@@ -38,6 +38,7 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 	//
 
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncMetrics", "notDesiredExistingKeys", notDesiredExistingKeys)
 	notDesiredMap := map[string]threescaleapi.MetricItem{}
 	for _, systemName := range notDesiredExistingKeys {
 		// key is expected to exist
@@ -54,6 +55,7 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 	//
 
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncMetrics", "matchedKeys", matchedKeys)
 	matchedMap := map[string]metricData{}
 	for _, systemName := range matchedKeys {
 		matchedMap[systemName] = metricData{
@@ -72,6 +74,7 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 	//
 
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	t.logger.V(1).Info("syncMetrics", "desiredNewKeys", desiredNewKeys)
 	desiredNewMap := map[string]capabilitiesv1beta1.MetricSpec{}
 	for _, systemName := range desiredNewKeys {
 		// key is expected to exist

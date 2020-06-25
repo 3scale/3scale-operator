@@ -42,6 +42,7 @@ func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	//
 
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncMappingRules", "notDesiredExistingKeys", notDesiredExistingKeys)
 	notDesiredList := make([]threescaleapi.MappingRuleItem, 0, len(notDesiredExistingKeys))
 	for _, key := range notDesiredExistingKeys {
 		// key is expected to exist
@@ -58,6 +59,7 @@ func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	//
 
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncMappingRules", "matchedKeys", matchedKeys)
 	matchedList := make([]mappingRuleData, 0, len(matchedKeys))
 	for _, key := range matchedKeys {
 		matchedList = append(matchedList, mappingRuleData{
@@ -76,6 +78,7 @@ func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	//
 
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	t.logger.V(1).Info("syncMappingRules", "desiredNewKeys", desiredNewKeys)
 	desiredNewList := make([]capabilitiesv1beta1.MappingRuleSpec, 0, len(desiredNewKeys))
 	for _, key := range desiredNewKeys {
 		// key is expected to exist
@@ -124,8 +127,8 @@ func (t *ThreescaleReconciler) reconcileMatchedMappingRules(matchedList []mappin
 		//
 		// Reconcile delta
 		//
-		if *data.spec.Increment != data.item.Delta {
-			params["delta"] = strconv.Itoa(*data.spec.Increment)
+		if data.spec.Increment != data.item.Delta {
+			params["delta"] = strconv.Itoa(data.spec.Increment)
 		}
 
 		if len(params) > 0 {
@@ -155,8 +158,7 @@ func (t *ThreescaleReconciler) createNewMappingRules(desiredList []capabilitiesv
 			"pattern":     spec.Pattern,
 			"http_method": spec.HTTPMethod,
 			"metric_id":   strconv.FormatInt(metricID, 10),
-			// Defaults are set in the spec, should not be nil
-			"delta": strconv.Itoa(*spec.Increment),
+			"delta":       strconv.Itoa(spec.Increment),
 		}
 
 		err = t.productEntity.CreateMappingRule(params)
