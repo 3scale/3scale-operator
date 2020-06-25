@@ -56,14 +56,14 @@ func schema_pkg_apis_apps_v1alpha1_APIManager(ref common.ReferenceCallback) comm
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.APIManagerStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./pkg/apis/apps/v1alpha1.APIManagerSpec", "./pkg/apis/apps/v1alpha1.APIManagerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -341,32 +341,32 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref common.ReferenceCallback) 
 					},
 					"apicast": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ApicastSpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.ApicastSpec"),
 						},
 					},
 					"backend": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.BackendSpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.BackendSpec"),
 						},
 					},
 					"system": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.SystemSpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.SystemSpec"),
 						},
 					},
 					"zync": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ZyncSpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.ZyncSpec"),
 						},
 					},
 					"highAvailability": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.HighAvailabilitySpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.HighAvailabilitySpec"),
 						},
 					},
 					"podDisruptionBudget": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.PodDisruptionBudgetSpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.PodDisruptionBudgetSpec"),
 						},
 					},
 				},
@@ -374,7 +374,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ApicastSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.BackendSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.HighAvailabilitySpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.PodDisruptionBudgetSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.SystemSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ZyncSpec"},
+			"./pkg/apis/apps/v1alpha1.ApicastSpec", "./pkg/apis/apps/v1alpha1.BackendSpec", "./pkg/apis/apps/v1alpha1.HighAvailabilitySpec", "./pkg/apis/apps/v1alpha1.PodDisruptionBudgetSpec", "./pkg/apis/apps/v1alpha1.SystemSpec", "./pkg/apis/apps/v1alpha1.ZyncSpec"},
 	}
 }
 
@@ -391,7 +391,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref common.ReferenceCallback
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerCondition"),
+										Ref: ref("./pkg/apis/apps/v1alpha1.APIManagerCondition"),
 									},
 								},
 							},
@@ -408,6 +408,6 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerCondition", "github.com/RHsyseng/operator-utils/pkg/olm.DeploymentStatus"},
+			"./pkg/apis/apps/v1alpha1.APIManagerCondition", "github.com/RHsyseng/operator-utils/pkg/olm.DeploymentStatus"},
 	}
 }
