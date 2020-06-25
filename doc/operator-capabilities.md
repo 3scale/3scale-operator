@@ -182,9 +182,11 @@ spec:
   mappingRules:
     - httpMethod: GET
       pattern: "/pets"
+      increment: 1
       metricMethodRef: hits
     - httpMethod: GET
       pattern: "/pets/id"
+      increment: 1
       metricMethodRef: hits
   metrics:
     hits:
@@ -195,7 +197,7 @@ spec:
 
 Check on the fields of **Backend** custom resource and possible values in the [Backend CRD Reference](backend-reference.md) documentation.
 
-* **NOTE 1**: `httpMethod`, `Pattern` and `metricMethodRef` fields are required.
+* **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
 * **NOTE 2**: `metricMethodRef` holds a reference to existing metric or method map key name `system_name`. In the example, `hits`.
 
 ### Backend custom resource status field
