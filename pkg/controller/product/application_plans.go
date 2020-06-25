@@ -32,6 +32,7 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 	//
 
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncApplicationPlans", "notDesiredExistingKeys", notDesiredExistingKeys)
 	for _, systemName := range notDesiredExistingKeys {
 		// key is expected to exist
 		// notDesiredExistingKeys is a subset of the existingMap key set
@@ -45,6 +46,7 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 	// Reconcile existing
 	//
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncApplicationPlans", "matchedKeys", matchedKeys)
 	for _, systemName := range matchedKeys {
 		// interface to remote entity
 		planEntity := helper.NewApplicationPlanEntity(t.productEntity.ID(), existingMap[systemName], t.threescaleAPIClient, t.logger)
@@ -62,6 +64,7 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 	//
 
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	t.logger.V(1).Info("syncApplicationPlans", "desiredNewKeys", desiredNewKeys)
 	for _, systemName := range desiredNewKeys {
 		// key is expected to exist
 		// desiredNewKeys is a subset of the Spec.ApplicationPlans map key set

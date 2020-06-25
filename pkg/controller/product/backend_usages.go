@@ -47,6 +47,7 @@ func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	// Deleted existing and not desired
 	//
 	notDesiredExistingKeys := helper.ArrayStringDifference(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncBackendUsage", "notDesiredExistingKeys", notDesiredExistingKeys)
 	notDesiredList := make([]threescaleapi.BackendAPIUsageItem, 0, len(notDesiredExistingKeys))
 	for _, systemName := range notDesiredExistingKeys {
 		// key is expected to exist
@@ -62,6 +63,7 @@ func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	// Reconcile existing and changed
 	//
 	matchedKeys := helper.ArrayStringIntersection(existingKeys, desiredKeys)
+	t.logger.V(1).Info("syncBackendUsage", "matchedKeys", matchedKeys)
 	matchedMap := map[string]backendUsageData{}
 	for _, systemName := range matchedKeys {
 		matchedMap[systemName] = backendUsageData{
@@ -79,6 +81,7 @@ func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	// Spec validation makes sure all backend resources referenced by backend usage
 	// exist and are sync'ed. Thus, they should exist in the backend entity map
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
+	t.logger.V(1).Info("syncBackendUsage", "desiredNewKeys", desiredNewKeys)
 	desiredNewList := make([]newBackendUsageData, 0, len(desiredNewKeys))
 	for _, backendSystemName := range desiredNewKeys {
 		// desiredNewKeys is a set of backend resources systemName's

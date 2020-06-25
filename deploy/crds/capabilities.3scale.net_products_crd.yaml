@@ -396,6 +396,7 @@ spec:
                     type: integer
                 required:
                 - httpMethod
+                - increment
                 - metricMethodRef
                 - pattern
                 type: object
