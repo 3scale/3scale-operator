@@ -1,0 +1,25 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  metrics:
+    hits:
+      description: Number of API hits
+      friendlyName: Hits
+      unit: "hit"
+  applicationPlans:
+    plan01:
+      name: "My Plan 01"
+      limits:
+        - period: month
+          value: 300
+          metricMethodRef:
+            systemName: hits
+            backend: backendA
+        - period: week
+          value: 100
+          metricMethodRef:
+            systemName: hits
+

@@ -1,0 +1,10 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  deployment:
+    apicastSelfManaged:
+      stagingPublicBaseURL: "https://staging.api.example.com"
+      productionPublicBaseURL: "https://production.api.example.com"
