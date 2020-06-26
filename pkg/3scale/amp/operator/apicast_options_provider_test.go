@@ -114,7 +114,7 @@ func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 }
 
 func defaultApicastOptions() *component.ApicastOptions {
-	tmpBool := false
+	tmpBool := true
 
 	return &component.ApicastOptions{
 		ManagementAPI:                  apicastManagementAPI,

@@ -155,6 +155,7 @@ func basicApimanagerTestBackendOptions() *appsv1alpha1.APIManager {
 }
 
 func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOptions {
+	trueValue := true
 	return &component.BackendOptions{
 		ServiceEndpoint:              component.DefaultBackendServiceEndpoint(),
 		RouteEndpoint:                fmt.Sprintf("https://backend-%s.%s", tenantName, wildcardDomain),
@@ -184,6 +185,8 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 		CronPodTemplateLabels:        testBackendCronPodLabels(),
 		ListenerMonitoringLabels:     testBackendMonitoringListenerLabels(),
 		WorkerMonitoringLabels:       testBackendMonitoringWorkerLabels(),
+		WorkerMetrics:                &trueValue,
+		ListenerMetrics:              &trueValue,
 	}
 }
 
