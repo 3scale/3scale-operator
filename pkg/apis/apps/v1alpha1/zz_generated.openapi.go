@@ -11,15 +11,15 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManager":              schema_pkg_apis_apps_v1alpha1_APIManager(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackup":        schema_pkg_apis_apps_v1alpha1_APIManagerBackup(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupSpec":    schema_pkg_apis_apps_v1alpha1_APIManagerBackupSpec(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupStatus":  schema_pkg_apis_apps_v1alpha1_APIManagerBackupStatus(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestore":       schema_pkg_apis_apps_v1alpha1_APIManagerRestore(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSpec":   schema_pkg_apis_apps_v1alpha1_APIManagerRestoreSpec(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreStatus": schema_pkg_apis_apps_v1alpha1_APIManagerRestoreStatus(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec":          schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref),
-		"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus":        schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref),
+		"./pkg/apis/apps/v1alpha1.APIManager":              schema_pkg_apis_apps_v1alpha1_APIManager(ref),
+		"./pkg/apis/apps/v1alpha1.APIManagerBackup":        schema_pkg_apis_apps_v1alpha1_APIManagerBackup(ref),
+		"./pkg/apis/apps/v1alpha1.APIManagerBackupSpec":    schema_pkg_apis_apps_v1alpha1_APIManagerBackupSpec(ref),
+		"./pkg/apis/apps/v1alpha1.APIManagerBackupStatus":  schema_pkg_apis_apps_v1alpha1_APIManagerBackupStatus(ref),
+		"./pkg/apis/apps/v1alpha1.APIManagerRestore":       schema_pkg_apis_apps_v1alpha1_APIManagerRestore(ref),
+		"./pkg/apis/apps/v1alpha1.APIManagerRestoreSpec":   schema_pkg_apis_apps_v1alpha1_APIManagerRestoreSpec(ref),
+		"./pkg/apis/apps/v1alpha1.APIManagerRestoreStatus": schema_pkg_apis_apps_v1alpha1_APIManagerRestoreStatus(ref),
+		"./pkg/apis/apps/v1alpha1.APIManagerSpec":          schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref),
+		"./pkg/apis/apps/v1alpha1.APIManagerStatus":        schema_pkg_apis_apps_v1alpha1_APIManagerStatus(ref),
 	}
 }
 
@@ -51,7 +51,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManager(ref common.ReferenceCallback) comm
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.APIManagerSpec"),
 						},
 					},
 					"status": {
@@ -95,19 +95,19 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackup(ref common.ReferenceCallback
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupSpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.APIManagerBackupSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupStatus"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.APIManagerBackupStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./pkg/apis/apps/v1alpha1.APIManagerBackupSpec", "./pkg/apis/apps/v1alpha1.APIManagerBackupStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -121,7 +121,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackupSpec(ref common.ReferenceCall
 					"backupDestination": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Backup data destination configuration",
-							Ref:         ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupDestination"),
+							Ref:         ref("./pkg/apis/apps/v1alpha1.APIManagerBackupDestination"),
 						},
 					},
 				},
@@ -129,7 +129,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerBackupSpec(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerBackupDestination"},
+			"./pkg/apis/apps/v1alpha1.APIManagerBackupDestination"},
 	}
 }
 
@@ -216,19 +216,19 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerRestore(ref common.ReferenceCallbac
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSpec"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.APIManagerRestoreSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreStatus"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.APIManagerRestoreStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./pkg/apis/apps/v1alpha1.APIManagerRestoreSpec", "./pkg/apis/apps/v1alpha1.APIManagerRestoreStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -242,7 +242,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerRestoreSpec(ref common.ReferenceCal
 					"restoreSource": {
 						SchemaProps: spec.SchemaProps{
 							Description: "INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
-							Ref:         ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSource"),
+							Ref:         ref("./pkg/apis/apps/v1alpha1.APIManagerRestoreSource"),
 						},
 					},
 				},
@@ -250,7 +250,7 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerRestoreSpec(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerRestoreSource"},
+			"./pkg/apis/apps/v1alpha1.APIManagerRestoreSource"},
 	}
 }
 
