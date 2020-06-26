@@ -12,6 +12,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	ApicastStagingName    = "apicast-staging"
+	ApicastProductionName = "apicast-production"
+)
+
 type Apicast struct {
 	Options *ApicastOptions
 }
@@ -27,7 +32,7 @@ func (apicast *Apicast) StagingService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "apicast-staging",
+			Name:   ApicastStagingName,
 			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: v1.ServiceSpec{
@@ -45,7 +50,7 @@ func (apicast *Apicast) StagingService() *v1.Service {
 					TargetPort: intstr.FromInt(8090),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "apicast-staging"},
+			Selector: map[string]string{"deploymentConfig": ApicastStagingName},
 		},
 	}
 }
@@ -57,7 +62,7 @@ func (apicast *Apicast) ProductionService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "apicast-production",
+			Name:   ApicastProductionName,
 			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: v1.ServiceSpec{
@@ -75,7 +80,7 @@ func (apicast *Apicast) ProductionService() *v1.Service {
 					TargetPort: intstr.FromInt(8090),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "apicast-production"},
+			Selector: map[string]string{"deploymentConfig": ApicastProductionName},
 		},
 	}
 }
@@ -84,13 +89,13 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "apicast-staging",
+			Name:   ApicastStagingName,
 			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: apicast.Options.StagingReplicas,
 			Selector: map[string]string{
-				"deploymentConfig": "apicast-staging",
+				"deploymentConfig": ApicastStagingName,
 			},
 			Strategy: appsv1.DeploymentStrategy{
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
@@ -117,7 +122,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
-							"apicast-staging",
+							ApicastStagingName,
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
@@ -156,7 +161,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 							Env:             apicast.buildApicastStagingEnv(),
 							Image:           "amp-apicast:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
-							Name:            "apicast-staging",
+							Name:            ApicastStagingName,
 							Resources:       apicast.Options.StagingResourceRequirements,
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
@@ -188,13 +193,13 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "apicast-production",
+			Name:   ApicastProductionName,
 			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: apicast.Options.ProductionReplicas,
 			Selector: map[string]string{
-				"deploymentConfig": "apicast-production",
+				"deploymentConfig": ApicastProductionName,
 			},
 			Strategy: appsv1.DeploymentStrategy{
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
@@ -222,7 +227,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 						Automatic: true,
 						ContainerNames: []string{
 							"system-master-svc",
-							"apicast-production",
+							ApicastProductionName,
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
@@ -274,7 +279,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 							Env:             apicast.buildApicastProductionEnv(),
 							Image:           "amp-apicast:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
-							Name:            "apicast-production",
+							Name:            ApicastProductionName,
 							Resources:       apicast.Options.ProductionResourceRequirements,
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
@@ -365,12 +370,12 @@ func (apicast *Apicast) StagingPodDisruptionBudget() *v1beta1.PodDisruptionBudge
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "apicast-staging",
+			Name:   ApicastStagingName,
 			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "apicast-staging"},
+				MatchLabels: map[string]string{"deploymentConfig": ApicastStagingName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -384,12 +389,12 @@ func (apicast *Apicast) ProductionPodDisruptionBudget() *v1beta1.PodDisruptionBu
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "apicast-production",
+			Name:   ApicastProductionName,
 			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "apicast-production"},
+				MatchLabels: map[string]string{"deploymentConfig": ApicastProductionName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},

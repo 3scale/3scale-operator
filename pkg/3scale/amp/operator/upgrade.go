@@ -36,6 +36,9 @@ func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1alpha
 }
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
+	// TODO Upgrade should be grouped by component and not by feature.
+	// Otherwise each component may get multiple update requests.
+
 	res, err := u.upgradeImages()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading images: %w", err)
@@ -56,6 +59,14 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 	res, err = u.upgradePodTemplateLabels()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading pod template labels: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
+	}
+
+	res, err = u.upgradeMonitoringSettings()
+	if err != nil {
+		return res, fmt.Errorf("Upgrading monitoring settings: %w", err)
 	}
 	if res.Requeue {
 		return res, nil
@@ -725,6 +736,162 @@ func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentCo
 	}
 
 	return updated, nil
+}
+
+func (u *UpgradeApiManager) upgradeMonitoringSettings() (reconcile.Result, error) {
+	updated := false
+
+	updatedTmp, err := u.ensureApicastStagingMonitoringSettings()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
+	updatedTmp, err = u.ensureApicastProductionMonitoringSettings()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
+	updatedTmp, err = u.ensureBackendWorkerMonitoringSettings()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
+	updatedTmp, err = u.ensureBackendListenerMonitoringSettings()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
+	return reconcile.Result{Requeue: updated}, nil
+}
+
+func (u *UpgradeApiManager) ensureApicastStagingMonitoringSettings() (bool, error) {
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: component.ApicastStagingName, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	if len(existing.Spec.Template.Spec.Containers) != 1 {
+		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
+			component.ApicastStagingName, len(existing.Spec.Template.Spec.Containers))
+	}
+
+	update := false
+	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, "APICAST_EXTENDED_METRICS"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, helper.EnvVarFromValue("APICAST_EXTENDED_METRICS", "true"))
+		update = true
+	}
+
+	if update {
+		u.Logger().Info(fmt.Sprintf("Enabling metrics to DC %s", component.ApicastStagingName))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return update, nil
+}
+
+func (u *UpgradeApiManager) ensureApicastProductionMonitoringSettings() (bool, error) {
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: component.ApicastProductionName, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	if len(existing.Spec.Template.Spec.Containers) != 1 {
+		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
+			component.ApicastProductionName, len(existing.Spec.Template.Spec.Containers))
+	}
+
+	update := false
+	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, "APICAST_EXTENDED_METRICS"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, helper.EnvVarFromValue("APICAST_EXTENDED_METRICS", "true"))
+		update = true
+	}
+
+	if update {
+		u.Logger().Info(fmt.Sprintf("Enabling metrics to DC %s", component.ApicastProductionName))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return update, nil
+}
+
+func (u *UpgradeApiManager) ensureBackendWorkerMonitoringSettings() (bool, error) {
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: component.BackendWorkerName, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	if len(existing.Spec.Template.Spec.Containers) != 1 {
+		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
+			component.BackendWorkerName, len(existing.Spec.Template.Spec.Containers))
+	}
+
+	update := false
+	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, "CONFIG_WORKER_PROMETHEUS_METRICS_PORT"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, helper.EnvVarFromValue("CONFIG_WORKER_PROMETHEUS_METRICS_PORT", component.BackendWorkerMetricsPortStr))
+		update = true
+	}
+
+	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, "CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, helper.EnvVarFromValue("CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED", "true"))
+		update = true
+	}
+
+	if update {
+		u.Logger().Info(fmt.Sprintf("Enabling metrics to DC %s", component.BackendWorkerName))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return update, nil
+}
+
+func (u *UpgradeApiManager) ensureBackendListenerMonitoringSettings() (bool, error) {
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: component.BackendListenerName, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	if len(existing.Spec.Template.Spec.Containers) != 1 {
+		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
+			component.BackendListenerName, len(existing.Spec.Template.Spec.Containers))
+	}
+
+	update := false
+	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, "CONFIG_LISTENER_PROMETHEUS_METRICS_PORT"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, helper.EnvVarFromValue("CONFIG_LISTENER_PROMETHEUS_METRICS_PORT", component.BackendListenerMetricsPortStr))
+		update = true
+	}
+
+	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, "CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, helper.EnvVarFromValue("CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED", "true"))
+		update = true
+	}
+
+	if update {
+		u.Logger().Info(fmt.Sprintf("Enabling metrics to DC %s", component.BackendListenerName))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return update, nil
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {

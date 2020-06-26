@@ -68,3 +68,13 @@ func EnvVarFromSecretOptional(envVarName string, secretName, secretKey string) v
 		},
 	}
 }
+
+func FindEnvVar(vars []v1.EnvVar, name string) (v1.EnvVar, bool) {
+	for idx := range vars {
+		if vars[idx].Name == name {
+			return vars[idx], true
+		}
+	}
+
+	return v1.EnvVar{}, false
+}
