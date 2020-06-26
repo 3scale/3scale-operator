@@ -114,14 +114,12 @@ func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 }
 
 func defaultApicastOptions() *component.ApicastOptions {
-	tmpBool := true
-
 	return &component.ApicastOptions{
 		ManagementAPI:                  apicastManagementAPI,
 		OpenSSLVerify:                  strconv.FormatBool(openSSLVerify),
 		ResponseCodes:                  strconv.FormatBool(responseCodes),
 		ImageTag:                       product.ThreescaleRelease,
-		ExtendedMetrics:                &tmpBool,
+		ExtendedMetrics:                true,
 		ProductionResourceRequirements: component.DefaultProductionResourceRequirements(),
 		StagingResourceRequirements:    component.DefaultStagingResourceRequirements(),
 		ProductionReplicas:             int32(productionReplicaCount),

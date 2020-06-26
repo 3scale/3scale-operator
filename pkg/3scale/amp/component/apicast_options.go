@@ -11,7 +11,7 @@ type ApicastOptions struct {
 	OpenSSLVerify                  string `validate:"required"`
 	ResponseCodes                  string `validate:"required"`
 	ImageTag                       string `validate:"required"`
-	ExtendedMetrics                *bool
+	ExtendedMetrics                bool
 	ProductionResourceRequirements v1.ResourceRequirements `validate:"-"`
 	StagingResourceRequirements    v1.ResourceRequirements `validate:"-"`
 	ProductionReplicas             int32
