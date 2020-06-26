@@ -320,8 +320,8 @@ func (apicast *Apicast) buildApicastCommonEnv() []v1.EnvVar {
 		helper.EnvVarFromConfigMap("APICAST_RESPONSE_CODES", "apicast-environment", "APICAST_RESPONSE_CODES"),
 	}
 
-	if apicast.Options.ExtendedMetrics != nil {
-		result = append(result, helper.EnvVarFromValue("APICAST_EXTENDED_METRICS", fmt.Sprintf("%t", *apicast.Options.ExtendedMetrics)))
+	if apicast.Options.ExtendedMetrics {
+		result = append(result, helper.EnvVarFromValue("APICAST_EXTENDED_METRICS", "true"))
 	}
 
 	return result

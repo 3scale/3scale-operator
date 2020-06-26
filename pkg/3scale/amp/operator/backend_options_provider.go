@@ -59,9 +59,8 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.backendOptions.ListenerMonitoringLabels = o.listenerMonitoringLabels()
 	o.backendOptions.WorkerMonitoringLabels = o.workerMonitoringLabels()
 
-	boolTmp := true
-	o.backendOptions.WorkerMetrics = &boolTmp
-	o.backendOptions.ListenerMetrics = &boolTmp
+	o.backendOptions.WorkerMetrics = true
+	o.backendOptions.ListenerMetrics = true
 
 	err = o.backendOptions.Validate()
 	if err != nil {

@@ -42,8 +42,8 @@ type BackendOptions struct {
 	CronPodTemplateLabels        map[string]string `validate:"required"`
 	ListenerMonitoringLabels     map[string]string `validate:"required"`
 	WorkerMonitoringLabels       map[string]string `validate:"required"`
-	WorkerMetrics                *bool
-	ListenerMetrics              *bool
+	WorkerMetrics                bool
+	ListenerMetrics              bool
 }
 
 func NewBackendOptions() *BackendOptions {

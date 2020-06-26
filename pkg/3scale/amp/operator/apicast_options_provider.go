@@ -35,8 +35,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.ImageTag = product.ThreescaleRelease
 	a.apicastOptions.OpenSSLVerify = strconv.FormatBool(*a.apimanager.Spec.Apicast.OpenSSLVerify)
 	a.apicastOptions.ResponseCodes = strconv.FormatBool(*a.apimanager.Spec.Apicast.IncludeResponseCodes)
-	boolTmp := true
-	a.apicastOptions.ExtendedMetrics = &boolTmp
+	a.apicastOptions.ExtendedMetrics = true
 	a.apicastOptions.CommonLabels = a.commonLabels()
 	a.apicastOptions.CommonStagingLabels = a.commonStagingLabels()
 	a.apicastOptions.CommonProductionLabels = a.commonProductionLabels()
