@@ -405,9 +405,15 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 	result = append(result,
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK", "system-events-hook", "URL"),
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
-		v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_PORT", Value: BackendWorkerMetricsPortStr},
-		v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
 	)
+
+	if backend.Options.WorkerMetrics != nil {
+		result = append(result,
+			v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_PORT", Value: BackendWorkerMetricsPortStr},
+			v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
+		)
+	}
+
 	return result
 }
 
@@ -424,9 +430,14 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 		helper.EnvVarFromValue("PUMA_WORKERS", "16"),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_USER", BackendSecretInternalApiSecretName, BackendSecretInternalApiUsernameFieldName),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
-		v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_PORT", Value: BackendListenerMetricsPortStr},
-		v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
 	)
+
+	if backend.Options.ListenerMetrics != nil {
+		result = append(result,
+			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_PORT", Value: BackendListenerMetricsPortStr},
+			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
+		)
+	}
 	return result
 }
 
