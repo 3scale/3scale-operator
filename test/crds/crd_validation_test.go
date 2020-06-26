@@ -27,11 +27,11 @@ const (
 func TestSampleCustomResources(t *testing.T) {
 	root := "../../deploy/crds"
 	crdCrMap := map[string]string{
-		"apps.3scale.net_apimanagers_crd.yaml":          "apps.3scale.net_v1alpha1_apimanager_cr",
-		"apps.3scale.net_apimanagerbackups_crd.yaml":    "apps.3scale.net_v1alpha1_apimanagerbackup_cr.yaml",
-		"apps.3scale.net_apimanagerrestores_crd.yaml":   "apps.3scale.net_v1alpha1_apimanagerrestore_cr.yaml",
-		"capabilities.3scale.net_tenants_crd.yaml":      "capabilities.3scale.net_v1alpha1_tenant_cr",
-		"capabilities.3scale.net_backends_crd.yaml": "capabilities.3scale.net_v1beta1_backend_cr",
+		"apps.3scale.net_apimanagers_crd.yaml":        "apps.3scale.net_v1alpha1_apimanager_cr",
+		"apps.3scale.net_apimanagerbackups_crd.yaml":  "apps.3scale.net_v1alpha1_apimanagerbackup_cr.yaml",
+		"apps.3scale.net_apimanagerrestores_crd.yaml": "apps.3scale.net_v1alpha1_apimanagerrestore_cr.yaml",
+		"capabilities.3scale.net_tenants_crd.yaml":    "capabilities.3scale.net_v1alpha1_tenant_cr",
+		"capabilities.3scale.net_backends_crd.yaml":   "capabilities.3scale.net_v1beta1_backend_cr",
 	}
 	for crd, prefix := range crdCrMap {
 		validateCustomResources(t, root, crd, prefix)
@@ -62,10 +62,10 @@ func validateCustomResources(t *testing.T, root string, crd string, prefix strin
 func TestCompleteCRD(t *testing.T) {
 	root := "../../deploy/crds"
 	crdStructMap := map[string]interface{}{
-		"apps.3scale.net_apimanagers_crd.yaml":          &apps.APIManager{},
-		"apps.3scale.net_apimanagerbackups_crd.yaml":    &apps.APIManagerBackup{},
-		"apps.3scale.net_apimanagerrestores_crd.yaml":   &apps.APIManagerRestore{},
-		"capabilities.3scale.net_tenants_crd.yaml":      &capabilities.Tenant{},
+		"apps.3scale.net_apimanagers_crd.yaml":        &apps.APIManager{},
+		"apps.3scale.net_apimanagerbackups_crd.yaml":  &apps.APIManagerBackup{},
+		"apps.3scale.net_apimanagerrestores_crd.yaml": &apps.APIManagerRestore{},
+		"capabilities.3scale.net_tenants_crd.yaml":    &capabilities.Tenant{},
 	}
 
 	pathOmissions := []string{
