@@ -33,7 +33,7 @@ func TestSampleCustomResources(t *testing.T) {
 		"apps.3scale.net_apimanagerrestores_crd.yaml": "apps.3scale.net_v1alpha1_apimanagerrestore_cr.yaml",
 		"capabilities.3scale.net_tenants_crd.yaml":    "capabilities.3scale.net_v1alpha1_tenant_cr",
 		"capabilities.3scale.net_backends_crd.yaml":   "capabilities.3scale.net_v1beta1_backend_cr",
-                "capabilities.3scale.net_products_crd.yaml": "capabilities.3scale.net_v1beta1_product_cr",
+		"capabilities.3scale.net_products_crd.yaml":   "capabilities.3scale.net_v1beta1_product_cr",
 	}
 	for crd, prefix := range crdCrMap {
 		validateCustomResources(t, root, crd, prefix)
@@ -69,9 +69,9 @@ func TestCompleteCRD(t *testing.T) {
 		"apps.3scale.net_apimanagers_crd.yaml":        &apps.APIManager{},
 		"apps.3scale.net_apimanagerbackups_crd.yaml":  &apps.APIManagerBackup{},
 		"apps.3scale.net_apimanagerrestores_crd.yaml": &apps.APIManagerRestore{},
-		"capabilities.3scale.net_tenants_crd.yaml":    &capabilities.Tenant{},
-                "capabilities.3scale.net_backends_crd.yaml": &capabilitiesv1beta1.Backend{},
-		"capabilities.3scale.net_products_crd.yaml": &capabilitiesv1beta1.Product{},
+		"capabilities.3scale.net_tenants_crd.yaml":    &capabilitiesv1alpha1.Tenant{},
+		"capabilities.3scale.net_backends_crd.yaml":   &capabilitiesv1beta1.Backend{},
+		"capabilities.3scale.net_products_crd.yaml":   &capabilitiesv1beta1.Product{},
 	}
 
 	pathOmissions := []string{
@@ -86,10 +86,10 @@ func TestCompleteCRD(t *testing.T) {
 			schema := getSchema(subT, fmt.Sprintf("%s/%s", root, crd))
 			missingEntries := schema.GetMissingEntries(obj)
 			for _, missing := range missingEntries {
-                               
-			if missingFieldPathInPathOmissions(missing.Path, pathOmissions) {
-				continue
-			}
+
+				if missingFieldPathInPathOmissions(missing.Path, pathOmissions) {
+					continue
+				}
 				assert.Fail(subT, "Discrepancy between CRD and Struct", "CRD: %s: Missing or incorrect schema validation at %s, expected type %s", crd, missing.Path, missing.Type)
 			}
 		})
