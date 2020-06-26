@@ -54,7 +54,7 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
-	err := imagev1.AddToScheme(s)
+	err = imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}

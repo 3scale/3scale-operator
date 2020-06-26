@@ -38,8 +38,8 @@ type ZyncOptions struct {
 	ZyncQuePodTemplateLabels      map[string]string `validate:"required"`
 	ZyncDatabasePodTemplateLabels map[string]string `validate:"required"`
 
-        ZyncMonitoringLabels                  map[string]string `validate:"required"`
-	ZyncQueMonitoringLabels               map[string]string `validate:"required"`
+	ZyncMonitoringLabels    map[string]string `validate:"required"`
+	ZyncQueMonitoringLabels map[string]string `validate:"required"`
 }
 
 func NewZyncOptions() *ZyncOptions {
