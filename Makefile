@@ -23,7 +23,7 @@ help: Makefile
 
 ## vendor: Populate vendor directory
 vendor:
-	@GO111MODULE=on $(GO) mod vendor
+	$(GO) mod vendor
 
 IMAGE ?= quay.io/3scale/3scale-operator
 SOURCE_VERSION ?= master
@@ -38,6 +38,16 @@ TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
 download:
 	@echo Download go.mod dependencies
 	@go mod download
+
+## install-tools: Installing tools from tools.go
+install-tools: download
+	@echo Installing tools from tools.go
+	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+
+## assets: Generate embedded assets
+assets: install-tools
+	@echo Generate Go embedded assets files by processing source
+	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
 ## build: Build operator
 build:
@@ -111,7 +121,7 @@ endif
 	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier verify --ui_validate_io 3scale-operator-master/
 
 ## licenses.xml: Generate licenses.xml file
-licenses.xml:
+licenses.xml: $(DEPENDENCY_DECISION_FILE)
 ifndef LICENSEFINDERBINARY
 	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
 endif

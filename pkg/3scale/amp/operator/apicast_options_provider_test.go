@@ -89,6 +89,25 @@ func testApicastProductionTolerations() []v1.Toleration {
 	return getTestTolerations("apicast-production")
 }
 
+func testApicastStagingMonitoringLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "apicast",
+		"threescale_component_element": "staging",
+		"monitoring-key":               "middleware",
+	}
+}
+
+func testApicastProductionMonitoringLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "apicast",
+		"threescale_component_element": "production",
+		"monitoring-key":               "middleware",
+	}
+}
+
+
 func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 	tmpApicastManagementAPI := apicastManagementAPI
 	tmpOpenSSLVerify := openSSLVerify
@@ -117,6 +136,7 @@ func defaultApicastOptions() *component.ApicastOptions {
 		OpenSSLVerify:                  strconv.FormatBool(openSSLVerify),
 		ResponseCodes:                  strconv.FormatBool(responseCodes),
 		ImageTag:                       product.ThreescaleRelease,
+		ExtendedMetrics:                true,
 		ProductionResourceRequirements: component.DefaultProductionResourceRequirements(),
 		StagingResourceRequirements:    component.DefaultStagingResourceRequirements(),
 		ProductionReplicas:             int32(productionReplicaCount),
@@ -126,6 +146,8 @@ func defaultApicastOptions() *component.ApicastOptions {
 		CommonProductionLabels:         testApicastProductionLabels(),
 		StagingPodTemplateLabels:       testApicastStagingPodLabels(),
 		ProductionPodTemplateLabels:    testApicastProductionPodLabels(),
+		StagingMonitoringLabels:        testApicastStagingMonitoringLabels(),
+		ProductionMonitoringLabels:     testApicastProductionMonitoringLabels(),
 	}
 }
 

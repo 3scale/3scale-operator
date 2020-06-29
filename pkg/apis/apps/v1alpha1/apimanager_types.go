@@ -18,10 +18,10 @@ import (
 const (
 	ThreescaleVersionAnnotation = "apps.3scale.net/apimanager-threescale-version"
 	OperatorVersionAnnotation   = "apps.3scale.net/threescale-operator-version"
+	Default3scaleAppLabel       = "3scale-api-management"
 )
 
 const (
-	defaultAppLabel                    = "3scale-api-management"
 	defaultTenantName                  = "3scale"
 	defaultImageStreamImportInsecure   = false
 	defaultResourceRequirementsEnabled = true
@@ -50,6 +50,8 @@ type APIManagerSpec struct {
 	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 	// +optional
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
+	// +optional
+	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -419,6 +421,10 @@ type PodDisruptionBudgetSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
 
+type MonitoringSpec struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
 func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
 }
@@ -577,7 +583,7 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
 
-	tmpDefaultAppLabel := defaultAppLabel
+	tmpDefaultAppLabel := Default3scaleAppLabel
 	tmpDefaultTenantName := defaultTenantName
 	tmpDefaultImageStreamTagImportInsecure := defaultImageStreamImportInsecure
 	tmpDefaultResourceRequirementsEnabled := defaultResourceRequirementsEnabled
@@ -741,4 +747,8 @@ func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
 	return !apimanager.IsExternalDatabaseEnabled() &&
 		apimanager.Spec.System.DatabaseSpec != nil &&
 		apimanager.Spec.System.DatabaseSpec.MySQL != nil
+}
+
+func (apimanager *APIManager) IsMonitoringEnabled() bool {
+	return apimanager.Spec.Monitoring != nil && apimanager.Spec.Monitoring.Enabled
 }

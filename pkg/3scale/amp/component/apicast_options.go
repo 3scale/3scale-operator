@@ -7,10 +7,11 @@ import (
 )
 
 type ApicastOptions struct {
-	ManagementAPI                  string                  `validate:"required"`
-	OpenSSLVerify                  string                  `validate:"required"`
-	ResponseCodes                  string                  `validate:"required"`
-	ImageTag                       string                  `validate:"required"`
+	ManagementAPI                  string `validate:"required"`
+	OpenSSLVerify                  string `validate:"required"`
+	ResponseCodes                  string `validate:"required"`
+	ImageTag                       string `validate:"required"`
+	ExtendedMetrics                bool
 	ProductionResourceRequirements v1.ResourceRequirements `validate:"-"`
 	StagingResourceRequirements    v1.ResourceRequirements `validate:"-"`
 	ProductionReplicas             int32
@@ -24,6 +25,8 @@ type ApicastOptions struct {
 	ProductionTolerations          []v1.Toleration   `validate:"-"`
 	StagingAffinity                *v1.Affinity      `validate:"-"`
 	StagingTolerations             []v1.Toleration   `validate:"-"`
+	StagingMonitoringLabels        map[string]string `validate:"required"`
+	ProductionMonitoringLabels     map[string]string `validate:"required"`
 }
 
 func NewApicastOptions() *ApicastOptions {

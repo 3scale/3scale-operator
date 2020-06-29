@@ -11,6 +11,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -48,8 +49,9 @@ func TestBaseAPIManagerLogicReconcilerUpdateOwnerRef(t *testing.T) {
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
+	clientset := fakeclientset.NewSimpleClientset()
 
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
 	apimanagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	desiredConfigmap := &v1.ConfigMap{

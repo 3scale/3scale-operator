@@ -66,6 +66,19 @@ metadata:
           "apiVersion": "apps.3scale.net/v1alpha1",
           "kind": "APIManager",
           "metadata": {
+            "name": "example-apimanager-monitoring"
+          },
+          "spec": {
+            "monitoring": {
+              "enabled": true
+            },
+            "wildcardDomain": "example.com"
+          }
+        },
+        {
+          "apiVersion": "apps.3scale.net/v1alpha1",
+          "kind": "APIManager",
+          "metadata": {
             "name": "example-apimanager-s3"
           },
           "spec": {
@@ -521,13 +534,6 @@ spec:
           - update
           - watch
         - apiGroups:
-          - monitoring.coreos.com
-          resources:
-          - servicemonitors
-          verbs:
-          - get
-          - create
-        - apiGroups:
           - apps
           resourceNames:
           - 3scale-operator
@@ -662,6 +668,27 @@ spec:
           - update
           - watch
           - delete
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          - prometheusrules
+          verbs:
+          - list
+          - get
+          - create
+          - update
+          - watch
+        - apiGroups:
+          - integreatly.org
+          resources:
+          - grafanadashboards
+          verbs:
+          - get
+          - list
+          - create
+          - update
+          - watch
         serviceAccountName: 3scale-operator
     strategy: deployment
   installModes:

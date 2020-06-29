@@ -6,10 +6,12 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	imagev1 "github.com/openshift/api/image/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -21,7 +23,7 @@ func TestSystemMySQLImageReconciler(t *testing.T) {
 		name      = "example-apimanager"
 		namespace = "operator-unittest"
 		trueValue = true
-		imageUrl  = "mysql:test"
+		imageURL  = "mysql:test"
 		log       = logf.Log.WithName("operator_test")
 	)
 
@@ -40,7 +42,7 @@ func TestSystemMySQLImageReconciler(t *testing.T) {
 			System: &appsv1alpha1.SystemSpec{
 				DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 					MySQL: &appsv1alpha1.SystemMySQLSpec{
-						Image: &imageUrl,
+						Image: &imageURL,
 					},
 				},
 			},
@@ -59,8 +61,9 @@ func TestSystemMySQLImageReconciler(t *testing.T) {
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
+	clientset := fakeclientset.NewSimpleClientset()
 
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log)
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery())
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	reconciler := NewSystemMySQLImageReconciler(baseAPIManagerLogicReconciler)

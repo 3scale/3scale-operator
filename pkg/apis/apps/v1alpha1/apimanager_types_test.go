@@ -12,7 +12,7 @@ import (
 )
 
 func TestSetDefaults(t *testing.T) {
-	tmpDefaultAppLabel := defaultAppLabel
+	tmpDefaultAppLabel := Default3scaleAppLabel
 	tmpDefaultTenantName := defaultTenantName
 	tmpDefaultImageStreamTagImportInsecure := defaultImageStreamImportInsecure
 	tmpDefaultResourceRequirementsEnabled := defaultResourceRequirementsEnabled

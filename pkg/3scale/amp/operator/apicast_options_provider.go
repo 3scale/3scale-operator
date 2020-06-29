@@ -6,6 +6,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
@@ -34,11 +35,14 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.ImageTag = product.ThreescaleRelease
 	a.apicastOptions.OpenSSLVerify = strconv.FormatBool(*a.apimanager.Spec.Apicast.OpenSSLVerify)
 	a.apicastOptions.ResponseCodes = strconv.FormatBool(*a.apimanager.Spec.Apicast.IncludeResponseCodes)
+	a.apicastOptions.ExtendedMetrics = true
 	a.apicastOptions.CommonLabels = a.commonLabels()
 	a.apicastOptions.CommonStagingLabels = a.commonStagingLabels()
 	a.apicastOptions.CommonProductionLabels = a.commonProductionLabels()
 	a.apicastOptions.StagingPodTemplateLabels = a.stagingPodTemplateLabels(imageOpts.ApicastImage)
 	a.apicastOptions.ProductionPodTemplateLabels = a.productionPodTemplateLabels(imageOpts.ApicastImage)
+	a.apicastOptions.StagingMonitoringLabels = a.stagingMonitoringLabels()
+	a.apicastOptions.ProductionMonitoringLabels = a.productionMonitoringLabels()
 
 	a.setResourceRequirementsOptions()
 	a.setNodeAffinityAndTolerationsOptions()
@@ -113,5 +117,17 @@ func (a *ApicastOptionsProvider) productionPodTemplateLabels(image string) map[s
 
 	labels["deploymentConfig"] = "apicast-production"
 
+	return labels
+}
+
+func (a *ApicastOptionsProvider) stagingMonitoringLabels() map[string]string {
+	labels := a.commonStagingLabels()
+	labels["monitoring-key"] = common.MonitoringKey
+	return labels
+}
+
+func (a *ApicastOptionsProvider) productionMonitoringLabels() map[string]string {
+	labels := a.commonProductionLabels()
+	labels["monitoring-key"] = common.MonitoringKey
 	return labels
 }

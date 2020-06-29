@@ -119,6 +119,25 @@ func testBackendCronTolerations() []v1.Toleration {
 	return getTestTolerations("backend-cron")
 }
 
+func testBackendMonitoringListenerLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "listener",
+		"monitoring-key":               "middleware",
+	}
+}
+
+func testBackendMonitoringWorkerLabels() map[string]string {
+	return map[string]string{
+		"app":                          appLabel,
+		"threescale_component":         "backend",
+		"threescale_component_element": "worker",
+		"monitoring-key":               "middleware",
+	}
+}
+
+
 func getInternalSecret() *v1.Secret {
 	data := map[string]string{
 		component.BackendSecretInternalApiUsernameFieldName: "someUserName",
@@ -188,6 +207,10 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 		ListenerPodTemplateLabels:    testBackendListenerPodLabels(),
 		WorkerPodTemplateLabels:      testBackendWorkerPodLabels(),
 		CronPodTemplateLabels:        testBackendCronPodLabels(),
+		ListenerMonitoringLabels:     testBackendMonitoringListenerLabels(),
+		WorkerMonitoringLabels:       testBackendMonitoringWorkerLabels(),
+		WorkerMetrics:                true,
+		ListenerMetrics:              true,
 	}
 }
 

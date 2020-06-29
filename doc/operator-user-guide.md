@@ -12,6 +12,7 @@
     * [PostgreSQL Installation](#postgresql-installation)
     * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
     * [Setting custom affinity and tolerations](#setting-custom-affinity-and-tolerations)
+    * [Enabling monitoring resources](operator-monitoring-resources.md)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
 * [Feature Operator (in *TechPreview*)](operator-capabilities.md)

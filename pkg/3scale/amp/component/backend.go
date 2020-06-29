@@ -2,15 +2,21 @@ package component
 
 import (
 	"fmt"
-
-	"k8s.io/api/policy/v1beta1"
+	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+)
+
+const (
+	BackendListenerName = "backend-listener"
+	BackendWorkerName   = "backend-worker"
 )
 
 const (
@@ -35,6 +41,16 @@ const (
 	BackendSecretBackendListenerRouteEndpointFieldName   = "route_endpoint"
 )
 
+const (
+	BackendWorkerMetricsPort   = 9421
+	BackendListenerMetricsPort = 9394
+)
+
+var (
+	BackendWorkerMetricsPortStr   = strconv.FormatInt(BackendWorkerMetricsPort, 10)
+	BackendListenerMetricsPortStr = strconv.FormatInt(BackendListenerMetricsPort, 10)
+)
+
 type Backend struct {
 	Options *BackendOptions
 }
@@ -50,7 +66,7 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-worker",
+			Name:   BackendWorkerName,
 			Labels: backend.Options.CommonWorkerLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -76,13 +92,13 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
-						ContainerNames: []string{"backend-redis-svc", "backend-worker"},
+						ContainerNames: []string{"backend-redis-svc", BackendWorkerName},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
 							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
 			},
 			Replicas: backend.Options.WorkerReplicas,
-			Selector: map[string]string{"deploymentConfig": "backend-worker"},
+			Selector: map[string]string{"deploymentConfig": BackendWorkerName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: backend.Options.WorkerPodTemplateLabels,
@@ -104,7 +120,7 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:            "backend-worker",
+							Name:            BackendWorkerName,
 							Image:           "amp-backend:latest",
 							Args:            []string{"bin/3scale_backend_worker", "run"},
 							Env:             backend.buildBackendWorkerEnv(),
@@ -199,7 +215,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-listener",
+			Name:   BackendListenerName,
 			Labels: backend.Options.CommonListenerLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -225,13 +241,13 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
-						ContainerNames: []string{"backend-listener"},
+						ContainerNames: []string{BackendListenerName},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
 							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
 			},
 			Replicas: backend.Options.ListenerReplicas,
-			Selector: map[string]string{"deploymentConfig": "backend-listener"},
+			Selector: map[string]string{"deploymentConfig": BackendListenerName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: backend.Options.ListenerPodTemplateLabels,
@@ -241,7 +257,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations: backend.Options.ListenerTolerations,
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "backend-listener",
+							Name:  BackendListenerName,
 							Image: "amp-backend:latest",
 							Args:  []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
 							Ports: []v1.ContainerPort{
@@ -292,7 +308,7 @@ func (backend *Backend) ListenerService() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-listener",
+			Name:   BackendListenerName,
 			Labels: backend.Options.CommonListenerLabels,
 		},
 		Spec: v1.ServiceSpec{
@@ -307,7 +323,7 @@ func (backend *Backend) ListenerService() *v1.Service {
 					},
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "backend-listener"},
+			Selector: map[string]string{"deploymentConfig": BackendListenerName},
 		},
 	}
 }
@@ -326,7 +342,7 @@ func (backend *Backend) ListenerRoute() *routev1.Route {
 			Host: "backend-" + backend.Options.TenantName + "." + backend.Options.WildcardDomain,
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
-				Name: "backend-listener",
+				Name: BackendListenerName,
 			},
 			Port: &routev1.RoutePort{
 				TargetPort: intstr.FromString("http"),
@@ -395,6 +411,14 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK", "system-events-hook", "URL"),
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
 	)
+
+	if backend.Options.WorkerMetrics {
+		result = append(result,
+			v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_PORT", Value: BackendWorkerMetricsPortStr},
+			v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
+		)
+	}
+
 	return result
 }
 
@@ -412,6 +436,13 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_USER", BackendSecretInternalApiSecretName, BackendSecretInternalApiUsernameFieldName),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
 	)
+
+	if backend.Options.ListenerMetrics {
+		result = append(result,
+			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_PORT", Value: BackendListenerMetricsPortStr},
+			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
+		)
+	}
 	return result
 }
 
@@ -458,12 +489,12 @@ func (backend *Backend) WorkerPodDisruptionBudget() *v1beta1.PodDisruptionBudget
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-worker",
+			Name:   BackendWorkerName,
 			Labels: backend.Options.CommonWorkerLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "backend-worker"},
+				MatchLabels: map[string]string{"deploymentConfig": BackendWorkerName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -496,12 +527,12 @@ func (backend *Backend) ListenerPodDisruptionBudget() *v1beta1.PodDisruptionBudg
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-listener",
+			Name:   BackendListenerName,
 			Labels: backend.Options.CommonListenerLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "backend-listener"},
+				MatchLabels: map[string]string{"deploymentConfig": BackendListenerName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},

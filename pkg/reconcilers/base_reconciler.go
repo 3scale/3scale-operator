@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -31,19 +32,21 @@ type BaseReconciler struct {
 	apiClientReader client.Reader
 	ctx             context.Context
 	logger          logr.Logger
+	discoveryClient discovery.DiscoveryInterface
 }
 
 // blank assignment to verify that BaseReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &BaseReconciler{}
 
 func NewBaseReconciler(client client.Client, scheme *runtime.Scheme, apiClientReader client.Reader,
-	ctx context.Context, logger logr.Logger) *BaseReconciler {
+	ctx context.Context, logger logr.Logger, discoveryClient discovery.DiscoveryInterface) *BaseReconciler {
 	return &BaseReconciler{
 		client:          client,
 		scheme:          scheme,
 		apiClientReader: apiClientReader,
 		ctx:             ctx,
 		logger:          logger,
+		discoveryClient: discoveryClient,
 	}
 }
 
@@ -69,6 +72,10 @@ func (b *BaseReconciler) Scheme() *runtime.Scheme {
 
 func (b *BaseReconciler) Logger() logr.Logger {
 	return b.logger
+}
+
+func (b *BaseReconciler) DiscoveryClient() discovery.DiscoveryInterface {
+	return b.discoveryClient
 }
 
 // ReconcileResource attempts to mutate the existing state

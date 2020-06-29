@@ -17,6 +17,7 @@ import (
 	"k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -58,11 +59,16 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 		return nil, err
 	}
 
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		return nil, err
+	}
+
 	client := mgr.GetClient()
 	scheme := mgr.GetScheme()
 	ctx := context.TODO()
 	return &ReconcileAPIManager{
-		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log),
+		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, discoveryClient),
 	}, nil
 
 }
@@ -279,6 +285,12 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 
 	apicastReconciler := operator.NewApicastReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
 	result, err = apicastReconciler.Reconcile()
+	if err != nil || result.Requeue {
+		return result, err
+	}
+
+	genericMonitoringReconciler := operator.NewGenericMonitoringReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	result, err = genericMonitoringReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
