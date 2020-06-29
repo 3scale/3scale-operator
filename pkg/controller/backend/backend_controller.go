@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -53,12 +54,17 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 		return nil, err
 	}
 
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		return nil, err
+	}
+
 	client := mgr.GetClient()
 	scheme := mgr.GetScheme()
 	ctx := context.TODO()
 	recorder := mgr.GetEventRecorderFor(controllerName)
 	return &ReconcileBackend{
-		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, recorder),
+		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, discoveryClient, recorder),
 	}, nil
 }
 

@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"k8s.io/api/policy/v1beta1"
-
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 

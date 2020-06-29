@@ -56,14 +56,14 @@ func schema_pkg_apis_apps_v1alpha1_APIManager(ref common.ReferenceCallback) comm
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus"),
+							Ref: ref("./pkg/apis/apps/v1alpha1.APIManagerStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.APIManagerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./pkg/apis/apps/v1alpha1.APIManagerSpec", "./pkg/apis/apps/v1alpha1.APIManagerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -369,12 +369,17 @@ func schema_pkg_apis_apps_v1alpha1_APIManagerSpec(ref common.ReferenceCallback) 
 							Ref: ref("./pkg/apis/apps/v1alpha1.PodDisruptionBudgetSpec"),
 						},
 					},
+					"monitoring": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("./pkg/apis/apps/v1alpha1.MonitoringSpec"),
+						},
+					},
 				},
 				Required: []string{"wildcardDomain"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ApicastSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.BackendSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.HighAvailabilitySpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.PodDisruptionBudgetSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.SystemSpec", "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1.ZyncSpec"},
+			"./pkg/apis/apps/v1alpha1.ApicastSpec", "./pkg/apis/apps/v1alpha1.BackendSpec", "./pkg/apis/apps/v1alpha1.HighAvailabilitySpec", "./pkg/apis/apps/v1alpha1.MonitoringSpec", "./pkg/apis/apps/v1alpha1.PodDisruptionBudgetSpec", "./pkg/apis/apps/v1alpha1.SystemSpec", "./pkg/apis/apps/v1alpha1.ZyncSpec"},
 	}
 }
 

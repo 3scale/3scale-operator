@@ -47,7 +47,7 @@ func TestBaseReconcilerCreate(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
 	clientset := fakeclientset.NewSimpleClientset()
-        recorder := record.NewFakeRecorder(10000)
+	recorder := record.NewFakeRecorder(10000)
 
 	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
 
@@ -117,7 +117,7 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
-        clientset := fakeclientset.NewSimpleClientset()
+	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
 
 	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
