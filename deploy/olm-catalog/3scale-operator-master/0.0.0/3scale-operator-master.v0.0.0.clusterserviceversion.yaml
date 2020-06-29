@@ -397,6 +397,7 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
     - description: Backend is the Schema for the backends API
+      displayName: 3scale Backend
       kind: Backend
       name: backends.capabilities.3scale.net
       version: v1beta1

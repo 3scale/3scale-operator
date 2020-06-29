@@ -165,6 +165,7 @@ func (b *BackendStatus) Equals(other *BackendStatus, logger logr.Logger) bool {
 // Backend is the Schema for the backends API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=backends,scope=Namespaced
+// +operator-sdk:gen-csv:customresourcedefinitions.displayName="3scale Backend"
 type Backend struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
