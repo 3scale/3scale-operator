@@ -88,7 +88,7 @@ type BackendStatus struct {
 	// +optional
 	ID *int64 `json:"backendId,omitempty"`
 
-	// ObservedGeneration reflects the generation of the most recently observed MachineSet.
+	// ObservedGeneration reflects the generation of the most recently observed Backend Spec.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 

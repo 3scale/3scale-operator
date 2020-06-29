@@ -761,7 +761,7 @@ type ProductStatus struct {
 	// +optional
 	State *string `json:"state,omitempty"`
 
-	// ObservedGeneration reflects the generation of the most recently observed MachineSet.
+	// ObservedGeneration reflects the generation of the most recently observed Product Spec.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
