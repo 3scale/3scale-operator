@@ -325,10 +325,12 @@ spec:
   customresourcedefinitions:
     owned:
     - description: APIManagerBackup represents an APIManager backup
+      displayName: APIManagerBackup
       kind: APIManagerBackup
       name: apimanagerbackups.apps.3scale.net
       version: v1alpha1
     - description: APIManagerRestore represents an APIManager restore
+      displayName: APIManagerRestore
       kind: APIManagerRestore
       name: apimanagerrestores.apps.3scale.net
       version: v1alpha1
