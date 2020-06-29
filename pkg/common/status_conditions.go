@@ -55,11 +55,14 @@ type ConditionReason string
 // changed arbitrarily - it becomes part of the API, and has the same
 // backwards- and forwards-compatibility concerns of any other part of the API.
 type Condition struct {
-	Type               ConditionType          `json:"type"`
-	Status             corev1.ConditionStatus `json:"status"`
-	Reason             ConditionReason        `json:"reason,omitempty"`
-	Message            string                 `json:"message,omitempty"`
-	LastTransitionTime metav1.Time            `json:"lastTransitionTime,omitempty"`
+	Type   ConditionType          `json:"type"`
+	Status corev1.ConditionStatus `json:"status"`
+	// +optional
+	Reason ConditionReason `json:"reason,omitempty"`
+	// +optional
+	Message string `json:"message,omitempty"`
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 }
 
 // IsTrue Condition whether the condition status is "True".
