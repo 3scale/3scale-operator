@@ -24,7 +24,7 @@ Current *capabilities* state: **Full Lifecycle**
   * **Upgrade**: Upgrade from previously installed 3scale API Management solution
   * **Reconciliation**: Tunable CRD parameters after 3scale API Management solution has been installed
 * Tech Preview
-  * **Application Capabilities via Operator**: Allow interacting with underlying 3scale API Management solution. Expose objects like *tenants*, *api*, *metric*, *limits* as _Custom Resource_ objects.
+  * **Application Capabilities via Operator**: Allow interacting with underlying 3scale API Management solution. Expose objects like *tenant*, *product*, *backend* as  _Custom Resource_ objects.
 
 ## User Guide
 

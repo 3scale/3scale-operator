@@ -19,7 +19,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_apimanagerrestore")
+var (
+	// controllerName is the name of this controller
+	controllerName = "controller_apimanagerrestore"
+	log            = logf.Log.WithName(controllerName)
+)
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -51,8 +55,9 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 	client := mgr.GetClient()
 	scheme := mgr.GetScheme()
 	ctx := context.TODO()
+	recorder := mgr.GetEventRecorderFor(controllerName)
 	return &ReconcileAPIManagerRestore{
-		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, discoveryClient),
+		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, discoveryClient, recorder),
 	}, nil
 }
 
@@ -67,7 +72,7 @@ func newAPIClientReader(mgr manager.Manager) (client.Client, error) {
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("apimanagerrestore-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New(controllerName, mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}

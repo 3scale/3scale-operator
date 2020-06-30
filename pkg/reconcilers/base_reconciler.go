@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -33,13 +34,14 @@ type BaseReconciler struct {
 	ctx             context.Context
 	logger          logr.Logger
 	discoveryClient discovery.DiscoveryInterface
+	recorder        record.EventRecorder
 }
 
 // blank assignment to verify that BaseReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &BaseReconciler{}
 
 func NewBaseReconciler(client client.Client, scheme *runtime.Scheme, apiClientReader client.Reader,
-	ctx context.Context, logger logr.Logger, discoveryClient discovery.DiscoveryInterface) *BaseReconciler {
+	ctx context.Context, logger logr.Logger, discoveryClient discovery.DiscoveryInterface, recorder record.EventRecorder) *BaseReconciler {
 	return &BaseReconciler{
 		client:          client,
 		scheme:          scheme,
@@ -47,6 +49,7 @@ func NewBaseReconciler(client client.Client, scheme *runtime.Scheme, apiClientRe
 		ctx:             ctx,
 		logger:          logger,
 		discoveryClient: discoveryClient,
+		recorder:        recorder,
 	}
 }
 
@@ -76,6 +79,14 @@ func (b *BaseReconciler) Logger() logr.Logger {
 
 func (b *BaseReconciler) DiscoveryClient() discovery.DiscoveryInterface {
 	return b.discoveryClient
+}
+
+func (b *BaseReconciler) Context() context.Context {
+	return b.ctx
+}
+
+func (b *BaseReconciler) EventRecorder() record.EventRecorder {
+	return b.recorder
 }
 
 // ReconcileResource attempts to mutate the existing state

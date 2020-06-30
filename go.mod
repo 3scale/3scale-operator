@@ -3,7 +3,7 @@ module github.com/3scale/3scale-operator
 go 1.13
 
 require (
-	github.com/3scale/3scale-porta-go-client v0.0.3
+	github.com/3scale/3scale-porta-go-client v0.0.4
 	github.com/Azure/go-autorest v12.2.0+incompatible
 	github.com/RHsyseng/operator-utils v0.0.0-20200204194854-c5b0d8533458
 	github.com/coreos/prometheus-operator v0.34.0

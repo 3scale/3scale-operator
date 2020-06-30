@@ -126,144 +126,6 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1alpha1",
-          "kind": "API",
-          "metadata": {
-            "labels": {
-              "environment": "testing"
-            },
-            "name": "example-api"
-          },
-          "spec": {
-            "description": "api01",
-            "integrationMethod": {
-              "apicastHosted": {
-                "apiTestGetRequest": "/",
-                "authenticationSettings": {
-                  "credentials": {
-                    "apiKey": {
-                      "authParameterName": "user-key",
-                      "credentialsLocation": "headers"
-                    }
-                  },
-                  "errors": {
-                    "authenticationFailed": {
-                      "contentType": "text/plain; charset=us-ascii",
-                      "responseBody": "Authentication failed",
-                      "responseCode": 403
-                    },
-                    "authenticationMissing": {
-                      "contentType": "text/plain; charset=us-ascii",
-                      "responseBody": "Authentication Missing",
-                      "responseCode": 403
-                    }
-                  },
-                  "hostHeader": "",
-                  "secretToken": "MySecretTokenBetweenApicastAndMyBackend_1237120312"
-                },
-                "mappingRulesSelector": {
-                  "matchLabels": {
-                    "api": "api01"
-                  }
-                },
-                "privateBaseURL": "https://echo-api.3scale.net:443"
-              }
-            }
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1alpha1",
-          "kind": "Binding",
-          "metadata": {
-            "name": "example-binding"
-          },
-          "spec": {
-            "APISelector": {
-              "matchLabels": {
-                "environment": "testing"
-              }
-            },
-            "credentialsRef": {
-              "name": "ecorp-tenant-secret"
-            }
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1alpha1",
-          "kind": "Limit",
-          "metadata": {
-            "labels": {
-              "api": "api01"
-            },
-            "name": "plan01-metric01-day-10"
-          },
-          "spec": {
-            "description": "Limit for metric01 in plan01",
-            "maxValue": 10,
-            "metricRef": {
-              "name": "metric01"
-            },
-            "period": "day"
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1alpha1",
-          "kind": "MappingRule",
-          "metadata": {
-            "labels": {
-              "api": "api01"
-            },
-            "name": "metric01-get-path01"
-          },
-          "spec": {
-            "increment": 1,
-            "method": "GET",
-            "metricRef": {
-              "name": "metric01"
-            },
-            "path": "/path01"
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1alpha1",
-          "kind": "Metric",
-          "metadata": {
-            "labels": {
-              "api": "api01"
-            },
-            "name": "metric01"
-          },
-          "spec": {
-            "description": "metric01",
-            "incrementHits": false,
-            "unit": "hit"
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1alpha1",
-          "kind": "Plan",
-          "metadata": {
-            "labels": {
-              "api": "api01"
-            },
-            "name": "example-plan"
-          },
-          "spec": {
-            "approvalRequired": false,
-            "costs": {
-              "costMonth": "0",
-              "setupFee": "0.5"
-            },
-            "default": true,
-            "limitSelector": {
-              "matchLabels": {
-                "plan": "plan01"
-              }
-            },
-            "trialPeriod": 0
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1alpha1",
           "kind": "Tenant",
           "metadata": {
             "name": "example-tenant"
@@ -283,6 +145,173 @@ metadata:
               "namespace": "operator-test"
             },
             "username": "admin"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Backend",
+          "metadata": {
+            "name": "backend1"
+          },
+          "spec": {
+            "name": "Operated Backend 1",
+            "privateBaseURL": "https://api.example.com",
+            "systemName": "backend1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
+            "name": "product1"
+          },
+          "spec": {
+            "name": "OperatedProduct 1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
+            "name": "product1"
+          },
+          "spec": {
+            "deployment": {
+              "apicastHosted": {}
+            },
+            "name": "OperatedProduct 1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
+            "name": "product1"
+          },
+          "spec": {
+            "deployment": {
+              "apicastSelfManaged": {
+                "productionPublicBaseURL": "https://production.api.example.com",
+                "stagingPublicBaseURL": "https://staging.api.example.com"
+              }
+            },
+            "name": "OperatedProduct 1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
+            "name": "product1"
+          },
+          "spec": {
+            "applicationPlans": {
+              "plan01": {
+                "limits": [
+                  {
+                    "metricMethodRef": {
+                      "backend": "backendA",
+                      "systemName": "hits"
+                    },
+                    "period": "month",
+                    "value": 300
+                  },
+                  {
+                    "metricMethodRef": {
+                      "systemName": "hits"
+                    },
+                    "period": "week",
+                    "value": 100
+                  }
+                ],
+                "name": "My Plan 01"
+              }
+            },
+            "metrics": {
+              "hits": {
+                "description": "Number of API hits",
+                "friendlyName": "Hits",
+                "unit": "hit"
+              }
+            },
+            "name": "OperatedProduct 1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
+            "name": "product1"
+          },
+          "spec": {
+            "applicationPlans": {
+              "plan01": {
+                "name": "My Plan 01",
+                "pricingRules": [
+                  {
+                    "from": 1,
+                    "metricMethodRef": {
+                      "systemName": "hits"
+                    },
+                    "pricePerUnit": "15.45",
+                    "to": 100
+                  },
+                  {
+                    "from": 1,
+                    "metricMethodRef": {
+                      "backend": "backendA",
+                      "systemName": "hits"
+                    },
+                    "pricePerUnit": "15.45",
+                    "to": 300
+                  }
+                ]
+              }
+            },
+            "metrics": {
+              "hits": {
+                "description": "Number of API hits",
+                "friendlyName": "Hits",
+                "unit": "hit"
+              }
+            },
+            "name": "OperatedProduct 1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
+            "name": "product1"
+          },
+          "spec": {
+            "mappingRules": [
+              {
+                "httpMethod": "GET",
+                "increment": 1,
+                "metricMethodRef": "hits",
+                "pattern": "/pets"
+              },
+              {
+                "httpMethod": "GET",
+                "increment": 1,
+                "metricMethodRef": "method01",
+                "pattern": "/cars"
+              }
+            ],
+            "methods": {
+              "method01": {
+                "friendlyName": "Method01"
+              }
+            },
+            "metrics": {
+              "hits": {
+                "description": "Number of API hits",
+                "friendlyName": "Hits",
+                "unit": "hit"
+              }
+            },
+            "name": "OperatedProduct 1"
           }
         }
       ]
@@ -367,36 +396,16 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
-    - description: API is the Schema for the apis API
-      displayName: API
-      kind: API
-      name: apis.capabilities.3scale.net
-      version: v1alpha1
-    - description: Binding is the Schema for the bindings API
-      displayName: Binding
-      kind: Binding
-      name: bindings.capabilities.3scale.net
-      version: v1alpha1
-    - description: Limit is the Schema for the limits API
-      displayName: Limit
-      kind: Limit
-      name: limits.capabilities.3scale.net
-      version: v1alpha1
-    - description: MappingRule is the Schema for the mappingrules API
-      displayName: MappingRule
-      kind: MappingRule
-      name: mappingrules.capabilities.3scale.net
-      version: v1alpha1
-    - description: Metric is the Schema for the metrics API
-      displayName: Metric
-      kind: Metric
-      name: metrics.capabilities.3scale.net
-      version: v1alpha1
-    - description: Plan is the Schema for the plans API
-      displayName: Plan
-      kind: Plan
-      name: plans.capabilities.3scale.net
-      version: v1alpha1
+    - description: Backend is the Schema for the backends API
+      displayName: 3scale Backend
+      kind: Backend
+      name: backends.capabilities.3scale.net
+      version: v1beta1
+    - description: Product is the Schema for the products API
+      displayName: 3scale Product
+      kind: Product
+      name: products.capabilities.3scale.net
+      version: v1beta1
     - description: Tenant is the Schema for the tenants API
       displayName: Tenant
       kind: Tenant
@@ -511,7 +520,6 @@ spec:
           - configmaps
           - secrets
           - serviceaccounts
-          - bindings/finalizers
           verbs:
           - create
           - delete
@@ -572,12 +580,6 @@ spec:
           - capabilities.3scale.net
           resources:
           - '*'
-          - bindings
-          - metrics
-          - plans
-          - limits
-          - mappingrules
-          - tenants
           verbs:
           - create
           - delete

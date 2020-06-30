@@ -14,6 +14,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/apis"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/controller"
@@ -285,14 +286,10 @@ func filterGKVsFromAddToScheme(gvks []schema.GroupVersionKind) []schema.GroupVer
 		schema.GroupVersionKind{Group: "apps.openshift.io", Kind: "DeploymentConfig", Version: matchAnyValue},
 
 		// Custom resource types
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Plan", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "API", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Limit", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "MappingRule", Version: matchAnyValue},
 		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Tenant", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Metric", Version: matchAnyValue},
-		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: "Binding", Version: matchAnyValue},
 		schema.GroupVersionKind{Group: "apps.3scale.net", Kind: "APIManager", Version: matchAnyValue},
+		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: capabilitiesv1beta1.ProductKind, Version: matchAnyValue},
+		schema.GroupVersionKind{Group: "capabilities.3scale.net", Kind: capabilitiesv1beta1.BackendKind, Version: matchAnyValue},
 	}
 
 	ownGVKs := []schema.GroupVersionKind{}

@@ -1,0 +1,8 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  deployment:
+    apicastHosted: {}

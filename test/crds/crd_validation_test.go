@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	apps "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	capabilities "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
+	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	"github.com/RHsyseng/operator-utils/pkg/validation"
 	"github.com/ghodss/yaml"
 
@@ -27,16 +28,12 @@ const (
 func TestSampleCustomResources(t *testing.T) {
 	root := "../../deploy/crds"
 	crdCrMap := map[string]string{
-		"apps.3scale.net_apimanagers_crd.yaml":          "apps.3scale.net_v1alpha1_apimanager_cr",
-		"apps.3scale.net_apimanagerbackups_crd.yaml":    "apps.3scale.net_v1alpha1_apimanagerbackup_cr.yaml",
-		"apps.3scale.net_apimanagerrestores_crd.yaml":   "apps.3scale.net_v1alpha1_apimanagerrestore_cr.yaml",
-		"capabilities.3scale.net_apis_crd.yaml":         "capabilities.3scale.net_v1alpha1_api_cr",
-		"capabilities.3scale.net_bindings_crd.yaml":     "capabilities.3scale.net_v1alpha1_binding_cr",
-		"capabilities.3scale.net_limits_crd.yaml":       "capabilities.3scale.net_v1alpha1_limit_cr",
-		"capabilities.3scale.net_mappingrules_crd.yaml": "capabilities.3scale.net_v1alpha1_mappingrule_cr",
-		"capabilities.3scale.net_metrics_crd.yaml":      "capabilities.3scale.net_v1alpha1_metric_cr",
-		"capabilities.3scale.net_plans_crd.yaml":        "capabilities.3scale.net_v1alpha1_plan_cr",
-		"capabilities.3scale.net_tenants_crd.yaml":      "capabilities.3scale.net_v1alpha1_tenant_cr",
+		"apps.3scale.net_apimanagers_crd.yaml":        "apps.3scale.net_v1alpha1_apimanager_cr",
+		"apps.3scale.net_apimanagerbackups_crd.yaml":  "apps.3scale.net_v1alpha1_apimanagerbackup_cr.yaml",
+		"apps.3scale.net_apimanagerrestores_crd.yaml": "apps.3scale.net_v1alpha1_apimanagerrestore_cr.yaml",
+		"capabilities.3scale.net_tenants_crd.yaml":    "capabilities.3scale.net_v1alpha1_tenant_cr",
+		"capabilities.3scale.net_backends_crd.yaml":   "capabilities.3scale.net_v1beta1_backend_cr",
+		"capabilities.3scale.net_products_crd.yaml":   "capabilities.3scale.net_v1beta1_product_cr",
 	}
 	for crd, prefix := range crdCrMap {
 		validateCustomResources(t, root, crd, prefix)
@@ -52,11 +49,13 @@ func validateCustomResources(t *testing.T, root string, crd string, prefix strin
 			return nil
 		}
 		if strings.HasPrefix(info.Name(), prefix) {
-			bytes, err := ioutil.ReadFile(path)
-			assert.NoError(t, err, "Error reading CR yaml from %v", path)
-			var input map[string]interface{}
-			assert.NoError(t, yaml.Unmarshal(bytes, &input))
-			assert.NoError(t, schema.Validate(input), "File %v does not validate against the %s CRD schema", info.Name(), crd)
+			t.Run(info.Name(), func(subT *testing.T) {
+				bytes, err := ioutil.ReadFile(path)
+				assert.NoError(subT, err, "Error reading CR yaml from %v", path)
+				var input map[string]interface{}
+				assert.NoError(subT, yaml.Unmarshal(bytes, &input))
+				assert.NoError(subT, schema.Validate(input), "File %v does not validate against the %s CRD schema", info.Name(), crd)
+			})
 		}
 		return nil
 	}
@@ -67,16 +66,12 @@ func validateCustomResources(t *testing.T, root string, crd string, prefix strin
 func TestCompleteCRD(t *testing.T) {
 	root := "../../deploy/crds"
 	crdStructMap := map[string]interface{}{
-		"apps.3scale.net_apimanagers_crd.yaml":          &apps.APIManager{},
-		"apps.3scale.net_apimanagerbackups_crd.yaml":    &apps.APIManagerBackup{},
-		"apps.3scale.net_apimanagerrestores_crd.yaml":   &apps.APIManagerRestore{},
-		"capabilities.3scale.net_apis_crd.yaml":         &capabilities.API{},
-		"capabilities.3scale.net_bindings_crd.yaml":     &capabilities.Binding{},
-		"capabilities.3scale.net_limits_crd.yaml":       &capabilities.Limit{},
-		"capabilities.3scale.net_mappingrules_crd.yaml": &capabilities.MappingRule{},
-		"capabilities.3scale.net_metrics_crd.yaml":      &capabilities.Metric{},
-		"capabilities.3scale.net_plans_crd.yaml":        &capabilities.Plan{},
-		"capabilities.3scale.net_tenants_crd.yaml":      &capabilities.Tenant{},
+		"apps.3scale.net_apimanagers_crd.yaml":        &apps.APIManager{},
+		"apps.3scale.net_apimanagerbackups_crd.yaml":  &apps.APIManagerBackup{},
+		"apps.3scale.net_apimanagerrestores_crd.yaml": &apps.APIManagerRestore{},
+		"capabilities.3scale.net_tenants_crd.yaml":    &capabilitiesv1alpha1.Tenant{},
+		"capabilities.3scale.net_backends_crd.yaml":   &capabilitiesv1beta1.Backend{},
+		"capabilities.3scale.net_products_crd.yaml":   &capabilitiesv1beta1.Product{},
 	}
 
 	pathOmissions := []string{
@@ -87,16 +82,17 @@ func TestCompleteCRD(t *testing.T) {
 	}
 
 	for crd, obj := range crdStructMap {
-		schema := getSchema(t, fmt.Sprintf("%s/%s", root, crd))
-		missingEntries := schema.GetMissingEntries(obj)
-		for _, missing := range missingEntries {
+		t.Run(crd, func(subT *testing.T) {
+			schema := getSchema(subT, fmt.Sprintf("%s/%s", root, crd))
+			missingEntries := schema.GetMissingEntries(obj)
+			for _, missing := range missingEntries {
 
-			filtered := missingFieldPathInPathOmissions(missing.Path, pathOmissions)
-			if filtered {
-				continue
+				if missingFieldPathInPathOmissions(missing.Path, pathOmissions) {
+					continue
+				}
+				assert.Fail(subT, "Discrepancy between CRD and Struct", "CRD: %s: Missing or incorrect schema validation at %s, expected type %s", crd, missing.Path, missing.Type)
 			}
-			assert.Fail(t, "Discrepancy between CRD and Struct", "CRD: %s: Missing or incorrect schema validation at %s, expected type %s", crd, missing.Path, missing.Type)
-		}
+		})
 	}
 }
 
