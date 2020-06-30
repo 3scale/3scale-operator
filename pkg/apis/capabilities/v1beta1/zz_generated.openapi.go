@@ -197,23 +197,9 @@ func schema_pkg_apis_capabilities_v1beta1_ProductStatus(ref common.ReferenceCall
 					},
 					"observedGeneration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ObservedGeneration reflects the generation of the most recently observed MachineSet.",
+							Description: "ObservedGeneration reflects the generation of the most recently observed Product Spec.",
 							Type:        []string{"integer"},
 							Format:      "int64",
-						},
-					},
-					"errorReason": {
-						SchemaProps: spec.SchemaProps{
-							Description: "In the event that there is a terminal problem reconciling the product, both ErrorReason and ErrorMessage will be set. ErrorReason will be populated with a succinct value suitable for machine interpretation, while ErrorMessage will contain a more verbose string suitable for logging and human consumption.\n\nThese fields should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Product's spec or the configuration of the product controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the product controller, or the responsible product controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Products can be added as events to the Product object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"errorMessage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "A human readable message indicating details about why the resource is in this condition.",
-							Type:        []string{"string"},
-							Format:      "",
 						},
 					},
 					"conditions": {

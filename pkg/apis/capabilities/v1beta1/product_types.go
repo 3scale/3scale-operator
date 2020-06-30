@@ -765,31 +765,6 @@ type ProductStatus struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// In the event that there is a terminal problem reconciling the
-	// product, both ErrorReason and ErrorMessage will be set. ErrorReason
-	// will be populated with a succinct value suitable for machine
-	// interpretation, while ErrorMessage will contain a more verbose
-	// string suitable for logging and human consumption.
-	//
-	// These fields should not be set for transitive errors that a
-	// controller faces that are expected to be fixed automatically over
-	// time (like service outages), but instead indicate that something is
-	// fundamentally wrong with the Product's spec or the configuration of
-	// the product controller, and that manual intervention is required. Examples
-	// of terminal errors would be invalid combinations of settings in the
-	// spec, values that are unsupported by the product controller, or the
-	// responsible product controller itself being critically misconfigured.
-	//
-	// Any transient errors that occur during the reconciliation of Products
-	// can be added as events to the Product object and/or logged in the
-	// controller's output.
-	// +optional
-	// TODO enum
-	ErrorReason *string `json:"errorReason,omitempty"`
-	// A human readable message indicating details about why the resource is in this condition.
-	// +optional
-	ErrorMessage *string `json:"errorMessage,omitempty"`
-
 	// Current state of the 3scale product.
 	// Conditions represent the latest available observations of an object's state
 	// +optional
@@ -814,12 +789,6 @@ func (p *ProductStatus) Equals(other *ProductStatus, logger logr.Logger) bool {
 	if p.ObservedGeneration != other.ObservedGeneration {
 		diff := cmp.Diff(p.ObservedGeneration, other.ObservedGeneration)
 		logger.V(1).Info("ObservedGeneration not equal", "difference", diff)
-		return false
-	}
-
-	if !reflect.DeepEqual(p.ErrorReason, other.ErrorReason) {
-		diff := cmp.Diff(p.ErrorReason, other.ErrorReason)
-		logger.V(1).Info("ErrorReason not equal", "difference", diff)
 		return false
 	}
 

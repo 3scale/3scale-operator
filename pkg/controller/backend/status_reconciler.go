@@ -73,12 +73,6 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.BackendStatus 
 	newStatus.Conditions.SetCondition(s.invalidCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
 
-	// terminal problems
-	if helper.IsInvalidSpecError(s.syncError) {
-		message := s.syncError.Error()
-		newStatus.ErrorMessage = &message
-	}
-
 	return newStatus
 }
 

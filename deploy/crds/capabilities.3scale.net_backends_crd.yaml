@@ -166,28 +166,9 @@ spec:
                 - type
                 type: object
               type: array
-            errorMessage:
-              type: string
-            errorReason:
-              description: "In the event that there is a terminal problem reconciling
-                the replicas, both ErrorReason and ErrorMessage will be set. ErrorReason
-                will be populated with a succinct value suitable for machine interpretation,
-                while ErrorMessage will contain a more verbose string suitable for
-                logging and human consumption. \n These fields should not be set for
-                transitive errors that a controller faces that are expected to be
-                fixed automatically over time (like service outages), but instead
-                indicate that something is fundamentally wrong with the Backend's
-                spec or the configuration of the backend controller, and that manual
-                intervention is required. Examples of terminal errors would be invalid
-                combinations of settings in the spec, values that are unsupported
-                by the backend controller, or the responsible backend controller itself
-                being critically misconfigured. \n Any transient errors that occur
-                during the reconciliation of Backends can be added as events to the
-                Backend's object and/or logged in the controller's output."
-              type: string
             observedGeneration:
               description: ObservedGeneration reflects the generation of the most
-                recently observed MachineSet.
+                recently observed Backend Spec.
               format: int64
               type: integer
           type: object

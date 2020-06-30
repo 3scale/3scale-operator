@@ -290,16 +290,6 @@ func (in *BackendStatus) DeepCopyInto(out *BackendStatus) {
 		*out = new(int64)
 		**out = **in
 	}
-	if in.ErrorReason != nil {
-		in, out := &in.ErrorReason, &out.ErrorReason
-		*out = new(BackendStatusError)
-		**out = **in
-	}
-	if in.ErrorMessage != nil {
-		in, out := &in.ErrorMessage, &out.ErrorMessage
-		*out = new(string)
-		**out = **in
-	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make(common.Conditions, len(*in))
@@ -602,16 +592,6 @@ func (in *ProductStatus) DeepCopyInto(out *ProductStatus) {
 	}
 	if in.State != nil {
 		in, out := &in.State, &out.State
-		*out = new(string)
-		**out = **in
-	}
-	if in.ErrorReason != nil {
-		in, out := &in.ErrorReason, &out.ErrorReason
-		*out = new(string)
-		**out = **in
-	}
-	if in.ErrorMessage != nil {
-		in, out := &in.ErrorMessage, &out.ErrorMessage
 		*out = new(string)
 		**out = **in
 	}

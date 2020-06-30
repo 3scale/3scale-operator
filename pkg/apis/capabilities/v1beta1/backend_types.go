@@ -92,29 +92,6 @@ type BackendStatus struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// In the event that there is a terminal problem reconciling the
-	// replicas, both ErrorReason and ErrorMessage will be set. ErrorReason
-	// will be populated with a succinct value suitable for machine
-	// interpretation, while ErrorMessage will contain a more verbose
-	// string suitable for logging and human consumption.
-	//
-	// These fields should not be set for transitive errors that a
-	// controller faces that are expected to be fixed automatically over
-	// time (like service outages), but instead indicate that something is
-	// fundamentally wrong with the Backend's spec or the configuration of
-	// the backend controller, and that manual intervention is required. Examples
-	// of terminal errors would be invalid combinations of settings in the
-	// spec, values that are unsupported by the backend controller, or the
-	// responsible backend controller itself being critically misconfigured.
-	//
-	// Any transient errors that occur during the reconciliation of Backends
-	// can be added as events to the Backend's object and/or logged in the
-	// controller's output.
-	// +optional
-	ErrorReason *BackendStatusError `json:"errorReason,omitempty"`
-	// +optional
-	ErrorMessage *string `json:"errorMessage,omitempty"`
-
 	// Current state of the 3scale backend.
 	// Conditions represent the latest available observations of an object's state
 	// +optional
@@ -133,18 +110,6 @@ func (b *BackendStatus) Equals(other *BackendStatus, logger logr.Logger) bool {
 	if b.ObservedGeneration != other.ObservedGeneration {
 		diff := cmp.Diff(b.ObservedGeneration, other.ObservedGeneration)
 		logger.V(1).Info("ObservedGeneration not equal", "difference", diff)
-		return false
-	}
-
-	if !reflect.DeepEqual(b.ErrorReason, other.ErrorReason) {
-		diff := cmp.Diff(b.ErrorReason, other.ErrorReason)
-		logger.V(1).Info("ErrorReason not equal", "difference", diff)
-		return false
-	}
-
-	if !reflect.DeepEqual(b.ErrorMessage, other.ErrorMessage) {
-		diff := cmp.Diff(b.ErrorMessage, other.ErrorMessage)
-		logger.V(1).Info("ErrorMessage not equal", "difference", diff)
 		return false
 	}
 
