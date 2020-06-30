@@ -78,7 +78,7 @@ type BackendSpec struct {
 	// system_name attr is unique for all metrics AND methods
 	// In other words, if metric's system_name is A, there is no metric or method with system_name A.
 	// +optional
-	Methods map[string]Methodpec `json:"methods,omitempty"`
+	Methods map[string]MethodSpec `json:"methods,omitempty"`
 
 	// ProviderAccountRef references account provider credentials
 	// +optional

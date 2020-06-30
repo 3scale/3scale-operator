@@ -11,7 +11,7 @@ import (
 
 type methodData struct {
 	item threescaleapi.MethodItem
-	spec capabilitiesv1beta1.Methodpec
+	spec capabilitiesv1beta1.MethodSpec
 }
 
 func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
@@ -72,7 +72,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	//
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
 	t.logger.V(1).Info("syncMethods", "desiredNewKeys", desiredNewKeys)
-	desiredNewMap := map[string]capabilitiesv1beta1.Methodpec{}
+	desiredNewMap := map[string]capabilitiesv1beta1.MethodSpec{}
 	for _, systemName := range desiredNewKeys {
 		// key is expected to exist
 		// desiredNewKeys is a subset of the Spec.Method map key set
@@ -86,7 +86,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.Methodpec) error {
+func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {
 	for systemName, method := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": method.Name,

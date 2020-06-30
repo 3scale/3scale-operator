@@ -135,8 +135,8 @@ type ApplicationPlanSpec struct {
 	// TODO Features
 }
 
-// Methodpec defines the desired state of Product's Method
-type Methodpec struct {
+// MethodSpec defines the desired state of Product's Method
+type MethodSpec struct {
 	Name string `json:"friendlyName"`
 	// +optional
 	Description string `json:"description,omitempty"`
@@ -674,7 +674,7 @@ type ProductSpec struct {
 	// system_name attr is unique for all metrics AND methods
 	// In other words, if metric's system_name is A, there is no metric or method with system_name A.
 	// +optional
-	Methods map[string]Methodpec `json:"methods,omitempty"`
+	Methods map[string]MethodSpec `json:"methods,omitempty"`
 
 	// Application Plans
 	// Map: system_name -> Application Plan Spec

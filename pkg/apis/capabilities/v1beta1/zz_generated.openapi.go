@@ -84,18 +84,21 @@ func schema_pkg_apis_capabilities_v1beta1_ProductSpec(ref common.ReferenceCallba
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Description is a human readable text of the product",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"deployment": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/capabilities/v1beta1.ProductDeploymentSpec"),
+							Description: "Deployment defined 3scale product deployment mode",
+							Ref:         ref("./pkg/apis/capabilities/v1beta1.ProductDeploymentSpec"),
 						},
 					},
 					"mappingRules": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "Mapping Rules Array: MappingRule Spec",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -141,7 +144,7 @@ func schema_pkg_apis_capabilities_v1beta1_ProductSpec(ref common.ReferenceCallba
 								Allows: true,
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("./pkg/apis/capabilities/v1beta1.Methodpec"),
+										Ref: ref("./pkg/apis/capabilities/v1beta1.MethodSpec"),
 									},
 								},
 							},
@@ -172,7 +175,7 @@ func schema_pkg_apis_capabilities_v1beta1_ProductSpec(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/capabilities/v1beta1.ApplicationPlanSpec", "./pkg/apis/capabilities/v1beta1.BackendUsageSpec", "./pkg/apis/capabilities/v1beta1.MappingRuleSpec", "./pkg/apis/capabilities/v1beta1.Methodpec", "./pkg/apis/capabilities/v1beta1.MetricSpec", "./pkg/apis/capabilities/v1beta1.ProductDeploymentSpec", "k8s.io/api/core/v1.LocalObjectReference"},
+			"./pkg/apis/capabilities/v1beta1.ApplicationPlanSpec", "./pkg/apis/capabilities/v1beta1.BackendUsageSpec", "./pkg/apis/capabilities/v1beta1.MappingRuleSpec", "./pkg/apis/capabilities/v1beta1.MethodSpec", "./pkg/apis/capabilities/v1beta1.MetricSpec", "./pkg/apis/capabilities/v1beta1.ProductDeploymentSpec", "k8s.io/api/core/v1.LocalObjectReference"},
 	}
 }
 

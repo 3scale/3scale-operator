@@ -68,7 +68,7 @@ spec:
               type: array
             methods:
               additionalProperties:
-                description: Methodpec defines the desired state of Product's Method
+                description: MethodSpec defines the desired state of Product's Method
                 properties:
                   description:
                     type: string
