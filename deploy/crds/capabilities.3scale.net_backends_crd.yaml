@@ -32,6 +32,7 @@ spec:
           description: BackendSpec defines the desired state of Backend
           properties:
             description:
+              description: Description is a human readable text of the backend
               type: string
             mappingRules:
               items:
@@ -102,6 +103,7 @@ spec:
               description: Name is human readable name for the backend
               type: string
             privateBaseURL:
+              description: PrivateBaseURL Private Base URL of the API
               pattern: ^https?:\/\/.*$
               type: string
             providerAccountRef:
@@ -118,6 +120,7 @@ spec:
               type: string
           required:
           - name
+          - privateBaseURL
           type: object
         status:
           description: BackendStatus defines the observed state of Backend

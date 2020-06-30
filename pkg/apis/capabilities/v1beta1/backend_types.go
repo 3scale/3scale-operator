@@ -55,9 +55,11 @@ type BackendSpec struct {
 	// +optional
 	SystemName string `json:"systemName,omitempty"`
 
+	// PrivateBaseURL Private Base URL of the API
 	// +kubebuilder:validation:Pattern=`^https?:\/\/.*$`
-	PrivateBaseURL string `json:"privateBaseURL,omitempty"`
+	PrivateBaseURL string `json:"privateBaseURL"`
 
+	// Description is a human readable text of the backend
 	// +optional
 	Description string `json:"description,omitempty"`
 

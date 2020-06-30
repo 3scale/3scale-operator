@@ -154,8 +154,7 @@ spec:
                 is not used multiple times.'
               type: object
             deployment:
-              description: ProductDeploymentSpec defines the desired state of Product
-                Deployment
+              description: Deployment defined 3scale product deployment mode
               properties:
                 apicastHosted:
                   description: ApicastHostedSpec defines the desired state of Product
@@ -244,15 +243,6 @@ spec:
                               type: object
                           type: object
                       type: object
-                      oneOf:
-                       - properties:
-                           userkey:
-                             type: object
-                         required: ["userkey"]
-                       - properties:
-                           appKeyAppID:
-                             type: object
-                         required: ["appKeyAppID"]
                   type: object
                 apicastSelfManaged:
                   description: ApicastSelfManagedSpec defines the desired state of
@@ -341,15 +331,6 @@ spec:
                               type: object
                           type: object
                       type: object
-                      oneOf:
-                       - properties:
-                           userkey:
-                             type: object
-                         required: ["userkey"]
-                       - properties:
-                           appKeyAppID:
-                             type: object
-                         required: ["appKeyAppID"]
                     productionPublicBaseURL:
                       pattern: ^https?:\/\/.*$
                       type: string
@@ -358,18 +339,11 @@ spec:
                       type: string
                   type: object
               type: object
-              oneOf:
-                - properties:
-                  apicastHosted:
-                    type: object
-                  required: ["apicastHosted"]
-                - properties:
-                  apicastSelfManaged:
-                    type: object
-                  required: ["apicastSelfManaged"]
             description:
+              description: Description is a human readable text of the product
               type: string
             mappingRules:
+              description: 'Mapping Rules Array: MappingRule Spec'
               items:
                 description: MappingRuleSpec defines the desired state of Product's
                   MappingRule

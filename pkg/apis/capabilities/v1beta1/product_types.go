@@ -643,12 +643,16 @@ type ProductSpec struct {
 	// +optional
 	SystemName string `json:"systemName,omitempty"`
 
+	// Description is a human readable text of the product
 	// +optional
 	Description string `json:"description,omitempty"`
 
+	// Deployment defined 3scale product deployment mode
 	// +optional
 	Deployment *ProductDeploymentSpec `json:"deployment,omitempty"`
 
+	// Mapping Rules
+	// Array: MappingRule Spec
 	// +optional
 	MappingRules []MappingRuleSpec `json:"mappingRules,omitempty"`
 
@@ -672,9 +676,9 @@ type ProductSpec struct {
 	// +optional
 	Methods map[string]Methodpec `json:"methods,omitempty"`
 
-	// +optional
 	// Application Plans
 	// Map: system_name -> Application Plan Spec
+	// +optional
 	ApplicationPlans map[string]ApplicationPlanSpec `json:"applicationPlans,omitempty"`
 
 	// ProviderAccountRef references account provider credentials
