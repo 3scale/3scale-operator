@@ -28,9 +28,9 @@ func testPodTemplateLabels() map[string]string {
 		"threescale_component_element": "memcache",
 		"com.redhat.component-name":    "system-memcache",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "1.5",
+		"com.redhat.component-version": "2.9",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "system-memcache",
 	}
 }
