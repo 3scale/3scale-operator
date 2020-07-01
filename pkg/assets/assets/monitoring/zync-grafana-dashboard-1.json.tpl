@@ -73,7 +73,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
-          "legendFormat": "{{ '{{' }}status{{ '}}' }}",
+          "legendFormat": "{{`{{status}}`}}",
           "refId": "A"
         }
       ],
@@ -161,7 +161,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
-          "legendFormat": "{{ '{{' }}controller{{ '}}' }}",
+          "legendFormat": "{{`{{controller}}`}}",
           "refId": "A"
         }
       ],
@@ -249,7 +249,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
-          "legendFormat": "{{ '{{' }}controller{{ '}}' }}",
+          "legendFormat": "{{`{{controller}}`}}",
           "refId": "A"
         }
       ],
@@ -337,7 +337,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
-          "legendFormat": "{{ '{{' }}controller{{ '}}' }}",
+          "legendFormat": "{{`{{controller}}`}}",
           "refId": "A"
         }
       ],
@@ -425,7 +425,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
-          "legendFormat": "{{ '{{' }}controller{{ '}}' }}",
+          "legendFormat": "{{`{{controller}}`}}",
           "refId": "A"
         }
       ],
@@ -609,7 +609,7 @@
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}le{{ '}}' }}",
+          "legendFormat": "{{`{{le}}`}}",
           "refId": "A"
         }
       ],
@@ -674,7 +674,7 @@
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}le{{ '}}' }}",
+          "legendFormat": "{{`{{le}}`}}",
           "refId": "A"
         }
       ],
@@ -740,7 +740,7 @@
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}le{{ '}}' }}",
+          "legendFormat": "{{`{{le}}`}}",
           "refId": "A"
         }
       ],
@@ -806,7 +806,7 @@
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}le{{ '}}' }}",
+          "legendFormat": "{{`{{le}}`}}",
           "refId": "A"
         }
       ],
@@ -872,7 +872,7 @@
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}le{{ '}}' }}",
+          "legendFormat": "{{`{{le}}`}}",
           "refId": "A"
         }
       ],
@@ -958,7 +958,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}exported_job{{ '}}' }}",
+          "legendFormat": "{{`{{exported_job}}`}}",
           "refId": "A"
         }
       ],
@@ -1047,7 +1047,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}exported_job{{ '}}' }}",
+          "legendFormat": "{{`{{exported_job}}`}}",
           "refId": "A"
         }
       ],
@@ -1136,7 +1136,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}exported_job{{ '}}' }}",
+          "legendFormat": "{{`{{exported_job}}`}}",
           "refId": "A"
         }
       ],
@@ -1225,7 +1225,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}exported_job{{ '}}' }}",
+          "legendFormat": "{{`{{exported_job}}`}}",
           "refId": "A"
         }
       ],
@@ -1314,7 +1314,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}exported_job{{ '}}' }}",
+          "legendFormat": "{{`{{exported_job}}`}}",
           "refId": "A"
         }
       ],
@@ -1403,7 +1403,7 @@
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 10,
-          "legendFormat": "{{ '{{' }}exported_job{{ '}}' }}",
+          "legendFormat": "{{`{{exported_job}}`}}",
           "refId": "A"
         }
       ],
@@ -1853,7 +1853,7 @@
           "expr": "kube_deployment_status_replicas{namespace='$namespace',deployment=~'$deployment'}",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{ '{{' }}deployment{{ '}}' }}-total-pods",
+          "legendFormat": "{{`{{deployment}}`}}-total-pods",
           "legendLink": null,
           "refId": "A",
           "step": 10
@@ -1862,14 +1862,14 @@
           "expr": "kube_deployment_status_replicas_available{namespace='$namespace',deployment=~'$deployment'}",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{ '{{' }}deployment{{ '}}' }}-avail-pods",
+          "legendFormat": "{{`{{deployment}}`}}-avail-pods",
           "refId": "B"
         },
         {
           "expr": "kube_deployment_status_replicas_unavailable{namespace='$namespace',deployment=~'$deployment'}",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{ '{{' }}deployment{{ '}}' }}-unavail-pods",
+          "legendFormat": "{{`{{deployment}}`}}-unavail-pods",
           "refId": "C"
         },
         {
@@ -1968,7 +1968,7 @@
           "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "{{ '{{' }}pod{{ '}}' }}",
+          "legendFormat": "{{`{{pod}}`}}",
           "refId": "A"
         }
       ],
@@ -2071,7 +2071,7 @@
           "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{ '{{' }}pod{{ '}}' }}",
+          "legendFormat": "{{`{{pod}}`}}",
           "legendLink": null,
           "refId": "A",
           "step": 10
@@ -2422,7 +2422,7 @@
           "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{ '{{' }}pod{{ '}}' }}",
+          "legendFormat": "{{`{{pod}}`}}",
           "legendLink": null,
           "refId": "A",
           "step": 10
@@ -2770,7 +2770,7 @@
           "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{ '{{' }}pod{{ '}}' }}",
+          "legendFormat": "{{`{{pod}}`}}",
           "refId": "A"
         }
       ],
@@ -2857,7 +2857,7 @@
           "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{ '{{' }}pod{{ '}}' }}",
+          "legendFormat": "{{`{{pod}}`}}",
           "refId": "A"
         }
       ],
