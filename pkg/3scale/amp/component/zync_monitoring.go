@@ -118,26 +118,6 @@ func ZyncGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 	}
 }
 
-func ZyncQueGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
-	data := &struct {
-		Namespace string
-	}{
-		ns,
-	}
-	return &grafanav1alpha1.GrafanaDashboard{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-que",
-			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-			},
-		},
-		Spec: grafanav1alpha1.GrafanaDashboardSpec{
-			Json: assets.TemplateAsset("monitoring/zync-que-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/zync-que-grafana-dashboard-1.json", ns),
-		},
-	}
-}
-
 func ZyncPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{

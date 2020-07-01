@@ -7,7 +7,6 @@
 // assets/monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl
 // assets/monitoring/system-grafana-dashboard-1.json.tpl
 // assets/monitoring/zync-grafana-dashboard-1.json.tpl
-// assets/monitoring/zync-que-grafana-dashboard-1.json.tpl
 package assets
 
 import (
@@ -99,7 +98,7 @@ func monitoringApicastGrafanaDashboard1JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/apicast-grafana-dashboard-1.json.tpl", size: 84787, mode: os.FileMode(436), modTime: time.Unix(1592930935, 0)}
+	info := bindataFileInfo{name: "monitoring/apicast-grafana-dashboard-1.json.tpl", size: 84787, mode: os.FileMode(420), modTime: time.Unix(1593599880, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -119,7 +118,7 @@ func monitoringApicastGrafanaDashboard2JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/apicast-grafana-dashboard-2.json.tpl", size: 17167, mode: os.FileMode(436), modTime: time.Unix(1592930805, 0)}
+	info := bindataFileInfo{name: "monitoring/apicast-grafana-dashboard-2.json.tpl", size: 17167, mode: os.FileMode(420), modTime: time.Unix(1593599880, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -139,7 +138,7 @@ func monitoringBackendGrafanaDashboard1JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/backend-grafana-dashboard-1.json.tpl", size: 73139, mode: os.FileMode(436), modTime: time.Unix(1592930951, 0)}
+	info := bindataFileInfo{name: "monitoring/backend-grafana-dashboard-1.json.tpl", size: 73139, mode: os.FileMode(420), modTime: time.Unix(1593599880, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -159,7 +158,7 @@ func monitoringKubernetesResourcesByNamespaceGrafanaDashboard1JsonTpl() (*asset,
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/kubernetes-resources-by-namespace-grafana-dashboard-1.json.tpl", size: 46749, mode: os.FileMode(436), modTime: time.Unix(1592930805, 0)}
+	info := bindataFileInfo{name: "monitoring/kubernetes-resources-by-namespace-grafana-dashboard-1.json.tpl", size: 46749, mode: os.FileMode(420), modTime: time.Unix(1593599880, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -179,7 +178,7 @@ func monitoringKubernetesResourcesByPodGrafanaDashboard1JsonTpl() (*asset, error
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl", size: 41705, mode: os.FileMode(436), modTime: time.Unix(1592930805, 0)}
+	info := bindataFileInfo{name: "monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl", size: 41705, mode: os.FileMode(420), modTime: time.Unix(1593599880, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -199,7 +198,7 @@ func monitoringSystemGrafanaDashboard1JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/system-grafana-dashboard-1.json.tpl", size: 39175, mode: os.FileMode(436), modTime: time.Unix(1592930805, 0)}
+	info := bindataFileInfo{name: "monitoring/system-grafana-dashboard-1.json.tpl", size: 39175, mode: os.FileMode(420), modTime: time.Unix(1593599880, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -219,27 +218,7 @@ func monitoringZyncGrafanaDashboard1JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/zync-grafana-dashboard-1.json.tpl", size: 2821, mode: os.FileMode(436), modTime: time.Unix(1592930805, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _monitoringZyncQueGrafanaDashboard1JsonTpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xd4\x56\x5b\x6f\x23\x35\x14\x7e\xef\xaf\xb0\xce\x03\x02\x29\x81\x24\x4b\x17\x88\xb4\x0f\xa5\xa2\x68\xa5\xb2\xec\x2e\x17\x89\x6d\xab\xe8\x64\x7c\x32\x63\xe2\xd8\x83\xed\x49\x93\x46\xf9\xef\xc8\x9e\x9b\x27\x1e\xc1\xf3\xbe\x24\xf6\xe7\x33\xf6\xb9\x7c\xe7\xb3\x4f\x57\x8c\x01\x2a\xa5\x1d\x3a\xa1\x95\x85\x25\xf3\x10\x63\x20\x85\x75\xb0\x64\x0f\x61\xc6\x1a\x34\xac\xac\x2b\x21\xdd\x5b\x05\x4b\x36\x9f\xf4\x28\x47\x87\x56\x57\x26\x23\x58\x32\x98\x4e\xd9\xcf\x06\x37\xa8\x90\x4d\xa7\x10\x99\x91\xc2\xb5\xf4\x26\xce\x54\x14\xe1\x85\xe0\x23\xa8\xc8\xb4\xba\xd5\x52\x1b\xbf\xa7\xc9\xd7\xf8\xe5\x6c\xc2\x16\xf3\xf9\x84\x2d\xae\xaf\x27\x6c\xfe\x55\xbc\xb5\xc2\x5d\x38\xfb\xa6\x0f\x87\x7d\xc1\x6e\x24\x19\x67\x63\x3b\x77\x2c\x83\x1d\x47\x5b\xac\x35\x1a\x0e\xcd\xda\x39\xfc\x3f\x5d\x31\x76\xf6\xe6\x40\x5c\xb8\x0b\x6f\x21\x57\xe4\xde\x72\x58\x32\x55\x49\x59\x23\x06\xcb\xe2\x77\xad\xa5\x13\x25\x2c\xd9\x2c\x80\xc2\x9b\x2c\xc2\x50\x0a\xb5\xf5\x79\x7d\x78\x0a\xd3\x12\x15\x49\xdb\x65\xb6\xcd\x2b\xa0\x14\x68\x43\xac\xa1\x08\xe7\xd6\x61\x58\x63\x40\x36\x28\x6d\x97\x9a\xe0\xfb\x3d\xa9\xdc\x15\xbe\x0c\xb3\x01\x4e\xa9\xf9\x46\x48\x19\xd7\x0b\x72\x23\xf8\x7b\xdd\x97\xbb\xae\x01\x2c\xd9\x0f\x51\xa2\x9e\xfd\x27\x8b\x08\x38\xb4\xf1\x35\xf3\xa3\x9f\xb7\xc9\xeb\xf6\xee\x63\xaf\x89\x44\x39\x29\x3e\x3c\x09\xf7\xf9\xa5\x8f\x8c\x41\x56\x19\x43\xca\x8d\xac\xec\xf0\x30\x86\x0a\x35\x82\xda\x42\x3f\xa7\x4c\x72\xda\xa1\x1c\xb1\xde\xa3\xac\xfa\x84\x25\xb1\x48\xa1\xc2\x6a\xbc\x5b\x00\x9f\x05\xaf\x73\x1f\xa3\x51\x9d\x6b\x46\x56\x52\xbe\xd7\x42\xb9\x5f\x74\x60\x77\x00\x3a\x2a\x82\x2e\xbb\x9e\xeb\x4f\x2c\xc9\x64\xa4\x1c\xe6\x94\x54\xb1\xf4\x5b\x19\xe4\xa2\xb2\x83\x0c\x07\x3c\x2d\xba\x21\xc5\xc9\x50\xe8\x9d\x8d\xd4\xae\x3f\xd8\x92\x11\x64\x7f\xdd\x93\x31\x82\xd3\x85\xd3\xb6\xc4\x8c\xc6\xb8\x65\x1d\x66\xdb\xe4\x14\xeb\xa8\x2c\x89\xdf\x0b\x95\x3a\xec\xd0\xe4\xe4\x6c\x24\x23\xb1\x90\xf8\x0e\x3b\x94\x75\x6b\xa3\x90\x76\x95\x69\xa5\x28\xf3\x39\x59\x95\x5a\xcb\x68\x6e\x4f\x7f\xeb\xf5\x9b\x47\x78\x39\xaa\x6c\xfa\x4f\x45\xd3\x9d\x56\xc2\x69\x23\x54\xfe\x08\x13\xdf\xf8\xc1\xeb\x37\x8f\x70\x3a\xb1\xaf\xdf\xb5\x73\x76\x3e\x3f\xc2\x39\xea\x7d\xdf\x0a\xda\xec\xd0\x73\x0c\x9c\xd8\xd1\xaa\x4e\xc5\xd0\x44\x28\x47\x66\x1f\xe8\x02\xe3\x2b\x77\x98\xb9\x20\x4a\xf3\xc1\x72\x4d\xf5\xbb\xee\x84\x8f\x3e\x2c\x16\x85\x31\xdc\xcd\xd0\x26\x48\x09\xdc\x40\x07\x9f\x9b\x51\x5f\x0f\x57\x18\xb2\x85\x96\xfc\xa2\x4e\xde\xfd\x3b\xa3\x77\x91\x16\x75\xf8\x47\xca\x1b\x66\x5d\x7c\xf0\x5b\x21\x36\x2e\xfd\xc2\x05\x91\x83\x4f\x7f\xbd\xbb\x65\x1f\xfe\xf8\x89\xdd\x8e\xb8\x0c\xae\xd3\xb8\x53\xdc\x6d\x68\x88\xa7\xfd\x66\xb5\x71\x17\x6a\x11\x5a\x6d\xd5\xaa\xaf\x50\x5c\xec\x05\xaf\x50\x42\xd2\x75\xad\x4d\x90\xd6\xde\x81\x03\x1e\xc4\x85\x64\xad\xab\x6c\x5b\x33\x2c\x8e\xc8\x6b\x43\xd3\x71\x3e\xe8\x91\x4b\xe2\xc2\x7a\x5c\x33\x3a\x6d\x78\x78\x4a\x5c\x3c\xe2\x81\xfe\x83\xd8\x3d\xcb\x6c\xe1\x33\x31\xa4\x09\xae\x49\x26\x4e\xf8\x05\x9d\xff\x88\x96\x12\x5e\xd5\xf2\x97\x98\xd7\xfa\x97\xc0\x51\x30\x3d\xad\x26\x9f\x89\x9f\x09\xfd\x8f\x69\xd1\x51\x8a\x7c\x4c\xf9\x03\x7e\x4f\xfb\xce\xe9\xc1\xbd\xee\x7f\xeb\x2b\xd8\x66\x05\xed\xf0\x4f\x32\x56\xe8\xf0\x8c\xf9\xbe\x86\xdd\x51\x36\x0f\x03\xb3\x0d\x99\x00\x87\x79\x74\x75\x3b\xda\x95\x12\x9d\x50\x79\xfa\x4c\xea\x5f\x0d\x81\x71\xdd\xfa\xa6\xee\x50\x50\xfa\x79\xfa\xba\xe5\x32\x38\xdd\x60\x30\xf8\xac\x14\xd9\x36\xe8\x75\xf3\xb1\xa1\x8d\xef\xfd\x55\x2b\x3b\x31\xe1\xe0\x3a\x6a\xcd\xf9\x2c\x9a\xbc\x8a\x27\xf3\x5d\x3f\xbe\x8e\xc6\xf3\x78\xf2\x6a\x16\xaf\x44\x1d\xb7\x88\xc6\xf3\xe6\x9d\xf4\xd4\xc6\xe0\xe5\xb3\xbf\xc2\x1e\xfe\xf7\x94\x78\xe3\xd7\xf1\xc6\xf1\x29\x8b\x6f\xe3\x09\xef\xc7\xdf\xf1\xd8\xdf\xd6\x97\x41\xfa\x5e\x74\xb8\x83\xa0\xa9\x5d\xab\x6a\x97\x57\xc2\x37\x9f\x8e\x2a\xfb\x50\xd5\xb2\x00\xfb\x9e\x06\x57\xe7\xab\x7f\x03\x00\x00\xff\xff\x93\x34\xfc\x09\x10\x0b\x00\x00")
-
-func monitoringZyncQueGrafanaDashboard1JsonTplBytes() ([]byte, error) {
-	return bindataRead(
-		_monitoringZyncQueGrafanaDashboard1JsonTpl,
-		"monitoring/zync-que-grafana-dashboard-1.json.tpl",
-	)
-}
-
-func monitoringZyncQueGrafanaDashboard1JsonTpl() (*asset, error) {
-	bytes, err := monitoringZyncQueGrafanaDashboard1JsonTplBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "monitoring/zync-que-grafana-dashboard-1.json.tpl", size: 2832, mode: os.FileMode(436), modTime: time.Unix(1592930805, 0)}
+	info := bindataFileInfo{name: "monitoring/zync-grafana-dashboard-1.json.tpl", size: 2821, mode: os.FileMode(420), modTime: time.Unix(1593601886, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -303,7 +282,6 @@ var _bindata = map[string]func() (*asset, error){
 	"monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl":       monitoringKubernetesResourcesByPodGrafanaDashboard1JsonTpl,
 	"monitoring/system-grafana-dashboard-1.json.tpl":                            monitoringSystemGrafanaDashboard1JsonTpl,
 	"monitoring/zync-grafana-dashboard-1.json.tpl":                              monitoringZyncGrafanaDashboard1JsonTpl,
-	"monitoring/zync-que-grafana-dashboard-1.json.tpl":                          monitoringZyncQueGrafanaDashboard1JsonTpl,
 }
 
 // AssetDir returns the file names below a certain
@@ -355,7 +333,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl":       &bintree{monitoringKubernetesResourcesByPodGrafanaDashboard1JsonTpl, map[string]*bintree{}},
 		"system-grafana-dashboard-1.json.tpl":                            &bintree{monitoringSystemGrafanaDashboard1JsonTpl, map[string]*bintree{}},
 		"zync-grafana-dashboard-1.json.tpl":                              &bintree{monitoringZyncGrafanaDashboard1JsonTpl, map[string]*bintree{}},
-		"zync-que-grafana-dashboard-1.json.tpl":                          &bintree{monitoringZyncQueGrafanaDashboard1JsonTpl, map[string]*bintree{}},
 	}},
 }}
 
