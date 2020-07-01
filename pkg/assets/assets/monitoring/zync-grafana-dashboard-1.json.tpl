@@ -2929,8 +2929,8 @@
         "allValue": null,
         "current": {
           "tags": [],
-          "text": "{{ meta.namespace }}",
-          "value": "{{ meta.namespace }}"
+          "text": "{{ .Namespace }}",
+          "value": "{{ .Namespace }}"
         },
         "hide": 0,
         "includeAll": false,
@@ -2940,11 +2940,11 @@
         "options": [
           {
             "selected": true,
-            "text": "{{ meta.namespace }}",
-            "value": "{{ meta.namespace }}"
+            "text": "{{ .Namespace }}",
+            "value": "{{ .Namespace }}"
           }
         ],
-        "query": "{{ meta.namespace }}",
+        "query": "{{ .Namespace }}",
         "skipUrlSync": false,
         "type": "custom"
       },
@@ -3001,6 +3001,6 @@
     ]
   },
   "timezone": "",
-  "title": "{{ meta.namespace }} / 3scale Zync",
+  "title": "{{ .Namespace }} / 3scale / Zync",
   "version": 1
 }
