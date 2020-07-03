@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - APIManager CRD 3scale 2.8
+- Upgrade between 2.7 and 2.8 (no specific PR, implementation distributed in feature PR's)
 - Metrics endpoint include 3scale operator and product version [#290](https://github.com/3scale/3scale-operator/pull/290)
 - Move system-smtp to secret [#280](https://github.com/3scale/3scale-operator/pull/280)
 - Support s3 apicompatible service [#302](https://github.com/3scale/3scale-operator/pull/302)
@@ -19,6 +20,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - APIManager CRD 3scale 2.7
 - Make replicas configurable in scalable DeploymentConfigs [#220](https://github.com/3scale/3scale-operator/pull/220)
+- Upgrade between 2.6 and 2.7 [#203](https://github.com/3scale/3scale-operator/pull/203)
 
 ## [0.3.0] - 2019-11-06
 
