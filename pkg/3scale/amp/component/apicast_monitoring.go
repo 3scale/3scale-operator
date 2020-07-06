@@ -20,7 +20,7 @@ func (apicast *Apicast) ApicastProductionMonitoringService() *v1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-production-metrics",
-			Labels: apicast.Options.ProductionMonitoringLabels,
+			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -44,7 +44,7 @@ func (apicast *Apicast) ApicastStagingMonitoringService() *v1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-staging-metrics",
-			Labels: apicast.Options.StagingMonitoringLabels,
+			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -64,7 +64,7 @@ func (apicast *Apicast) ApicastProductionServiceMonitor() *monitoringv1.ServiceM
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-production",
-			Labels: apicast.Options.ProductionMonitoringLabels,
+			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -73,7 +73,7 @@ func (apicast *Apicast) ApicastProductionServiceMonitor() *monitoringv1.ServiceM
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: apicast.Options.ProductionMonitoringLabels,
+				MatchLabels: apicast.Options.CommonProductionLabels,
 			},
 		},
 	}
@@ -83,7 +83,7 @@ func (apicast *Apicast) ApicastStagingServiceMonitor() *monitoringv1.ServiceMoni
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-staging",
-			Labels: apicast.Options.StagingMonitoringLabels,
+			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -92,7 +92,7 @@ func (apicast *Apicast) ApicastStagingServiceMonitor() *monitoringv1.ServiceMoni
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: apicast.Options.StagingMonitoringLabels,
+				MatchLabels: apicast.Options.CommonStagingLabels,
 			},
 		},
 	}
@@ -143,9 +143,8 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast",
 			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-				"prometheus":     "application-monitoring",
-				"role":           "alert-rules",
+				"prometheus": "application-monitoring",
+				"role":       "alert-rules",
 			},
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{

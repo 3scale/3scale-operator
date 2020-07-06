@@ -100,9 +100,6 @@ func (b *Backend) options() (*component.BackendOptions, error) {
 	bo.ListenerPodTemplateLabels = b.listenerPodTemplateLabels()
 	bo.WorkerPodTemplateLabels = b.workerPodTemplateLabels()
 	bo.CronPodTemplateLabels = b.cronPodTemplateLabels()
-	// Not used, can be anything
-	bo.ListenerMonitoringLabels = map[string]string{"a": "a"}
-	bo.WorkerMonitoringLabels = map[string]string{"a": "a"}
 
 	err := bo.Validate()
 	return bo, err

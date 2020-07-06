@@ -92,7 +92,6 @@ type SystemOptions struct {
 	SphinxPodTemplateLabels  map[string]string `validate:"required"`
 	MemcachedLabels          map[string]string `validate:"required"`
 	SMTPLabels               map[string]string `validate:"required"`
-	SidekiqMonitoringLabels  map[string]string `validate:"required"`
 }
 
 func NewSystemOptions() *SystemOptions {
