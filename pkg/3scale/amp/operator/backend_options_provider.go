@@ -6,7 +6,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	v1 "k8s.io/api/core/v1"
@@ -56,8 +55,6 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.backendOptions.ListenerPodTemplateLabels = o.listenerPodTemplateLabels(imageOpts.BackendImage)
 	o.backendOptions.WorkerPodTemplateLabels = o.workerPodTemplateLabels(imageOpts.BackendImage)
 	o.backendOptions.CronPodTemplateLabels = o.cronPodTemplateLabels(imageOpts.BackendImage)
-	o.backendOptions.ListenerMonitoringLabels = o.listenerMonitoringLabels()
-	o.backendOptions.WorkerMonitoringLabels = o.workerMonitoringLabels()
 
 	o.backendOptions.WorkerMetrics = true
 	o.backendOptions.ListenerMetrics = true
@@ -234,17 +231,5 @@ func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels(image string) map
 
 	labels["deploymentConfig"] = "backend-cron"
 
-	return labels
-}
-
-func (o *OperatorBackendOptionsProvider) listenerMonitoringLabels() map[string]string {
-	labels := o.commonListenerLabels()
-	labels["monitoring-key"] = common.MonitoringKey
-	return labels
-}
-
-func (o *OperatorBackendOptionsProvider) workerMonitoringLabels() map[string]string {
-	labels := o.commonWorkerLabels()
-	labels["monitoring-key"] = common.MonitoringKey
 	return labels
 }

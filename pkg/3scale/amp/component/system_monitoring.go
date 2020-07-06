@@ -20,7 +20,7 @@ func (system *System) SystemSidekiqMonitoringService() *v1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-sidekiq-metrics",
-			Labels: system.Options.SidekiqMonitoringLabels,
+			Labels: system.Options.CommonSidekiqLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -40,7 +40,7 @@ func (system *System) SystemSidekiqServiceMonitor() *monitoringv1.ServiceMonitor
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-sidekiq",
-			Labels: system.Options.SidekiqMonitoringLabels,
+			Labels: system.Options.CommonSidekiqLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -49,7 +49,7 @@ func (system *System) SystemSidekiqServiceMonitor() *monitoringv1.ServiceMonitor
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: system.Options.SidekiqMonitoringLabels,
+				MatchLabels: system.Options.CommonSidekiqLabels,
 			},
 		},
 	}
@@ -80,9 +80,8 @@ func SystemSidekiqPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "system-sidekiq",
 			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-				"prometheus":     "application-monitoring",
-				"role":           "alert-rules",
+				"prometheus": "application-monitoring",
+				"role":       "alert-rules",
 			},
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{

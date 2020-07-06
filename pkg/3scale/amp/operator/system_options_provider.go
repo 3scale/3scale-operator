@@ -6,7 +6,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	v1 "k8s.io/api/core/v1"
@@ -54,7 +53,6 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.options.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels(imageOpts.SystemImage)
 	s.options.MemcachedLabels = s.memcachedLabels()
 	s.options.SMTPLabels = s.smtpLabels()
-	s.options.SidekiqMonitoringLabels = s.sidekiqMonitoringLabels()
 
 	err = s.setSecretBasedOptions()
 	if err != nil {
@@ -558,11 +556,5 @@ func (s *SystemOptionsProvider) sphinxPodTemplateLabels(image string) map[string
 
 	labels["deploymentConfig"] = "system-sphinx"
 
-	return labels
-}
-
-func (s *SystemOptionsProvider) sidekiqMonitoringLabels() map[string]string {
-	labels := s.commonSidekiqLabels()
-	labels["monitoring-key"] = common.MonitoringKey
 	return labels
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	v1 "k8s.io/api/core/v1"
@@ -60,8 +59,6 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.zyncOptions.ZyncPodTemplateLabels = z.zyncPodTemplateLabels(imageOpts.ZyncImage)
 	z.zyncOptions.ZyncQuePodTemplateLabels = z.zyncQuePodTemplateLabels(imageOpts.ZyncImage)
 	z.zyncOptions.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels(imageOpts.ZyncDatabasePostgreSQLImage)
-	z.zyncOptions.ZyncMonitoringLabels = z.zyncMonitoringLabels()
-	z.zyncOptions.ZyncQueMonitoringLabels = z.zyncQueMonitoringLabels()
 
 	err = z.zyncOptions.Validate()
 	if err != nil {
@@ -192,17 +189,5 @@ func (z *ZyncOptionsProvider) zyncDatabasePodTemplateLabels(image string) map[st
 
 	labels["deploymentConfig"] = "zync-database"
 
-	return labels
-}
-
-func (z *ZyncOptionsProvider) zyncMonitoringLabels() map[string]string {
-	labels := z.commonZyncLabels()
-	labels["monitoring-key"] = common.MonitoringKey
-	return labels
-}
-
-func (z *ZyncOptionsProvider) zyncQueMonitoringLabels() map[string]string {
-	labels := z.commonZyncQueLabels()
-	labels["monitoring-key"] = common.MonitoringKey
 	return labels
 }

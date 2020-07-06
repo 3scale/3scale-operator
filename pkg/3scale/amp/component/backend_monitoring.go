@@ -20,7 +20,7 @@ func (backend *Backend) BackendListenerMonitoringService() *v1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-listener-metrics",
-			Labels: backend.Options.ListenerMonitoringLabels,
+			Labels: backend.Options.CommonListenerLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -40,7 +40,7 @@ func (backend *Backend) BackendListenerServiceMonitor() *monitoringv1.ServiceMon
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-listener",
-			Labels: backend.Options.ListenerMonitoringLabels,
+			Labels: backend.Options.CommonListenerLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -49,7 +49,7 @@ func (backend *Backend) BackendListenerServiceMonitor() *monitoringv1.ServiceMon
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: backend.Options.ListenerMonitoringLabels,
+				MatchLabels: backend.Options.CommonListenerLabels,
 			},
 		},
 	}
@@ -63,7 +63,7 @@ func (backend *Backend) BackendWorkerMonitoringService() *v1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-worker-metrics",
-			Labels: backend.Options.WorkerMonitoringLabels,
+			Labels: backend.Options.CommonWorkerLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -83,7 +83,7 @@ func (backend *Backend) BackendWorkerServiceMonitor() *monitoringv1.ServiceMonit
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-worker",
-			Labels: backend.Options.WorkerMonitoringLabels,
+			Labels: backend.Options.CommonWorkerLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -92,7 +92,7 @@ func (backend *Backend) BackendWorkerServiceMonitor() *monitoringv1.ServiceMonit
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: backend.Options.WorkerMonitoringLabels,
+				MatchLabels: backend.Options.CommonWorkerLabels,
 			},
 		},
 	}
@@ -123,9 +123,8 @@ func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-worker",
 			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-				"prometheus":     "application-monitoring",
-				"role":           "alert-rules",
+				"prometheus": "application-monitoring",
+				"role":       "alert-rules",
 			},
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
