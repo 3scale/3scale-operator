@@ -20,7 +20,7 @@ func (zync *Zync) ZyncMonitoringService() *v1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync-metrics",
-			Labels: zync.Options.ZyncMonitoringLabels,
+			Labels: zync.Options.CommonZyncLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -44,7 +44,7 @@ func (zync *Zync) ZyncQueMonitoringService() *v1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync-que-metrics",
-			Labels: zync.Options.ZyncQueMonitoringLabels,
+			Labels: zync.Options.CommonZyncQueLabels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -64,7 +64,7 @@ func (zync *Zync) ZyncServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync",
-			Labels: zync.Options.ZyncMonitoringLabels,
+			Labels: zync.Options.CommonZyncLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -73,7 +73,7 @@ func (zync *Zync) ZyncServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: zync.Options.ZyncMonitoringLabels,
+				MatchLabels: zync.Options.CommonZyncLabels,
 			},
 		},
 	}
@@ -83,7 +83,7 @@ func (zync *Zync) ZyncQueServiceMonitor() *monitoringv1.ServiceMonitor {
 	return &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync-que",
-			Labels: zync.Options.ZyncQueMonitoringLabels,
+			Labels: zync.Options.CommonZyncQueLabels,
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
 			Endpoints: []monitoringv1.Endpoint{{
@@ -92,7 +92,7 @@ func (zync *Zync) ZyncQueServiceMonitor() *monitoringv1.ServiceMonitor {
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: zync.Options.ZyncQueMonitoringLabels,
+				MatchLabels: zync.Options.CommonZyncQueLabels,
 			},
 		},
 	}
@@ -123,9 +123,8 @@ func ZyncPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync",
 			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-				"prometheus":     "application-monitoring",
-				"role":           "alert-rules",
+				"prometheus": "application-monitoring",
+				"role":       "alert-rules",
 			},
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
@@ -157,9 +156,8 @@ func ZyncQuePrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync-que",
 			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-				"prometheus":     "application-monitoring",
-				"role":           "alert-rules",
+				"prometheus": "application-monitoring",
+				"role":       "alert-rules",
 			},
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{

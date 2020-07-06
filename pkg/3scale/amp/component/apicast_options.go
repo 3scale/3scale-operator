@@ -25,8 +25,6 @@ type ApicastOptions struct {
 	ProductionTolerations          []v1.Toleration   `validate:"-"`
 	StagingAffinity                *v1.Affinity      `validate:"-"`
 	StagingTolerations             []v1.Toleration   `validate:"-"`
-	StagingMonitoringLabels        map[string]string `validate:"required"`
-	ProductionMonitoringLabels     map[string]string `validate:"required"`
 }
 
 func NewApicastOptions() *ApicastOptions {
