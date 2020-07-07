@@ -92,6 +92,10 @@ const (
 )
 
 const (
+	SystemSidekiqName = "system-sidekiq"
+)
+
+const (
 	SystemSidekiqMetricsPort = 9394
 )
 
@@ -743,7 +747,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-sidekiq",
+			Name:   SystemSidekiqName,
 			Labels: system.Options.CommonSidekiqLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -769,13 +773,13 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
-						ContainerNames: []string{"check-svc", "system-sidekiq"},
+						ContainerNames: []string{"check-svc", SystemSidekiqName},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
 							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag)}}},
 			},
 			Replicas: *system.Options.SidekiqReplicas,
-			Selector: map[string]string{"deploymentConfig": "system-sidekiq"},
+			Selector: map[string]string{"deploymentConfig": SystemSidekiqName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: system.Options.SidekiqPodTemplateLabels,
@@ -798,7 +802,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:            "system-sidekiq",
+							Name:            SystemSidekiqName,
 							Image:           "amp-system:latest",
 							Args:            []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
 							Env:             system.buildSystemBaseEnv(),
