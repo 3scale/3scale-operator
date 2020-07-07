@@ -319,6 +319,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		SphinxPodTemplateLabels:  testSystemSphinxPodTemplateLabels(),
 		MemcachedLabels:          testSystemMemcachedLabels(),
 		SMTPLabels:               testSystemSMTPLabels(),
+		SideKiqMetrics:           true,
 	}
 
 	expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(opts.ApicastAccessToken)

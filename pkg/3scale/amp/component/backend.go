@@ -126,9 +126,7 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 							Env:             backend.buildBackendWorkerEnv(),
 							Resources:       backend.Options.WorkerResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{Name: "metrics", ContainerPort: BackendWorkerMetricsPort, Protocol: v1.ProtocolTCP},
-							},
+							Ports:           backend.workerPorts(),
 						},
 					},
 					ServiceAccountName: "amp"}},
@@ -260,15 +258,10 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations: backend.Options.ListenerTolerations,
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  BackendListenerName,
-							Image: "amp-backend:latest",
-							Args:  []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{HostPort: 0,
-									ContainerPort: 3000,
-									Protocol:      v1.ProtocolTCP},
-								v1.ContainerPort{Name: "metrics", ContainerPort: BackendListenerMetricsPort, Protocol: v1.ProtocolTCP},
-							},
+							Name:      BackendListenerName,
+							Image:     "amp-backend:latest",
+							Args:      []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
+							Ports:     backend.listenerPorts(),
 							Env:       backend.buildBackendListenerEnv(),
 							Resources: backend.Options.ListenerResourceRequirements,
 							LivenessProbe: &v1.Probe{
@@ -541,4 +534,26 @@ func (backend *Backend) ListenerPodDisruptionBudget() *v1beta1.PodDisruptionBudg
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
 	}
+}
+
+func (backend *Backend) listenerPorts() []v1.ContainerPort {
+	ports := []v1.ContainerPort{
+		v1.ContainerPort{HostPort: 0, ContainerPort: 3000, Protocol: v1.ProtocolTCP},
+	}
+
+	if backend.Options.ListenerMetrics {
+		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: BackendListenerMetricsPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
+}
+
+func (backend *Backend) workerPorts() []v1.ContainerPort {
+	ports := []v1.ContainerPort{}
+
+	if backend.Options.WorkerMetrics {
+		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: BackendWorkerMetricsPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
 }

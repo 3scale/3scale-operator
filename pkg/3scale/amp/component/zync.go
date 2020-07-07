@@ -236,13 +236,8 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 						v1.Container{
 							Name:  "zync",
 							Image: "amp-zync:latest",
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
-									ContainerPort: 8080,
-									Protocol:      v1.ProtocolTCP},
-								v1.ContainerPort{Name: "metrics", ContainerPort: ZyncMetricsPort, Protocol: v1.ProtocolTCP},
-							},
-							Env: zync.commonZyncEnvVars(),
+							Ports: zync.zyncPorts(),
+							Env:   zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
@@ -601,4 +596,16 @@ func (zync *Zync) QuePodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
 	}
+}
+
+func (zync *Zync) zyncPorts() []v1.ContainerPort {
+	ports := []v1.ContainerPort{
+		v1.ContainerPort{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
+	}
+
+	if zync.Options.ZyncMetrics {
+		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: ZyncMetricsPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
 }

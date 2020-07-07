@@ -805,9 +805,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:       *system.Options.SidekiqContainerResourceRequirements,
 							VolumeMounts:    system.sidekiqContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{ContainerPort: SystemSidekiqMetricsPort, Protocol: v1.ProtocolTCP, Name: "metrics"},
-							},
+							Ports:           system.sideKiqPorts(),
 						},
 					},
 					ServiceAccountName: "amp",
@@ -1233,4 +1231,14 @@ func (system *System) SidekiqPodDisruptionBudget() *v1beta1.PodDisruptionBudget 
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
 	}
+}
+
+func (system *System) sideKiqPorts() []v1.ContainerPort {
+	ports := []v1.ContainerPort{}
+
+	if system.Options.SideKiqMetrics {
+		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: SystemSidekiqMetricsPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
 }
