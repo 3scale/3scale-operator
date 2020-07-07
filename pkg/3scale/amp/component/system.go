@@ -91,6 +91,10 @@ const (
 	SystemFileStoragePVCName = "system-storage"
 )
 
+const (
+	SystemSidekiqMetricsPort = 9394
+)
+
 type System struct {
 	Options *SystemOptions
 }
@@ -801,6 +805,9 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:       *system.Options.SidekiqContainerResourceRequirements,
 							VolumeMounts:    system.sidekiqContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
+							Ports: []v1.ContainerPort{
+								v1.ContainerPort{ContainerPort: SystemSidekiqMetricsPort, Protocol: v1.ProtocolTCP, Name: "metrics"},
+							},
 						},
 					},
 					ServiceAccountName: "amp",

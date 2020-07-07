@@ -6,7 +6,7 @@ The 3scale monitoring resources are (optionally) installed when 3scale is instal
 
 * [prometheus-operator](https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus#quickstart) needs to be deployed in the cluster.
 
-The prometheus operator is an operator that creates, configures, and manages Prometheus clusters atop Kubernetes. It provides `ServiceMonitor` and `PrometheusRule` custom resources required by 3scale monitoring.
+The prometheus operator is an operator that creates, configures, and manages Prometheus clusters atop Kubernetes. It provides `ServiceMonitor`, `PodMonitor` and `PrometheusRule` custom resources required by 3scale monitoring.
 
 * [grafana-operator](https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus#quickstart) needs to be deployed in the cluster.
 
@@ -40,7 +40,7 @@ spec:
 
 ## Exposing monitoring resources
 
-3scale operator created monitoring resources, i.e. `ServiceMonitor`, `PrometheusRule` and `ServiceMonitor`, will all be labeled with
+`GrafanaDashboard` resources will all be labeled with
 
 ```
 monitoring-key: middleware
