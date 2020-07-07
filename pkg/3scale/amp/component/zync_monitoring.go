@@ -7,67 +7,18 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func (zync *Zync) ZyncMonitoringService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "zync-metrics",
-			Labels: zync.Options.CommonZyncLabels,
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "metrics",
-					Protocol:   v1.ProtocolTCP,
-					Port:       9393,
-					TargetPort: intstr.FromInt(9393),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "zync"},
-		},
-	}
-}
-
-func (zync *Zync) ZyncQueMonitoringService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "zync-que-metrics",
-			Labels: zync.Options.CommonZyncQueLabels,
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "metrics",
-					Protocol:   v1.ProtocolTCP,
-					Port:       9394,
-					TargetPort: intstr.FromInt(9394),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "zync-que"},
-		},
-	}
-}
-
-func (zync *Zync) ZyncServiceMonitor() *monitoringv1.ServiceMonitor {
-	return &monitoringv1.ServiceMonitor{
+func (zync *Zync) ZyncPodMonitor() *monitoringv1.PodMonitor {
+	return &monitoringv1.PodMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync",
 			Labels: zync.Options.CommonZyncLabels,
 		},
-		Spec: monitoringv1.ServiceMonitorSpec{
-			Endpoints: []monitoringv1.Endpoint{{
+		Spec: monitoringv1.PodMonitorSpec{
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{{
 				Port:   "metrics",
 				Path:   "/metrics",
 				Scheme: "http",
@@ -79,14 +30,14 @@ func (zync *Zync) ZyncServiceMonitor() *monitoringv1.ServiceMonitor {
 	}
 }
 
-func (zync *Zync) ZyncQueServiceMonitor() *monitoringv1.ServiceMonitor {
-	return &monitoringv1.ServiceMonitor{
+func (zync *Zync) ZyncQuePodMonitor() *monitoringv1.PodMonitor {
+	return &monitoringv1.PodMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync-que",
 			Labels: zync.Options.CommonZyncQueLabels,
 		},
-		Spec: monitoringv1.ServiceMonitorSpec{
-			Endpoints: []monitoringv1.Endpoint{{
+		Spec: monitoringv1.PodMonitorSpec{
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{{
 				Port:   "metrics",
 				Path:   "/metrics",
 				Scheme: "http",

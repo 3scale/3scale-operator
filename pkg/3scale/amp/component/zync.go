@@ -21,6 +21,11 @@ const (
 	ZyncSecretAuthenticationTokenFieldName = "ZYNC_AUTHENTICATION_TOKEN"
 )
 
+const (
+	ZyncMetricsPort    = 9393
+	ZyncQueMetricsPort = 9394
+)
+
 type Zync struct {
 	Options *ZyncOptions
 }
@@ -235,6 +240,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 								v1.ContainerPort{
 									ContainerPort: 8080,
 									Protocol:      v1.ProtocolTCP},
+								v1.ContainerPort{Name: "metrics", ContainerPort: ZyncMetricsPort, Protocol: v1.ProtocolTCP},
 							},
 							Env: zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
@@ -384,7 +390,7 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 								},
 							},
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{Name: "metrics", ContainerPort: 9394, Protocol: v1.ProtocolTCP},
+								v1.ContainerPort{Name: "metrics", ContainerPort: ZyncQueMetricsPort, Protocol: v1.ProtocolTCP},
 							},
 							Resources: zync.Options.QueContainerResourceRequirements,
 							Env:       zync.commonZyncEnvVars(),

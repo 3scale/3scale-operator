@@ -97,16 +97,6 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(apicast.ApicastStagingMonitoringService(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	err = r.ReconcileMonitoringService(apicast.ApicastProductionMonitoringService(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	err = r.ReconcileGrafanaDashboard(component.ApicastMainAppGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -122,12 +112,12 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(apicast.ApicastProductionServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodMonitor(apicast.ApicastProductionPodMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileServiceMonitor(apicast.ApicastStagingServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodMonitor(apicast.ApicastStagingPodMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

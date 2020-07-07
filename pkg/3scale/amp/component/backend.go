@@ -126,6 +126,9 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 							Env:             backend.buildBackendWorkerEnv(),
 							Resources:       backend.Options.WorkerResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
+							Ports: []v1.ContainerPort{
+								v1.ContainerPort{Name: "metrics", ContainerPort: BackendWorkerMetricsPort, Protocol: v1.ProtocolTCP},
+							},
 						},
 					},
 					ServiceAccountName: "amp"}},
@@ -264,6 +267,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 								v1.ContainerPort{HostPort: 0,
 									ContainerPort: 3000,
 									Protocol:      v1.ProtocolTCP},
+								v1.ContainerPort{Name: "metrics", ContainerPort: BackendListenerMetricsPort, Protocol: v1.ProtocolTCP},
 							},
 							Env:       backend.buildBackendListenerEnv(),
 							Resources: backend.Options.ListenerResourceRequirements,
