@@ -765,6 +765,20 @@ func (u *UpgradeApiManager) upgradeMonitoringSettings() (reconcile.Result, error
 	}
 	updated = updated || updatedTmp
 
+	// Ports need to be exposed in DC for monitoring
+	updatedTmp, err = u.ensureZyncMonitoringSettings()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
+	// Ports need to be exposed in DC for monitoring
+	updatedTmp, err = u.ensureSystemSidekiqMonitoringSettings()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
 	return reconcile.Result{Requeue: updated}, nil
 }
 
@@ -849,6 +863,11 @@ func (u *UpgradeApiManager) ensureBackendWorkerMonitoringSettings() (bool, error
 		update = true
 	}
 
+	if _, ok := helper.FindContainerPortByName(existing.Spec.Template.Spec.Containers[0].Ports, "metrics"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Ports = append(existing.Spec.Template.Spec.Containers[0].Ports, v1.ContainerPort{Name: "metrics", ContainerPort: component.BackendWorkerMetricsPort, Protocol: v1.ProtocolTCP})
+		update = true
+	}
+
 	if update {
 		u.Logger().Info(fmt.Sprintf("Enabling metrics to DC %s", component.BackendWorkerName))
 		err = u.UpdateResource(existing)
@@ -883,8 +902,71 @@ func (u *UpgradeApiManager) ensureBackendListenerMonitoringSettings() (bool, err
 		update = true
 	}
 
+	if _, ok := helper.FindContainerPortByName(existing.Spec.Template.Spec.Containers[0].Ports, "metrics"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Ports = append(existing.Spec.Template.Spec.Containers[0].Ports, v1.ContainerPort{Name: "metrics", ContainerPort: component.BackendListenerMetricsPort, Protocol: v1.ProtocolTCP})
+		update = true
+	}
+
 	if update {
 		u.Logger().Info(fmt.Sprintf("Enabling metrics to DC %s", component.BackendListenerName))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return update, nil
+}
+
+func (u *UpgradeApiManager) ensureZyncMonitoringSettings() (bool, error) {
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: component.ZyncName, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	if len(existing.Spec.Template.Spec.Containers) != 1 {
+		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
+			component.ZyncName, len(existing.Spec.Template.Spec.Containers))
+	}
+
+	update := false
+	if _, ok := helper.FindContainerPortByName(existing.Spec.Template.Spec.Containers[0].Ports, "metrics"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Ports = append(existing.Spec.Template.Spec.Containers[0].Ports, v1.ContainerPort{Name: "metrics", ContainerPort: component.ZyncMetricsPort, Protocol: v1.ProtocolTCP})
+		update = true
+	}
+
+	if update {
+		u.Logger().Info(fmt.Sprintf("Enabling metrics to DC %s", component.ZyncName))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return update, nil
+}
+
+func (u *UpgradeApiManager) ensureSystemSidekiqMonitoringSettings() (bool, error) {
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: component.SystemSidekiqName, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	if len(existing.Spec.Template.Spec.Containers) != 1 {
+		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
+			component.SystemSidekiqName, len(existing.Spec.Template.Spec.Containers))
+	}
+
+	update := false
+	if _, ok := helper.FindContainerPortByName(existing.Spec.Template.Spec.Containers[0].Ports, "metrics"); !ok {
+		existing.Spec.Template.Spec.Containers[0].Ports = append(existing.Spec.Template.Spec.Containers[0].Ports, v1.ContainerPort{Name: "metrics", ContainerPort: component.SystemSidekiqMetricsPort, Protocol: v1.ProtocolTCP})
+		update = true
+	}
+
+	if update {
+		u.Logger().Info(fmt.Sprintf("Enabling metrics to DC %s", component.SystemSidekiqName))
 		err = u.UpdateResource(existing)
 		if err != nil {
 			return false, err
