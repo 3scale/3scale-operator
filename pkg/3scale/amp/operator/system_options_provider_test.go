@@ -133,14 +133,6 @@ func testSystemSMTPLabels() map[string]string {
 		"threescale_component_element": "smtp",
 	}
 }
-func testSystemSidekiqMonitoringLabels() map[string]string {
-	return map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "sidekiq",
-		"monitoring-key":               "middleware",
-	}
-}
 
 func testSystemAppAffinity() *v1.Affinity {
 	return getTestAffinity("system-app")
@@ -327,7 +319,6 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		SphinxPodTemplateLabels:  testSystemSphinxPodTemplateLabels(),
 		MemcachedLabels:          testSystemMemcachedLabels(),
 		SMTPLabels:               testSystemSMTPLabels(),
-		SidekiqMonitoringLabels:  testSystemSidekiqMonitoringLabels(),
 	}
 
 	expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(opts.ApicastAccessToken)

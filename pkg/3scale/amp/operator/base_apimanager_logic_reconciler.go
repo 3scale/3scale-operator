@@ -115,13 +115,6 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileRoleBinding(desired *rbacv1.Rol
 	return r.ReconcileResource(&rbacv1.RoleBinding{}, desired, mutateFn)
 }
 
-func (r *BaseAPIManagerLogicReconciler) ReconcileMonitoringService(desired *v1.Service, mutateFn reconcilers.MutateFn) error {
-	if !r.apiManager.IsMonitoringEnabled() {
-		common.TagObjectToDelete(desired)
-	}
-	return r.ReconcileResource(&v1.Service{}, desired, mutateFn)
-}
-
 func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafanav1alpha1.GrafanaDashboard, mutateFn reconcilers.MutateFn) error {
 	kindExists, err := r.hasGrafanaDashboards()
 	if err != nil {
@@ -188,6 +181,29 @@ func (r *BaseAPIManagerLogicReconciler) hasServiceMonitors() (bool, error) {
 	return k8sutil.ResourceExists(r.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.ServiceMonitorsKind)
+}
+
+func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv1.PodMonitor, mutateFn reconcilers.MutateFn) error {
+	kindExists, err := r.hasPodMonitors()
+	if err != nil {
+		return err
+	}
+
+	if !kindExists {
+		r.Logger().Info("Install prometheus-operator in your cluster to create podmonitor objects", "Error creating podmonitor object", desired.Name)
+		return nil
+	}
+
+	if !r.apiManager.IsMonitoringEnabled() {
+		common.TagObjectToDelete(desired)
+	}
+	return r.ReconcileResource(&monitoringv1.PodMonitor{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) hasPodMonitors() (bool, error) {
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
+		monitoringv1.SchemeGroupVersion.String(),
+		monitoringv1.PodMonitorsKind)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutatefn reconcilers.MutateFn) error {
