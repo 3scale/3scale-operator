@@ -64,6 +64,8 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.setFileStorageOptions()
 	s.setReplicas()
 
+	s.options.SideKiqMetrics = true
+
 	err = s.options.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("GetSystemOptions validating: %w", err)
