@@ -188,8 +188,7 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 		ListenerPodTemplateLabels:    testBackendListenerPodLabels(),
 		WorkerPodTemplateLabels:      testBackendWorkerPodLabels(),
 		CronPodTemplateLabels:        testBackendCronPodLabels(),
-		WorkerMetrics:                true,
-		ListenerMetrics:              true,
+		OperatorDeployment:           true,
 	}
 }
 

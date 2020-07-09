@@ -1240,7 +1240,7 @@ func (system *System) SidekiqPodDisruptionBudget() *v1beta1.PodDisruptionBudget 
 func (system *System) sideKiqPorts() []v1.ContainerPort {
 	var ports []v1.ContainerPort
 
-	if system.Options.SideKiqMetrics {
+	if system.Options.OperatorDeployment {
 		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: SystemSidekiqMetricsPort, Protocol: v1.ProtocolTCP})
 	}
 

@@ -409,7 +409,7 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
 	)
 
-	if backend.Options.WorkerMetrics {
+	if backend.Options.OperatorDeployment {
 		result = append(result,
 			v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_PORT", Value: BackendWorkerMetricsPortStr},
 			v1.EnvVar{Name: "CONFIG_WORKER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
@@ -434,7 +434,7 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
 	)
 
-	if backend.Options.ListenerMetrics {
+	if backend.Options.OperatorDeployment {
 		result = append(result,
 			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_PORT", Value: BackendListenerMetricsPortStr},
 			v1.EnvVar{Name: "CONFIG_LISTENER_PROMETHEUS_METRICS_ENABLED", Value: "true"},
@@ -541,7 +541,7 @@ func (backend *Backend) listenerPorts() []v1.ContainerPort {
 		v1.ContainerPort{HostPort: 0, ContainerPort: 3000, Protocol: v1.ProtocolTCP},
 	}
 
-	if backend.Options.ListenerMetrics {
+	if backend.Options.OperatorDeployment {
 		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: BackendListenerMetricsPort, Protocol: v1.ProtocolTCP})
 	}
 
@@ -551,7 +551,7 @@ func (backend *Backend) listenerPorts() []v1.ContainerPort {
 func (backend *Backend) workerPorts() []v1.ContainerPort {
 	var ports []v1.ContainerPort
 
-	if backend.Options.WorkerMetrics {
+	if backend.Options.OperatorDeployment {
 		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: BackendWorkerMetricsPort, Protocol: v1.ProtocolTCP})
 	}
 

@@ -56,8 +56,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.backendOptions.WorkerPodTemplateLabels = o.workerPodTemplateLabels(imageOpts.BackendImage)
 	o.backendOptions.CronPodTemplateLabels = o.cronPodTemplateLabels(imageOpts.BackendImage)
 
-	o.backendOptions.WorkerMetrics = true
-	o.backendOptions.ListenerMetrics = true
+	o.backendOptions.OperatorDeployment = true
 
 	err = o.backendOptions.Validate()
 	if err != nil {

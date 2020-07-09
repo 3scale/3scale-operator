@@ -64,7 +64,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.setFileStorageOptions()
 	s.setReplicas()
 
-	s.options.SideKiqMetrics = true
+	s.options.OperatorDeployment = true
 
 	err = s.options.Validate()
 	if err != nil {

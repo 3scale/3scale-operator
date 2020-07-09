@@ -160,7 +160,7 @@ func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 		ZyncPodTemplateLabels:                 testZyncPodTemplateLabels(),
 		ZyncQuePodTemplateLabels:              testZyncQuePodTemplateCommonLabels(),
 		ZyncDatabasePodTemplateLabels:         testZyncDatabasePodTemplateCommonLabels(),
-		ZyncMetrics:                           true,
+		OperatorDeployment:                    true,
 	}
 
 	expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(expectedOpts.DatabasePassword)

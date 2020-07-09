@@ -60,7 +60,7 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.zyncOptions.ZyncQuePodTemplateLabels = z.zyncQuePodTemplateLabels(imageOpts.ZyncImage)
 	z.zyncOptions.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels(imageOpts.ZyncDatabasePostgreSQLImage)
 
-	z.zyncOptions.ZyncMetrics = true
+	z.zyncOptions.OperatorDeployment = true
 
 	err = z.zyncOptions.Validate()
 	if err != nil {

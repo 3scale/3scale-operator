@@ -607,7 +607,7 @@ func (zync *Zync) zyncPorts() []v1.ContainerPort {
 		v1.ContainerPort{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
 	}
 
-	if zync.Options.ZyncMetrics {
+	if zync.Options.OperatorDeployment {
 		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: ZyncMetricsPort, Protocol: v1.ProtocolTCP})
 	}
 
