@@ -549,7 +549,7 @@ func (backend *Backend) listenerPorts() []v1.ContainerPort {
 }
 
 func (backend *Backend) workerPorts() []v1.ContainerPort {
-	ports := []v1.ContainerPort{}
+	var ports []v1.ContainerPort
 
 	if backend.Options.WorkerMetrics {
 		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: BackendWorkerMetricsPort, Protocol: v1.ProtocolTCP})
