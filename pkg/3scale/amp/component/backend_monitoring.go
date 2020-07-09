@@ -7,92 +7,43 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func (backend *Backend) BackendListenerMonitoringService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-listener-metrics",
-			Labels: backend.Options.ListenerMonitoringLabels,
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "metrics",
-					Protocol:   v1.ProtocolTCP,
-					Port:       BackendListenerMetricsPort,
-					TargetPort: intstr.FromInt(BackendListenerMetricsPort),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "backend-listener"},
-		},
-	}
-}
-
-func (backend *Backend) BackendListenerServiceMonitor() *monitoringv1.ServiceMonitor {
-	return &monitoringv1.ServiceMonitor{
+func (backend *Backend) BackendListenerPodMonitor() *monitoringv1.PodMonitor {
+	return &monitoringv1.PodMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-listener",
-			Labels: backend.Options.ListenerMonitoringLabels,
+			Labels: backend.Options.CommonListenerLabels,
 		},
-		Spec: monitoringv1.ServiceMonitorSpec{
-			Endpoints: []monitoringv1.Endpoint{{
+		Spec: monitoringv1.PodMonitorSpec{
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{{
 				Port:   "metrics",
 				Path:   "/metrics",
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: backend.Options.ListenerMonitoringLabels,
+				MatchLabels: backend.Options.CommonListenerLabels,
 			},
 		},
 	}
 }
 
-func (backend *Backend) BackendWorkerMonitoringService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-worker-metrics",
-			Labels: backend.Options.WorkerMonitoringLabels,
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "metrics",
-					Protocol:   v1.ProtocolTCP,
-					Port:       BackendWorkerMetricsPort,
-					TargetPort: intstr.FromInt(BackendWorkerMetricsPort),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "backend-worker"},
-		},
-	}
-}
-
-func (backend *Backend) BackendWorkerServiceMonitor() *monitoringv1.ServiceMonitor {
-	return &monitoringv1.ServiceMonitor{
+func (backend *Backend) BackendWorkerPodMonitor() *monitoringv1.PodMonitor {
+	return &monitoringv1.PodMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-worker",
-			Labels: backend.Options.WorkerMonitoringLabels,
+			Labels: backend.Options.CommonWorkerLabels,
 		},
-		Spec: monitoringv1.ServiceMonitorSpec{
-			Endpoints: []monitoringv1.Endpoint{{
+		Spec: monitoringv1.PodMonitorSpec{
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{{
 				Port:   "metrics",
 				Path:   "/metrics",
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: backend.Options.WorkerMonitoringLabels,
+				MatchLabels: backend.Options.CommonWorkerLabels,
 			},
 		},
 	}
@@ -123,9 +74,8 @@ func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "backend-worker",
 			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-				"prometheus":     "application-monitoring",
-				"role":           "alert-rules",
+				"prometheus": "application-monitoring",
+				"role":       "alert-rules",
 			},
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{

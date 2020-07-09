@@ -675,6 +675,7 @@ spec:
         - apiGroups:
           - monitoring.coreos.com
           resources:
+          - podmonitors
           - servicemonitors
           - prometheusrules
           verbs:

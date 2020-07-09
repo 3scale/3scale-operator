@@ -14,11 +14,20 @@ import (
 )
 
 const (
+	ZyncName = "zync"
+)
+
+const (
 	ZyncSecretName                         = "zync"
 	ZyncSecretKeyBaseFieldName             = "SECRET_KEY_BASE"
 	ZyncSecretDatabaseURLFieldName         = "DATABASE_URL"
 	ZyncSecretDatabasePasswordFieldName    = "ZYNC_DATABASE_PASSWORD"
 	ZyncSecretAuthenticationTokenFieldName = "ZYNC_AUTHENTICATION_TOKEN"
+)
+
+const (
+	ZyncMetricsPort    = 9393
+	ZyncQueMetricsPort = 9394
 )
 
 type Zync struct {
@@ -163,7 +172,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "zync",
+			Name:   ZyncName,
 			Labels: zync.Options.CommonZyncLabels,
 			Annotations: map[string]string{
 				"prometheus.io/port":   "9393",
@@ -181,7 +190,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 						Automatic: true,
 						ContainerNames: []string{
 							"zync-db-svc",
-							"zync",
+							ZyncName,
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
@@ -191,7 +200,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 			Replicas: zync.Options.ZyncReplicas,
-			Selector: map[string]string{"deploymentConfig": "zync"},
+			Selector: map[string]string{"deploymentConfig": ZyncName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: zync.Options.ZyncPodTemplateLabels,
@@ -229,14 +238,10 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "zync",
+							Name:  ZyncName,
 							Image: "amp-zync:latest",
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
-									ContainerPort: 8080,
-									Protocol:      v1.ProtocolTCP},
-							},
-							Env: zync.commonZyncEnvVars(),
+							Ports: zync.zyncPorts(),
+							Env:   zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
@@ -384,7 +389,7 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 								},
 							},
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{Name: "metrics", ContainerPort: 9394, Protocol: v1.ProtocolTCP},
+								v1.ContainerPort{Name: "metrics", ContainerPort: ZyncQueMetricsPort, Protocol: v1.ProtocolTCP},
 							},
 							Resources: zync.Options.QueContainerResourceRequirements,
 							Env:       zync.commonZyncEnvVars(),
@@ -518,7 +523,7 @@ func (zync *Zync) Service() *v1.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "zync",
+			Name:   ZyncName,
 			Labels: zync.Options.CommonZyncLabels,
 		},
 		Spec: v1.ServiceSpec{
@@ -530,7 +535,7 @@ func (zync *Zync) Service() *v1.Service {
 					TargetPort: intstr.FromInt(8080),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "zync"},
+			Selector: map[string]string{"deploymentConfig": ZyncName},
 		},
 	}
 }
@@ -566,12 +571,12 @@ func (zync *Zync) ZyncPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 			APIVersion: "policy/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "zync",
+			Name:   ZyncName,
 			Labels: zync.Options.CommonZyncLabels,
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "zync"},
+				MatchLabels: map[string]string{"deploymentConfig": ZyncName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -595,4 +600,16 @@ func (zync *Zync) QuePodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
 	}
+}
+
+func (zync *Zync) zyncPorts() []v1.ContainerPort {
+	ports := []v1.ContainerPort{
+		v1.ContainerPort{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
+	}
+
+	if zync.Options.ZyncMetrics {
+		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: ZyncMetricsPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
 }
