@@ -139,8 +139,8 @@ func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "{{$labels.container_name}} replica controller on {{$labels.namespace}}: Has more than 10000 jobs processed in the last 5 minutes",
 								"description": "{{$labels.container_name}} replica controller on {{$labels.namespace}} project: Has more than 1000 jobs processed in the last 5 minutes",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(avg_over_time(apisonator_worker_job_count{job="backend-worker-monitoring",namespace="%s"} [5m])) > 10000`, ns)),
-							For:  "30m",
+							Expr: intstr.FromString(fmt.Sprintf(`sum(avg_over_time(apisonator_worker_job_count{job=~"backend.*",namespace="%s"} [5m])) > 10000`, ns)),
+							For:  "5m",
 							Labels: map[string]string{
 								"severity": "critical",
 							},
