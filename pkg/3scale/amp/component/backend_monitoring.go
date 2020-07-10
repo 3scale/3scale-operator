@@ -95,6 +95,18 @@ func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"severity": "critical",
 							},
 						},
+						{
+							Alert: "ThreescaleBackendWorkerJobDown",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*backend-worker.*",namespace="%s"} == 0`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "critical",
+							},
+						},
 					},
 				},
 			},
