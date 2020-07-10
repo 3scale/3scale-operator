@@ -25,6 +25,8 @@ spec:
     enabled: true
 ```
 
+NOTE: All monitoring resources will be created by the operator using *Create only* reconcilliation policy. That means that PrometheusRules and GrafanaDashboards objects can be updated preventing the operator to revert the changes back. This policy allows to tune, for instance, the alert thresholds, to your needs.
+
 ## Monitored components
 
 * Kubernetes resources at namespace level where 3scale is installed
