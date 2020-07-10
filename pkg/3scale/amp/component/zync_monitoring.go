@@ -134,15 +134,27 @@ func ZyncPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 					Name: fmt.Sprintf("%s/zync.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "PumaWorkersRunningLow",
+							Alert: "ThreescaleZyncJobDown",
 							Annotations: map[string]string{
-								"summary":     "{{$labels.container_name}} replica controller on {{$labels.namespace}}: Has less than 5 puma workers in the last 5 minutes",
-								"description": "{{$labels.container_name}} replica controller on {{$labels.namespace}} project: Has less than 5 puma workers in the last 5 minutes",
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`avg_over_time(puma_running{job="zync-monitoring",namespace="%s"} [5m]) < 5`, ns)),
-							For:  "30m",
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/zync",namespace="%s"} == 0`, ns)),
+							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
+							},
+						},
+						{
+							Alert: "ThreescaleZync5XXRequestsHigh",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(rails_requests_total{namespace="%s",pod=~"zync-[a-z0-9]+-[a-z0-9]+",status=~"5[0-9]*"}[1m])) by (namespace,job) > 50`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "warning",
 							},
 						},
 					},
@@ -168,15 +180,51 @@ func ZyncQuePrometheusRules(ns string) *monitoringv1.PrometheusRule {
 					Name: fmt.Sprintf("%s/zync-que.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "QueWorkersRunningLow",
+							Alert: "ThreescaleZyncQueJobDown",
 							Annotations: map[string]string{
-								"summary":     "{{$labels.container_name}} replica controller on {{$labels.namespace}}: Has less than 5 que workers in the last 5 minutes",
-								"description": "{{$labels.container_name}} replica controller on {{$labels.namespace}} project: Has less than 5 que workers in the last 5 minutes",
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`avg_over_time(que_workers_total{job="zync-que-monitoring",namespace="%s"} [5m]) < 5`, ns)),
-							For:  "30m",
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/zync-que",namespace="%s"} == 0`, ns)),
+							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
+							},
+						},
+						{
+							Alert: "ThreescaleZyncQueScheduledJobCountHigh",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job count over 100",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job count over 100",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='scheduled',namespace="%s"}) by (namespace,job,exported_job) > 250`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "warning",
+							},
+						},
+						{
+							Alert: "ThreescaleZyncQueFailedJobCountHigh",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count over 100",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count over 100",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='failed',namespace="%s"}) by (namespace,job,exported_job) > 250`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "warning",
+							},
+						},
+						{
+							Alert: "ThreescaleZyncQueReadyJobCountHigh",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count over 100",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count over 100",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='ready',namespace="%s"}) by (namespace,job,exported_job) > 250`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "warning",
 							},
 						},
 					},
