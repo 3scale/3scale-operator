@@ -84,7 +84,7 @@ func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 					Name: fmt.Sprintf("%s/backend-worker.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "WorkersJobsCountRunningHigh",
+							Alert: "ThreescaleBackendWorkerJobsCountRunningHigh",
 							Annotations: map[string]string{
 								"summary":     "{{$labels.container_name}} replica controller on {{$labels.namespace}}: Has more than 10000 jobs processed in the last 5 minutes",
 								"description": "{{$labels.container_name}} replica controller on {{$labels.namespace}} project: Has more than 1000 jobs processed in the last 5 minutes",
