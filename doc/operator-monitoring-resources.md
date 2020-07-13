@@ -50,7 +50,7 @@ There are many ways to provide the required monitoring stack. Few examples are g
 * [kube-prometheus](https://github.com/coreos/kube-prometheus): This repository collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator.
 
 * For devtesting purposes only, *quickstart steps* to deploy minimum required monitoring stack in [monitoring-stack-deployment](monitoring-stack-deployment/README.md).
-*Warning*: no *authentication* setup included. Prototect the prometheus and grafana services when you want to expose them in internet.
+*Warning*: no *authentication* setup included. Protect the prometheus and grafana services when you want to expose them in internet.
 In our dev clusters we configure authentication to be managed by Openshift (so htpassword or github)
 
 ### Prometheus
