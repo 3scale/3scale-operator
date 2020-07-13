@@ -1,4 +1,4 @@
-1. Install Prometheus opeator v0.32.0 from catalog
+1. Install Prometheus operator v0.32.0 from catalog
 
 1. Install Grafana operator (v3.4.0). At the time of writing, not available from catalog, so manual installation from git repo.
 
