@@ -29,7 +29,7 @@ NOTE: All monitoring resources will be created by the operator using *Create onl
 
 ## Monitored components
 
-* Kubernetes resources at namespace level where 3scale is installed
+* Kubernetes resources at pod and namespace level where 3scale is installed
 * Apicast Staging
 * Apicast Production
 * 3scale Backend worker
