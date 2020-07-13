@@ -42,7 +42,7 @@ NOTE: All monitoring resources will be created by the operator using *Create onl
 
 3scale monitoring is leveraged by [prometheus](https://prometheus.io/) and [grafana](https://grafana.com/) monitoring solutions. They need to be up and running in the cluster and configured to watch for monitoring resources.
 
-Monitoring stack setup and running is beyond 3scale operator reponsabilities.
+**Monitoring stack setup and running is beyond 3scale operator reponsabilities, cluster administrator must provide it.**
 There are many ways to provide the required monitoring stack. Few examples are given:
 
 * Openshift new proposal [User Workload Monitoring](https://github.com/openshift/enhancements/blob/master/enhancements/monitoring/user-workload-monitoring.md)
