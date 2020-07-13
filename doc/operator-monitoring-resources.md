@@ -49,7 +49,9 @@ There are many ways to provide the required monitoring stack. Few examples are g
 
 * [kube-prometheus](https://github.com/coreos/kube-prometheus): This repository collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator.
 
-* For devtesting purposes only, *quickstart steps* to deploy minimum required monitoring stack in [monitoring-stack-deployment](monitoring-stack-deployment/README.md)
+* For devtesting purposes only, *quickstart steps* to deploy minimum required monitoring stack in [monitoring-stack-deployment](monitoring-stack-deployment/README.md).
+*Warning*: no *authentication* setup included. Prototect the prometheus and grafana services when you want to expose them in internet.
+In our dev clusters we configure authentication to be managed by Openshift (so htpassword or github)
 
 ### Prometheus
 
@@ -61,37 +63,52 @@ Tested releases:
 * Prometheus image: `quay.io/openshift/origin-prometheus: 4.2`
 
 Make sure prometheus services are configured to monitor 3scale monitoring resources.
-The simplest configuration is catch-all config in `Prometheus` custom resource spec :
+When the prometheus services are deployed in the same namespace as 3scale, the simplest configuration is *catch-all* config in `Prometheus` custom resource spec:
 
 ```
 podMonitorSelector: {}
 ruleSelector: {}
 ```
 
-Optionally, you can filter by labels. 3scale operator created `PodMonitors` and `PrometheusRules` will all be labeled with
+Optionally, you can filter by labels. 3scale operator created `PodMonitors` and `PrometheusRules` will all be labeled, by default, with
 
 ```
 app: 3scale-api-management
 ```
+
+The `app=3scale-api-management` label value can be overriden in the [APIManager CR](apimanager-reference.md#APIManagerSpec).
+
 
 `Prometheus` custom resource spec to filter podmonitors and rules:
 
 ```
 podMonitorSelector:
   matchExpressions:
-  - key: monitoring-key
+  - key: app 
       operator: In
       values:
-      - middleware
+      - 3scale-api-management
 ruleSelector:
   matchExpressions:
-  - key: monitoring-key
-    operator: In
-    values:
-    - middleware
+  - key: app 
+      operator: In
+      values:
+      - 3scale-api-management
 ```
 
-Note: If the prometheus operator is installed in a different namespace than 3scale, then configure it accordingly to watch for resources outside the namespace. Check operator [doc](https://github.com/coreos/prometheus-operator/blob/v0.32.0/Documentation/api.md#prometheusspec) regarding this issue.
+*NOTE*: If the prometheus operator is installed in a different namespace than 3scale, then configure it accordingly to watch for resources outside the namespace.
+For instance, label the namespace where 3scale in installed with `MYLABELKEY=MYLABELVALUE`, then setup a *namespace selector*:
+
+```
+  podMonitorNamespaceSelector:
+    matchExpressions:
+      - key: MYLABELKEY
+        operator: In
+        values:
+          - MYLABELVALUE
+```
+
+Do not forget to provide required RBAC permissions. Check operator [doc](https://github.com/coreos/prometheus-operator/blob/v0.32.0/Documentation/api.md#prometheusspec) regarding this issue.
 
 **Kubernetes metrics: kube-state-metrics**
 
@@ -119,6 +136,8 @@ app: 3scale-api-management
 monitoring-key: middleware
 ```
 
+The `app=3scale-api-management` label value can be overriden in the [APIManager CR](apimanager-reference.md#APIManagerSpec).
+
 This `dashboardLabelSelector` configuration in the `Grafana` custom resource spec should do that:
 
 ```
@@ -135,4 +154,7 @@ spec:
       - 3scale-api-management
 ```
 
-Note: If the grafana operator is installed in a different namespace than 3scale, then configure accordingly it to watch for resources outside the namespace. Check operator [doc](https://github.com/integr8ly/grafana-operator/blob/v2.0.0/documentation/deploy_grafana.md#operator-flags) regarding this issue.
+*NOTE*: If the grafana operator is installed in a different namespace than 3scale, then configure accordingly it to watch for resources outside the namespace. 
+Use `--namespaces` or `--scan-all` operator flags to enable watching for dashboards in a list of namespaces.
+Do not forget to provide required RBAC permissions.
+Check operator [doc](https://github.com/integr8ly/grafana-operator/blob/v2.0.0/documentation/deploy_grafana.md#operator-flags) regarding this issue.
