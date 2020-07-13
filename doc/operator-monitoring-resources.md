@@ -119,7 +119,7 @@ app: 3scale-api-management
 monitoring-key: middleware
 ```
 
-This `dashboardLabelSelector` configuration in the `Grafana` cusrom resource spec should do that:
+This `dashboardLabelSelector` configuration in the `Grafana` custom resource spec should do that:
 
 ```
 apiVersion: integreatly.org/v1alpha1
