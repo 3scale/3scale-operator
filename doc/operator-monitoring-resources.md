@@ -32,7 +32,7 @@ NOTE: All monitoring resources will be created by the operator using *Create onl
 * Kubernetes resources at pod and namespace level where 3scale is installed
 * Apicast Staging
 * Apicast Production
-* 3scale Backend worker
+* Backend worker
 * 3scale Backend listener
 * System
 * Zync
