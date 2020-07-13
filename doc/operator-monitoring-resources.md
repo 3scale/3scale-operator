@@ -33,7 +33,7 @@ NOTE: All monitoring resources will be created by the operator using *Create onl
 * Apicast Staging
 * Apicast Production
 * Backend worker
-* 3scale Backend listener
+* Backend listener
 * System
 * Zync
 * Zync-que
