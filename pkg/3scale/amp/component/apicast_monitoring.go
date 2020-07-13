@@ -159,7 +159,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/apicast-production",namespace="%s"} == 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/apicast-production|.*/apicast-staging",namespace="%s"} == 0`, ns)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
