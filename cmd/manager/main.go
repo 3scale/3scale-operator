@@ -15,8 +15,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/apis"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/controller"
 	"github.com/3scale/3scale-operator/version"
 
@@ -36,7 +34,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -209,12 +206,6 @@ func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
 		log.Info("Could not create metrics Service", "error", err.Error())
 	}
 
-	// Adding the monitoring-key:middleware to the operator service which will get propagated to the serviceMonitor
-	err = addMonitoringKeyLabelToOperatorService(ctx, cfg, service)
-	if err != nil {
-		log.Error(err, "Could not add monitoring-key label to operator metrics Service")
-	}
-
 	// CreateServiceMonitors will automatically create the prometheus-operator ServiceMonitor resources
 	// necessary to configure Prometheus to scrape metrics from this operator.
 	services := []*v1.Service{service}
@@ -317,31 +308,4 @@ func filterGKVsFromAddToScheme(gvks []schema.GroupVersionKind) []schema.GroupVer
 	}
 
 	return ownGVKs
-}
-
-func addMonitoringKeyLabelToOperatorService(ctx context.Context, cfg *rest.Config, service *v1.Service) error {
-	if service == nil {
-		return fmt.Errorf("service doesn't exist")
-	}
-
-	kclient, err := client.New(cfg, client.Options{})
-	if err != nil {
-		return err
-	}
-
-	updatedLabels := map[string]string{
-		"monitoring-key": common.MonitoringKey,
-		"app":            appsv1alpha1.Default3scaleAppLabel,
-	}
-	for k, v := range service.ObjectMeta.Labels {
-		updatedLabels[k] = v
-	}
-	service.ObjectMeta.Labels = updatedLabels
-
-	err = kclient.Update(ctx, service)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

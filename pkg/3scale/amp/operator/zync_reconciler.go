@@ -91,22 +91,12 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(zync.ZyncMonitoringService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodMonitor(zync.ZyncPodMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileMonitoringService(zync.ZyncQueMonitoringService(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	err = r.ReconcileServiceMonitor(zync.ZyncServiceMonitor(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	err = r.ReconcileServiceMonitor(zync.ZyncQueServiceMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodMonitor(zync.ZyncQuePodMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
