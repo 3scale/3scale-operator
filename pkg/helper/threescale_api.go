@@ -2,6 +2,7 @@ package helper
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -9,7 +10,7 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -60,7 +61,7 @@ func LookupProviderAccount(cl client.Client, ns string, providerAccountRef *core
 	// if exists, fiels are required.
 	defaulSecret, err := GetSecret(providerAccountDefaultSecretName, ns, cl)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierrors.IsNotFound(err) {
 			return nil, fmt.Errorf("LookupProviderAccount: %w", err)
 		}
 		// Not found
@@ -81,10 +82,10 @@ func LookupProviderAccount(cl client.Client, ns string, providerAccountRef *core
 
 	// Lookup 3scale installation in current namespace
 	// TODO: Check apimanger CR exists?
-
 	// TODO implement read from existing 3scale installation
-	logger.Info("LookupProviderAccount no provider account found")
-	return nil, nil
+
+	// not found, return error
+	return nil, errors.New("LookupProviderAccount: no provider account found")
 }
 
 // PortaClient instantiate porta_client.ThreeScaleClient from ProviderAccount object
