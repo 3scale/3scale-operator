@@ -104,7 +104,19 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 					Name: fmt.Sprintf("%s/apicast.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "ApicastRequestTime",
+							Alert: "ThreescaleApicastJobDown",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/apicast-production|.*/apicast-staging",namespace="%s"} == 0`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "critical",
+							},
+						},
+						{
+							Alert: "ThreescaleApicastRequestTime",
 							Annotations: map[string]string{
 								"summary":     "Request on instance {{ $labels.instance }} is taking more than one second to process the requests",
 								"description": "High number of request taking more than a second to be processed",
@@ -116,7 +128,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							},
 						},
 						{
-							Alert: "APICastHttp4xxErrorRate",
+							Alert: "ThreescaleApicastHttp4xxErrorRate",
 							Annotations: map[string]string{
 								"summary":     "APICast high HTTP 4XX error rate (instance {{ $labels.instance }})",
 								"description": "The number of request with 4XX is bigger than the 5% of total request.",
@@ -128,7 +140,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							},
 						},
 						{
-							Alert: "APICAstLatencyHigh",
+							Alert: "ThreescaleApicastLatencyHigh",
 							Annotations: map[string]string{
 								"summary":     "APICast latency high (instance {{ $labels.instance }})",
 								"description": "APIcast p99 latency is higher than 5 seconds\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}",
