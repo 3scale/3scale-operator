@@ -15,14 +15,15 @@ const (
 
 func MeteringLabels(componentName, componentVersion string, componentType ComponentType) map[string]string {
 	labels := map[string]string{
-		"com.redhat.product-name":    "3scale",
-		"com.redhat.component-name":  componentName,
-		"com.redhat.product-version": product.ThreescaleRelease,
-		"com.redhat.component-type":  string(componentType),
+		"com.redhat.product-name":      "3scale",
+		"com.redhat.component-name":    componentName,
+		"com.redhat.product-version":   product.ThreescaleRelease,
+		"com.redhat.component-type":    string(componentType),
+		"com.redhat.component-version": componentVersion,
 	}
 
-	if len(componentVersion) <= validation.LabelValueMaxLength {
-		labels["com.redhat.component-version"] = componentVersion
+	if len(componentVersion) > validation.LabelValueMaxLength {
+		labels["com.redhat.component-version"] = ""
 	}
 
 	return labels
