@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  labels:
+    prometheus: k8s
+  name: example
+spec:
+  baseImage: quay.io/openshift/origin-prometheus
+  tag: "4.2"
+  externalUrl: https://prometheus.namespace_name.apps.DOMAIN
+  podMonitorSelector: {}
+  replicas: 1
+  ruleSelector: {}
+  securityContext: {}
+  serviceAccountName: prometheus-k8s
+  serviceMonitorSelector: {}
+  additionalScrapeConfigs:
+    key: 3scale-scrape-configs.yaml
+    name: additional-scrape-configs
