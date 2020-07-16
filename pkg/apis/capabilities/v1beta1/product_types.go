@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
@@ -823,12 +824,20 @@ type Product struct {
 	Status ProductStatus `json:"status,omitempty"`
 }
 
-func (product *Product) SetDefaults() bool {
+func (product *Product) SetDefaults(logger logr.Logger) bool {
 	updated := false
 
 	// Respect 3scale API defaults
 	if product.Spec.SystemName == "" {
 		product.Spec.SystemName = productSystemNameRegexp.ReplaceAllString(product.Spec.Name, "")
+		updated = true
+	}
+
+	// 3scale API ignores case of the system name field
+	systemNameLowercase := strings.ToLower(product.Spec.SystemName)
+	if product.Spec.SystemName != systemNameLowercase {
+		logger.Info("System name updated", "from", product.Spec.SystemName, "to", systemNameLowercase)
+		product.Spec.SystemName = systemNameLowercase
 		updated = true
 	}
 
@@ -845,6 +854,7 @@ func (product *Product) SetDefaults() bool {
 		}
 	}
 	if !hitsFound {
+		logger.Info("Hits metric added")
 		product.Spec.Metrics["hits"] = MetricSpec{
 			Name:        "Hits",
 			Unit:        "hit",

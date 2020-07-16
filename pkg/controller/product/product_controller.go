@@ -139,9 +139,9 @@ func (r *ReconcileProduct) Reconcile(request reconcile.Request) (reconcile.Resul
 }
 
 func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Product) (reconcile.Result, error) {
-	logger := r.Logger().WithValues("reconcile", productResource.Name)
+	logger := r.Logger().WithValues("product", productResource.Name)
 
-	if productResource.SetDefaults() {
+	if productResource.SetDefaults(logger) {
 		err := r.Client().Update(r.Context(), productResource)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("Failed setting product defaults: %w", err)

@@ -138,7 +138,7 @@ func (r *ReconcileBackend) Reconcile(request reconcile.Request) (reconcile.Resul
 }
 
 func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backend) (reconcile.Result, error) {
-	logger := r.Logger().WithValues("reconcile", backendResource.Name)
+	logger := r.Logger().WithValues("backend", backendResource.Name)
 
 	if backendResource.SetDefaults() {
 		err := r.Client().Update(r.Context(), backendResource)

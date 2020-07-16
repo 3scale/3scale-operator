@@ -3,7 +3,14 @@ package v1beta1
 import (
 	"strings"
 	"testing"
+
+	"github.com/go-logr/logr"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+func getv1beta1TestLogger() logr.Logger {
+	return logf.Log.WithName("v1beta1")
+}
 
 func defaultTestingProduct() Product {
 	product := Product{
@@ -12,7 +19,7 @@ func defaultTestingProduct() Product {
 		},
 	}
 
-	product.SetDefaults()
+	product.SetDefaults(getv1beta1TestLogger())
 	return product
 }
 
