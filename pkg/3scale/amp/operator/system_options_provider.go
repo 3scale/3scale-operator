@@ -65,6 +65,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.setReplicas()
 
 	s.options.SideKiqMetrics = true
+	s.options.IncludeOracleOptionalSettings = true
 
 	err = s.options.Validate()
 	if err != nil {

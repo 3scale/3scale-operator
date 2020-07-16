@@ -248,6 +248,9 @@ func (system *System) buildSystemAppPreHookEnv() []v1.EnvVar {
 	result = append(result,
 		helper.EnvVarFromSecret("MASTER_ACCESS_TOKEN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterAccessTokenFieldName),
 	)
+	if system.Options.IncludeOracleOptionalSettings {
+		result = append(result, helper.EnvVarFromSecretOptional("ORACLE_SYSTEM_PASSWORD", SystemSecretSystemDatabaseSecretName, "ORACLE_SYSTEM_PASSWORD"))
+	}
 	return result
 }
 
