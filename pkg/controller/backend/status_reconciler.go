@@ -7,9 +7,11 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 type StatusReconciler struct {
@@ -29,7 +31,7 @@ func NewStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabil
 	}
 }
 
-func (s *StatusReconciler) Reconcile() error {
+func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
 	newStatus := s.calculateStatus()
@@ -40,7 +42,7 @@ func (s *StatusReconciler) Reconcile() error {
 	if equalStatus && s.backendResource.Generation == s.backendResource.Status.ObservedGeneration {
 		// Steady state
 		s.logger.V(1).Info("Status was not updated")
-		return nil
+		return reconcile.Result{}, nil
 	}
 
 	// Save the generation number we acted on, otherwise we might wrongfully indicate
@@ -54,9 +56,15 @@ func (s *StatusReconciler) Reconcile() error {
 	s.backendResource.Status = *newStatus
 	updateErr := s.Client().Status().Update(s.Context(), s.backendResource)
 	if updateErr != nil {
-		return fmt.Errorf("Failed to update status: %w", updateErr)
+		// Ignore conflicts, resource might just be outdated.
+		if errors.IsConflict(updateErr) {
+			s.logger.Info("Failed to update status: resource might just be outdated")
+			return reconcile.Result{Requeue: true}, nil
+		}
+
+		return reconcile.Result{}, fmt.Errorf("Failed to update status: %w", updateErr)
 	}
-	return nil
+	return reconcile.Result{}, nil
 }
 
 func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.BackendStatus {
