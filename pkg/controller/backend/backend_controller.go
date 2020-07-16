@@ -153,13 +153,17 @@ func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backen
 	backendAPI, specErr := r.reconcileSpec(backendResource)
 
 	statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, backendAPI, specErr)
-	statusErr := statusReconciler.Reconcile()
+	statusResult, statusErr := statusReconciler.Reconcile()
 	if statusErr != nil {
 		if specErr != nil {
 			return reconcile.Result{}, fmt.Errorf("Failed to sync backend: %v. Failed to update backend status: %w", specErr, statusErr)
 		}
 
 		return reconcile.Result{}, fmt.Errorf("Failed to update backend status: %w", statusErr)
+	}
+
+	if statusResult.Requeue {
+		return statusResult, nil
 	}
 
 	if helper.IsInvalidSpecError(specErr) {

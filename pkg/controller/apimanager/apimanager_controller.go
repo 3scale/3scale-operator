@@ -192,10 +192,15 @@ func (r *ReconcileAPIManager) Reconcile(request reconcile.Request) (reconcile.Re
 		return result, nil
 	}
 
-	err = r.reconcileAPIManagerStatus(instance)
+	statusResult, err := r.reconcileAPIManagerStatus(instance)
 	if err != nil {
 		logger.Error(err, "Error updating status")
 		return reconcile.Result{}, err
+	}
+
+	if statusResult.Requeue {
+		logger.V(1).Info("Reconciling status not finished. Requeueing.")
+		return statusResult, nil
 	}
 
 	return reconcile.Result{}, nil
@@ -330,19 +335,38 @@ func (r *ReconcileAPIManager) reconcileSystemMySQLLogic(cr *appsv1alpha1.APIMana
 	return result, err
 }
 
-func (r *ReconcileAPIManager) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager) error {
-	return r.setDeploymentStatus(cr)
+func (r *ReconcileAPIManager) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	updated, err := r.setDeploymentStatus(cr)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if updated {
+		err = r.Client().Status().Update(context.TODO(), cr)
+		if err != nil {
+			// Ignore conflicts, resource might just be outdated.
+			if errors.IsConflict(err) {
+				r.Logger().Info("Failed to update status: resource might just be outdated")
+				return reconcile.Result{Requeue: true}, nil
+			}
+
+			return reconcile.Result{}, fmt.Errorf("Failed to update API Manager deployment status: %w", err)
+		}
+	}
+
+	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) error {
+func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIManager) (bool, error) {
+	updated := false
+
 	listOps := []client.ListOption{
 		client.InNamespace(instance.Namespace),
 	}
 	dcList := &appsv1.DeploymentConfigList{}
 	err := r.Client().List(context.TODO(), dcList, listOps...)
 	if err != nil {
-		r.Logger().Error(err, "Failed to list deployment configs")
-		return err
+		return false, fmt.Errorf("Failed to list deployment configs: %w", err)
 	}
 	var dcs []appsv1.DeploymentConfig
 	for _, dc := range dcList.Items {
@@ -359,13 +383,10 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {
 		r.Logger().Info("Deployment status will be updated")
 		instance.Status.Deployments = deploymentStatus
-		err = r.Client().Status().Update(context.TODO(), instance)
-		if err != nil {
-			r.Logger().Error(err, "Failed to update API Manager deployment status")
-			return err
-		}
+		updated = true
 	}
-	return nil
+
+	return updated, nil
 }
 
 func (r *ReconcileAPIManager) externalDatabasesCheck(cr *appsv1alpha1.APIManager) error {

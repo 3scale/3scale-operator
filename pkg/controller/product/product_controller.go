@@ -154,13 +154,17 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 	productEntity, specErr := r.reconcileSpec(productResource)
 
 	statusReconciler := NewStatusReconciler(r.BaseReconciler, productResource, productEntity, specErr)
-	statusErr := statusReconciler.Reconcile()
+	statusResult, statusErr := statusReconciler.Reconcile()
 	if statusErr != nil {
 		if specErr != nil {
 			return reconcile.Result{}, fmt.Errorf("Failed to sync product: %v. Failed to update product status: %w", specErr, statusErr)
 		}
 
 		return reconcile.Result{}, fmt.Errorf("Failed to update product status: %w", statusErr)
+	}
+
+	if statusResult.Requeue {
+		return statusResult, nil
 	}
 
 	if helper.IsInvalidSpecError(specErr) {
