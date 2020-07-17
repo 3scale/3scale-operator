@@ -16,19 +16,21 @@ import (
 
 type StatusReconciler struct {
 	*reconcilers.BaseReconciler
-	backendResource  *capabilitiesv1beta1.Backend
-	backendAPIEntity *helper.BackendAPIEntity
-	syncError        error
-	logger           logr.Logger
+	backendResource     *capabilitiesv1beta1.Backend
+	backendAPIEntity    *helper.BackendAPIEntity
+	providerAccountHost string
+	syncError           error
+	logger              logr.Logger
 }
 
-func NewStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, backendAPIEntity *helper.BackendAPIEntity, syncError error) *StatusReconciler {
+func NewStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, backendAPIEntity *helper.BackendAPIEntity, providerAccountHost string, syncError error) *StatusReconciler {
 	return &StatusReconciler{
-		BaseReconciler:   b,
-		backendResource:  backendResource,
-		backendAPIEntity: backendAPIEntity,
-		syncError:        syncError,
-		logger:           b.Logger().WithValues("Status Reconciler", backendResource.Name),
+		BaseReconciler:      b,
+		backendResource:     backendResource,
+		backendAPIEntity:    backendAPIEntity,
+		providerAccountHost: providerAccountHost,
+		syncError:           syncError,
+		logger:              b.Logger().WithValues("Status Reconciler", backendResource.Name),
 	}
 }
 
@@ -74,6 +76,8 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.BackendStatus 
 		tmp := s.backendAPIEntity.ID()
 		newStatus.ID = &tmp
 	}
+
+	newStatus.ProviderAccountHost = s.providerAccountHost
 
 	newStatus.ObservedGeneration = s.backendResource.Status.ObservedGeneration
 

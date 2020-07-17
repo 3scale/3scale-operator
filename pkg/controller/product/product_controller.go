@@ -202,7 +202,7 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 		return reconcile.Result{}, fmt.Errorf("Failed to update product status: %w", statusErr)
 	}
 
-        if statusResult.Requeue {
+	if statusResult.Requeue {
 		return statusResult, nil
 	}
 
