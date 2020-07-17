@@ -87,6 +87,9 @@ func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
 			"private_endpoint": t.backendResource.Spec.PrivateBaseURL,
 		}
 		backendAPIEntity, err = t.backendRemoteIndex.CreateBackendAPI(params)
+		if err != nil {
+			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err)
+		}
 	}
 
 	// Will be used by coming steps
