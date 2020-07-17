@@ -140,7 +140,7 @@ func (r *ReconcileBackend) Reconcile(request reconcile.Request) (reconcile.Resul
 func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backend) (reconcile.Result, error) {
 	logger := r.Logger().WithValues("backend", backendResource.Name)
 
-	if backendResource.SetDefaults() {
+	if backendResource.SetDefaults(logger) {
 		err := r.Client().Update(r.Context(), backendResource)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("Failed setting backend defaults: %w", err)
