@@ -181,6 +181,7 @@ rules:
   - create
   - update
   - watch
+  - delete
 - apiGroups:
   - integreatly.org
   resources:
@@ -191,3 +192,4 @@ rules:
   - create
   - update
   - watch
+  - delete
