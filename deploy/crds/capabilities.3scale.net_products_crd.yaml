@@ -478,6 +478,9 @@ spec:
             productId:
               format: int64
               type: integer
+            providerAccountHost:
+              description: 3scale control plane host
+              type: string
             state:
               type: string
           type: object

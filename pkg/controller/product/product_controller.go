@@ -151,77 +151,66 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	productEntity, specErr := r.reconcileSpec(productResource)
+	err := r.validateSpec(productResource)
+	if err != nil {
+		if helper.IsInvalidSpecError(err) {
+			// On Validation error, no need to retry as spec is not valid and needs to be changed
+			logger.Info("ERROR", "spec validation error", err)
+			r.EventRecorder().Eventf(productResource, corev1.EventTypeWarning, "Invalid Product Spec", "%v", err)
+			return reconcile.Result{}, nil
+		}
 
-	statusReconciler := NewStatusReconciler(r.BaseReconciler, productResource, productEntity, specErr)
+		return reconcile.Result{}, err
+	}
+
+	providerAccount, err := helper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("reconcile product spec: %w", err)
+	}
+
+	err = r.checkExternalRefs(productResource, providerAccount)
+	if err != nil {
+		if helper.IsOrphanSpecError(err) {
+			// On Orphan spec error, retry
+			logger.Info("ERROR", "spec orphan error", err)
+			return reconcile.Result{Requeue: true}, nil
+		}
+
+		return reconcile.Result{}, err
+	}
+
+	threescaleAPIClient, err := helper.PortaClient(providerAccount)
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("reconcile product spec: %w", err)
+	}
+
+	backendRemoteIndex, err := helper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("reconcile product spec: %w", err)
+	}
+
+	reconciler := NewThreescaleReconciler(r.BaseReconciler, productResource, threescaleAPIClient, backendRemoteIndex)
+	productEntity, syncErr := reconciler.Reconcile()
+
+	statusReconciler := NewStatusReconciler(r.BaseReconciler, productResource, productEntity, providerAccount.AdminURLStr, syncErr)
 	statusResult, statusErr := statusReconciler.Reconcile()
 	if statusErr != nil {
-		if specErr != nil {
-			return reconcile.Result{}, fmt.Errorf("Failed to sync product: %v. Failed to update product status: %w", specErr, statusErr)
+		if syncErr != nil {
+			return reconcile.Result{}, fmt.Errorf("Failed to sync product: %v. Failed to update product status: %w", syncErr, statusErr)
 		}
 
 		return reconcile.Result{}, fmt.Errorf("Failed to update product status: %w", statusErr)
 	}
 
-	if statusResult.Requeue {
+        if statusResult.Requeue {
 		return statusResult, nil
 	}
 
-	if helper.IsInvalidSpecError(specErr) {
-		// On Validation error, no need to retry as spec is not valid and needs to be changed
-		logger.Info("ERROR", "spec validation error", specErr)
-		r.EventRecorder().Eventf(productResource, corev1.EventTypeWarning, "Invalid Product Spec", "%v", specErr)
-		return reconcile.Result{}, nil
-	}
-
-	if helper.IsOrphanSpecError(specErr) {
-		// On Orphan spec error, retry
-		logger.Info("ERROR", "spec orphan error", specErr)
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	if specErr != nil {
-		return reconcile.Result{}, fmt.Errorf("Failed to sync product: %w", specErr)
+	if syncErr != nil {
+		return reconcile.Result{}, fmt.Errorf("Failed to sync product: %w", syncErr)
 	}
 
 	return reconcile.Result{}, nil
-}
-
-func (r *ReconcileProduct) reconcileSpec(resource *capabilitiesv1beta1.Product) (*helper.ProductEntity, error) {
-	err := r.validateSpec(resource)
-	if err != nil {
-		// Do not wrap error
-		return nil, err
-	}
-
-	providerAccount, err := helper.LookupProviderAccount(r.Client(), resource.Namespace, resource.Spec.ProviderAccountRef, r.Logger())
-	if err != nil {
-		return nil, fmt.Errorf("reconcile product spec: %w", err)
-	}
-
-	err = r.checkExternalRefs(resource, providerAccount)
-	if err != nil {
-		// Do not wrap error
-		return nil, err
-	}
-
-	threescaleAPIClient, err := helper.PortaClient(providerAccount)
-	if err != nil {
-		return nil, fmt.Errorf("reconcile product spec: %w", err)
-	}
-
-	backendRemoteIndex, err := helper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
-	if err != nil {
-		return nil, fmt.Errorf("reconcile product spec: %w", err)
-	}
-
-	reconciler := NewThreescaleReconciler(r.BaseReconciler, resource, threescaleAPIClient, backendRemoteIndex)
-	entity, err := reconciler.Reconcile()
-	if err != nil {
-		return nil, fmt.Errorf("reconcile product spec: %w", err)
-	}
-
-	return entity, nil
 }
 
 func (r *ReconcileProduct) validateSpec(resource *capabilitiesv1beta1.Product) error {

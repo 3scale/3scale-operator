@@ -766,6 +766,10 @@ type ProductStatus struct {
 	// +optional
 	State *string `json:"state,omitempty"`
 
+	// 3scale control plane host
+	// +optional
+	ProviderAccountHost string `json:"providerAccountHost,omitempty"`
+
 	// ObservedGeneration reflects the generation of the most recently observed Product Spec.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
@@ -788,6 +792,12 @@ func (p *ProductStatus) Equals(other *ProductStatus, logger logr.Logger) bool {
 	if !reflect.DeepEqual(p.State, other.State) {
 		diff := cmp.Diff(p.State, other.State)
 		logger.V(1).Info("State not equal", "difference", diff)
+		return false
+	}
+
+	if p.ProviderAccountHost != other.ProviderAccountHost {
+		diff := cmp.Diff(p.ProviderAccountHost, other.ProviderAccountHost)
+		logger.V(1).Info("ProviderAccountHost not equal", "difference", diff)
 		return false
 	}
 
