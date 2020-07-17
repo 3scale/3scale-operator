@@ -684,6 +684,7 @@ spec:
           - create
           - update
           - watch
+          - delete
         - apiGroups:
           - integreatly.org
           resources:
@@ -694,6 +695,7 @@ spec:
           - create
           - update
           - watch
+          - delete
         serviceAccountName: 3scale-operator
     strategy: deployment
   installModes:
