@@ -15,6 +15,7 @@
     * [Enabling monitoring resources](operator-monitoring-resources.md)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
+* [3scale installation Backup and Restore using the operator (in *TechPreview*)](operator-backup-and-restore.md)
 * [Feature Operator (in *TechPreview*)](operator-capabilities.md)
 * [APIManager CRD reference](apimanager-reference.md)
 
