@@ -67,6 +67,20 @@ workflow is the following one:
            resources:
              requests: "10Gi"
    ```
+   Another example, providing a pre-existing PersistentVolume name instead:
+   ```
+     apiVersion: apps.3scale.net/v1alpha1
+     kind: APIManagerBackup
+     metadata:
+      name: example-apimanagerbackup-pvc
+     spec:
+       backupDestination:
+         persistentVolumeClaim:
+           # resources specification is required but ignored when providing a volumeName as per K8s PVCs requirements behavior
+           resources:
+             requests: "10Gi"
+           volumeName: "my-preexisting-persistent-volume"
+   ```
 1. Wait until APIManagerBackup finishes. You can check this by obtaining
    the content of APIManagerBackup and waiting until the `.status.completed` field
    is set to true.
