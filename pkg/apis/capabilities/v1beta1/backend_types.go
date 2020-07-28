@@ -91,6 +91,10 @@ type BackendStatus struct {
 	// +optional
 	ID *int64 `json:"backendId,omitempty"`
 
+	// 3scale control plane host
+	// +optional
+	ProviderAccountHost string `json:"providerAccountHost,omitempty"`
+
 	// ObservedGeneration reflects the generation of the most recently observed Backend Spec.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
@@ -107,6 +111,12 @@ func (b *BackendStatus) Equals(other *BackendStatus, logger logr.Logger) bool {
 	if !reflect.DeepEqual(b.ID, other.ID) {
 		diff := cmp.Diff(b.ID, other.ID)
 		logger.V(1).Info("ID not equal", "difference", diff)
+		return false
+	}
+
+	if b.ProviderAccountHost != other.ProviderAccountHost {
+		diff := cmp.Diff(b.ProviderAccountHost, other.ProviderAccountHost)
+		logger.V(1).Info("ProviderAccountHost not equal", "difference", diff)
 		return false
 	}
 

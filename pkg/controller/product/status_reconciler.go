@@ -16,19 +16,21 @@ import (
 
 type StatusReconciler struct {
 	*reconcilers.BaseReconciler
-	resource  *capabilitiesv1beta1.Product
-	entity    *helper.ProductEntity
-	syncError error
-	logger    logr.Logger
+	resource            *capabilitiesv1beta1.Product
+	entity              *helper.ProductEntity
+	providerAccountHost string
+	syncError           error
+	logger              logr.Logger
 }
 
-func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, entity *helper.ProductEntity, syncError error) *StatusReconciler {
+func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, entity *helper.ProductEntity, providerAccountHost string, syncError error) *StatusReconciler {
 	return &StatusReconciler{
-		BaseReconciler: b,
-		resource:       resource,
-		entity:         entity,
-		syncError:      syncError,
-		logger:         b.Logger().WithValues("Status Reconciler", resource.Name),
+		BaseReconciler:      b,
+		resource:            resource,
+		entity:              entity,
+		providerAccountHost: providerAccountHost,
+		syncError:           syncError,
+		logger:              b.Logger().WithValues("Status Reconciler", resource.Name),
 	}
 }
 
@@ -76,6 +78,8 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus 
 		tmpState := s.entity.State()
 		newStatus.State = &tmpState
 	}
+
+	newStatus.ProviderAccountHost = s.providerAccountHost
 
 	newStatus.ObservedGeneration = s.resource.Status.ObservedGeneration
 
