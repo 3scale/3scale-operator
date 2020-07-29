@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -29,9 +30,9 @@ type applicationPlanReconciler struct {
 	*reconcilers.BaseReconciler
 	systemName          string
 	resource            capabilitiesv1beta1.ApplicationPlanSpec
-	productEntity       *helper.ProductEntity
-	backendRemoteIndex  *helper.BackendAPIRemoteIndex
-	planEntity          *helper.ApplicationPlanEntity
+	productEntity       *controllerhelper.ProductEntity
+	backendRemoteIndex  *controllerhelper.BackendAPIRemoteIndex
+	planEntity          *controllerhelper.ApplicationPlanEntity
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
@@ -40,9 +41,9 @@ func newApplicationPlanReconciler(b *reconcilers.BaseReconciler,
 	systemName string,
 	resource capabilitiesv1beta1.ApplicationPlanSpec,
 	threescaleAPIClient *threescaleapi.ThreeScaleClient,
-	productEntity *helper.ProductEntity,
-	backendRemoteIndex *helper.BackendAPIRemoteIndex,
-	planEntity *helper.ApplicationPlanEntity,
+	productEntity *controllerhelper.ProductEntity,
+	backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex,
+	planEntity *controllerhelper.ApplicationPlanEntity,
 	logger logr.Logger,
 ) *applicationPlanReconciler {
 

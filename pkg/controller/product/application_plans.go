@@ -3,6 +3,7 @@ package product
 import (
 	"fmt"
 
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
@@ -49,7 +50,7 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 	t.logger.V(1).Info("syncApplicationPlans", "matchedKeys", matchedKeys)
 	for _, systemName := range matchedKeys {
 		// interface to remote entity
-		planEntity := helper.NewApplicationPlanEntity(t.productEntity.ID(), existingMap[systemName], t.threescaleAPIClient, t.logger)
+		planEntity := controllerhelper.NewApplicationPlanEntity(t.productEntity.ID(), existingMap[systemName], t.threescaleAPIClient, t.logger)
 		// desired spec
 		planSpec := t.resource.Spec.ApplicationPlans[systemName]
 		reconciler := newApplicationPlanReconciler(t.BaseReconciler, systemName, planSpec, t.threescaleAPIClient, t.productEntity, t.backendRemoteIndex, planEntity, t.logger)
@@ -78,7 +79,7 @@ func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 			return fmt.Errorf("Error sync product [%s] plan [%s]: %w", t.resource.Spec.SystemName, systemName, err)
 		}
 		// interface to remote entity
-		planEntity := helper.NewApplicationPlanEntity(t.productEntity.ID(), obj.Element, t.threescaleAPIClient, t.logger)
+		planEntity := controllerhelper.NewApplicationPlanEntity(t.productEntity.ID(), obj.Element, t.threescaleAPIClient, t.logger)
 
 		reconciler := newApplicationPlanReconciler(t.BaseReconciler, systemName, planSpec, t.threescaleAPIClient, t.productEntity, t.backendRemoteIndex, planEntity, t.logger)
 		err = reconciler.Reconcile()

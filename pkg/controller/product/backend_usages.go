@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
@@ -16,7 +17,7 @@ type backendUsageData struct {
 }
 
 type newBackendUsageData struct {
-	item *helper.BackendAPIEntity
+	item *controllerhelper.BackendAPIEntity
 	spec capabilitiesv1beta1.BackendUsageSpec
 }
 

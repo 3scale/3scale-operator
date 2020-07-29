@@ -5,6 +5,7 @@ import (
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -17,13 +18,13 @@ import (
 type StatusReconciler struct {
 	*reconcilers.BaseReconciler
 	backendResource     *capabilitiesv1beta1.Backend
-	backendAPIEntity    *helper.BackendAPIEntity
+	backendAPIEntity    *controllerhelper.BackendAPIEntity
 	providerAccountHost string
 	syncError           error
 	logger              logr.Logger
 }
 
-func NewStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, backendAPIEntity *helper.BackendAPIEntity, providerAccountHost string, syncError error) *StatusReconciler {
+func NewStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, backendAPIEntity *controllerhelper.BackendAPIEntity, providerAccountHost string, syncError error) *StatusReconciler {
 	return &StatusReconciler{
 		BaseReconciler:      b,
 		backendResource:     backendResource,

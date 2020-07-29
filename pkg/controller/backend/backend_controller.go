@@ -7,6 +7,7 @@ import (
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
@@ -162,17 +163,17 @@ func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backen
 		return reconcile.Result{}, err
 	}
 
-	providerAccount, err := helper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, r.Logger())
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, r.Logger())
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("reconcile backend spec: %w", err)
 	}
 
-	threescaleAPIClient, err := helper.PortaClient(providerAccount)
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("reconcile backend spec: %w", err)
 	}
 
-	backendRemoteIndex, err := helper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
+	backendRemoteIndex, err := controllerhelper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("reconcile backend spec: %w", err)
 	}

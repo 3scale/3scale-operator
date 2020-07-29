@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -31,8 +32,8 @@ type mappingRuleData struct {
 type ThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	backendResource     *capabilitiesv1beta1.Backend
-	backendAPIEntity    *helper.BackendAPIEntity
-	backendRemoteIndex  *helper.BackendAPIRemoteIndex
+	backendAPIEntity    *controllerhelper.BackendAPIEntity
+	backendRemoteIndex  *controllerhelper.BackendAPIRemoteIndex
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
@@ -40,7 +41,7 @@ type ThreescaleReconciler struct {
 func NewThreescaleReconciler(b *reconcilers.BaseReconciler,
 	backendResource *capabilitiesv1beta1.Backend,
 	threescaleAPIClient *threescaleapi.ThreeScaleClient,
-	backendRemoteIndex *helper.BackendAPIRemoteIndex) *ThreescaleReconciler {
+	backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex) *ThreescaleReconciler {
 
 	return &ThreescaleReconciler{
 		BaseReconciler:      b,
@@ -51,7 +52,7 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler,
 	}
 }
 
-func (t *ThreescaleReconciler) Reconcile() (*helper.BackendAPIEntity, error) {
+func (t *ThreescaleReconciler) Reconcile() (*controllerhelper.BackendAPIEntity, error) {
 	taskRunner := helper.NewTaskRunner(nil, t.logger)
 	taskRunner.AddTask("SyncBackend", t.syncBackend)
 	// First methods and metrics, then mapping rules.
@@ -73,7 +74,7 @@ func (t *ThreescaleReconciler) Reconcile() (*helper.BackendAPIEntity, error) {
 func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
 	var (
 		err              error
-		backendAPIEntity *helper.BackendAPIEntity
+		backendAPIEntity *controllerhelper.BackendAPIEntity
 	)
 
 	backendAPIEntity, exists := t.backendRemoteIndex.FindBySystemName(t.backendResource.Spec.SystemName)

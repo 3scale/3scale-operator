@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 
 	"github.com/go-logr/logr"
@@ -408,7 +409,7 @@ func (b *ProductEntity) getMetrics() (*threescaleapi.MetricJSONList, error) {
 		methodsKeys = append(methodsKeys, method.Element.SystemName)
 	}
 
-	metricKeys := ArrayStringDifference(metricsAndMethodsKeys, methodsKeys)
+	metricKeys := helper.ArrayStringDifference(metricsAndMethodsKeys, methodsKeys)
 	metricList := &threescaleapi.MetricJSONList{
 		Metrics: make([]threescaleapi.MetricJSON, 0, len(metricKeys)),
 	}
