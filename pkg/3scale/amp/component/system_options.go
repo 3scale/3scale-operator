@@ -93,6 +93,8 @@ type SystemOptions struct {
 	MemcachedLabels          map[string]string `validate:"required"`
 	SMTPLabels               map[string]string `validate:"required"`
 	SideKiqMetrics           bool
+
+	IncludeOracleOptionalSettings bool
 }
 
 func NewSystemOptions() *SystemOptions {
