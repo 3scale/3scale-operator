@@ -292,9 +292,9 @@ For example: `adminURL=https://3scale-admin.example.com` and `token=123456`.
 oc create secret generic threescale-provider-account --from-literal=adminURL=https://3scale-admin.example.com --from-literal=token=123456
 ```
 
-* Local 3scale installation **NOT IMPLEMENTED YET**
+* Default provider account in the same namespace 3scale deployment
 
-The operator will gather required credentials automatically for the default 3scale tenant if 3scale installation is found in the same namespace as the custom resource.
+The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
 ## Product custom resource
 
@@ -580,9 +580,9 @@ For example: `adminURL=https://3scale-admin.example.com` and `token=123456`.
 oc create secret generic threescale-provider-account --from-literal=adminURL=https://3scale-admin.example.com --from-literal=token=123456
 ```
 
-* Local 3scale installation **NOT IMPLEMENTED YET**
+* Default provider account in the same namespace 3scale deployment
 
-The operator will gather required credentials automatically for the default 3scale tenant if 3scale installation is found in the same namespace as the custom resource.
+The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
 ## Tenant custom resource
 
