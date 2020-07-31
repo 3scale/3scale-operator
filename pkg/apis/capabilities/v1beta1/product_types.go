@@ -1015,6 +1015,10 @@ func (product *Product) Validate() field.ErrorList {
 	return errors
 }
 
+func (product *Product) IsSynced() bool {
+	return product.Status.Conditions.IsTrueFor(ProductSyncedConditionType)
+}
+
 func (product *Product) FindMetricOrMethod(ref string) bool {
 	if len(product.Spec.Metrics) > 0 {
 		if _, ok := product.Spec.Metrics[ref]; ok {
