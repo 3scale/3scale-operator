@@ -96,7 +96,7 @@ type PricingRuleSpec struct {
 	MetricMethodRef MetricMethodRefSpec `json:"metricMethodRef"`
 
 	// Price per unit (USD)
-	// +kubebuilder:validation:Pattern=`^\d+.?\d{2}$`
+	// +kubebuilder:validation:Pattern=`^\d+(\.\d{2})?$`
 	PricePerUnit string `json:"pricePerUnit"`
 }
 
@@ -116,12 +116,12 @@ type ApplicationPlanSpec struct {
 	TrialPeriod *int `json:"trialPeriod,omitempty"`
 
 	// Setup fee (USD)
-	// +kubebuilder:validation:Pattern=`^\d+.?\d{2}$`
+	// +kubebuilder:validation:Pattern=`^\d+(\.\d{2})?$`
 	// +optional
 	SetupFee *string `json:"setupFee,omitempty"`
 
 	// Cost per Month (USD)
-	// +kubebuilder:validation:Pattern=`^\d+.?\d{2}$`
+	// +kubebuilder:validation:Pattern=`^\d+(\.\d{2})?$`
 	// +optional
 	CostMonth *string `json:"costMonth,omitempty"`
 
