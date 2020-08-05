@@ -351,6 +351,11 @@ func (in *MappingRuleSpec) DeepCopyInto(out *MappingRuleSpec) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.Last != nil {
+		in, out := &in.Last, &out.Last
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

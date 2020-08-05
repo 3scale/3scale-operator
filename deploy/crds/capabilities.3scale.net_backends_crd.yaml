@@ -53,6 +53,8 @@ spec:
                     type: string
                   increment:
                     type: integer
+                  last:
+                    type: boolean
                   metricMethodRef:
                     type: string
                   pattern:
