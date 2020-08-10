@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 	crmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
+	consolev1 "github.com/openshift/api/console/v1"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -114,6 +115,11 @@ func main() {
 
 	// Setup Scheme for OpenShift routes
 	if err := routev1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	if err := consolev1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}

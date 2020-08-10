@@ -4,28 +4,28 @@ go 1.13
 
 require (
 	github.com/3scale/3scale-porta-go-client v0.0.4
-	github.com/RHsyseng/operator-utils v0.0.0-20200204194854-c5b0d8533458
-	github.com/coreos/prometheus-operator v0.34.0
+	github.com/RHsyseng/operator-utils v0.0.0-20200506183821-e3b4a2ba9c30
+	github.com/coreos/prometheus-operator v0.35.1
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
-	github.com/go-bindata/go-bindata v3.1.1+incompatible
+	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.4
+	github.com/go-openapi/spec v0.19.6
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/google/go-cmp v0.3.1
 	github.com/integr8ly/grafana-operator/v3 v3.5.0
 	github.com/luci/go-render v0.0.0-20160219211803-9a04cc21af0f
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
-	github.com/openshift/client-go v0.0.0-20190923180330-3b6373338c9b
+	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/operator-framework/operator-sdk v0.16.0
 	github.com/prometheus/client_golang v1.2.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0
-	gopkg.in/yaml.v2 v2.2.4
-	k8s.io/api v0.0.0
-	k8s.io/apimachinery v0.0.0
+	gopkg.in/yaml.v2 v2.2.8
+	k8s.io/api v0.17.2
+	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20190918143330-0270cf2f1c1d
 	sigs.k8s.io/controller-runtime v0.4.0
@@ -58,6 +58,8 @@ replace (
 
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm
 
-replace github.com/openshift/api => github.com/openshift/api v0.0.0-20190924102528-32369d4db2ad // Required until https://github.com/operator-framework/operator-lifecycle-manager/pull/1241 is resolved
+replace github.com/openshift/api => github.com/openshift/api v0.0.0-20200527184302-a843dc3262a0 // Required until https://github.com/operator-framework/operator-lifecycle-manager/pull/1241 is resolved
+
+replace github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20191125132246-f6563a70e19a
 
 replace github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.15.2
