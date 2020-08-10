@@ -10,13 +10,17 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 
 	"github.com/RHsyseng/operator-utils/pkg/olm"
+	"github.com/RHsyseng/operator-utils/pkg/resource/read"
 	appsv1 "github.com/openshift/api/apps/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	"k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -97,6 +101,11 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	err = c.Watch(&source.Kind{Type: &v1beta1.PodDisruptionBudget{}}, ownerHandler)
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -211,9 +220,19 @@ func (r *ReconcileAPIManager) apiManagerInstance(namespacedName types.Namespaced
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			if err := helper.ConsoleLinkSupported(); err == nil {
+				instance.ObjectMeta = metav1.ObjectMeta {
+					Name: namespacedName.Name,
+					Namespace: namespacedName.Namespace,
+				}
+				helper.RemoveConsoleLink(r.Context(), r.Client(), instance)
+			}
 			return nil, nil
 		}
 		return nil, err
+	}
+	if err := helper.ConsoleLinkSupported(); err == nil {
+		helper.CreateConsoleLink(r.Context(), r.Client(), instance)
 	}
 	return instance, nil
 }
@@ -256,6 +275,15 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+	}
+
+	reader := read.New(r.Client()).WithNamespace(cr.Namespace).WithOwnerObject(cr)
+	resourceMap, err := reader.ListAll(
+		&routev1.RouteList{},
+	)
+	_ = resourceMap
+	if err != nil {
+		log.Error(err, "Failed to list deployed objects. ", err)
 	}
 
 	backendReconciler := operator.NewBackendReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
