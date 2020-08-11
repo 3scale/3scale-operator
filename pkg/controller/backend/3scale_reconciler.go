@@ -475,6 +475,16 @@ func (t *ThreescaleReconciler) reconcileMatchedMappingRules(matchedList []mappin
 			params["delta"] = strconv.Itoa(data.spec.Increment)
 		}
 
+		//
+		// Reconcile position. Only reconcile position when it has been set
+		// in the CR spec. If it has not been set on the spec we assume the desired
+		// position is the one set by the 3scale API and we do not modify
+		// the spec with the value from the API either.
+		//
+		if data.spec.Position != nil && *data.spec.Position != data.item.Position {
+			params["position"] = strconv.FormatInt(int64(*data.spec.Position), 10)
+		}
+
 		if len(params) > 0 {
 			err := t.backendAPIEntity.UpdateMappingRule(data.item.ID, params)
 			if err != nil {
@@ -503,6 +513,11 @@ func (t *ThreescaleReconciler) createNewMappingRules(desiredList []capabilitiesv
 			"http_method": spec.HTTPMethod,
 			"metric_id":   strconv.FormatInt(metricID, 10),
 			"delta":       strconv.Itoa(spec.Increment),
+		}
+
+		// Only set params position when position is set in CR's spec
+		if spec.Position != nil {
+			params["position"] = strconv.FormatInt(int64(*spec.Position), 10)
 		}
 
 		err = t.backendAPIEntity.CreateMappingRule(params)
