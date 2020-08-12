@@ -38,6 +38,11 @@ NOTE: All monitoring resources will be created by the operator using *Create onl
 * Zync
 * Zync-que
 
+See:
+* [APIcast metrics](https://github.com/3scale/APIcast/blob/master/doc/prometheus-metrics.md)
+* [Backend metics](https://github.com/3scale/apisonator/blob/master/docs/prometheus_metrics.md)
+
+
 ## Monitoring stack
 
 3scale monitoring is leveraged by [prometheus](https://prometheus.io/) and [grafana](https://grafana.com/) monitoring solutions. They need to be up and running in the cluster and configured to watch for monitoring resources.
