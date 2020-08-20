@@ -89,6 +89,32 @@ func testApicastProductionTolerations() []v1.Toleration {
 	return getTestTolerations("apicast-production")
 }
 
+func testApicastStagingCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("123m"),
+			v1.ResourceMemory: resource.MustParse("456Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("789m"),
+			v1.ResourceMemory: resource.MustParse("111Mi"),
+		},
+	}
+}
+
+func testApicastProductionCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("222m"),
+			v1.ResourceMemory: resource.MustParse("333Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("444m"),
+			v1.ResourceMemory: resource.MustParse("555Mi"),
+		},
+	}
+}
+
 func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 	tmpApicastManagementAPI := apicastManagementAPI
 	tmpOpenSSLVerify := openSSLVerify
@@ -139,7 +165,7 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 		expectedOptionsFactory func() *component.ApicastOptions
 	}{
 		{"Default", basicApimanagerTestApicastOptions, defaultApicastOptions},
-		{"WithoutResourceRequirements",
+		{"WithGlobalResourceRequirementsDisabled",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -177,6 +203,35 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				opts := defaultApicastOptions()
 				opts.ProductionTolerations = testApicastProductionTolerations()
 				opts.StagingTolerations = testApicastStagingTolerations()
+				return opts
+			},
+		},
+		{"WithAPIcastCustomResourceRequirements",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestApicastOptions()
+				apimanager.Spec.Apicast.ProductionSpec.Resources = testApicastProductionCustomResourceRequirements()
+				apimanager.Spec.Apicast.StagingSpec.Resources = testApicastStagingCustomResourceRequirements()
+				return apimanager
+			},
+			func() *component.ApicastOptions {
+				opts := defaultApicastOptions()
+				opts.ProductionResourceRequirements = *testApicastProductionCustomResourceRequirements()
+				opts.StagingResourceRequirements = *testApicastStagingCustomResourceRequirements()
+				return opts
+			},
+		},
+		{"WithAPIcastCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestApicastOptions()
+				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
+				apimanager.Spec.Apicast.ProductionSpec.Resources = testApicastProductionCustomResourceRequirements()
+				apimanager.Spec.Apicast.StagingSpec.Resources = testApicastStagingCustomResourceRequirements()
+				return apimanager
+			},
+			func() *component.ApicastOptions {
+				opts := defaultApicastOptions()
+				opts.ProductionResourceRequirements = *testApicastProductionCustomResourceRequirements()
+				opts.StagingResourceRequirements = *testApicastStagingCustomResourceRequirements()
 				return opts
 			},
 		},

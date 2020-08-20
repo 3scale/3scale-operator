@@ -497,6 +497,11 @@ func (in *ApicastProductionSpec) DeepCopyInto(out *ApicastProductionSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -580,6 +585,11 @@ func (in *ApicastStagingSpec) DeepCopyInto(out *ApicastStagingSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }

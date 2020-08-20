@@ -165,6 +165,8 @@ type ApicastProductionSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -174,6 +176,8 @@ type ApicastStagingSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type BackendSpec struct {
