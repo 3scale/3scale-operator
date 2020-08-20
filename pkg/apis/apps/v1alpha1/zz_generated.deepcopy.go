@@ -1377,6 +1377,11 @@ func (in *ZyncAppSpec) DeepCopyInto(out *ZyncAppSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1409,6 +1414,11 @@ func (in *ZyncQueSpec) DeepCopyInto(out *ZyncQueSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }
@@ -1447,6 +1457,11 @@ func (in *ZyncSpec) DeepCopyInto(out *ZyncSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.DatabaseResources != nil {
+		in, out := &in.DatabaseResources, &out.DatabaseResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.AppSpec != nil {
 		in, out := &in.AppSpec, &out.AppSpec

@@ -399,6 +399,8 @@ type ZyncSpec struct {
 	DatabaseAffinity *v1.Affinity `json:"databaseAffinity,omitempty"`
 	// +optional
 	DatabaseTolerations []v1.Toleration `json:"databaseTolerations,omitempty"`
+	// +optional
+	DatabaseResources *v1.ResourceRequirements `json:"databaseResources,omitempty"`
 
 	// +optional
 	AppSpec *ZyncAppSpec `json:"appSpec,omitempty"`
@@ -414,6 +416,8 @@ type ZyncAppSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type ZyncQueSpec struct {
@@ -423,6 +427,8 @@ type ZyncQueSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type HighAvailabilitySpec struct {
