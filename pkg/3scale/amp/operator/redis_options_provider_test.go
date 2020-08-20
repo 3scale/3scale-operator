@@ -87,6 +87,19 @@ func testSystemRedisTolerations() []v1.Toleration {
 	return getTestTolerations("system-redis")
 }
 
+func testBackendRedisCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("111m"),
+			v1.ResourceMemory: resource.MustParse("222Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("333m"),
+			v1.ResourceMemory: resource.MustParse("444Mi"),
+		},
+	}
+}
+
 func defaultRedisOptions() *component.RedisOptions {
 	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
@@ -246,6 +259,32 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				opts := defaultRedisOptions()
 				opts.SystemRedisTolerations = testSystemRedisTolerations()
 				opts.BackendRedisTolerations = testBackendRedisTolerations()
+				return opts
+			},
+		},
+		{"WithBackendRedisCustomResourceRequirements",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.Backend.RedisResources = testBackendRedisCustomResourceRequirements()
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.BackendRedisContainerResourceRequirements = testBackendRedisCustomResourceRequirements()
+				return opts
+			},
+		},
+		{"WithBackendRedisCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
+				apimanager.Spec.Backend.RedisResources = testBackendRedisCustomResourceRequirements()
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.SystemRedisContainerResourceRequirements = &v1.ResourceRequirements{}
+				opts.BackendRedisContainerResourceRequirements = testBackendRedisCustomResourceRequirements()
 				return opts
 			},
 		},

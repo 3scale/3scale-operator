@@ -192,6 +192,8 @@ type BackendSpec struct {
 	// +optional
 	RedisTolerations []v1.Toleration `json:"redisTolerations,omitempty"`
 	// +optional
+	RedisResources *v1.ResourceRequirements `json:"redisResources,omitempty"`
+	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
 	WorkerSpec *BackendWorkerSpec `json:"workerSpec,omitempty"`
@@ -211,6 +213,8 @@ type BackendListenerSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type BackendWorkerSpec struct {
@@ -220,6 +224,8 @@ type BackendWorkerSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type BackendCronSpec struct {
@@ -229,6 +235,8 @@ type BackendCronSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type SystemSpec struct {

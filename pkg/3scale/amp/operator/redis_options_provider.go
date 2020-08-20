@@ -66,6 +66,13 @@ func (r *RedisOptionsProvider) setResourceRequirementsOptions() {
 		r.options.BackendRedisContainerResourceRequirements = &v1.ResourceRequirements{}
 		r.options.SystemRedisContainerResourceRequirements = &v1.ResourceRequirements{}
 	}
+
+	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// spec.resourceRequirementsEnabled, overwriting that setting when they are
+	// defined
+	if r.apimanager.Spec.Backend.RedisResources != nil {
+		r.options.BackendRedisContainerResourceRequirements = r.apimanager.Spec.Backend.RedisResources
+	}
 }
 
 func (r *RedisOptionsProvider) setPersistentVolumeClaimOptions() {

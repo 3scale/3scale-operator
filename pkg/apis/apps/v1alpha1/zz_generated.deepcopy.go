@@ -624,6 +624,11 @@ func (in *BackendCronSpec) DeepCopyInto(out *BackendCronSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -656,6 +661,11 @@ func (in *BackendListenerSpec) DeepCopyInto(out *BackendListenerSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }
@@ -721,6 +731,11 @@ func (in *BackendSpec) DeepCopyInto(out *BackendSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.RedisResources != nil {
+		in, out := &in.RedisResources, &out.RedisResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ListenerSpec != nil {
 		in, out := &in.ListenerSpec, &out.ListenerSpec
 		*out = new(BackendListenerSpec)
@@ -768,6 +783,11 @@ func (in *BackendWorkerSpec) DeepCopyInto(out *BackendWorkerSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }
