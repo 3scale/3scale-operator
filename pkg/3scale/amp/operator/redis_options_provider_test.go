@@ -100,6 +100,19 @@ func testBackendRedisCustomResourceRequirements() *v1.ResourceRequirements {
 	}
 }
 
+func testSystemRedisCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("222m"),
+			v1.ResourceMemory: resource.MustParse("333Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("444m"),
+			v1.ResourceMemory: resource.MustParse("555Mi"),
+		},
+	}
+}
+
 func defaultRedisOptions() *component.RedisOptions {
 	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
@@ -285,6 +298,32 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				opts := defaultRedisOptions()
 				opts.SystemRedisContainerResourceRequirements = &v1.ResourceRequirements{}
 				opts.BackendRedisContainerResourceRequirements = testBackendRedisCustomResourceRequirements()
+				return opts
+			},
+		},
+		{"WithSystemRedisCustomResourceRequirements",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.Backend.RedisResources = testSystemRedisCustomResourceRequirements()
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.BackendRedisContainerResourceRequirements = testSystemRedisCustomResourceRequirements()
+				return opts
+			},
+		},
+		{"WithSystemRedisCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
+				apimanager.Spec.System.RedisResources = testSystemRedisCustomResourceRequirements()
+				return apimanager
+			},
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.BackendRedisContainerResourceRequirements = &v1.ResourceRequirements{}
+				opts.SystemRedisContainerResourceRequirements = testSystemRedisCustomResourceRequirements()
 				return opts
 			},
 		},

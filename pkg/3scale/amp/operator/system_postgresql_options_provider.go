@@ -133,6 +133,15 @@ func (s *SystemPostgresqlOptionsProvider) setResourceRequirementsOptions() {
 	} else {
 		s.options.ContainerResourceRequirements = v1.ResourceRequirements{}
 	}
+
+	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// spec.resourceRequirementsEnabled, overwriting that setting when they are
+	// defined
+	if s.apimanager.Spec.System.DatabaseSpec != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Resources != nil {
+		s.options.ContainerResourceRequirements = *s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Resources
+	}
 }
 
 func (s *SystemPostgresqlOptionsProvider) setPersistentVolumeClaimOptions() {

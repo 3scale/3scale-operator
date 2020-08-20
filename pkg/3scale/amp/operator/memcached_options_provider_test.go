@@ -43,6 +43,19 @@ func testMemcachedTolerations() []v1.Toleration {
 	return getTestTolerations("memcached")
 }
 
+func testSystemMemcachedCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("111m"),
+			v1.ResourceMemory: resource.MustParse("222Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("333m"),
+			v1.ResourceMemory: resource.MustParse("444Mi"),
+		},
+	}
+}
+
 func defaultMemcachedOptions() *component.MemcachedOptions {
 	return &component.MemcachedOptions{
 		ImageTag:             product.ThreescaleRelease,
@@ -94,6 +107,31 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 			func() *component.MemcachedOptions {
 				opts := defaultMemcachedOptions()
 				opts.Tolerations = testMemcachedTolerations()
+				return opts
+			},
+		},
+		{"WithSystemMemcachedCustomResourceRequirements",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System.MemcachedResources = testSystemMemcachedCustomResourceRequirements()
+				return apimanager
+			},
+			func() *component.MemcachedOptions {
+				opts := defaultMemcachedOptions()
+				opts.ResourceRequirements = *testSystemMemcachedCustomResourceRequirements()
+				return opts
+			},
+		},
+		{"WithSystemMemcachedCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
+				apimanager.Spec.System.MemcachedResources = testSystemMemcachedCustomResourceRequirements()
+				return apimanager
+			},
+			func() *component.MemcachedOptions {
+				opts := defaultMemcachedOptions()
+				opts.ResourceRequirements = *testSystemMemcachedCustomResourceRequirements()
 				return opts
 			},
 		},

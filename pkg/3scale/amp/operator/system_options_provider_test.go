@@ -158,6 +158,71 @@ func testSystemSphinxTolerations() []v1.Toleration {
 	return getTestTolerations("system-sphinx")
 }
 
+func testSystemMasterContainerCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("111m"),
+			v1.ResourceMemory: resource.MustParse("222Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("333m"),
+			v1.ResourceMemory: resource.MustParse("444Mi"),
+		},
+	}
+}
+
+func testSystemProviderContainerCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("222m"),
+			v1.ResourceMemory: resource.MustParse("333Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("444m"),
+			v1.ResourceMemory: resource.MustParse("555Mi"),
+		},
+	}
+}
+
+func testSystemDeveloperContainerCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("666m"),
+			v1.ResourceMemory: resource.MustParse("777Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("888m"),
+			v1.ResourceMemory: resource.MustParse("999Mi"),
+		},
+	}
+}
+
+func testSystemSidekiqCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("842m"),
+			v1.ResourceMemory: resource.MustParse("253Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("294m"),
+			v1.ResourceMemory: resource.MustParse("195Mi"),
+		},
+	}
+}
+
+func testSystemSphinxCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("123m"),
+			v1.ResourceMemory: resource.MustParse("456Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("789m"),
+			v1.ResourceMemory: resource.MustParse("346Mi"),
+		},
+	}
+}
+
 func basicApimanagerSpecTestSystemOptions() *appsv1alpha1.APIManager {
 	tmpSystemAppReplicas := systemAppReplicas
 	tmpSystemSideKiqReplicas := systemSidekiqReplicas
@@ -510,6 +575,47 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				expectedOpts.AppTolerations = testSystemAppTolerations()
 				expectedOpts.SidekiqTolerations = testSystemSidekiqTolerations()
 				expectedOpts.SphinxTolerations = testSystemSphinxTolerations()
+				return expectedOpts
+			},
+		},
+		{"WithSystemCustomResourceRequirements",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.System.AppSpec.MasterContainerResources = testSystemMasterContainerCustomResourceRequirements()
+				apimanager.Spec.System.AppSpec.ProviderContainerResources = testSystemProviderContainerCustomResourceRequirements()
+				apimanager.Spec.System.AppSpec.DeveloperContainerResources = testSystemDeveloperContainerCustomResourceRequirements()
+				apimanager.Spec.System.SidekiqSpec.Resources = testSystemSidekiqCustomResourceRequirements()
+				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
+				return apimanager
+			}, nil, nil, nil, nil, nil, nil, nil,
+			func(opts *component.SystemOptions) *component.SystemOptions {
+				expectedOpts := defaultSystemOptions(opts)
+				expectedOpts.AppMasterContainerResourceRequirements = testSystemMasterContainerCustomResourceRequirements()
+				expectedOpts.AppProviderContainerResourceRequirements = testSystemProviderContainerCustomResourceRequirements()
+				expectedOpts.AppDeveloperContainerResourceRequirements = testSystemDeveloperContainerCustomResourceRequirements()
+				expectedOpts.SidekiqContainerResourceRequirements = testSystemSidekiqCustomResourceRequirements()
+				expectedOpts.SphinxContainerResourceRequirements = testSystemSphinxCustomResourceRequirements()
+				return expectedOpts
+			},
+		},
+		{"WithSystemCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
+				apimanager.Spec.System.AppSpec.MasterContainerResources = testSystemMasterContainerCustomResourceRequirements()
+				apimanager.Spec.System.AppSpec.ProviderContainerResources = testSystemProviderContainerCustomResourceRequirements()
+				apimanager.Spec.System.AppSpec.DeveloperContainerResources = testSystemDeveloperContainerCustomResourceRequirements()
+				apimanager.Spec.System.SidekiqSpec.Resources = testSystemSidekiqCustomResourceRequirements()
+				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
+				return apimanager
+			}, nil, nil, nil, nil, nil, nil, nil,
+			func(opts *component.SystemOptions) *component.SystemOptions {
+				expectedOpts := defaultSystemOptions(opts)
+				expectedOpts.AppMasterContainerResourceRequirements = testSystemMasterContainerCustomResourceRequirements()
+				expectedOpts.AppProviderContainerResourceRequirements = testSystemProviderContainerCustomResourceRequirements()
+				expectedOpts.AppDeveloperContainerResourceRequirements = testSystemDeveloperContainerCustomResourceRequirements()
+				expectedOpts.SidekiqContainerResourceRequirements = testSystemSidekiqCustomResourceRequirements()
+				expectedOpts.SphinxContainerResourceRequirements = testSystemSphinxCustomResourceRequirements()
 				return expectedOpts
 			},
 		},

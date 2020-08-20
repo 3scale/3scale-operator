@@ -60,6 +60,19 @@ func testSystemPostgreSQLTolerations() []v1.Toleration {
 	return getTestTolerations("system-postgresql")
 }
 
+func testSystemPostgreSQLCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("111m"),
+			v1.ResourceMemory: resource.MustParse("222Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("333m"),
+			v1.ResourceMemory: resource.MustParse("444Mi"),
+		},
+	}
+}
+
 func defaultSystemPostgreSQLOptions(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
 	return &component.SystemPostgreSQLOptions{
 		ImageTag:                      product.ThreescaleRelease,
@@ -178,6 +191,43 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
 				expecteOpts := defaultSystemPostgreSQLOptions(opts)
 				expecteOpts.Tolerations = testSystemPostgreSQLTolerations()
+				return expecteOpts
+			},
+		},
+		{"WithSystemPostgreSQLCustomResourceRequirements", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+							Resources: testSystemPostgreSQLCustomResourceRequirements(),
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				expecteOpts := defaultSystemPostgreSQLOptions(opts)
+				expecteOpts.ContainerResourceRequirements = *testSystemPostgreSQLCustomResourceRequirements()
+				return expecteOpts
+			},
+		},
+		{"WithPostgreSQLCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+							Resources: testSystemPostgreSQLCustomResourceRequirements(),
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				expecteOpts := defaultSystemPostgreSQLOptions(opts)
+				expecteOpts.ContainerResourceRequirements = *testSystemPostgreSQLCustomResourceRequirements()
 				return expecteOpts
 			},
 		},

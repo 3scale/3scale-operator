@@ -147,6 +147,15 @@ func (s *SystemMysqlOptionsProvider) setResourceRequirementsOptions() {
 	} else {
 		s.mysqlOptions.ContainerResourceRequirements = v1.ResourceRequirements{}
 	}
+
+	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// spec.resourceRequirementsEnabled, overwriting that setting when they are
+	// defined
+	if s.apimanager.Spec.System.DatabaseSpec != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL.Resources != nil {
+		s.mysqlOptions.ContainerResourceRequirements = *s.apimanager.Spec.System.DatabaseSpec.MySQL.Resources
+	}
 }
 
 func (s *SystemMysqlOptionsProvider) setPersistentVolumeClaimOptions() {

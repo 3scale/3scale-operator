@@ -431,6 +431,25 @@ func (s *SystemOptionsProvider) setResourceRequirementsOptions() {
 		s.options.SidekiqContainerResourceRequirements = &v1.ResourceRequirements{}
 		s.options.SphinxContainerResourceRequirements = &v1.ResourceRequirements{}
 	}
+
+	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// spec.resourceRequirementsEnabled, overwriting that setting when they are
+	// defined
+	if s.apimanager.Spec.System.AppSpec.MasterContainerResources != nil {
+		s.options.AppMasterContainerResourceRequirements = s.apimanager.Spec.System.AppSpec.MasterContainerResources
+	}
+	if s.apimanager.Spec.System.AppSpec.ProviderContainerResources != nil {
+		s.options.AppProviderContainerResourceRequirements = s.apimanager.Spec.System.AppSpec.ProviderContainerResources
+	}
+	if s.apimanager.Spec.System.AppSpec.DeveloperContainerResources != nil {
+		s.options.AppDeveloperContainerResourceRequirements = s.apimanager.Spec.System.AppSpec.DeveloperContainerResources
+	}
+	if s.apimanager.Spec.System.SidekiqSpec.Resources != nil {
+		s.options.SidekiqContainerResourceRequirements = s.apimanager.Spec.System.SidekiqSpec.Resources
+	}
+	if s.apimanager.Spec.System.SphinxSpec.Resources != nil {
+		s.options.SphinxContainerResourceRequirements = s.apimanager.Spec.System.SphinxSpec.Resources
+	}
 }
 
 func (s *SystemOptionsProvider) setNodeAffinityAndTolerationsOptions() {

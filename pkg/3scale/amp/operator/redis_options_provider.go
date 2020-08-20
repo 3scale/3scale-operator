@@ -73,6 +73,9 @@ func (r *RedisOptionsProvider) setResourceRequirementsOptions() {
 	if r.apimanager.Spec.Backend.RedisResources != nil {
 		r.options.BackendRedisContainerResourceRequirements = r.apimanager.Spec.Backend.RedisResources
 	}
+	if r.apimanager.Spec.System.RedisResources != nil {
+		r.options.SystemRedisContainerResourceRequirements = r.apimanager.Spec.System.RedisResources
+	}
 }
 
 func (r *RedisOptionsProvider) setPersistentVolumeClaimOptions() {
