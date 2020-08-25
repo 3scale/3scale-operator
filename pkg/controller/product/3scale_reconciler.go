@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -14,13 +15,13 @@ import (
 type ThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	resource            *capabilitiesv1beta1.Product
-	productEntity       *helper.ProductEntity
-	backendRemoteIndex  *helper.BackendAPIRemoteIndex
+	productEntity       *controllerhelper.ProductEntity
+	backendRemoteIndex  *controllerhelper.BackendAPIRemoteIndex
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
 
-func NewThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient, backendRemoteIndex *helper.BackendAPIRemoteIndex) *ThreescaleReconciler {
+func NewThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient, backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex) *ThreescaleReconciler {
 	return &ThreescaleReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
@@ -30,7 +31,7 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabiliti
 	}
 }
 
-func (t *ThreescaleReconciler) Reconcile() (*helper.ProductEntity, error) {
+func (t *ThreescaleReconciler) Reconcile() (*controllerhelper.ProductEntity, error) {
 	productEntity, err := t.reconcile3scaleProduct()
 	if err != nil {
 		return nil, err
@@ -58,7 +59,7 @@ func (t *ThreescaleReconciler) Reconcile() (*helper.ProductEntity, error) {
 	return t.productEntity, nil
 }
 
-func (t *ThreescaleReconciler) reconcile3scaleProduct() (*helper.ProductEntity, error) {
+func (t *ThreescaleReconciler) reconcile3scaleProduct() (*controllerhelper.ProductEntity, error) {
 	productList, err := t.threescaleAPIClient.ListProducts()
 	if err != nil {
 		return nil, fmt.Errorf("reconcile3scaleProduct product [%s]: %w", t.resource.Spec.SystemName, err)
@@ -91,5 +92,5 @@ func (t *ThreescaleReconciler) reconcile3scaleProduct() (*helper.ProductEntity, 
 		productObj = product
 	}
 
-	return helper.NewProductEntity(productObj, t.threescaleAPIClient, t.logger), nil
+	return controllerhelper.NewProductEntity(productObj, t.threescaleAPIClient, t.logger), nil
 }

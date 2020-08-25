@@ -7,7 +7,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/helper"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -120,7 +120,7 @@ func (r *ReconcileTenant) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	portaClient, err := helper.PortaClientFromURLString(tenantR.Spec.SystemMasterUrl, masterAccessToken)
+	portaClient, err := controllerhelper.PortaClientFromURLString(tenantR.Spec.SystemMasterUrl, masterAccessToken)
 	if err != nil {
 		log.Error(err, "Error creating porta client object")
 		// Error reading the object - requeue the request.

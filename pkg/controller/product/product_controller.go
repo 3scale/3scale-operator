@@ -7,6 +7,7 @@ import (
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
@@ -163,7 +164,7 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 		return reconcile.Result{}, err
 	}
 
-	providerAccount, err := helper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("reconcile product spec: %w", err)
 	}
@@ -179,12 +180,12 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 		return reconcile.Result{}, err
 	}
 
-	threescaleAPIClient, err := helper.PortaClient(providerAccount)
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("reconcile product spec: %w", err)
 	}
 
-	backendRemoteIndex, err := helper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
+	backendRemoteIndex, err := controllerhelper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("reconcile product spec: %w", err)
 	}
@@ -227,7 +228,7 @@ func (r *ReconcileProduct) validateSpec(resource *capabilitiesv1beta1.Product) e
 	}
 }
 
-func (r *ReconcileProduct) checkExternalRefs(resource *capabilitiesv1beta1.Product, providerAccount *helper.ProviderAccount) error {
+func (r *ReconcileProduct) checkExternalRefs(resource *capabilitiesv1beta1.Product, providerAccount *controllerhelper.ProviderAccount) error {
 	errors := field.ErrorList{}
 
 	backendList, err := r.backendList(resource, providerAccount)
@@ -347,7 +348,7 @@ func checkAppPricingRulesExternalRefs(resource *capabilitiesv1beta1.Product, bac
 // Returns a list of k8s backend list where all elements meet the following conditions:
 // - Sync state (ensure remote backend exist and in sync)
 // - Same 3scale provider Account as the product
-func (r *ReconcileProduct) backendList(resource *capabilitiesv1beta1.Product, productProviderAccount *helper.ProviderAccount) ([]capabilitiesv1beta1.Backend, error) {
+func (r *ReconcileProduct) backendList(resource *capabilitiesv1beta1.Product, productProviderAccount *controllerhelper.ProviderAccount) ([]capabilitiesv1beta1.Backend, error) {
 	logger := r.Logger().WithValues("reconcile", resource.Name)
 	backendList := &capabilitiesv1beta1.BackendList{}
 	opts := []controllerclient.ListOption{
@@ -367,7 +368,7 @@ func (r *ReconcileProduct) backendList(resource *capabilitiesv1beta1.Product, pr
 			continue
 		}
 
-		backendProviderAccount, err := helper.LookupProviderAccount(r.Client(), resource.Namespace, backendList.Items[idx].Spec.ProviderAccountRef, r.Logger())
+		backendProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), resource.Namespace, backendList.Items[idx].Spec.ProviderAccountRef, r.Logger())
 		if err != nil {
 			return nil, fmt.Errorf("backendList: %w", err)
 		}
