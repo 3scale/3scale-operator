@@ -216,7 +216,7 @@ spec:
 Check on the fields of **Backend** custom resource and possible values in the [Backend CRD Reference](backend-reference.md) documentation.
 
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
-* **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
+* **NOTE 2**: `metricMethodRef` holds a reference to existing metric or method map key name `system_name`. In the example, `hits`.
 
 ### Backend custom resource status field
 
@@ -422,7 +422,7 @@ spec:
 ```
 
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
-* **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
+* **NOTE 2**: `metricMethodRef` holds a reference to existing metric or method map key name `system_name`. In the example, `hits`.
 
 ### Product application plans
 
@@ -449,7 +449,7 @@ spec:
 
 ### Product application plan limits
 
-Define the desired product application plan limits declaratively using the `applicationPlans.limits` list.
+Define desired product application plan limits declaratively using the `applicationPlans.limits` list.
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
