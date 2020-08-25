@@ -29,7 +29,7 @@ using the operator backup functionality see [restoring 3scale](#restoring-3scale
 ## Backing up 3scale
 
 The backup functionality of a 3scale installation deployed by an `APIManager`
-a custom resource is provided.
+ custom resource is provided.
 
 ### Backup compatible scenarios
 
@@ -82,7 +82,7 @@ workflow is the following one:
            volumeName: "my-preexisting-persistent-volume"
    ```
 1. Wait until APIManagerBackup finishes. You can check this by obtaining
-   the content of APIManagerBackup and waiting until the `.status.completed` the field
+   the content of APIManagerBackup and waiting until the `.status.completed` field
    is set to true.
 1. At this point the backup has finished. The backup contents are detailed in
    the [APIManagerBackup reference](apimanagerbackup-reference.md#data-that-is-backed-up).
