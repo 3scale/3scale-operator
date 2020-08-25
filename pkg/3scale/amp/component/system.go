@@ -254,6 +254,14 @@ func (system *System) buildSystemAppPreHookEnv() []v1.EnvVar {
 	return result
 }
 
+func (system *System) buildSystemAppPostHookEnv() []v1.EnvVar {
+	var result []v1.EnvVar
+	if system.Options.IncludeOracleOptionalSettings {
+		result = append(result, helper.EnvVarFromSecretOptional("ORACLE_SYSTEM_PASSWORD", SystemSecretSystemDatabaseSecretName, "ORACLE_SYSTEM_PASSWORD"))
+	}
+	return result
+}
+
 func (system *System) BackendRedisEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
 		helper.EnvVarFromSecret("BACKEND_REDIS_URL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
@@ -513,6 +521,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 						FailurePolicy: appsv1.LifecycleHookFailurePolicyAbort,
 						ExecNewPod: &appsv1.ExecNewPodHook{
 							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:post_deploy"},
+							Env:           system.buildSystemAppPostHookEnv(),
 							ContainerName: "system-master"}}},
 			},
 			MinReadySeconds: 0,
