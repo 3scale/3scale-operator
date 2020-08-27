@@ -34,6 +34,7 @@ Specifies product deployment mode
 Specifies apicast hosted deployment mode
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
 | Authentication | `authentication` | object | See [AuthenticationSpec](#AuthenticationSpec) | No |
 
 ### ApicastSelfManagedSpec
@@ -41,6 +42,7 @@ Specifies apicast hosted deployment mode
 Specifies apicast self managed deployment mode
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
 | Authentication | `authentication` | object | See [AuthenticationSpec](#AuthenticationSpec) | No |
 | StagingPublicBaseURL | `stagingPublicBaseURL` | string | Staging Public Base URL | No |
 | ProductionPublicBaseURL | `productionPublicBaseURL` | string | Production Public Base URL | No |
@@ -50,6 +52,7 @@ Specifies apicast self managed deployment mode
 Specifies product authentication
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
 | UserKeyAuthentication | `userkey` | object | See [UserKeyAuthenticationSpec](#UserKeyAuthenticationSpec) | No |
 | AppKeyAppIDAuthentication | `appKeyAppID` | object | See [AppKeyAppIDAuthenticationSpec](#AppKeyAppIDAuthenticationSpec) | No |
 
@@ -58,6 +61,7 @@ Specifies product authentication
 Specifies product user key authentication mode
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
 | Key | `authUserKey` | string | The application is identified & authenticated via a single string | No |
 | CredentialsLoc | `credentials` | string | Credentials location. Valid values: *headers*, *query*, *authorization* | No |
 | Security | `security` | object | See [SecuritySpec](#SecuritySpec) | No |
@@ -67,6 +71,7 @@ Specifies product user key authentication mode
 Specifies product appKey & appID authentication mode
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
 | AppID | `appID` | string | The application is identified via the *App_ID* | No |
 | AppKey | `appKey` | string | The application is authenticated via the *App_Key* | No |
 | CredentialsLoc | `credentials` | string | Credentials location. Valid values: *headers*, *query*, *authorization* | No |
@@ -77,6 +82,7 @@ Specifies product appKey & appID authentication mode
 Specifies product security
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
 | HostHeader | `hostHeader` | string | Lets you define a custom Host request header | No |
 | SecretToken | `secretToken` | string | Enables you to block any direct developer requests to your API backend | No |
 
