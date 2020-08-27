@@ -42,7 +42,7 @@ spec:
                     type: boolean
                   costMonth:
                     description: Cost per Month (USD)
-                    pattern: ^\d+.?\d{2}$
+                    pattern: ^\d+(\.\d{2})?$
                     type: string
                   limits:
                     description: Limits
@@ -115,7 +115,7 @@ spec:
                           type: object
                         pricePerUnit:
                           description: Price per unit (USD)
-                          pattern: ^\d+.?\d{2}$
+                          pattern: ^\d+(\.\d{2})?$
                           type: string
                         to:
                           description: Range To
@@ -129,7 +129,7 @@ spec:
                     type: array
                   setupFee:
                     description: Setup fee (USD)
-                    pattern: ^\d+.?\d{2}$
+                    pattern: ^\d+(\.\d{2})?$
                     type: string
                   trialPeriod:
                     description: Trial Period (days)
