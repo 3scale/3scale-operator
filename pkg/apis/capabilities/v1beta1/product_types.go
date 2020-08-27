@@ -160,6 +160,8 @@ type MappingRuleSpec struct {
 	Increment       int    `json:"increment"`
 	// +optional
 	Position *int `json:"position,omitempty"`
+	// +optional
+	Last *bool `json:"last,omitempty"`
 }
 
 // BackendUsageSpec defines the desired state of Product's Backend Usages
