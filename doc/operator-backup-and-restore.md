@@ -29,7 +29,7 @@ using the operator backup functionality see [restoring 3scale](#restoring-3scale
 ## Backing up 3scale
 
 The backup functionality of a 3scale installation deployed by an `APIManager`
-custom resource is provided.
+ custom resource is provided.
 
 ### Backup compatible scenarios
 

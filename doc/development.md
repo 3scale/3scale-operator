@@ -41,7 +41,7 @@ git checkout master
 
 [Clone the repository](#clone-repository)
 
-Build operator image
+Build the operator image
 
 ```sh
 make build IMAGE=quay.io/myorg/3scale-operator VERSION=test
@@ -51,7 +51,7 @@ make build IMAGE=quay.io/myorg/3scale-operator VERSION=test
 
 ### Run 3scale Operator Locally
 
-Run operator from command line, it will not be deployed as pod.
+Run operator from the command line, it will not be deployed as a pod.
 
 * [Clone the repository](#clone-repository)
 
@@ -77,11 +77,11 @@ make local
 
 ### Deploy 3scale Operator Manually
 
-Build operator image and deploy manually as a pod.
+Build the operator image and deploy it manually as a pod.
 
 * [Build 3scale operator image](#building-3scale-operator-image)
 
-* Push image to public repo (for instance `quay.io`)
+* Push image to the public repo (for instance `quay.io`)
 
 ```sh
 make push IMAGE=quay.io/myorg/3scale-operator VERSION=test
@@ -170,7 +170,7 @@ make test-crds
 
 Access to a Openshift v4.1.0+ cluster required
 
-* Run tests locally deploying image
+* Run tests locally deploying the image
 ```sh
 export NAMESPACE=operator-test
 make e2e-run
@@ -257,7 +257,7 @@ make licenses.xml
 When licenses check does not parse correctly licensing information, it will complain.
 In that case, you need to add manually license information.
 
-There are two options: a)specify dependency license (recommended) or b)add exception for that dependency.
+There are two options: a)specify dependency license (recommended) or b)add an exception for that dependency.
 
 * Specify dependency license:
 

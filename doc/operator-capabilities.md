@@ -5,7 +5,7 @@ Featured capabilities:
 * Allow interaction with the underlying 3scale API Management solution.
 * Manage the 3scale application declaratively using openshift (custom) resources.
 
-The following diagram shows 3scale entities and relations that will be eligible for management using openshift (custom) resources in  a declarative way.
+The following diagram shows 3scale entities and relations that will be eligible for management using openshift (custom) resources in a declarative way.
 
 ![3scale Object types](3scale-diagram.png)
 
@@ -45,7 +45,7 @@ The following diagram shows available custom resource definitions and their rela
 
 ## Quickstart Guide
 
-To get up and running quickly, this quickstart guide will show how to deploy your first 3scale product and backend with the minimum requried configuration.
+To get up and running quickly, this quickstart guide will show how to deploy your first 3scale product and backend with the minimum required configuration.
 
 Requirements
 
@@ -77,7 +77,7 @@ spec:
 
 Check on the fields of **Backend** custom resource and possible values in the [Backend CRD Reference](backend-reference.md) documentation.
 
-Create custom resource:
+Create a custom resource:
 
 ```
 oc create -f backend1.yaml
@@ -100,13 +100,13 @@ spec:
 
 Check on the fields of **Product** custom resource and possible values in the [Product CRD Reference](product-reference.md) documentation.
 
-Create custom resource:
+Create a custom resource:
 
 ```
 oc create -f product1.yaml
 ```
 
-Created custom resources will take few seconds to setup your 3scale instance. You can check when resources are synchronized checking object's `status` field conditions.
+Created custom resources will take a few seconds to setup your 3scale instance. You can check when resources are synchronized checking object's `status` field conditions.
 Or directly using `oc wait` command:
 
 ```
@@ -220,7 +220,7 @@ Check on the fields of **Backend** custom resource and possible values in the [B
 
 ### Backend custom resource status field
 
-Status field shows resource information useful for the end user.
+The status field shows resource information useful for the end user.
 It is not regarded to be updated manually and it is being reconcilliated on every change of the resource.
 
 Fields:
@@ -255,7 +255,7 @@ status:
 When some 3scale resource is found by the 3scale operator,
 *LookupProviderAccount* process is started to figure out the tenant owning the resource.
 
-The process will check the following tenant credential sources. If none is found, error is raised.
+The process will check the following tenant credential sources. If none is found, an error is raised.
 
 * Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
 
@@ -544,7 +544,7 @@ spec:
 When some 3scale resource is found by the 3scale operator,
 *LookupProviderAccount* process is started to figure out the tenant owning the resource.
 
-The process will check the following tenant credential sources. If none is found, error is raised.
+The process will check the following tenant credential sources. If none is found, an error is raised.
 
 * Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
 
@@ -603,7 +603,7 @@ To deploy a new tenant in your 3scale instance, first you need some preparation 
 
 A) *3scale Master credentials secret: MASTER_SECRET*
 
-Tenant management can only be done using 3scale *master* account. You need *master* account credentials (preferably and access token).
+Tenant management can only be done using 3scale *master* account. You need *master* account credentials (preferably an access token).
 
 * If the tenant resource is created in the same namespace as 3scale,
 the secret with *master* account credentials has been created already and it is called **system-seed**.
@@ -666,7 +666,7 @@ oc create -f <yaml-name>
 
 This should trigger the creation of a new tenant in your 3scale API Management solution.
 
-The 3scale operator will create a new secret and store new tenant's credentials in it. The new tenant *provider_key* and *admin domain url* will be stored in a secret.
+The 3scale operator will create a new secret and store the new tenant's credentials in it. The new tenant *provider_key* and *admin domain url* will be stored in a secret.
 The secret location can be specified using *tenantSecretRef* tenant spec key.
 
 Example of the created secret content:
