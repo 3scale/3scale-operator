@@ -129,77 +129,77 @@ func (r *ReconcileBackend) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, nil
 	}
 
-	result, err := r.reconcile(backend)
-	if err != nil {
-		reqLogger.Error(err, "Failed to reconcile")
-		r.EventRecorder().Eventf(backend, corev1.EventTypeWarning, "ReconcileError", "%v", err)
-	}
-	reqLogger.Info("END", "result", result, "error", err)
-	return result, err
-}
-
-func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backend) (reconcile.Result, error) {
-	logger := r.Logger().WithValues("backend", backendResource.Name)
-
-	if backendResource.SetDefaults(logger) {
-		err := r.Client().Update(r.Context(), backendResource)
+	if backend.SetDefaults(reqLogger) {
+		err := r.Client().Update(r.Context(), backend)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("Failed setting backend defaults: %w", err)
 		}
 
-		logger.Info("resource defaults updated. Requeueing.")
+		reqLogger.Info("resource defaults updated. Requeueing.")
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	err := r.validateSpec(backendResource)
-	if err != nil {
-		if helper.IsInvalidSpecError(err) {
-			// On Validation error, no need to retry as spec is not valid and needs to be changed
-			logger.Info("ERROR", "spec validation error", err)
-			r.EventRecorder().Eventf(backendResource, corev1.EventTypeWarning, "Invalid Backend Spec", "%v", err)
-			return reconcile.Result{}, nil
+	statusReconciler, reconcileErr := r.reconcile(backend)
+	statusResult, statusUpdateErr := statusReconciler.Reconcile()
+	if statusUpdateErr != nil {
+		if reconcileErr != nil {
+			return reconcile.Result{}, fmt.Errorf("Failed to sync backend: %v. Failed to update backend status: %w", reconcileErr, statusUpdateErr)
 		}
 
-		return reconcile.Result{}, err
-	}
-
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, r.Logger())
-	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("reconcile backend spec: %w", err)
-	}
-
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
-	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("reconcile backend spec: %w", err)
-	}
-
-	backendRemoteIndex, err := controllerhelper.NewBackendAPIRemoteIndex(threescaleAPIClient, r.Logger())
-	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("reconcile backend spec: %w", err)
-	}
-
-	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient, backendRemoteIndex)
-	backendAPIEntity, syncErr := reconciler.Reconcile()
-
-	statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, backendAPIEntity, providerAccount.AdminURLStr, syncErr)
-	statusResult, statusErr := statusReconciler.Reconcile()
-	if statusErr != nil {
-		if syncErr != nil {
-			return reconcile.Result{}, fmt.Errorf("Failed to sync backend: %v. Failed to update backend status: %w", syncErr, statusErr)
-		}
-
-		return reconcile.Result{}, fmt.Errorf("Failed to update backend status: %w", statusErr)
+		return reconcile.Result{}, fmt.Errorf("Failed to update backend status: %w", statusUpdateErr)
 	}
 
 	if statusResult.Requeue {
 		return statusResult, nil
 	}
 
-	if syncErr != nil {
-		return reconcile.Result{}, fmt.Errorf("Failed to sync backend: %w", syncErr)
+	if reconcileErr != nil {
+		if helper.IsInvalidSpecError(reconcileErr) {
+			// On Validation error, no need to retry as spec is not valid and needs to be changed
+			reqLogger.Info("ERROR", "spec validation error", reconcileErr)
+			r.EventRecorder().Eventf(backend, corev1.EventTypeWarning, "Invalid Backend Spec", "%v", reconcileErr)
+			return reconcile.Result{}, nil
+		}
+
+		reqLogger.Error(reconcileErr, "Failed to reconcile")
+		r.EventRecorder().Eventf(backend, corev1.EventTypeWarning, "ReconcileError", "%v", reconcileErr)
 	}
 
-	return reconcile.Result{}, nil
+	reqLogger.Info("END", "error", reconcileErr)
+	return reconcile.Result{}, reconcileErr
+}
+
+func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backend) (*StatusReconciler, error) {
+	logger := r.Logger().WithValues("backend", backendResource.Name)
+
+	err := r.validateSpec(backendResource)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, nil, "", err)
+		return statusReconciler, err
+	}
+
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, logger)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, nil, providerAccount.AdminURLStr, err)
+		return statusReconciler, err
+	}
+
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, nil, providerAccount.AdminURLStr, err)
+		return statusReconciler, err
+	}
+
+	backendRemoteIndex, err := controllerhelper.NewBackendAPIRemoteIndex(threescaleAPIClient, logger)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, nil, providerAccount.AdminURLStr, err)
+		return statusReconciler, err
+	}
+
+	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient, backendRemoteIndex)
+	backendAPIEntity, err := reconciler.Reconcile()
+	statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, backendAPIEntity, providerAccount.AdminURLStr, err)
+	return statusReconciler, err
 }
 
 func (r *ReconcileBackend) validateSpec(backendResource *capabilitiesv1beta1.Backend) error {
