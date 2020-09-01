@@ -49,6 +49,13 @@ func (m *MemcachedOptionsProvider) setResourceRequirementsOptions() {
 	} else {
 		m.memcachedOptions.ResourceRequirements = v1.ResourceRequirements{}
 	}
+
+	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// spec.resourceRequirementsEnabled, overwriting that setting when they are
+	// defined
+	if m.apimanager.Spec.System.MemcachedResources != nil {
+		m.memcachedOptions.ResourceRequirements = *m.apimanager.Spec.System.MemcachedResources
+	}
 }
 
 func (m *MemcachedOptionsProvider) setNodeAffinityAndTolerationsOptions() {

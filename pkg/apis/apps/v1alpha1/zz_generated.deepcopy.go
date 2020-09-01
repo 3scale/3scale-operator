@@ -497,6 +497,11 @@ func (in *ApicastProductionSpec) DeepCopyInto(out *ApicastProductionSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -581,6 +586,11 @@ func (in *ApicastStagingSpec) DeepCopyInto(out *ApicastStagingSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -614,6 +624,11 @@ func (in *BackendCronSpec) DeepCopyInto(out *BackendCronSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -646,6 +661,11 @@ func (in *BackendListenerSpec) DeepCopyInto(out *BackendListenerSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }
@@ -711,6 +731,11 @@ func (in *BackendSpec) DeepCopyInto(out *BackendSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.RedisResources != nil {
+		in, out := &in.RedisResources, &out.RedisResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ListenerSpec != nil {
 		in, out := &in.ListenerSpec, &out.ListenerSpec
 		*out = new(BackendListenerSpec)
@@ -758,6 +783,11 @@ func (in *BackendWorkerSpec) DeepCopyInto(out *BackendWorkerSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }
@@ -922,6 +952,21 @@ func (in *SystemAppSpec) DeepCopyInto(out *SystemAppSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.MasterContainerResources != nil {
+		in, out := &in.MasterContainerResources, &out.MasterContainerResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.ProviderContainerResources != nil {
+		in, out := &in.ProviderContainerResources, &out.ProviderContainerResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.DeveloperContainerResources != nil {
+		in, out := &in.DeveloperContainerResources, &out.DeveloperContainerResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1038,6 +1083,11 @@ func (in *SystemMySQLSpec) DeepCopyInto(out *SystemMySQLSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1130,6 +1180,11 @@ func (in *SystemPostgreSQLSpec) DeepCopyInto(out *SystemPostgreSQLSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1201,6 +1256,11 @@ func (in *SystemSidekiqSpec) DeepCopyInto(out *SystemSidekiqSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1239,6 +1299,11 @@ func (in *SystemSpec) DeepCopyInto(out *SystemSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.MemcachedResources != nil {
+		in, out := &in.MemcachedResources, &out.MemcachedResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.RedisImage != nil {
 		in, out := &in.RedisImage, &out.RedisImage
 		*out = new(string)
@@ -1260,6 +1325,11 @@ func (in *SystemSpec) DeepCopyInto(out *SystemSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.RedisResources != nil {
+		in, out := &in.RedisResources, &out.RedisResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.FileStorageSpec != nil {
 		in, out := &in.FileStorageSpec, &out.FileStorageSpec
@@ -1314,6 +1384,11 @@ func (in *SystemSphinxSpec) DeepCopyInto(out *SystemSphinxSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1347,6 +1422,11 @@ func (in *ZyncAppSpec) DeepCopyInto(out *ZyncAppSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1379,6 +1459,11 @@ func (in *ZyncQueSpec) DeepCopyInto(out *ZyncQueSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }
@@ -1417,6 +1502,11 @@ func (in *ZyncSpec) DeepCopyInto(out *ZyncSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.DatabaseResources != nil {
+		in, out := &in.DatabaseResources, &out.DatabaseResources
+		*out = new(v1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.AppSpec != nil {
 		in, out := &in.AppSpec, &out.AppSpec

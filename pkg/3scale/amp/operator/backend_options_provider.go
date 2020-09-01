@@ -156,6 +156,19 @@ func (o *OperatorBackendOptionsProvider) setResourceRequirementsOptions() {
 		o.backendOptions.WorkerResourceRequirements = v1.ResourceRequirements{}
 		o.backendOptions.CronResourceRequirements = v1.ResourceRequirements{}
 	}
+
+	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// spec.resourceRequirementsEnabled, overwriting that setting when they are
+	// defined
+	if o.apimanager.Spec.Backend.ListenerSpec.Resources != nil {
+		o.backendOptions.ListenerResourceRequirements = *o.apimanager.Spec.Backend.ListenerSpec.Resources
+	}
+	if o.apimanager.Spec.Backend.WorkerSpec.Resources != nil {
+		o.backendOptions.WorkerResourceRequirements = *o.apimanager.Spec.Backend.WorkerSpec.Resources
+	}
+	if o.apimanager.Spec.Backend.CronSpec.Resources != nil {
+		o.backendOptions.CronResourceRequirements = *o.apimanager.Spec.Backend.CronSpec.Resources
+	}
 }
 
 func (o *OperatorBackendOptionsProvider) setNodeAffinityAndTolerationsOptions() {

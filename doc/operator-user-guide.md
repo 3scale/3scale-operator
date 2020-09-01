@@ -12,6 +12,7 @@
     * [PostgreSQL Installation](#postgresql-installation)
     * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
     * [Setting custom affinity and tolerations](#setting-custom-affinity-and-tolerations)
+    * [Setting custom compute resource requirements at component level](#setting-custom-compute-resource-requirements-at-component-level)
     * [Enabling monitoring resources](operator-monitoring-resources.md)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
@@ -441,6 +442,54 @@ spec:
 
 See [APIManager reference](apimanager-reference.md) for a full list of
 attributes related to affinity and tolerations.
+
+#### Setting custom compute resource requirements at component level
+
+Kubernetes [Compute Resource Requirements](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+can be customized in a 3scale API Management solution through APIManager
+CR attributes in order to customize compute resource requirements (this is, CPU
+and Memory) assigned to a specific APIManager's component.
+
+For example, setting custom compute resource requirements for system-master's
+system-provider container, for backend-listener and for zync-database can be
+done in the following way:
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  backend:
+    listenerSpec:
+      resources:
+        requests:
+          memory: "150Mi"
+          cpu: "300m"
+        limits:
+          memory: "500Mi"
+          cpu: "1000m"
+  system:
+    appSpec:
+      providerContainerResources:
+        requests:
+          memory: "111Mi"
+          cpu: "222m"
+        limits:
+          memory: "333Mi"
+          cpu: "444m"     
+  zync:
+    databaseResources:
+      requests:
+        memory: "111Mi"
+        cpu: "222m"
+      limits:
+        memory: "333Mi"
+        cpu: "444m"   
+```
+
+See [APIManager reference](apimanager-reference.md) for a full list of
+attributes related to compute resource requirements.
 
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set

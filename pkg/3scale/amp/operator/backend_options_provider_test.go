@@ -119,6 +119,45 @@ func testBackendCronTolerations() []v1.Toleration {
 	return getTestTolerations("backend-cron")
 }
 
+func testBackendListenerCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("123m"),
+			v1.ResourceMemory: resource.MustParse("456Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("789m"),
+			v1.ResourceMemory: resource.MustParse("111Mi"),
+		},
+	}
+}
+
+func testBackendWorkerCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("222m"),
+			v1.ResourceMemory: resource.MustParse("333Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("444m"),
+			v1.ResourceMemory: resource.MustParse("555Mi"),
+		},
+	}
+}
+
+func testBackendCronCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("666m"),
+			v1.ResourceMemory: resource.MustParse("777Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("888m"),
+			v1.ResourceMemory: resource.MustParse("999Mi"),
+		},
+	}
+}
+
 func getInternalSecret() *v1.Secret {
 	data := map[string]string{
 		component.BackendSecretInternalApiUsernameFieldName: "someUserName",
@@ -281,6 +320,41 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				opts.ListenerTolerations = testBackendListenerTolerations()
 				opts.WorkerTolerations = testBackendWorkerTolerations()
 				opts.CronTolerations = testBackendCronTolerations()
+				return opts
+			},
+		},
+		{"WithBackendCustomResourceRequirements", nil, nil, nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestBackendOptions()
+				apimanager.Spec.Backend.ListenerSpec.Resources = testBackendListenerCustomResourceRequirements()
+				apimanager.Spec.Backend.WorkerSpec.Resources = testBackendWorkerCustomResourceRequirements()
+				apimanager.Spec.Backend.CronSpec.Resources = testBackendCronCustomResourceRequirements()
+				return apimanager
+			},
+			func(in *component.BackendOptions) *component.BackendOptions {
+				opts := defaultBackendOptions(in)
+
+				opts.ListenerResourceRequirements = *testBackendListenerCustomResourceRequirements()
+				opts.WorkerResourceRequirements = *testBackendWorkerCustomResourceRequirements()
+				opts.CronResourceRequirements = *testBackendCronCustomResourceRequirements()
+				return opts
+			},
+		},
+		{"WithBackendCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil, nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestBackendOptions()
+				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
+				apimanager.Spec.Backend.ListenerSpec.Resources = testBackendListenerCustomResourceRequirements()
+				apimanager.Spec.Backend.WorkerSpec.Resources = testBackendWorkerCustomResourceRequirements()
+				apimanager.Spec.Backend.CronSpec.Resources = testBackendCronCustomResourceRequirements()
+				return apimanager
+			},
+			func(in *component.BackendOptions) *component.BackendOptions {
+				opts := defaultBackendOptions(in)
+
+				opts.ListenerResourceRequirements = *testBackendListenerCustomResourceRequirements()
+				opts.WorkerResourceRequirements = *testBackendWorkerCustomResourceRequirements()
+				opts.CronResourceRequirements = *testBackendCronCustomResourceRequirements()
 				return opts
 			},
 		},

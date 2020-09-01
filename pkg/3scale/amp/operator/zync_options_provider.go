@@ -117,6 +117,19 @@ func (z *ZyncOptionsProvider) setResourceRequirementsOptions() {
 		z.zyncOptions.QueContainerResourceRequirements = v1.ResourceRequirements{}
 		z.zyncOptions.DatabaseContainerResourceRequirements = v1.ResourceRequirements{}
 	}
+
+	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// spec.resourceRequirementsEnabled, overwriting that setting when they are
+	// defined
+	if z.apimanager.Spec.Zync.AppSpec.Resources != nil {
+		z.zyncOptions.ContainerResourceRequirements = *z.apimanager.Spec.Zync.AppSpec.Resources
+	}
+	if z.apimanager.Spec.Zync.QueSpec.Resources != nil {
+		z.zyncOptions.QueContainerResourceRequirements = *z.apimanager.Spec.Zync.QueSpec.Resources
+	}
+	if z.apimanager.Spec.Zync.DatabaseResources != nil {
+		z.zyncOptions.DatabaseContainerResourceRequirements = *z.apimanager.Spec.Zync.DatabaseResources
+	}
 }
 
 func (z *ZyncOptionsProvider) setNodeAffinityAndTolerationsOptions() {

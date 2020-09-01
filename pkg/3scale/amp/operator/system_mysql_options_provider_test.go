@@ -60,6 +60,19 @@ func testSystemMySQLTolerations() []v1.Toleration {
 	return getTestTolerations("system-mysql")
 }
 
+func testSystemMySQLCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("111m"),
+			v1.ResourceMemory: resource.MustParse("222Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("333m"),
+			v1.ResourceMemory: resource.MustParse("444Mi"),
+		},
+	}
+}
+
 func defaultSystemMysqlOptions(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
 	return &component.SystemMysqlOptions{
 		ImageTag:                      product.ThreescaleRelease,
@@ -184,6 +197,43 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
 				expecteOpts := defaultSystemMysqlOptions(opts)
 				expecteOpts.Tolerations = testSystemMySQLTolerations()
+				return expecteOpts
+			},
+		},
+		{"WithSystemMySQLCustomResourceRequirements", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						MySQL: &appsv1alpha1.SystemMySQLSpec{
+							Resources: testSystemMySQLCustomResourceRequirements(),
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
+				expecteOpts := defaultSystemMysqlOptions(opts)
+				expecteOpts.ContainerResourceRequirements = *testSystemMySQLCustomResourceRequirements()
+				return expecteOpts
+			},
+		},
+		{"WithSystemMySQLCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+						MySQL: &appsv1alpha1.SystemMySQLSpec{
+							Resources: testSystemMySQLCustomResourceRequirements(),
+						},
+					},
+				}
+				return apimanager
+			},
+			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
+				expecteOpts := defaultSystemMysqlOptions(opts)
+				expecteOpts.ContainerResourceRequirements = *testSystemMySQLCustomResourceRequirements()
 				return expecteOpts
 			},
 		},

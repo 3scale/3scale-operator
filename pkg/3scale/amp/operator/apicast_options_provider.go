@@ -60,6 +60,18 @@ func (a *ApicastOptionsProvider) setResourceRequirementsOptions() {
 		a.apicastOptions.ProductionResourceRequirements = v1.ResourceRequirements{}
 		a.apicastOptions.StagingResourceRequirements = v1.ResourceRequirements{}
 	}
+
+	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// spec.resourceRequirementsEnabled, overwriting that setting when they are
+	// defined
+	if a.apimanager.Spec.Apicast.ProductionSpec.Resources != nil {
+		a.apicastOptions.ProductionResourceRequirements = *a.apimanager.Spec.Apicast.ProductionSpec.Resources
+	}
+
+	if a.apimanager.Spec.Apicast.StagingSpec.Resources != nil {
+		a.apicastOptions.StagingResourceRequirements = *a.apimanager.Spec.Apicast.StagingSpec.Resources
+	}
+
 }
 
 func (a *ApicastOptionsProvider) setNodeAffinityAndTolerationsOptions() {

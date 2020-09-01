@@ -120,6 +120,45 @@ func testZyncDatabaseTolerations() []v1.Toleration {
 	return getTestTolerations("zync-database")
 }
 
+func testZyncCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("123m"),
+			v1.ResourceMemory: resource.MustParse("456Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("789m"),
+			v1.ResourceMemory: resource.MustParse("111Mi"),
+		},
+	}
+}
+
+func testQueZyncCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("222m"),
+			v1.ResourceMemory: resource.MustParse("333Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("444m"),
+			v1.ResourceMemory: resource.MustParse("555Mi"),
+		},
+	}
+}
+
+func testZyncDatabaseCustomResourceRequirements() *v1.ResourceRequirements {
+	return &v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("666m"),
+			v1.ResourceMemory: resource.MustParse("777Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("888m"),
+			v1.ResourceMemory: resource.MustParse("999Mi"),
+		},
+	}
+}
+
 func getZyncSecret() *v1.Secret {
 	data := map[string]string{
 		component.ZyncSecretKeyBaseFieldName:             zyncSecretKeyBasename,
@@ -235,6 +274,39 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				expectedOpts.ZyncTolerations = testZyncTolerations()
 				expectedOpts.ZyncQueTolerations = testZyncQueTolerations()
 				expectedOpts.ZyncDatabaseTolerations = testZyncDatabaseTolerations()
+				return expectedOpts
+			},
+		},
+		{"WithZyncCustomResourceRequirements", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestZyncOptions()
+				apimanager.Spec.Zync.AppSpec.Resources = testZyncCustomResourceRequirements()
+				apimanager.Spec.Zync.QueSpec.Resources = testQueZyncCustomResourceRequirements()
+				apimanager.Spec.Zync.DatabaseResources = testZyncDatabaseCustomResourceRequirements()
+				return apimanager
+			},
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				expectedOpts := defaultZyncOptions(opts)
+				expectedOpts.ContainerResourceRequirements = *testZyncCustomResourceRequirements()
+				expectedOpts.QueContainerResourceRequirements = *testQueZyncCustomResourceRequirements()
+				expectedOpts.DatabaseContainerResourceRequirements = *testZyncDatabaseCustomResourceRequirements()
+				return expectedOpts
+			},
+		},
+		{"WithZyncCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestZyncOptions()
+				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
+				apimanager.Spec.Zync.AppSpec.Resources = testZyncCustomResourceRequirements()
+				apimanager.Spec.Zync.QueSpec.Resources = testQueZyncCustomResourceRequirements()
+				apimanager.Spec.Zync.DatabaseResources = testZyncDatabaseCustomResourceRequirements()
+				return apimanager
+			},
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				expectedOpts := defaultZyncOptions(opts)
+				expectedOpts.ContainerResourceRequirements = *testZyncCustomResourceRequirements()
+				expectedOpts.QueContainerResourceRequirements = *testQueZyncCustomResourceRequirements()
+				expectedOpts.DatabaseContainerResourceRequirements = *testZyncDatabaseCustomResourceRequirements()
 				return expectedOpts
 			},
 		},

@@ -165,6 +165,8 @@ type ApicastProductionSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -174,6 +176,8 @@ type ApicastStagingSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type BackendSpec struct {
@@ -187,6 +191,8 @@ type BackendSpec struct {
 	RedisAffinity *v1.Affinity `json:"redisAffinity,omitempty"`
 	// +optional
 	RedisTolerations []v1.Toleration `json:"redisTolerations,omitempty"`
+	// +optional
+	RedisResources *v1.ResourceRequirements `json:"redisResources,omitempty"`
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
@@ -207,6 +213,8 @@ type BackendListenerSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type BackendWorkerSpec struct {
@@ -216,6 +224,8 @@ type BackendWorkerSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type BackendCronSpec struct {
@@ -225,6 +235,8 @@ type BackendCronSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type SystemSpec struct {
@@ -238,6 +250,8 @@ type SystemSpec struct {
 	MemcachedAffinity *v1.Affinity `json:"memcachedAffinity,omitempty"`
 	// +optional
 	MemcachedTolerations []v1.Toleration `json:"memcachedTolerations,omitempty"`
+	// +optional
+	MemcachedResources *v1.ResourceRequirements `json:"memcachedResources,omitempty"`
 
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
@@ -248,6 +262,8 @@ type SystemSpec struct {
 	RedisAffinity *v1.Affinity `json:"redisAffinity,omitempty"`
 	// +optional
 	RedisTolerations []v1.Toleration `json:"redisTolerations,omitempty"`
+	// +optional
+	RedisResources *v1.ResourceRequirements `json:"redisResources,omitempty"`
 
 	// TODO should this field be optional? We have different approaches in Kubernetes.
 	// For example, in v1.Volume it is optional and there's an implied behaviour
@@ -279,6 +295,12 @@ type SystemAppSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	MasterContainerResources *v1.ResourceRequirements `json:"masterContainerResources,omitempty"`
+	// +optional
+	ProviderContainerResources *v1.ResourceRequirements `json:"providerContainerResources,omitempty"`
+	// +optional
+	DeveloperContainerResources *v1.ResourceRequirements `json:"developerContainerResources,omitempty"`
 }
 
 type SystemSidekiqSpec struct {
@@ -288,6 +310,8 @@ type SystemSidekiqSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type SystemSphinxSpec struct {
@@ -295,6 +319,8 @@ type SystemSphinxSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type SystemFileStorageSpec struct {
@@ -349,6 +375,8 @@ type SystemMySQLSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type SystemPostgreSQLSpec struct {
@@ -361,6 +389,8 @@ type SystemPostgreSQLSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type SystemMySQLPVCSpec struct {
@@ -387,6 +417,8 @@ type ZyncSpec struct {
 	DatabaseAffinity *v1.Affinity `json:"databaseAffinity,omitempty"`
 	// +optional
 	DatabaseTolerations []v1.Toleration `json:"databaseTolerations,omitempty"`
+	// +optional
+	DatabaseResources *v1.ResourceRequirements `json:"databaseResources,omitempty"`
 
 	// +optional
 	AppSpec *ZyncAppSpec `json:"appSpec,omitempty"`
@@ -402,6 +434,8 @@ type ZyncAppSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type ZyncQueSpec struct {
@@ -411,6 +445,8 @@ type ZyncQueSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type HighAvailabilitySpec struct {
