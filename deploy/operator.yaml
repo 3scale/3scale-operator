@@ -14,7 +14,7 @@ spec:
         com.redhat.product-name: 3scale
         com.redhat.component-name: 3scale-operator
         com.redhat.product-version: master
-        com.redhat.component-version: 0.6.0
+        com.redhat.component-version: 0.7.0
         com.redhat.component-type: infrastructure
     spec:
       serviceAccountName: 3scale-operator

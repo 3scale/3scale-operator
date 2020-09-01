@@ -4,6 +4,22 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2020-08-28
+
+### Added
+- APIManager CRD 3scale 2.9
+- Upgrade between 2.8 and 2.9 (no specific PR, implementation distributed in feature PR's)
+- Metering labels [#367](https://github.com/3scale/3scale-operator/pull/367)
+- Add configurable Storage Class for all PVCs [#386](https://github.com/3scale/3scale-operator/pull/386)
+- backup/restore functionality - system deployment mode with PVC [#392](https://github.com/3scale/3scale-operator/pull/392)
+- Add affinity and tolerations APIManager configurability for DeploymentConfigs [#384](https://github.com/3scale/3scale-operator/pull/384)
+- Monitoring resources [#333](https://github.com/3scale/3scale-operator/pull/333)
+- Operator capabilities V2: Product and Backend CRD's [#357](https://github.com/3scale/3scale-operator/pull/357)
+
+### Changed
+- Use new ImageStream tagging structure [#292](https://github.com/3scale/3scale-operator/pull/292)
+- APIManager CRD system's app spec and sidekiq spec now optional [#394](https://github.com/3scale/3scale-operator/pull/394)
+
 ## [0.5.0] - 2020-04-02
 
 ### Added
@@ -44,7 +60,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-[Unreleased]: https://github.com/3scale/3scale-operator/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/3scale/3scale-operator/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.6.0
 [0.5.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.5.0
 [0.4.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.4.0
 [0.3.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.3.0
