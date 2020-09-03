@@ -503,7 +503,10 @@ spec:
                   value: quay.io/openshift/origin-cli:4.2
                 image: quay.io/3scale/3scale-operator:master
                 name: 3scale-operator
-                resources: {}
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100m
               serviceAccountName: 3scale-operator
       permissions:
       - rules:

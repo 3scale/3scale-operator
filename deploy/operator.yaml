@@ -24,6 +24,10 @@ spec:
           image: REPLACE_IMAGE
           command:
             - 3scale-operator
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100m
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
