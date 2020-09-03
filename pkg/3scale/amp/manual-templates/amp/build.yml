@@ -64,7 +64,7 @@ objects:
       dockerStrategy:
         pullSecret:
           name: "${PULLSECRET_NAME}"
-        dockerfilePath: openshift/system/Dockerfile.on_prem
+        dockerfilePath: openshift/system/Dockerfile
         forcePull: true
 
 - apiVersion: v1
