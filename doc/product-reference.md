@@ -123,7 +123,6 @@ Specifies product mapping rules
 | Pattern | `pattern` | string | Mapping Rule pattern | Yes |
 | Metric Method Reference | `metricMethodRef` | string | Existing method or metric **system name** | Yes |
 | Increment | `increment` | int | Increase the metric by this delta | Yes |
-| Position | `position` | int | Mapping Rule position | No |
 | Last | `last` | \*bool | Last matched Mapping Rule to process | No |
 
 #### MetricSpec

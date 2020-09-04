@@ -368,8 +368,6 @@ spec:
                     type: string
                   pattern:
                     type: string
-                  position:
-                    type: integer
                 required:
                 - httpMethod
                 - increment
