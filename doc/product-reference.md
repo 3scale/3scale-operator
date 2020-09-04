@@ -40,7 +40,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | System Name | `systemName` | string | Name | No |
 | Description | `description` | string | Product description message | No |
 | Deployment | `deployment` | object | See [ProductDeploymentSpec](#ProductDeploymentSpec) | No |
-| Mapping Rules | `mappingRules` | object | See [MappingRules Spec](#MappingRuleSpec) | No |
+| Mapping Rules | `mappingRules` | array | See [MappingRules Spec](#MappingRuleSpec). Order in the array matters. Rules are processed as defined in the array from more prioritary to less prioritary | No |
 | Metrics | `metrics` | object | Map with key as metric system name and value as [Metric Spec](#MetricSpec) | No |
 | Methods | `methods` | object | Map with key as method system name and value as [Method Spec](#MethodSpec) | No |
 | Backend Usages | `backendUsages` | object | Map with key as backend system name and value as [BackendUsageSpec](#BackendUsageSpec) | No |
