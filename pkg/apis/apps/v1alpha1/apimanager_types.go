@@ -401,10 +401,6 @@ type SystemMySQLPVCSpec struct {
 type SystemPostgreSQLPVCSpec struct {
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
-	// +optional
-	Affinity *v1.Affinity `json:"affinity,omitempty"`
-	// +optional
-	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 type ZyncSpec struct {
