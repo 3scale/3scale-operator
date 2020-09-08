@@ -5601,7 +5601,24 @@ spec:
                           type: string
                         persistentVolumeClaim:
                           properties:
+                            resources:
+                              description: Resources represents the minimum resources
+                                the volume should have. Ignored when VolumeName field
+                                is set
+                              properties:
+                                requests:
+                                  description: 'Storage Resource requests to be used
+                                    on the PersistentVolumeClaim. To learn more about
+                                    resource requests see: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                  type: string
+                              required:
+                              - requests
+                              type: object
                             storageClassName:
+                              type: string
+                            volumeName:
+                              description: VolumeName is the binding reference to
+                                the PersistentVolume backing this claim.
                               type: string
                           type: object
                         resources:
@@ -6331,7 +6348,24 @@ spec:
                           type: string
                         persistentVolumeClaim:
                           properties:
+                            resources:
+                              description: Resources represents the minimum resources
+                                the volume should have. Ignored when VolumeName field
+                                is set
+                              properties:
+                                requests:
+                                  description: 'Storage Resource requests to be used
+                                    on the PersistentVolumeClaim. To learn more about
+                                    resource requests see: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                  type: string
+                              required:
+                              - requests
+                              type: object
                             storageClassName:
+                              type: string
+                            volumeName:
+                              description: VolumeName is the binding reference to
+                                the PersistentVolume backing this claim.
                               type: string
                           type: object
                         resources:
@@ -6425,7 +6459,24 @@ spec:
                     persistentVolumeClaim:
                       description: Union type. Only one of the fields can be set.
                       properties:
+                        resources:
+                          description: Resources represents the minimum resources
+                            the volume should have. Ignored when VolumeName field
+                            is set
+                          properties:
+                            requests:
+                              description: 'Storage Resource requests to be used on
+                                the PersistentVolumeClaim. To learn more about resource
+                                requests see: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                              type: string
+                          required:
+                          - requests
+                          type: object
                         storageClassName:
+                          type: string
+                        volumeName:
+                          description: VolumeName is the binding reference to the
+                            PersistentVolume backing this claim.
                           type: string
                       type: object
                     simpleStorageService:
