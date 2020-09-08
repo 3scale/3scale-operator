@@ -342,6 +342,13 @@ type SystemRedisPersistentVolumeClaimSpec struct {
 type SystemPVCSpec struct {
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
+	// Resources represents the minimum resources the volume should have.
+	// Ignored when VolumeName field is set
+	// +optional
+	Resources *PersistentVolumeClaimResources `json:"resources,omitempty"`
+	// VolumeName is the binding reference to the PersistentVolume backing this claim.
+	// +optional
+	VolumeName *string `json:"volumeName,omitempty"`
 }
 
 type DeprecatedSystemS3Spec struct {
@@ -396,11 +403,25 @@ type SystemPostgreSQLSpec struct {
 type SystemMySQLPVCSpec struct {
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
+	// Resources represents the minimum resources the volume should have.
+	// Ignored when VolumeName field is set
+	// +optional
+	Resources *PersistentVolumeClaimResources `json:"resources,omitempty"`
+	// VolumeName is the binding reference to the PersistentVolume backing this claim.
+	// +optional
+	VolumeName *string `json:"volumeName,omitempty"`
 }
 
 type SystemPostgreSQLPVCSpec struct {
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
+	// Resources represents the minimum resources the volume should have.
+	// Ignored when VolumeName field is set
+	// +optional
+	Resources *PersistentVolumeClaimResources `json:"resources,omitempty"`
+	// VolumeName is the binding reference to the PersistentVolume backing this claim.
+	// +optional
+	VolumeName *string `json:"volumeName,omitempty"`
 }
 
 type ZyncSpec struct {
