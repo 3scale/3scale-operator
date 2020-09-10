@@ -472,14 +472,22 @@ func (s *SystemOptionsProvider) setFileStorageOptions() {
 	} else {
 		// default to PVC
 		var storageClassName *string
+		var volumeName *string
+		storageRequests := component.DefaultSharedStorageResources()
 		if s.apimanager.Spec.System != nil &&
 			s.apimanager.Spec.System.FileStorageSpec != nil &&
 			s.apimanager.Spec.System.FileStorageSpec.PVC != nil {
 			storageClassName = s.apimanager.Spec.System.FileStorageSpec.PVC.StorageClassName
+			volumeName = s.apimanager.Spec.System.FileStorageSpec.PVC.VolumeName
+			if s.apimanager.Spec.System.FileStorageSpec.PVC.Resources != nil {
+				storageRequests = s.apimanager.Spec.System.FileStorageSpec.PVC.Resources.Requests
+			}
 		}
 
 		s.options.PvcFileStorageOptions = &component.PVCFileStorageOptions{
-			StorageClass: storageClassName,
+			StorageClass:    storageClassName,
+			VolumeName:      volumeName,
+			StorageRequests: storageRequests,
 		}
 	}
 }

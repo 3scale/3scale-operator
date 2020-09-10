@@ -24,7 +24,9 @@ type SystemSMTPSecretOptions struct {
 }
 
 type PVCFileStorageOptions struct {
-	StorageClass *string
+	StorageClass    *string
+	VolumeName      *string
+	StorageRequests resource.Quantity `validate:"required"`
 }
 
 type SystemOptions struct {
@@ -310,4 +312,8 @@ func DefaultAppReplicas() *int32 {
 func DefaultSidekiqReplicas() *int32 {
 	var defaultReplicas int32 = 1
 	return &defaultReplicas
+}
+
+func DefaultSharedStorageResources() resource.Quantity {
+	return resource.MustParse("100Mi")
 }
