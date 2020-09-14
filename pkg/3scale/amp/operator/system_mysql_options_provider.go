@@ -159,11 +159,22 @@ func (s *SystemMysqlOptionsProvider) setResourceRequirementsOptions() {
 }
 
 func (s *SystemMysqlOptionsProvider) setPersistentVolumeClaimOptions() {
+	var volumeName *string
+	storageRequests := component.DefaultSystemMysqlStorageResources()
+
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec != nil {
+
 		s.mysqlOptions.PVCStorageClass = s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec.StorageClassName
+		volumeName = s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec.VolumeName
+		if s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec.Resources != nil {
+			storageRequests = s.apimanager.Spec.System.DatabaseSpec.MySQL.PersistentVolumeClaimSpec.Resources.Requests
+		}
 	}
+
+	s.mysqlOptions.PVCVolumeName = volumeName
+	s.mysqlOptions.PVCStorageRequests = storageRequests
 }
 
 func (s *SystemMysqlOptionsProvider) setNodeAffinityAndTolerationsOptions() {

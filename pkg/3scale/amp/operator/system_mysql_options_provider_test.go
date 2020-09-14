@@ -85,6 +85,7 @@ func defaultSystemMysqlOptions(opts *component.SystemMysqlOptions) *component.Sy
 		CommonLabels:                  testSystemMysqlCommonLabels(),
 		DeploymentLabels:              testSystemMysqlDeploymentLabels(),
 		PodTemplateLabels:             testSystemMysqlPodTemplateLabels(),
+		PVCStorageRequests:            component.DefaultSystemMysqlStorageResources(),
 	}
 }
 
@@ -146,14 +147,19 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 				return expecteOpts
 			},
 		},
-		{"PVCStorageClassSet", nil,
+		{"PVCSettingsSet", nil,
 			func() *appsv1alpha1.APIManager {
+				tmpVolumeName := "myvolume"
 				apimanager := basicApimanager()
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
 					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 						MySQL: &appsv1alpha1.SystemMySQLSpec{
 							PersistentVolumeClaimSpec: &appsv1alpha1.SystemMySQLPVCSpec{
 								StorageClassName: &customStorageClass,
+								Resources: &appsv1alpha1.PersistentVolumeClaimResources{
+									Requests: resource.MustParse("456Mi"),
+								},
+								VolumeName: &tmpVolumeName,
 							},
 						},
 					},
@@ -161,8 +167,11 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 				return apimanager
 			},
 			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
+				tmpVolumeName := "myvolume"
 				expecteOpts := defaultSystemMysqlOptions(opts)
 				expecteOpts.PVCStorageClass = &customStorageClass
+				expecteOpts.PVCVolumeName = &tmpVolumeName
+				expecteOpts.PVCStorageRequests = resource.MustParse("456Mi")
 				return expecteOpts
 			},
 		},

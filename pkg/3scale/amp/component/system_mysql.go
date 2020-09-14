@@ -6,7 +6,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -70,6 +69,11 @@ func (mysql *SystemMysql) ExtraConfigConfigMap() *v1.ConfigMap {
 }
 
 func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
+	volName := ""
+	if mysql.Options.PVCVolumeName != nil {
+		volName = *mysql.Options.PVCVolumeName
+	}
+
 	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
@@ -83,8 +87,13 @@ func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
 			},
-			Resources:        v1.ResourceRequirements{Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")}},
+			Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{
+					v1.ResourceStorage: mysql.Options.PVCStorageRequests,
+				},
+			},
 			StorageClassName: mysql.Options.PVCStorageClass,
+			VolumeName:       volName,
 		},
 	}
 }

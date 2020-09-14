@@ -18,6 +18,8 @@ type SystemMysqlOptions struct {
 	DatabaseURL                   string                  `validate:"required"`
 	ContainerResourceRequirements v1.ResourceRequirements `validate:"-"`
 	PVCStorageClass               *string
+	PVCVolumeName                 *string
+	PVCStorageRequests            resource.Quantity `validate:"required"`
 	Affinity                      *v1.Affinity      `validate:"-"`
 	Tolerations                   []v1.Toleration   `validate:"-"`
 	CommonLabels                  map[string]string `validate:"required"`
@@ -64,4 +66,8 @@ func DefaultSystemMysqlDatabaseName() string {
 
 func DefaultSystemMysqlDatabaseURL(password, name string) string {
 	return fmt.Sprintf("mysql2://root:%s@system-mysql/%s", password, name)
+}
+
+func DefaultSystemMysqlStorageResources() resource.Quantity {
+	return resource.MustParse("1Gi")
 }
