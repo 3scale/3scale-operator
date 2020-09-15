@@ -84,6 +84,7 @@ func defaultSystemPostgreSQLOptions(opts *component.SystemPostgreSQLOptions) *co
 		CommonLabels:                  testSystemPostgreSQLCommonLabels(),
 		DeploymentLabels:              testSystemPostgreSQLDeploymentLabels(),
 		PodTemplateLabels:             testSystemPostgreSQLPodTemplateLabels(),
+		PVCStorageRequests:            component.DefaultSystemPostgresqlStorageResources(),
 	}
 }
 
@@ -138,14 +139,19 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 				return expecteOpts
 			},
 		},
-		{"PVCStorageClassSet", nil,
+		{"PVCSettingsSet", nil,
 			func() *appsv1alpha1.APIManager {
+				tmpVolumeName := "myvolume"
 				apimanager := basicApimanager()
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
 					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
 							PersistentVolumeClaimSpec: &appsv1alpha1.SystemPostgreSQLPVCSpec{
 								StorageClassName: &customStorageClass,
+								Resources: &appsv1alpha1.PersistentVolumeClaimResources{
+									Requests: resource.MustParse("456Mi"),
+								},
+								VolumeName: &tmpVolumeName,
 							},
 						},
 					},
@@ -153,8 +159,11 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 				return apimanager
 			},
 			func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
+				tmpVolumeName := "myvolume"
 				expecteOpts := defaultSystemPostgreSQLOptions(opts)
 				expecteOpts.PVCStorageClass = &customStorageClass
+				expecteOpts.PVCVolumeName = &tmpVolumeName
+				expecteOpts.PVCStorageRequests = resource.MustParse("456Mi")
 				return expecteOpts
 			},
 		},

@@ -145,11 +145,22 @@ func (s *SystemPostgresqlOptionsProvider) setResourceRequirementsOptions() {
 }
 
 func (s *SystemPostgresqlOptionsProvider) setPersistentVolumeClaimOptions() {
+	var volumeName *string
+	storageRequests := component.DefaultSystemPostgresqlStorageResources()
+
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec != nil {
+
 		s.options.PVCStorageClass = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec.StorageClassName
+		volumeName = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec.VolumeName
+		if s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec.Resources != nil {
+			storageRequests = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PersistentVolumeClaimSpec.Resources.Requests
+		}
 	}
+
+	s.options.PVCVolumeName = volumeName
+	s.options.PVCStorageRequests = storageRequests
 }
 
 func (s *SystemPostgresqlOptionsProvider) setNodeAffinityAndTolerationsOptions() {

@@ -6,7 +6,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -44,6 +43,11 @@ func (p *SystemPostgreSQL) Service() *v1.Service {
 }
 
 func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim {
+	volName := ""
+	if p.Options.PVCVolumeName != nil {
+		volName = *p.Options.PVCVolumeName
+	}
+
 	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
@@ -59,10 +63,11 @@ func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim
 			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
-					"storage": resource.MustParse("1Gi"),
+					v1.ResourceStorage: p.Options.PVCStorageRequests,
 				},
 			},
 			StorageClassName: p.Options.PVCStorageClass,
+			VolumeName:       volName,
 		},
 	}
 }

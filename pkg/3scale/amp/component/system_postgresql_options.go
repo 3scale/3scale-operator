@@ -17,6 +17,8 @@ type SystemPostgreSQLOptions struct {
 	DatabaseName                  string                  `validate:"required"`
 	DatabaseURL                   string                  `validate:"required"`
 	PVCStorageClass               *string
+	PVCVolumeName                 *string
+	PVCStorageRequests            resource.Quantity `validate:"required"`
 	Affinity                      *v1.Affinity      `validate:"-"`
 	Tolerations                   []v1.Toleration   `validate:"-"`
 	CommonLabels                  map[string]string `validate:"required"`
@@ -59,4 +61,8 @@ func DefaultSystemPostgresqlDatabaseName() string {
 
 func DefaultSystemPostgresqlDatabaseURL(username, password, databasename string) string {
 	return fmt.Sprintf("postgresql://%s:%s@system-postgresql/%s", username, password, databasename)
+}
+
+func DefaultSystemPostgresqlStorageResources() resource.Quantity {
+	return resource.MustParse("1Gi")
 }
