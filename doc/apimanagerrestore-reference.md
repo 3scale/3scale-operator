@@ -59,7 +59,7 @@ and has to be performed by the user appropriately:
   * backend-redis
   * system-redis
 
-The reason of this is to allow the user to configure different database endpoints
+The reason for this is to allow the user to configure different database endpoints
 than the ones used in the previous 3scale installation that was backed up
 
 ## APIManagerRestore
@@ -77,7 +77,7 @@ than the ones used in the previous 3scale installation that was backed up
 
 ### APIManagerRestoreSourceSpec
 
-This section controls from where APIManager's  is to be stored.
+This section controls from where APIManager's is to be stored.
 
 **One of the fields is mandatory to be set. Only one of the fields can be set. The fields are mutually exclusive.**
 
