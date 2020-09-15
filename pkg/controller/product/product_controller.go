@@ -16,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/discovery"
-	controllerclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -185,7 +184,7 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 		return statusReconciler, err
 	}
 
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, logger)
 	if err != nil {
 		statusReconciler := NewStatusReconciler(r.BaseReconciler, productResource, nil, providerAccount.AdminURLStr, err)
 		return statusReconciler, err
@@ -231,9 +230,10 @@ func (r *ReconcileProduct) validateSpec(resource *capabilitiesv1beta1.Product) e
 }
 
 func (r *ReconcileProduct) checkExternalRefs(resource *capabilitiesv1beta1.Product, providerAccount *controllerhelper.ProviderAccount) error {
+	logger := r.Logger().WithValues("product", resource.Name)
 	errors := field.ErrorList{}
 
-	backendList, err := r.backendList(resource, providerAccount)
+	backendList, err := controllerhelper.BackendList(resource.Namespace, r.Client(), providerAccount, logger)
 	if err != nil {
 		return fmt.Errorf("checking backend usage references: %w", err)
 	}
@@ -345,45 +345,6 @@ func checkAppPricingRulesExternalRefs(resource *capabilitiesv1beta1.Product, bac
 	}
 
 	return errors
-}
-
-// Returns a list of k8s backend list where all elements meet the following conditions:
-// - Sync state (ensure remote backend exist and in sync)
-// - Same 3scale provider Account as the product
-func (r *ReconcileProduct) backendList(resource *capabilitiesv1beta1.Product, productProviderAccount *controllerhelper.ProviderAccount) ([]capabilitiesv1beta1.Backend, error) {
-	logger := r.Logger().WithValues("reconcile", resource.Name)
-	backendList := &capabilitiesv1beta1.BackendList{}
-	opts := []controllerclient.ListOption{
-		controllerclient.InNamespace(resource.Namespace),
-	}
-	err := r.Client().List(r.Context(), backendList, opts...)
-	logger.V(1).Info("Get list of Backend resources.", "Err", err)
-	if err != nil {
-		return nil, fmt.Errorf("backendList: %w", err)
-	}
-	logger.V(1).Info("Backend resources", "total", len(backendList.Items))
-
-	validBackends := make([]capabilitiesv1beta1.Backend, 0)
-	for idx := range backendList.Items {
-		// Only synchronized
-		if !backendList.Items[idx].IsSynced() {
-			continue
-		}
-
-		backendProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), resource.Namespace, backendList.Items[idx].Spec.ProviderAccountRef, r.Logger())
-		if err != nil {
-			return nil, fmt.Errorf("backendList: %w", err)
-		}
-
-		// Only same provider Account
-		if productProviderAccount.AdminURLStr != backendProviderAccount.AdminURLStr {
-			continue
-		}
-		validBackends = append(validBackends, backendList.Items[idx])
-	}
-
-	logger.V(1).Info("Backend valid resources", "total", len(validBackends))
-	return validBackends, nil
 }
 
 func findBackendBySystemName(list []capabilitiesv1beta1.Backend, systemName string) int {

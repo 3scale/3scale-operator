@@ -196,7 +196,7 @@ func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backen
 		return statusReconciler, err
 	}
 
-	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient, backendRemoteIndex)
+	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient, backendRemoteIndex, providerAccount)
 	backendAPIEntity, err := reconciler.Reconcile()
 	statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, backendAPIEntity, providerAccount.AdminURLStr, err)
 	return statusReconciler, err

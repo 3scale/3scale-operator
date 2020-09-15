@@ -35,19 +35,23 @@ type ThreescaleReconciler struct {
 	backendAPIEntity    *controllerhelper.BackendAPIEntity
 	backendRemoteIndex  *controllerhelper.BackendAPIRemoteIndex
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
+	providerAccount     *controllerhelper.ProviderAccount
 	logger              logr.Logger
 }
 
 func NewThreescaleReconciler(b *reconcilers.BaseReconciler,
 	backendResource *capabilitiesv1beta1.Backend,
 	threescaleAPIClient *threescaleapi.ThreeScaleClient,
-	backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex) *ThreescaleReconciler {
+	backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex,
+	providerAccount *controllerhelper.ProviderAccount,
+) *ThreescaleReconciler {
 
 	return &ThreescaleReconciler{
 		BaseReconciler:      b,
 		backendResource:     backendResource,
 		backendRemoteIndex:  backendRemoteIndex,
 		threescaleAPIClient: threescaleAPIClient,
+		providerAccount:     providerAccount,
 		logger:              b.Logger().WithValues("3scale Reconciler", backendResource.Name),
 	}
 }
@@ -149,7 +153,12 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 		// notDesiredExistingKeys is a subset of the existingMap key set
 		notDesiredMap[systemName] = existingMap[systemName]
 	}
-	err = t.processNotDesiredMethods(notDesiredMap)
+	err = t.deleteNotDesiredMethodsFrom3scale(notDesiredMap)
+	if err != nil {
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	err = t.deleteExternalMetricReferences(notDesiredExistingKeys)
 	if err != nil {
 		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
@@ -206,13 +215,97 @@ func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabil
 	return nil
 }
 
-func (t *ThreescaleReconciler) processNotDesiredMethods(notDesiredMap map[string]threescaleapi.MethodItem) error {
+func (t *ThreescaleReconciler) deleteNotDesiredMethodsFrom3scale(notDesiredMap map[string]threescaleapi.MethodItem) error {
 	for _, notDesiredMethod := range notDesiredMap {
 		err := t.backendAPIEntity.DeleteMethod(notDesiredMethod.ID)
 		if err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+// valid for metrics and methods as long as 3scale ensures system_names are unique among methods and metrics
+func (t *ThreescaleReconciler) deleteExternalMetricReferences(notDesiredMetrics []string) error {
+	productList, err := controllerhelper.ProductList(t.backendResource.Namespace, t.Client(), t.providerAccount, t.logger)
+	if err != nil {
+		return fmt.Errorf("deleteExternalMetricReferences: %w", err)
+	}
+
+	// filter products referencing current backend resource
+	linkedProductList := make([]capabilitiesv1beta1.Product, 0)
+	for _, product := range productList {
+		if _, ok := product.Spec.BackendUsages[t.backendResource.Spec.SystemName]; ok {
+			linkedProductList = append(linkedProductList, product)
+		}
+	}
+
+	t.logger.V(1).Info("Product linked to backend", "total", len(linkedProductList))
+
+	for productIdx := range linkedProductList {
+		err = t.deleteExternalMetricReferencesOnProduct(notDesiredMetrics, linkedProductList[productIdx])
+		if err != nil {
+			return fmt.Errorf("deleteExternalMetricReferences: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// valid for metrics and methods as long as 3scale ensures system_names are unique among methods and metrics
+func (t *ThreescaleReconciler) deleteExternalMetricReferencesOnProduct(notDesiredMetrics []string, productRef capabilitiesv1beta1.Product) error {
+	productUpdated := false
+	product := productRef.DeepCopy()
+
+	for planSystemName, planSpec := range product.Spec.ApplicationPlans {
+		planSpecUpdated := false
+
+		// Check limits with external references to the current backend
+		newLimits := make([]capabilitiesv1beta1.LimitSpec, 0)
+		for limitIdx, limitSpec := range planSpec.Limits {
+			// Check if the limit belongs to the current backend
+			// Check if the limit is marked for deletion in notDesiredMap
+			if limitSpec.MetricMethodRef.BackendSystemName == nil ||
+				*limitSpec.MetricMethodRef.BackendSystemName != t.backendResource.Spec.SystemName ||
+				!helper.ArrayContains(notDesiredMetrics, limitSpec.MetricMethodRef.SystemName) {
+				newLimits = append(newLimits, planSpec.Limits[limitIdx])
+			}
+		}
+
+		if len(newLimits) != len(planSpec.Limits) {
+			planSpecUpdated = true
+			planSpec.Limits = newLimits
+		}
+
+		// Check pricingRules with external references to the current backend
+		newRules := make([]capabilitiesv1beta1.PricingRuleSpec, 0)
+		for ruleIdx, ruleSpec := range planSpec.PricingRules {
+			// Check if the current rule belongs to the current backend
+			if ruleSpec.MetricMethodRef.BackendSystemName == nil ||
+				*ruleSpec.MetricMethodRef.BackendSystemName != t.backendResource.Spec.SystemName ||
+				!helper.ArrayContains(notDesiredMetrics, ruleSpec.MetricMethodRef.SystemName) {
+				newRules = append(newRules, planSpec.PricingRules[ruleIdx])
+			}
+		}
+
+		if len(newRules) != len(planSpec.PricingRules) {
+			planSpecUpdated = true
+			planSpec.PricingRules = newRules
+		}
+
+		if planSpecUpdated {
+			productUpdated = true
+			product.Spec.ApplicationPlans[planSystemName] = planSpec
+		}
+	}
+
+	if productUpdated {
+		err := t.UpdateResource(product)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -268,7 +361,12 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 		// notDesiredExistingKeys is a subset of the existingMap key set
 		notDesiredMap[systemName] = existingMap[systemName]
 	}
-	err = t.processNotDesiredMetrics(notDesiredMap)
+	err = t.deleteNotDesiredMetricsFrom3scale(notDesiredMap)
+	if err != nil {
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+	}
+
+	err = t.deleteExternalMetricReferences(notDesiredExistingKeys)
 	if err != nil {
 		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
 	}
@@ -328,7 +426,7 @@ func (t *ThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabil
 	return nil
 }
 
-func (t *ThreescaleReconciler) processNotDesiredMetrics(notDesiredMap map[string]threescaleapi.MetricItem) error {
+func (t *ThreescaleReconciler) deleteNotDesiredMetricsFrom3scale(notDesiredMap map[string]threescaleapi.MetricItem) error {
 	for _, metric := range notDesiredMap {
 		err := t.backendAPIEntity.DeleteMetric(metric.ID)
 		if err != nil {
