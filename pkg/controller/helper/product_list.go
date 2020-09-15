@@ -35,7 +35,7 @@ func ProductList(ns string, cl client.Client, providerAccount *ProviderAccount, 
 
 		productProviderAccount, err := LookupProviderAccount(cl, ns, productList.Items[idx].Spec.ProviderAccountRef, logger)
 		if err != nil {
-			return nil, fmt.Errorf("BackendList: %w", err)
+			return nil, fmt.Errorf("ProductList: %w", err)
 		}
 
 		// Filter by provider account
