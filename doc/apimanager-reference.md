@@ -278,8 +278,7 @@ that should be set on it.
 | --- | --- | --- | --- | --- | --- |
 | Enabled | `enabled` | bool | No | `false` | Enable to use external system database, backend redis, system redis and apicast redis databases|
 
-When HighAvailability is enabled the following secrets have to been
-pre-created by the user:
+When HighAvailability is enabled the following secrets have to be pre-created by the user:
 
 * [backend-redis](#backend-redis) with the `REDIS_STORAGE_URL` and
   `REDIS_QUEUES_URL` fields with values pointing to the desired external
@@ -434,7 +433,7 @@ existing secret names.
 | AWS_ACCESS_KEY_ID | AWS Access Key ID to use in S3 Storage for System's file storage | Y |
 | AWS_SECRET_ACCESS_KEY | AWS Access Key Secret to use in S3 Storage for System's file storage | Y |
 | AWS_BUCKET | S3 bucket to be used as System's FileStorage for assets | Y |
-| AWS_REGION | Region of the S3 bucket to be used as Sytem's FileStorage for assets | Y |
+| AWS_REGION | Region of the S3 bucket to be used as System's FileStorage for assets | Y |
 | AWS_HOSTNAME | Default: Amazon endpoints - AWS S3 compatible provider endpoint hostname | N |
 | AWS_PROTOCOL | Default: HTTPS - AWS S3 compatible provider endpoint protocol | N |
 | AWS_PATH_STYLE | Default: false - When set to true, the bucket name is always left in the request URI and never moved to the host as a sub-domain | N |

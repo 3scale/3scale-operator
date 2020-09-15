@@ -45,7 +45,7 @@ configured externally:
 
 ## Data that is not backed up
 
-Backups of the external databases used by 3scale is not part of the
+Backups of the external databases used by 3scale are not part of the
 3scale-operator functionality and has to be performed by the user appropriately
 
 ## APIManagerBackup

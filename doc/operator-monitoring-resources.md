@@ -25,7 +25,7 @@ spec:
     enabled: true
 ```
 
-NOTE: All monitoring resources will be created by the operator using *Create only* reconcilliation policy. That means that PrometheusRules and GrafanaDashboards objects can be updated preventing the operator to revert the changes back. This policy allows to tune, for instance, the alert thresholds, to your needs.
+NOTE: All monitoring resources will be created by the operator using *Create only* reconciliation policy. That means that PrometheusRules and GrafanaDashboards objects can be updated preventing the operator to revert the changes. This policy allows us to tune, for instance, the alert thresholds, to your needs.
 
 ## Monitored components
 
@@ -47,7 +47,7 @@ See:
 
 3scale monitoring is leveraged by [prometheus](https://prometheus.io/) and [grafana](https://grafana.com/) monitoring solutions. They need to be up and running in the cluster and configured to watch for monitoring resources.
 
-**Monitoring stack setup and running is beyond 3scale operator reponsabilities, cluster administrator must provide it.**
+**Monitoring stack setup and running is beyond 3scale operator responsibilities, cluster administrator must provide it.**
 There are many ways to provide the required monitoring stack. Few examples are given:
 
 * Openshift new proposal [User Workload Monitoring](https://github.com/openshift/enhancements/blob/master/enhancements/monitoring/user-workload-monitoring.md)
@@ -55,7 +55,7 @@ There are many ways to provide the required monitoring stack. Few examples are g
 * [kube-prometheus](https://github.com/coreos/kube-prometheus): This repository collects Kubernetes manifests, Grafana dashboards, and Prometheus rules combined with documentation and scripts to provide easy to operate end-to-end Kubernetes cluster monitoring with Prometheus using the Prometheus Operator.
 
 * For devtesting purposes only, *quickstart steps* to deploy minimum required monitoring stack in [monitoring-stack-deployment](monitoring-stack-deployment/README.md).
-*Warning*: no *authentication* setup included. Protect the prometheus and grafana services when you want to expose them in internet.
+*Warning*: no *authentication* setup included. Protect the prometheus and grafana services when you want to expose them on the internet.
 In our dev clusters we configure authentication to be managed by Openshift (so htpassword or github)
 
 ### Prometheus

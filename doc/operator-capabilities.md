@@ -216,12 +216,12 @@ spec:
 Check on the fields of **Backend** custom resource and possible values in the [Backend CRD Reference](backend-reference.md) documentation.
 
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
-* **NOTE 2**: `metricMethodRef` holds a reference to existing metric or method map key name `system_name`. In the example, `hits`.
+* **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
 
 ### Backend custom resource status field
 
 The status field shows resource information useful for the end user.
-It is not regarded to be updated manually and it is being reconcilliated on every change of the resource.
+It is not regarded to be updated manually and it is being reconciled on every change of the resource.
 
 Fields:
 
@@ -422,7 +422,7 @@ spec:
 ```
 
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
-* **NOTE 2**: `metricMethodRef` holds a reference to existing metric or method map key name `system_name`. In the example, `hits`.
+* **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
 
 ### Product application plans
 
@@ -449,7 +449,7 @@ spec:
 
 ### Product application plan limits
 
-Define desired product application plan limits declaratively using the `applicationPlans.limits` list.
+Define the desired product application plan limits declaratively using the `applicationPlans.limits` list.
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
@@ -594,7 +594,7 @@ you may create other tenants creating [Tenant](tenant_reference.md) custom resou
 
 ### Preparation before deploying the new tenant
 
-To deploy a new tenant in your 3scale instance, first you need some preparation steps:
+To deploy a new tenant in your 3scale instance, first, you need some preparation steps:
 
 * Create or local 3scale Master credentials secret: *MASTER_SECRET*
 * Create a new secret to store the password for the admin account of the new tenant: *ADMIN_SECRET*
