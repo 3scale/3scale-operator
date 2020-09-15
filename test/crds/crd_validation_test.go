@@ -23,6 +23,9 @@ const (
 	startTimePath                            = "/status/startTime"
 	completionTimePath                       = "/status/completionTime"
 	lastTransitionTimePath                   = "/status/conditions/lastTransitionTime"
+	systemSharedPVCResourceRequestsPath      = "/spec/system/fileStorage/persistentVolumeClaim/resources/requests"
+	systemMySQLPVCResourceRequestsPath       = "/spec/system/database/mysql/persistentVolumeClaim/resources/requests"
+	systemPostgreSQLPVCResourceRequestsPath  = "/spec/system/database/postgresql/persistentVolumeClaim/resources/requests"
 )
 
 func TestSampleCustomResources(t *testing.T) {
@@ -79,6 +82,9 @@ func TestCompleteCRD(t *testing.T) {
 		startTimePath,
 		completionTimePath,
 		lastTransitionTimePath,
+		systemSharedPVCResourceRequestsPath,
+		systemMySQLPVCResourceRequestsPath,
+		systemPostgreSQLPVCResourceRequestsPath,
 	}
 
 	for crd, obj := range crdStructMap {
