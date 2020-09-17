@@ -72,7 +72,7 @@ than the ones used in the previous 3scale installation that was backed up
 ### APIManagerRestoreSpec
 
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | `restoreSource` | [APIManagerRestoreSourceSpec](#APIManagerRestoreSourceSpec) | Yes | See [APIManagerRestoreSourceSpec](#APIManagerRestoreSourceSpec) | Configuration related to from where the backup is restored |
 
 ### APIManagerRestoreSourceSpec
@@ -96,5 +96,5 @@ TODO complete status section with the status fields of the different steps. Not 
 and they are not that important for the end-user point of view.
 
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | `completed` | bool | No | false | `true` when APIManager's restore has finished |

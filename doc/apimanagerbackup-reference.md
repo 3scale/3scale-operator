@@ -58,7 +58,7 @@ Backups of the external databases used by 3scale are not part of the
 ### APIManagerBackupSpec
 
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | `apiManagerName` | string | No | Name of the APIManager deployed in the same namespace as the deployed APIManagerBackup | Name of the APIManager to backup |
 | `backupDestination` | [APIManagerBackupDestinationSpec](#APIManagerBackupDestinationSpec) | Yes | See [APIManagerBackupDestinationSpec](#APIManagerBackupDestinationSpec) | Configuration related to where the backup is performed |
 
@@ -104,7 +104,7 @@ TODO complete status section with the status fields of the different steps. Not 
 and they are not that important for the end-user point of view.
 
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | `completed` | bool | No | false | `true` when APIManager's backup has finished |
 | `apiManagerSourceName` | string | No | `""` | Name of the APIManager that APIManagerBackup handles |
 | `startTime` | [meta/v1 Time](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#time-v1-meta) | No | N/A | Start time of the backup (in UTC) |
