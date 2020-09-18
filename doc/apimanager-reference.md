@@ -198,7 +198,7 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
-| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](apimanagerbackup-reference.md#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
 | VolumeName | `volumeName` | string | No | nil | The binding reference to the PersistentVolume backing this claim |
 
 ### SystemS3Spec
@@ -245,7 +245,7 @@ that should be set on it.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
-| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](apimanagerbackup-reference.md#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
 | VolumeName | `volumeName` | string | No | nil | The binding reference to the PersistentVolume backing this claim |
 
 ### PostgreSQLSpec
@@ -263,7 +263,7 @@ that should be set on it.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
-| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](apimanagerbackup-reference.md#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
 | VolumeName | `volumeName` | string | No | nil | The binding reference to the PersistentVolume backing this claim |
 
 ### SystemAppSpec
@@ -363,6 +363,12 @@ an `APIManager` status field should never be modified by the user.
 | **Field** | **json/yaml field**| **Type** | **Info** |
 | --- | --- | --- | --- |
 | No fields for the moment | | | |
+
+## PersistentVolumeClaimResourcesSpec
+
+| **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- |
+| `requests` | [v1 Quantity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#quantity-resource-core) | Yes | N/A | Size of the PersistentVolumeClaim where the backup is to be performed. Set enough size to contain all [data that is backed up](#data-that-is-backed-up).
 
 ## APIManager Secrets
 
