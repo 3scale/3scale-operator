@@ -93,7 +93,12 @@ const (
 )
 
 const (
-	SystemSidekiqName = "system-sidekiq"
+	SystemSidekiqName       = "system-sidekiq"
+	SystemAppDeploymentName = "system-app"
+
+	SystemAppMasterContainerName    = "system-master"
+	SystemAppProviderContainerName  = "system-provider"
+	SystemAppDeveloperContainerName = "system-developer"
 )
 
 const (
@@ -103,6 +108,9 @@ const (
 	SystemAppMasterContainerPrometheusPort        = 9395
 	SystemAppProviderContainerPrometheusPort      = 9396
 	SystemAppDeveloperContainerPrometheusPort     = 9394
+	SystemAppMasterContainerMetricsPortName       = "master-metrics"
+	SystemAppProviderContainerMetricsPortName     = "prov-metrics"
+	SystemAppDeveloperContainerMetricsPortName    = "dev-metrics"
 )
 
 type System struct {
@@ -530,7 +538,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-app",
+			Name:   SystemAppDeploymentName,
 			Labels: system.Options.CommonAppLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -555,7 +563,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							// but changing that probably has some implications during an upgrade process of the product
 							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy"},
 							Env:           system.buildSystemAppPreHookEnv(),
-							ContainerName: "system-master",
+							ContainerName: SystemAppMasterContainerName,
 							Volumes:       system.volumeNamesForSystemAppPreHookPod()},
 					},
 					Post: &appsv1.LifecycleHook{
@@ -563,7 +571,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 						ExecNewPod: &appsv1.ExecNewPodHook{
 							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:post_deploy"},
 							Env:           system.buildSystemAppPostHookEnv(),
-							ContainerName: "system-master"}}},
+							ContainerName: SystemAppMasterContainerName}}},
 			},
 			MinReadySeconds: 0,
 			Triggers: appsv1.DeploymentTriggerPolicies{
@@ -573,13 +581,13 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 					Type: appsv1.DeploymentTriggerOnImageChange,
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic:      true,
-						ContainerNames: []string{"system-provider", "system-developer", "system-master"},
+						ContainerNames: []string{SystemAppProviderContainerName, SystemAppDeveloperContainerName, SystemAppMasterContainerName},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
 							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag)}}},
 			},
 			Replicas: *system.Options.AppReplicas,
-			Selector: map[string]string{"deploymentConfig": "system-app"},
+			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: system.Options.AppPodTemplateLabels,
@@ -590,7 +598,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 					Volumes:     system.appPodVolumes(),
 					Containers: []v1.Container{
 						v1.Container{
-							Name:         "system-master",
+							Name:         SystemAppMasterContainerName,
 							Image:        "amp-system:latest",
 							Args:         []string{"env", "TENANT_MODE=master", "PORT=3002", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appMasterPorts(),
@@ -633,7 +641,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							StdinOnce:       false,
 							TTY:             false,
 						}, v1.Container{
-							Name:         "system-provider",
+							Name:         SystemAppProviderContainerName,
 							Image:        "amp-system:latest",
 							Args:         []string{"env", "TENANT_MODE=provider", "PORT=3000", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appProviderPorts(),
@@ -676,7 +684,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							StdinOnce:       false,
 							TTY:             false,
 						}, v1.Container{
-							Name:         "system-developer",
+							Name:         SystemAppDeveloperContainerName,
 							Image:        "amp-system:latest",
 							Args:         []string{"env", "PORT=3001", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appDeveloperPorts(),
@@ -951,7 +959,7 @@ func (system *System) ProviderService() *v1.Service {
 					TargetPort: intstr.FromString("provider"),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-app"},
+			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 		},
 	}
 }
@@ -975,7 +983,7 @@ func (system *System) MasterService() *v1.Service {
 					TargetPort: intstr.FromString("master"),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-app"},
+			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 		},
 	}
 }
@@ -999,7 +1007,7 @@ func (system *System) DeveloperService() *v1.Service {
 					TargetPort: intstr.FromString("developer"),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-app"},
+			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 		},
 	}
 }
@@ -1246,7 +1254,7 @@ func (system *System) AppPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 		},
 		Spec: v1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "system-app"},
+				MatchLabels: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -1288,7 +1296,7 @@ func (system *System) appMasterPorts() []v1.ContainerPort {
 	ports = append(ports, v1.ContainerPort{Name: "master", HostPort: 0, ContainerPort: 3002, Protocol: v1.ProtocolTCP})
 
 	if system.Options.AppMetrics {
-		ports = append(ports, v1.ContainerPort{Name: "master-metrics", ContainerPort: SystemAppMasterContainerPrometheusPort, Protocol: v1.ProtocolTCP})
+		ports = append(ports, v1.ContainerPort{Name: SystemAppMasterContainerMetricsPortName, ContainerPort: SystemAppMasterContainerPrometheusPort, Protocol: v1.ProtocolTCP})
 	}
 
 	return ports
@@ -1300,7 +1308,7 @@ func (system *System) appProviderPorts() []v1.ContainerPort {
 	ports = append(ports, v1.ContainerPort{Name: "provider", HostPort: 0, ContainerPort: 3000, Protocol: v1.ProtocolTCP})
 
 	if system.Options.AppMetrics {
-		ports = append(ports, v1.ContainerPort{Name: "prov-metrics", ContainerPort: SystemAppProviderContainerPrometheusPort, Protocol: v1.ProtocolTCP})
+		ports = append(ports, v1.ContainerPort{Name: SystemAppProviderContainerMetricsPortName, ContainerPort: SystemAppProviderContainerPrometheusPort, Protocol: v1.ProtocolTCP})
 	}
 
 	return ports
@@ -1312,7 +1320,7 @@ func (system *System) appDeveloperPorts() []v1.ContainerPort {
 	ports = append(ports, v1.ContainerPort{Name: "developer", HostPort: 0, ContainerPort: 3001, Protocol: v1.ProtocolTCP})
 
 	if system.Options.AppMetrics {
-		ports = append(ports, v1.ContainerPort{Name: "dev-metrics", ContainerPort: SystemAppDeveloperContainerPrometheusPort, Protocol: v1.ProtocolTCP})
+		ports = append(ports, v1.ContainerPort{Name: SystemAppDeveloperContainerMetricsPortName, ContainerPort: SystemAppDeveloperContainerPrometheusPort, Protocol: v1.ProtocolTCP})
 	}
 
 	return ports
