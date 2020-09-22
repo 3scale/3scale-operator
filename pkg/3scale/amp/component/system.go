@@ -97,14 +97,12 @@ const (
 )
 
 const (
-	SystemSidekiqMetricsPort = 9394
-)
-
-const (
-	SystemAppPrometheusExporterPortEnvVarName = "PROMETHEUS_EXPORTER_PORT"
-	SystemAppMasterContainerPrometheusPort    = 9395
-	SystemAppProviderContainerPrometheusPort  = 9396
-	SystemAppDeveloperContainerPrometheusPort = 9394
+	SystemAppPrometheusExporterPortEnvVarName     = "PROMETHEUS_EXPORTER_PORT"
+	SystemSidekiqPrometheusExporterPortEnvVarName = "PROMETHEUS_EXPORTER_PORT"
+	SystemSidekiqMetricsPort                      = 9394
+	SystemAppMasterContainerPrometheusPort        = 9395
+	SystemAppProviderContainerPrometheusPort      = 9396
+	SystemAppDeveloperContainerPrometheusPort     = 9394
 )
 
 type System struct {
@@ -270,6 +268,15 @@ func (system *System) buildAppDeveloperContainerEnv() []v1.EnvVar {
 	result := system.buildSystemBaseEnv()
 	if system.Options.AppMetrics {
 		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppDeveloperContainerPrometheusPort)))
+	}
+
+	return result
+}
+
+func (system *System) buildSystemSidekiqContainerEnv() []v1.EnvVar {
+	result := system.buildSystemBaseEnv()
+	if system.Options.SideKiqMetrics {
+		result = append(result, helper.EnvVarFromValue(SystemSidekiqPrometheusExporterPortEnvVarName, strconv.Itoa(SystemSidekiqMetricsPort)))
 	}
 
 	return result
@@ -583,16 +590,10 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 					Volumes:     system.appPodVolumes(),
 					Containers: []v1.Container{
 						v1.Container{
-							Name:  "system-master",
-							Image: "amp-system:latest",
-							Args:  []string{"env", "TENANT_MODE=master", "PORT=3002", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
-									Name:          "master",
-									HostPort:      0,
-									ContainerPort: 3002,
-									Protocol:      v1.ProtocolTCP},
-							},
+							Name:         "system-master",
+							Image:        "amp-system:latest",
+							Args:         []string{"env", "TENANT_MODE=master", "PORT=3002", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
+							Ports:        system.appMasterPorts(),
 							Env:          system.buildAppMasterContainerEnv(),
 							Resources:    *system.Options.AppMasterContainerResourceRequirements,
 							VolumeMounts: system.appMasterContainerVolumeMounts(),
@@ -632,16 +633,10 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							StdinOnce:       false,
 							TTY:             false,
 						}, v1.Container{
-							Name:  "system-provider",
-							Image: "amp-system:latest",
-							Args:  []string{"env", "TENANT_MODE=provider", "PORT=3000", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
-									Name:          "provider",
-									HostPort:      0,
-									ContainerPort: 3000,
-									Protocol:      v1.ProtocolTCP},
-							},
+							Name:         "system-provider",
+							Image:        "amp-system:latest",
+							Args:         []string{"env", "TENANT_MODE=provider", "PORT=3000", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
+							Ports:        system.appProviderPorts(),
 							Env:          system.buildAppProviderContainerEnv(),
 							Resources:    *system.Options.AppProviderContainerResourceRequirements,
 							VolumeMounts: system.appProviderContainerVolumeMounts(),
@@ -681,16 +676,10 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							StdinOnce:       false,
 							TTY:             false,
 						}, v1.Container{
-							Name:  "system-developer",
-							Image: "amp-system:latest",
-							Args:  []string{"env", "PORT=3001", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
-									Name:          "developer",
-									HostPort:      0,
-									ContainerPort: 3001,
-									Protocol:      v1.ProtocolTCP},
-							},
+							Name:         "system-developer",
+							Image:        "amp-system:latest",
+							Args:         []string{"env", "PORT=3001", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
+							Ports:        system.appDeveloperPorts(),
 							Env:          system.buildAppDeveloperContainerEnv(),
 							Resources:    *system.Options.AppDeveloperContainerResourceRequirements,
 							VolumeMounts: system.appDeveloperContainerVolumeMounts(),
@@ -851,7 +840,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 							Name:            SystemSidekiqName,
 							Image:           "amp-system:latest",
 							Args:            []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
-							Env:             system.buildSystemBaseEnv(),
+							Env:             system.buildSystemSidekiqContainerEnv(),
 							Resources:       *system.Options.SidekiqContainerResourceRequirements,
 							VolumeMounts:    system.sidekiqContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
@@ -1288,6 +1277,42 @@ func (system *System) sideKiqPorts() []v1.ContainerPort {
 
 	if system.Options.SideKiqMetrics {
 		ports = append(ports, v1.ContainerPort{Name: "metrics", ContainerPort: SystemSidekiqMetricsPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
+}
+
+func (system *System) appMasterPorts() []v1.ContainerPort {
+	var ports []v1.ContainerPort
+
+	ports = append(ports, v1.ContainerPort{Name: "master", HostPort: 0, ContainerPort: 3002, Protocol: v1.ProtocolTCP})
+
+	if system.Options.AppMetrics {
+		ports = append(ports, v1.ContainerPort{Name: "master-metrics", ContainerPort: SystemAppMasterContainerPrometheusPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
+}
+
+func (system *System) appProviderPorts() []v1.ContainerPort {
+	var ports []v1.ContainerPort
+
+	ports = append(ports, v1.ContainerPort{Name: "provider", HostPort: 0, ContainerPort: 3000, Protocol: v1.ProtocolTCP})
+
+	if system.Options.AppMetrics {
+		ports = append(ports, v1.ContainerPort{Name: "prov-metrics", ContainerPort: SystemAppProviderContainerPrometheusPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
+}
+
+func (system *System) appDeveloperPorts() []v1.ContainerPort {
+	var ports []v1.ContainerPort
+
+	ports = append(ports, v1.ContainerPort{Name: "developer", HostPort: 0, ContainerPort: 3001, Protocol: v1.ProtocolTCP})
+
+	if system.Options.AppMetrics {
+		ports = append(ports, v1.ContainerPort{Name: "dev-metrics", ContainerPort: SystemAppDeveloperContainerPrometheusPort, Protocol: v1.ProtocolTCP})
 	}
 
 	return ports
