@@ -3,6 +3,7 @@ package component
 import (
 	"fmt"
 	"sort"
+	"strconv"
 
 	"k8s.io/api/policy/v1beta1"
 
@@ -97,6 +98,13 @@ const (
 
 const (
 	SystemSidekiqMetricsPort = 9394
+)
+
+const (
+	SystemAppPrometheusExporterPortEnvVarName = "PROMETHEUS_EXPORTER_PORT"
+	SystemAppMasterContainerPrometheusPort    = 9395
+	SystemAppProviderContainerPrometheusPort  = 9396
+	SystemAppDeveloperContainerPrometheusPort = 9394
 )
 
 type System struct {
@@ -236,6 +244,32 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 			helper.EnvVarFromSecretOptional(AwsHostname, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsHostname),
 			helper.EnvVarFromSecretOptional(AwsPathStyle, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsPathStyle),
 		)
+	}
+
+	return result
+}
+
+func (system *System) buildAppMasterContainerEnv() []v1.EnvVar {
+	result := system.buildSystemBaseEnv()
+	if system.Options.AppMetrics {
+		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppMasterContainerPrometheusPort)))
+	}
+
+	return result
+}
+
+func (system *System) buildAppProviderContainerEnv() []v1.EnvVar {
+	result := system.buildSystemBaseEnv()
+	if system.Options.AppMetrics {
+		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppProviderContainerPrometheusPort)))
+	}
+	return result
+}
+
+func (system *System) buildAppDeveloperContainerEnv() []v1.EnvVar {
+	result := system.buildSystemBaseEnv()
+	if system.Options.AppMetrics {
+		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppDeveloperContainerPrometheusPort)))
 	}
 
 	return result
@@ -559,7 +593,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 3002,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env:          system.buildSystemBaseEnv(),
+							Env:          system.buildAppMasterContainerEnv(),
 							Resources:    *system.Options.AppMasterContainerResourceRequirements,
 							VolumeMounts: system.appMasterContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
@@ -608,7 +642,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 3000,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env:          system.buildSystemBaseEnv(),
+							Env:          system.buildAppProviderContainerEnv(),
 							Resources:    *system.Options.AppProviderContainerResourceRequirements,
 							VolumeMounts: system.appProviderContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
@@ -657,7 +691,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									ContainerPort: 3001,
 									Protocol:      v1.ProtocolTCP},
 							},
-							Env:          system.buildSystemBaseEnv(),
+							Env:          system.buildAppDeveloperContainerEnv(),
 							Resources:    *system.Options.AppDeveloperContainerResourceRequirements,
 							VolumeMounts: system.appDeveloperContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{

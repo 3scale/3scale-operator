@@ -93,6 +93,7 @@ type SystemOptions struct {
 	MemcachedLabels          map[string]string `validate:"required"`
 	SMTPLabels               map[string]string `validate:"required"`
 	SideKiqMetrics           bool
+	AppMetrics               bool
 
 	IncludeOracleOptionalSettings bool
 }
