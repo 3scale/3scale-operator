@@ -22,8 +22,8 @@ func NewBackendAPIRemoteIndex(client *threescaleapi.ThreeScaleClient, logger log
 	backendIDIndex := map[int64]*BackendAPIEntity{}
 	backendSystemNameIndex := map[string]*BackendAPIEntity{}
 
-	for _, backendObj := range backendAPIs.Backends {
-		backendAPIEntity := NewBackendAPIEntity(&backendObj, client, logger)
+	for idx := range backendAPIs.Backends {
+		backendAPIEntity := NewBackendAPIEntity(&backendAPIs.Backends[idx], client, logger)
 		backendIDIndex[backendAPIEntity.ID()] = backendAPIEntity
 		backendSystemNameIndex[backendAPIEntity.SystemName()] = backendAPIEntity
 	}
