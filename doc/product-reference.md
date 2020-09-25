@@ -1,11 +1,38 @@
-# Product CRD field Reference
+# Product CRD Reference
+
+## Table of Contents
+
+* [Product](#product)
+  * [ProductSpec](#productspec)
+    * [ProductDeploymentSpec](#productdeploymentspec)
+      * [ApicastHostedSpec](#apicasthostedspec)
+      * [ApicastSelfManagedSpec](#apicastselfmanagedspec)
+    * [AuthenticationSpec](#authenticationspec)
+      * [UserKeyAuthenticationSpec](#userkeyauthenticationspec)
+      * [AppKeyAppIDAuthenticationSpec](#appkeyappidauthenticationspec)
+      * [SecuritySpec](#securityspec)
+    * [MappingRuleSpec](#mappingrulespec)
+    * [MetricSpec](#metricspec)
+    * [MethodSpec](#methodspec)
+    * [Provider Account Reference](#provider-account-reference)
+    * [BackendUsageSpec](#backendusagespec)
+    * [ApplicationPlanSpec](#applicationplanspec)
+    * [PricingRuleSpec](#pricingrulespec)
+    * [MetricMethodRefSpec](#metricmethodrefspec)
+    * [LimitSpec](#limitspec)
+  * [ProductStatus](#productstatus)
+    * [ConditionSpec](#conditionspec)
+
+Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Product
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
 | Spec | `spec` | [ProductSpec](#ProductSpec) | The specfication for the custom resource |
 | Status | `status` | [ProductStatus](#ProductStatus) | The status for the custom resource |
 
-## ProductSpec
+### ProductSpec
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
@@ -20,7 +47,7 @@
 | Application Plans | `applicationPlans` | object | Map with key as plan's system name and value as [ApplicationPlanSpec](#ApplicationPlanSpec) | No |
 | Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
 
-### ProductDeploymentSpec
+#### ProductDeploymentSpec
 
 Specifies product deployment mode
 
@@ -29,7 +56,7 @@ Specifies product deployment mode
 | ApicastHosted | `apicastHosted` | object | See [ApicastHostedSpec](#ApicastHostedSpec) | No |
 | ApicastSelfManaged | `apicastSelfManaged` | object | See [ApicastSelfManagedSpec](#ApicastSelfManagedSpec) | No |
 
-### ApicastHostedSpec
+##### ApicastHostedSpec
 
 Specifies apicast hosted deployment mode
 
@@ -37,7 +64,7 @@ Specifies apicast hosted deployment mode
 | --- | --- | --- | --- | --- |
 | Authentication | `authentication` | object | See [AuthenticationSpec](#AuthenticationSpec) | No |
 
-### ApicastSelfManagedSpec
+##### ApicastSelfManagedSpec
 
 Specifies apicast self managed deployment mode
 
@@ -47,7 +74,7 @@ Specifies apicast self managed deployment mode
 | StagingPublicBaseURL | `stagingPublicBaseURL` | string | Staging Public Base URL | No |
 | ProductionPublicBaseURL | `productionPublicBaseURL` | string | Production Public Base URL | No |
 
-### AuthenticationSpec
+#### AuthenticationSpec
 
 Specifies product authentication
 
@@ -56,7 +83,7 @@ Specifies product authentication
 | UserKeyAuthentication | `userkey` | object | See [UserKeyAuthenticationSpec](#UserKeyAuthenticationSpec) | No |
 | AppKeyAppIDAuthentication | `appKeyAppID` | object | See [AppKeyAppIDAuthenticationSpec](#AppKeyAppIDAuthenticationSpec) | No |
 
-### UserKeyAuthenticationSpec
+##### UserKeyAuthenticationSpec
 
 Specifies product user key authentication mode
 
@@ -66,7 +93,7 @@ Specifies product user key authentication mode
 | CredentialsLoc | `credentials` | string | Credentials location. Valid values: *headers*, *query*, *authorization* | No |
 | Security | `security` | object | See [SecuritySpec](#SecuritySpec) | No |
 
-### AppKeyAppIDAuthenticationSpec
+##### AppKeyAppIDAuthenticationSpec
 
 Specifies product appKey & appID authentication mode
 
@@ -77,7 +104,7 @@ Specifies product appKey & appID authentication mode
 | CredentialsLoc | `credentials` | string | Credentials location. Valid values: *headers*, *query*, *authorization* | No |
 | Security | `security` | object | See [SecuritySpec](#SecuritySpec) | No |
 
-### SecuritySpec
+##### SecuritySpec
 
 Specifies product security
 
@@ -86,7 +113,7 @@ Specifies product security
 | HostHeader | `hostHeader` | string | Lets you define a custom Host request header | No |
 | SecretToken | `secretToken` | string | Enables you to block any direct developer requests to your API backend | No |
 
-### MappingRuleSpec
+#### MappingRuleSpec
 
 Specifies product mapping rules
 
@@ -99,7 +126,7 @@ Specifies product mapping rules
 | Position | `position` | int | Mapping Rule position | No |
 | Last | `last` | \*bool | Last matched Mapping Rule to process | No |
 
-### MetricSpec
+#### MetricSpec
 
 Specifies product metric
 
@@ -109,7 +136,7 @@ Specifies product metric
 | Unit | `unit` | string | Metric unit | Yes |
 | Description | `description` | string | Metric description message | No |
 
-### MethodSpec
+#### MethodSpec
 
 Specifies product method
 
@@ -118,7 +145,7 @@ Specifies product method
 | Name | `friendlyName` | string | Method name | Yes |
 | Description | `description` | string | Method description message | No |
 
-### Provider Account Reference
+#### Provider Account Reference
 
 Provider account credentials secret referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object. 
 
@@ -143,7 +170,7 @@ stringData:
   token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-### BackendUsageSpec
+#### BackendUsageSpec
 
 Specifies product backend usage
 
@@ -151,7 +178,7 @@ Specifies product backend usage
 | --- | --- | --- | --- | --- |
 | Path | `path` | string | The path where this Backend API and its methods are available within the context of this Product | Yes |
 
-### ApplicationPlanSpec
+#### ApplicationPlanSpec
 
 LimitSpec defines the maximum value a metric can take on a contract before the user is no longer authorized to use resources.
 Once a limit has been passed in a given period, reject messages will be issued if the service is accessed under this contract.
@@ -166,7 +193,7 @@ Once a limit has been passed in a given period, reject messages will be issued i
 | PricingRules | `pricingRules` | array | Array of [PricingRuleSpec](#PricingRuleSpec) objects | No |
 | Limits | `limits` | array | Array of [LimitSpec](#LimitSpec) objects | No |
 
-### PricingRuleSpec
+#### PricingRuleSpec
 
 PricingRuleSpec defines the cost of each operation performed on an API.
 Multiple pricing rules on the same metric divide up the ranges of when a pricing rule applies.
@@ -178,7 +205,7 @@ Multiple pricing rules on the same metric divide up the ranges of when a pricing
 | PricePerUnit | `pricePerUnit` | string | Price per unit (USD) | Yes |
 | Metric Reference | `metricMethodRef` | object | See [MetricMethodRefSpec](#MetricMethodRefSpec) | No |
 
-### MetricMethodRefSpec
+#### MetricMethodRefSpec
 
 MetricMethodRefSpec defines method or metric reference. Metric or method can optionally belong to used backends.
 
@@ -187,7 +214,7 @@ MetricMethodRefSpec defines method or metric reference. Metric or method can opt
 | SystemName | `systemName` | string | Identifies uniquely the metric or method | Yes |
 | Backend | `backend` | string | Identifies uniquely backend owning the metric or method | No |
 
-### LimitSpec
+#### LimitSpec
 
 LimitSpec defines the maximum value a metric can take on a contract before the user is no longer authorized to use resources.
 Once a limit has been passed in a given period, reject messages will be issued if the service is accessed under this contract.
@@ -198,7 +225,7 @@ Once a limit has been passed in a given period, reject messages will be issued i
 | Value | `value` | int | Limit value | Yes |
 | Metric Reference | `metricMethodRef` | object | See [MetricMethodRefSpec](#MetricMethodRefSpec) | No |
 
-## ProductStatus
+### ProductStatus
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- | --- |
@@ -209,7 +236,7 @@ Once a limit has been passed in a given period, reject messages will be issued i
 | Error Message | `errorMessage` | string | error message |
 | Conditions | `conditions` | array of [condition](#ConditionSpec)s | resource conditions |
 
-### ConditionSpec
+#### ConditionSpec
 
 The status object has an array of Conditions through which the Product has or has not passed.
 Each element of the Condition array has the following fields:
