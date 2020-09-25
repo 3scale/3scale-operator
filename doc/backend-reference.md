@@ -1,11 +1,26 @@
-# Backend CRD field Reference
+# Backend CRD Reference
+
+## Table of Contents
+
+* [Backend](#backend)
+  * [BackendSpec](#backendspec)
+    * [MappingRuleSpec](#mappingrulespec)
+    * [MetricSpec](#metricspec)
+    * [MethodSpec](#methodspec)
+    * [Provider Account Reference](#provider-account-reference)
+  * [BackendStatus](#backendstatus)
+    * [ConditionSpec](#conditionspec)
+
+Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Backend
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
 | Spec | `spec` | [BackendSpec](#BackendSpec) | The specfication for the custom resource |
 | Status | `status` | [BackendStatus](#BackendStatus) | The status for the custom resource |
 
-## BackendSpec
+### BackendSpec
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
@@ -18,7 +33,7 @@
 | Methods | `methods` | object | Map with key as method system name and value as [Method Spec](#MethodSpec) | No |
 | Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
 
-### MappingRuleSpec
+#### MappingRuleSpec
 
 Specifies backend mapping rule
 
@@ -31,7 +46,7 @@ Specifies backend mapping rule
 | Position | `position` | int | Mapping Rule position | No |
 | Last | `last` | \*bool | Last matched Mapping Rule to process | No |
 
-### MetricSpec
+#### MetricSpec
 
 Specifies backend metric
 
@@ -41,7 +56,7 @@ Specifies backend metric
 | Unit | `unit` | string | Metric unit | Yes |
 | Description | `description` | string | Metric description message | No |
 
-### MethodSpec
+#### MethodSpec
 
 Specifies backend method
 
@@ -50,7 +65,7 @@ Specifies backend method
 | Name | `friendlyName` | string | Method name | Yes |
 | Description | `description` | string | Method description message | No |
 
-### Provider Account Reference
+#### Provider Account Reference
 
 Provider account credentials secret referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object. 
 
@@ -75,7 +90,7 @@ stringData:
   token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-## BackendStatus
+### BackendStatus
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- | --- |
@@ -85,7 +100,7 @@ stringData:
 | Error Message | `errorMessage` | string | error message |
 | Conditions | `conditions` | array of [condition](#ConditionSpec)s | resource conditions |
 
-### ConditionSpec
+#### ConditionSpec
 
 The status object has an array of Conditions through which the Backend has or has not passed.
 Each element of the Condition array has the following fields:
