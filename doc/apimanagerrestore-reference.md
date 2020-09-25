@@ -8,6 +8,19 @@ This resource is the resource used to restore a 3scale API Management solution
 previously deployed using an `APIManager` custom resource and the solution was
 backed up by an `APIManagerBackup` custom resource.
 
+## Table of Contents
+
+* [Restore scenarios scope](#restore-scenarios-scope)
+* [Data that is restored](#data-that-is-restored)
+* [Data that is not restored](#data-that-is-not-restored)
+* [APIManagerRestore](#apimanagerrestore)
+   * [APIManagerRestoreSpec](#apimanagerrestorespec)
+   * [APIManagerRestoreSourceSpec](#apimanagerrestoresourcespec)
+   * [PersistentVolumeClaimRestoreSource](#persistentvolumeclaimrestoresource)
+* [APIManagerRestoreStatusSpec](#apimanagerrestorestatusspec)
+
+Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
+
 ## Restore scenarios scope
 
 Is in the scope of restore functionality of the operator:
