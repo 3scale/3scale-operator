@@ -7,6 +7,20 @@ The following Custom Resources are provided:
 This resource is the resource used to backup a 3scale API Management solution
 deployed using an APIManager custom resource.
 
+## Table of Contents
+
+* [Backup scenarios scope](#backup-scenarios-scope)
+* [Data that is backed up](#data-that-is-backed-up)
+* [Data that is not backed up](#data-that-is-not-backed-up)
+* [APIManagerBackup](#apimanagerbackup)
+   * [APIManagerBackupSpec](#apimanagerbackupspec)
+   * [APIManagerBackupDestinationSpec](#apimanagerbackupdestinationspec)
+   * [PersistentVolumeClaimBackupDestination](#persistentvolumeclaimbackupdestination)
+   * [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
+* [APIManagerBackupStatusSpec](#apimanagerbackupstatusspec)
+
+Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
+
 ## Backup scenarios scope
 
 Backup functionality is available when the following databases are
