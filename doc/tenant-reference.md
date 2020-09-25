@@ -1,6 +1,17 @@
-# 3scale Operator
+# Tenant CRD reference
 
-## Tenant CRD field reference
+## Table of Contents
+
+* [Tenant](#tenant)
+  * [TenantSpec](#tenantspec)
+  * [Master Secret](#master-secret)
+    * [Admin Secret](#admin-secret)
+    * [Tenant Secret](#tenant-secret)
+  * [TenantStatus](#tenantstatus)
+
+Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Tenant
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
