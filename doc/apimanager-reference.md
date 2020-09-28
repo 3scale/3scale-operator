@@ -322,7 +322,7 @@ that should be set on it.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Enabled | `enabled` | bool | No | `false` | Enable to use external system database, backend redis, system redis and apicast redis databases|
+| Enabled | `enabled` | bool | No | `false` | Enable to use external system database, backend redis, and system redis databases|
 
 When HighAvailability is enabled the following secrets have to be pre-created by the user:
 
