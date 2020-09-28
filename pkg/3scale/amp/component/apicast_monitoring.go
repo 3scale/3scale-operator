@@ -136,7 +136,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(apicast_status{namespace='%s', status=~"^4.."}[1m])) / sum(rate(apicast_status{namespace='%s'}[1m])) * 100 > 5`, ns, ns)),
 							For:  "5m",
 							Labels: map[string]string{
-								"severity": "critical",
+								"severity": "warning",
 							},
 						},
 						{
