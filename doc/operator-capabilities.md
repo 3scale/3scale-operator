@@ -13,14 +13,9 @@ The following diagram shows available custom resource definitions and their rela
 
 ![3scale Custom Resources](capabilities-diagram.png)
 
-## CRD Index
-
-* [Backend CRD reference](backend-reference.md)
-* [Product CRD reference](product-reference.md)
-* [Tenant CRD reference](tenant-reference.md)
-
 ## Table of contents
 
+* [CRD Index](#crd-index)
 * [Quickstart Guide](#quickstart-guide)
 * [Backend custom resource](#backend-custom-resource)
    * [Backend metrics](#backend-metrics)
@@ -42,6 +37,13 @@ The following diagram shows available custom resource definitions and their rela
 * [Tenant custom resource](#tenant-custom-resource)
    * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
    * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
+* [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
+
+## CRD Index
+
+* [Backend CRD reference](backend-reference.md)
+* [Product CRD reference](product-reference.md)
+* [Tenant CRD reference](tenant-reference.md)
 
 ## Quickstart Guide
 
@@ -516,7 +518,7 @@ spec:
 
 * **NOTE 1**: `from`, `to`, `pricePerUnit` and `metricMethodRef` fields are required.
 * **NOTE 2**: `metricMethodRef` reference can be product or backend reference. Use `backend` optional field to reference metric's backend owner.
-* **NOTE 3**: `from` and `to` will be validated. `from` < `to` for any rule and overlapping ranges for the same metric is not allowed. 
+* **NOTE 3**: `from` and `to` will be validated. `from` < `to` for any rule and overlapping ranges for the same metric is not allowed.
 
 ### Product backend usages
 
@@ -683,3 +685,16 @@ stringData:
 ```
 
 Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more information.
+
+## Limitations and unimplemented functionalities
+
+* Deletion of a [Backend CR](backend-reference.md) is not reconciled. Existing Backend in 3scale will not be deleted. [THREESCALE-5538](https://issues.redhat.com/browse/THREESCALE-5538)
+* Deletion of a [Product CR](product-reference.md) is not reconciled. Existing Product in 3scale will not be deleted. [THREESCALE-5539](https://issues.redhat.com/browse/THREESCALE-5539)
+* [Product CRD](product-reference.md) Single sign on (SSO) authentication for the admin and developers portal
+* [Product CRD](product-reference.md) OpenID Connect authentication [https://issues.redhat.com/browse/THREESCALE-5537](THREESCALE-5537)
+* ActiveDocs CRD [THREESCALE-5531](https://issues.redhat.com/browse/THREESCALE-5531)
+* Gateway Policy CRD [THREESCALE-6101](https://issues.redhat.com/browse/THREESCALE-6101)
+* Account CRD [THREESCALE-5530](https://issues.redhat.com/browse/THREESCALE-5530)
+  * 3scale Applications are managed using Account CRD
+* [Product CRD](product-reference.md) Gateway response custom code and errors [THREESCALE-5536](https://issues.redhat.com/browse/THREESCALE-5536)
+* 3scale Operator CRD holding OAS3 reference as source of truth for 3scale Product configuration [THREESCALE-4712](https://issues.redhat.com/browse/THREESCALE-4712)
