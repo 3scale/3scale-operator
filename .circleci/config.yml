@@ -124,12 +124,72 @@ commands:
             WILDCARD_DOMAIN="lvh.me"
             ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
               oc new-app -f- --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN}
-            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
+          no_output_timeout: 30m
+      - check-3scale-templates-deployed-deploymentconfigs
+      - check-3scale-templates-openshift-events
+      - check-3scale-templates-deployed-routes
 
+
+  check-3scale-templates-deployed-deploymentconfigs:
+    parameters:
+      wildcard_domain:
+        type: string
+        default: "lvh.me"
+      template_file:
+        type: string
+        default: "pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml"
+    steps:
+      - run:
+          name: "Check expected 3scale DeploymentConfigs"
+          command: |
+            WILDCARD_DOMAIN=<< parameters.wildcard_domain >>
+            TEMPLATE_FILE=<< parameters.template_file >>
+
+            echo "Checking number of DeploymentConfigs is equal to the expected number of DeploymentConfigs..."
+            NUM_EXPECTED_DCS=$(oc new-app -f ${TEMPLATE_FILE}  -o json --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN} | jq '[.items[] | select(.kind=="DeploymentConfig")] | length')
+            ALL_EXPECTED_DCS_SHOWN=0
+            RESULT_DCS=$(oc get dc --output=name)
+            while [ ${ALL_EXPECTED_DCS_SHOWN} -eq 0 ]; do
+              NUM_RESULT_DCS=$(echo ${RESULT_DCS} | wc -w)
+              if [ ${NUM_RESULT_DCS} -ne ${NUM_EXPECTED_DCS} ]; then
+                sleep 2
+                RESULT_DCS=$(oc get dc --output=name)
+              else
+                echo "Obtained DeploymentConfigs ('${NUM_RESULT_DCS}') match number of expected DeploymentConfigs ('${NUM_EXPECTED_DCS}'). Proceeding..."
+                ALL_EXPECTED_DCS_SHOWN=1
+              fi
+            done
+            echo ""
+
+            for i in ${RESULT_DCS}; do
+              DC_AVAILABLE=0
+              echo "Waiting for DeploymentConfig '${i}' to be Available..."
+              while [ ${DC_AVAILABLE} -eq 0 ]; do
+                DC_AVAILABLE_CONDITION_OUTPUT=$(oc get ${i} -o json | jq '.status.conditions[] | select(.type=="Available")')
+                if [ -z "${DC_AVAILABLE_CONDITION_OUTPUT}" ]; then
+                  echo "DeploymentConfig '${i}' still doesn't have the 'Available' condition. Waiting..."
+                  sleep 2
+                else
+                  AVAILABLE_STATE=$(echo -n ${DC_AVAILABLE_CONDITION_OUTPUT} | jq -r '.status')
+                  if [ "${AVAILABLE_STATE}" == "True" ]; then
+                    echo "DeploymentConfig '${i}' is Available"
+                    echo ""
+                    DC_AVAILABLE=1
+                  else
+                    sleep 2
+                  fi
+                fi
+              done
+            done
+          no_output_timeout: 30m
+
+  check-3scale-templates-openshift-events:
+    steps:
+      - run:
+          name: "Check OpenShift events"
+          command: |
             oc get events | egrep ' Failed ' || :
             oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'
-          no_output_timeout: 30m
-      - check-3scale-templates-deployed-routes
 
   check-3scale-templates-deployed-routes:
     parameters:
@@ -169,13 +229,12 @@ commands:
       - run:
           name: Deploy 3scale from amp-eval template
           command: |
+            WILDCARD_DOMAIN="lvh.me"
             oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
               --param WILDCARD_DOMAIN=lvh.me --param TENANT_NAME=3scale
-            oc wait --for=condition=available --timeout=-1s $(oc get dc --output=name)
-
-            oc get events | egrep ' Failed ' || :
-            oc get events -o json | jq '[.items[] | select(.reason == "Failed") | debug ] | length == 0'
           no_output_timeout: 30m
+      - check-3scale-templates-deployed-deploymentconfigs
+      - check-3scale-templates-openshift-events
       - check-3scale-templates-deployed-routes
   push-3scale-images-to-quay:
     parameters:
