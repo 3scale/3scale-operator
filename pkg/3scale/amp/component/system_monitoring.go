@@ -104,7 +104,7 @@ func SystemSidekiqPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							Expr: intstr.FromString(fmt.Sprintf(`avg(sidekiq_job_runtime_seconds_sum{queue="zync",worker="ZyncWorker",namespace="%s"}) > 300`, ns)),
 							For:  "10m",
 							Labels: map[string]string{
-								"severity": "critical",
+								"severity": "warning",
 							},
 						},
 					},
