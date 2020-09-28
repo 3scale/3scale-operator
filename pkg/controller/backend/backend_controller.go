@@ -180,7 +180,7 @@ func (r *ReconcileBackend) reconcile(backendResource *capabilitiesv1beta1.Backen
 
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, nil, providerAccount.AdminURLStr, err)
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, backendResource, nil, "", err)
 		return statusReconciler, err
 	}
 

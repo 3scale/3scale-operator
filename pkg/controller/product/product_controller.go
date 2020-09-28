@@ -186,7 +186,7 @@ func (r *ReconcileProduct) reconcile(productResource *capabilitiesv1beta1.Produc
 
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, productResource, nil, providerAccount.AdminURLStr, err)
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, productResource, nil, "", err)
 		return statusReconciler, err
 	}
 
