@@ -170,10 +170,14 @@ commands:
                   echo "DeploymentConfig '${i}' still doesn't have the 'Available' condition. Waiting..."
                   sleep 2
                 else
-                  oc wait --for=condition=available --timeout=-1s ${i}
-                  echo "DeploymentConfig '${i}' is Available"
-                  echo ""
-                  DC_AVAILABLE=1
+                  AVAILABLE_STATE=$(echo -n ${DC_AVAILABLE_CONDITION_OUTPUT} | jq -r '.status')
+                  if [ "${AVAILABLE_STATE}" == "True" ]; then
+                    echo "DeploymentConfig '${i}' is Available"
+                    echo ""
+                    DC_AVAILABLE=1
+                  else
+                    sleep 2
+                  fi
                 fi
               done
             done
