@@ -176,6 +176,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.ReconcilePodMonitor(system.SystemAppPodMonitor(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	err = r.ReconcileGrafanaDashboard(component.SystemGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err

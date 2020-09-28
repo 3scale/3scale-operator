@@ -385,6 +385,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		MemcachedLabels:               testSystemMemcachedLabels(),
 		SMTPLabels:                    testSystemSMTPLabels(),
 		SideKiqMetrics:                true,
+		AppMetrics:                    true,
 		IncludeOracleOptionalSettings: true,
 	}
 
