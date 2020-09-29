@@ -226,6 +226,8 @@ that should be set on it.
 
 ### DatabaseSpec
 
+Note: Deploying databases internally with this section is meant for evaluation purposes. Check [HighAvailabilitySpec](#highavailabilityspec) for production ready recommended deployments.
+
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | MySQL | `mysql`| \*SystemMySQLSpec | No | nil | Enable MySQL database as System's database. Only takes effect when `.spec.highAvailability.enabled` is not set to true. See [MySQLSpec](#MySQLSpec) specification |
