@@ -199,8 +199,8 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
-| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
-| VolumeName | `volumeName` | string | No | nil | The binding reference to the PersistentVolume backing this claim |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. |
+| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
 
 ### SystemS3Spec
 
@@ -246,8 +246,8 @@ that should be set on it.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
-| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
-| VolumeName | `volumeName` | string | No | nil | The binding reference to the PersistentVolume backing this claim |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. |
+| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
 
 ### PostgreSQLSpec
 
@@ -264,8 +264,8 @@ that should be set on it.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
-| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have |
-| VolumeName | `volumeName` | string | No | nil | The binding reference to the PersistentVolume backing this claim |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. |
+| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
 
 ### SystemAppSpec
 
