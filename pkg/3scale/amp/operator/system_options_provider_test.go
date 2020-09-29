@@ -325,6 +325,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 	tmpSMTPPassword := opts.SmtpSecretOptions.Password
 	tmpSMTPPort := component.DefaultSystemSMTPPort()
 	tmpSMTPUsername := component.DefaultSystemSMTPUsername()
+	storageRequests := component.DefaultSharedStorageResources()
 
 	expectedOpts := &component.SystemOptions{
 		TenantName:                               tenantName,
@@ -362,7 +363,9 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		MessageBusRedisNamespace:                  &messageBusRedisNamespace,
 		RedisNamespace:                            &redisNamespace,
 		AdminEmail:                                &tmpSystemAdminEmail,
-		PvcFileStorageOptions:                     &component.PVCFileStorageOptions{},
+		PvcFileStorageOptions: &component.PVCFileStorageOptions{
+			StorageRequests: storageRequests,
+		},
 		SmtpSecretOptions: component.SystemSMTPSecretOptions{
 			Address:           &tmpSMTPAddress,
 			Authentication:    &tmpSMTPAuthentication,
@@ -536,13 +539,23 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				tmp := "mystorageclassname"
-				apimanager.Spec.System.FileStorageSpec.PVC = &appsv1alpha1.SystemPVCSpec{StorageClassName: &tmp}
+				tmpVolumeName := "myvolume"
+				apimanager.Spec.System.FileStorageSpec.PVC = &appsv1alpha1.SystemPVCSpec{
+					StorageClassName: &tmp,
+					Resources: &appsv1alpha1.PersistentVolumeClaimResources{
+						Requests: resource.MustParse("456Mi"),
+					},
+					VolumeName: &tmpVolumeName,
+				}
 				return apimanager
 			}, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				tmp := "mystorageclassname"
-				expectedOpts.PvcFileStorageOptions = &component.PVCFileStorageOptions{StorageClass: &tmp}
+				tmpVolumeName := "myvolume"
+				expectedOpts.PvcFileStorageOptions.StorageClass = &tmp
+				expectedOpts.PvcFileStorageOptions.StorageRequests = resource.MustParse("456Mi")
+				expectedOpts.PvcFileStorageOptions.VolumeName = &tmpVolumeName
 				expectedOpts.S3FileStorageOptions = nil
 				return expectedOpts
 			},

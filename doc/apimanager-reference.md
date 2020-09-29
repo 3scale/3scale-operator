@@ -7,51 +7,52 @@ One APIManager custom resource per project is allowed.
 ## Table of Contents
 
 * [APIManager](#apimanager)
-  * [APIManagerSpec](#apimanagerspec)
-  * [ApicastSpec](#apicastspec)
-  * [ApicastProductionSpec](#apicastproductionspec)
-  * [ApicastStagingSpec](#apicaststagingspec)
-  * [BackendSpec](#backendspec)
-  * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
-  * [BackendListenerSpec](#backendlistenerspec)
-  * [BackendWorkerSpec](#backendworkerspec)
-  * [BackendCronSpec](#backendcronspec)
-  * [SystemSpec](#systemspec)
-  * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
-  * [FileStorageSpec](#filestoragespec)
-  * [SystemPVCSpec](#systempvcspec)
-  * [SystemS3Spec](#systems3spec)
-  * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
-  * [DatabaseSpec](#databasespec)
-  * [MySQLSpec](#mysqlspec)
-  * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
-  * [PostgreSQLSpec](#postgresqlspec)
-  * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
-  * [SystemAppSpec](#systemappspec)
-  * [SystemSidekiqSpec](#systemsidekiqspec)
-  * [SystemSphinxSpec](#systemsphinxspec)
-  * [ZyncSpec](#zyncspec)
-  * [ZyncAppSpec](#zyncappspec)
-  * [ZyncQueSpec](#zyncquespec)
-  * [HighAvailabilitySpec](#highavailabilityspec)
-  * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
-  * [MonitoringSpec](#monitoringspec)
-  * [APIManagerStatus](#apimanagerstatus)
+   * [APIManagerSpec](#apimanagerspec)
+   * [ApicastSpec](#apicastspec)
+   * [ApicastProductionSpec](#apicastproductionspec)
+   * [ApicastStagingSpec](#apicaststagingspec)
+   * [BackendSpec](#backendspec)
+   * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
+   * [BackendListenerSpec](#backendlistenerspec)
+   * [BackendWorkerSpec](#backendworkerspec)
+   * [BackendCronSpec](#backendcronspec)
+   * [SystemSpec](#systemspec)
+   * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
+   * [FileStorageSpec](#filestoragespec)
+   * [SystemPVCSpec](#systempvcspec)
+   * [SystemS3Spec](#systems3spec)
+   * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
+   * [DatabaseSpec](#databasespec)
+   * [MySQLSpec](#mysqlspec)
+   * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
+   * [PostgreSQLSpec](#postgresqlspec)
+   * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
+   * [SystemAppSpec](#systemappspec)
+   * [SystemSidekiqSpec](#systemsidekiqspec)
+   * [SystemSphinxSpec](#systemsphinxspec)
+   * [ZyncSpec](#zyncspec)
+   * [ZyncAppSpec](#zyncappspec)
+   * [ZyncQueSpec](#zyncquespec)
+   * [HighAvailabilitySpec](#highavailabilityspec)
+   * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
+   * [MonitoringSpec](#monitoringspec)
+   * [APIManagerStatus](#apimanagerstatus)
+* [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
 * [APIManager Secrets](#apimanager-secrets)
-  * [backend-internal-api](#backend-internal-api)
-  * [backend-listener](#backend-listener)
-  * [backend-redis](#backend-redis)
-  * [system-app](#system-app)
-  * [system-database](#system-database)
-  * [system-events-hook](#system-events-hook)
-  * [system-master-apicast](#system-master-apicast)
-  * [system-memcache](#system-memcache)
-  * [system-recaptcha](#system-recaptcha)
-  * [system-redis](#system-redis)
-  * [system-seed](#system-seed)
-  * [zync](#zync)
-  * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
-  * [system-smtp](#system-smtp)
+   * [backend-internal-api](#backend-internal-api)
+   * [backend-listener](#backend-listener)
+   * [backend-redis](#backend-redis)
+   * [system-app](#system-app)
+   * [system-database](#system-database)
+   * [system-events-hook](#system-events-hook)
+   * [system-master-apicast](#system-master-apicast)
+   * [system-memcache](#system-memcache)
+   * [system-recaptcha](#system-recaptcha)
+   * [system-redis](#system-redis)
+   * [system-seed](#system-seed)
+   * [zync](#zync)
+   * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
+   * [system-smtp](#system-smtp)
 * [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
@@ -198,6 +199,8 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. This parameter is not updateable when the underlying PV is not resizable. |
+| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
 
 ### SystemS3Spec
 
@@ -223,6 +226,8 @@ that should be set on it.
 
 ### DatabaseSpec
 
+Note: Deploying databases internally with this section is meant for evaluation purposes. Check [HighAvailabilitySpec](#highavailabilityspec) for production ready recommended deployments.
+
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | MySQL | `mysql`| \*SystemMySQLSpec | No | nil | Enable MySQL database as System's database. Only takes effect when `.spec.highAvailability.enabled` is not set to true. See [MySQLSpec](#MySQLSpec) specification |
@@ -243,6 +248,8 @@ that should be set on it.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. This parameter is not updateable when the underlying PV is not resizable. |
+| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
 
 ### PostgreSQLSpec
 
@@ -259,6 +266,8 @@ that should be set on it.
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. This parameter is not updateable when the underlying PV is not resizable. |
+| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
 
 ### SystemAppSpec
 
@@ -357,6 +366,12 @@ an `APIManager` status field should never be modified by the user.
 | **Field** | **json/yaml field**| **Type** | **Info** |
 | --- | --- | --- | --- |
 | No fields for the moment | | | |
+
+## PersistentVolumeClaimResourcesSpec
+
+| **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- |
+| `requests` | [v1 Quantity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#quantity-resource-core) | Yes | N/A | Requested size of the PersistentVolumeClaim. |
 
 ## APIManager Secrets
 

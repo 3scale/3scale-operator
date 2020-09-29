@@ -239,7 +239,9 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.BackendSharedSecret = "${SYSTEM_BACKEND_SHARED_SECRET}"
 	o.TenantName = "${TENANT_NAME}"
 	o.WildcardDomain = "${WILDCARD_DOMAIN}"
-	o.PvcFileStorageOptions = &component.PVCFileStorageOptions{}
+	o.PvcFileStorageOptions = &component.PVCFileStorageOptions{
+		StorageRequests: component.DefaultSharedStorageResources(),
+	}
 	o.MemcachedServers = component.DefaultMemcachedServers()
 	o.EventHooksURL = component.DefaultEventHooksURL()
 	o.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(o.ApicastAccessToken)

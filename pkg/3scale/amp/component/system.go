@@ -10,7 +10,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -917,6 +916,11 @@ func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
 }
 
 func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
+	volName := ""
+	if system.Options.PvcFileStorageOptions.VolumeName != nil {
+		volName = *system.Options.PvcFileStorageOptions.VolumeName
+	}
+
 	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -928,12 +932,13 @@ func (system *System) SharedStorage() *v1.PersistentVolumeClaim {
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			StorageClassName: system.Options.PvcFileStorageOptions.StorageClass,
+			VolumeName:       volName,
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteMany,
 			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
-					v1.ResourceStorage: resource.MustParse("100Mi"),
+					v1.ResourceStorage: system.Options.PvcFileStorageOptions.StorageRequests,
 				},
 			},
 		},

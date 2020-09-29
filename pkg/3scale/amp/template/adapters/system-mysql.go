@@ -92,6 +92,7 @@ func (a *SystemMysqlAdapter) options() (*component.SystemMysqlOptions, error) {
 	mo.PodTemplateLabels = a.podTemplateLabels()
 
 	mo.ContainerResourceRequirements = component.DefaultSystemMysqlResourceRequirements()
+	mo.PVCStorageRequests = component.DefaultSystemMysqlStorageResources()
 
 	err := mo.Validate()
 	return mo, err

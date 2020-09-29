@@ -79,6 +79,7 @@ func (r *SystemPostgreSQLAdapter) options() (*component.SystemPostgreSQLOptions,
 	o.PodTemplateLabels = r.podTemplateLabels()
 
 	o.ContainerResourceRequirements = component.DefaultSystemPostgresqlResourceRequirements()
+	o.PVCStorageRequests = component.DefaultSystemPostgresqlStorageResources()
 
 	err := o.Validate()
 	return o, err

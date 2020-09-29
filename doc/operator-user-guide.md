@@ -13,6 +13,7 @@
     * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
     * [Setting custom affinity and tolerations](#setting-custom-affinity-and-tolerations)
     * [Setting custom compute resource requirements at component level](#setting-custom-compute-resource-requirements-at-component-level)
+    * [Setting custom storage resource requirements](#setting-custom-storage-resource-requirements)
     * [Enabling monitoring resources](operator-monitoring-resources.md)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
@@ -477,7 +478,7 @@ spec:
           cpu: "222m"
         limits:
           memory: "333Mi"
-          cpu: "444m"     
+          cpu: "444m"
   zync:
     databaseResources:
       requests:
@@ -485,11 +486,70 @@ spec:
         cpu: "222m"
       limits:
         memory: "333Mi"
-        cpu: "444m"   
+        cpu: "444m"
 ```
 
 See [APIManager reference](apimanager-reference.md) for a full list of
 attributes related to compute resource requirements.
+
+#### Setting custom storage resource requirements
+
+Openshift [storage resource requirements](https://docs.openshift.com/container-platform/4.5/storage/persistent_storage/persistent-storage-local.html#create-local-pvc_persistent-storage-local)
+can be customized through APIManager CR attributes.
+
+This is the list of 3scale PVC's resources that can be customized with examples.
+
+* *System Shared (RWX) Storage PVC*
+
+```
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: apimanager1
+spec:
+  wildcardDomain: example.com
+  system:
+    fileStorage:
+      persistentVolumeClaim:
+        resources:
+          requests: 2Gi
+```
+
+* *MySQL (RWO) PVC*
+```
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: apimanager1
+spec:
+  wildcardDomain: example.com
+  system:
+    database:
+      mysql:
+        persistentVolumeClaim:
+          resources:
+            requests: 2Gi
+```
+
+* *PostgreSQL (RWO) PVC*
+```
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: apimanager1
+spec:
+  wildcardDomain: example.com
+  system:
+    database:
+      postgresql:
+        persistentVolumeClaim:
+          resources:
+            requests: 2Gi
+```
+
+*IMPORTANT NOTE*: Storage resource requirements are **usually** install only attributes.
+Only when the underlying PersistentVolume's storageclass allows resizing, storage resource requirements can be modified after installation.
+Check [Expanding persistent volumes](https://docs.openshift.com/container-platform/4.5/storage/expanding-persistent-volumes.html) official doc for more information.
 
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set
