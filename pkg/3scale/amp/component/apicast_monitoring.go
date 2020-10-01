@@ -151,6 +151,18 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"severity": "warning",
 							},
 						},
+						{
+							Alert: "ThreescaleApicastWorkerRestart",
+							Annotations: map[string]string{
+								"summary":     "A new worker process in Nginx has been started",
+								"description": "A new thread has been started. This could indicate that a worker process has died due to the memory limits being exceeded. Please investigate the memory pressure on pod (instance {{ $labels.instance }})",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`changes(worker_process{namespace='%s', pod=~'apicast-production.*'}[5m]) > 0`, ns)),
+							For:  "5m",
+							Labels: map[string]string{
+								"severity": "critical",
+							},
+						},
 					},
 				},
 			},
