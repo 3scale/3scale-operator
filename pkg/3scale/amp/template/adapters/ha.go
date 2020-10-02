@@ -183,13 +183,16 @@ func (h *HAAdapter) addParameters(template *templatev1.Template) {
 
 func (h *HAAdapter) options() (*component.HighAvailabilityOptions, error) {
 	o := component.NewHighAvailabilityOptions()
-	o.AppLabel = "${APP_LABEL}"
+	o.SystemDatabaseLabels = h.systemDatabaseLabels()
+
+	o.BackendRedisLabels = h.backendRedisLabels()
 	o.BackendRedisQueuesEndpoint = "${BACKEND_REDIS_QUEUES_ENDPOINT}"
 	o.BackendRedisQueuesSentinelHosts = "${BACKEND_REDIS_QUEUE_SENTINEL_HOSTS}"
 	o.BackendRedisQueuesSentinelRole = "${BACKEND_REDIS_QUEUE_SENTINEL_ROLE}"
 	o.BackendRedisStorageEndpoint = "${BACKEND_REDIS_STORAGE_ENDPOINT}"
 	o.BackendRedisStorageSentinelHosts = "${BACKEND_REDIS_STORAGE_SENTINEL_HOSTS}"
 	o.BackendRedisStorageSentinelRole = "${BACKEND_REDIS_STORAGE_SENTINEL_ROLE}"
+
 	o.SystemDatabaseURL = "${SYSTEM_DATABASE_URL}"
 	o.SystemRedisURL = "${SYSTEM_REDIS_URL}"
 	o.SystemRedisSentinelsHosts = "${SYSTEM_REDIS_SENTINEL_HOSTS}"
@@ -197,6 +200,7 @@ func (h *HAAdapter) options() (*component.HighAvailabilityOptions, error) {
 	o.SystemMessageBusRedisSentinelsHosts = "${SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_HOSTS}"
 	o.SystemMessageBusRedisSentinelsRole = "${SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_ROLE}"
 	o.SystemMessageBusRedisURL = "${SYSTEM_MESSAGE_BUS_REDIS_URL}"
+	o.SystemRedisLabels = h.systemRedisLabels()
 
 	err := o.Validate()
 	return o, err
@@ -251,5 +255,26 @@ func (h *HAAdapter) parameters() []templatev1.Parameter {
 			Name:        "BACKEND_REDIS_STORAGE_SENTINEL_ROLE",
 			Description: "Define the external backend redis storage sentinel role",
 		},
+	}
+}
+
+func (h *HAAdapter) backendRedisLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "backend",
+	}
+}
+
+func (h *HAAdapter) systemRedisLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "system",
+	}
+}
+
+func (h *HAAdapter) systemDatabaseLabels() map[string]string {
+	return map[string]string{
+		"app":                  "${APP_LABEL}",
+		"threescale_component": "system",
 	}
 }

@@ -256,10 +256,10 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 		}
 	} else {
 		// External databases
-		// validate required secrets exist
-		err := r.externalDatabasesCheck(cr)
-		if err != nil {
-			return reconcile.Result{}, err
+		haReconciler := operator.NewHighAvailabilityReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+		result, err = haReconciler.Reconcile()
+		if err != nil || result.Requeue {
+			return result, err
 		}
 	}
 
@@ -387,10 +387,4 @@ func (r *ReconcileAPIManager) setDeploymentStatus(instance *appsv1alpha1.APIMana
 	}
 
 	return updated, nil
-}
-
-func (r *ReconcileAPIManager) externalDatabasesCheck(cr *appsv1alpha1.APIManager) error {
-	optsProvider := operator.NewHighAvailabilityOptionsProvider(cr.Namespace, r.Client())
-	_, err := optsProvider.GetHighAvailabilityOptions()
-	return err
 }

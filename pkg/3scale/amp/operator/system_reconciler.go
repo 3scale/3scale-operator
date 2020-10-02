@@ -123,12 +123,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Redis Secret
-	err = r.ReconcileSecret(system.RedisSecret(), reconcilers.DefaultsOnlySecretMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	// MasterApicast  Secret
 	err = r.ReconcileSecret(system.MasterApicastSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {

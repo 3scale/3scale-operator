@@ -7,10 +7,13 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func testRedisSystemCommonLabels() map[string]string {
@@ -130,6 +133,20 @@ func defaultRedisOptions() *component.RedisOptions {
 		BackendCommonLabels:                       testRedisBackendCommonLabels(),
 		BackendRedisLabels:                        testRedisBackendRedisLabels(),
 		BackendRedisPodTemplateLabels:             testRedisBackendRedisPodTemplateLabels(),
+		BackendStorageURL:                         component.DefaultBackendRedisStorageURL(),
+		BackendQueuesURL:                          component.DefaultBackendRedisQueuesURL(),
+		BackendRedisStorageSentinelHosts:          component.DefaultBackendStorageSentinelHosts(),
+		BackendRedisStorageSentinelRole:           component.DefaultBackendStorageSentinelRole(),
+		BackendRedisQueuesSentinelHosts:           component.DefaultBackendQueuesSentinelHosts(),
+		BackendRedisQueuesSentinelRole:            component.DefaultBackendQueuesSentinelRole(),
+		SystemRedisURL:                            component.DefaultSystemRedisURL(),
+		SystemRedisMessageBusURL:                  component.DefaultSystemRedisMessageBusURL(),
+		SystemRedisSentinelsHosts:                 component.DefaultSystemRedisSentinelHosts(),
+		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
+		SystemMessageBusRedisSentinelsHosts:       component.DefaultSystemMessageBusRedisSentinelHosts(),
+		SystemMessageBusRedisSentinelsRole:        component.DefaultSystemMessageBusRedisSentinelRole(),
+		SystemMessageBusRedisNamespace:            component.DefaultSystemMessageBusRedisNamespace(),
+		SystemRedisNamespace:                      component.DefaultSystemRedisNamespace(),
 	}
 }
 
@@ -331,7 +348,9 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			optsProvider := NewRedisOptionsProvider(tc.apimanagerFactory())
+			objs := []runtime.Object{}
+			cl := fake.NewFakeClient(objs...)
+			optsProvider := NewRedisOptionsProvider(tc.apimanagerFactory(), namespace, cl)
 			opts, err := optsProvider.GetRedisOptions()
 			if err != nil {
 				subT.Error(err)

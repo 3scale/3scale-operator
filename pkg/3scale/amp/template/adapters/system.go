@@ -153,7 +153,6 @@ func (s *System) componentObjects(c *component.System) []common.KubernetesObject
 
 	eventsHookSecret := c.EventsHookSecret()
 
-	redisSecret := c.RedisSecret()
 	masterApicastSecret := c.MasterApicastSecret()
 
 	seedSecret := c.SeedSecret()
@@ -175,7 +174,6 @@ func (s *System) componentObjects(c *component.System) []common.KubernetesObject
 		sidekiqDeploymentConfig,
 		sphinxDeploymentConfig,
 		eventsHookSecret,
-		redisSecret,
 		masterApicastSecret,
 		seedSecret,
 		recaptchaSecret,
@@ -220,21 +218,6 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.RecaptchaPublicKey = &recaptchaPublicKey
 	recaptchaPrivateKey := "${RECAPTCHA_PRIVATE_KEY}"
 	o.RecaptchaPrivateKey = &recaptchaPrivateKey
-	o.RedisURL = "${SYSTEM_REDIS_URL}"
-	redisSentinelHosts := component.DefaultSystemRedisSentinelHosts()
-	o.RedisSentinelHosts = &redisSentinelHosts
-	redisSentinelRole := component.DefaultSystemRedisSentinelRole()
-	o.RedisSentinelRole = &redisSentinelRole
-	redisNamespace := "${SYSTEM_REDIS_NAMESPACE}"
-	o.RedisNamespace = &redisNamespace
-	messageBusRedisURL := "${SYSTEM_MESSAGE_BUS_REDIS_URL}"
-	o.MessageBusRedisURL = &messageBusRedisURL
-	messageBusRedisSentinelHosts := component.DefaultSystemMessageBusRedisSentinelHosts()
-	o.MessageBusRedisSentinelHosts = &messageBusRedisSentinelHosts
-	messageBusRedisSentinelRole := component.DefaultSystemMessageBusRedisSentinelRole()
-	o.MessageBusRedisSentinelRole = &messageBusRedisSentinelRole
-	messageBusRedisNamespace := "${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}"
-	o.MessageBusRedisNamespace = &messageBusRedisNamespace
 	o.AppSecretKeyBase = "${SYSTEM_APP_SECRET_KEY_BASE}"
 	o.BackendSharedSecret = "${SYSTEM_BACKEND_SHARED_SECRET}"
 	o.TenantName = "${TENANT_NAME}"

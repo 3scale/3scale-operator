@@ -9,17 +9,24 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type RedisOptionsProvider struct {
-	apimanager *appsv1alpha1.APIManager
-	options    *component.RedisOptions
+	apimanager   *appsv1alpha1.APIManager
+	namespace    string
+	client       client.Client
+	options      *component.RedisOptions
+	secretSource *helper.SecretSource
 }
 
-func NewRedisOptionsProvider(apimanager *appsv1alpha1.APIManager) *RedisOptionsProvider {
+func NewRedisOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace string, client client.Client) *RedisOptionsProvider {
 	return &RedisOptionsProvider{
-		apimanager: apimanager,
-		options:    component.NewRedisOptions(),
+		apimanager:   apimanager,
+		namespace:    namespace,
+		client:       client,
+		options:      component.NewRedisOptions(),
+		secretSource: helper.NewSecretSource(client, namespace),
 	}
 }
 
@@ -51,11 +58,125 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 
 	r.setPersistentVolumeClaimOptions()
 
-	err := r.options.Validate()
+	// Should the operator be reading redis secrets?
+	// When HA is disabled, do we support external redis?
+	// If answer is true, why does the operator deploy redis?
+	// If the answer is no, then it would be sufficient to set default URL's (internal redis url)
+	// to options and reconciliate secret for owner reference
+	err := r.setSecretBasedOptions()
+	if err != nil {
+		return nil, fmt.Errorf("GetRedisOptions reading secret options: %w", err)
+	}
+
+	err = r.options.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("GetRedisOptions validating: %w", err)
 	}
 	return r.options, nil
+}
+
+func (r *RedisOptionsProvider) setSecretBasedOptions() error {
+	cases := []struct {
+		field       *string
+		secretName  string
+		secretField string
+		defValue    string
+	}{
+		{
+			&r.options.BackendStorageURL,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisStorageURLFieldName,
+			component.DefaultBackendRedisStorageURL(),
+		},
+		{
+			&r.options.BackendQueuesURL,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisQueuesURLFieldName,
+			component.DefaultBackendRedisQueuesURL(),
+		},
+		{
+			&r.options.BackendRedisStorageSentinelHosts,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisStorageSentinelHostsFieldName,
+			component.DefaultBackendStorageSentinelHosts(),
+		},
+		{
+			&r.options.BackendRedisStorageSentinelRole,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisStorageSentinelRoleFieldName,
+			component.DefaultBackendStorageSentinelRole(),
+		},
+		{
+			&r.options.BackendRedisQueuesSentinelHosts,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisQueuesSentinelHostsFieldName,
+			component.DefaultBackendQueuesSentinelHosts(),
+		},
+		{
+			&r.options.BackendRedisQueuesSentinelRole,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisQueuesSentinelRoleFieldName,
+			component.DefaultBackendQueuesSentinelRole(),
+		},
+		{
+			&r.options.SystemRedisURL,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisURLFieldName,
+			component.DefaultSystemRedisURL(),
+		},
+		{
+			&r.options.SystemRedisMessageBusURL,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisMessageBusRedisURLFieldName,
+			component.DefaultSystemRedisMessageBusURL(),
+		},
+		{
+			&r.options.SystemRedisSentinelsHosts,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisSentinelHosts,
+			component.DefaultSystemRedisSentinelHosts(),
+		},
+		{
+			&r.options.SystemRedisSentinelsRole,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisSentinelRole,
+			component.DefaultSystemRedisSentinelRole(),
+		},
+		{
+			&r.options.SystemMessageBusRedisSentinelsHosts,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisMessageBusSentinelHosts,
+			component.DefaultSystemMessageBusRedisSentinelHosts(),
+		},
+		{
+			&r.options.SystemMessageBusRedisSentinelsRole,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisMessageBusSentinelRole,
+			component.DefaultSystemMessageBusRedisSentinelRole(),
+		},
+		{
+			&r.options.SystemRedisNamespace,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisNamespace,
+			component.DefaultSystemRedisNamespace(),
+		},
+		{
+			&r.options.SystemMessageBusRedisNamespace,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisMessageBusRedisNamespace,
+			component.DefaultSystemMessageBusRedisNamespace(),
+		},
+	}
+
+	for _, option := range cases {
+		val, err := r.secretSource.FieldValue(option.secretName, option.secretField, option.defValue)
+		if err != nil {
+			return err
+		}
+		*option.field = val
+	}
+
+	return nil
 }
 
 func (r *RedisOptionsProvider) setResourceRequirementsOptions() {

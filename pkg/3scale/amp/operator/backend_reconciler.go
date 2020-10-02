@@ -4,6 +4,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -62,12 +63,6 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Internal API Secret
 	err = r.ReconcileSecret(backend.InternalAPISecretForSystem(), reconcilers.DefaultsOnlySecretMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Redis Secret
-	err = r.ReconcileSecret(backend.RedisSecret(), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

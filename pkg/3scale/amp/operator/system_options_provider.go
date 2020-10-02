@@ -92,11 +92,6 @@ func (s *SystemOptionsProvider) setSecretBasedOptions() error {
 		return fmt.Errorf("unable to create System Event Hooks secret options - %s", err)
 	}
 
-	err = s.setSystemRedisOptions()
-	if err != nil {
-		return fmt.Errorf("unable to create System Redis secret options - %s", err)
-	}
-
 	err = s.setSystemAppOptions()
 	if err != nil {
 		return fmt.Errorf("unable to create System App secret options - %s", err)
@@ -173,77 +168,6 @@ func (s *SystemOptionsProvider) setSystemEventHookOptions() error {
 		return err
 	}
 	s.options.EventHooksURL = val
-
-	return nil
-}
-
-func (s *SystemOptionsProvider) setSystemRedisOptions() error {
-	val, err := s.secretSource.FieldValue(
-		component.SystemSecretSystemRedisSecretName,
-		component.SystemSecretSystemRedisURLFieldName,
-		component.DefaultSystemRedisURL())
-	if err != nil {
-		return err
-	}
-	s.options.RedisURL = val
-
-	cases := []struct {
-		field       **string
-		secretName  string
-		secretField string
-		defValue    string
-	}{
-		{
-			&s.options.RedisSentinelHosts,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisSentinelHosts,
-			component.DefaultSystemRedisSentinelHosts(),
-		},
-		{
-			&s.options.RedisSentinelRole,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisSentinelRole,
-			component.DefaultSystemRedisSentinelRole(),
-		},
-		{
-			&s.options.MessageBusRedisURL,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusRedisURLFieldName,
-			component.DefaultSystemMessageBusRedisURL(),
-		},
-		{
-			&s.options.MessageBusRedisSentinelHosts,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusSentinelHosts,
-			component.DefaultSystemMessageBusRedisSentinelHosts(),
-		},
-		{
-			&s.options.MessageBusRedisSentinelRole,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusSentinelRole,
-			component.DefaultSystemMessageBusRedisSentinelRole(),
-		},
-		{
-			&s.options.RedisNamespace,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisNamespace,
-			component.DefaultSystemRedisNamespace(),
-		},
-		{
-			&s.options.MessageBusRedisNamespace,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusRedisNamespace,
-			component.DefaultSystemMessageBusRedisNamespace(),
-		},
-	}
-
-	for _, option := range cases {
-		val, err := s.secretSource.FieldValue(option.secretName, option.secretField, option.defValue)
-		if err != nil {
-			return err
-		}
-		*option.field = &val
-	}
 
 	return nil
 }

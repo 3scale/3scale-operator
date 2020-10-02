@@ -174,17 +174,6 @@ func getListenerSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.BackendSecretBackendListenerSecretName, data)
 }
 
-func getRedisSecret() *v1.Secret {
-	data := map[string]string{
-		component.BackendSecretBackendRedisStorageURLFieldName:           "storageURLValue",
-		component.BackendSecretBackendRedisQueuesURLFieldName:            "queueURLValue",
-		component.BackendSecretBackendRedisStorageSentinelHostsFieldName: "storageSentinelHostsValue",
-		component.BackendSecretBackendRedisStorageSentinelRoleFieldName:  "storageSentinelRoleValue",
-		component.BackendSecretBackendRedisQueuesSentinelHostsFieldName:  "queueSentinelHostsValue",
-		component.BackendSecretBackendRedisQueuesSentinelRoleFieldName:   "queueSentinelRoleValue",
-	}
-	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
-}
 func basicApimanagerTestBackendOptions() *appsv1alpha1.APIManager {
 	tmpListenerReplicaCount := listenerReplicaCount
 	tmpWorkerReplicaCount := workerReplicaCount
@@ -203,12 +192,6 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 	return &component.BackendOptions{
 		ServiceEndpoint:              component.DefaultBackendServiceEndpoint(),
 		RouteEndpoint:                fmt.Sprintf("https://backend-%s.%s", tenantName, wildcardDomain),
-		StorageURL:                   component.DefaultBackendRedisStorageURL(),
-		QueuesURL:                    component.DefaultBackendRedisQueuesURL(),
-		StorageSentinelHosts:         component.DefaultBackendStorageSentinelHosts(),
-		StorageSentinelRole:          component.DefaultBackendStorageSentinelRole(),
-		QueuesSentinelHosts:          component.DefaultBackendQueuesSentinelHosts(),
-		QueuesSentinelRole:           component.DefaultBackendQueuesSentinelRole(),
 		ListenerResourceRequirements: component.DefaultBackendListenerResourceRequirements(),
 		WorkerResourceRequirements:   component.DefaultBackendWorkerResourceRequirements(),
 		CronResourceRequirements:     component.DefaultCronResourceRequirements(),
@@ -239,16 +222,15 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 		testName               string
 		internalSecret         *v1.Secret
 		listenerSecret         *v1.Secret
-		redisSecret            *v1.Secret
 		apimanagerFactory      func() *appsv1alpha1.APIManager
 		expectedOptionsFactory func(*component.BackendOptions) *component.BackendOptions
 	}{
-		{"Default", nil, nil, nil, basicApimanagerTestBackendOptions,
+		{"Default", nil, nil, basicApimanagerTestBackendOptions,
 			func(opts *component.BackendOptions) *component.BackendOptions {
 				return defaultBackendOptions(opts)
 			},
 		},
-		{"WithoutResourceRequirements", nil, nil, nil,
+		{"WithoutResourceRequirements", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -262,7 +244,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"InternalSecret", getInternalSecret(), nil, nil, basicApimanagerTestBackendOptions,
+		{"InternalSecret", getInternalSecret(), nil, basicApimanagerTestBackendOptions,
 			func(in *component.BackendOptions) *component.BackendOptions {
 				opts := defaultBackendOptions(in)
 				opts.SystemBackendUsername = "someUserName"
@@ -270,7 +252,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"ListenerSecret", nil, getListenerSecret(), nil, basicApimanagerTestBackendOptions,
+		{"ListenerSecret", nil, getListenerSecret(), basicApimanagerTestBackendOptions,
 			func(in *component.BackendOptions) *component.BackendOptions {
 				opts := defaultBackendOptions(in)
 				opts.ServiceEndpoint = "serviceValue"
@@ -278,19 +260,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"RedisSecret", nil, nil, getRedisSecret(), basicApimanagerTestBackendOptions,
-			func(in *component.BackendOptions) *component.BackendOptions {
-				opts := defaultBackendOptions(in)
-				opts.StorageURL = "storageURLValue"
-				opts.QueuesURL = "queueURLValue"
-				opts.StorageSentinelHosts = "storageSentinelHostsValue"
-				opts.StorageSentinelRole = "storageSentinelRoleValue"
-				opts.QueuesSentinelHosts = "queueSentinelHostsValue"
-				opts.QueuesSentinelRole = "queueSentinelRoleValue"
-				return opts
-			},
-		},
-		{"WithAffinity", nil, nil, nil,
+		{"WithAffinity", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Affinity = testBackendListenerAffinity()
@@ -306,7 +276,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithTolerations", nil, nil, nil,
+		{"WithTolerations", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Tolerations = testBackendListenerTolerations()
@@ -323,7 +293,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithBackendCustomResourceRequirements", nil, nil, nil,
+		{"WithBackendCustomResourceRequirements", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Resources = testBackendListenerCustomResourceRequirements()
@@ -340,7 +310,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithBackendCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil, nil,
+		{"WithBackendCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
@@ -368,9 +338,6 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 			}
 			if tc.listenerSecret != nil {
 				objs = append(objs, tc.listenerSecret)
-			}
-			if tc.redisSecret != nil {
-				objs = append(objs, tc.redisSecret)
 			}
 
 			cl := fake.NewFakeClient(objs...)

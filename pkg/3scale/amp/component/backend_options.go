@@ -8,14 +8,8 @@ import (
 )
 
 type BackendOptions struct {
-	ServiceEndpoint              string `validate:"required"`
-	RouteEndpoint                string `validate:"required"`
-	StorageURL                   string `validate:"required"`
-	QueuesURL                    string `validate:"required"`
-	StorageSentinelHosts         string
-	StorageSentinelRole          string
-	QueuesSentinelHosts          string
-	QueuesSentinelRole           string
+	ServiceEndpoint              string                  `validate:"required"`
+	RouteEndpoint                string                  `validate:"required"`
 	ImageTag                     string                  `validate:"required"`
 	ListenerResourceRequirements v1.ResourceRequirements `validate:"-"`
 	WorkerResourceRequirements   v1.ResourceRequirements `validate:"-"`
@@ -55,14 +49,6 @@ func (b *BackendOptions) Validate() error {
 
 func DefaultBackendServiceEndpoint() string {
 	return "http://backend-listener:3000"
-}
-
-func DefaultBackendRedisStorageURL() string {
-	return "redis://backend-redis:6379/0"
-}
-
-func DefaultBackendRedisQueuesURL() string {
-	return "redis://backend-redis:6379/1"
 }
 
 func DefaultBackendListenerResourceRequirements() v1.ResourceRequirements {
@@ -110,20 +96,4 @@ func DefaultSystemBackendUsername() string {
 
 func DefaultSystemBackendPassword() string {
 	return oprand.String(8)
-}
-
-func DefaultBackendStorageSentinelHosts() string {
-	return ""
-}
-
-func DefaultBackendStorageSentinelRole() string {
-	return ""
-}
-
-func DefaultBackendQueuesSentinelHosts() string {
-	return ""
-}
-
-func DefaultBackendQueuesSentinelRole() string {
-	return ""
 }
