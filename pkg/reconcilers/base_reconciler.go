@@ -8,6 +8,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	"github.com/go-logr/logr"
+	consolev1 "github.com/openshift/api/console/v1"
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -163,4 +165,10 @@ func (b *BaseReconciler) DeleteResource(obj common.KubernetesObject, options ...
 func (b *BaseReconciler) UpdateResourceStatus(obj common.KubernetesObject) error {
 	b.Logger().Info(fmt.Sprintf("Updated status of object '%s/%s'", strings.Replace(fmt.Sprintf("%T", obj), "*", "", 1), obj.GetName()))
 	return b.Client().Status().Update(context.TODO(), obj)
+}
+
+//HasConsoleLink checks if the ConsoleLink is supported in current cluster
+func (b *BaseReconciler) HasConsoleLink() (bool, error) {
+	return k8sutil.ResourceExists(b.DiscoveryClient(),
+		consolev1.GroupVersion.String(), "ConsoleLink")
 }

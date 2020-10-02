@@ -447,6 +447,18 @@ spec:
     mediatype: image/png
   install:
     spec:
+      clusterPermissions:
+        - rules:
+            - apiGroups:
+                - console.openshift.io
+              resources:
+                - consolelinks
+              verbs:
+                - create
+                - delete
+                - get
+                - update
+          serviceAccountName: 3scale-operator
       deployments:
       - name: 3scale-operator
         spec:
