@@ -416,6 +416,40 @@ objects:
         type: ""
   status:
     dockerImageRepository: ""
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: backend
+    name: backend-redis
+  stringData:
+    REDIS_QUEUES_SENTINEL_HOSTS: ""
+    REDIS_QUEUES_SENTINEL_ROLE: ""
+    REDIS_QUEUES_URL: redis://backend-redis:6379/1
+    REDIS_STORAGE_SENTINEL_HOSTS: ""
+    REDIS_STORAGE_SENTINEL_ROLE: ""
+    REDIS_STORAGE_URL: redis://backend-redis:6379/0
+  type: Opaque
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_LABEL}
+      threescale_component: system
+    name: system-redis
+  stringData:
+    MESSAGE_BUS_NAMESPACE: ${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}
+    MESSAGE_BUS_SENTINEL_HOSTS: ""
+    MESSAGE_BUS_SENTINEL_ROLE: ""
+    MESSAGE_BUS_URL: ${SYSTEM_MESSAGE_BUS_REDIS_URL}
+    NAMESPACE: ${SYSTEM_REDIS_NAMESPACE}
+    SENTINEL_HOSTS: ""
+    SENTINEL_ROLE: ""
+    URL: ${SYSTEM_REDIS_URL}
+  type: Opaque
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -1070,22 +1104,6 @@ objects:
   stringData:
     password: ${SYSTEM_BACKEND_PASSWORD}
     username: ${SYSTEM_BACKEND_USERNAME}
-  type: Opaque
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: backend
-    name: backend-redis
-  stringData:
-    REDIS_QUEUES_SENTINEL_HOSTS: ""
-    REDIS_QUEUES_SENTINEL_ROLE: ""
-    REDIS_QUEUES_URL: redis://backend-redis:6379/1
-    REDIS_STORAGE_SENTINEL_HOSTS: ""
-    REDIS_STORAGE_SENTINEL_ROLE: ""
-    REDIS_STORAGE_URL: redis://backend-redis:6379/0
   type: Opaque
 - apiVersion: v1
   kind: Secret
@@ -3521,24 +3539,6 @@ objects:
   stringData:
     PASSWORD: ${SYSTEM_BACKEND_SHARED_SECRET}
     URL: http://system-master:3000/master/events/import
-  type: Opaque
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    creationTimestamp: null
-    labels:
-      app: ${APP_LABEL}
-      threescale_component: system
-    name: system-redis
-  stringData:
-    MESSAGE_BUS_NAMESPACE: ${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}
-    MESSAGE_BUS_SENTINEL_HOSTS: ""
-    MESSAGE_BUS_SENTINEL_ROLE: ""
-    MESSAGE_BUS_URL: ${SYSTEM_MESSAGE_BUS_REDIS_URL}
-    NAMESPACE: ${SYSTEM_REDIS_NAMESPACE}
-    SENTINEL_HOSTS: ""
-    SENTINEL_ROLE: ""
-    URL: ${SYSTEM_REDIS_URL}
   type: Opaque
 - apiVersion: v1
   kind: Secret
