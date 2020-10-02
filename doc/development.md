@@ -107,6 +107,8 @@ oc new-project $NAMESPACE
 oc create -f deploy/service_account.yaml
 oc create -f deploy/role.yaml
 oc create -f deploy/role_binding.yaml
+oc create -f deploy/cluster_role.yaml
+oc create -f deploy/cluster_role_binding.yaml
 ```
 
 * Deploy the operator
@@ -131,6 +133,11 @@ oc delete -f deploy/operator.yaml
 oc delete -f deploy/role_binding.yaml
 oc delete -f deploy/service_account.yaml
 oc delete -f deploy/role.yaml
+# If 3scale-operator has been deployed in a cluster where other users might
+# be using it do not delete the ClusterRole and ClusterRoleBinding below as
+# they are shared global resources
+oc delete -f deploy/cluster_role.yaml
+oc delete -f deploy/cluster_role_binding.yaml
 ```
 
 * Delete the APIManager CRD:
