@@ -7,7 +7,9 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-logr/logr"
+	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	consolev1 "github.com/openshift/api/console/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -16,6 +18,7 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -171,4 +174,64 @@ func (b *BaseReconciler) UpdateResourceStatus(obj common.KubernetesObject) error
 func (b *BaseReconciler) HasConsoleLink() (bool, error) {
 	return k8sutil.ResourceExists(b.DiscoveryClient(),
 		consolev1.GroupVersion.String(), "ConsoleLink")
+}
+
+//HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
+func (r *BaseReconciler) HasGrafanaDashboards() (bool, error) {
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
+		grafanav1alpha1.SchemeGroupVersion.String(),
+		grafanav1alpha1.GrafanaDashboardKind)
+}
+
+//HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
+func (r *BaseReconciler) HasPrometheusRules() (bool, error) {
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
+		monitoringv1.SchemeGroupVersion.String(),
+		monitoringv1.PrometheusRuleKind)
+}
+
+//HasServiceMonitors checks if the ServiceMonitors CRD is supported in current cluster
+func (r *BaseReconciler) HasServiceMonitors() (bool, error) {
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
+		monitoringv1.SchemeGroupVersion.String(),
+		monitoringv1.ServiceMonitorsKind)
+}
+
+//HasPodMonitors checks if the PodMonitors CRD is supported in current cluster
+func (r *BaseReconciler) HasPodMonitors() (bool, error) {
+	return k8sutil.ResourceExists(r.DiscoveryClient(),
+		monitoringv1.SchemeGroupVersion.String(),
+		monitoringv1.PodMonitorsKind)
+}
+
+//SetOwnerReference sets owner as a Controller OwnerReference on owned
+func (r *BaseReconciler) SetOwnerReference(owner, obj common.KubernetesObject) error {
+	err := controllerutil.SetControllerReference(owner, obj, r.Scheme())
+	if err != nil {
+		r.Logger().Error(err, "Error setting OwnerReference on object",
+			"Kind", obj.GetObjectKind().GroupVersionKind().String(),
+			"Namespace", obj.GetNamespace(),
+			"Name", obj.GetName(),
+		)
+	}
+	return err
+}
+
+//EnsureOwnerReference sets owner as a Controller OwnerReference on owned
+// returns boolean to notify when the object has been updated
+func (r *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject) (bool, error) {
+	changed := false
+
+	originalSize := len(obj.GetOwnerReferences())
+	err := r.SetOwnerReference(owner, obj)
+	if err != nil {
+		return false, err
+	}
+
+	newSize := len(obj.GetOwnerReferences())
+	if originalSize != newSize {
+		changed = true
+	}
+
+	return changed, nil
 }

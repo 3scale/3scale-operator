@@ -5,7 +5,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-logr/logr"
@@ -18,7 +17,6 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type BaseAPIManagerLogicReconciler struct {
@@ -37,35 +35,6 @@ func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager 
 
 func (r *BaseAPIManagerLogicReconciler) NamespacedNameWithAPIManagerNamespace(obj metav1.Object) types.NamespacedName {
 	return types.NamespacedName{Namespace: r.apiManager.GetNamespace(), Name: obj.GetName()}
-}
-
-func (r *BaseAPIManagerLogicReconciler) setOwnerReference(obj common.KubernetesObject) error {
-	err := controllerutil.SetControllerReference(r.apiManager, obj, r.Scheme())
-	if err != nil {
-		r.Logger().Error(err, "Error setting OwnerReference on object",
-			"Kind", obj.GetObjectKind().GroupVersionKind().String(),
-			"Namespace", obj.GetNamespace(),
-			"Name", obj.GetName(),
-		)
-	}
-	return err
-}
-
-func (r *BaseAPIManagerLogicReconciler) ensureOwnerReference(obj common.KubernetesObject) (bool, error) {
-	changed := false
-
-	originalSize := len(obj.GetOwnerReferences())
-	err := r.setOwnerReference(obj)
-	if err != nil {
-		return false, err
-	}
-
-	newSize := len(obj.GetOwnerReferences())
-	if originalSize != newSize {
-		changed = true
-	}
-
-	return changed, nil
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcilePodDisruptionBudget(desired *v1beta1.PodDisruptionBudget, mutatefn reconcilers.MutateFn) error {
@@ -116,7 +85,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileRoleBinding(desired *rbacv1.Rol
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafanav1alpha1.GrafanaDashboard, mutateFn reconcilers.MutateFn) error {
-	kindExists, err := r.hasGrafanaDashboards()
+	kindExists, err := r.HasGrafanaDashboards()
 	if err != nil {
 		return err
 	}
@@ -132,14 +101,8 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafa
 	return r.ReconcileResource(&grafanav1alpha1.GrafanaDashboard{}, desired, mutateFn)
 }
 
-func (r *BaseAPIManagerLogicReconciler) hasGrafanaDashboards() (bool, error) {
-	return k8sutil.ResourceExists(r.DiscoveryClient(),
-		grafanav1alpha1.SchemeGroupVersion.String(),
-		grafanav1alpha1.GrafanaDashboardKind)
-}
-
 func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monitoringv1.PrometheusRule, mutateFn reconcilers.MutateFn) error {
-	kindExists, err := r.hasPrometheusRules()
+	kindExists, err := r.HasPrometheusRules()
 	if err != nil {
 		return err
 	}
@@ -154,14 +117,8 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monito
 	return r.ReconcileResource(&monitoringv1.PrometheusRule{}, desired, mutateFn)
 }
 
-func (r *BaseAPIManagerLogicReconciler) hasPrometheusRules() (bool, error) {
-	return k8sutil.ResourceExists(r.DiscoveryClient(),
-		monitoringv1.SchemeGroupVersion.String(),
-		monitoringv1.PrometheusRuleKind)
-}
-
 func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitoringv1.ServiceMonitor, mutateFn reconcilers.MutateFn) error {
-	kindExists, err := r.hasServiceMonitors()
+	kindExists, err := r.HasServiceMonitors()
 	if err != nil {
 		return err
 	}
@@ -177,14 +134,8 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 	return r.ReconcileResource(&monitoringv1.ServiceMonitor{}, desired, mutateFn)
 }
 
-func (r *BaseAPIManagerLogicReconciler) hasServiceMonitors() (bool, error) {
-	return k8sutil.ResourceExists(r.DiscoveryClient(),
-		monitoringv1.SchemeGroupVersion.String(),
-		monitoringv1.ServiceMonitorsKind)
-}
-
 func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv1.PodMonitor, mutateFn reconcilers.MutateFn) error {
-	kindExists, err := r.hasPodMonitors()
+	kindExists, err := r.HasPodMonitors()
 	if err != nil {
 		return err
 	}
@@ -200,15 +151,9 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv
 	return r.ReconcileResource(&monitoringv1.PodMonitor{}, desired, mutateFn)
 }
 
-func (r *BaseAPIManagerLogicReconciler) hasPodMonitors() (bool, error) {
-	return k8sutil.ResourceExists(r.DiscoveryClient(),
-		monitoringv1.SchemeGroupVersion.String(),
-		monitoringv1.PodMonitorsKind)
-}
-
 func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutatefn reconcilers.MutateFn) error {
 	desired.SetNamespace(r.apiManager.GetNamespace())
-	if err := r.setOwnerReference(desired); err != nil {
+	if err := r.SetOwnerReference(r.apiManager, desired); err != nil {
 		return err
 	}
 
@@ -223,7 +168,7 @@ func (r *BaseAPIManagerLogicReconciler) APIManagerMutator(mutateFn reconcilers.M
 		updated := helper.EnsureObjectMeta(existing, desired)
 
 		// OwnerRefenrence
-		updatedTmp, err := r.ensureOwnerReference(existing)
+		updatedTmp, err := r.EnsureOwnerReference(r.apiManager, existing)
 		if err != nil {
 			return false, err
 		}
