@@ -108,7 +108,7 @@ func (h *HighAvailabilityOptionsProvider) setBackendRedisOptions() error {
 	}
 
 	for _, option := range casesWithDefault {
-		val, err := h.secretSource.FieldValue(option.secretName, option.secretField, option.defValue)
+		val, err := h.secretSource.FieldValueFromRequiredSecret(option.secretName, option.secretField, option.defValue)
 		if err != nil {
 			return err
 		}
