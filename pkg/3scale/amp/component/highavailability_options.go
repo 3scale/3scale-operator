@@ -6,7 +6,7 @@ type HighAvailabilityOptions struct {
 	BackendRedisQueuesEndpoint          string `validate:"required"`
 	BackendRedisQueuesSentinelHosts     string
 	BackendRedisQueuesSentinelRole      string
-	BackendRedisStorageEndpoint         string
+	BackendRedisStorageEndpoint         string `validate:"required"`
 	BackendRedisStorageSentinelHosts    string
 	BackendRedisStorageSentinelRole     string
 	SystemDatabaseURL                   string `validate:"required"`
