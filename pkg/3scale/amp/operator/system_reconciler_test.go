@@ -88,7 +88,6 @@ func TestSystemReconcilerCreate(t *testing.T) {
 		{"systemEnvironmentCM", "system-environment", &v1.ConfigMap{}},
 		{"systemSMTPSecret", "system-smtp", &v1.Secret{}},
 		{"systemEventsHookSecret", component.SystemSecretSystemEventsHookSecretName, &v1.Secret{}},
-		{"systemRedisSecret", component.SystemSecretSystemRedisSecretName, &v1.Secret{}},
 		{"systemMasterApicastSecret", component.SystemSecretSystemMasterApicastSecretName, &v1.Secret{}},
 		{"systemSeedSecret", component.SystemSecretSystemSeedSecretName, &v1.Secret{}},
 		{"systemRecaptchaSecret", component.SystemSecretSystemRecaptchaSecretName, &v1.Secret{}},

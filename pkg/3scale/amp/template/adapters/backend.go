@@ -42,7 +42,6 @@ func (b *Backend) componentObjects(c *component.Backend) []common.KubernetesObje
 	environmentConfigMap := c.EnvironmentConfigMap()
 
 	internalAPISecretForSystem := c.InternalAPISecretForSystem()
-	redisSecret := c.RedisSecret()
 	listenerSecret := c.ListenerSecret()
 
 	objects := []common.KubernetesObject{
@@ -53,7 +52,6 @@ func (b *Backend) componentObjects(c *component.Backend) []common.KubernetesObje
 		workerDeploymentConfig,
 		environmentConfigMap,
 		internalAPISecretForSystem,
-		redisSecret,
 		listenerSecret,
 	}
 
@@ -84,8 +82,6 @@ func (b *Backend) options() (*component.BackendOptions, error) {
 	bo.ImageTag = "${AMP_RELEASE}"
 	bo.RouteEndpoint = fmt.Sprintf("https://backend-%s.%s", "${TENANT_NAME}", "${WILDCARD_DOMAIN}")
 	bo.ServiceEndpoint = component.DefaultBackendServiceEndpoint()
-	bo.StorageURL = component.DefaultBackendRedisStorageURL()
-	bo.QueuesURL = component.DefaultBackendRedisQueuesURL()
 	bo.ListenerReplicas = 1
 	bo.WorkerReplicas = 1
 	bo.CronReplicas = 1

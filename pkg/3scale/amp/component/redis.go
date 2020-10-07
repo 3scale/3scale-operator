@@ -408,6 +408,28 @@ func (redis *Redis) BackendImageStream() *imagev1.ImageStream {
 	}
 }
 
+func (redis *Redis) BackendRedisSecret() *v1.Secret {
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   BackendSecretBackendRedisSecretName,
+			Labels: redis.Options.BackendCommonLabels,
+		},
+		StringData: map[string]string{
+			BackendSecretBackendRedisStorageURLFieldName:           redis.Options.BackendStorageURL,
+			BackendSecretBackendRedisQueuesURLFieldName:            redis.Options.BackendQueuesURL,
+			BackendSecretBackendRedisStorageSentinelHostsFieldName: redis.Options.BackendRedisStorageSentinelHosts,
+			BackendSecretBackendRedisStorageSentinelRoleFieldName:  redis.Options.BackendRedisStorageSentinelRole,
+			BackendSecretBackendRedisQueuesSentinelHostsFieldName:  redis.Options.BackendRedisQueuesSentinelHosts,
+			BackendSecretBackendRedisQueuesSentinelRoleFieldName:   redis.Options.BackendRedisQueuesSentinelRole,
+		},
+		Type: v1.SecretTypeOpaque,
+	}
+}
+
 ////// Begin System Redis
 
 func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
@@ -591,6 +613,30 @@ func (redis *Redis) SystemImageStream() *imagev1.ImageStream {
 				},
 			},
 		},
+	}
+}
+
+func (redis *Redis) SystemRedisSecret() *v1.Secret {
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   SystemSecretSystemRedisSecretName,
+			Labels: redis.Options.SystemCommonLabels,
+		},
+		StringData: map[string]string{
+			SystemSecretSystemRedisURLFieldName:                redis.Options.SystemRedisURL,
+			SystemSecretSystemRedisSentinelHosts:               redis.Options.SystemRedisSentinelsHosts,
+			SystemSecretSystemRedisSentinelRole:                redis.Options.SystemRedisSentinelsRole,
+			SystemSecretSystemRedisMessageBusRedisURLFieldName: redis.Options.SystemRedisMessageBusURL,
+			SystemSecretSystemRedisMessageBusSentinelHosts:     redis.Options.SystemMessageBusRedisSentinelsHosts,
+			SystemSecretSystemRedisMessageBusSentinelRole:      redis.Options.SystemMessageBusRedisSentinelsRole,
+			SystemSecretSystemRedisNamespace:                   redis.Options.SystemRedisNamespace,
+			SystemSecretSystemRedisMessageBusRedisNamespace:    redis.Options.SystemMessageBusRedisNamespace,
+		},
+		Type: v1.SecretTypeOpaque,
 	}
 }
 

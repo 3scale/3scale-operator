@@ -97,42 +97,6 @@ func (o *OperatorBackendOptionsProvider) setSecretBasedOptions() error {
 			component.BackendSecretBackendListenerRouteEndpointFieldName,
 			fmt.Sprintf("https://backend-%s.%s", *o.apimanager.Spec.TenantName, o.apimanager.Spec.WildcardDomain),
 		},
-		{
-			&o.backendOptions.StorageURL,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisStorageURLFieldName,
-			component.DefaultBackendRedisStorageURL(),
-		},
-		{
-			&o.backendOptions.QueuesURL,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisQueuesURLFieldName,
-			component.DefaultBackendRedisQueuesURL(),
-		},
-		{
-			&o.backendOptions.StorageSentinelHosts,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisStorageSentinelHostsFieldName,
-			component.DefaultBackendStorageSentinelHosts(),
-		},
-		{
-			&o.backendOptions.StorageSentinelRole,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisStorageSentinelRoleFieldName,
-			component.DefaultBackendStorageSentinelRole(),
-		},
-		{
-			&o.backendOptions.QueuesSentinelHosts,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisQueuesSentinelHostsFieldName,
-			component.DefaultBackendQueuesSentinelHosts(),
-		},
-		{
-			&o.backendOptions.QueuesSentinelRole,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisQueuesSentinelRoleFieldName,
-			component.DefaultBackendQueuesSentinelRole(),
-		},
 	}
 
 	for _, option := range cases {

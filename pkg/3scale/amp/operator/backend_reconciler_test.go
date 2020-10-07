@@ -103,7 +103,6 @@ func TestNewBackendReconciler(t *testing.T) {
 		{"environmentCM", "backend-environment", &v1.ConfigMap{}},
 		{"internalAPISecret", component.BackendSecretInternalApiSecretName, &v1.Secret{}},
 		{"listenerSecret", component.BackendSecretBackendListenerSecretName, &v1.Secret{}},
-		{"redisSecret", component.BackendSecretBackendRedisSecretName, &v1.Secret{}},
 		{"workerPDB", "backend-worker", &v1beta1.PodDisruptionBudget{}},
 		{"cronPDB", "backend-cron", &v1beta1.PodDisruptionBudget{}},
 		{"listenerPDB", "backend-listener", &v1beta1.PodDisruptionBudget{}},

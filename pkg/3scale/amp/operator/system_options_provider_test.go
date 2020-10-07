@@ -7,6 +7,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
@@ -263,20 +264,6 @@ func getEventHookSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.SystemSecretSystemEventsHookSecretName, data)
 }
 
-func getSystemRedisSecret() *v1.Secret {
-	data := map[string]string{
-		component.SystemSecretSystemRedisNamespace:                   "systemRedis",
-		component.SystemSecretSystemRedisURLFieldName:                "redis://system1:6379",
-		component.SystemSecretSystemRedisSentinelHosts:               "someHosts1",
-		component.SystemSecretSystemRedisSentinelRole:                "someRole1",
-		component.SystemSecretSystemRedisMessageBusRedisNamespace:    "mbus",
-		component.SystemSecretSystemRedisMessageBusSentinelHosts:     "someHosts2",
-		component.SystemSecretSystemRedisMessageBusSentinelRole:      "someRole2",
-		component.SystemSecretSystemRedisMessageBusRedisURLFieldName: "redis://system2:6379",
-	}
-	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
-}
-
 func getSystemAppSecret() *v1.Secret {
 	data := map[string]string{
 		component.SystemSecretSystemAppSecretKeyBaseFieldName: "somePassword234",
@@ -308,13 +295,6 @@ func getSystemMasterApicastSecret() *v1.Secret {
 func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOptions {
 	recaptchaPublicKey := component.DefaultRecaptchaPublickey()
 	recaptchaPrivateKey := component.DefaultRecaptchaPrivatekey()
-	redisSentinelHosts := component.DefaultSystemRedisSentinelHosts()
-	redisSentinelRole := component.DefaultSystemRedisSentinelRole()
-	messageBusRedisURL := component.DefaultSystemMessageBusRedisURL()
-	messageBusRedisSentinelHosts := component.DefaultSystemMessageBusRedisSentinelHosts()
-	messageBusRedisSentinelRole := component.DefaultSystemMessageBusRedisSentinelRole()
-	messageBusRedisNamespace := component.DefaultSystemMessageBusRedisNamespace()
-	redisNamespace := component.DefaultSystemRedisNamespace()
 	tmpSystemAppReplicas := int32(systemAppReplicas)
 	tmpSystemSideKiqReplicas := int32(systemSidekiqReplicas)
 	tmpSystemAdminEmail := component.DefaultSystemAdminEmail()
@@ -354,14 +334,6 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		ApicastAccessToken:                        opts.ApicastAccessToken,
 		AppReplicas:                               &tmpSystemAppReplicas,
 		SidekiqReplicas:                           &tmpSystemSideKiqReplicas,
-		RedisURL:                                  component.DefaultSystemRedisURL(),
-		RedisSentinelHosts:                        &redisSentinelHosts,
-		RedisSentinelRole:                         &redisSentinelRole,
-		MessageBusRedisURL:                        &messageBusRedisURL,
-		MessageBusRedisSentinelHosts:              &messageBusRedisSentinelHosts,
-		MessageBusRedisSentinelRole:               &messageBusRedisSentinelRole,
-		MessageBusRedisNamespace:                  &messageBusRedisNamespace,
-		RedisNamespace:                            &redisNamespace,
 		AdminEmail:                                &tmpSystemAdminEmail,
 		PvcFileStorageOptions: &component.PVCFileStorageOptions{
 			StorageRequests: storageRequests,
@@ -405,14 +377,13 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 		memcachedSecret           *v1.Secret
 		recaptchadSecret          *v1.Secret
 		eventHookSecret           *v1.Secret
-		redisSecret               *v1.Secret
 		systemAppSecret           *v1.Secret
 		systemSeedSecret          *v1.Secret
 		systemMasterApicastSecret *v1.Secret
 		expectedOptionsFactory    func(*component.SystemOptions) *component.SystemOptions
 	}{
 		{"Default", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, nil, nil, nil, nil,
+			nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				return defaultSystemOptions(opts)
 			},
@@ -422,7 +393,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppMasterContainerResourceRequirements = &v1.ResourceRequirements{}
@@ -434,7 +405,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithMemcachedSecret", basicApimanagerSpecTestSystemOptions,
-			getMemcachedSecret(), nil, nil, nil, nil, nil, nil,
+			getMemcachedSecret(), nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.MemcachedServers = "mymemcache:11211"
@@ -442,7 +413,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithRecaptchaSecret", basicApimanagerSpecTestSystemOptions,
-			nil, getRecaptchaSecret(), nil, nil, nil, nil, nil,
+			nil, getRecaptchaSecret(), nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				recaptchaPublicKey := "someCaptchaPK"
@@ -453,7 +424,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithEventsHookSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, getEventHookSecret(), nil, nil, nil, nil,
+			nil, nil, getEventHookSecret(), nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.BackendSharedSecret = "somePassword"
@@ -461,30 +432,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"WithRedisSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, getSystemRedisSecret(), nil, nil, nil,
-			func(opts *component.SystemOptions) *component.SystemOptions {
-				expectedOpts := defaultSystemOptions(opts)
-				expectedOpts.RedisURL = "redis://system1:6379"
-				redisSentinelHosts := "someHosts1"
-				expectedOpts.RedisSentinelHosts = &redisSentinelHosts
-				redisSentinelRole := "someRole1"
-				expectedOpts.RedisSentinelRole = &redisSentinelRole
-				messageBusRedisURL := "redis://system2:6379"
-				expectedOpts.MessageBusRedisURL = &messageBusRedisURL
-				messageBusRedisSentinelHosts := "someHosts2"
-				expectedOpts.MessageBusRedisSentinelHosts = &messageBusRedisSentinelHosts
-				messageBusRedisSentinelRole := "someRole2"
-				expectedOpts.MessageBusRedisSentinelRole = &messageBusRedisSentinelRole
-				redisNamespace := "systemRedis"
-				expectedOpts.RedisNamespace = &redisNamespace
-				messageBusRedisNamespace := "mbus"
-				expectedOpts.MessageBusRedisNamespace = &messageBusRedisNamespace
-				return expectedOpts
-			},
-		},
 		{"WithAppSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, nil, getSystemAppSecret(), nil, nil,
+			nil, nil, nil, getSystemAppSecret(), nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppSecretKeyBase = "somePassword234"
@@ -492,7 +441,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSeedSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, nil, nil, getSystemSeedSecret(), nil,
+			nil, nil, nil, nil, getSystemSeedSecret(), nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.MasterName = "masterDomainName"
@@ -508,7 +457,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithMasterApicastSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, nil, nil, nil, getSystemMasterApicastSecret(),
+			nil, nil, nil, nil, nil, getSystemMasterApicastSecret(),
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.ApicastAccessToken = "apicastAccessToken"
@@ -525,7 +474,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				}
 				return apimanager
 			},
-			nil, nil, nil, nil, nil, nil, nil,
+			nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.S3FileStorageOptions = &component.S3FileStorageOptions{
@@ -548,7 +497,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 					VolumeName: &tmpVolumeName,
 				}
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				tmp := "mystorageclassname"
@@ -567,7 +516,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.SidekiqSpec.Affinity = testSystemSidekiqAffinity()
 				apimanager.Spec.System.SphinxSpec.Affinity = testSystemSphinxAffinity()
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppAffinity = testSystemAppAffinity()
@@ -583,7 +532,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.SidekiqSpec.Tolerations = testSystemSidekiqTolerations()
 				apimanager.Spec.System.SphinxSpec.Tolerations = testSystemSphinxTolerations()
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppTolerations = testSystemAppTolerations()
@@ -601,7 +550,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.SidekiqSpec.Resources = testSystemSidekiqCustomResourceRequirements()
 				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppMasterContainerResourceRequirements = testSystemMasterContainerCustomResourceRequirements()
@@ -622,7 +571,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.SidekiqSpec.Resources = testSystemSidekiqCustomResourceRequirements()
 				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppMasterContainerResourceRequirements = testSystemMasterContainerCustomResourceRequirements()
@@ -646,9 +595,6 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			}
 			if tc.eventHookSecret != nil {
 				objs = append(objs, tc.eventHookSecret)
-			}
-			if tc.redisSecret != nil {
-				objs = append(objs, tc.redisSecret)
 			}
 			if tc.systemAppSecret != nil {
 				objs = append(objs, tc.systemAppSecret)

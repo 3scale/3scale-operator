@@ -4,6 +4,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -18,7 +20,7 @@ func NewRedisReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconc
 }
 
 func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
-	redis, err := Redis(r.apiManager)
+	redis, err := Redis(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -53,6 +55,12 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// Backend Redis Secret
+	err = r.ReconcileSecret(redis.BackendRedisSecret(), reconcilers.DefaultsOnlySecretMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// System redis DC
 	err = r.ReconcileDeploymentConfig(redis.SystemDeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
 	if err != nil {
@@ -77,11 +85,17 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// System Redis Secret
+	err = r.ReconcileSecret(redis.SystemRedisSecret(), reconcilers.DefaultsOnlySecretMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
-func Redis(apimanager *appsv1alpha1.APIManager) (*component.Redis, error) {
-	optsProvider := NewRedisOptionsProvider(apimanager)
+func Redis(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.Redis, error) {
+	optsProvider := NewRedisOptionsProvider(apimanager, apimanager.Namespace, client)
 	opts, err := optsProvider.GetRedisOptions()
 	if err != nil {
 		return nil, err

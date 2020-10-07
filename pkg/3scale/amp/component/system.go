@@ -403,30 +403,6 @@ func (system *System) EventsHookSecret() *v1.Secret {
 	}
 }
 
-func (system *System) RedisSecret() *v1.Secret {
-	return &v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSecretSystemRedisSecretName,
-			Labels: system.Options.CommonLabels,
-		},
-		StringData: map[string]string{
-			SystemSecretSystemRedisURLFieldName:                system.Options.RedisURL,
-			SystemSecretSystemRedisSentinelHosts:               *system.Options.RedisSentinelHosts,
-			SystemSecretSystemRedisSentinelRole:                *system.Options.RedisSentinelRole,
-			SystemSecretSystemRedisMessageBusRedisURLFieldName: *system.Options.MessageBusRedisURL,
-			SystemSecretSystemRedisMessageBusSentinelHosts:     *system.Options.MessageBusRedisSentinelHosts,
-			SystemSecretSystemRedisMessageBusSentinelRole:      *system.Options.MessageBusRedisSentinelRole,
-			SystemSecretSystemRedisNamespace:                   *system.Options.RedisNamespace,
-			SystemSecretSystemRedisMessageBusRedisNamespace:    *system.Options.MessageBusRedisNamespace,
-		},
-		Type: v1.SecretTypeOpaque,
-	}
-}
-
 func (system *System) AppSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{

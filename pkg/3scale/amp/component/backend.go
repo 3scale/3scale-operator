@@ -367,28 +367,6 @@ func (backend *Backend) EnvironmentConfigMap() *v1.ConfigMap {
 	}
 }
 
-func (backend *Backend) RedisSecret() *v1.Secret {
-	return &v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   BackendSecretBackendRedisSecretName,
-			Labels: backend.Options.CommonLabels,
-		},
-		StringData: map[string]string{
-			BackendSecretBackendRedisStorageURLFieldName:           backend.Options.StorageURL,
-			BackendSecretBackendRedisQueuesURLFieldName:            backend.Options.QueuesURL,
-			BackendSecretBackendRedisStorageSentinelHostsFieldName: backend.Options.StorageSentinelHosts,
-			BackendSecretBackendRedisStorageSentinelRoleFieldName:  backend.Options.StorageSentinelRole,
-			BackendSecretBackendRedisQueuesSentinelHostsFieldName:  backend.Options.QueuesSentinelHosts,
-			BackendSecretBackendRedisQueuesSentinelRoleFieldName:   backend.Options.QueuesSentinelRole,
-		},
-		Type: v1.SecretTypeOpaque,
-	}
-}
-
 func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
 	return []v1.EnvVar{
 		helper.EnvVarFromSecret("CONFIG_REDIS_PROXY", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),

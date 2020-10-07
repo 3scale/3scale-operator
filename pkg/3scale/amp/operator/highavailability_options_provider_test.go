@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+
 	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -76,28 +78,39 @@ func getBackendRedisSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
 }
 
+func basicApimanagerTestHA() *appsv1alpha1.APIManager {
+	apimanager := basicApimanager()
+	apimanager.Spec.HighAvailability = &appsv1alpha1.HighAvailabilitySpec{
+		Enabled: true,
+	}
+	return apimanager
+}
+
 func TestGetHighAvailabilityOptionsProvider(t *testing.T) {
 	objs := []runtime.Object{getSystemRedisSecretForHighAvailabilityTest(), getSystemDatabaseSecret(), getBackendRedisSecret()}
 	cl := fake.NewFakeClient(objs...)
-	optsProvider := NewHighAvailabilityOptionsProvider(namespace, cl)
+	apimanager := basicApimanagerTestHA()
+	optsProvider := NewHighAvailabilityOptionsProvider(apimanager, namespace, cl)
 	opts, err := optsProvider.GetHighAvailabilityOptions()
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectedOptions := &component.HighAvailabilityOptions{
-		AppLabel:                            "-",
+		BackendRedisLabels:                  testBackendCommonLabels(),
+		SystemRedisLabels:                   testSystemCommonLabels(),
+		SystemDatabaseLabels:                testSystemCommonLabels(),
 		BackendRedisQueuesEndpoint:          backendQueueURL,
-		BackendRedisQueuesSentinelHosts:     "-",
-		BackendRedisQueuesSentinelRole:      "-",
+		BackendRedisQueuesSentinelHosts:     "",
+		BackendRedisQueuesSentinelRole:      "",
 		BackendRedisStorageEndpoint:         backendStorageURL,
-		BackendRedisStorageSentinelHosts:    "-",
-		BackendRedisStorageSentinelRole:     "-",
+		BackendRedisStorageSentinelHosts:    "",
+		BackendRedisStorageSentinelRole:     "",
 		SystemRedisURL:                      systemRedisURL,
-		SystemRedisSentinelsHosts:           "-",
-		SystemRedisSentinelsRole:            "-",
+		SystemRedisSentinelsHosts:           "",
+		SystemRedisSentinelsRole:            "",
 		SystemMessageBusRedisURL:            systemMessageBusURL,
-		SystemMessageBusRedisSentinelsHosts: "-",
-		SystemMessageBusRedisSentinelsRole:  "-",
+		SystemMessageBusRedisSentinelsHosts: "",
+		SystemMessageBusRedisSentinelsRole:  "",
 		SystemDatabaseURL:                   systemDatabaseURL,
 	}
 
@@ -174,6 +187,7 @@ func TestGetHighAvailabilityOptionsInvalid(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
+			apimanager := basicApimanagerTestHA()
 			objs := []runtime.Object{}
 			if tc.backendRedisSecret != nil {
 				objs = append(objs, tc.backendRedisSecret)
@@ -185,7 +199,7 @@ func TestGetHighAvailabilityOptionsInvalid(t *testing.T) {
 				objs = append(objs, tc.systemDatabaseSecret)
 			}
 			cl := fake.NewFakeClient(objs...)
-			optsProvider := NewHighAvailabilityOptionsProvider(namespace, cl)
+			optsProvider := NewHighAvailabilityOptionsProvider(apimanager, namespace, cl)
 			_, err := optsProvider.GetHighAvailabilityOptions()
 			if err == nil {
 				subT.Fatal("expected to fail")

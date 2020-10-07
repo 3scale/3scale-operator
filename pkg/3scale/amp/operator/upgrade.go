@@ -211,7 +211,7 @@ func (u *UpgradeApiManager) upgradeMemcachedDeploymentConfig() (reconcile.Result
 	return reconcile.Result{}, nil
 }
 func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := Redis(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -225,7 +225,7 @@ func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Res
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := Redis(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -348,7 +348,7 @@ func (u *UpgradeApiManager) upgradeAMPImageStreams() (reconcile.Result, error) {
 }
 
 func (u *UpgradeApiManager) upgradeBackendRedisImageStream() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := Redis(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -358,7 +358,7 @@ func (u *UpgradeApiManager) upgradeBackendRedisImageStream() (reconcile.Result, 
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisImageStream() (reconcile.Result, error) {
-	redis, err := Redis(u.apiManager)
+	redis, err := Redis(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

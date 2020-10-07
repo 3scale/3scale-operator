@@ -52,12 +52,16 @@ func (r *RedisAdapter) backendRedisComponentObjects(c *component.Redis) []common
 	cm := c.BackendConfigMap()
 	bpvc := c.BackendPVC()
 	bis := c.BackendImageStream()
+	backendRedisSecret := c.BackendRedisSecret()
+	systemRedisSecret := c.SystemRedisSecret()
 	objects := []common.KubernetesObject{
 		dc,
 		bs,
 		cm,
 		bpvc,
 		bis,
+		backendRedisSecret,
+		systemRedisSecret,
 	}
 	return objects
 }
@@ -97,6 +101,22 @@ func (r *RedisAdapter) options() (*component.RedisOptions, error) {
 	ro.BackendCommonLabels = r.backendCommonLabels()
 	ro.BackendRedisLabels = r.backendRedisLabels()
 	ro.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels()
+
+	ro.SystemRedisURL = "${SYSTEM_REDIS_URL}"
+	ro.SystemRedisSentinelsHosts = component.DefaultSystemRedisSentinelHosts()
+	ro.SystemRedisSentinelsRole = component.DefaultSystemRedisSentinelRole()
+	ro.SystemRedisNamespace = "${SYSTEM_REDIS_NAMESPACE}"
+	ro.SystemRedisMessageBusURL = "${SYSTEM_MESSAGE_BUS_REDIS_URL}"
+	ro.SystemMessageBusRedisSentinelsHosts = component.DefaultSystemMessageBusRedisSentinelHosts()
+	ro.SystemMessageBusRedisSentinelsRole = component.DefaultSystemMessageBusRedisSentinelRole()
+	ro.SystemMessageBusRedisNamespace = "${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}"
+
+	ro.BackendStorageURL = component.DefaultBackendRedisStorageURL()
+	ro.BackendQueuesURL = component.DefaultBackendRedisQueuesURL()
+	ro.BackendRedisStorageSentinelHosts = component.DefaultBackendStorageSentinelHosts()
+	ro.BackendRedisStorageSentinelRole = component.DefaultBackendStorageSentinelRole()
+	ro.BackendRedisQueuesSentinelHosts = component.DefaultBackendQueuesSentinelHosts()
+	ro.BackendRedisQueuesSentinelRole = component.DefaultBackendQueuesSentinelRole()
 
 	err := ro.Validate()
 	return ro, err

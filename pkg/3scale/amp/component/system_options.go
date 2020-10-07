@@ -32,14 +32,6 @@ type PVCFileStorageOptions struct {
 type SystemOptions struct {
 	MemcachedServers                       string  `validate:"required"`
 	EventHooksURL                          string  `validate:"required"`
-	RedisURL                               string  `validate:"required"`
-	RedisSentinelHosts                     *string `validate:"required"`
-	RedisSentinelRole                      *string `validate:"required"`
-	RedisNamespace                         *string `validate:"required"`
-	MessageBusRedisURL                     *string `validate:"required"`
-	MessageBusRedisSentinelHosts           *string `validate:"required"`
-	MessageBusRedisSentinelRole            *string `validate:"required"`
-	MessageBusRedisNamespace               *string `validate:"required"`
 	ApicastSystemMasterProxyConfigEndpoint string  `validate:"required"`
 	AdminEmail                             *string `validate:"required"`
 
@@ -131,38 +123,6 @@ func DefaultBackendSharedSecret() string {
 
 func DefaultEventHooksURL() string {
 	return "http://system-master:3000/master/events/import"
-}
-
-func DefaultSystemRedisURL() string {
-	return "redis://system-redis:6379/1"
-}
-
-func DefaultSystemRedisSentinelHosts() string {
-	return ""
-}
-
-func DefaultSystemRedisSentinelRole() string {
-	return ""
-}
-
-func DefaultSystemMessageBusRedisURL() string {
-	return ""
-}
-
-func DefaultSystemMessageBusRedisSentinelHosts() string {
-	return ""
-}
-
-func DefaultSystemMessageBusRedisSentinelRole() string {
-	return ""
-}
-
-func DefaultSystemRedisNamespace() string {
-	return ""
-}
-
-func DefaultSystemMessageBusRedisNamespace() string {
-	return ""
 }
 
 func DefaultSystemAppSecretKeyBase() string {

@@ -7,10 +7,13 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func testRedisSystemCommonLabels() map[string]string {
@@ -113,6 +116,32 @@ func testSystemRedisCustomResourceRequirements() *v1.ResourceRequirements {
 	}
 }
 
+func testBackendRedisSecret() *v1.Secret {
+	data := map[string]string{
+		component.BackendSecretBackendRedisStorageURLFieldName:           "storageURLValue",
+		component.BackendSecretBackendRedisQueuesURLFieldName:            "queueURLValue",
+		component.BackendSecretBackendRedisStorageSentinelHostsFieldName: "storageSentinelHostsValue",
+		component.BackendSecretBackendRedisStorageSentinelRoleFieldName:  "storageSentinelRoleValue",
+		component.BackendSecretBackendRedisQueuesSentinelHostsFieldName:  "queueSentinelHostsValue",
+		component.BackendSecretBackendRedisQueuesSentinelRoleFieldName:   "queueSentinelRoleValue",
+	}
+	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
+}
+
+func testSystemRedisSecret() *v1.Secret {
+	data := map[string]string{
+		component.SystemSecretSystemRedisNamespace:                   "systemRedis",
+		component.SystemSecretSystemRedisURLFieldName:                "redis://system1:6379",
+		component.SystemSecretSystemRedisSentinelHosts:               "someHosts1",
+		component.SystemSecretSystemRedisSentinelRole:                "someRole1",
+		component.SystemSecretSystemRedisMessageBusRedisNamespace:    "mbus",
+		component.SystemSecretSystemRedisMessageBusSentinelHosts:     "someHosts2",
+		component.SystemSecretSystemRedisMessageBusSentinelRole:      "someRole2",
+		component.SystemSecretSystemRedisMessageBusRedisURLFieldName: "redis://system2:6379",
+	}
+	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
+}
+
 func defaultRedisOptions() *component.RedisOptions {
 	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
@@ -130,6 +159,20 @@ func defaultRedisOptions() *component.RedisOptions {
 		BackendCommonLabels:                       testRedisBackendCommonLabels(),
 		BackendRedisLabels:                        testRedisBackendRedisLabels(),
 		BackendRedisPodTemplateLabels:             testRedisBackendRedisPodTemplateLabels(),
+		BackendStorageURL:                         component.DefaultBackendRedisStorageURL(),
+		BackendQueuesURL:                          component.DefaultBackendRedisQueuesURL(),
+		BackendRedisStorageSentinelHosts:          component.DefaultBackendStorageSentinelHosts(),
+		BackendRedisStorageSentinelRole:           component.DefaultBackendStorageSentinelRole(),
+		BackendRedisQueuesSentinelHosts:           component.DefaultBackendQueuesSentinelHosts(),
+		BackendRedisQueuesSentinelRole:            component.DefaultBackendQueuesSentinelRole(),
+		SystemRedisURL:                            component.DefaultSystemRedisURL(),
+		SystemRedisMessageBusURL:                  component.DefaultSystemRedisMessageBusURL(),
+		SystemRedisSentinelsHosts:                 component.DefaultSystemRedisSentinelHosts(),
+		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
+		SystemMessageBusRedisSentinelsHosts:       component.DefaultSystemMessageBusRedisSentinelHosts(),
+		SystemMessageBusRedisSentinelsRole:        component.DefaultSystemMessageBusRedisSentinelRole(),
+		SystemMessageBusRedisNamespace:            component.DefaultSystemMessageBusRedisNamespace(),
+		SystemRedisNamespace:                      component.DefaultSystemRedisNamespace(),
 	}
 }
 
@@ -142,11 +185,13 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 
 	cases := []struct {
 		testName               string
+		backendRedisSecret     *v1.Secret
+		systemRedisSecret      *v1.Secret
 		apimanagerFactory      func() *appsv1alpha1.APIManager
 		expectedOptionsFactory func() *component.RedisOptions
 	}{
-		{"Default", basicApimanager, defaultRedisOptions},
-		{"WithoutResourceRequirements",
+		{"Default", nil, nil, basicApimanager, defaultRedisOptions},
+		{"WithoutResourceRequirements", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
@@ -159,7 +204,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"BackendRedisImageSet",
+		{"BackendRedisImageSet", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
@@ -174,7 +219,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"SystemRedisImageSet",
+		{"SystemRedisImageSet", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
@@ -189,7 +234,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"SystemRedisOnlyPVCSpecSet",
+		{"SystemRedisOnlyPVCSpecSet", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
@@ -202,7 +247,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"BackendRedisOnlyPVCSpecSet",
+		{"BackendRedisOnlyPVCSpecSet", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
@@ -215,7 +260,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"BackendRedisStoragePVCStorageClassSet",
+		{"BackendRedisStoragePVCStorageClassSet", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
@@ -231,7 +276,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"SystemRedisStoragePVCStorageClassSet",
+		{"SystemRedisStoragePVCStorageClassSet", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
@@ -247,7 +292,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithAffinity",
+		{"WithAffinity", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.RedisAffinity = testSystemRedisAffinity()
@@ -261,7 +306,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithTolerations",
+		{"WithTolerations", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.RedisTolerations = testSystemRedisTolerations()
@@ -275,7 +320,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithBackendRedisCustomResourceRequirements",
+		{"WithBackendRedisCustomResourceRequirements", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.Backend.RedisResources = testBackendRedisCustomResourceRequirements()
@@ -287,7 +332,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithBackendRedisCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+		{"WithBackendRedisCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
@@ -301,7 +346,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithSystemRedisCustomResourceRequirements",
+		{"WithSystemRedisCustomResourceRequirements", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.Backend.RedisResources = testSystemRedisCustomResourceRequirements()
@@ -313,7 +358,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
-		{"WithSystemRedisCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
+		{"WithSystemRedisCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil,
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
@@ -327,11 +372,45 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
+		{"WithBackendRedisSecret", testBackendRedisSecret(), nil, basicApimanager,
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.BackendStorageURL = "storageURLValue"
+				opts.BackendQueuesURL = "queueURLValue"
+				opts.BackendRedisStorageSentinelHosts = "storageSentinelHostsValue"
+				opts.BackendRedisStorageSentinelRole = "storageSentinelRoleValue"
+				opts.BackendRedisQueuesSentinelHosts = "queueSentinelHostsValue"
+				opts.BackendRedisQueuesSentinelRole = "queueSentinelRoleValue"
+				return opts
+			},
+		},
+		{"WithSystemRedisSecret", nil, testSystemRedisSecret(), basicApimanager,
+			func() *component.RedisOptions {
+				opts := defaultRedisOptions()
+				opts.SystemRedisURL = "redis://system1:6379"
+				opts.SystemRedisSentinelsHosts = "someHosts1"
+				opts.SystemRedisSentinelsRole = "someRole1"
+				opts.SystemRedisMessageBusURL = "redis://system2:6379"
+				opts.SystemMessageBusRedisSentinelsHosts = "someHosts2"
+				opts.SystemMessageBusRedisSentinelsRole = "someRole2"
+				opts.SystemRedisNamespace = "systemRedis"
+				opts.SystemMessageBusRedisNamespace = "mbus"
+				return opts
+			},
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			optsProvider := NewRedisOptionsProvider(tc.apimanagerFactory())
+			objs := []runtime.Object{}
+			if tc.backendRedisSecret != nil {
+				objs = append(objs, tc.backendRedisSecret)
+			}
+			if tc.systemRedisSecret != nil {
+				objs = append(objs, tc.systemRedisSecret)
+			}
+			cl := fake.NewFakeClient(objs...)
+			optsProvider := NewRedisOptionsProvider(tc.apimanagerFactory(), namespace, cl)
 			opts, err := optsProvider.GetRedisOptions()
 			if err != nil {
 				subT.Error(err)
