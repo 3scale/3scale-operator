@@ -160,7 +160,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							Expr: intstr.FromString(fmt.Sprintf(`changes(worker_process{namespace='%s', pod=~'apicast-production.*'}[5m]) > 0`, ns)),
 							For:  "5m",
 							Labels: map[string]string{
-								"severity": "critical",
+								"severity": "warning",
 							},
 						},
 					},
