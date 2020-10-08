@@ -48,10 +48,12 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// zync db postresql IS
-	err = r.ReconcileImagestream(ampImages.ZyncDatabasePostgreSQLImageStream(), reconcilers.GenericImageStreamMutator)
-	if err != nil {
-		return reconcile.Result{}, err
+	if !r.apiManager.IsZyncExternalDatabaseEnabled() {
+		// zync db postresql IS
+		err = r.ReconcileImagestream(ampImages.ZyncDatabasePostgreSQLImageStream(), reconcilers.GenericImageStreamMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// system memcached IS
