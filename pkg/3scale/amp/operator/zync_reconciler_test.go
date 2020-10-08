@@ -17,6 +17,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -128,6 +129,125 @@ func TestNewZyncReconciler(t *testing.T) {
 			// object must exist, that is all required to be tested
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
+			}
+		})
+	}
+}
+
+func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
+	var (
+		name                 = "example-apimanager"
+		namespace            = "operator-unittest"
+		wildcardDomain       = "test.3scale.net"
+		log                  = logf.Log.WithName("operator_test")
+		appLabel             = "someLabel"
+		tenantName           = "someTenant"
+		trueValue            = true
+		oneValue       int64 = 1
+	)
+
+	ctx := context.TODO()
+
+	apimanager := &appsv1alpha1.APIManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appsv1alpha1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				AppLabel:                     &appLabel,
+				ImageStreamTagImportInsecure: &trueValue,
+				WildcardDomain:               wildcardDomain,
+				TenantName:                   &tenantName,
+				ResourceRequirementsEnabled:  &trueValue,
+			},
+			Zync: &appsv1alpha1.ZyncSpec{
+				AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &oneValue},
+				QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: &oneValue},
+			},
+			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+			HighAvailability: &appsv1alpha1.HighAvailabilitySpec{
+				Enabled:                     true,
+				ExternalZyncDatabaseEnabled: &trueValue,
+			},
+		},
+	}
+
+	zyncExternalDatabaseSecret := getZyncSecretExternalDatabase(namespace)
+
+	// Objects to track in the fake client.
+	objs := []runtime.Object{apimanager, zyncExternalDatabaseSecret}
+	s := scheme.Scheme
+	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
+	err := appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = imagev1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = routev1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := monitoringv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+	if err := grafanav1alpha1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a fake client to mock API calls.
+	cl := fake.NewFakeClient(objs...)
+	clientAPIReader := fake.NewFakeClient(objs...)
+	clientset := fakeclientset.NewSimpleClientset()
+	recorder := record.NewFakeRecorder(10000)
+
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+
+	zyncReconciler := NewZyncReconciler(baseAPIManagerLogicReconciler)
+	_, err = zyncReconciler.Reconcile()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		testName   string
+		objName    string
+		obj        runtime.Object
+		hasToExist bool
+	}{
+		{"queRole", "zync-que-role", &rbacv1.Role{}, true},
+		{"queServiceAccount", "zync-que-sa", &v1.ServiceAccount{}, true},
+		{"queRoleBinding", "zync-que-rolebinding", &rbacv1.RoleBinding{}, true},
+		{"zyncDC", "zync", &appsv1.DeploymentConfig{}, true},
+		{"zyncQueDC", "zync-que", &appsv1.DeploymentConfig{}, true},
+		{"zyncDatabaseDC", "zync-database", &appsv1.DeploymentConfig{}, false},
+		{"zyncService", "zync", &v1.Service{}, true},
+		{"zyncDatabaseService", "zync-database", &v1.Service{}, false},
+		{"zyncSecret", component.ZyncSecretName, &v1.Secret{}, true},
+		{"zyncPDB", "zync", &v1beta1.PodDisruptionBudget{}, true},
+		{"quePDB", "zync-que", &v1beta1.PodDisruptionBudget{}, true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			obj := tc.obj
+			namespacedName := types.NamespacedName{
+				Name:      tc.objName,
+				Namespace: namespace,
+			}
+			err = cl.Get(context.TODO(), namespacedName, obj)
+			if tc.hasToExist {
+				if err != nil {
+					subT.Errorf("error fetching object %s: %v", tc.objName, err)
+				}
+			} else {
+				if err == nil || !errors.IsNotFound(err) {
+					subT.Errorf("object %s that shouldn't exist exists or different error than NotFound returned: %v", tc.objName, err)
+				}
 			}
 		})
 	}

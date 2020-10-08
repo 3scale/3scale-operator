@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -22,6 +23,8 @@ const (
 	zyncDatabasePasswd          = "somePass3424"
 	zyncAuthToken               = "someToken5252"
 )
+
+var zyncExternalDatabaseTestURL = fmt.Sprintf("postgresql://exampleuser:%s@databaseurl:5432/zync_production", zyncDatabasePasswd)
 
 func testZyncCommonLabels() map[string]string {
 	return map[string]string{
@@ -168,6 +171,16 @@ func getZyncSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.ZyncSecretName, data)
 }
 
+func getZyncSecretExternalDatabase(namespace string) *v1.Secret {
+	data := map[string]string{
+		component.ZyncSecretKeyBaseFieldName:             zyncSecretKeyBasename,
+		component.ZyncSecretDatabasePasswordFieldName:    zyncDatabasePasswd,
+		component.ZyncSecretDatabaseURLFieldName:         zyncExternalDatabaseTestURL,
+		component.ZyncSecretAuthenticationTokenFieldName: zyncAuthToken,
+	}
+	return GetTestSecret(namespace, component.ZyncSecretName, data)
+}
+
 func basicApimanagerSpecTestZyncOptions() *appsv1alpha1.APIManager {
 	tmpZyncReplicas := zyncReplica
 	tmpZyncQueReplicas := zyncQueReplica
@@ -176,6 +189,16 @@ func basicApimanagerSpecTestZyncOptions() *appsv1alpha1.APIManager {
 	apimanager.Spec.Zync = &appsv1alpha1.ZyncSpec{
 		AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &tmpZyncReplicas},
 		QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: &tmpZyncQueReplicas},
+	}
+	return apimanager
+}
+
+func basicApimanagerWithExternalZyncDatabaseSpecTestZyncOptions() *appsv1alpha1.APIManager {
+	trueVal := true
+	apimanager := basicApimanagerSpecTestZyncOptions()
+	apimanager.Spec.HighAvailability = &appsv1alpha1.HighAvailabilitySpec{
+		Enabled:                     true,
+		ExternalZyncDatabaseEnabled: &trueVal,
 	}
 	return apimanager
 }
@@ -235,13 +258,23 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				return expectedOpts
 			},
 		},
-		{"ZincSecret", getZyncSecret(), basicApimanagerSpecTestZyncOptions,
+		{"ZyncSecret", getZyncSecret(), basicApimanagerSpecTestZyncOptions,
 			func(opts *component.ZyncOptions) *component.ZyncOptions {
 				expectedOpts := defaultZyncOptions(opts)
 				expectedOpts.SecretKeyBase = zyncSecretKeyBasename
 				expectedOpts.DatabasePassword = zyncDatabasePasswd
 				expectedOpts.AuthenticationToken = zyncAuthToken
 				expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(zyncDatabasePasswd)
+				return opts
+			},
+		},
+		{"ZyncSecretWithExternalZync", getZyncSecretExternalDatabase(namespace), basicApimanagerWithExternalZyncDatabaseSpecTestZyncOptions,
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				expectedOpts := defaultZyncOptions(opts)
+				expectedOpts.SecretKeyBase = zyncSecretKeyBasename
+				expectedOpts.DatabasePassword = zyncDatabasePasswd
+				expectedOpts.AuthenticationToken = zyncAuthToken
+				expectedOpts.DatabaseURL = zyncExternalDatabaseTestURL
 				return opts
 			},
 		},
