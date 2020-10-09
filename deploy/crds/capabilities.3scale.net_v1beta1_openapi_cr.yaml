@@ -1,0 +1,8 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Openapi
+metadata:
+  name: example-openapi
+spec:
+  openapiRef:
+    configMapRef:
+      name: hello

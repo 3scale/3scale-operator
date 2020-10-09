@@ -3,8 +3,11 @@ package v1beta1
 import (
 	"github.com/3scale/3scale-operator/pkg/common"
 
+	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -90,6 +93,31 @@ type OpenapiStatus struct {
 	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
+func (o *OpenapiStatus) Equals(other *OpenapiStatus, logger logr.Logger) bool {
+	if o.ProviderAccountHost != other.ProviderAccountHost {
+		diff := cmp.Diff(o.ProviderAccountHost, other.ProviderAccountHost)
+		logger.V(1).Info("ProviderAccountHost not equal", "difference", diff)
+		return false
+	}
+
+	if o.ObservedGeneration != other.ObservedGeneration {
+		diff := cmp.Diff(o.ObservedGeneration, other.ObservedGeneration)
+		logger.V(1).Info("ObservedGeneration not equal", "difference", diff)
+		return false
+	}
+
+	// Marshalling sorts by condition type
+	currentMarshaledJSON, _ := o.Conditions.MarshalJSON()
+	otherMarshaledJSON, _ := other.Conditions.MarshalJSON()
+	if string(currentMarshaledJSON) != string(otherMarshaledJSON) {
+		diff := cmp.Diff(string(currentMarshaledJSON), string(otherMarshaledJSON))
+		logger.V(1).Info("Conditions not equal", "difference", diff)
+		return false
+	}
+
+	return true
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Openapi is the Schema for the openapis API
@@ -101,6 +129,17 @@ type Openapi struct {
 
 	Spec   OpenapiSpec   `json:"spec,omitempty"`
 	Status OpenapiStatus `json:"status,omitempty"`
+}
+
+// SetDefaults set explicit defaults
+func (o *Openapi) SetDefaults(logger logr.Logger) bool {
+	updated := false
+	return updated
+}
+
+func (o *Openapi) Validate() field.ErrorList {
+	errors := field.ErrorList{}
+	return errors
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -2,16 +2,21 @@ package openapi
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/common"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -19,7 +24,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_openapi")
+var (
+	// controllerName is the name of this controller
+	controllerName = "controller_openapi"
+
+	// package level logger
+	log = logf.Log.WithName(controllerName)
+)
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -29,34 +40,45 @@ var log = logf.Log.WithName("controller_openapi")
 // Add creates a new Openapi Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
+	reconciler, err := newReconciler(mgr)
+	if err != nil {
+		return err
+	}
+
+	return add(mgr, reconciler)
 }
 
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileOpenapi{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
+	apiClientReader, err := common.NewAPIClientReader(mgr)
+	if err != nil {
+		return nil, err
+	}
+
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		return nil, err
+	}
+
+	client := mgr.GetClient()
+	scheme := mgr.GetScheme()
+	ctx := context.TODO()
+	recorder := mgr.GetEventRecorderFor(controllerName)
+	return &ReconcileOpenapi{
+		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, discoveryClient, recorder),
+	}, nil
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("openapi-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New(controllerName, mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
 	// Watch for changes to primary resource Openapi
 	err = c.Watch(&source.Kind{Type: &capabilitiesv1beta1.Openapi{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner Openapi
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &capabilitiesv1beta1.Openapi{},
-	})
 	if err != nil {
 		return err
 	}
@@ -69,85 +91,124 @@ var _ reconcile.Reconciler = &ReconcileOpenapi{}
 
 // ReconcileOpenapi reconciles a Openapi object
 type ReconcileOpenapi struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	*reconcilers.BaseReconciler
 }
 
 // Reconcile reads that state of the cluster for a Openapi object and makes changes based on the state read
 // and what is in the Openapi.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileOpenapi) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Openapi")
+	reqLogger := r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	reqLogger.Info("Reconcile Openapi", "Operator version", version.Version)
 
 	// Fetch the Openapi instance
-	instance := &capabilitiesv1beta1.Openapi{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	openapiCR := &capabilitiesv1beta1.Openapi{}
+	err := r.Client().Get(context.TODO(), request.NamespacedName, openapiCR)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
-
-	// Set Openapi instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
+	if reqLogger.V(1).Enabled() {
+		jsonData, err := json.MarshalIndent(openapiCR, "", "  ")
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
+		reqLogger.V(1).Info(string(jsonData))
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
-	return reconcile.Result{}, nil
+	// Ignore deleted Openapi, this can happen when foregroundDeletion is enabled
+	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
+	if openapiCR.DeletionTimestamp != nil {
+		return reconcile.Result{}, nil
+	}
+
+	if openapiCR.SetDefaults(reqLogger) {
+		err := r.Client().Update(r.Context(), openapiCR)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("Failed setting openapi defaults: %w", err)
+		}
+
+		reqLogger.Info("resource defaults updated. Requeueing.")
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	statusReconciler, reconcileStatus, reconcileErr := r.reconcileSpec(openapiCR)
+	statusResult, statusUpdateErr := statusReconciler.Reconcile()
+	if statusUpdateErr != nil {
+		if reconcileErr != nil {
+			return reconcile.Result{}, fmt.Errorf("Failed to reconcile openapi: %v. Failed to update openapi status: %w", reconcileErr, statusUpdateErr)
+		}
+
+		return reconcile.Result{}, fmt.Errorf("Failed to update openapi status: %w", statusUpdateErr)
+	}
+
+	if statusResult.Requeue {
+		return statusResult, nil
+	}
+
+	if reconcileErr != nil {
+		if helper.IsInvalidSpecError(reconcileErr) {
+			// On Validation error, no need to retry as spec is not valid and needs to be changed
+			reqLogger.Info("ERROR", "spec validation error", reconcileErr)
+			r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "Invalid Openapi Spec", "%v", reconcileErr)
+			return reconcile.Result{}, nil
+		}
+
+		reqLogger.Error(reconcileErr, "Failed to reconcile")
+		r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "ReconcileError", "%v", reconcileErr)
+		return reconcile.Result{}, reconcileErr
+	}
+
+	return reconcileStatus, nil
 }
 
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *capabilitiesv1beta1.Openapi) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
+func (r *ReconcileOpenapi) reconcileSpec(openapiCR *capabilitiesv1beta1.Openapi) (*StatusReconciler, reconcile.Result, error) {
+	logger := r.Logger().WithValues("openapi", openapiCR.Name)
+
+	err := r.validateSpec(openapiCR)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
+		return statusReconciler, reconcile.Result{}, err
 	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
+
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), openapiCR.Namespace, openapiCR.Spec.ProviderAccountRef, logger)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
+		return statusReconciler, reconcile.Result{}, err
 	}
+
+	productSynced, err := r.checkProductSynced(openapiCR)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		return statusReconciler, reconcile.Result{}, err
+	}
+
+	statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, productSynced)
+	return statusReconciler, reconcile.Result{Requeue: !productSynced}, err
+}
+
+func (r *ReconcileOpenapi) validateSpec(resource *capabilitiesv1beta1.Openapi) error {
+	errors := field.ErrorList{}
+	errors = append(errors, resource.Validate()...)
+
+	if len(errors) == 0 {
+		return nil
+	}
+
+	return &helper.SpecFieldError{
+		ErrorType:      helper.InvalidError,
+		FieldErrorList: errors,
+	}
+}
+
+func (r *ReconcileOpenapi) checkProductSynced(resource *capabilitiesv1beta1.Openapi) (bool, error) {
+	// TODO check product resource is synced
+	return true, nil
 }
