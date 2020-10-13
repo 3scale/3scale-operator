@@ -227,7 +227,7 @@ Once a limit has been passed in a given period, reject messages will be issued i
 ### ProductStatus
 
 | **Field** | **json field**| **Type** | **Info** |
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | ID | `productID` | string | Internal ID |
 | State | `state` | string | Internal 3scale product state description |
 | Observed Generation | `observedGeneration` | string | helper field to see if status info is up to date with latest resource spec |
@@ -250,10 +250,10 @@ Each element of the Condition array has the following fields:
   * Invalid: the product spec is semantically wrong and has to be changed;
   * Failed: An error occurred during synchronization.
 
-| **Field** | **json field**| **Type** | **Info** 
-| --- | --- | --- | --- | 
+| **Field** | **json field**| **Type** | **Info** |
+| --- | --- | --- | --- |
 | Type | `type` | string | Condition Type |
 | Status | `status` | string | Status: True, False, Unknown |
 | Reason | `reason` | string | Condition state reason |
 | Message | `message` | string | Condition state description |
-| LastTransitionTime | `lastTransitionTime` | timestamp | Last transition timestap | Yes |
+| LastTransitionTime | `lastTransitionTime` | timestamp | Last transition timestap |
