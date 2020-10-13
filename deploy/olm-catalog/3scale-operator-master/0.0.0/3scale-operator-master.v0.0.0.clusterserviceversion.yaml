@@ -324,6 +324,7 @@ metadata:
     repository: https://github.com/3scale/3scale-operator
     support: Red Hat
     tectonic-visibility: ocs
+    operators.openshift.io/infrastructure-features: '["Disconnected"]'
   name: 3scale-operator-master.v0.0.0
   namespace: placeholder
 spec:
