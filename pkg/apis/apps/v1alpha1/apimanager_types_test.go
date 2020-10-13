@@ -23,13 +23,8 @@ func TestSetDefaults(t *testing.T) {
 
 	var tmpDefaultReplicas int64 = 1
 
-	inputAPIManager := APIManager{
-		Spec: APIManagerSpec{
-			APIManagerCommonSpec: APIManagerCommonSpec{
-				WildcardDomain: "test.3scale.com",
-			},
-		},
-	}
+	inputAPIManager := minimumAPIManagerTest()
+
 	expectedAPIManager := APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{
@@ -105,5 +100,85 @@ func testBasicAPIManagerDefaults(input, expected *APIManager) func(t *testing.T)
 		if !reflect.DeepEqual(input, expected) {
 			t.Errorf("Resulting APIManager differs from the expected one. Differences are: (%s)", cmp.Diff(input, expected))
 		}
+	}
+}
+
+func TestZyncExternalDatabaseIsEnabled(t *testing.T) {
+	trueVal := true
+	falseVal := false
+
+	cases := []struct {
+		testName          string
+		apimanagerFactory func() *APIManager
+		expectedResult    bool
+	}{
+		{"WithDefaultAPIManager",
+			func() *APIManager {
+				return minimumAPIManagerTest()
+			},
+			false,
+		},
+		{"WithHighAvailabilityEnabledOnly",
+			func() *APIManager {
+				apimanager := minimumAPIManagerTest()
+				apimanager.Spec.HighAvailability = &HighAvailabilitySpec{
+					Enabled: true,
+				}
+				return apimanager
+			},
+			false,
+		},
+		{"WithBothHighAvailabilityAndExternalZyncDBEnabled",
+			func() *APIManager {
+				apimanager := minimumAPIManagerTest()
+				apimanager.Spec.HighAvailability = &HighAvailabilitySpec{
+					Enabled:                     true,
+					ExternalZyncDatabaseEnabled: &trueVal,
+				}
+				return apimanager
+			},
+			true,
+		},
+		{"WithHADisabledAndExternalZyncDBEnabled",
+			func() *APIManager {
+				apimanager := minimumAPIManagerTest()
+				apimanager.Spec.HighAvailability = &HighAvailabilitySpec{
+					Enabled:                     false,
+					ExternalZyncDatabaseEnabled: &trueVal,
+				}
+				return apimanager
+			},
+			false,
+		},
+		{"WithHAEnabledAndExternalZyncDBDisabled",
+			func() *APIManager {
+				apimanager := minimumAPIManagerTest()
+				apimanager.Spec.HighAvailability = &HighAvailabilitySpec{
+					Enabled:                     false,
+					ExternalZyncDatabaseEnabled: &falseVal,
+				}
+				return apimanager
+			},
+			false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			receivedResult := tc.apimanagerFactory().IsZyncExternalDatabaseEnabled()
+			if !reflect.DeepEqual(tc.expectedResult, receivedResult) {
+				subT.Errorf("Expected result differs: Expected: %t, Received: %t", tc.expectedResult, receivedResult)
+			}
+		})
+	}
+}
+
+func minimumAPIManagerTest() *APIManager {
+	return &APIManager{
+		Spec: APIManagerSpec{
+			APIManagerCommonSpec: APIManagerCommonSpec{
+				WildcardDomain: "test.3scale.com",
+			},
+		},
 	}
 }

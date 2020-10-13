@@ -55,22 +55,24 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Zync DB DC
-	err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	// Zync Service
 	err = r.ReconcileService(zync.Service(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Zync Service
-	err = r.ReconcileService(zync.DatabaseService(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
+	if !r.apiManager.IsZyncExternalDatabaseEnabled() {
+		// Zync DB DC
+		err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// Zync DB Service
+		err = r.ReconcileService(zync.DatabaseService(), reconcilers.CreateOnlyMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// Zync Secret

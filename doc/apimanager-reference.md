@@ -302,12 +302,12 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Zync |
-| PostgreSQLImage | `postgreSQLImage` | string | No | nil | Used to overwrite the desired PostgreSQL image for the PostgreSQL used by Zync |
+| PostgreSQLImage | `postgreSQLImage` | string | No | nil | Used to overwrite the desired PostgreSQL image for the PostgreSQL used by Zync. Does not take effect when `.spec.highAvailability.enabled` and `spec.highAvailability.externalZyncDatabase` are set to true |
 | AppSpec | `appSpec` | \*ZyncAppSpec | No | See [ZyncAppSpec](#ZyncAppSpec) reference | Spec of Zync App part |
 | QueSpec | `queSpec` | \*ZyncQueSpec | No | See [ZyncQueSpec](#ZyncQueSpec) reference | Spec of Zync Que part |
-| DatabaseAffinity | `databaseAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
-| DatabaseTolerations | `databaseTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
-| DatabaseResources | `databaseResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | DatabaseResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| DatabaseAffinity | `databaseAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Does not take effect when `.spec.highAvailability.enabled` and `spec.highAvailability.externalZyncDatabase` are set to true |
+| DatabaseTolerations | `databaseTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Does not take effect when `.spec.highAvailability.enabled` and `spec.highAvailability.externalZyncDatabase` are set to true |
+| DatabaseResources | `databaseResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | DatabaseResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior. Does not take effect when `.spec.highAvailability.enabled` and `spec.highAvailability.externalZyncDatabase` are set to true |
 
 ### ZyncAppSpec
 
@@ -332,6 +332,7 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Enabled | `enabled` | bool | No | `false` | Enable to use external system database, backend redis, and system redis databases|
+| ExternalZyncDatabaseEnabled | `externalZyncDatabaseEnabled` | bool | No | `false` | Enable to user external zync database. The value of this field only takes effect when `spec.highAvailability.enabled` is set to `true` |
 
 When HighAvailability is enabled the following secrets have to be pre-created by the user:
 
@@ -345,6 +346,12 @@ When HighAvailability is enabled the following secrets have to be pre-created by
 * [system-redis](#system-redis) with the `URL` and `MESSAGE_BUS_URL` fields
   with the value pointing to the desired external databases. The databases
   should be configured in high-availability mode
+
+Additionally, when HighAvailability is enabled, if the `externalZyncDatabaseEnabled` field is
+also enabled the user has to pre-create the following secret too:
+* [zync](#zync) with the `DATABASE_URL` and `DATABASE_PASSWORD` fields
+  with the values pointing to the desired external database settings.
+  The database should be configured in high-availability mode
 
 ### PodDisruptionBudgetSpec
 
@@ -479,10 +486,10 @@ The available configurable secrets are:
 
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
-| DATABASE_URL | PostgreSQL database used by Zync. | `postgresql://zync:<ZYNC_DATABASE_PASSWORD>@zync-database:5432/zync_production` |
+| DATABASE_URL | PostgreSQL database used by Zync. Not configurable when `spec.highAvailability.enabled` is false | When `.spec.highAvailability.enabled` and `.spec.highAvailability.zyncExternalDatabaseEnabled` are set to `true` this parameter is mandatory and has to follow the format: `postgresql://<zync-db-username>:<ZYNC_DATABASE_PASSWORD>@<zync-db-host>:<zync-db-port>/zync_production`, where `<zync-db-username>` must be an already existing user in the external database with full permissions on the `zync_production` logical database, `zync_production` logical database must be an already existing logical database in the external database and the specified value of `<ZYNC_DATABASE_PASSWORD>` must be the same as the `ZYNC_DATABASE_PASSWORD` parameter in this secret. Otherwise it has a default value, which is `postgresql://zync:<ZYNC_DATABASE_PASSWORD>@zync-database:5432/zync_production` |
+| ZYNC_DATABASE_PASSWORD | Database password associated to the user specified in the `DATABASE_URL` parameter | When `.spec.highAvailability.enabled` and `.spec.highAvailability.zyncExternalDatabaseEnabled` are set to `true` this parameter is mandatory and must have the same value as the password part of the `DATABASE_URL` parameter in this secret . Otherwise the default value is an autogenerated value if not defined |
 | SECRET_KEY_BASE | Zync's application key generator to encrypt communications | Autogenerated value |
 | ZYNC_AUTHENTICATION_TOKEN | Authentication token used to authenticate System when calling Zync | Autogenerated value |
-| ZYNC_DATABASE_PASSWORD | Database password associated to the 'zync' user (non-admin user) | Autogenerated value |
 
 ### fileStorage-S3-credentials-secret
 

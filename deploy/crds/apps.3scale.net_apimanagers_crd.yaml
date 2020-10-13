@@ -4184,6 +4184,8 @@ spec:
               properties:
                 enabled:
                   type: boolean
+                externalZyncDatabaseEnabled:
+                  type: boolean
               type: object
             imageStreamTagImportInsecure:
               type: boolean

@@ -468,6 +468,8 @@ type ZyncQueSpec struct {
 
 type HighAvailabilitySpec struct {
 	Enabled bool `json:"enabled,omitempty"`
+	// +optional
+	ExternalZyncDatabaseEnabled *bool `json:"externalZyncDatabaseEnabled,omitempty"`
 }
 
 type PodDisruptionBudgetSpec struct {
@@ -786,6 +788,11 @@ func (apimanager *APIManager) IsExternalDatabaseEnabled() bool {
 	return apimanager.Spec.HighAvailability != nil && apimanager.Spec.HighAvailability.Enabled
 }
 
+func (apimanager *APIManager) IsZyncExternalDatabaseEnabled() bool {
+	return apimanager.IsExternalDatabaseEnabled() &&
+		apimanager.Spec.HighAvailability.ExternalZyncDatabaseEnabled != nil &&
+		*apimanager.Spec.HighAvailability.ExternalZyncDatabaseEnabled
+}
 func (apimanager *APIManager) IsPDBEnabled() bool {
 	return apimanager.Spec.PodDisruptionBudget != nil && apimanager.Spec.PodDisruptionBudget.Enabled
 }

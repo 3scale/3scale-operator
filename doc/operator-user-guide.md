@@ -227,6 +227,43 @@ spec:
     enabled: true
 ```
 
+Additionally, Zync Database can also be configured as an external database.
+
+* **Zync secret**
+
+Example:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: zync
+stringData:
+  DATABASE_URL: postgresql://<zync-db-user>:<zync-db-password>@<zync-db-host>:<zync-db-port>/zync_production
+  ZYNC_DATABASE_PASSWORD: <zync-db-password>
+type: Opaque
+```
+
+Secret name must be `zync`.
+
+See [Zync secret](apimanager-reference.md#zync) for reference.
+
+
+In this case, finally create *APIManager* custom resource to deploy 3scale
+with the previous external databases and zync database externally too:
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  wildcardDomain: lvh.me
+  highAvailability:
+    enabled: true
+    externalZyncDatabaseEnabled: true
+```
+
 Check [*APIManager HighAvailabilitySpec*](apimanager-reference.md#HighAvailabilitySpec) for reference.
 
 #### S3 Filestorage Installation
