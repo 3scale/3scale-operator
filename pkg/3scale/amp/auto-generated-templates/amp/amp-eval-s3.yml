@@ -1320,10 +1320,13 @@ objects:
           - containerPort: 11211
             protocol: TCP
           readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - echo version | nc $HOSTNAME 11211 | grep VERSION
             initialDelaySeconds: 10
             periodSeconds: 30
-            tcpSocket:
-              port: 11211
             timeoutSeconds: 5
           resources: {}
         serviceAccountName: amp
@@ -4268,7 +4271,7 @@ parameters:
 - description: AMP release tag.
   name: AMP_RELEASE
   required: true
-  value: master
+  value: "2.10"
 - description: Used for object app labels
   name: APP_LABEL
   required: true
@@ -4280,24 +4283,24 @@ parameters:
   value: 3scale
 - name: AMP_BACKEND_IMAGE
   required: true
-  value: quay.io/3scale/apisonator:nightly
+  value: registry.redhat.io/3scale-amp2/backend-rhel7:3scale2.10
 - name: AMP_ZYNC_IMAGE
   required: true
-  value: quay.io/3scale/zync:nightly
+  value: registry.redhat.io/3scale-amp2/zync-rhel7:3scale2.10
 - name: AMP_APICAST_IMAGE
   required: true
-  value: quay.io/3scale/apicast:nightly
+  value: registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.10
 - name: AMP_SYSTEM_IMAGE
   required: true
-  value: quay.io/3scale/porta:nightly
+  value: registry.redhat.io/3scale-amp2/system-rhel7:3scale2.10
 - description: Zync's PostgreSQL image to use
   name: ZYNC_DATABASE_IMAGE
   required: true
-  value: centos/postgresql-10-centos7
+  value: registry.redhat.io/rhscl/postgresql-10-rhel7
 - description: Memcached image to use
   name: MEMCACHED_IMAGE
   required: true
-  value: memcached:1.5
+  value: registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.10
 - description: Set to true if the server may bypass certificate verification or connect
     directly over HTTP during image import.
   name: IMAGESTREAM_TAG_IMPORT_INSECURE
@@ -4306,11 +4309,11 @@ parameters:
 - description: System MySQL image to use
   name: SYSTEM_DATABASE_IMAGE
   required: true
-  value: centos/mysql-57-centos7
+  value: registry.redhat.io/rhscl/mysql-57-rhel7:5.7
 - description: Redis image to use
   name: REDIS_IMAGE
   required: true
-  value: centos/redis-32-centos7
+  value: registry.redhat.io/rhscl/redis-32-rhel7:3.2
 - description: Username for System's MySQL user that will be used for accessing the
     database.
   displayName: System MySQL User
