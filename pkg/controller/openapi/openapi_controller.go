@@ -12,10 +12,12 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/discovery"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -184,6 +186,12 @@ func (r *ReconcileOpenapi) reconcileSpec(openapiCR *capabilitiesv1beta1.Openapi)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
+	_, err = r.readOpenAPI(openapiCR)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		return statusReconciler, reconcile.Result{}, err
+	}
+
 	productSynced, err := r.checkProductSynced(openapiCR)
 	if err != nil {
 		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
@@ -211,4 +219,91 @@ func (r *ReconcileOpenapi) validateSpec(resource *capabilitiesv1beta1.Openapi) e
 func (r *ReconcileOpenapi) checkProductSynced(resource *capabilitiesv1beta1.Openapi) (bool, error) {
 	// TODO check product resource is synced
 	return true, nil
+}
+
+func (r *ReconcileOpenapi) readOpenAPI(resource *capabilitiesv1beta1.Openapi) (*openapi3.Swagger, error) {
+	// OpenAPIRef is oneOf by CRD openapiV3 validation
+	if resource.Spec.OpenAPIRef.ConfigMapRef != nil {
+		return r.readOpenAPIConfigMap(resource)
+	}
+
+	// Must be URL
+	// TODO Implement  Openapi resource from URL
+	fieldErrors := field.ErrorList{}
+	specFldPath := field.NewPath("spec")
+	openapiRefFldPath := specFldPath.Child("openapiRef")
+	urlFldPath := openapiRefFldPath.Child("url")
+	fieldErrors = append(fieldErrors, field.NotFound(urlFldPath, resource.Spec.OpenAPIRef.URL))
+	return nil, &helper.SpecFieldError{
+		ErrorType:      helper.InvalidError,
+		FieldErrorList: fieldErrors,
+	}
+}
+
+func (r *ReconcileOpenapi) readOpenAPIConfigMap(resource *capabilitiesv1beta1.Openapi) (*openapi3.Swagger, error) {
+	fieldErrors := field.ErrorList{}
+	specFldPath := field.NewPath("spec")
+	openapiRefFldPath := specFldPath.Child("openapiRef")
+	configMapRefFldPath := openapiRefFldPath.Child("configMapRef")
+
+	objectKey := client.ObjectKey{Namespace: resource.Spec.OpenAPIRef.ConfigMapRef.Namespace, Name: resource.Spec.OpenAPIRef.ConfigMapRef.Name}
+	openapiConfigMapObj := &corev1.ConfigMap{}
+
+	// Read config map
+	if err := r.Client().Get(r.Context(), objectKey, openapiConfigMapObj); err != nil {
+		if errors.IsNotFound(err) {
+			fieldErrors = append(fieldErrors, field.Invalid(configMapRefFldPath, resource.Spec.OpenAPIRef.ConfigMapRef, "ConfigMap not found"))
+			return nil, &helper.SpecFieldError{
+				ErrorType:      helper.InvalidError,
+				FieldErrorList: fieldErrors,
+			}
+		}
+
+		// unexpected error
+		return nil, err
+	}
+
+	if len(openapiConfigMapObj.Data) < 1 {
+		fieldErrors = append(fieldErrors, field.Invalid(configMapRefFldPath, resource.Spec.OpenAPIRef.ConfigMapRef, "ConfigMap was empty"))
+		return nil, &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
+		}
+	}
+
+	// Get arbitrary key value
+	data := func(configMap *corev1.ConfigMap) string {
+		for _, v := range configMap.Data {
+			return v
+		}
+		return ""
+	}(openapiConfigMapObj)
+
+	//  UTF-8 encoding
+	dataByteArray := []byte(data)
+	openapiObj, err := openapi3.NewSwaggerLoader().LoadSwaggerFromData(dataByteArray)
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(configMapRefFldPath, resource.Spec.OpenAPIRef.ConfigMapRef, err.Error()))
+		return nil, &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
+		}
+	}
+
+	err = openapiObj.Validate(r.Context())
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(configMapRefFldPath, resource.Spec.OpenAPIRef.ConfigMapRef, err.Error()))
+		return nil, &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
+		}
+	}
+
+	for pathStr, pathItem := range openapiObj.Paths {
+		for opKey := range pathItem.Operations() {
+			r.Logger().Info("openapi path", opKey, pathStr)
+		}
+	}
+
+	return openapiObj, nil
 }

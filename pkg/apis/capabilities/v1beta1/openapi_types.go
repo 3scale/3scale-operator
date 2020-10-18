@@ -134,6 +134,13 @@ type Openapi struct {
 // SetDefaults set explicit defaults
 func (o *Openapi) SetDefaults(logger logr.Logger) bool {
 	updated := false
+
+	// defaults
+	if o.Spec.OpenAPIRef.ConfigMapRef != nil && o.Spec.OpenAPIRef.ConfigMapRef.Namespace == "" {
+		o.Spec.OpenAPIRef.ConfigMapRef.Namespace = o.GetNamespace()
+		updated = true
+	}
+
 	return updated
 }
 

@@ -6,6 +6,7 @@ require (
 	github.com/3scale/3scale-porta-go-client v0.0.4
 	github.com/RHsyseng/operator-utils v0.0.0-20200506183821-e3b4a2ba9c30
 	github.com/coreos/prometheus-operator v0.35.1
+	github.com/getkin/kin-openapi v0.22.1
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/go-logr/logr v0.1.0
@@ -22,8 +23,8 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.4.0
-	gopkg.in/yaml.v2 v2.2.8
+	github.com/stretchr/testify v1.5.1
+	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v12.0.0+incompatible
