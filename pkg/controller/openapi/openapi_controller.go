@@ -186,7 +186,27 @@ func (r *ReconcileOpenapi) reconcileSpec(openapiCR *capabilitiesv1beta1.Openapi)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
-	_, err = r.readOpenAPI(openapiCR)
+	openapiObj, err := r.readOpenAPI(openapiCR)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		return statusReconciler, reconcile.Result{}, err
+	}
+
+	err = r.validateOpenapiAs3scaleProduct(openapiCR, openapiObj)
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		return statusReconciler, reconcile.Result{}, err
+	}
+
+	backendReconciler := NewBackendReconciler(r.BaseReconciler, openapiCR, openapiObj, providerAccount, logger)
+	_, err = backendReconciler.Reconcile()
+	if err != nil {
+		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		return statusReconciler, reconcile.Result{}, err
+	}
+
+	productReconciler := NewProductReconciler(r.BaseReconciler, openapiCR, openapiObj, providerAccount, logger)
+	_, err = productReconciler.Reconcile()
 	if err != nil {
 		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
 		return statusReconciler, reconcile.Result{}, err
@@ -299,11 +319,37 @@ func (r *ReconcileOpenapi) readOpenAPIConfigMap(resource *capabilitiesv1beta1.Op
 		}
 	}
 
-	for pathStr, pathItem := range openapiObj.Paths {
-		for opKey := range pathItem.Operations() {
-			r.Logger().Info("openapi path", opKey, pathStr)
+	return openapiObj, nil
+}
+
+func (r *ReconcileOpenapi) validateOpenapiAs3scaleProduct(openapiCR *capabilitiesv1beta1.Openapi, openapiObj *openapi3.Swagger) error {
+	fieldErrors := field.ErrorList{}
+	specFldPath := field.NewPath("spec")
+	openapiRefFldPath := specFldPath.Child("openapiRef")
+
+	// Multiple sec requirements
+	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(openapiObj)
+	if len(globalSecRequirements) > 1 {
+		fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, "Invalid OAS: multiple security requirements"))
+		return &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
 		}
 	}
 
-	return openapiObj, nil
+	if len(globalSecRequirements) == 1 {
+		// Validate supported types
+		switch globalSecRequirements[0].Value.Type {
+		case "apiKey":
+			break
+		default:
+			fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, fmt.Sprintf("Unexpected security schema type: %s", globalSecRequirements[0].Value.Type)))
+			return &helper.SpecFieldError{
+				ErrorType:      helper.InvalidError,
+				FieldErrorList: fieldErrors,
+			}
+		}
+	}
+
+	return nil
 }
