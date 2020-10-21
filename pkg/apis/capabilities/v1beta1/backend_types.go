@@ -182,7 +182,7 @@ func (backend *Backend) SetDefaults(logger logr.Logger) bool {
 		}
 	}
 	if !hitsFound {
-		logger.Info("Hits metric added")
+		logger.V(1).Info("Hits metric added")
 		backend.Spec.Metrics["hits"] = MetricSpec{
 			Name:        "Hits",
 			Unit:        "hit",
