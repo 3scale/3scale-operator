@@ -66,7 +66,7 @@ type OpenapiSpec struct {
 	// +optional
 	SkipOpenapiValidation bool `json:"skipOpenapiValidation,omitempty"`
 
-	// SkipOpenapiValidation Skip OpenAPI schema validation
+	// ProductSystemName 3scale product system name
 	// +optional
 	ProductSystemName string `json:"productSystemName,omitempty"`
 }

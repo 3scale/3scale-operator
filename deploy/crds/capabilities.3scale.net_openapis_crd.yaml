@@ -85,7 +85,7 @@ spec:
                       type: string
                   required: ["url"]
             productSystemName:
-              description: SkipOpenapiValidation Skip OpenAPI schema validation
+              description: ProductSystemName 3scale product system name
               type: string
             productionPublicBaseURL:
               description: ProductionPublicBaseURL Custom public production URL
