@@ -180,6 +180,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	err = r.ReconcilePrometheusRules(component.SystemPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	err = r.ReconcilePrometheusRules(component.SystemSidekiqPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
