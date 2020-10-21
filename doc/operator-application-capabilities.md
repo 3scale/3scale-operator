@@ -347,7 +347,7 @@ spec:
 
 ### Product metrics
 
-Define desired product metrics declaratively using the `metrics` object.
+Define desired product metrics using the *metrics* object.
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
@@ -373,7 +373,7 @@ spec:
 
 ### Product methods
 
-Define desired product metrics declaratively using the `metrics` object.
+Define desired product methods using the *methods* object.
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
