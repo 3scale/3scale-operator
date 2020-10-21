@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -248,16 +249,7 @@ func (r *ReconcileOpenapi) readOpenAPI(resource *capabilitiesv1beta1.Openapi) (*
 	}
 
 	// Must be URL
-	// TODO Implement  Openapi resource from URL
-	fieldErrors := field.ErrorList{}
-	specFldPath := field.NewPath("spec")
-	openapiRefFldPath := specFldPath.Child("openapiRef")
-	urlFldPath := openapiRefFldPath.Child("url")
-	fieldErrors = append(fieldErrors, field.NotFound(urlFldPath, resource.Spec.OpenAPIRef.URL))
-	return nil, &helper.SpecFieldError{
-		ErrorType:      helper.InvalidError,
-		FieldErrorList: fieldErrors,
-	}
+	return r.readOpenAPIFromURL(resource)
 }
 
 func (r *ReconcileOpenapi) readOpenAPIConfigMap(resource *capabilitiesv1beta1.Openapi) (*openapi3.Swagger, error) {
@@ -352,4 +344,40 @@ func (r *ReconcileOpenapi) validateOpenapiAs3scaleProduct(openapiCR *capabilitie
 	}
 
 	return nil
+}
+
+func (r *ReconcileOpenapi) readOpenAPIFromURL(resource *capabilitiesv1beta1.Openapi) (*openapi3.Swagger, error) {
+	fieldErrors := field.ErrorList{}
+	specFldPath := field.NewPath("spec")
+	openapiRefFldPath := specFldPath.Child("openapiRef")
+	urlRefFldPath := openapiRefFldPath.Child("url")
+
+	openAPIURL, err := url.Parse(*resource.Spec.OpenAPIRef.URL)
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(urlRefFldPath, resource.Spec.OpenAPIRef.URL, err.Error()))
+		return nil, &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
+		}
+	}
+
+	openapiObj, err := openapi3.NewSwaggerLoader().LoadSwaggerFromURI(openAPIURL)
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(urlRefFldPath, resource.Spec.OpenAPIRef.URL, err.Error()))
+		return nil, &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
+		}
+	}
+
+	err = openapiObj.Validate(r.Context())
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(urlRefFldPath, resource.Spec.OpenAPIRef.URL, err.Error()))
+		return nil, &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
+		}
+	}
+
+	return openapiObj, nil
 }
