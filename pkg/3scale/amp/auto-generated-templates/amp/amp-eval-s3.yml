@@ -3,8 +3,7 @@ kind: Template
 message: Login on https://${TENANT_NAME}-admin.${WILDCARD_DOMAIN} as ${ADMIN_USERNAME}/${ADMIN_PASSWORD}
 metadata:
   annotations:
-    description: 3scale API Management main system (Evaluation) with shared file storage
-      in AWS S3.
+    description: 3scale API Management main system (Evaluation) with shared file storage in AWS S3.
     iconClass: icon-3scale
     openshift.io/display-name: 3scale API Management
     openshift.io/provider-display-name: Red Hat, Inc.
@@ -671,8 +670,7 @@ objects:
           - /opt/app/entrypoint.sh
           - sh
           - -c
-          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;
-            done
+          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done
           env:
           - name: CONFIG_REDIS_PROXY
             valueFrom:
@@ -990,8 +988,7 @@ objects:
           - /opt/app/entrypoint.sh
           - sh
           - -c
-          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;
-            done
+          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done
           env:
           - name: CONFIG_REDIS_PROXY
             valueFrom:
@@ -1149,8 +1146,7 @@ objects:
               - /bin/sh
               - -i
               - -c
-              - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE
-                -e 'SELECT 1'
+              - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'
             initialDelaySeconds: 10
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3231,9 +3227,7 @@ objects:
         - command:
           - bash
           - -c
-          - bundle exec sh -c "until rake boot:redis && curl --output /dev/null --silent
-            --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS;
-            done"
+          - bundle exec sh -c "until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done"
           env:
           - name: REDIS_URL
             valueFrom:
@@ -3426,8 +3420,7 @@ objects:
         - command:
           - sh
           - -c
-          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
-            do sleep $SLEEP_SECONDS; done
+          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done
           env:
           - name: SLEEP_SECONDS
             value: "1"
@@ -4164,8 +4157,7 @@ objects:
         - command:
           - sh
           - -c
-          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
-            do sleep $SLEEP_SECONDS; done
+          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done
           env:
           - name: SLEEP_SECONDS
             value: "1"
@@ -4273,8 +4265,7 @@ parameters:
   name: APP_LABEL
   required: true
   value: 3scale-api-management
-- description: Tenant name under the root that Admin UI will be available with -admin
-    suffix.
+- description: Tenant name under the root that Admin UI will be available with -admin suffix.
   name: TENANT_NAME
   required: true
   value: 3scale
@@ -4298,8 +4289,7 @@ parameters:
   name: MEMCACHED_IMAGE
   required: true
   value: memcached:1.5
-- description: Set to true if the server may bypass certificate verification or connect
-    directly over HTTP during image import.
+- description: Set to true if the server may bypass certificate verification or connect directly over HTTP during image import.
   name: IMAGESTREAM_TAG_IMPORT_INSECURE
   required: true
   value: "false"
@@ -4311,8 +4301,7 @@ parameters:
   name: REDIS_IMAGE
   required: true
   value: centos/redis-32-centos7
-- description: Username for System's MySQL user that will be used for accessing the
-    database.
+- description: Username for System's MySQL user that will be used for accessing the database.
   displayName: System MySQL User
   name: SYSTEM_DATABASE_USER
   required: true
@@ -4334,8 +4323,7 @@ parameters:
   generate: expression
   name: SYSTEM_DATABASE_ROOT_PASSWORD
   required: true
-- description: Root domain for the wildcard routes. Eg. example.com will generate
-    3scale-admin.example.com.
+- description: Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com.
   name: WILDCARD_DOMAIN
   required: true
 - description: Internal 3scale API username for internal 3scale api auth.
@@ -4392,15 +4380,11 @@ parameters:
   name: SYSTEM_REDIS_URL
   required: true
   value: redis://system-redis:6379/1
-- description: Define the external system-redis message bus to connect to. By default
-    the same value as SYSTEM_REDIS_URL but with the logical database incremented by
-    1 and the result applied mod 16
+- description: Define the external system-redis message bus to connect to. By default the same value as SYSTEM_REDIS_URL but with the logical database incremented by 1 and the result applied mod 16
   name: SYSTEM_MESSAGE_BUS_REDIS_URL
-- description: Define the namespace to be used by System's Redis Database. The empty
-    value means not namespaced
+- description: Define the namespace to be used by System's Redis Database. The empty value means not namespaced
   name: SYSTEM_REDIS_NAMESPACE
-- description: Define the namespace to be used by System's Message Bus Redis Database.
-    The empty value means not namespaced
+- description: Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced
   name: SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE
 - description: Password for the Zync Database PostgreSQL connection user.
   displayName: Zync Database PostgreSQL Connection Password
@@ -4416,18 +4400,15 @@ parameters:
   generate: expression
   name: ZYNC_AUTHENTICATION_TOKEN
   required: true
-- description: Read Only Access Token that is APIcast going to use to download its
-    configuration.
+- description: Read Only Access Token that is APIcast going to use to download its configuration.
   from: '[a-z0-9]{8}'
   generate: expression
   name: APICAST_ACCESS_TOKEN
   required: true
-- description: Scope of the APIcast Management API. Can be disabled, status or debug.
-    At least status required for health checks.
+- description: Scope of the APIcast Management API. Can be disabled, status or debug. At least status required for health checks.
   name: APICAST_MANAGEMENT_API
   value: status
-- description: Turn on/off the OpenSSL peer verification when downloading the configuration.
-    Can be set to true/false.
+- description: Turn on/off the OpenSSL peer verification when downloading the configuration. Can be set to true/false.
   name: APICAST_OPENSSL_VERIFY
   value: "false"
 - description: Enable logging response codes in APIcast.
@@ -4449,6 +4430,5 @@ parameters:
   name: AWS_PROTOCOL
 - description: AWS S3 compatible provider endpoint hostname
   name: AWS_HOSTNAME
-- description: When set to true, the bucket name is always left in the request URI
-    and never moved to the host as a sub-domain
+- description: When set to true, the bucket name is always left in the request URI and never moved to the host as a sub-domain
   name: AWS_PATH_STYLE
