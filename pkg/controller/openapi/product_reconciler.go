@@ -294,8 +294,6 @@ func (p *ProductReconciler) desiredMappingRules() ([]capabilitiesv1beta1.Mapping
 }
 
 func (p *ProductReconciler) desiredMappingRulesPattern(path string) (string, error) {
-	// TODO Strict matching optional param
-
 	publicBasePath, err := p.desiredPublicBasePath()
 	if err != nil {
 		return "", err
@@ -305,7 +303,13 @@ func (p *ProductReconciler) desiredMappingRulesPattern(path string) (string, err
 	publicBasePathSanitized := LastSlashRegexp.ReplaceAllString(publicBasePath, "")
 
 	//  According OAS 3.0: path MUST begin with a slash
-	return fmt.Sprintf("%s%s", publicBasePathSanitized, path), nil
+	pattern := fmt.Sprintf("%s%s", publicBasePathSanitized, path)
+
+	if !p.openapiCR.Spec.PrefixMatching {
+		pattern = fmt.Sprintf("%s$", pattern)
+	}
+
+	return pattern, nil
 }
 
 func (p *ProductReconciler) desiredPublicBasePath() (string, error) {

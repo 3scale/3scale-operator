@@ -73,6 +73,10 @@ type OpenapiSpec struct {
 	// PrivateBaseURL Custom private base URL
 	// +optional
 	PrivateBaseURL string `json:"privateBaseURL,omitempty"`
+
+	// PrefixMatching Use prefix matching instead of strict matching on mapping rules derived from openapi operations
+	// +optional
+	PrefixMatching bool `json:"prefixMatching,omitempty"`
 }
 
 // OpenapiStatus defines the observed state of Openapi

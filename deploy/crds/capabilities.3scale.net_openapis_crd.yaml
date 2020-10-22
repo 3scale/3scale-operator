@@ -84,6 +84,10 @@ spec:
                     url:
                       type: string
                   required: ["url"]
+            prefixMatching:
+              description: PrefixMatching Use prefix matching instead of strict matching
+                on mapping rules derived from openapi operations
+              type: boolean
             privateBaseURL:
               description: PrivateBaseURL Custom private base URL
               type: string
