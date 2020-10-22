@@ -69,6 +69,10 @@ type OpenapiSpec struct {
 	// ProductSystemName 3scale product system name
 	// +optional
 	ProductSystemName string `json:"productSystemName,omitempty"`
+
+	// PrivateBaseURL Custom private base URL
+	// +optional
+	PrivateBaseURL string `json:"privateBaseURL,omitempty"`
 }
 
 // OpenapiStatus defines the observed state of Openapi

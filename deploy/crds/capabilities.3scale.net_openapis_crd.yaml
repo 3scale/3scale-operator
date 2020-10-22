@@ -84,6 +84,9 @@ spec:
                     url:
                       type: string
                   required: ["url"]
+            privateBaseURL:
+              description: PrivateBaseURL Custom private base URL
+              type: string
             productSystemName:
               description: ProductSystemName 3scale product system name
               type: string

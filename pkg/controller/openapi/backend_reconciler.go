@@ -93,16 +93,9 @@ func (p *BackendReconciler) desired() (*capabilitiesv1beta1.Backend, error) {
 	description := fmt.Sprintf("Backend of %s", p.openapiObj.Info.Title)
 
 	// private base URL
-	privateBaseURL, err := helper.BaseURLFromOpenAPI(p.openapiObj)
+	privateBaseURL, err := p.desiredPrivateBaseURL()
 	if err != nil {
-		fieldErrors := field.ErrorList{}
-		specFldPath := field.NewPath("spec")
-		openapiRefFldPath := specFldPath.Child("openapiRef")
-		fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, p.openapiCR.Spec.OpenAPIRef, err.Error()))
-		return nil, &helper.SpecFieldError{
-			ErrorType:      helper.InvalidError,
-			FieldErrorList: fieldErrors,
-		}
+		return nil, err
 	}
 
 	backend := &capabilitiesv1beta1.Backend{
@@ -190,4 +183,24 @@ func (p *BackendReconciler) desiredObjName() string {
 	// returned
 	// Maybe truncate?
 	return fmt.Sprintf("%s-%s", helper.K8sNameFromOpenAPITitle(p.openapiObj), string(p.openapiCR.UID))
+}
+
+func (p *BackendReconciler) desiredPrivateBaseURL() (string, error) {
+	privateBaseURL := p.openapiCR.Spec.PrivateBaseURL
+	if privateBaseURL == "" {
+		var err error
+		privateBaseURL, err = helper.BaseURLFromOpenAPI(p.openapiObj)
+		if err != nil {
+			fieldErrors := field.ErrorList{}
+			specFldPath := field.NewPath("spec")
+			openapiRefFldPath := specFldPath.Child("openapiRef")
+			fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, p.openapiCR.Spec.OpenAPIRef, err.Error()))
+			return "", &helper.SpecFieldError{
+				ErrorType:      helper.InvalidError,
+				FieldErrorList: fieldErrors,
+			}
+		}
+	}
+
+	return privateBaseURL, nil
 }
