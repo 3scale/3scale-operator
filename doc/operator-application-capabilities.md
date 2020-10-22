@@ -33,6 +33,7 @@ The following diagram shows available custom resource definitions and their rela
    * [Product application plan limits](#product-application-plan-limits)
    * [Product application plan pricing rules](#product-application-plan-pricing-rules)
    * [Product backend usages](#product-backend-usages)
+   * [Product custom resource status field](#product-custom-resource-status-field)
    * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
 * [Tenant custom resource](#tenant-custom-resource)
    * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
@@ -229,27 +230,29 @@ Fields:
 
 * **backendId**: 3scale bakend internal ID
 * **conditions**: status.Conditions k8s common pattern. States:
-  * *InSync*: Sync process going on
-  * *Synced*: Sync'ed
-  * *Invalid*: Invalid object. Spec should be changed.
+  * *Failed*: Indicates that an error occurred during synchronization. The operator will retry.
+  * *Synced*: Indicates the backend has been successfully synchronized.
+  * *Invalid*: Invalid object. This is not a transient error, but it reports about invalid spec and should be changed. The operator will not retry.
 * **observedGeneration**: helper field to see if status info is up to date with latest resource spec.
+* **providerAccountHost**: 3scale provider account URL to which the backend is synchronized.
 
 Example of *Synced* resource.
 
-```
+```yaml
 status:
-    backendId: 59978
-    conditions:
-    - lastTransitionTime: "2020-06-22T10:50:33Z"
-      status: "False"
-      type: Failed
-    - lastTransitionTime: "2020-06-22T10:50:33Z"
-      status: "False"
-      type: Invalid
-    - lastTransitionTime: "2020-06-22T10:50:33Z"
-      status: "True"
-      type: Synced
-    observedGeneration: 2
+  backendId: 59978
+  conditions:
+  - lastTransitionTime: "2020-06-22T10:50:33Z"
+    status: "False"
+    type: Failed
+  - lastTransitionTime: "2020-06-22T10:50:33Z"
+    status: "False"
+    type: Invalid
+  - lastTransitionTime: "2020-06-22T10:50:33Z"
+    status: "True"
+    type: Synced
+  observedGeneration: 2
+  providerAccountHost: https://3scale-admin.example.com
 ```
 
 ### Link your 3scale backend to your 3scale tenant or provider account
@@ -540,6 +543,46 @@ spec:
 
 * **NOTE 1**: `backendUsages` map key names are references to `Backend system_name`. In the example: `backendA` and `backendB`.
 * **NOTE 1**: `path` field is required.
+
+### Product custom resource status field
+
+The status field shows resource information useful for the end user.
+It is not regarded to be updated manually and it is being reconciled on every change of the resource.
+
+Fields:
+
+* **productId**: 3scale product internal ID
+* **conditions**: status.Conditions k8s common pattern. States:
+  * *Failed*: Indicates that an error occurred during synchronization. The operator will retry.
+  * *Synced*: Indicates the product has been successfully synchronized.
+  * *Invalid*: Invalid object. This is not a transient error, but it reports about invalid spec and should be changed. The operator will not retry.
+  * *Orphan*: Spec references non existing resource. The operator will retry.
+* **observedGeneration**: helper field to see if status info is up to date with latest resource spec.
+* **state**: 3scale product internal state read from 3scale API.
+* **providerAccountHost**: 3scale provider account URL to which the backend is synchronized.
+
+Example of *Synced* resource.
+
+```yaml
+status:
+  conditions:
+  - lastTransitionTime: "2020-10-21T18:07:01Z"
+    status: "False"
+    type: Failed
+  - lastTransitionTime: "2020-10-21T18:06:54Z"
+    status: "False"
+    type: Invalid
+  - lastTransitionTime: "2020-10-21T18:07:01Z"
+    status: "False"
+    type: Orphan
+  - lastTransitionTime: "2020-10-21T18:07:01Z"
+    status: "True"
+    type: Synced
+  observedGeneration: 1
+  productId: 2555417872138
+  providerAccountHost: https://3scale-admin.example.com
+  state: incomplete
+```
 
 ### Link your 3scale product to your 3scale tenant or provider account
 

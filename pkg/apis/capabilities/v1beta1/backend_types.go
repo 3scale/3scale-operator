@@ -26,7 +26,7 @@ const (
 	// Example: the spec references non existing internal Metric reference
 	BackendInvalidConditionType common.ConditionType = "Invalid"
 
-	// BackendSyncedConditionType indicates the product has been successfully synchronized.
+	// BackendSyncedConditionType indicates the backend has been successfully synchronized.
 	// Steady state
 	BackendSyncedConditionType common.ConditionType = "Synced"
 
@@ -40,7 +40,7 @@ var (
 	backendSystemNameRegexp = regexp.MustCompile("[^a-zA-Z0-9]+")
 )
 
-// ProductStatusError represents that the combination of configuration in the BackendSpec
+// BackendStatusError represents that the combination of configuration in the BackendSpec
 // is not supported by this cluster. This is not a transient error, but
 // indicates a state that must be fixed before progress can be made.
 // Example: the BackendSpec references non existing internal Metric refenrece
@@ -51,7 +51,7 @@ type BackendSpec struct {
 	// Name is human readable name for the backend
 	Name string `json:"name"`
 
-	// SystemName identifies uniquely the product within the account provider
+	// SystemName identifies uniquely the backend within the account provider
 	// Default value will be sanitized Name
 	// +optional
 	SystemName string `json:"systemName,omitempty"`
