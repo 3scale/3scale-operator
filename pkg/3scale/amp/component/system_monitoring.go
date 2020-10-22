@@ -44,13 +44,28 @@ func (system *System) SystemAppPodMonitor() *monitoringv1.PodMonitor {
 					Scheme: "http",
 				},
 				{
+					Port:   SystemAppMasterContainerMetricsPortName,
+					Path:   "/yabeda-metrics",
+					Scheme: "http",
+				},
+				{
 					Port:   SystemAppProviderContainerMetricsPortName,
 					Path:   "/metrics",
 					Scheme: "http",
 				},
 				{
+					Port:   SystemAppProviderContainerMetricsPortName,
+					Path:   "/yabeda-metrics",
+					Scheme: "http",
+				},
+				{
 					Port:   SystemAppDeveloperContainerMetricsPortName,
 					Path:   "/metrics",
+					Scheme: "http",
+				},
+				{
+					Port:   SystemAppDeveloperContainerMetricsPortName,
+					Path:   "/yabeda-metrics",
 					Scheme: "http",
 				},
 			},
@@ -77,6 +92,39 @@ func SystemGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/system-grafana-dashboard-1.json.tpl", data),
 			Name: fmt.Sprintf("%s/system-grafana-dashboard-1.json", ns),
+		},
+	}
+}
+
+func SystemPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+	return &monitoringv1.PrometheusRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system",
+			Labels: map[string]string{
+				"prometheus": "application-monitoring",
+				"role":       "alert-rules",
+			},
+		},
+		Spec: monitoringv1.PrometheusRuleSpec{
+			Groups: []monitoringv1.RuleGroup{
+				{
+					Name: fmt.Sprintf("%s/system.rules", ns),
+					Rules: []monitoringv1.Rule{
+						{
+							Alert: "ThreescaleSystem5XXRequestsHigh",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(rails_requests_total{namespace="%s",pod=~"system-app-[a-z0-9]+-[a-z0-9]+",status=~"5[0-9]*"}[1m])) by (namespace,job) > 50`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "warning",
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
