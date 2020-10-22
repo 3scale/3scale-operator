@@ -144,15 +144,15 @@ func SystemSidekiqPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 					Name: fmt.Sprintf("%s/system-sidekiq.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "SystemSidekiqZyncRuntime",
+							Alert: "ThreescaleSystemSidekiqJobDown",
 							Annotations: map[string]string{
-								"summary":     "Rule example:  Zync runtime average more than 300 seconds",
-								"description": "Rule example:  Zync runtime average more than 300 seconds",
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`avg(sidekiq_job_runtime_seconds_sum{queue="zync",worker="ZyncWorker",namespace="%s"}) > 300`, ns)),
-							For:  "10m",
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*system-sidekiq.*",namespace="%s"} == 0`, ns)),
+							For:  "1m",
 							Labels: map[string]string{
-								"severity": "warning",
+								"severity": "critical",
 							},
 						},
 					},
