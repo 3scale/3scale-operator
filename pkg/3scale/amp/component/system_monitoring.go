@@ -96,10 +96,10 @@ func SystemGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 	}
 }
 
-func SystemPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func SystemAppPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system",
+			Name: "system-app",
 			Labels: map[string]string{
 				"prometheus": "application-monitoring",
 				"role":       "alert-rules",
@@ -108,10 +108,10 @@ func SystemPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/system.rules", ns),
+					Name: fmt.Sprintf("%s/system-app.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "ThreescaleSystem5XXRequestsHigh",
+							Alert: "ThreescaleSystemApp5XXRequestsHigh",
 							Annotations: map[string]string{
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
@@ -123,7 +123,7 @@ func SystemPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							},
 						},
 						{
-							Alert: "ThreescaleSystemJobDown",
+							Alert: "ThreescaleSystemAppJobDown",
 							Annotations: map[string]string{
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
