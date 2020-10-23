@@ -101,7 +101,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.BackendGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileGrafanaDashboard(component.BackendGrafanaDashboard(r.apiManager.Namespace), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
