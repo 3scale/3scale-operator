@@ -12,6 +12,7 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type StatusReconciler struct {
@@ -37,7 +38,10 @@ func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1
 func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
-	newStatus := s.calculateStatus()
+	newStatus, err := s.calculateStatus()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
 	equalStatus := s.resource.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
@@ -70,10 +74,22 @@ func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.OpenapiStatus {
+func (s *StatusReconciler) calculateStatus() (*capabilitiesv1beta1.OpenapiStatus, error) {
 	newStatus := &capabilitiesv1beta1.OpenapiStatus{}
 
 	newStatus.ProviderAccountHost = s.providerAccountHost
+
+	productResourceName, err := s.getManagedProduct()
+	if err != nil {
+		return nil, err
+	}
+	newStatus.ProductResourceName = productResourceName
+
+	backendResourceNames, err := s.getManagedBackends()
+	if err != nil {
+		return nil, err
+	}
+	newStatus.BackendResourceNames = backendResourceNames
 
 	newStatus.ObservedGeneration = s.resource.Status.ObservedGeneration
 
@@ -82,7 +98,7 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.OpenapiStatus 
 	newStatus.Conditions.SetCondition(s.invalidCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
 
-	return newStatus
+	return newStatus, nil
 }
 
 func (s *StatusReconciler) readyCondition() common.Condition {
@@ -125,4 +141,51 @@ func (s *StatusReconciler) failedCondition() common.Condition {
 	}
 
 	return condition
+}
+
+func (s *StatusReconciler) getManagedProduct() (*corev1.LocalObjectReference, error) {
+	listOps := []client.ListOption{
+		client.InNamespace(s.resource.Namespace),
+	}
+	productList := &capabilitiesv1beta1.ProductList{}
+	err := s.Client().List(s.Context(), productList, listOps...)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to list product: %w", err)
+	}
+
+	for _, product := range productList.Items {
+		for _, ownerRef := range product.GetOwnerReferences() {
+			if ownerRef.UID == s.resource.UID {
+				return &corev1.LocalObjectReference{
+					Name: product.Name,
+				}, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+func (s *StatusReconciler) getManagedBackends() ([]corev1.LocalObjectReference, error) {
+	listOps := []client.ListOption{
+		client.InNamespace(s.resource.Namespace),
+	}
+	list := &capabilitiesv1beta1.BackendList{}
+	err := s.Client().List(s.Context(), list, listOps...)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to list backends: %w", err)
+	}
+
+	var managedBackends []corev1.LocalObjectReference
+	for _, backend := range list.Items {
+		for _, ownerRef := range backend.GetOwnerReferences() {
+			if ownerRef.UID == s.resource.UID {
+				managedBackends = append(managedBackends, corev1.LocalObjectReference{
+					Name: backend.Name,
+				})
+			}
+		}
+	}
+
+	return managedBackends, nil
 }

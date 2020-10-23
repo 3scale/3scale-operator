@@ -127,6 +127,18 @@ spec:
         status:
           description: OpenapiStatus defines the observed state of Openapi
           properties:
+            backendResourceNames:
+              description: BackendResourceNames reference to managed product
+              items:
+                description: LocalObjectReference contains enough information to let
+                  you locate the referenced object inside the same namespace.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+              type: array
             conditions:
               description: Current state of the openapi resource. Conditions represent
                 the latest available observations of an object's state
@@ -174,7 +186,7 @@ spec:
               format: int64
               type: integer
             productResourceName:
-              description: 3scale control plane host
+              description: ProductResourceName reference to managed product
               properties:
                 name:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names

@@ -1,6 +1,8 @@
 package v1beta1
 
 import (
+	"reflect"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	"github.com/go-logr/logr"
@@ -93,9 +95,13 @@ type OpenapiStatus struct {
 	// +optional
 	ProviderAccountHost string `json:"providerAccountHost,omitempty"`
 
-	// 3scale control plane host
+	// ProductResourceName reference to managed product
 	// +optional
 	ProductResourceName *corev1.LocalObjectReference `json:"productResourceName,omitempty"`
+
+	// BackendResourceNames reference to managed product
+	// +optional
+	BackendResourceNames []corev1.LocalObjectReference `json:"backendResourceNames,omitempty"`
 
 	// ObservedGeneration reflects the generation of the most recently observed Backend Spec.
 	// +optional
@@ -113,6 +119,18 @@ func (o *OpenapiStatus) Equals(other *OpenapiStatus, logger logr.Logger) bool {
 	if o.ProviderAccountHost != other.ProviderAccountHost {
 		diff := cmp.Diff(o.ProviderAccountHost, other.ProviderAccountHost)
 		logger.V(1).Info("ProviderAccountHost not equal", "difference", diff)
+		return false
+	}
+
+	if o.ProductResourceName != other.ProductResourceName {
+		diff := cmp.Diff(o.ProductResourceName, other.ProductResourceName)
+		logger.V(1).Info("ProductResourceName not equal", "difference", diff)
+		return false
+	}
+
+	if !reflect.DeepEqual(o.BackendResourceNames, other.BackendResourceNames) {
+		diff := cmp.Diff(o.BackendResourceNames, other.BackendResourceNames)
+		logger.V(1).Info("BackendResourceNames not equal", "difference", diff)
 		return false
 	}
 

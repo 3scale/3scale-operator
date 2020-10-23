@@ -534,6 +534,11 @@ func (in *OpenapiStatus) DeepCopyInto(out *OpenapiStatus) {
 		*out = new(v1.LocalObjectReference)
 		**out = **in
 	}
+	if in.BackendResourceNames != nil {
+		in, out := &in.BackendResourceNames, &out.BackendResourceNames
+		*out = make([]v1.LocalObjectReference, len(*in))
+		copy(*out, *in)
+	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make(common.Conditions, len(*in))
