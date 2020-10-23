@@ -96,10 +96,10 @@ func SystemGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
 	}
 }
 
-func SystemPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func SystemAppPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system",
+			Name: "system-app",
 			Labels: map[string]string{
 				"prometheus": "application-monitoring",
 				"role":       "alert-rules",
@@ -108,10 +108,10 @@ func SystemPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/system.rules", ns),
+					Name: fmt.Sprintf("%s/system-app.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "ThreescaleSystem5XXRequestsHigh",
+							Alert: "ThreescaleSystemApp5XXRequestsHigh",
 							Annotations: map[string]string{
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
@@ -120,6 +120,18 @@ func SystemPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "warning",
+							},
+						},
+						{
+							Alert: "ThreescaleSystemAppJobDown",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*system-app.*",namespace="%s"} == 0`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "critical",
 							},
 						},
 					},
@@ -144,15 +156,15 @@ func SystemSidekiqPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 					Name: fmt.Sprintf("%s/system-sidekiq.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "SystemSidekiqZyncRuntime",
+							Alert: "ThreescaleSystemSidekiqJobDown",
 							Annotations: map[string]string{
-								"summary":     "Rule example:  Zync runtime average more than 300 seconds",
-								"description": "Rule example:  Zync runtime average more than 300 seconds",
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`avg(sidekiq_job_runtime_seconds_sum{queue="zync",worker="ZyncWorker",namespace="%s"}) > 300`, ns)),
-							For:  "10m",
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*system-sidekiq.*",namespace="%s"} == 0`, ns)),
+							For:  "1m",
 							Labels: map[string]string{
-								"severity": "warning",
+								"severity": "critical",
 							},
 						},
 					},
