@@ -4,5 +4,4 @@ metadata:
   name: example-openapi
 spec:
   openapiRef:
-    configMapRef:
-      name: hello
+    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
