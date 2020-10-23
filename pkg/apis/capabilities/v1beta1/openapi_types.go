@@ -77,6 +77,14 @@ type OpenapiSpec struct {
 	// PrefixMatching Use prefix matching instead of strict matching on mapping rules derived from openapi operations
 	// +optional
 	PrefixMatching bool `json:"prefixMatching,omitempty"`
+
+	// PrivateAPIHostHeader Custom host header sent by the API gateway to the private API
+	// +optional
+	PrivateAPIHostHeader string `json:"privateAPIHostHeader,omitempty"`
+
+	// PrivateAPISecretToken Custom secret token sent by the API gateway to the private API
+	// +optional
+	PrivateAPISecretToken string `json:"privateAPISecretToken,omitempty"`
 }
 
 // OpenapiStatus defines the observed state of Openapi

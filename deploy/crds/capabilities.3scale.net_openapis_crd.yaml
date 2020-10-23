@@ -88,6 +88,14 @@ spec:
               description: PrefixMatching Use prefix matching instead of strict matching
                 on mapping rules derived from openapi operations
               type: boolean
+            privateAPIHostHeader:
+              description: PrivateAPIHostHeader Custom host header sent by the API
+                gateway to the private API
+              type: string
+            privateAPISecretToken:
+              description: PrivateAPISecretToken Custom secret token sent by the API
+                gateway to the private API
+              type: string
             privateBaseURL:
               description: PrivateBaseURL Custom private base URL
               type: string

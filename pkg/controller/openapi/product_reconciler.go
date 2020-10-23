@@ -220,7 +220,8 @@ func (p *ProductReconciler) desiredDeployment() *capabilitiesv1beta1.ProductDepl
 func (p *ProductReconciler) desiredAuthentication() *capabilitiesv1beta1.AuthenticationSpec {
 	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(p.openapiObj)
 	if len(globalSecRequirements) == 0 {
-		return nil
+		// if no security requirements are found, default to UserKey auth
+		return p.desiredUserKeyAuthentication(nil)
 	}
 
 	// Only the first one is used
@@ -238,12 +239,18 @@ func (p *ProductReconciler) desiredAuthentication() *capabilitiesv1beta1.Authent
 }
 
 func (p *ProductReconciler) desiredUserKeyAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
-	return &capabilitiesv1beta1.AuthenticationSpec{
+	authSpec := &capabilitiesv1beta1.AuthenticationSpec{
 		UserKeyAuthentication: &capabilitiesv1beta1.UserKeyAuthenticationSpec{
-			Key:            &secReq.Value.Name,
-			CredentialsLoc: p.parseUserKeyCredentialsLoc(secReq.Value.In),
+			Security: p.desiredPrivateAPISecurity(),
 		},
 	}
+
+	if secReq != nil {
+		authSpec.UserKeyAuthentication.Key = &secReq.Value.Name
+		authSpec.UserKeyAuthentication.CredentialsLoc = p.parseUserKeyCredentialsLoc(secReq.Value.In)
+	}
+
+	return authSpec
 }
 
 func (p *ProductReconciler) parseUserKeyCredentialsLoc(inField string) *string {
@@ -332,4 +339,22 @@ func (p *ProductReconciler) desiredPublicBasePath() (string, error) {
 	}
 
 	return basePath, nil
+}
+
+func (p *ProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1beta1.SecuritySpec {
+	if p.openapiCR.Spec.PrivateAPIHostHeader == "" && p.openapiCR.Spec.PrivateAPISecretToken == "" {
+		return nil
+	}
+
+	privateAPISec := &capabilitiesv1beta1.SecuritySpec{}
+
+	if p.openapiCR.Spec.PrivateAPIHostHeader != "" {
+		privateAPISec.HostHeader = &p.openapiCR.Spec.PrivateAPIHostHeader
+	}
+
+	if p.openapiCR.Spec.PrivateAPISecretToken != "" {
+		privateAPISec.SecretToken = &p.openapiCR.Spec.PrivateAPISecretToken
+	}
+
+	return privateAPISec
 }
