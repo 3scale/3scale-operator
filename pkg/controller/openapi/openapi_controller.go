@@ -238,8 +238,24 @@ func (r *ReconcileOpenapi) validateSpec(resource *capabilitiesv1beta1.Openapi) e
 }
 
 func (r *ReconcileOpenapi) checkProductSynced(resource *capabilitiesv1beta1.Openapi) (bool, error) {
-	// TODO check product resource is synced
-	return true, nil
+	if resource.Status.ProductResourceName == nil {
+		// product resource name not available to check
+		return false, nil
+	}
+
+	// Fetch the Product instance
+	product := &capabilitiesv1beta1.Product{}
+	objectKey := client.ObjectKey{Name: resource.Status.ProductResourceName.Name, Namespace: resource.Namespace}
+	err := r.Client().Get(r.Context(), objectKey, product)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		// Error reading the object - requeue the request.
+		return false, err
+	}
+
+	return product.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductSyncedConditionType), nil
 }
 
 func (r *ReconcileOpenapi) readOpenAPI(resource *capabilitiesv1beta1.Openapi) (*openapi3.Swagger, error) {
