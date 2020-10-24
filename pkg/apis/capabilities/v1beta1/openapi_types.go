@@ -64,10 +64,6 @@ type OpenapiSpec struct {
 	// +optional
 	StagingPublicBaseURL string `json:"stagingPublicBaseURL,omitempty"`
 
-	// SkipOpenapiValidation Skip OpenAPI schema validation
-	// +optional
-	SkipOpenapiValidation bool `json:"skipOpenapiValidation,omitempty"`
-
 	// ProductSystemName 3scale product system name
 	// +optional
 	ProductSystemName string `json:"productSystemName,omitempty"`
@@ -91,15 +87,15 @@ type OpenapiSpec struct {
 
 // OpenapiStatus defines the observed state of Openapi
 type OpenapiStatus struct {
-	// 3scale control plane host
+	// ProviderAccountHost contains the 3scale account's provider URL
 	// +optional
 	ProviderAccountHost string `json:"providerAccountHost,omitempty"`
 
-	// ProductResourceName reference to managed product
+	// ProductResourceName references the managed 3scale product
 	// +optional
 	ProductResourceName *corev1.LocalObjectReference `json:"productResourceName,omitempty"`
 
-	// BackendResourceNames reference to managed product
+	// BackendResourceNames contains a list of references to the managed 3scale backends
 	// +optional
 	BackendResourceNames []corev1.LocalObjectReference `json:"backendResourceNames,omitempty"`
 
