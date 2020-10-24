@@ -1,0 +1,121 @@
+# Openapi CRD Reference
+
+## Table of Contents
+
+* [OpenAPI](#openapi)
+   * [OpenapiSpec](#openapispec)
+      * [OpenAPIRef](#openapiref)
+      * [Provider Account Reference](#provider-account-reference)
+   * [OpenapiStatus](#openapistatus)
+      * [ConditionSpec](#conditionspec)
+
+Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## OpenAPI
+
+| **Field** | **json field**| **Type** | **Info** |
+| --- | --- | --- | --- |
+| Spec | `spec` | [OpenapiSpec](#openapispec) | The specfication for the custom resource |
+| Status | `status` | [OpenapiStatus](#openapistatus) | The status for the custom resource |
+
+### OpenapiSpec
+
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| OpenAPIRef | `openapiRef` | object | Reference to the OpenAPI Specification. See [OpenAPIRef](#openapiref) | Yes |
+| Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
+| ProductionPublicBaseURL | `productionPublicBaseURL` | string | Custom public production URL | No |
+| StagingPublicBaseURL | `stagingPublicBaseURL` | string | Custom public staging URL | No |
+| ProductSystemName | `productSystemName` | string | Custom 3scale product system name | No |
+| PrivateBaseURL | `privateBaseURL` | string | Custom private base URL | No |
+| PrefixMatching | `prefixMatching` | boolean | Use prefix matching instead of strict matching on mapping rules derived from openapi operations | No |
+| PrivateAPIHostHeader | `privateAPIHostHeader` | string | Custom host header sent by the API gateway to the private API | No |
+| PrivateAPISecretToken | `privateAPISecretToken` | string | Custom secret token sent by the API gateway to the private API | No |
+
+#### OpenAPIRef
+
+Reference to the OpenAPI Specification
+
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| ConfigMapRef | `configMapRef` | [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) | The configMap that contains the OpenAPI Document | No |
+| URL | `url` | string | Remote URL from where to fetch the OpenAPI Document | No |
+
+#### Provider Account Reference
+
+Provider account credentials secret referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object.
+
+The secret must have `adminURL` and `token` fields with tenant credentials.
+Tenant controller will fetch the secret and read the following fields:
+
+| **Field** | **Description** | **Required** |
+| --- | --- | --- |
+| *token* | Provider account access token with *Account Management API* scope and *Read & Write* permission | Yes |
+| *adminURL* | Provider account's domain URL | Yes |
+
+For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mytenant
+type: Opaque
+stringData:
+  adminURL: https://my3scale-admin.example.com:443
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+### OpenapiStatus
+
+| **Field** | **json field**| **Type** | **Info** |
+| --- | --- | --- | --- |
+| ProviderAccountHost | `providerAccountHost` | string | 3scale account's provider URL |
+| ProductResourceName | `productResourceName` | [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) | Reference to the managed 3scale product |
+| BackendResourceNames | `backendResourceNames` | array of [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) | List of references to the managed 3scale backend |
+| Observed Generation | `observedGeneration` | string | helper field to see if status info is up to date with latest resource spec |
+| Conditions | `conditions` | array of [condition](#ConditionSpec)s | resource conditions |
+
+For example:
+
+```
+status:
+    backendResourceNames:
+    - name: swaggerpetstore-4686df5a-da77-4099-904a-edc3d273aa53
+    conditions:
+    - lastTransitionTime: "2020-10-23T16:59:22Z"
+      status: "False"
+      type: Failed
+    - lastTransitionTime: "2020-10-23T16:59:22Z"
+      status: "False"
+      type: Invalid
+    - lastTransitionTime: "2020-10-23T16:59:22Z"
+      status: "True"
+      type: Ready
+    observedGeneration: 1
+    productResourceName:
+      name: swaggerpetstore-4686df5a-da77-4099-904a-edc3d273aa53
+    providerAccountHost: https://3scale-admin.example.net
+```
+
+#### ConditionSpec
+
+The status object has an array of Conditions through which the Product has or has not passed.
+Each element of the Condition array has the following fields:
+
+* The *lastTransitionTime* field provides a timestamp for when the entity last transitioned from one status to another.
+* The *message* field is a human-readable message indicating details about the transition.
+* The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
+* The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
+* The *type* field is a string with the following possible values:
+  * Invalid: Indicates that the combination of configuration in the OpenapiSpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
+  * Ready: Indicates the openapi resource has been successfully reconciled;
+  * Failed: Indicates that an error occurred during reconcilliation;
+
+| **Field** | **json field**| **Type** | **Info** |
+| --- | --- | --- | --- |
+| Type | `type` | string | Condition Type |
+| Status | `status` | string | Status: True, False, Unknown |
+| Reason | `reason` | string | Condition state reason |
+| Message | `message` | string | Condition state description |
+| LastTransitionTime | `lastTransitionTime` | timestamp | Last transition timestap |
