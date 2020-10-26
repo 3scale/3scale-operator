@@ -11,6 +11,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -424,6 +425,20 @@ func (u *UpgradeApiManager) upgradeMonitoringSettings() (reconcile.Result, error
 	}
 	updated = updated || updatedTmp
 
+	// Apicast rules
+	updatedTmp, err = u.upgradePrometheusRules(component.ApicastPrometheusRules(u.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
+	// System Sidekiq rules
+	updatedTmp, err = u.upgradePrometheusRules(component.SystemSidekiqPrometheusRules(u.apiManager.Namespace))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
 	return reconcile.Result{Requeue: updated}, nil
 }
 
@@ -512,6 +527,36 @@ func (u *UpgradeApiManager) ensureSystemAppMonitoringSettings() (bool, error) {
 	}
 
 	return update, nil
+}
+
+func (u *UpgradeApiManager) upgradePrometheusRules(desired *monitoringv1.PrometheusRule) (bool, error) {
+	existing := &monitoringv1.PrometheusRule{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	changed := u.ensurePrometheusRulesEqual(desired, existing)
+	if changed {
+		u.Logger().Info(fmt.Sprintf("Upgrading prometheus rules: %s", existing.Name))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return true, err
+		}
+	}
+
+	return changed, nil
+}
+
+func (u *UpgradeApiManager) ensurePrometheusRulesEqual(desired, existing *monitoringv1.PrometheusRule) bool {
+	if !reflect.DeepEqual(existing.Spec, desired.Spec) {
+		diff := cmp.Diff(existing.Spec, desired.Spec)
+		u.Logger().V(1).Info(fmt.Sprintf("%s prometheus rules changed: %s", desired.Name, diff))
+		existing.Spec = desired.Spec
+		return true
+	}
+
+	return false
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {
