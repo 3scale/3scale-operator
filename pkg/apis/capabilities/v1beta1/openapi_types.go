@@ -16,21 +16,21 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
-	OpenapiKind = "Openapi"
+	OpenAPIKind = "OpenAPI"
 
-	// OpenapiInvalidConditionType represents that the combination of configuration
-	// in the OpenapiSpec is not supported. This is not a transient error, but
+	// OpenAPIInvalidConditionType represents that the combination of configuration
+	// in the OpenAPISpec is not supported. This is not a transient error, but
 	// indicates a state that must be fixed before progress can be made.
 	// Example: the spec references invalid openapi spec
-	OpenapiInvalidConditionType common.ConditionType = "Invalid"
+	OpenAPIInvalidConditionType common.ConditionType = "Invalid"
 
-	// OpenapiReadyConditionType indicates the openapi resource has been successfully reconciled.
+	// OpenAPIReadyConditionType indicates the openapi resource has been successfully reconciled.
 	// Steady state
-	OpenapiReadyConditionType common.ConditionType = "Ready"
+	OpenAPIReadyConditionType common.ConditionType = "Ready"
 
-	// OpenapiFailedConditionType indicates that an error occurred during reconcilliation.
+	// OpenAPIFailedConditionType indicates that an error occurred during reconcilliation.
 	// The operator will retry.
-	OpenapiFailedConditionType common.ConditionType = "Failed"
+	OpenAPIFailedConditionType common.ConditionType = "Failed"
 )
 
 // OpenAPIRefSpec Reference to the OpenAPI Specification
@@ -45,8 +45,8 @@ type OpenAPIRefSpec struct {
 	URL *string `json:"url,omitempty"`
 }
 
-// OpenapiSpec defines the desired state of Openapi
-type OpenapiSpec struct {
+// OpenAPISpec defines the desired state of OpenAPI
+type OpenAPISpec struct {
 	// OpenAPIRef Reference to the OpenAPI Specification
 	OpenAPIRef OpenAPIRefSpec `json:"openapiRef"`
 
@@ -85,8 +85,8 @@ type OpenapiSpec struct {
 	PrivateAPISecretToken string `json:"privateAPISecretToken,omitempty"`
 }
 
-// OpenapiStatus defines the observed state of Openapi
-type OpenapiStatus struct {
+// OpenAPIStatus defines the observed state of OpenAPI
+type OpenAPIStatus struct {
 	// ProviderAccountHost contains the 3scale account's provider URL
 	// +optional
 	ProviderAccountHost string `json:"providerAccountHost,omitempty"`
@@ -111,7 +111,7 @@ type OpenapiStatus struct {
 	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
-func (o *OpenapiStatus) Equals(other *OpenapiStatus, logger logr.Logger) bool {
+func (o *OpenAPIStatus) Equals(other *OpenAPIStatus, logger logr.Logger) bool {
 	if o.ProviderAccountHost != other.ProviderAccountHost {
 		diff := cmp.Diff(o.ProviderAccountHost, other.ProviderAccountHost)
 		logger.V(1).Info("ProviderAccountHost not equal", "difference", diff)
@@ -150,19 +150,19 @@ func (o *OpenapiStatus) Equals(other *OpenapiStatus, logger logr.Logger) bool {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Openapi is the Schema for the openapis API
+// OpenAPI is the Schema for the openapis API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=openapis,scope=Namespaced
-type Openapi struct {
+type OpenAPI struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   OpenapiSpec   `json:"spec,omitempty"`
-	Status OpenapiStatus `json:"status,omitempty"`
+	Spec   OpenAPISpec   `json:"spec,omitempty"`
+	Status OpenAPIStatus `json:"status,omitempty"`
 }
 
 // SetDefaults set explicit defaults
-func (o *Openapi) SetDefaults(logger logr.Logger) bool {
+func (o *OpenAPI) SetDefaults(logger logr.Logger) bool {
 	updated := false
 
 	// defaults
@@ -174,20 +174,20 @@ func (o *Openapi) SetDefaults(logger logr.Logger) bool {
 	return updated
 }
 
-func (o *Openapi) Validate() field.ErrorList {
+func (o *OpenAPI) Validate() field.ErrorList {
 	errors := field.ErrorList{}
 	return errors
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// OpenapiList contains a list of Openapi
-type OpenapiList struct {
+// OpenAPIList contains a list of OpenAPI
+type OpenAPIList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Openapi `json:"items"`
+	Items           []OpenAPI `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Openapi{}, &OpenapiList{})
+	SchemeBuilder.Register(&OpenAPI{}, &OpenAPIList{})
 }

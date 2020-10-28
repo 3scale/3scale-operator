@@ -161,7 +161,7 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "Openapi",
+          "kind": "OpenAPI",
           "metadata": {
             "name": "example-openapi"
           },
@@ -175,7 +175,7 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "Openapi",
+          "kind": "OpenAPI",
           "metadata": {
             "name": "example-openapi"
           },
@@ -347,10 +347,10 @@ metadata:
     containerImage: quay.io/3scale/3scale-operator:master
     createdAt: "2019-05-30T22:40:00Z"
     description: 3scale Operator to provision 3scale and publish/manage API
+    operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/3scale/3scale-operator
     support: Red Hat
     tectonic-visibility: ocs
-    operators.openshift.io/infrastructure-features: '["Disconnected"]'
   name: 3scale-operator-master.v0.0.0
   namespace: placeholder
 spec:
@@ -428,8 +428,8 @@ spec:
       kind: Backend
       name: backends.capabilities.3scale.net
       version: v1beta1
-    - description: Openapi is the Schema for the openapis API
-      kind: Openapi
+    - description: OpenAPI is the Schema for the openapis API
+      kind: OpenAPI
       name: openapis.capabilities.3scale.net
       version: v1beta1
     - description: Product is the Schema for the products API

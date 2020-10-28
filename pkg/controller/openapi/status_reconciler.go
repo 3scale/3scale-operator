@@ -17,14 +17,14 @@ import (
 
 type StatusReconciler struct {
 	*reconcilers.BaseReconciler
-	resource            *capabilitiesv1beta1.Openapi
+	resource            *capabilitiesv1beta1.OpenAPI
 	providerAccountHost string
 	reconcileError      error
 	reconcileReady      bool
 	logger              logr.Logger
 }
 
-func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Openapi, providerAccountHost string, reconcileError error, reconcileReady bool) *StatusReconciler {
+func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.OpenAPI, providerAccountHost string, reconcileError error, reconcileReady bool) *StatusReconciler {
 	return &StatusReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
@@ -74,8 +74,8 @@ func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *StatusReconciler) calculateStatus() (*capabilitiesv1beta1.OpenapiStatus, error) {
-	newStatus := &capabilitiesv1beta1.OpenapiStatus{}
+func (s *StatusReconciler) calculateStatus() (*capabilitiesv1beta1.OpenAPIStatus, error) {
+	newStatus := &capabilitiesv1beta1.OpenAPIStatus{}
 
 	newStatus.ProviderAccountHost = s.providerAccountHost
 
@@ -103,7 +103,7 @@ func (s *StatusReconciler) calculateStatus() (*capabilitiesv1beta1.OpenapiStatus
 
 func (s *StatusReconciler) readyCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.OpenapiReadyConditionType,
+		Type:   capabilitiesv1beta1.OpenAPIReadyConditionType,
 		Status: corev1.ConditionFalse,
 	}
 
@@ -116,7 +116,7 @@ func (s *StatusReconciler) readyCondition() common.Condition {
 
 func (s *StatusReconciler) invalidCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.OpenapiInvalidConditionType,
+		Type:   capabilitiesv1beta1.OpenAPIInvalidConditionType,
 		Status: corev1.ConditionFalse,
 	}
 
@@ -130,7 +130,7 @@ func (s *StatusReconciler) invalidCondition() common.Condition {
 
 func (s *StatusReconciler) failedCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.OpenapiFailedConditionType,
+		Type:   capabilitiesv1beta1.OpenAPIFailedConditionType,
 		Status: corev1.ConditionFalse,
 	}
 

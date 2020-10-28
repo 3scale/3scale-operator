@@ -29,14 +29,14 @@ var (
 
 type ProductReconciler struct {
 	*reconcilers.BaseReconciler
-	openapiCR       *capabilitiesv1beta1.Openapi
+	openapiCR       *capabilitiesv1beta1.OpenAPI
 	openapiObj      *openapi3.Swagger
 	providerAccount *controllerhelper.ProviderAccount
 	logger          logr.Logger
 }
 
 func NewProductReconciler(b *reconcilers.BaseReconciler,
-	openapiCR *capabilitiesv1beta1.Openapi,
+	openapiCR *capabilitiesv1beta1.OpenAPI,
 	openapiObj *openapi3.Swagger,
 	providerAccount *controllerhelper.ProviderAccount,
 	logger logr.Logger,

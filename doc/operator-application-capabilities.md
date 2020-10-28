@@ -35,7 +35,7 @@ The following diagram shows available custom resource definitions and their rela
    * [Product backend usages](#product-backend-usages)
    * [Product custom resource status field](#product-custom-resource-status-field)
    * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
-* [Openapi custom resource](#openapi-custom-resource)
+* [OpenAPI custom resource](#openapi-custom-resource)
    * [Features](#features)
    * [Configmap OpenAPI spec source](#configmap-openapi-spec-source)
    * [URL OpenAPI spec source](#url-openapi-spec-source)
@@ -51,7 +51,7 @@ The following diagram shows available custom resource definitions and their rela
 * [Backend CRD reference](backend-reference.md)
 * [Product CRD reference](product-reference.md)
 * [Tenant CRD reference](tenant-reference.md)
-* [Openapi CRD reference](openapi-reference.md)
+* [OpenAPI CRD reference](openapi-reference.md)
 
 ## Quickstart Guide
 
@@ -636,7 +636,7 @@ oc create secret generic threescale-provider-account --from-literal=adminURL=htt
 
 The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
-## Openapi custom resource
+## OpenAPI custom resource
 
 ### Features
 
@@ -651,13 +651,13 @@ The operator will gather required credentials automatically for the default 3sca
 * 3scale Product's `system_name` will be set out of OpenAPI Spec document `info.title`. It can be customized using the `spec.productSystemName` field.
 * Private API base URL will be read from the first `server.url` document element. It can be customized using the `spec.privateBaseURL` field.
 * By default, *strict matching* regular expressions used on mapping rule patterns read from OpenAPI spec operations. *Prefix matching* can be applied using the `spec.privateBaseURL` field.
-* Private API security can be configured using the `spec.privateAPIHostHeader` and the `spec.privateAPISecretToken` fields. Check [Openapi CR reference](openapi-reference.md) for more information.
+* Private API security can be configured using the `spec.privateAPIHostHeader` and the `spec.privateAPISecretToken` fields. Check [OpenAPI CR reference](openapi-reference.md) for more information.
 
 ### Configmap OpenAPI spec source
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Openapi
+kind: OpenAPI
 metadata:
   name: openapi1
 spec:
@@ -666,13 +666,13 @@ spec:
       name: myopenapi
 ```
 
-[Openapi CRD Reference](openapi-reference.md) for more info about fields.
+[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
 
 ### URL OpenAPI spec source
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Openapi
+kind: OpenAPI
 metadata:
   name: openapi1
 spec:
@@ -680,13 +680,13 @@ spec:
     url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
 ```
 
-[Openapi CRD Reference](openapi-reference.md) for more info about fields.
+[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
 
 ### OpenAPI spec source with custom public base URL
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Openapi
+kind: OpenAPI
 metadata:
   name: openapi1
 spec:
@@ -696,7 +696,7 @@ spec:
   stagingPublicBaseURL: "https://staging.my-gateway.example.com"
 ```
 
-[Openapi CRD Reference](openapi-reference.md) for more info about fields.
+[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
 
 ### Link your OpenAPI spec to your 3scale tenant or provider account
 
@@ -709,7 +709,7 @@ The process will check the following tenant credential sources. If none is found
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Openapi
+kind: OpenAPI
 metadata:
   name: openapi1
 spec:
@@ -719,7 +719,7 @@ spec:
     name: mytenant
 ```
 
-[Openapi CRD Reference](openapi-reference.md) for more info about fields.
+[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 

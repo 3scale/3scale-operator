@@ -1,5 +1,5 @@
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Openapi
+kind: OpenAPI
 metadata:
   name: example-openapi
 spec:

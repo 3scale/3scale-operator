@@ -5,8 +5,8 @@ metadata:
 spec:
   group: capabilities.3scale.net
   names:
-    kind: Openapi
-    listKind: OpenapiList
+    kind: OpenAPI
+    listKind: OpenAPIList
     plural: openapis
     singular: openapi
   scope: Namespaced
@@ -14,7 +14,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Openapi is the Schema for the openapis API
+      description: OpenAPI is the Schema for the openapis API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -29,7 +29,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: OpenapiSpec defines the desired state of Openapi
+          description: OpenAPISpec defines the desired state of OpenAPI
           properties:
             openapiRef:
               description: OpenAPIRef Reference to the OpenAPI Specification
@@ -122,7 +122,7 @@ spec:
           - openapiRef
           type: object
         status:
-          description: OpenapiStatus defines the observed state of Openapi
+          description: OpenAPIStatus defines the observed state of OpenAPI
           properties:
             backendResourceNames:
               description: BackendResourceNames contains a list of references to the

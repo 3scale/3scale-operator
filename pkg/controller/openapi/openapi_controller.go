@@ -40,7 +40,7 @@ var (
 * business logic.  Delete these comments after modifying this file.*
  */
 
-// Add creates a new Openapi Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new OpenAPI Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	reconciler, err := newReconciler(mgr)
@@ -67,7 +67,7 @@ func newReconciler(mgr manager.Manager) (reconcile.Reconciler, error) {
 	scheme := mgr.GetScheme()
 	ctx := context.TODO()
 	recorder := mgr.GetEventRecorderFor(controllerName)
-	return &ReconcileOpenapi{
+	return &ReconcileOpenAPI{
 		BaseReconciler: reconcilers.NewBaseReconciler(client, scheme, apiClientReader, ctx, log, discoveryClient, recorder),
 	}, nil
 }
@@ -80,8 +80,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to primary resource Openapi
-	err = c.Watch(&source.Kind{Type: &capabilitiesv1beta1.Openapi{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource OpenAPI
+	err = c.Watch(&source.Kind{Type: &capabilitiesv1beta1.OpenAPI{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -89,22 +89,22 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-// blank assignment to verify that ReconcileOpenapi implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileOpenapi{}
+// blank assignment to verify that ReconcileOpenAPI implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ReconcileOpenAPI{}
 
-// ReconcileOpenapi reconciles a Openapi object
-type ReconcileOpenapi struct {
+// ReconcileOpenAPI reconciles a OpenAPI object
+type ReconcileOpenAPI struct {
 	*reconcilers.BaseReconciler
 }
 
-// Reconcile reads that state of the cluster for a Openapi object and makes changes based on the state read
-// and what is in the Openapi.Spec
-func (r *ReconcileOpenapi) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+// Reconcile reads that state of the cluster for a OpenAPI object and makes changes based on the state read
+// and what is in the OpenAPI.Spec
+func (r *ReconcileOpenAPI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := r.Logger().WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconcile Openapi", "Operator version", version.Version)
+	reqLogger.Info("Reconcile OpenAPI", "Operator version", version.Version)
 
-	// Fetch the Openapi instance
-	openapiCR := &capabilitiesv1beta1.Openapi{}
+	// Fetch the OpenAPI instance
+	openapiCR := &capabilitiesv1beta1.OpenAPI{}
 	err := r.Client().Get(context.TODO(), request.NamespacedName, openapiCR)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -126,7 +126,7 @@ func (r *ReconcileOpenapi) Reconcile(request reconcile.Request) (reconcile.Resul
 		reqLogger.V(1).Info(string(jsonData))
 	}
 
-	// Ignore deleted Openapi, this can happen when foregroundDeletion is enabled
+	// Ignore deleted OpenAPI, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if openapiCR.DeletionTimestamp != nil {
 		return reconcile.Result{}, nil
@@ -160,7 +160,7 @@ func (r *ReconcileOpenapi) Reconcile(request reconcile.Request) (reconcile.Resul
 		if helper.IsInvalidSpecError(reconcileErr) {
 			// On Validation error, no need to retry as spec is not valid and needs to be changed
 			reqLogger.Info("ERROR", "spec validation error", reconcileErr)
-			r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "Invalid Openapi Spec", "%v", reconcileErr)
+			r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "Invalid OpenAPI Spec", "%v", reconcileErr)
 			return reconcile.Result{}, nil
 		}
 
@@ -172,7 +172,7 @@ func (r *ReconcileOpenapi) Reconcile(request reconcile.Request) (reconcile.Resul
 	return reconcileStatus, nil
 }
 
-func (r *ReconcileOpenapi) reconcileSpec(openapiCR *capabilitiesv1beta1.Openapi) (*StatusReconciler, reconcile.Result, error) {
+func (r *ReconcileOpenAPI) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI) (*StatusReconciler, reconcile.Result, error) {
 	logger := r.Logger().WithValues("openapi", openapiCR.Name)
 
 	err := r.validateSpec(openapiCR)
@@ -193,7 +193,7 @@ func (r *ReconcileOpenapi) reconcileSpec(openapiCR *capabilitiesv1beta1.Openapi)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
-	err = r.validateOpenapiAs3scaleProduct(openapiCR, openapiObj)
+	err = r.validateOpenAPIAs3scaleProduct(openapiCR, openapiObj)
 	if err != nil {
 		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
 		return statusReconciler, reconcile.Result{}, err
@@ -223,7 +223,7 @@ func (r *ReconcileOpenapi) reconcileSpec(openapiCR *capabilitiesv1beta1.Openapi)
 	return statusReconciler, reconcile.Result{Requeue: !productSynced}, err
 }
 
-func (r *ReconcileOpenapi) validateSpec(resource *capabilitiesv1beta1.Openapi) error {
+func (r *ReconcileOpenAPI) validateSpec(resource *capabilitiesv1beta1.OpenAPI) error {
 	errors := field.ErrorList{}
 	errors = append(errors, resource.Validate()...)
 
@@ -237,7 +237,7 @@ func (r *ReconcileOpenapi) validateSpec(resource *capabilitiesv1beta1.Openapi) e
 	}
 }
 
-func (r *ReconcileOpenapi) checkProductSynced(resource *capabilitiesv1beta1.Openapi) (bool, error) {
+func (r *ReconcileOpenAPI) checkProductSynced(resource *capabilitiesv1beta1.OpenAPI) (bool, error) {
 	if resource.Status.ProductResourceName == nil {
 		// product resource name not available to check
 		return false, nil
@@ -258,7 +258,7 @@ func (r *ReconcileOpenapi) checkProductSynced(resource *capabilitiesv1beta1.Open
 	return product.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductSyncedConditionType), nil
 }
 
-func (r *ReconcileOpenapi) readOpenAPI(resource *capabilitiesv1beta1.Openapi) (*openapi3.Swagger, error) {
+func (r *ReconcileOpenAPI) readOpenAPI(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
 	// OpenAPIRef is oneOf by CRD openapiV3 validation
 	if resource.Spec.OpenAPIRef.ConfigMapRef != nil {
 		return r.readOpenAPIConfigMap(resource)
@@ -268,7 +268,7 @@ func (r *ReconcileOpenapi) readOpenAPI(resource *capabilitiesv1beta1.Openapi) (*
 	return r.readOpenAPIFromURL(resource)
 }
 
-func (r *ReconcileOpenapi) readOpenAPIConfigMap(resource *capabilitiesv1beta1.Openapi) (*openapi3.Swagger, error) {
+func (r *ReconcileOpenAPI) readOpenAPIConfigMap(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
@@ -330,7 +330,7 @@ func (r *ReconcileOpenapi) readOpenAPIConfigMap(resource *capabilitiesv1beta1.Op
 	return openapiObj, nil
 }
 
-func (r *ReconcileOpenapi) validateOpenapiAs3scaleProduct(openapiCR *capabilitiesv1beta1.Openapi, openapiObj *openapi3.Swagger) error {
+func (r *ReconcileOpenAPI) validateOpenAPIAs3scaleProduct(openapiCR *capabilitiesv1beta1.OpenAPI, openapiObj *openapi3.Swagger) error {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
@@ -362,7 +362,7 @@ func (r *ReconcileOpenapi) validateOpenapiAs3scaleProduct(openapiCR *capabilitie
 	return nil
 }
 
-func (r *ReconcileOpenapi) readOpenAPIFromURL(resource *capabilitiesv1beta1.Openapi) (*openapi3.Swagger, error) {
+func (r *ReconcileOpenAPI) readOpenAPIFromURL(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")

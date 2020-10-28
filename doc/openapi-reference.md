@@ -1,12 +1,12 @@
-# Openapi CRD Reference
+# OpenAPI CRD Reference
 
 ## Table of Contents
 
 * [OpenAPI](#openapi)
-   * [OpenapiSpec](#openapispec)
+   * [OpenAPISpec](#openapispec)
       * [OpenAPIRef](#openapiref)
       * [Provider Account Reference](#provider-account-reference)
-   * [OpenapiStatus](#openapistatus)
+   * [OpenAPIStatus](#openapistatus)
       * [ConditionSpec](#conditionspec)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
@@ -15,10 +15,10 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
-| Spec | `spec` | [OpenapiSpec](#openapispec) | The specfication for the custom resource |
-| Status | `status` | [OpenapiStatus](#openapistatus) | The status for the custom resource |
+| Spec | `spec` | [OpenAPISpec](#openapispec) | The specfication for the custom resource |
+| Status | `status` | [OpenAPIStatus](#openapistatus) | The status for the custom resource |
 
-### OpenapiSpec
+### OpenAPISpec
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
@@ -66,7 +66,7 @@ stringData:
   token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-### OpenapiStatus
+### OpenAPIStatus
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
@@ -108,7 +108,7 @@ Each element of the Condition array has the following fields:
 * The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
 * The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
 * The *type* field is a string with the following possible values:
-  * Invalid: Indicates that the combination of configuration in the OpenapiSpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
+  * Invalid: Indicates that the combination of configuration in the OpenAPISpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
   * Ready: Indicates the openapi resource has been successfully reconciled;
   * Failed: Indicates that an error occurred during reconcilliation;
 

@@ -76,7 +76,7 @@ func TestCompleteCRD(t *testing.T) {
 		"capabilities.3scale.net_tenants_crd.yaml":    &capabilitiesv1alpha1.Tenant{},
 		"capabilities.3scale.net_backends_crd.yaml":   &capabilitiesv1beta1.Backend{},
 		"capabilities.3scale.net_products_crd.yaml":   &capabilitiesv1beta1.Product{},
-		"capabilities.3scale.net_openapis_crd.yaml":   &capabilitiesv1beta1.Openapi{},
+		"capabilities.3scale.net_openapis_crd.yaml":   &capabilitiesv1beta1.OpenAPI{},
 	}
 
 	pathOmissions := []string{
