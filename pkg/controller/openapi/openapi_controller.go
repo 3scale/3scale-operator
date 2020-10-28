@@ -172,54 +172,54 @@ func (r *ReconcileOpenAPI) Reconcile(request reconcile.Request) (reconcile.Resul
 	return reconcileStatus, nil
 }
 
-func (r *ReconcileOpenAPI) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI) (*StatusReconciler, reconcile.Result, error) {
+func (r *ReconcileOpenAPI) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI) (*OpenAPIStatusReconciler, reconcile.Result, error) {
 	logger := r.Logger().WithValues("openapi", openapiCR.Name)
 
 	err := r.validateSpec(openapiCR)
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), openapiCR.Namespace, openapiCR.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
 	openapiObj, err := r.readOpenAPI(openapiCR)
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
 	err = r.validateOpenAPIAs3scaleProduct(openapiCR, openapiObj)
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
-	backendReconciler := NewBackendReconciler(r.BaseReconciler, openapiCR, openapiObj, providerAccount, logger)
+	backendReconciler := NewOpenAPIBackendReconciler(r.BaseReconciler, openapiCR, openapiObj, providerAccount, logger)
 	_, err = backendReconciler.Reconcile()
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
-	productReconciler := NewProductReconciler(r.BaseReconciler, openapiCR, openapiObj, providerAccount, logger)
+	productReconciler := NewOpenAPIProductReconciler(r.BaseReconciler, openapiCR, openapiObj, providerAccount, logger)
 	_, err = productReconciler.Reconcile()
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
 	productSynced, err := r.checkProductSynced(openapiCR)
 	if err != nil {
-		statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
-	statusReconciler := NewStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, productSynced)
+	statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, productSynced)
 	return statusReconciler, reconcile.Result{Requeue: !productSynced}, err
 }
 

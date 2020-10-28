@@ -27,7 +27,7 @@ var (
 	LastSlashRegexp = regexp.MustCompile(`/$`)
 )
 
-type ProductReconciler struct {
+type OpenAPIProductReconciler struct {
 	*reconcilers.BaseReconciler
 	openapiCR       *capabilitiesv1beta1.OpenAPI
 	openapiObj      *openapi3.Swagger
@@ -35,13 +35,13 @@ type ProductReconciler struct {
 	logger          logr.Logger
 }
 
-func NewProductReconciler(b *reconcilers.BaseReconciler,
+func NewOpenAPIProductReconciler(b *reconcilers.BaseReconciler,
 	openapiCR *capabilitiesv1beta1.OpenAPI,
 	openapiObj *openapi3.Swagger,
 	providerAccount *controllerhelper.ProviderAccount,
 	logger logr.Logger,
-) *ProductReconciler {
-	return &ProductReconciler{
+) *OpenAPIProductReconciler {
+	return &OpenAPIProductReconciler{
 		BaseReconciler:  b,
 		openapiCR:       openapiCR,
 		openapiObj:      openapiObj,
@@ -50,11 +50,11 @@ func NewProductReconciler(b *reconcilers.BaseReconciler,
 	}
 }
 
-func (p *ProductReconciler) Logger() logr.Logger {
+func (p *OpenAPIProductReconciler) Logger() logr.Logger {
 	return p.logger
 }
 
-func (p *ProductReconciler) Reconcile() (*capabilitiesv1beta1.Product, error) {
+func (p *OpenAPIProductReconciler) Reconcile() (*capabilitiesv1beta1.Product, error) {
 	desired, err := p.desired()
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (p *ProductReconciler) Reconcile() (*capabilitiesv1beta1.Product, error) {
 	return nil, p.ReconcileResource(&capabilitiesv1beta1.Product{}, desired, p.productMutator)
 }
 
-func (p *ProductReconciler) desired() (*capabilitiesv1beta1.Product, error) {
+func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, error) {
 	// product obj name
 	objName := p.desiredObjName()
 
@@ -144,7 +144,7 @@ func (p *ProductReconciler) desired() (*capabilitiesv1beta1.Product, error) {
 	return product, nil
 }
 
-func (p *ProductReconciler) productMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func (p *OpenAPIProductReconciler) productMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*capabilitiesv1beta1.Product)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *capabilitiesv1beta1.Product", existingObj)
@@ -178,7 +178,7 @@ func (p *ProductReconciler) productMutator(existingObj, desiredObj common.Kubern
 	return updated, nil
 }
 
-func (p *ProductReconciler) desiredSystemName() string {
+func (p *OpenAPIProductReconciler) desiredSystemName() string {
 	// Same as backend system name
 	// Duplicated implementation. Refactor
 	if p.openapiCR.Spec.ProductSystemName != "" {
@@ -188,7 +188,7 @@ func (p *ProductReconciler) desiredSystemName() string {
 	return helper.SystemNameFromOpenAPITitle(p.openapiObj)
 }
 
-func (p *ProductReconciler) desiredObjName() string {
+func (p *OpenAPIProductReconciler) desiredObjName() string {
 	// DNS1123 Label compliant name. Due to UIDs are 36 characters of length this
 	// means that the maximum prefix lenght that can be provided is of 26
 	// characters. If the generated name is not DNS1123 compliant an error is
@@ -197,7 +197,7 @@ func (p *ProductReconciler) desiredObjName() string {
 	return fmt.Sprintf("%s-%s", helper.K8sNameFromOpenAPITitle(p.openapiObj), string(p.openapiCR.UID))
 }
 
-func (p *ProductReconciler) desiredDeployment() *capabilitiesv1beta1.ProductDeploymentSpec {
+func (p *OpenAPIProductReconciler) desiredDeployment() *capabilitiesv1beta1.ProductDeploymentSpec {
 	deployment := &capabilitiesv1beta1.ProductDeploymentSpec{}
 
 	if p.openapiCR.Spec.ProductionPublicBaseURL != "" || p.openapiCR.Spec.StagingPublicBaseURL != "" {
@@ -217,7 +217,7 @@ func (p *ProductReconciler) desiredDeployment() *capabilitiesv1beta1.ProductDepl
 	return deployment
 }
 
-func (p *ProductReconciler) desiredAuthentication() *capabilitiesv1beta1.AuthenticationSpec {
+func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.AuthenticationSpec {
 	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(p.openapiObj)
 	if len(globalSecRequirements) == 0 {
 		// if no security requirements are found, default to UserKey auth
@@ -238,7 +238,7 @@ func (p *ProductReconciler) desiredAuthentication() *capabilitiesv1beta1.Authent
 	return authenticationSpec
 }
 
-func (p *ProductReconciler) desiredUserKeyAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
+func (p *OpenAPIProductReconciler) desiredUserKeyAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
 	authSpec := &capabilitiesv1beta1.AuthenticationSpec{
 		UserKeyAuthentication: &capabilitiesv1beta1.UserKeyAuthenticationSpec{
 			Security: p.desiredPrivateAPISecurity(),
@@ -253,7 +253,7 @@ func (p *ProductReconciler) desiredUserKeyAuthentication(secReq *helper.Extended
 	return authSpec
 }
 
-func (p *ProductReconciler) parseUserKeyCredentialsLoc(inField string) *string {
+func (p *OpenAPIProductReconciler) parseUserKeyCredentialsLoc(inField string) *string {
 	tmpQuery := "query"
 	tmpHeaders := "headers"
 	switch inField {
@@ -266,7 +266,7 @@ func (p *ProductReconciler) parseUserKeyCredentialsLoc(inField string) *string {
 	}
 }
 
-func (p *ProductReconciler) desiredMethods() map[string]capabilitiesv1beta1.MethodSpec {
+func (p *OpenAPIProductReconciler) desiredMethods() map[string]capabilitiesv1beta1.MethodSpec {
 	methods := make(map[string]capabilitiesv1beta1.MethodSpec)
 	for path, pathItem := range p.openapiObj.Paths {
 		for opVerb, operation := range pathItem.Operations() {
@@ -280,7 +280,7 @@ func (p *ProductReconciler) desiredMethods() map[string]capabilitiesv1beta1.Meth
 	return methods
 }
 
-func (p *ProductReconciler) desiredMappingRules() ([]capabilitiesv1beta1.MappingRuleSpec, error) {
+func (p *OpenAPIProductReconciler) desiredMappingRules() ([]capabilitiesv1beta1.MappingRuleSpec, error) {
 	mappingRules := make([]capabilitiesv1beta1.MappingRuleSpec, 0)
 	for path, pathItem := range p.openapiObj.Paths {
 		desiredPattern, err := p.desiredMappingRulesPattern(path)
@@ -300,7 +300,7 @@ func (p *ProductReconciler) desiredMappingRules() ([]capabilitiesv1beta1.Mapping
 	return mappingRules, nil
 }
 
-func (p *ProductReconciler) desiredMappingRulesPattern(path string) (string, error) {
+func (p *OpenAPIProductReconciler) desiredMappingRulesPattern(path string) (string, error) {
 	publicBasePath, err := p.desiredPublicBasePath()
 	if err != nil {
 		return "", err
@@ -319,7 +319,7 @@ func (p *ProductReconciler) desiredMappingRulesPattern(path string) (string, err
 	return pattern, nil
 }
 
-func (p *ProductReconciler) desiredPublicBasePath() (string, error) {
+func (p *OpenAPIProductReconciler) desiredPublicBasePath() (string, error) {
 	// TODO Override public base path optional param
 
 	basePath, err := helper.BasePathFromOpenAPI(p.openapiObj)
@@ -341,7 +341,7 @@ func (p *ProductReconciler) desiredPublicBasePath() (string, error) {
 	return basePath, nil
 }
 
-func (p *ProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1beta1.SecuritySpec {
+func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1beta1.SecuritySpec {
 	if p.openapiCR.Spec.PrivateAPIHostHeader == "" && p.openapiCR.Spec.PrivateAPISecretToken == "" {
 		return nil
 	}

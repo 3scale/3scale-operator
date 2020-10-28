@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-type BackendReconciler struct {
+type OpenAPIBackendReconciler struct {
 	*reconcilers.BaseReconciler
 	openapiCR       *capabilitiesv1beta1.OpenAPI
 	openapiObj      *openapi3.Swagger
@@ -29,13 +29,13 @@ type BackendReconciler struct {
 	logger          logr.Logger
 }
 
-func NewBackendReconciler(b *reconcilers.BaseReconciler,
+func NewOpenAPIBackendReconciler(b *reconcilers.BaseReconciler,
 	openapiCR *capabilitiesv1beta1.OpenAPI,
 	openapiObj *openapi3.Swagger,
 	providerAccount *controllerhelper.ProviderAccount,
 	logger logr.Logger,
-) *BackendReconciler {
-	return &BackendReconciler{
+) *OpenAPIBackendReconciler {
+	return &OpenAPIBackendReconciler{
 		BaseReconciler:  b,
 		openapiCR:       openapiCR,
 		openapiObj:      openapiObj,
@@ -44,11 +44,11 @@ func NewBackendReconciler(b *reconcilers.BaseReconciler,
 	}
 }
 
-func (p *BackendReconciler) Logger() logr.Logger {
+func (p *OpenAPIBackendReconciler) Logger() logr.Logger {
 	return p.logger
 }
 
-func (p *BackendReconciler) Reconcile() ([]*capabilitiesv1beta1.Backend, error) {
+func (p *OpenAPIBackendReconciler) Reconcile() ([]*capabilitiesv1beta1.Backend, error) {
 	desired, err := p.desired()
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (p *BackendReconciler) Reconcile() ([]*capabilitiesv1beta1.Backend, error) 
 	return nil, p.ReconcileResource(&capabilitiesv1beta1.Backend{}, desired, p.backendMutator)
 }
 
-func (p *BackendReconciler) desired() (*capabilitiesv1beta1.Backend, error) {
+func (p *OpenAPIBackendReconciler) desired() (*capabilitiesv1beta1.Backend, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
@@ -132,7 +132,7 @@ func (p *BackendReconciler) desired() (*capabilitiesv1beta1.Backend, error) {
 	return backend, nil
 }
 
-func (p *BackendReconciler) backendMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func (p *OpenAPIBackendReconciler) backendMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*capabilitiesv1beta1.Backend)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *capabilitiesv1beta1.Backend", existingObj)
@@ -166,7 +166,7 @@ func (p *BackendReconciler) backendMutator(existingObj, desiredObj common.Kubern
 	return updated, nil
 }
 
-func (p *BackendReconciler) desiredSystemName() string {
+func (p *OpenAPIBackendReconciler) desiredSystemName() string {
 	// Same as product system name
 	// Duplicated implementation. Refactor
 	if p.openapiCR.Spec.ProductSystemName != "" {
@@ -176,7 +176,7 @@ func (p *BackendReconciler) desiredSystemName() string {
 	return helper.SystemNameFromOpenAPITitle(p.openapiObj)
 }
 
-func (p *BackendReconciler) desiredObjName() string {
+func (p *OpenAPIBackendReconciler) desiredObjName() string {
 	// DNS1123 Label compliant name. Due to UIDs are 36 characters of length this
 	// means that the maximum prefix lenght that can be provided is of 26
 	// characters. If the generated name is not DNS1123 compliant an error is
@@ -185,7 +185,7 @@ func (p *BackendReconciler) desiredObjName() string {
 	return fmt.Sprintf("%s-%s", helper.K8sNameFromOpenAPITitle(p.openapiObj), string(p.openapiCR.UID))
 }
 
-func (p *BackendReconciler) desiredPrivateBaseURL() (string, error) {
+func (p *OpenAPIBackendReconciler) desiredPrivateBaseURL() (string, error) {
 	privateBaseURL := p.openapiCR.Spec.PrivateBaseURL
 	if privateBaseURL == "" {
 		var err error

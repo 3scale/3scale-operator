@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type StatusReconciler struct {
+type OpenAPIStatusReconciler struct {
 	*reconcilers.BaseReconciler
 	resource            *capabilitiesv1beta1.OpenAPI
 	providerAccountHost string
@@ -24,8 +24,8 @@ type StatusReconciler struct {
 	logger              logr.Logger
 }
 
-func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.OpenAPI, providerAccountHost string, reconcileError error, reconcileReady bool) *StatusReconciler {
-	return &StatusReconciler{
+func NewOpenAPIStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.OpenAPI, providerAccountHost string, reconcileError error, reconcileReady bool) *OpenAPIStatusReconciler {
+	return &OpenAPIStatusReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
 		providerAccountHost: providerAccountHost,
@@ -35,7 +35,7 @@ func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1
 	}
 }
 
-func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
+func (s *OpenAPIStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
 	newStatus, err := s.calculateStatus()
@@ -74,7 +74,7 @@ func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *StatusReconciler) calculateStatus() (*capabilitiesv1beta1.OpenAPIStatus, error) {
+func (s *OpenAPIStatusReconciler) calculateStatus() (*capabilitiesv1beta1.OpenAPIStatus, error) {
 	newStatus := &capabilitiesv1beta1.OpenAPIStatus{}
 
 	newStatus.ProviderAccountHost = s.providerAccountHost
@@ -101,7 +101,7 @@ func (s *StatusReconciler) calculateStatus() (*capabilitiesv1beta1.OpenAPIStatus
 	return newStatus, nil
 }
 
-func (s *StatusReconciler) readyCondition() common.Condition {
+func (s *OpenAPIStatusReconciler) readyCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.OpenAPIReadyConditionType,
 		Status: corev1.ConditionFalse,
@@ -114,7 +114,7 @@ func (s *StatusReconciler) readyCondition() common.Condition {
 	return condition
 }
 
-func (s *StatusReconciler) invalidCondition() common.Condition {
+func (s *OpenAPIStatusReconciler) invalidCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.OpenAPIInvalidConditionType,
 		Status: corev1.ConditionFalse,
@@ -128,7 +128,7 @@ func (s *StatusReconciler) invalidCondition() common.Condition {
 	return condition
 }
 
-func (s *StatusReconciler) failedCondition() common.Condition {
+func (s *OpenAPIStatusReconciler) failedCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.OpenAPIFailedConditionType,
 		Status: corev1.ConditionFalse,
@@ -143,7 +143,7 @@ func (s *StatusReconciler) failedCondition() common.Condition {
 	return condition
 }
 
-func (s *StatusReconciler) getManagedProduct() (*corev1.LocalObjectReference, error) {
+func (s *OpenAPIStatusReconciler) getManagedProduct() (*corev1.LocalObjectReference, error) {
 	listOps := []client.ListOption{
 		client.InNamespace(s.resource.Namespace),
 	}
@@ -166,7 +166,7 @@ func (s *StatusReconciler) getManagedProduct() (*corev1.LocalObjectReference, er
 	return nil, nil
 }
 
-func (s *StatusReconciler) getManagedBackends() ([]corev1.LocalObjectReference, error) {
+func (s *OpenAPIStatusReconciler) getManagedBackends() ([]corev1.LocalObjectReference, error) {
 	listOps := []client.ListOption{
 		client.InNamespace(s.resource.Namespace),
 	}
