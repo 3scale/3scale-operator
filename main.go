@@ -18,15 +18,18 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"runtime"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	apimachineryruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/3scale/3scale-operator/version"
 	routev1 "github.com/openshift/api/route/v1"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -38,7 +41,7 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
+	scheme   = apimachineryruntime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
 
@@ -63,6 +66,8 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+
+	printVersion()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
@@ -147,4 +152,10 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func printVersion() {
+	setupLog.Info(fmt.Sprintf("Operator Version: %s", version.Version))
+	setupLog.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
+	setupLog.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 }
