@@ -1,0 +1,8 @@
+domain: 3scale.net
+layout: go.kubebuilder.io/v2
+multigroup: true
+projectName: 3scale-operator
+repo: github.com/3scale/3scale-operator
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}
