@@ -41,6 +41,10 @@ Reference to the OpenAPI Specification
 | SecretRef | `secretRef` | [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) to [OpenAPI secret reference](#openapi-secret-reference) | The secret that contains the OpenAPI Document | No |
 | URL | `url` | string | Remote URL from where to fetch the OpenAPI Document | No |
 
+**NOTE**: Supported OpenAPI version is the [OpenAPI 3.0.2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md) specification.
+
+**NOTE**: Accepted formats are `json` and `yaml`
+
 #### OpenAPI Secret Reference
 
 The secret that contains the OpenAPI Document referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object.
