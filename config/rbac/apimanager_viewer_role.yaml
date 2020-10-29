@@ -1,0 +1,20 @@
+# permissions for end users to view apimanagers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: apimanager-viewer-role
+rules:
+- apiGroups:
+  - apps.3scale.net
+  resources:
+  - apimanagers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.3scale.net
+  resources:
+  - apimanagers/status
+  verbs:
+  - get

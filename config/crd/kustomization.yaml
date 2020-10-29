@@ -1,0 +1,39 @@
+# This kustomization.yaml is not intended to be run by itself,
+# since it depends on service name and namespace that are out of this kustomize package.
+# It should be run by config/default
+resources:
+- bases/apps.3scale.net_apimanagers.yaml
+- bases/apps.3scale.net_apimanagerbackups.yaml
+- bases/apps.3scale.net_apimanagerrestores.yaml
+- bases/capabilities.3scale.net_tenants.yaml
+- bases/capabilities.3scale.net_backends.yaml
+- bases/capabilities.3scale.net_products.yaml
+- bases/capabilities.3scale.net_openapis.yaml
+# +kubebuilder:scaffold:crdkustomizeresource
+
+patchesStrategicMerge:
+# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
+# patches here are for enabling the conversion webhook for each CRD
+#- patches/webhook_in_apimanagers.yaml
+#- patches/webhook_in_apimanagerbackups.yaml
+#- patches/webhook_in_apimanagerrestores.yaml
+#- patches/webhook_in_tenants.yaml
+#- patches/webhook_in_backends.yaml
+#- patches/webhook_in_products.yaml
+#- patches/webhook_in_openapis.yaml
+# +kubebuilder:scaffold:crdkustomizewebhookpatch
+
+# [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
+# patches here are for enabling the CA injection for each CRD
+#- patches/cainjection_in_apimanagers.yaml
+#- patches/cainjection_in_apimanagerbackups.yaml
+#- patches/cainjection_in_apimanagerrestores.yaml
+#- patches/cainjection_in_tenants.yaml
+#- patches/cainjection_in_backends.yaml
+#- patches/cainjection_in_products.yaml
+#- patches/cainjection_in_openapis.yaml
+# +kubebuilder:scaffold:crdkustomizecainjectionpatch
+
+# the following config is for teaching kustomize how to do kustomization for CRDs.
+configurations:
+- kustomizeconfig.yaml
