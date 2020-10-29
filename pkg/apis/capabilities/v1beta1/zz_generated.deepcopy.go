@@ -513,6 +513,41 @@ func (in *OpenAPISpec) DeepCopyInto(out *OpenAPISpec) {
 		*out = new(v1.LocalObjectReference)
 		**out = **in
 	}
+	if in.ProductionPublicBaseURL != nil {
+		in, out := &in.ProductionPublicBaseURL, &out.ProductionPublicBaseURL
+		*out = new(string)
+		**out = **in
+	}
+	if in.StagingPublicBaseURL != nil {
+		in, out := &in.StagingPublicBaseURL, &out.StagingPublicBaseURL
+		*out = new(string)
+		**out = **in
+	}
+	if in.ProductSystemName != nil {
+		in, out := &in.ProductSystemName, &out.ProductSystemName
+		*out = new(string)
+		**out = **in
+	}
+	if in.PrivateBaseURL != nil {
+		in, out := &in.PrivateBaseURL, &out.PrivateBaseURL
+		*out = new(string)
+		**out = **in
+	}
+	if in.PrefixMatching != nil {
+		in, out := &in.PrefixMatching, &out.PrefixMatching
+		*out = new(bool)
+		**out = **in
+	}
+	if in.PrivateAPIHostHeader != nil {
+		in, out := &in.PrivateAPIHostHeader, &out.PrivateAPIHostHeader
+		*out = new(string)
+		**out = **in
+	}
+	if in.PrivateAPISecretToken != nil {
+		in, out := &in.PrivateAPISecretToken, &out.PrivateAPISecretToken
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

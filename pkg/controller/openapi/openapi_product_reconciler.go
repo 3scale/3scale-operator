@@ -181,8 +181,8 @@ func (p *OpenAPIProductReconciler) productMutator(existingObj, desiredObj common
 func (p *OpenAPIProductReconciler) desiredSystemName() string {
 	// Same as backend system name
 	// Duplicated implementation. Refactor
-	if p.openapiCR.Spec.ProductSystemName != "" {
-		return p.openapiCR.Spec.ProductSystemName
+	if p.openapiCR.Spec.ProductSystemName != nil {
+		return *p.openapiCR.Spec.ProductSystemName
 	}
 
 	return helper.SystemNameFromOpenAPITitle(p.openapiObj)
@@ -200,11 +200,11 @@ func (p *OpenAPIProductReconciler) desiredObjName() string {
 func (p *OpenAPIProductReconciler) desiredDeployment() *capabilitiesv1beta1.ProductDeploymentSpec {
 	deployment := &capabilitiesv1beta1.ProductDeploymentSpec{}
 
-	if p.openapiCR.Spec.ProductionPublicBaseURL != "" || p.openapiCR.Spec.StagingPublicBaseURL != "" {
+	if p.openapiCR.Spec.ProductionPublicBaseURL != nil || p.openapiCR.Spec.StagingPublicBaseURL != nil {
 		// Self managed deployment
 		deployment.ApicastSelfManaged = &capabilitiesv1beta1.ApicastSelfManagedSpec{
-			StagingPublicBaseURL:    &p.openapiCR.Spec.StagingPublicBaseURL,
-			ProductionPublicBaseURL: &p.openapiCR.Spec.ProductionPublicBaseURL,
+			StagingPublicBaseURL:    p.openapiCR.Spec.StagingPublicBaseURL,
+			ProductionPublicBaseURL: p.openapiCR.Spec.ProductionPublicBaseURL,
 			Authentication:          p.desiredAuthentication(),
 		}
 	} else {
@@ -312,7 +312,7 @@ func (p *OpenAPIProductReconciler) desiredMappingRulesPattern(path string) (stri
 	//  According OAS 3.0: path MUST begin with a slash
 	pattern := fmt.Sprintf("%s%s", publicBasePathSanitized, path)
 
-	if !p.openapiCR.Spec.PrefixMatching {
+	if p.openapiCR.Spec.PrefixMatching == nil || !*p.openapiCR.Spec.PrefixMatching {
 		pattern = fmt.Sprintf("%s$", pattern)
 	}
 
@@ -342,18 +342,18 @@ func (p *OpenAPIProductReconciler) desiredPublicBasePath() (string, error) {
 }
 
 func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1beta1.SecuritySpec {
-	if p.openapiCR.Spec.PrivateAPIHostHeader == "" && p.openapiCR.Spec.PrivateAPISecretToken == "" {
+	if p.openapiCR.Spec.PrivateAPIHostHeader == nil && p.openapiCR.Spec.PrivateAPISecretToken == nil {
 		return nil
 	}
 
 	privateAPISec := &capabilitiesv1beta1.SecuritySpec{}
 
-	if p.openapiCR.Spec.PrivateAPIHostHeader != "" {
-		privateAPISec.HostHeader = &p.openapiCR.Spec.PrivateAPIHostHeader
+	if p.openapiCR.Spec.PrivateAPIHostHeader != nil {
+		privateAPISec.HostHeader = p.openapiCR.Spec.PrivateAPIHostHeader
 	}
 
-	if p.openapiCR.Spec.PrivateAPISecretToken != "" {
-		privateAPISec.SecretToken = &p.openapiCR.Spec.PrivateAPISecretToken
+	if p.openapiCR.Spec.PrivateAPISecretToken != nil {
+		privateAPISec.SecretToken = p.openapiCR.Spec.PrivateAPISecretToken
 	}
 
 	return privateAPISec

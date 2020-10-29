@@ -57,32 +57,32 @@ type OpenAPISpec struct {
 	// ProductionPublicBaseURL Custom public production URL
 	// +kubebuilder:validation:Pattern=`^https?:\/\/.*$`
 	// +optional
-	ProductionPublicBaseURL string `json:"productionPublicBaseURL,omitempty"`
+	ProductionPublicBaseURL *string `json:"productionPublicBaseURL,omitempty"`
 
 	// StagingPublicBaseURL Custom public staging URL
 	// +kubebuilder:validation:Pattern=`^https?:\/\/.*$`
 	// +optional
-	StagingPublicBaseURL string `json:"stagingPublicBaseURL,omitempty"`
+	StagingPublicBaseURL *string `json:"stagingPublicBaseURL,omitempty"`
 
 	// ProductSystemName 3scale product system name
 	// +optional
-	ProductSystemName string `json:"productSystemName,omitempty"`
+	ProductSystemName *string `json:"productSystemName,omitempty"`
 
 	// PrivateBaseURL Custom private base URL
 	// +optional
-	PrivateBaseURL string `json:"privateBaseURL,omitempty"`
+	PrivateBaseURL *string `json:"privateBaseURL,omitempty"`
 
 	// PrefixMatching Use prefix matching instead of strict matching on mapping rules derived from openapi operations
 	// +optional
-	PrefixMatching bool `json:"prefixMatching,omitempty"`
+	PrefixMatching *bool `json:"prefixMatching,omitempty"`
 
 	// PrivateAPIHostHeader Custom host header sent by the API gateway to the private API
 	// +optional
-	PrivateAPIHostHeader string `json:"privateAPIHostHeader,omitempty"`
+	PrivateAPIHostHeader *string `json:"privateAPIHostHeader,omitempty"`
 
 	// PrivateAPISecretToken Custom secret token sent by the API gateway to the private API
 	// +optional
-	PrivateAPISecretToken string `json:"privateAPISecretToken,omitempty"`
+	PrivateAPISecretToken *string `json:"privateAPISecretToken,omitempty"`
 }
 
 // OpenAPIStatus defines the observed state of OpenAPI

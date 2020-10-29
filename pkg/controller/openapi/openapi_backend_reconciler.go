@@ -169,8 +169,8 @@ func (p *OpenAPIBackendReconciler) backendMutator(existingObj, desiredObj common
 func (p *OpenAPIBackendReconciler) desiredSystemName() string {
 	// Same as product system name
 	// Duplicated implementation. Refactor
-	if p.openapiCR.Spec.ProductSystemName != "" {
-		return p.openapiCR.Spec.ProductSystemName
+	if p.openapiCR.Spec.ProductSystemName != nil {
+		return *p.openapiCR.Spec.ProductSystemName
 	}
 
 	return helper.SystemNameFromOpenAPITitle(p.openapiObj)
@@ -186,19 +186,19 @@ func (p *OpenAPIBackendReconciler) desiredObjName() string {
 }
 
 func (p *OpenAPIBackendReconciler) desiredPrivateBaseURL() (string, error) {
-	privateBaseURL := p.openapiCR.Spec.PrivateBaseURL
-	if privateBaseURL == "" {
-		var err error
-		privateBaseURL, err = helper.BaseURLFromOpenAPI(p.openapiObj)
-		if err != nil {
-			fieldErrors := field.ErrorList{}
-			specFldPath := field.NewPath("spec")
-			openapiRefFldPath := specFldPath.Child("openapiRef")
-			fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, p.openapiCR.Spec.OpenAPIRef, err.Error()))
-			return "", &helper.SpecFieldError{
-				ErrorType:      helper.InvalidError,
-				FieldErrorList: fieldErrors,
-			}
+	if p.openapiCR.Spec.PrivateBaseURL != nil {
+		return *p.openapiCR.Spec.PrivateBaseURL, nil
+	}
+
+	privateBaseURL, err := helper.BaseURLFromOpenAPI(p.openapiObj)
+	if err != nil {
+		fieldErrors := field.ErrorList{}
+		specFldPath := field.NewPath("spec")
+		openapiRefFldPath := specFldPath.Child("openapiRef")
+		fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, p.openapiCR.Spec.OpenAPIRef, err.Error()))
+		return "", &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
 		}
 	}
 

@@ -28,7 +28,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | StagingPublicBaseURL | `stagingPublicBaseURL` | string | Custom public staging URL | No |
 | ProductSystemName | `productSystemName` | string | Custom 3scale product system name | No |
 | PrivateBaseURL | `privateBaseURL` | string | Custom private base URL | No |
-| PrefixMatching | `prefixMatching` | boolean | Use prefix matching instead of strict matching on mapping rules derived from openapi operations | No |
+| PrefixMatching | `prefixMatching` | boolean | Use prefix matching instead of strict matching on mapping rules derived from openapi operations. Defaults to strict matching. | No |
 | PrivateAPIHostHeader | `privateAPIHostHeader` | string | Custom host header sent by the API gateway to the private API | No |
 | PrivateAPISecretToken | `privateAPISecretToken` | string | Custom secret token sent by the API gateway to the private API | No |
 
