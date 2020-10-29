@@ -199,7 +199,6 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 
 	return nil
 
-	return nil
 }
 
 func (h *HighAvailabilityOptionsProvider) setSystemDatabaseOptions() error {
