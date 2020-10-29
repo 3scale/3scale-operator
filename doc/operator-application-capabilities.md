@@ -644,6 +644,7 @@ The operator will gather required credentials automatically for the default 3sca
   * Just a single top level security requirement supported. Operation level security requirements not supported.
   * Only first `server.url` element in servers list parsed as private url. Path and operation level `servers` elements not supported.
   * Supported security schemes: `apiKey`.
+* Accepted OpenAPI spec document formats are `json` and `yaml`.
 * OpenAPI spec document can be read from:
   * Secret
   * URL. Supported schemes are http and https
@@ -655,7 +656,7 @@ The operator will gather required credentials automatically for the default 3sca
 
 ### Secret OpenAPI spec source
 
-Create a secret with the OpenAPI spec document. The name of the secret object will be referenced in the OpenAPI CR. 
+Create a secret with the OpenAPI spec document. The name of the secret object will be referenced in the OpenAPI CR.
 
 The following example shows how to create a secret out of a file:
 
