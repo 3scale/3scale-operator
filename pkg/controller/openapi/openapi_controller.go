@@ -214,6 +214,10 @@ func (r *ReconcileOpenAPI) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI)
 		return statusReconciler, reconcile.Result{}, err
 	}
 
+	// No need to check for backend sync state.
+	// The product has the backends linked as backend usage.
+	// The product will not be in sync until the backend usage items are sync'ed.
+	// The product controller makes sure the backend usage's items are valid Backend CRs and are sync'ed.
 	productSynced, err := r.checkProductSynced(openapiCR)
 	if err != nil {
 		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
