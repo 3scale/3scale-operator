@@ -23,6 +23,9 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+OPERATOR_SDK ?= operator-sdk
+DOCKER ?= docker
+
 all: manager
 
 # Run tests
@@ -71,11 +74,11 @@ generate: controller-gen
 
 # Build the docker image
 docker-build: test
-	docker build . -t ${IMG}
+	$(DOCKER) build . -t ${IMG}
 
 # Push the docker image
 docker-push:
-	docker push ${IMG}
+	$(DOCKER) push ${IMG}
 
 # find or download controller-gen
 # download controller-gen if necessary
@@ -112,12 +115,12 @@ endif
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
 bundle: manifests
-	operator-sdk generate kustomize manifests -q
+	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundle
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Build the bundle image.
 .PHONY: bundle-build
 bundle-build:
-	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	$(DOCKER) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
