@@ -873,7 +873,7 @@ Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more info
 * Deletion of a [Product CR](product-reference.md) is not reconciled. Existing Product in 3scale will not be deleted. [THREESCALE-5539](https://issues.redhat.com/browse/THREESCALE-5539)
 * [Product CRD](product-reference.md) Single sign on (SSO) authentication for the admin and developers portal
 * [Product CRD](product-reference.md) OpenID Connect authentication [THREESCALE-5537](https://issues.redhat.com/browse/THREESCALE-5537)
-* [Product CRD](product-reference.md) Policy chaing management [THREESCALE-6235](https://issues.redhat.com/browse/THREESCALE-6235)
+* [Product CRD](product-reference.md) Policy chain management [THREESCALE-6235](https://issues.redhat.com/browse/THREESCALE-6235)
 * ActiveDocs CRD [THREESCALE-5531](https://issues.redhat.com/browse/THREESCALE-5531)
 * Gateway Policy CRD [THREESCALE-6101](https://issues.redhat.com/browse/THREESCALE-6101)
 * Account CRD [THREESCALE-5530](https://issues.redhat.com/browse/THREESCALE-5530)
