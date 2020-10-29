@@ -163,7 +163,7 @@ metadata:
           "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "OpenAPI",
           "metadata": {
-            "name": "example-openapi"
+            "name": "openapi-from-secret"
           },
           "spec": {
             "openapiRef": {
@@ -177,7 +177,7 @@ metadata:
           "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "OpenAPI",
           "metadata": {
-            "name": "example-openapi"
+            "name": "openapi-from-url"
           },
           "spec": {
             "openapiRef": {
