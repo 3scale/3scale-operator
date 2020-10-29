@@ -77,9 +77,12 @@ func (p *OpenAPIBackendReconciler) desired() (*capabilitiesv1beta1.Backend, erro
 	// obj name
 	objName := p.desiredObjName()
 
-	errStrings := validation.IsDNS1123Label(objName)
+	// DNS Subdomain Names
+	// If the name would be part of some label, validation would be DNS Label Names (validation.IsDNS1123Label)
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
+	errStrings := validation.IsDNS1123Subdomain(objName)
 	if len(errStrings) > 0 {
-		fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, p.openapiCR.Spec.OpenAPIRef, strings.Join(errStrings, "--")))
+		fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, p.openapiCR.Spec.OpenAPIRef, strings.Join(errStrings, ",")))
 		return nil, &helper.SpecFieldError{
 			ErrorType:      helper.InvalidError,
 			FieldErrorList: fieldErrors,
