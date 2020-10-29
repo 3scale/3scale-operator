@@ -647,7 +647,7 @@ The operator will gather required credentials automatically for the default 3sca
 * OpenAPI spec document can be read from:
   * ConfigMap
   * URL. Supported schemes are http and https
-* When the `spec.productionPublicBaseURL` or the `spec.stagingPublicBaseURL` (or both) fields are provided, implicitly the customer is asking for "APIcast self-managed" deploment mode. Otherwise, default deployment mode will be set, that is, "APIcast 3scale managed".
+* When the `spec.productionPublicBaseURL` or the `spec.stagingPublicBaseURL` (or both) fields are provided, implicitly the customer is asking for "APIcast self-managed" deployment mode. Otherwise, default deployment mode will be set, that is, "APIcast 3scale managed".
 * 3scale Product's `system_name` will be set out of OpenAPI Spec document `info.title`. It can be customized using the `spec.productSystemName` field.
 * Private API base URL will be read from the first `server.url` document element. It can be customized using the `spec.privateBaseURL` field.
 * By default, *strict matching* regular expressions used on mapping rule patterns read from OpenAPI spec operations. *Prefix matching* can be applied using the `spec.privateBaseURL` field.
