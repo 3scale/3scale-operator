@@ -93,3 +93,6 @@ _output
 *.swp
 *.swo
 *~
+
+# controller-runtime testenv binaries
+testbin/*
