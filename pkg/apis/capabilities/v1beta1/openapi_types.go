@@ -35,9 +35,9 @@ const (
 
 // OpenAPIRefSpec Reference to the OpenAPI Specification
 type OpenAPIRefSpec struct {
-	// ConfigMapRef ConfigMap that contains the OpenAPI Document
+	// SecretRef refers to the secret object that contains the OpenAPI Document
 	// +optional
-	ConfigMapRef *corev1.ObjectReference `json:"configMapRef,omitempty"`
+	SecretRef *corev1.ObjectReference `json:"secretRef,omitempty"`
 
 	// URL Remote URL from where to fetch the OpenAPI Document
 	// +kubebuilder:validation:Pattern=`^https?:\/\/.*$`
@@ -166,8 +166,8 @@ func (o *OpenAPI) SetDefaults(logger logr.Logger) bool {
 	updated := false
 
 	// defaults
-	if o.Spec.OpenAPIRef.ConfigMapRef != nil && o.Spec.OpenAPIRef.ConfigMapRef.Namespace == "" {
-		o.Spec.OpenAPIRef.ConfigMapRef.Namespace = o.GetNamespace()
+	if o.Spec.OpenAPIRef.SecretRef != nil && o.Spec.OpenAPIRef.SecretRef.Namespace == "" {
+		o.Spec.OpenAPIRef.SecretRef.Namespace = o.GetNamespace()
 		updated = true
 	}
 

@@ -37,7 +37,7 @@ The following diagram shows available custom resource definitions and their rela
    * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
 * [OpenAPI custom resource](#openapi-custom-resource)
    * [Features](#features)
-   * [Configmap OpenAPI spec source](#configmap-openapi-spec-source)
+   * [Secret OpenAPI spec source](#secret-openapi-spec-source)
    * [URL OpenAPI spec source](#url-openapi-spec-source)
    * [OpenAPI spec source with custom public base URL](#openapi-spec-source-with-custom-public-base-url)
    * [Link your OpenAPI spec to your 3scale tenant or provider account](#link-your-openapi-spec-to-your-3scale-tenant-or-provider-account)
@@ -645,7 +645,7 @@ The operator will gather required credentials automatically for the default 3sca
   * Only first `server.url` element in servers list parsed as private url. Path and operation level `servers` elements not supported.
   * Supported security schemes: `apiKey`.
 * OpenAPI spec document can be read from:
-  * ConfigMap
+  * Secret
   * URL. Supported schemes are http and https
 * When the `spec.productionPublicBaseURL` or the `spec.stagingPublicBaseURL` (or both) fields are provided, implicitly the customer is asking for "APIcast self-managed" deployment mode. Otherwise, default deployment mode will be set, that is, "APIcast 3scale managed".
 * 3scale Product's `system_name` will be set out of OpenAPI Spec document `info.title`. It can be customized using the `spec.productSystemName` field.
@@ -653,7 +653,27 @@ The operator will gather required credentials automatically for the default 3sca
 * By default, *strict matching* regular expressions used on mapping rule patterns read from OpenAPI spec operations. *Prefix matching* can be applied using the `spec.privateBaseURL` field.
 * Private API security can be configured using the `spec.privateAPIHostHeader` and the `spec.privateAPISecretToken` fields. Check [OpenAPI CR reference](openapi-reference.md) for more information.
 
-### Configmap OpenAPI spec source
+### Secret OpenAPI spec source
+
+Create a secret with the OpenAPI spec document. The name of the secret object will be referenced in the OpenAPI CR. 
+
+The following example shows how to create a secret out of a file:
+
+```
+$ cat myopenapi.yaml
+---
+openapi: "3.0.0"
+info:
+title: "some title"
+version: "1.0.0"
+
+$ oc create secret generic myopenapi --from-file myopenapi.yaml
+secret/myopenapi created
+```
+
+**NOTE** The field name inside the secret is not read by the operator. Only the content is read.
+
+Then, create your OpenAPI CR providing reference to the secret holding the OpenAPI document.
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
@@ -662,7 +682,7 @@ metadata:
   name: openapi1
 spec:
   openapiRef:
-    configMapRef:
+    secretRef:
       name: myopenapi
 ```
 

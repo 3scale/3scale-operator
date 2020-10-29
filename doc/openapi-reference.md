@@ -38,8 +38,35 @@ Reference to the OpenAPI Specification
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
-| ConfigMapRef | `configMapRef` | [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) | The configMap that contains the OpenAPI Document | No |
+| SecretRef | `secretRef` | [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) to [OpenAPI secret reference](#openapi-secret-reference) | The secret that contains the OpenAPI Document | No |
 | URL | `url` | string | Remote URL from where to fetch the OpenAPI Document | No |
+
+#### OpenAPI Secret Reference
+
+The secret that contains the OpenAPI Document referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object.
+
+The secret must have at least one field with value set to the openapi document content. The field name will not be read.
+
+| **Field** | **Description** | **Required** |
+| --- | --- | --- |
+| *ANY* | OpenAPI Document | Yes |
+
+For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-openapi
+type: Opaque
+stringData:
+  myopenapi.yaml: |
+    ---
+    openapi: "3.0.0"
+    info:
+    title: "some title"
+    version: "1.0.0"
+```
 
 #### Provider Account Reference
 

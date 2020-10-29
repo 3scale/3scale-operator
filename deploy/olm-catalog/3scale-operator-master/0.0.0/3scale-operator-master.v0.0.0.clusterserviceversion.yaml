@@ -167,8 +167,8 @@ metadata:
           },
           "spec": {
             "openapiRef": {
-              "configMapRef": {
-                "name": "openapi-configmap-name"
+              "secretRef": {
+                "name": "openapi-secret-name"
               }
             }
           }

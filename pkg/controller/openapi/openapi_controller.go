@@ -16,6 +16,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -260,27 +261,27 @@ func (r *ReconcileOpenAPI) checkProductSynced(resource *capabilitiesv1beta1.Open
 
 func (r *ReconcileOpenAPI) readOpenAPI(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
 	// OpenAPIRef is oneOf by CRD openapiV3 validation
-	if resource.Spec.OpenAPIRef.ConfigMapRef != nil {
-		return r.readOpenAPIConfigMap(resource)
+	if resource.Spec.OpenAPIRef.SecretRef != nil {
+		return r.readOpenAPISecret(resource)
 	}
 
 	// Must be URL
 	return r.readOpenAPIFromURL(resource)
 }
 
-func (r *ReconcileOpenAPI) readOpenAPIConfigMap(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
+func (r *ReconcileOpenAPI) readOpenAPISecret(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
-	configMapRefFldPath := openapiRefFldPath.Child("configMapRef")
+	secretRefFldPath := openapiRefFldPath.Child("secretRef")
 
-	objectKey := client.ObjectKey{Namespace: resource.Spec.OpenAPIRef.ConfigMapRef.Namespace, Name: resource.Spec.OpenAPIRef.ConfigMapRef.Name}
-	openapiConfigMapObj := &corev1.ConfigMap{}
+	objectKey := types.NamespacedName{Name: resource.Spec.OpenAPIRef.SecretRef.Name, Namespace: resource.Spec.OpenAPIRef.SecretRef.Namespace}
+	openapiSecretObj := &corev1.Secret{}
 
-	// Read config map
-	if err := r.Client().Get(r.Context(), objectKey, openapiConfigMapObj); err != nil {
+	// Read secret
+	if err := r.Client().Get(r.Context(), objectKey, openapiSecretObj); err != nil {
 		if errors.IsNotFound(err) {
-			fieldErrors = append(fieldErrors, field.Invalid(configMapRefFldPath, resource.Spec.OpenAPIRef.ConfigMapRef, "ConfigMap not found"))
+			fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, resource.Spec.OpenAPIRef.SecretRef, "Secret not found"))
 			return nil, &helper.SpecFieldError{
 				ErrorType:      helper.InvalidError,
 				FieldErrorList: fieldErrors,
@@ -291,8 +292,8 @@ func (r *ReconcileOpenAPI) readOpenAPIConfigMap(resource *capabilitiesv1beta1.Op
 		return nil, err
 	}
 
-	if len(openapiConfigMapObj.Data) < 1 {
-		fieldErrors = append(fieldErrors, field.Invalid(configMapRefFldPath, resource.Spec.OpenAPIRef.ConfigMapRef, "ConfigMap was empty"))
+	if len(openapiSecretObj.Data) < 1 {
+		fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, resource.Spec.OpenAPIRef.SecretRef, "Secret was empty"))
 		return nil, &helper.SpecFieldError{
 			ErrorType:      helper.InvalidError,
 			FieldErrorList: fieldErrors,
@@ -300,18 +301,16 @@ func (r *ReconcileOpenAPI) readOpenAPIConfigMap(resource *capabilitiesv1beta1.Op
 	}
 
 	// Get arbitrary key value
-	data := func(configMap *corev1.ConfigMap) string {
-		for _, v := range configMap.Data {
+	dataByteArray := func(secret *corev1.Secret) []byte {
+		for _, v := range secret.Data {
 			return v
 		}
-		return ""
-	}(openapiConfigMapObj)
+		return nil
+	}(openapiSecretObj)
 
-	//  UTF-8 encoding
-	dataByteArray := []byte(data)
 	openapiObj, err := openapi3.NewSwaggerLoader().LoadSwaggerFromData(dataByteArray)
 	if err != nil {
-		fieldErrors = append(fieldErrors, field.Invalid(configMapRefFldPath, resource.Spec.OpenAPIRef.ConfigMapRef, err.Error()))
+		fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, resource.Spec.OpenAPIRef.SecretRef, err.Error()))
 		return nil, &helper.SpecFieldError{
 			ErrorType:      helper.InvalidError,
 			FieldErrorList: fieldErrors,
@@ -320,7 +319,7 @@ func (r *ReconcileOpenAPI) readOpenAPIConfigMap(resource *capabilitiesv1beta1.Op
 
 	err = openapiObj.Validate(r.Context())
 	if err != nil {
-		fieldErrors = append(fieldErrors, field.Invalid(configMapRefFldPath, resource.Spec.OpenAPIRef.ConfigMapRef, err.Error()))
+		fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, resource.Spec.OpenAPIRef.SecretRef, err.Error()))
 		return nil, &helper.SpecFieldError{
 			ErrorType:      helper.InvalidError,
 			FieldErrorList: fieldErrors,
