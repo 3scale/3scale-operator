@@ -653,6 +653,7 @@ The operator will gather required credentials automatically for the default 3sca
 * Private API base URL will be read from the first `server.url` document element. It can be customized using the `spec.privateBaseURL` field.
 * By default, *strict matching* regular expressions used on mapping rule patterns read from OpenAPI spec operations. *Prefix matching* can be applied using the `spec.privateBaseURL` field.
 * Private API security can be configured using the `spec.privateAPIHostHeader` and the `spec.privateAPISecretToken` fields. Check [OpenAPI CR reference](openapi-reference.md) for more information.
+* OpenAPI Spec document `info.title` must not exceed `253-38 = 215` character length. It will be used to create some openshift object names with some length [limitations](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/).
 
 ### Secret OpenAPI spec source
 
