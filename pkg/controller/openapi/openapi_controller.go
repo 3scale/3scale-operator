@@ -296,15 +296,15 @@ func (r *ReconcileOpenAPI) readOpenAPISecret(resource *capabilitiesv1beta1.OpenA
 		return nil, err
 	}
 
-	if len(openapiSecretObj.Data) < 1 {
-		fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, resource.Spec.OpenAPIRef.SecretRef, "Secret was empty"))
+	if len(openapiSecretObj.Data) != 1 {
+		fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, resource.Spec.OpenAPIRef.SecretRef, "Secret was empty or contains too many fields. Only one is required."))
 		return nil, &helper.SpecFieldError{
 			ErrorType:      helper.InvalidError,
 			FieldErrorList: fieldErrors,
 		}
 	}
 
-	// Get arbitrary key value
+	// Get key value
 	dataByteArray := func(secret *corev1.Secret) []byte {
 		for _, v := range secret.Data {
 			return v
