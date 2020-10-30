@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -91,7 +93,11 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafa
 	}
 
 	if !kindExists {
-		r.Logger().Info("Install grafana-operator in your cluster to create grafanadashboards objects", "Error creating grafanadashboard object", desired.Name)
+		if r.apiManager.IsMonitoringEnabled() {
+			errToLog := fmt.Errorf("Error creating grafana dashboard object '%s'. Install grafana-operator in your cluster to creaete grafana dashboard objects", desired.Name)
+			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+			r.logger.Error(errToLog, "ReconcileError")
+		}
 		return nil
 	}
 
@@ -106,8 +112,13 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monito
 	if err != nil {
 		return err
 	}
+
 	if !kindExists {
-		r.Logger().Info("Install prometheus-operator in your cluster to create prometheusrules objects", "Error creating prometheusrule object", desired.Name)
+		if r.apiManager.IsMonitoringEnabled() {
+			errToLog := fmt.Errorf("Error creating prometheusrule object '%s'. Install prometheus-operator in your cluster to creaete prometheusrule objects", desired.Name)
+			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+			r.logger.Error(errToLog, "ReconcileError")
+		}
 		return nil
 	}
 
@@ -124,7 +135,11 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 	}
 
 	if !kindExists {
-		r.Logger().Info("Install prometheus-operator in your cluster to create servicemonitor objects", "Error creating servicemonitor object", desired.Name)
+		if r.apiManager.IsMonitoringEnabled() {
+			errToLog := fmt.Errorf("Error creating servicemonitor object '%s'. Install prometheus-operator in your cluster to creaete servicemonitor objects", desired.Name)
+			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+			r.logger.Error(errToLog, "ReconcileError")
+		}
 		return nil
 	}
 
@@ -141,7 +156,11 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv
 	}
 
 	if !kindExists {
-		r.Logger().Info("Install prometheus-operator in your cluster to create podmonitor objects", "Error creating podmonitor object", desired.Name)
+		if r.apiManager.IsMonitoringEnabled() {
+			errToLog := fmt.Errorf("Error creating podmonitor object '%s'. Install prometheus-operator in your cluster to creaete podmonitor objects", desired.Name)
+			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+			r.logger.Error(errToLog, "ReconcileError")
+		}
 		return nil
 	}
 
