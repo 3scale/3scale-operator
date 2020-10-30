@@ -161,6 +161,32 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "OpenAPI",
+          "metadata": {
+            "name": "openapi-from-secret"
+          },
+          "spec": {
+            "openapiRef": {
+              "secretRef": {
+                "name": "openapi-secret-name"
+              }
+            }
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "OpenAPI",
+          "metadata": {
+            "name": "openapi-from-url"
+          },
+          "spec": {
+            "openapiRef": {
+              "url": "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
+            }
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Product",
           "metadata": {
             "name": "product1"
@@ -321,10 +347,10 @@ metadata:
     containerImage: quay.io/3scale/3scale-operator:master
     createdAt: "2019-05-30T22:40:00Z"
     description: 3scale Operator to provision 3scale and publish/manage API
+    operators.openshift.io/infrastructure-features: '["Disconnected"]'
     repository: https://github.com/3scale/3scale-operator
     support: Red Hat
     tectonic-visibility: ocs
-    operators.openshift.io/infrastructure-features: '["Disconnected"]'
   name: 3scale-operator-master.v0.0.0
   namespace: placeholder
 spec:
@@ -402,6 +428,10 @@ spec:
       kind: Backend
       name: backends.capabilities.3scale.net
       version: v1beta1
+    - description: OpenAPI is the Schema for the openapis API
+      kind: OpenAPI
+      name: openapis.capabilities.3scale.net
+      version: v1beta1
     - description: Product is the Schema for the products API
       displayName: 3scale Product
       kind: Product
@@ -449,17 +479,17 @@ spec:
   install:
     spec:
       clusterPermissions:
-        - rules:
-            - apiGroups:
-                - console.openshift.io
-              resources:
-                - consolelinks
-              verbs:
-                - create
-                - delete
-                - get
-                - update
-          serviceAccountName: 3scale-operator
+      - rules:
+        - apiGroups:
+          - console.openshift.io
+          resources:
+          - consolelinks
+          verbs:
+          - create
+          - delete
+          - get
+          - update
+        serviceAccountName: 3scale-operator
       deployments:
       - name: 3scale-operator
         spec:

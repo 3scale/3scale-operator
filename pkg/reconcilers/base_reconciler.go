@@ -177,38 +177,38 @@ func (b *BaseReconciler) HasConsoleLink() (bool, error) {
 }
 
 //HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
-func (r *BaseReconciler) HasGrafanaDashboards() (bool, error) {
-	return k8sutil.ResourceExists(r.DiscoveryClient(),
+func (b *BaseReconciler) HasGrafanaDashboards() (bool, error) {
+	return k8sutil.ResourceExists(b.DiscoveryClient(),
 		grafanav1alpha1.SchemeGroupVersion.String(),
 		grafanav1alpha1.GrafanaDashboardKind)
 }
 
 //HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
-func (r *BaseReconciler) HasPrometheusRules() (bool, error) {
-	return k8sutil.ResourceExists(r.DiscoveryClient(),
+func (b *BaseReconciler) HasPrometheusRules() (bool, error) {
+	return k8sutil.ResourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.PrometheusRuleKind)
 }
 
 //HasServiceMonitors checks if the ServiceMonitors CRD is supported in current cluster
-func (r *BaseReconciler) HasServiceMonitors() (bool, error) {
-	return k8sutil.ResourceExists(r.DiscoveryClient(),
+func (b *BaseReconciler) HasServiceMonitors() (bool, error) {
+	return k8sutil.ResourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.ServiceMonitorsKind)
 }
 
 //HasPodMonitors checks if the PodMonitors CRD is supported in current cluster
-func (r *BaseReconciler) HasPodMonitors() (bool, error) {
-	return k8sutil.ResourceExists(r.DiscoveryClient(),
+func (b *BaseReconciler) HasPodMonitors() (bool, error) {
+	return k8sutil.ResourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.PodMonitorsKind)
 }
 
 //SetOwnerReference sets owner as a Controller OwnerReference on owned
-func (r *BaseReconciler) SetOwnerReference(owner, obj common.KubernetesObject) error {
-	err := controllerutil.SetControllerReference(owner, obj, r.Scheme())
+func (b *BaseReconciler) SetOwnerReference(owner, obj common.KubernetesObject) error {
+	err := controllerutil.SetControllerReference(owner, obj, b.Scheme())
 	if err != nil {
-		r.Logger().Error(err, "Error setting OwnerReference on object",
+		b.Logger().Error(err, "Error setting OwnerReference on object",
 			"Kind", obj.GetObjectKind().GroupVersionKind().String(),
 			"Namespace", obj.GetNamespace(),
 			"Name", obj.GetName(),
@@ -219,11 +219,11 @@ func (r *BaseReconciler) SetOwnerReference(owner, obj common.KubernetesObject) e
 
 //EnsureOwnerReference sets owner as a Controller OwnerReference on owned
 // returns boolean to notify when the object has been updated
-func (r *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject) (bool, error) {
+func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject) (bool, error) {
 	changed := false
 
 	originalSize := len(obj.GetOwnerReferences())
-	err := r.SetOwnerReference(owner, obj)
+	err := b.SetOwnerReference(owner, obj)
 	if err != nil {
 		return false, err
 	}

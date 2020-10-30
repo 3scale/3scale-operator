@@ -35,6 +35,12 @@ The following diagram shows available custom resource definitions and their rela
    * [Product backend usages](#product-backend-usages)
    * [Product custom resource status field](#product-custom-resource-status-field)
    * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
+* [OpenAPI custom resource](#openapi-custom-resource)
+   * [Features](#features)
+   * [Secret OpenAPI spec source](#secret-openapi-spec-source)
+   * [URL OpenAPI spec source](#url-openapi-spec-source)
+   * [OpenAPI spec source with custom public base URL](#openapi-spec-source-with-custom-public-base-url)
+   * [Link your OpenAPI spec to your 3scale tenant or provider account](#link-your-openapi-spec-to-your-3scale-tenant-or-provider-account)
 * [Tenant custom resource](#tenant-custom-resource)
    * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
    * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
@@ -45,6 +51,7 @@ The following diagram shows available custom resource definitions and their rela
 * [Backend CRD reference](backend-reference.md)
 * [Product CRD reference](product-reference.md)
 * [Tenant CRD reference](tenant-reference.md)
+* [OpenAPI CRD reference](openapi-reference.md)
 
 ## Quickstart Guide
 
@@ -629,6 +636,138 @@ oc create secret generic threescale-provider-account --from-literal=adminURL=htt
 
 The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
+## OpenAPI custom resource
+
+### Features
+
+* [OpenAPI 3.0.2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md) specification
+  * Just a single top level security requirement supported. Operation level security requirements not supported.
+  * Only first `server.url` element in servers list parsed as private url. Path and operation level `servers` elements not supported.
+  * Supported security schemes: `apiKey`.
+* Accepted OpenAPI spec document formats are `json` and `yaml`.
+* OpenAPI spec document can be read from:
+  * Secret
+  * URL. Supported schemes are http and https
+* When the `spec.productionPublicBaseURL` or the `spec.stagingPublicBaseURL` (or both) fields are provided, implicitly the customer is asking for "APIcast self-managed" deployment mode. Otherwise, default deployment mode will be set, that is, "APIcast 3scale managed".
+* 3scale Product's `system_name` will be set out of OpenAPI Spec document `info.title`. It can be customized using the `spec.productSystemName` field.
+* Private API base URL will be read from the first `server.url` document element. It can be customized using the `spec.privateBaseURL` field.
+* By default, *strict matching* regular expressions used on mapping rule patterns read from OpenAPI spec operations. *Prefix matching* can be applied using the `spec.privateBaseURL` field.
+* Private API security can be configured using the `spec.privateAPIHostHeader` and the `spec.privateAPISecretToken` fields. Check [OpenAPI CR reference](openapi-reference.md) for more information.
+* OpenAPI Spec document `info.title` must not exceed `253-38 = 215` character length. It will be used to create some openshift object names with some length [limitations](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/).
+
+### Secret OpenAPI spec source
+
+Create a secret with the OpenAPI spec document. The name of the secret object will be referenced in the OpenAPI CR.
+
+The following example shows how to create a secret out of a file:
+
+```
+$ cat myopenapi.yaml
+---
+openapi: "3.0.0"
+info:
+title: "some title"
+version: "1.0.0"
+
+$ oc create secret generic myopenapi --from-file myopenapi.yaml
+secret/myopenapi created
+```
+
+**NOTE** The field name inside the secret is not read by the operator. Only the content is read.
+
+Then, create your OpenAPI CR providing reference to the secret holding the OpenAPI document.
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: OpenAPI
+metadata:
+  name: openapi1
+spec:
+  openapiRef:
+    secretRef:
+      name: myopenapi
+```
+
+[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
+
+### URL OpenAPI spec source
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: OpenAPI
+metadata:
+  name: openapi1
+spec:
+  openapiRef:
+    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
+```
+
+[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
+
+### OpenAPI spec source with custom public base URL
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: OpenAPI
+metadata:
+  name: openapi1
+spec:
+  openapiRef:
+    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
+  productionPublicBaseURL: "https://production.my-gateway.example.com"
+  stagingPublicBaseURL: "https://staging.my-gateway.example.com"
+```
+
+[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
+
+### Link your OpenAPI spec to your 3scale tenant or provider account
+
+When some openapi custom resource is found by the 3scale operator,
+*LookupProviderAccount* process is started to figure out the tenant owning the resource.
+
+The process will check the following tenant credential sources. If none is found, an error is raised.
+
+* Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: OpenAPI
+metadata:
+  name: openapi1
+spec:
+  openapiRef:
+    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
+  providerAccountRef:
+    name: mytenant
+```
+
+[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
+
+The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mytenant
+type: Opaque
+stringData:
+  adminURL: https://my3scale-admin.example.com:443
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+* Default `threescale-provider-account` secret
+
+For example: `adminURL=https://3scale-admin.example.com` and `token=123456`.
+
+```
+oc create secret generic threescale-provider-account --from-literal=adminURL=https://3scale-admin.example.com --from-literal=token=123456
+```
+
+* Default provider account in the same namespace 3scale deployment
+
+The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
+
 ## Tenant custom resource
 
 Tenant is also known as Provider Account.
@@ -735,9 +874,9 @@ Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more info
 * Deletion of a [Product CR](product-reference.md) is not reconciled. Existing Product in 3scale will not be deleted. [THREESCALE-5539](https://issues.redhat.com/browse/THREESCALE-5539)
 * [Product CRD](product-reference.md) Single sign on (SSO) authentication for the admin and developers portal
 * [Product CRD](product-reference.md) OpenID Connect authentication [THREESCALE-5537](https://issues.redhat.com/browse/THREESCALE-5537)
+* [Product CRD](product-reference.md) Policy chain management [THREESCALE-6235](https://issues.redhat.com/browse/THREESCALE-6235)
 * ActiveDocs CRD [THREESCALE-5531](https://issues.redhat.com/browse/THREESCALE-5531)
 * Gateway Policy CRD [THREESCALE-6101](https://issues.redhat.com/browse/THREESCALE-6101)
 * Account CRD [THREESCALE-5530](https://issues.redhat.com/browse/THREESCALE-5530)
   * 3scale Applications are managed using Account CRD
 * [Product CRD](product-reference.md) Gateway response custom code and errors [THREESCALE-5536](https://issues.redhat.com/browse/THREESCALE-5536)
-* 3scale Operator CRD holding OAS3 reference as source of truth for 3scale Product configuration [THREESCALE-4712](https://issues.redhat.com/browse/THREESCALE-4712)
