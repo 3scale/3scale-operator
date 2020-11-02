@@ -37,7 +37,7 @@ func testRedisSystemRedisPodTemplateLabels() map[string]string {
 		"com.redhat.component-type":    "application",
 		"com.redhat.component-version": "32",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "system-redis",
 	}
 }
@@ -66,7 +66,7 @@ func testRedisBackendRedisPodTemplateLabels() map[string]string {
 		"com.redhat.component-type":    "application",
 		"com.redhat.component-version": "32",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "backend-redis",
 	}
 }
