@@ -94,7 +94,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafa
 
 	if !kindExists {
 		if r.apiManager.IsMonitoringEnabled() {
-			errToLog := fmt.Errorf("Error creating grafana dashboard object '%s'. Install grafana-operator in your cluster to creaete grafana dashboard objects", desired.Name)
+			errToLog := fmt.Errorf("Error creating grafana dashboard object '%s'. Install grafana-operator in your cluster to create grafana dashboard objects", desired.Name)
 			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
 			r.logger.Error(errToLog, "ReconcileError")
 		}
@@ -115,7 +115,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monito
 
 	if !kindExists {
 		if r.apiManager.IsMonitoringEnabled() {
-			errToLog := fmt.Errorf("Error creating prometheusrule object '%s'. Install prometheus-operator in your cluster to creaete prometheusrule objects", desired.Name)
+			errToLog := fmt.Errorf("Error creating prometheusrule object '%s'. Install prometheus-operator in your cluster to create prometheusrule objects", desired.Name)
 			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
 			r.logger.Error(errToLog, "ReconcileError")
 		}
@@ -136,7 +136,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 
 	if !kindExists {
 		if r.apiManager.IsMonitoringEnabled() {
-			errToLog := fmt.Errorf("Error creating servicemonitor object '%s'. Install prometheus-operator in your cluster to creaete servicemonitor objects", desired.Name)
+			errToLog := fmt.Errorf("Error creating servicemonitor object '%s'. Install prometheus-operator in your cluster to create servicemonitor objects", desired.Name)
 			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
 			r.logger.Error(errToLog, "ReconcileError")
 		}
@@ -157,7 +157,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv
 
 	if !kindExists {
 		if r.apiManager.IsMonitoringEnabled() {
-			errToLog := fmt.Errorf("Error creating podmonitor object '%s'. Install prometheus-operator in your cluster to creaete podmonitor objects", desired.Name)
+			errToLog := fmt.Errorf("Error creating podmonitor object '%s'. Install prometheus-operator in your cluster to create podmonitor objects", desired.Name)
 			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
 			r.logger.Error(errToLog, "ReconcileError")
 		}
