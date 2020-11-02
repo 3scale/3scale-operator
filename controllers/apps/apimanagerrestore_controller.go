@@ -19,19 +19,17 @@ package controllers
 import (
 	"context"
 
-	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/restore"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // APIManagerRestoreReconciler reconciles a APIManagerRestore object
 type APIManagerRestoreReconciler struct {
-	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	*reconcilers.BaseReconciler
 }
 
 // +kubebuilder:rbac:groups=apps.3scale.net,resources=apimanagerrestores,verbs=get;list;watch;create;update;patch;delete
@@ -39,7 +37,7 @@ type APIManagerRestoreReconciler struct {
 
 func (r *APIManagerRestoreReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("apimanagerrestore", req.NamespacedName)
+	_ = r.Logger().WithValues("apimanagerrestore", req.NamespacedName)
 
 	// your logic here
 
@@ -49,5 +47,37 @@ func (r *APIManagerRestoreReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 func (r *APIManagerRestoreReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1alpha1.APIManagerRestore{}).
+		Owns(&corev1.Pod{}).
 		Complete(r)
+}
+
+func (r *APIManagerRestoreReconciler) getAPIManagerRestoreCR(request ctrl.Request) (*appsv1alpha1.APIManagerRestore, error) {
+	instance := appsv1alpha1.APIManagerRestore{}
+	err := r.Client().Get(context.TODO(), request.NamespacedName, &instance)
+	return &instance, err
+}
+
+func (r *APIManagerRestoreReconciler) setAPIManagerRestoreDefaults(cr *appsv1alpha1.APIManagerRestore) (ctrl.Result, error) {
+	changed, err := cr.SetDefaults() // TODO check where to put this
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if changed {
+		err = r.Client().Update(context.TODO(), cr)
+	}
+
+	return ctrl.Result{Requeue: changed}, err
+}
+
+func (r *APIManagerRestoreReconciler) apiManagerRestoreLogicReconciler(cr *appsv1alpha1.APIManagerRestore) (*APIManagerRestoreLogicReconciler, error) {
+	apiManagerRestoreOptionsProvider := restore.NewAPIManagerRestoreOptionsProvider(cr, r.BaseReconciler.Client())
+	options, err := apiManagerRestoreOptionsProvider.Options()
+	if err != nil {
+		return nil, err
+	}
+
+	apiManagerRestore := restore.NewAPIManagerRestore(options)
+	return NewAPIManagerRestoreLogicReconciler(r.BaseReconciler, cr, apiManagerRestore), nil
+
 }

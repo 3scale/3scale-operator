@@ -124,10 +124,19 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "APIManagerBackup")
 		os.Exit(1)
 	}
+
+	discoveryClientAPIManagerRestore, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
 	if err = (&appscontroller.APIManagerRestoreReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("APIManagerRestore"),
-		Scheme: mgr.GetScheme(),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("APIManagerRestore"),
+			discoveryClientAPIManagerRestore,
+			mgr.GetEventRecorderFor("APIManagerRestore")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "APIManagerRestore")
 		os.Exit(1)
