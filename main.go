@@ -155,10 +155,18 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenAPI")
 		os.Exit(1)
 	}
+	discoveryClientWebConsole, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
 	if err = (&appscontroller.WebConsoleReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("WebConsole"),
-		Scheme: mgr.GetScheme(),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("WebConsole"),
+			discoveryClientWebConsole,
+			mgr.GetEventRecorderFor("WebConsole")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "WebConsole")
 		os.Exit(1)
