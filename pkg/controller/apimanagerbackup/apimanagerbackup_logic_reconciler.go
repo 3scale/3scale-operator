@@ -3,7 +3,7 @@ package apimanagerbackup
 import (
 	"time"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/backup"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"

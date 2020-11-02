@@ -3,7 +3,7 @@ package apimanagerbackup
 import (
 	"context"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"k8s.io/apimachinery/pkg/api/errors"

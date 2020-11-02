@@ -1,7 +1,7 @@
 package backup
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	validator "github.com/go-playground/validator/v10"
 	"k8s.io/apimachinery/pkg/types"
 )
