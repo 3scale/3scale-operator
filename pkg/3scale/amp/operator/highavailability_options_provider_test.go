@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 
 	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
