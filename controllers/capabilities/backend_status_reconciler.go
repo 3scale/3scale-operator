@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
-type StatusReconciler struct {
+type BackendStatusReconciler struct {
 	*reconcilers.BaseReconciler
 	backendResource     *capabilitiesv1beta1.Backend
 	backendAPIEntity    *controllerhelper.BackendAPIEntity
@@ -24,8 +24,8 @@ type StatusReconciler struct {
 	logger              logr.Logger
 }
 
-func NewStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, backendAPIEntity *controllerhelper.BackendAPIEntity, providerAccountHost string, syncError error) *StatusReconciler {
-	return &StatusReconciler{
+func NewBackendStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, backendAPIEntity *controllerhelper.BackendAPIEntity, providerAccountHost string, syncError error) *BackendStatusReconciler {
+	return &BackendStatusReconciler{
 		BaseReconciler:      b,
 		backendResource:     backendResource,
 		backendAPIEntity:    backendAPIEntity,
@@ -35,7 +35,7 @@ func NewStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabil
 	}
 }
 
-func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
+func (s *BackendStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
 	newStatus := s.calculateStatus()
@@ -71,7 +71,7 @@ func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.BackendStatus {
+func (s *BackendStatusReconciler) calculateStatus() *capabilitiesv1beta1.BackendStatus {
 	newStatus := &capabilitiesv1beta1.BackendStatus{}
 	if s.backendAPIEntity != nil {
 		tmp := s.backendAPIEntity.ID()
@@ -90,7 +90,7 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.BackendStatus 
 	return newStatus
 }
 
-func (s *StatusReconciler) syncCondition() common.Condition {
+func (s *BackendStatusReconciler) syncCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.BackendSyncedConditionType,
 		Status: corev1.ConditionFalse,
@@ -103,7 +103,7 @@ func (s *StatusReconciler) syncCondition() common.Condition {
 	return condition
 }
 
-func (s *StatusReconciler) invalidCondition() common.Condition {
+func (s *BackendStatusReconciler) invalidCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.BackendInvalidConditionType,
 		Status: corev1.ConditionFalse,
@@ -117,7 +117,7 @@ func (s *StatusReconciler) invalidCondition() common.Condition {
 	return condition
 }
 
-func (s *StatusReconciler) failedCondition() common.Condition {
+func (s *BackendStatusReconciler) failedCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.BackendFailedConditionType,
 		Status: corev1.ConditionFalse,
