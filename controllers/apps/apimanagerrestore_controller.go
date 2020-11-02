@@ -32,8 +32,11 @@ type APIManagerRestoreReconciler struct {
 	*reconcilers.BaseReconciler
 }
 
-// +kubebuilder:rbac:groups=apps.3scale.net,resources=apimanagerrestores,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps.3scale.net,resources=apimanagerrestores/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagerrestores,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagerrestores/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagerrestores/finalizers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,namespace=placeholder,resources=pods/exec,verbs=create
+// +kubebuilder:rbac:groups=batch,namespace=placeholder,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 
 func (r *APIManagerRestoreReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

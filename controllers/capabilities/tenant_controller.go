@@ -50,8 +50,9 @@ type TenantReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=tenants,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=tenants/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants/finalizers,verbs=get;list;watch;create;update;patch;delete
 
 func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

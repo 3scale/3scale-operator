@@ -42,8 +42,9 @@ type ProductReconciler struct {
 // blank assignment to verify that ProductReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &ProductReconciler{}
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=products,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=products/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=products,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=products/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=products/finalizers,verbs=get;list;watch;create;update;patch;delete
 
 func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

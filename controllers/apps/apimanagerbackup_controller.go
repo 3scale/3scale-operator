@@ -35,8 +35,11 @@ type APIManagerBackupReconciler struct {
 // blank assignment to verify that ReconcileAPIManagerBackup implements reconcile.Reconciler
 var _ reconcile.Reconciler = &APIManagerBackupReconciler{}
 
-// +kubebuilder:rbac:groups=apps.3scale.net,resources=apimanagerbackups,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps.3scale.net,resources=apimanagerbackups/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagerbackups,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagerbackups/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagerbackups/finalizers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,namespace=placeholder,resources=pods/exec,verbs=create
+// +kubebuilder:rbac:groups=batch,namespace=placeholder,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 
 func (r *APIManagerBackupReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

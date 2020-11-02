@@ -42,8 +42,9 @@ type BackendReconciler struct {
 // blank assignment to verify that BackendReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &BackendReconciler{}
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=backends,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=backends/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=backends,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=backends/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=backends/finalizers,verbs=get;list;watch;create;update;patch;delete
 
 func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
