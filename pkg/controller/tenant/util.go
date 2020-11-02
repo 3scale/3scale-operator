@@ -3,7 +3,7 @@ package tenant
 import (
 	"net/url"
 
-	apiv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
+	apiv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -16,7 +16,7 @@ func addOwnerRefToObject(o metav1.Object, r metav1.OwnerReference) {
 func asOwner(t *apiv1alpha1.Tenant) metav1.OwnerReference {
 	trueVar := true
 	return metav1.OwnerReference{
-		APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+		APIVersion: apiv1alpha1.GroupVersion.String(),
 		Kind:       apiv1alpha1.TenantKind,
 		Name:       t.Name,
 		UID:        t.UID,
