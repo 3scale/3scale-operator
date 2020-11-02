@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -24,11 +25,13 @@ import (
 
 	apimachineryruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/discovery"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	routev1 "github.com/openshift/api/route/v1"
 
@@ -88,10 +91,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	discoveryClientAPIManager, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
 	if err = (&appscontroller.APIManagerReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("APIManager"),
-		Scheme: mgr.GetScheme(),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("APIManager"),
+			discoveryClientAPIManager,
+			mgr.GetEventRecorderFor("APIManager")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "APIManager")
 		os.Exit(1)

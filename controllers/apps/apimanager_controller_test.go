@@ -1,4 +1,4 @@
-package apimanager
+package controllers
 
 import (
 	"context"
@@ -18,6 +18,7 @@ import (
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -74,9 +75,10 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
 
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, ctrl.Log.WithName("controllers").WithName("APIManager"),
+		clientset.Discovery(), recorder)
 	// Create a ReconcileMemcached object with the scheme and fake client.
-	r := &ReconcileAPIManager{
+	r := &APIManagerReconciler{
 		BaseReconciler: baseReconciler,
 	}
 
