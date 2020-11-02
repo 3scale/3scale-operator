@@ -168,14 +168,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	discoveryClientProduct, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
 	if err = (&capabilitiescontroller.ProductReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Product"),
-		Scheme: mgr.GetScheme(),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("Product"),
+			discoveryClientProduct,
+			mgr.GetEventRecorderFor("Product")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Product")
 		os.Exit(1)
 	}
+
 	if err = (&capabilitiescontroller.OpenAPIReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("OpenAPI"),

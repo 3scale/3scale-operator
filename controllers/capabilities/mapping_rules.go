@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.resource.Spec.MappingRules))
 	desiredMap := map[string]capabilitiesv1beta1.MappingRuleSpec{}
 	for _, spec := range t.resource.Spec.MappingRules {
@@ -103,7 +103,7 @@ func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
+func (t *ProductThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
 	for _, mappingRule := range notDesiredList {
 		err := t.productEntity.DeleteMappingRule(mappingRule.ID)
 		if err != nil {
@@ -113,7 +113,7 @@ func (t *ThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []th
 	return nil
 }
 
-func (t *ThreescaleReconciler) getExistingMappingRules() (map[string]threescaleapi.MappingRuleItem, error) {
+func (t *ProductThreescaleReconciler) getExistingMappingRules() (map[string]threescaleapi.MappingRuleItem, error) {
 	existingMap := map[string]threescaleapi.MappingRuleItem{}
 	existingList, err := t.productEntity.MappingRules()
 	if err != nil {
@@ -127,7 +127,7 @@ func (t *ThreescaleReconciler) getExistingMappingRules() (map[string]threescalea
 	return existingMap, nil
 }
 
-func (t *ThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int, existing threescaleapi.MappingRuleItem) error {
+func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int, existing threescaleapi.MappingRuleItem) error {
 	params := threescaleapi.Params{}
 
 	//
@@ -182,7 +182,7 @@ func (t *ThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabili
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
+func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
 	metricID, err := t.productEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
 	if err != nil {
 		return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)

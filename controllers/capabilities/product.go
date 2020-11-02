@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-func (t *ThreescaleReconciler) syncProduct(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncProduct(_ interface{}) error {
 	params := threescaleapi.Params{}
 
 	if t.productEntity.Name() != t.resource.Spec.Name {

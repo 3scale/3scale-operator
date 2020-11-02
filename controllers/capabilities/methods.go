@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type methodData struct {
 	spec capabilitiesv1beta1.MethodSpec
 }
 
-func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.resource.Spec.Methods))
 	for systemName := range t.resource.Spec.Methods {
 		desiredKeys = append(desiredKeys, systemName)
@@ -86,7 +86,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {
+func (t *ProductThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {
 	for systemName, method := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": method.Name,
@@ -103,7 +103,7 @@ func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabil
 	return nil
 }
 
-func (t *ThreescaleReconciler) processNotDesiredMethods(notDesiredMap map[string]threescaleapi.MethodItem) error {
+func (t *ProductThreescaleReconciler) processNotDesiredMethods(notDesiredMap map[string]threescaleapi.MethodItem) error {
 	for _, notDesiredMethod := range notDesiredMap {
 		err := t.productEntity.DeleteMethod(notDesiredMethod.ID)
 		if err != nil {
@@ -113,7 +113,7 @@ func (t *ThreescaleReconciler) processNotDesiredMethods(notDesiredMap map[string
 	return nil
 }
 
-func (t *ThreescaleReconciler) reconcileMatchedMethods(matchedMap map[string]methodData) error {
+func (t *ProductThreescaleReconciler) reconcileMatchedMethods(matchedMap map[string]methodData) error {
 	for _, data := range matchedMap {
 		params := threescaleapi.Params{}
 		if data.spec.Name != data.item.Name {

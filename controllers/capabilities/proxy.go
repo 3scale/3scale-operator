@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-func (t *ThreescaleReconciler) syncProxy(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
 	existing, err := t.productEntity.Proxy()
 	if err != nil {
 		return fmt.Errorf("Error sync product [%s] proxy: %w", t.resource.Spec.SystemName, err)

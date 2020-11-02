@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ type newBackendUsageData struct {
 	spec capabilitiesv1beta1.BackendUsageSpec
 }
 
-func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.resource.Spec.BackendUsages))
 	for systemName := range t.resource.Spec.BackendUsages {
 		desiredKeys = append(desiredKeys, systemName)
@@ -104,7 +104,7 @@ func (t *ThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) processNotDesiredBackendUsages(notDesiredList []threescaleapi.BackendAPIUsageItem) error {
+func (t *ProductThreescaleReconciler) processNotDesiredBackendUsages(notDesiredList []threescaleapi.BackendAPIUsageItem) error {
 	for _, item := range notDesiredList {
 		err := t.productEntity.DeleteBackendUsage(item.ID)
 		if err != nil {
@@ -114,7 +114,7 @@ func (t *ThreescaleReconciler) processNotDesiredBackendUsages(notDesiredList []t
 	return nil
 }
 
-func (t *ThreescaleReconciler) reconcileMatchedBackendUsages(matchedMap map[string]backendUsageData) error {
+func (t *ProductThreescaleReconciler) reconcileMatchedBackendUsages(matchedMap map[string]backendUsageData) error {
 	for _, data := range matchedMap {
 		params := threescaleapi.Params{}
 		if data.spec.Path != data.item.Path {
@@ -132,7 +132,7 @@ func (t *ThreescaleReconciler) reconcileMatchedBackendUsages(matchedMap map[stri
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewBackendUsage(matchedList []newBackendUsageData) error {
+func (t *ProductThreescaleReconciler) createNewBackendUsage(matchedList []newBackendUsageData) error {
 	for _, data := range matchedList {
 		params := threescaleapi.Params{
 			"path":           data.spec.Path,

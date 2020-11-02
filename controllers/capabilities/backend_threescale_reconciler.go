@@ -14,16 +14,6 @@ import (
 	"github.com/go-logr/logr"
 )
 
-type methodData struct {
-	item threescaleapi.MethodItem
-	spec capabilitiesv1beta1.MethodSpec
-}
-
-type metricData struct {
-	item threescaleapi.MetricItem
-	spec capabilitiesv1beta1.MetricSpec
-}
-
 type BackendThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	backendResource     *capabilitiesv1beta1.Backend

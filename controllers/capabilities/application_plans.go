@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-func (t *ThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncApplicationPlans(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.resource.Spec.ApplicationPlans))
 	for systemName := range t.resource.Spec.ApplicationPlans {
 		desiredKeys = append(desiredKeys, systemName)

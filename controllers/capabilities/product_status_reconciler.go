@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
-type StatusReconciler struct {
+type ProductStatusReconciler struct {
 	*reconcilers.BaseReconciler
 	resource            *capabilitiesv1beta1.Product
 	entity              *controllerhelper.ProductEntity
@@ -24,8 +24,8 @@ type StatusReconciler struct {
 	logger              logr.Logger
 }
 
-func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, entity *controllerhelper.ProductEntity, providerAccountHost string, syncError error) *StatusReconciler {
-	return &StatusReconciler{
+func NewProductStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, entity *controllerhelper.ProductEntity, providerAccountHost string, syncError error) *ProductStatusReconciler {
+	return &ProductStatusReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
 		entity:              entity,
@@ -35,7 +35,7 @@ func NewStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1
 	}
 }
 
-func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
+func (s *ProductStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
 	newStatus := s.calculateStatus()
@@ -71,7 +71,7 @@ func (s *StatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus {
+func (s *ProductStatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus {
 	newStatus := &capabilitiesv1beta1.ProductStatus{}
 	if s.entity != nil {
 		tmpID := s.entity.ID()
@@ -93,7 +93,7 @@ func (s *StatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus 
 	return newStatus
 }
 
-func (s *StatusReconciler) syncCondition() common.Condition {
+func (s *ProductStatusReconciler) syncCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProductSyncedConditionType,
 		Status: corev1.ConditionFalse,
@@ -106,7 +106,7 @@ func (s *StatusReconciler) syncCondition() common.Condition {
 	return condition
 }
 
-func (s *StatusReconciler) orphanCondition() common.Condition {
+func (s *ProductStatusReconciler) orphanCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProductOrphanConditionType,
 		Status: corev1.ConditionFalse,
@@ -120,7 +120,7 @@ func (s *StatusReconciler) orphanCondition() common.Condition {
 	return condition
 }
 
-func (s *StatusReconciler) invalidCondition() common.Condition {
+func (s *ProductStatusReconciler) invalidCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProductInvalidConditionType,
 		Status: corev1.ConditionFalse,
@@ -134,7 +134,7 @@ func (s *StatusReconciler) invalidCondition() common.Condition {
 	return condition
 }
 
-func (s *StatusReconciler) failedCondition() common.Condition {
+func (s *ProductStatusReconciler) failedCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProductFailedConditionType,
 		Status: corev1.ConditionFalse,

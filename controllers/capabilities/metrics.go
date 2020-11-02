@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type metricData struct {
 	spec capabilitiesv1beta1.MetricSpec
 }
 
-func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.resource.Spec.Metrics))
 	for systemName := range t.resource.Spec.Metrics {
 		desiredKeys = append(desiredKeys, systemName)
@@ -89,7 +89,7 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) processNotDesiredMetrics(notDesiredMap map[string]threescaleapi.MetricItem) error {
+func (t *ProductThreescaleReconciler) processNotDesiredMetrics(notDesiredMap map[string]threescaleapi.MetricItem) error {
 	for _, metric := range notDesiredMap {
 		err := t.productEntity.DeleteMetric(metric.ID)
 		if err != nil {
@@ -99,7 +99,7 @@ func (t *ThreescaleReconciler) processNotDesiredMetrics(notDesiredMap map[string
 	return nil
 }
 
-func (t *ThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]metricData) error {
+func (t *ProductThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]metricData) error {
 	for _, data := range matchedMap {
 		params := threescaleapi.Params{}
 		if data.spec.Name != data.item.Name {
@@ -125,7 +125,7 @@ func (t *ThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]met
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta1.MetricSpec) error {
+func (t *ProductThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta1.MetricSpec) error {
 	for systemName, metric := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": metric.Name,

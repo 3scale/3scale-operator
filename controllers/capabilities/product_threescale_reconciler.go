@@ -1,4 +1,4 @@
-package product
+package controllers
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/go-logr/logr"
 )
 
-type ThreescaleReconciler struct {
+type ProductThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	resource            *capabilitiesv1beta1.Product
 	productEntity       *controllerhelper.ProductEntity
@@ -21,8 +21,8 @@ type ThreescaleReconciler struct {
 	logger              logr.Logger
 }
 
-func NewThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient, backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex) *ThreescaleReconciler {
-	return &ThreescaleReconciler{
+func NewProductThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient, backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex) *ProductThreescaleReconciler {
+	return &ProductThreescaleReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
 		threescaleAPIClient: threescaleAPIClient,
@@ -31,7 +31,7 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabiliti
 	}
 }
 
-func (t *ThreescaleReconciler) Reconcile() (*controllerhelper.ProductEntity, error) {
+func (t *ProductThreescaleReconciler) Reconcile() (*controllerhelper.ProductEntity, error) {
 	productEntity, err := t.reconcile3scaleProduct()
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (t *ThreescaleReconciler) Reconcile() (*controllerhelper.ProductEntity, err
 	return t.productEntity, nil
 }
 
-func (t *ThreescaleReconciler) reconcile3scaleProduct() (*controllerhelper.ProductEntity, error) {
+func (t *ProductThreescaleReconciler) reconcile3scaleProduct() (*controllerhelper.ProductEntity, error) {
 	productList, err := t.threescaleAPIClient.ListProducts()
 	if err != nil {
 		return nil, fmt.Errorf("reconcile3scaleProduct product [%s]: %w", t.resource.Spec.SystemName, err)
