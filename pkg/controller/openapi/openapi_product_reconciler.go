@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -103,7 +103,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	product := &capabilitiesv1beta1.Product{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       capabilitiesv1beta1.ProductKind,
-			APIVersion: capabilitiesv1beta1.SchemeGroupVersion.String(),
+			APIVersion: capabilitiesv1beta1.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objName,
