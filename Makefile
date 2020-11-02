@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 # Current Operator version
 VERSION ?= 0.0.1
 # Default bundle image tag
@@ -25,6 +26,12 @@ endif
 
 OPERATOR_SDK ?= operator-sdk
 DOCKER ?= docker
+
+MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
+
+LICENSEFINDERBINARY := $(shell command -v license_finder 2> /dev/null)
+DEPENDENCY_DECISION_FILE = $(PROJECT_PATH)/doc/dependency_decisions.yml
 
 all: manager
 
@@ -124,3 +131,49 @@ bundle: manifests
 .PHONY: bundle-build
 bundle-build:
 	$(DOCKER) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+# 3scale-specific targets
+
+download:
+	@echo Download go.mod dependencies
+	@go mod download
+
+## licenses.xml: Generate licenses.xml file
+licenses.xml: $(DEPENDENCY_DECISION_FILE)
+ifndef LICENSEFINDERBINARY
+	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
+endif
+	license_finder report --decisions-file=$(DEPENDENCY_DECISION_FILE) --quiet --format=xml > licenses.xml
+
+## licenses-check: Check license compliance of dependencies
+licenses-check:
+ifndef LICENSEFINDERBINARY
+	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
+endif
+	@echo "Checking license compliance"
+	license_finder --decisions-file=$(DEPENDENCY_DECISION_FILE)
+
+go-bindata:
+ifeq (, $(shell which go-bindata))
+	@{ \
+	set -e ;\
+	GOBINDATA_TMP_DIR=$$(mktemp -d) ;\
+	cd $$GOBINDATA_TMP_DIR ;\
+	go mod init tmp ;\
+	go get github.com/go-bindata/go-bindata/v3/...@v3.1.3 ;\
+	rm -rf $$GOBINDATA_TMP_DIR ;\
+	}
+GOBINDATA=$(GOBIN)/go-bindata
+else
+GOBINDATA=$(shell which go-bindata)
+endif
+
+## assets: Generate embedded assets
+assets: go-bindata
+	@echo Generate Go embedded assets files by processing source
+	go generate github.com/3scale/3scale-operator/pkg/assets
+
+## templates: generate templates
+TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
+templates:
+	$(MAKE) -C $(TEMPLATES_MAKEFILE_PATH) clean all
