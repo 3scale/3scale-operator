@@ -24,7 +24,7 @@ type metricData struct {
 	spec capabilitiesv1beta1.MetricSpec
 }
 
-type ThreescaleReconciler struct {
+type BackendThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
 	backendResource     *capabilitiesv1beta1.Backend
 	backendAPIEntity    *controllerhelper.BackendAPIEntity
@@ -39,9 +39,9 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler,
 	threescaleAPIClient *threescaleapi.ThreeScaleClient,
 	backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex,
 	providerAccount *controllerhelper.ProviderAccount,
-) *ThreescaleReconciler {
+) *BackendThreescaleReconciler {
 
-	return &ThreescaleReconciler{
+	return &BackendThreescaleReconciler{
 		BaseReconciler:      b,
 		backendResource:     backendResource,
 		backendRemoteIndex:  backendRemoteIndex,
@@ -51,7 +51,7 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler,
 	}
 }
 
-func (t *ThreescaleReconciler) Reconcile() (*controllerhelper.BackendAPIEntity, error) {
+func (t *BackendThreescaleReconciler) Reconcile() (*controllerhelper.BackendAPIEntity, error) {
 	taskRunner := helper.NewTaskRunner(nil, t.logger)
 	taskRunner.AddTask("SyncBackend", t.syncBackend)
 	// First methods and metrics, then mapping rules.
@@ -70,7 +70,7 @@ func (t *ThreescaleReconciler) Reconcile() (*controllerhelper.BackendAPIEntity, 
 	return t.backendAPIEntity, nil
 }
 
-func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
+func (t *BackendThreescaleReconciler) syncBackend(_ interface{}) error {
 	var (
 		err              error
 		backendAPIEntity *controllerhelper.BackendAPIEntity
@@ -119,7 +119,7 @@ func (t *ThreescaleReconciler) syncBackend(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
+func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.backendResource.Spec.Methods))
 	for systemName := range t.backendResource.Spec.Methods {
 		desiredKeys = append(desiredKeys, systemName)
@@ -193,7 +193,7 @@ func (t *ThreescaleReconciler) syncMethods(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {
+func (t *BackendThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {
 	for systemName, method := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": method.Name,
@@ -210,7 +210,7 @@ func (t *ThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabil
 	return nil
 }
 
-func (t *ThreescaleReconciler) deleteNotDesiredMethodsFrom3scale(notDesiredMap map[string]threescaleapi.MethodItem) error {
+func (t *BackendThreescaleReconciler) deleteNotDesiredMethodsFrom3scale(notDesiredMap map[string]threescaleapi.MethodItem) error {
 	for _, notDesiredMethod := range notDesiredMap {
 		err := t.backendAPIEntity.DeleteMethod(notDesiredMethod.ID)
 		if err != nil {
@@ -221,7 +221,7 @@ func (t *ThreescaleReconciler) deleteNotDesiredMethodsFrom3scale(notDesiredMap m
 }
 
 // valid for metrics and methods as long as 3scale ensures system_names are unique among methods and metrics
-func (t *ThreescaleReconciler) deleteExternalMetricReferences(notDesiredMetrics []string) error {
+func (t *BackendThreescaleReconciler) deleteExternalMetricReferences(notDesiredMetrics []string) error {
 	productList, err := controllerhelper.ProductList(t.backendResource.Namespace, t.Client(), t.providerAccount, t.logger)
 	if err != nil {
 		return fmt.Errorf("deleteExternalMetricReferences: %w", err)
@@ -248,7 +248,7 @@ func (t *ThreescaleReconciler) deleteExternalMetricReferences(notDesiredMetrics 
 }
 
 // valid for metrics and methods as long as 3scale ensures system_names are unique among methods and metrics
-func (t *ThreescaleReconciler) deleteExternalMetricReferencesOnProduct(notDesiredMetrics []string, productRef capabilitiesv1beta1.Product) error {
+func (t *BackendThreescaleReconciler) deleteExternalMetricReferencesOnProduct(notDesiredMetrics []string, productRef capabilitiesv1beta1.Product) error {
 	productUpdated := false
 	product := productRef.DeepCopy()
 
@@ -304,7 +304,7 @@ func (t *ThreescaleReconciler) deleteExternalMetricReferencesOnProduct(notDesire
 	return nil
 }
 
-func (t *ThreescaleReconciler) reconcileMatchedMethods(matchedMap map[string]methodData) error {
+func (t *BackendThreescaleReconciler) reconcileMatchedMethods(matchedMap map[string]methodData) error {
 	for _, data := range matchedMap {
 		params := threescaleapi.Params{}
 		if data.spec.Name != data.item.Name {
@@ -326,7 +326,7 @@ func (t *ThreescaleReconciler) reconcileMatchedMethods(matchedMap map[string]met
 	return nil
 }
 
-func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
+func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.backendResource.Spec.Metrics))
 	for systemName := range t.backendResource.Spec.Metrics {
 		desiredKeys = append(desiredKeys, systemName)
@@ -403,7 +403,7 @@ func (t *ThreescaleReconciler) syncMetrics(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta1.MetricSpec) error {
+func (t *BackendThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta1.MetricSpec) error {
 	for systemName, metric := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": metric.Name,
@@ -421,7 +421,7 @@ func (t *ThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabil
 	return nil
 }
 
-func (t *ThreescaleReconciler) deleteNotDesiredMetricsFrom3scale(notDesiredMap map[string]threescaleapi.MetricItem) error {
+func (t *BackendThreescaleReconciler) deleteNotDesiredMetricsFrom3scale(notDesiredMap map[string]threescaleapi.MetricItem) error {
 	for _, metric := range notDesiredMap {
 		err := t.backendAPIEntity.DeleteMetric(metric.ID)
 		if err != nil {
@@ -431,7 +431,7 @@ func (t *ThreescaleReconciler) deleteNotDesiredMetricsFrom3scale(notDesiredMap m
 	return nil
 }
 
-func (t *ThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]metricData) error {
+func (t *BackendThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]metricData) error {
 	for _, data := range matchedMap {
 		params := threescaleapi.Params{}
 		if data.spec.Name != data.item.Name {
@@ -457,7 +457,7 @@ func (t *ThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[string]met
 	return nil
 }
 
-func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
+func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.backendResource.Spec.MappingRules))
 	desiredMap := map[string]capabilitiesv1beta1.MappingRuleSpec{}
 	for _, spec := range t.backendResource.Spec.MappingRules {
@@ -548,7 +548,7 @@ func (t *ThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	return nil
 }
 
-func (t *ThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
+func (t *BackendThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
 	for _, mappingRule := range notDesiredList {
 		err := t.backendAPIEntity.DeleteMappingRule(mappingRule.ID)
 		if err != nil {
@@ -558,7 +558,7 @@ func (t *ThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []th
 	return nil
 }
 
-func (t *ThreescaleReconciler) getExistingMappingRules() (map[string]threescaleapi.MappingRuleItem, error) {
+func (t *BackendThreescaleReconciler) getExistingMappingRules() (map[string]threescaleapi.MappingRuleItem, error) {
 	existingMap := map[string]threescaleapi.MappingRuleItem{}
 	existingList, err := t.backendAPIEntity.MappingRules()
 	if err != nil {
@@ -572,7 +572,7 @@ func (t *ThreescaleReconciler) getExistingMappingRules() (map[string]threescalea
 	return existingMap, nil
 }
 
-func (t *ThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int, existing threescaleapi.MappingRuleItem) error {
+func (t *BackendThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int, existing threescaleapi.MappingRuleItem) error {
 	params := threescaleapi.Params{}
 
 	//
@@ -628,7 +628,7 @@ func (t *ThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabili
 	return nil
 }
 
-func (t *ThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
+func (t *BackendThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
 	metricID, err := t.backendAPIEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
 	if err != nil {
 		return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err)
