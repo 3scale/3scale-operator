@@ -1,4 +1,4 @@
-package apimanagerbackup
+package controllers
 
 import (
 	"time"
@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var clock kubeclock.Clock = &kubeclock.RealClock{}
+var apimanagerbackupClock kubeclock.Clock = &kubeclock.RealClock{}
 
 type APIManagerBackupLogicReconciler struct {
 	*reconcilers.BaseReconciler
@@ -257,7 +257,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupCompletion() (reconcile
 		// TODO make this more robust only setting it in case all substeps have been completed?
 		// It might be a little bit redundant because the steps are checked during the reconciliation
 		backupFinished := true
-		completionTimeUTC := metav1.Time{Time: clock.Now().UTC()}
+		completionTimeUTC := metav1.Time{Time: apimanagerbackupClock.Now().UTC()}
 		r.cr.Status.Completed = &backupFinished
 		r.cr.Status.CompletionTime = &completionTimeUTC
 		err := r.UpdateResourceStatus(r.cr)
@@ -294,7 +294,7 @@ func (r *APIManagerBackupLogicReconciler) reconcileAPIManagerSourceStatusField()
 
 func (r *APIManagerBackupLogicReconciler) reconcileStartTimeField() (reconcile.Result, error) {
 	if r.cr.Status.StartTime == nil {
-		startTimeUTC := metav1.Time{Time: clock.Now().UTC()}
+		startTimeUTC := metav1.Time{Time: apimanagerbackupClock.Now().UTC()}
 		r.cr.Status.StartTime = &startTimeUTC
 		err := r.UpdateResourceStatus(r.cr)
 		return reconcile.Result{Requeue: true}, err
