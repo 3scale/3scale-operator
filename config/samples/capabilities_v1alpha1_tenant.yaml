@@ -3,5 +3,14 @@ kind: Tenant
 metadata:
   name: tenant-sample
 spec:
-  # Add fields here
-  foo: bar
+  username: admin
+  systemMasterUrl: https://master.example.com
+  email: admin@example.com
+  organizationName: Example.com
+  masterCredentialsRef:
+    name: system-seed
+  passwordCredentialsRef:
+    name: ecorp-admin-secret
+  tenantSecretRef:
+    name: ecorp-tenant-secret
+    namespace: operator-test

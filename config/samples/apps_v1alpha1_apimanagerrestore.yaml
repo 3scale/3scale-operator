@@ -3,5 +3,7 @@ kind: APIManagerRestore
 metadata:
   name: apimanagerrestore-sample
 spec:
-  # Add fields here
-  foo: bar
+  restoreSource:
+    persistentVolumeClaim:
+      claimSource:
+        claimName: "mybackeduppvc"
