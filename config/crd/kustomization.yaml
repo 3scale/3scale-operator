@@ -41,6 +41,20 @@ patchesStrategicMerge:
 - patches/openapiref_openapi_validation_in_openapis.yaml
 # +kubebuilder:scaffold:crdkustomizeopenapiopenapirefopenapivalidationpatch
 
+# [Product CRD deloyment OpenAPI validation]. This patch adds `oneOf` OpenAPI
+# validation for the deployment attribute to the Product CRD due to at the moment
+# of writing this (2020-11-02) kubebuilder
+# does not support `oneOf` statement OpenAPI validation
+- patches/product_deployment_openapi_validation_in_products.yaml
+# +kubebuilder:scaffold:crdkustomizeproductproductdeploymentopenapivalidationpatch
+
+# [Product CRD authntication OpenAPI validation]. This patch adds `oneOf` OpenAPI
+# validation for the authentication attribute to the Product CRD due to at the moment
+# of writing this (2020-11-02) kubebuilder
+# does not support `oneOf` statement OpenAPI validation
+- patches/product_authentication_openapi_validation_in_products.yaml
+# +kubebuilder:scaffold:crdkustomizeproductproductauthenticationopenapivalidationpatch
+
 # the following config is for teaching kustomize how to do kustomization for CRDs.
 configurations:
 - kustomizeconfig.yaml
