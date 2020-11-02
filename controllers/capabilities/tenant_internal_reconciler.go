@@ -17,18 +17,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// InternalReconciler reconciles a Tenant object
-type InternalReconciler struct {
+// TenantInternalReconciler reconciles a Tenant object
+type TenantInternalReconciler struct {
 	k8sClient   client.Client
 	tenantR     *apiv1alpha1.Tenant
 	portaClient *porta_client_pkg.ThreeScaleClient
 	logger      logr.Logger
 }
 
-// NewInternalReconciler constructs InternalReconciler object
-func NewInternalReconciler(k8sClient client.Client, tenantR *apiv1alpha1.Tenant,
-	portaClient *porta_client_pkg.ThreeScaleClient, log logr.Logger) *InternalReconciler {
-	return &InternalReconciler{
+// NewTenantInternalReconciler constructs InternalReconciler object
+func NewTenantInternalReconciler(k8sClient client.Client, tenantR *apiv1alpha1.Tenant,
+	portaClient *porta_client_pkg.ThreeScaleClient, log logr.Logger) *TenantInternalReconciler {
+	return &TenantInternalReconciler{
 		k8sClient:   k8sClient,
 		tenantR:     tenantR,
 		portaClient: portaClient,
@@ -41,7 +41,7 @@ func NewInternalReconciler(k8sClient client.Client, tenantR *apiv1alpha1.Tenant,
 // - Have 3scale Tenant Account
 // - Have active admin user
 // - Have secret with tenant's access_token
-func (r *InternalReconciler) Run() error {
+func (r *TenantInternalReconciler) Run() error {
 	tenantDef, err := r.reconcileTenant()
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (r *InternalReconciler) Run() error {
 // On method completion:
 // * tenant will exist
 // * tenant's attributes will be updated if required
-func (r *InternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, error) {
+func (r *TenantInternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, error) {
 	tenantDef, err := r.fetchTenant()
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (r *InternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, error)
 	return tenantDef, nil
 }
 
-func (r *InternalReconciler) fetchTenant() (*porta_client_pkg.Tenant, error) {
+func (r *TenantInternalReconciler) fetchTenant() (*porta_client_pkg.Tenant, error) {
 	if r.tenantR.Status.TenantId == 0 {
 		// tenantId not in status field
 		// Tenant has to be created
@@ -106,7 +106,7 @@ func (r *InternalReconciler) fetchTenant() (*porta_client_pkg.Tenant, error) {
 	return tenantDef, nil
 }
 
-func (r *InternalReconciler) syncTenant(tenantDef *porta_client_pkg.Tenant) error {
+func (r *TenantInternalReconciler) syncTenant(tenantDef *porta_client_pkg.Tenant) error {
 	// If tenant desired state is not current state, update
 	triggerSync := func() bool {
 		if r.tenantR.Spec.OrganizationName != tenantDef.Signup.Account.OrgName {
@@ -142,7 +142,7 @@ func (r *InternalReconciler) syncTenant(tenantDef *porta_client_pkg.Tenant) erro
 // This method makes sure admin user:
 // * is active
 // * user's attributes will be updated if required
-func (r *InternalReconciler) reconcileAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
+func (r *TenantInternalReconciler) reconcileAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
 	adminUserDef, err := r.fetchAdminUser(tenantDef)
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func (r *InternalReconciler) reconcileAdminUser(tenantDef *porta_client_pkg.Tena
 }
 
 // This method makes sure secret with tenant's access_token exists
-func (r *InternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_pkg.Tenant) error {
+func (r *TenantInternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_pkg.Tenant) error {
 	tenantProviderKeySecretNN := types.NamespacedName{
 		Name:      r.tenantR.Spec.TenantSecretRef.Name,
 		Namespace: r.tenantR.Spec.TenantSecretRef.Namespace,
@@ -180,7 +180,7 @@ func (r *InternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_
 }
 
 // Create Tenant using porta client
-func (r *InternalReconciler) createTenant() (*porta_client_pkg.Tenant, error) {
+func (r *TenantInternalReconciler) createTenant() (*porta_client_pkg.Tenant, error) {
 	password, err := r.getAdminPassword()
 	if err != nil {
 		return nil, err
@@ -196,7 +196,7 @@ func (r *InternalReconciler) createTenant() (*porta_client_pkg.Tenant, error) {
 	)
 }
 
-func (r *InternalReconciler) getAdminPassword() (string, error) {
+func (r *TenantInternalReconciler) getAdminPassword() (string, error) {
 	// Get tenant admin password from secret reference
 	tenantAdminSecret := &v1.Secret{}
 
@@ -222,7 +222,7 @@ func (r *InternalReconciler) getAdminPassword() (string, error) {
 }
 
 //
-func (r *InternalReconciler) fetchAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
+func (r *TenantInternalReconciler) fetchAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
 	if r.tenantR.Status.AdminId == 0 {
 		// UserID not in status field
 		return r.findAdminUser(tenantDef)
@@ -232,7 +232,7 @@ func (r *InternalReconciler) fetchAdminUser(tenantDef *porta_client_pkg.Tenant) 
 	return r.portaClient.ReadUser(tenantDef.Signup.Account.ID, r.tenantR.Status.AdminId)
 }
 
-func (r *InternalReconciler) findAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
+func (r *TenantInternalReconciler) findAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
 	// Only admin users
 	// Any state
 	filterParams := porta_client_pkg.Params{
@@ -253,7 +253,7 @@ func (r *InternalReconciler) findAdminUser(tenantDef *porta_client_pkg.Tenant) (
 		"TenantId: %d. Admin Username: %s, Admin email: %s", tenantDef.Signup.Account.ID,
 		r.tenantR.Spec.Username, r.tenantR.Spec.Email)
 }
-func (r *InternalReconciler) syncAdminUser(tenantDef *porta_client_pkg.Tenant, adminUser *porta_client_pkg.User) error {
+func (r *TenantInternalReconciler) syncAdminUser(tenantDef *porta_client_pkg.Tenant, adminUser *porta_client_pkg.User) error {
 	// If adminUser desired state is not current state, update
 	if adminUser.State == "pending" {
 		err := r.activateAdminUser(tenantDef, adminUser)
@@ -293,12 +293,12 @@ func (r *InternalReconciler) syncAdminUser(tenantDef *porta_client_pkg.Tenant, a
 	return nil
 }
 
-func (r *InternalReconciler) activateAdminUser(tenantDef *porta_client_pkg.Tenant, adminUser *porta_client_pkg.User) error {
+func (r *TenantInternalReconciler) activateAdminUser(tenantDef *porta_client_pkg.Tenant, adminUser *porta_client_pkg.User) error {
 	r.logger.Info("Activating pending admin user", "Account ID", tenantDef.Signup.Account.ID, "ID", adminUser.ID)
 	return r.portaClient.ActivateUser(tenantDef.Signup.Account.ID, adminUser.ID)
 }
 
-func (r *InternalReconciler) findAccessTokenSecret(nn types.NamespacedName) (*v1.Secret, error) {
+func (r *TenantInternalReconciler) findAccessTokenSecret(nn types.NamespacedName) (*v1.Secret, error) {
 	adminAccessTokenSecret := &v1.Secret{}
 
 	err := r.k8sClient.Get(context.TODO(), nn, adminAccessTokenSecret)
@@ -314,7 +314,7 @@ func (r *InternalReconciler) findAccessTokenSecret(nn types.NamespacedName) (*v1
 	return adminAccessTokenSecret, nil
 }
 
-func (r *InternalReconciler) createTenantProviderKeySecret(tenantDef *porta_client_pkg.Tenant, nn types.NamespacedName) error {
+func (r *TenantInternalReconciler) createTenantProviderKeySecret(tenantDef *porta_client_pkg.Tenant, nn types.NamespacedName) error {
 	r.logger.Info("Creating admin access token secret", "Secret NS", nn.Namespace, "Secret name", nn.Name)
 
 	tenantProviderKey, err := r.findTenantProviderKey(tenantDef)
@@ -347,7 +347,7 @@ func (r *InternalReconciler) createTenantProviderKeySecret(tenantDef *porta_clie
 	return r.k8sClient.Create(context.TODO(), secret)
 }
 
-func (r *InternalReconciler) findTenantProviderKey(tenantDef *porta_client_pkg.Tenant) (string, error) {
+func (r *TenantInternalReconciler) findTenantProviderKey(tenantDef *porta_client_pkg.Tenant) (string, error) {
 	// Tenant Provider Key is available on provider application list
 	appList, err := r.portaClient.ListApplications(tenantDef.Signup.Account.ID)
 	if err != nil {
@@ -361,14 +361,14 @@ func (r *InternalReconciler) findTenantProviderKey(tenantDef *porta_client_pkg.T
 	return appList.Applications[0].Application.UserKey, nil
 }
 
-func (r *InternalReconciler) getTenantStatus(tenantDef *porta_client_pkg.Tenant, adminUserDef *porta_client_pkg.User) *apiv1alpha1.TenantStatus {
+func (r *TenantInternalReconciler) getTenantStatus(tenantDef *porta_client_pkg.Tenant, adminUserDef *porta_client_pkg.User) *apiv1alpha1.TenantStatus {
 	return &apiv1alpha1.TenantStatus{
 		TenantId: tenantDef.Signup.Account.ID,
 		AdminId:  adminUserDef.ID,
 	}
 }
 
-func (r *InternalReconciler) updateTenantStatus(tenantStatus *apiv1alpha1.TenantStatus) error {
+func (r *TenantInternalReconciler) updateTenantStatus(tenantStatus *apiv1alpha1.TenantStatus) error {
 	// don't update the status if there aren't any changes.
 	if reflect.DeepEqual(r.tenantR.Status, *tenantStatus) {
 		return nil
@@ -379,12 +379,12 @@ func (r *InternalReconciler) updateTenantStatus(tenantStatus *apiv1alpha1.Tenant
 }
 
 // addOwnerRefToObject appends the desired OwnerReference to the object
-func (r *InternalReconciler) addOwnerRefToObject(o metav1.Object, ref metav1.OwnerReference) {
+func (r *TenantInternalReconciler) addOwnerRefToObject(o metav1.Object, ref metav1.OwnerReference) {
 	o.SetOwnerReferences(append(o.GetOwnerReferences(), ref))
 }
 
 // asOwner returns an owner reference set as the tenant CR
-func (r *InternalReconciler) asOwner(t *apiv1alpha1.Tenant) metav1.OwnerReference {
+func (r *TenantInternalReconciler) asOwner(t *apiv1alpha1.Tenant) metav1.OwnerReference {
 	trueVar := true
 	return metav1.OwnerReference{
 		APIVersion: apiv1alpha1.GroupVersion.String(),

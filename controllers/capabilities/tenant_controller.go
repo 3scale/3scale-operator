@@ -97,7 +97,7 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	internalReconciler := NewInternalReconciler(r.Client, tenantR, portaClient, reqLogger)
+	internalReconciler := NewTenantInternalReconciler(r.Client, tenantR, portaClient, reqLogger)
 	err = internalReconciler.Run()
 	if err != nil {
 		reqLogger.Error(err, "Error in tenant reconciliation")
