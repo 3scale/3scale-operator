@@ -1,4 +1,4 @@
-package tenant
+package controllers
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	apiv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
@@ -321,7 +322,7 @@ func (r *InternalReconciler) createTenantProviderKeySecret(tenantDef *porta_clie
 		return err
 	}
 
-	adminURL, err := URLFromDomain(tenantDef.Signup.Account.AdminDomain)
+	adminURL, err := controllerhelper.URLFromDomain(tenantDef.Signup.Account.AdminDomain)
 	if err != nil {
 		return err
 	}
@@ -342,7 +343,7 @@ func (r *InternalReconciler) createTenantProviderKeySecret(tenantDef *porta_clie
 		},
 		Type: v1.SecretTypeOpaque,
 	}
-	addOwnerRefToObject(secret, asOwner(r.tenantR))
+	r.addOwnerRefToObject(secret, r.asOwner(r.tenantR))
 	return r.k8sClient.Create(context.TODO(), secret)
 }
 
@@ -375,4 +376,21 @@ func (r *InternalReconciler) updateTenantStatus(tenantStatus *apiv1alpha1.Tenant
 	r.logger.Info("update tenant status", "status", tenantStatus)
 	r.tenantR.Status = *tenantStatus
 	return r.k8sClient.Status().Update(context.TODO(), r.tenantR)
+}
+
+// addOwnerRefToObject appends the desired OwnerReference to the object
+func (r *InternalReconciler) addOwnerRefToObject(o metav1.Object, ref metav1.OwnerReference) {
+	o.SetOwnerReferences(append(o.GetOwnerReferences(), ref))
+}
+
+// asOwner returns an owner reference set as the tenant CR
+func (r *InternalReconciler) asOwner(t *apiv1alpha1.Tenant) metav1.OwnerReference {
+	trueVar := true
+	return metav1.OwnerReference{
+		APIVersion: apiv1alpha1.GroupVersion.String(),
+		Kind:       apiv1alpha1.TenantKind,
+		Name:       t.Name,
+		UID:        t.UID,
+		Controller: &trueVar,
+	}
 }
