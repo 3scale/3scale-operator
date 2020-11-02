@@ -141,6 +141,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "APIManagerRestore")
 		os.Exit(1)
 	}
+
 	if err = (&capabilitiescontroller.TenantReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Tenant"),
@@ -149,14 +150,24 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Tenant")
 		os.Exit(1)
 	}
+
+	discoveryClientBackend, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
 	if err = (&capabilitiescontroller.BackendReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Backend"),
-		Scheme: mgr.GetScheme(),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("Backend"),
+			discoveryClientBackend,
+			mgr.GetEventRecorderFor("Backend")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Backend")
 		os.Exit(1)
 	}
+
 	if err = (&capabilitiescontroller.ProductReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Product"),
