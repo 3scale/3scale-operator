@@ -167,6 +167,9 @@ endif
 	@echo "Checking license compliance"
 	license_finder --decisions-file=$(DEPENDENCY_DECISION_FILE)
 
+docker-build-only:
+	$(DOCKER) build . -t ${IMG}
+
 go-bindata:
 ifeq (, $(shell which go-bindata))
 	@{ \
