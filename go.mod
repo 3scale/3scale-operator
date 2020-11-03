@@ -13,6 +13,7 @@ require (
 	github.com/go-openapi/spec v0.19.6
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/google/go-cmp v0.4.0
+	github.com/google/uuid v1.1.1
 	github.com/integr8ly/grafana-operator/v3 v3.6.0
 	github.com/luci/go-render v0.0.0-20160219211803-9a04cc21af0f
 	github.com/mitchellh/go-homedir v1.1.0
