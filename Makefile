@@ -40,8 +40,12 @@ test: test-unit test-e2e test-crds
 
 # Run unit tests
 TEST_UNIT_PKGS = $(shell go list ./... | grep -E 'github.com/3scale/3scale-operator/pkg|github.com/3scale/3scale-operator/apis|github.com/3scale/3scale-operator/test/unitcontrollers')
-test-unit: generate fmt vet manifests
-	go test  -v $(TEST_UNIT_PKGS)
+TEST_UNIT_COVERPKGS = $(shell go list ./... | grep -v test/unitcontrollers | tr "\n" ",") # Exclude test/unitcontrollers directory as coverpkg does not accept only-tests packages
+test-unit: clean-cov generate fmt vet manifests
+	mkdir -p "$(PROJECT_PATH)/_output"
+	go test  -v $(TEST_UNIT_PKGS) -covermode=count -coverprofile $(PROJECT_PATH)/_output/unit.cov -coverpkg=$(TEST_UNIT_COVERPKGS)
+
+$(PROJECT_PATH)/_output/unit.cov: test-unit
 
 # Run CRD tests
 TEST_CRD_PKGS = $(shell go list ./... | grep 'github.com/3scale/3scale-operator/test/crds')
@@ -194,3 +198,17 @@ assets: go-bindata
 TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
 templates:
 	$(MAKE) -C $(TEMPLATES_MAKEFILE_PATH) clean all
+
+## coverage_analysis: Analyze coverage via a browse
+.PHONY: coverage_analysis
+coverage_analysis: $(PROJECT_PATH)/_output/unit.cov
+	go tool cover -html="$(PROJECT_PATH)/_output/unit.cov"
+
+## coverage_total_report: Simple coverage report
+.PHONY: coverage_total_report
+coverage_total_report: $(PROJECT_PATH)/_output/unit.cov
+	@go tool cover -func=$(PROJECT_PATH)/_output/unit.cov | grep total | awk '{print $$3}'
+
+clean-cov:
+	rm -rf $(PROJECT_PATH)/_output
+	rm -rf $(PROJECT_PATH)/cover.out
