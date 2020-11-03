@@ -1,4 +1,4 @@
-package controllers
+package unitcontrollers
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	appscontrollers "github.com/3scale/3scale-operator/controllers/apps"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -78,7 +79,7 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, ctrl.Log.WithName("controllers").WithName("APIManager"),
 		clientset.Discovery(), recorder)
 	// Create a ReconcileMemcached object with the scheme and fake client.
-	r := &APIManagerReconciler{
+	r := &appscontrollers.APIManagerReconciler{
 		BaseReconciler: baseReconciler,
 	}
 
