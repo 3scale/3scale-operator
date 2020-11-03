@@ -308,19 +308,6 @@ commands:
             oc observe pods --maximum-errors=-1 --no-headers --object-env-var=OBJECT --type-env-var=TYPE -- jq -n --raw-output 'env.OBJECT | fromjson | "\(env.TYPE) \(.kind) \(.metadata.name) started at \(.status.startTime) (\(.status.phase)) \(.status.conditions // [] | map("\(.type): \(.status) @ \(.lastTransitionTime)") | join(", "))"'
           background: true
 
-  watch-operator-pod-logs:
-    steps:
-      - run:
-          name: Watch pod logs
-          command: |
-            while [[ $(oc get pods -l name=threescale-operator -n operator-test -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
-              echo "waiting for pod" && sleep 1
-            done
-            OPERATOR_POD=$(oc get pods -l name=threescale-operator -n operator-test -o 'jsonpath={..metadata.name}')
-            echo "watching logs on $OPERATOR_POD"
-            kubectl -n operator-test logs -f $OPERATOR_POD
-          background: true
-
   oc-status:
     parameters:
       report_name:
@@ -484,7 +471,6 @@ jobs:
           command: |
             oc new-project operator-test
       - oc-observe
-      - watch-operator-pod-logs
       - run:
           name: run E2E tests
           command: |
