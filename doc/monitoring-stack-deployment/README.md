@@ -1,6 +1,6 @@
-1. Install Prometheus operator v0.32.0 from catalog
+1. Install Prometheus operator v0.37.0 from the Operator Hub.
 
-1. Install Grafana operator (v3.4.0). At the time of writing, not available from catalog, so manual installation from git repo.
+1. Install Grafana operator v3.5.0 from the Operator Hub.
 
 1. Create additional-scrape-configs secret with 3scale scrape config
 
@@ -14,18 +14,34 @@ kubectl create secret generic additional-scrape-configs --from-file=3scale-scrap
 
 1. Deploy prometheus
 
+In `prometheus.yaml` file provided, fill the `spec.externalUrl` field with the external URL. The URL template should be:
+
 ```
-k apply -f prometheus.yaml
+spec:
+  ...
+  externalUrl: https://prometheus.NAMESPACE_NAME.apps.CLUSTER_DOMAIN
+```
+
+Then deploy prometheus server:
+
+```
+oc apply -f prometheus.yaml
 ```
 
 1. Create Prometheus route
 
 ```
-oc expose service prometheus-operated --hostname prometheus.namespace_name.apps.DOMAIN
+oc expose service prometheus-operated --hostname prometheus.NAMESPACE_NAME.apps.CLUSTER_DOMAIN
+```
+
+1. Deploy grafana datasource
+
+```
+oc apply -f datasource.yaml
 ```
 
 1. Deploy grafana
 
 ```
-k apply -f grafana.yaml
+oc apply -f grafana.yaml
 ```
