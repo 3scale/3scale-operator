@@ -219,3 +219,6 @@ coverage_total_report: $(PROJECT_PATH)/_output/unit.cov
 clean-cov:
 	rm -rf $(PROJECT_PATH)/_output
 	rm -rf $(PROJECT_PATH)/cover.out
+
+bundle-validate:
+	$(OPERATOR_SDK) bundle validate ./bundle

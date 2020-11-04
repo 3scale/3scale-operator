@@ -530,14 +530,6 @@ jobs:
       - install-dependencies
       - run: make licenses-check
 
-  verify-manifest:
-    docker:
-      - image: circleci/python:3.6.4
-    steps:
-      - checkout
-      - run: sudo pip3 install -v operator-courier==2.1.7
-      - run: make verify-manifest
-
   unit-tests-coverage:
     docker:
       - image: circleci/golang:1.13.7
@@ -549,6 +541,15 @@ jobs:
             cp _output/unit.cov coverage.txt
             bash <(curl -s https://codecov.io/bash)
 
+  bundle-validate:
+    docker:
+      - image: circleci/golang:1.13.7
+    working_directory: /go/src/github.com/3scale/3scale-operator
+    steps:
+      - checkout
+      - install-operator-sdk
+      - run: make bundle-validate
+
 workflows:
   version: 2
   operator:
@@ -557,7 +558,7 @@ workflows:
       - test-crds
       - test-manifests-version
       - run-unit-tests
-      - verify-manifest
+      - bundle-validate
       - install-operator
       - run-operator-e2e-test:
           requires:
