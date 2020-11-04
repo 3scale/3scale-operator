@@ -1,0 +1,110 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+    operators.operatorframework.io/builder: operator-sdk-v1.1.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+  name: 3scale-operator.vX.Y.Z
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: APIManagerRestore represents an APIManager restore
+      displayName: APIManagerRestore
+      kind: APIManagerRestore
+      name: apimanagerrestores.apps.3scale.net
+      version: v1alpha1
+    - description: Tenant is the Schema for the tenants API
+      displayName: Tenant
+      kind: Tenant
+      name: tenants.capabilities.3scale.net
+      version: v1alpha1
+    - description: Backend is the Schema for the backends API
+      displayName: 3scale Backend
+      kind: Backend
+      name: backends.capabilities.3scale.net
+      version: v1beta1
+    - description: Product is the Schema for the products API
+      displayName: 3scale Product
+      kind: Product
+      name: products.capabilities.3scale.net
+      version: v1beta1
+    - description: OpenAPI is the Schema for the openapis API
+      displayName: Open API
+      kind: OpenAPI
+      name: openapis.capabilities.3scale.net
+      version: v1beta1
+    - description: APIManager is the Schema for the apimanagers API
+      displayName: APIManager
+      kind: APIManager
+      name: apimanagers.apps.3scale.net
+      resources:
+      - kind: DeploymentConfig
+        name: ""
+        version: apps.openshift.io/v1
+      - kind: ImageStream
+        name: ""
+        version: image.openshift.io/v1
+      - kind: PersistentVolumeClaim
+        name: ""
+        version: v1
+      - kind: Route
+        name: ""
+        version: route.openshift.io/v1
+      - kind: Service
+        name: ""
+        version: v1
+      specDescriptors:
+      - description: Wildcard domain as configured in the API Manager object
+        displayName: Wildcard Domain
+        path: wildcardDomain
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:label
+      statusDescriptors:
+      - description: APIManager Deployment Configs
+        displayName: Deployments
+        path: deployments
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:podStatuses
+      version: v1alpha1
+    - description: APIManagerBackup represents an APIManager backup
+      displayName: APIManagerBackup
+      kind: APIManagerBackup
+      name: apimanagerbackups.apps.3scale.net
+      version: v1alpha1
+  description: 3scale Operator to provision 3scale and publish/manage API
+  displayName: 3scale (nightly)
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - 3scale
+  - API
+  links:
+  - name: 3scale Operator
+    url: https://3scale-operator.domain
+  maintainers:
+  - email: msoriano+3scaleoperator@redhat.com
+    name: Miguel Soriano
+  - email: eastizle+apicastoperator@redhat.com
+    name: Eguzki Astiz
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.0
