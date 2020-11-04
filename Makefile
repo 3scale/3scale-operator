@@ -17,15 +17,17 @@ IMG ?= controller:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
-
+GO ?= go
+KUBECTL ?= kubectl
 OPERATOR_SDK ?= operator-sdk
 DOCKER ?= docker
+
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell $(GO) env GOBIN))
+GOBIN=$(shell $(GO) env GOPATH)/bin
+else
+GOBIN=$(shell $(GO) env GOBIN)
+endif
 
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
@@ -39,52 +41,52 @@ all: manager
 test: test-unit test-e2e test-crds test-manifests-version
 
 # Run unit tests
-TEST_UNIT_PKGS = $(shell go list ./... | grep -E 'github.com/3scale/3scale-operator/pkg|github.com/3scale/3scale-operator/apis|github.com/3scale/3scale-operator/test/unitcontrollers')
-TEST_UNIT_COVERPKGS = $(shell go list ./... | grep -v test/unitcontrollers | tr "\n" ",") # Exclude test/unitcontrollers directory as coverpkg does not accept only-tests packages
+TEST_UNIT_PKGS = $(shell $(GO) list ./... | grep -E 'github.com/3scale/3scale-operator/pkg|github.com/3scale/3scale-operator/apis|github.com/3scale/3scale-operator/test/unitcontrollers')
+TEST_UNIT_COVERPKGS = $(shell $(GO) list ./... | grep -v test/unitcontrollers | tr "\n" ",") # Exclude test/unitcontrollers directory as coverpkg does not accept only-tests packages
 test-unit: clean-cov generate fmt vet manifests
 	mkdir -p "$(PROJECT_PATH)/_output"
-	go test  -v $(TEST_UNIT_PKGS) -covermode=count -coverprofile $(PROJECT_PATH)/_output/unit.cov -coverpkg=$(TEST_UNIT_COVERPKGS)
+	$(GO) test  -v $(TEST_UNIT_PKGS) -covermode=count -coverprofile $(PROJECT_PATH)/_output/unit.cov -coverpkg=$(TEST_UNIT_COVERPKGS)
 
 $(PROJECT_PATH)/_output/unit.cov: test-unit
 
 # Run CRD tests
-TEST_CRD_PKGS = $(shell go list ./... | grep 'github.com/3scale/3scale-operator/test/crds')
+TEST_CRD_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/crds')
 test-crds: generate fmt vet manifests
-	go test -v $(TEST_CRD_PKGS)
+	$(GO) test -v $(TEST_CRD_PKGS)
 
-TEST_MANIFESTS_VERSION_PKGS = $(shell go list ./... | grep 'github.com/3scale/3scale-operator/test/manifests-version')
+TEST_MANIFESTS_VERSION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/manifests-version')
 ## test-manifests-version: Run manifest version checks
 test-manifests-version:
-	go test -v $(TEST_MANIFESTS_VERSION_PKGS)
+	$(GO) test -v $(TEST_MANIFESTS_VERSION_PKGS)
 
 # Run e2e tests
-TEST_E2E_PKGS = $(shell go list ./... | grep 'github.com/3scale/3scale-operator/controllers')
+TEST_E2E_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers')
 ENVTEST_ASSETS_DIR=$(PROJECT_PATH)/testbin
 test-e2e: generate fmt vet manifests
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f $(ENVTEST_ASSETS_DIR)/setup-envtest.sh || curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.6.3/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); USE_EXISTING_CLUSTER=true go test $(TEST_E2E_PKGS) -coverprofile cover.out -ginkgo.v -ginkgo.progress -v
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); USE_EXISTING_CLUSTER=true $(GO) test $(TEST_E2E_PKGS) -coverprofile cover.out -ginkgo.v -ginkgo.progress -v
 
 # Build manager binary
 manager: generate fmt vet
-	go build -o bin/manager main.go
+	$(GO) build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
-	go run ./main.go
+	$(GO) run ./main.go
 
 # Install CRDs into a cluster
 install: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -92,11 +94,11 @@ manifests: controller-gen
 
 # Run go fmt against code
 fmt:
-	go fmt ./...
+	$(GO) fmt ./...
 
 # Run go vet against code
 vet:
-	go vet ./...
+	$(GO) vet ./...
 
 # Generate code
 generate: controller-gen
@@ -118,8 +120,8 @@ ifeq (, $(shell which controller-gen))
 	set -e ;\
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
+	$(GO) mod init tmp ;\
+	$(GO) get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -133,8 +135,8 @@ ifeq (, $(shell which kustomize))
 	set -e ;\
 	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
+	$(GO) mod init tmp ;\
+	$(GO) get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
 	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
 	}
 KUSTOMIZE=$(GOBIN)/kustomize
@@ -159,7 +161,7 @@ bundle-build:
 
 download:
 	@echo Download go.mod dependencies
-	@go mod download
+	@$(GO) mod download
 
 ## licenses.xml: Generate licenses.xml file
 licenses.xml: $(DEPENDENCY_DECISION_FILE)
@@ -185,8 +187,8 @@ ifeq (, $(shell which go-bindata))
 	set -e ;\
 	GOBINDATA_TMP_DIR=$$(mktemp -d) ;\
 	cd $$GOBINDATA_TMP_DIR ;\
-	go mod init tmp ;\
-	go get github.com/go-bindata/go-bindata/v3/...@v3.1.3 ;\
+	$(GO) mod init tmp ;\
+	$(GO) get github.com/go-bindata/go-bindata/v3/...@v3.1.3 ;\
 	rm -rf $$GOBINDATA_TMP_DIR ;\
 	}
 GOBINDATA=$(GOBIN)/go-bindata
@@ -197,7 +199,7 @@ endif
 ## assets: Generate embedded assets
 assets: go-bindata
 	@echo Generate Go embedded assets files by processing source
-	go generate github.com/3scale/3scale-operator/pkg/assets
+	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
 ## templates: generate templates
 TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
@@ -207,12 +209,12 @@ templates:
 ## coverage_analysis: Analyze coverage via a browse
 .PHONY: coverage_analysis
 coverage_analysis: $(PROJECT_PATH)/_output/unit.cov
-	go tool cover -html="$(PROJECT_PATH)/_output/unit.cov"
+	$(GO) tool cover -html="$(PROJECT_PATH)/_output/unit.cov"
 
 ## coverage_total_report: Simple coverage report
 .PHONY: coverage_total_report
 coverage_total_report: $(PROJECT_PATH)/_output/unit.cov
-	@go tool cover -func=$(PROJECT_PATH)/_output/unit.cov | grep total | awk '{print $$3}'
+	@$(GO) tool cover -func=$(PROJECT_PATH)/_output/unit.cov | grep total | awk '{print $$3}'
 
 clean-cov:
 	rm -rf $(PROJECT_PATH)/_output
