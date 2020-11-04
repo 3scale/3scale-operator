@@ -36,7 +36,7 @@ DEPENDENCY_DECISION_FILE = $(PROJECT_PATH)/doc/dependency_decisions.yml
 all: manager
 
 # Run all tests
-test: test-unit test-e2e test-crds
+test: test-unit test-e2e test-crds test-manifests-version
 
 # Run unit tests
 TEST_UNIT_PKGS = $(shell go list ./... | grep -E 'github.com/3scale/3scale-operator/pkg|github.com/3scale/3scale-operator/apis|github.com/3scale/3scale-operator/test/unitcontrollers')
@@ -51,6 +51,11 @@ $(PROJECT_PATH)/_output/unit.cov: test-unit
 TEST_CRD_PKGS = $(shell go list ./... | grep 'github.com/3scale/3scale-operator/test/crds')
 test-crds: generate fmt vet manifests
 	go test -v $(TEST_CRD_PKGS)
+
+TEST_MANIFESTS_VERSION_PKGS = $(shell go list ./... | grep 'github.com/3scale/3scale-operator/test/manifests-version')
+## test-manifests-version: Run manifest version checks
+test-manifests-version:
+	go test -v $(TEST_MANIFESTS_VERSION_PKGS)
 
 # Run e2e tests
 TEST_E2E_PKGS = $(shell go list ./... | grep 'github.com/3scale/3scale-operator/controllers')
