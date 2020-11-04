@@ -10,7 +10,6 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.6
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/google/go-cmp v0.4.0
 	github.com/google/uuid v1.1.1
@@ -27,7 +26,6 @@ require (
 	k8s.io/api v0.18.6
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
 	sigs.k8s.io/controller-runtime v0.6.2
 )
 
