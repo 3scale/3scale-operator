@@ -72,6 +72,8 @@ manager: generate fmt vet
 	$(GO) build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
+LOCAL_RUN_NAMESPACE ?= $(shell oc project -q 2>/dev/null || echo operator-test)
+run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
 run: generate fmt vet manifests
 	$(GO) run ./main.go
 
