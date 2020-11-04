@@ -6,20 +6,23 @@
 * [Building 3scale operator image](#building-3scale-operator-image)
 * [Run 3scale Operator](#run-3scale-operator)
   * [Run 3scale Operator Locally](#run-3scale-operator-locally)
-  * [Deploy 3scale Operator Manually](#deploy-3scale-operator-manually)
-    * [Cleanup manually deployed operator](#cleanup-manually-deployed-operator)
   * [Deploy custom 3scale Operator using OLM](#deploy-custom-3scale-operator-using-olm)
 * [Run tests](#run-tests)
+  * [Run all tests](#run-all-tests)
+  * [Run unit tests](#run-unit-tests)
+  * [Run end-to-end tests](#run-end-to-end-tests)
 * [Building 3scale templates](#building-3scale-templates)
-* [Manifest management](#manifest-management)
-  * [Verify operator manifest](#verify-operator-manifest)
-  * [Push an operator bundle into external app registry](#push-an-operator-bundle-into-external-app-registry)
+* [Bundle management](#bundle-management)
+  * [(re)Generate an operator bundle image](#generate-an-operator-bundle-image)
+  * [Validate an operator bundle image](#validate-an-operator-bundle-image)
+  * [Push an operator bundle into an external container repository](#push-an-operator-bundle-into-an-external-container-repository)
 * [Licenses management](#licenses-management)
   * [Adding manually a new license](#adding-manually-a-new-license)
 
 ## Prerequisites
 
-* [operator-sdk] version v0.15.2
+* [operator-sdk] version v1.1.0
+* [docker] version 17.03+
 * [git][git_tool]
 * [go] version 1.13+
 * [kubernetes] version v1.13.0+
@@ -44,7 +47,7 @@ git checkout master
 Build the operator image
 
 ```sh
-make build IMAGE=quay.io/myorg/3scale-operator VERSION=test
+make docker-build IMG=quay.io/myorg/3scale-operator:myversiontag
 ```
 
 ## Run 3scale Operator
@@ -59,7 +62,8 @@ Run operator from the command line, it will not be deployed as a pod.
 
 ```sh
 // As a cluster admin
-for i in `ls deploy/crds/*_crd.yaml`; do oc create -f $i ; done
+for i in `ls bundle/manifests/**apps.3scale.net_*.yaml`; do oc create -f $i ; done
+for i in `ls bundle/manifests/**capabilities.3scale.net_*.yaml`; do oc create -f $i ; done
 ```
 
 * Create a new OpenShift project (optional)
@@ -67,126 +71,95 @@ for i in `ls deploy/crds/*_crd.yaml`; do oc create -f $i ; done
 ```sh
 export NAMESPACE=operator-test
 oc new-project $NAMESPACE
+```
+
+* Install the dependencies
+
+```sh
+make download
 ```
 
 * Run operator
 
 ```sh
-make local
-```
-
-### Deploy 3scale Operator Manually
-
-Build the operator image and deploy it manually as a pod.
-
-* [Build 3scale operator image](#building-3scale-operator-image)
-
-* Push image to the public repo (for instance `quay.io`)
-
-```sh
-make push IMAGE=quay.io/myorg/3scale-operator VERSION=test
-```
-
-* Register the 3scale-operator CRDs in the OpenShift API Server
-
-```sh
-// As a cluster admin
-for i in `ls deploy/crds/*_crd.yaml`; do oc create -f $i ; done
-```
-
-* Create a new OpenShift project (optional)
-
-```sh
-export NAMESPACE=operator-test
-oc new-project $NAMESPACE
-```
-
-* Deploy the needed roles and ServiceAccounts
-
-```sh
-oc create -f deploy/service_account.yaml
-oc create -f deploy/role.yaml
-oc create -f deploy/role_binding.yaml
-oc create -f deploy/cluster_role.yaml
-oc create -f deploy/cluster_role_binding.yaml
-```
-
-* Deploy the operator
-
-```sh
-sed -i 's|REPLACE_IMAGE|quay.io/myorg/3scale-operator:test|g' deploy/operator.yaml
-oc create -f deploy/operator.yaml
-```
-
-#### Cleanup manually deployed operator
-
-* Delete all `apimanager` custom resources:
-
-```sh
-oc delete apimanagers --all
-```
-
-* Delete the 3scale-operator operator, its associated roles and service accounts
-
-```sh
-oc delete -f deploy/operator.yaml
-oc delete -f deploy/role_binding.yaml
-oc delete -f deploy/service_account.yaml
-oc delete -f deploy/role.yaml
-# If 3scale-operator has been deployed in a cluster where other users might
-# be using it do not delete the ClusterRole and ClusterRoleBinding below as
-# they are shared global resources
-oc delete -f deploy/cluster_role.yaml
-oc delete -f deploy/cluster_role_binding.yaml
-```
-
-* Delete the APIManager CRD:
-
-```sh
-oc delete crds apimanagers.apps.3scale.net
+make run
 ```
 
 ### Deploy custom 3scale Operator using OLM
 
-To install this operator on OpenShift 4 using OLM for end-to-end testing, 
+To install this operator on an OpenShift 4.5+ cluster using OLM for end-to-end testing:
 
-* [Push an operator bundle into external app registry](#push-an-operator-bundle-into-external-app-registry).
+* Perform naming changes to avoid collision with existing 3scale Operator
+  official public operators catalog entries:
+  * Edit the `bundle/manifests/3scale-operator.clusterserviceversion.yaml` file
+    and perform the following changes:
+      * Change the current value of `.metadata.name` to a different name
+        than `3scale-operator.v*`. For example to `myorg-3scale-operator.v0.0.1`
+      * Change the current value of `.spec.displayName` to a value that helps you
+        identify the catalog entry name from other operators and the official
+        3scale operator entries. For example to `"MyOrg 3scale operator"`
+      * Change the current value of `.spec.provider.Name` to a value that helps
+        you identify the catalog entry name from other operators and the official
+        3scale operator entries. For example, to `MyOrg`
+  * Edit the `bundle.Dockerfile` file and change the value of
+    the Dockerfile label `LABEL operators.operatorframework.io.bundle.package.v1`
+    to a different value than `3scale-operator`. For example to
+    `myorg-3scale-operator`
+  * Edit the `bundle/metadata/annotations.yaml` file and change the value of
+    `.annotations.operators.operatorframework.io.bundle.package.v1` to a
+    different value than `3scale-operator`. For example to
+    `myorg-3scale-operator`. The new value should match the
+    Dockerfile label `LABEL operators.operatorframework.io.bundle.package.v1`
+    in the `bundle.Dockerfile` as explained in the point above
 
-* Create the [Operator Source](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#4-create-the-operatorsource)
-provided in `deploy/olm-catalog/3scale-operatorsource.yaml` to load your operator bundle in OpenShift.
+  It is really important that all the previously shown fields are changed
+  to avoid overwriting the 3scale operator official public operator
+  catalog entry in your cluster and to avoid confusion having two equal entries
+  on it.
 
-```bash
-oc create -f deploy/olm-catalog/3scale-operatorsource.yaml
-```
+  * [Create an operator bundle image](#generate-an-operator-bundle-image) using the
+  changed contents above
 
-It will take a few minutes for the operator to become visible under the _OperatorHub_ section of
-the OpenShift console _Catalog_. It can be easily found by filtering the provider type to _Custom_.
+  * [Push the operator bundle into an external container repository](#push-an-operator-bundle-into-an-external-container-repository).
+
+  * Run the following command to deploy the operator in your currently configured
+    and active cluster in $HOME/.kube/config:
+    ```sh
+    operator-sdk run bundle --namespace <mynamespace> <BUNDLE_IMAGE_URL>
+    ```
+
+    Additionally, a specific kubeconfig file with a desired Kubernetes
+    configuration can be provided too:
+    ```sh
+    operator-sdk run bundle --namespace <mynamespace> --kubeconfig <path> <BUNDLE_IMAGE_URL>
+    ```
+
+It will take a few minutes for the operator to become visible under
+the _OperatorHub_ section of the OpenShift console _Catalog_. It can be
+easily found by filtering the provider type to _Custom_.
 
 ### Run tests
 
-#### Run unittests
-
-No need access to OCP cluster
-
-```sh
-make unit
-make test-crds
-```
-
-#### Run integration tests
+#### Run all tests
 
 Access to a Openshift v4.1.0+ cluster required
 
-* Run tests locally deploying the image
 ```sh
-export NAMESPACE=operator-test
-make e2e-run
+make test
 ```
 
-* Run tests locally running operator with go run instead of as an image in the cluster
+#### Run unit tests
+
 ```sh
-export NAMESPACE=operator-test
-make e2e-local-run
+make test-unit
+```
+
+#### Run end-to-end tests
+
+Access to a Openshift v4.1.0+ cluster required
+
+```sh
+make test-e2e
 ```
 
 ## Building 3scale templates
@@ -205,41 +178,26 @@ pkg/3scale/amp/auto-generated-templates
 **NOTE**: If you want to use supported and stable templates you should go to the
 [official repository](https://github.com/3scale/3scale-amp-openshift-templates)
 
-## Manifest management
+## Bundle management
 
-`operator-courier` is used for metadata syntax checking and validation.
-This can be installed directly from pip:
-
-```sh
-pip3 install operator-courier
-```
-
-### Verify operator manifest
-
-Check [Required fields within your CSV](https://github.com/operator-framework/community-operators/blob/master/docs/required-fields.md)
-
-`operator-courier` will verify the fields included in the Operator metadata (CSV)
+### Generate an operator bundle image
 
 ```sh
-make verify-manifest
+make bundle
 ```
 
-### Push an operator bundle into external app registry
+The generated output will be saved in the `bundle` directory
 
-* Get quay token
+### Validate an operator bundle image
 
-Detailed information on this [guide](https://github.com/operator-framework/operator-courier/#authentication)
-
-```bash
-curl -sH "Content-Type: application/json" -XPOST https://quay.io/cnr/api/v1/users/login -d '{"user": {"username": "YOURUSERNAME", "password": "YOURPASSWORD"}}' | jq '.token'
+```sh
+make bundle-validate
 ```
 
-* Push bundle to Quay.io
+### Push an operator bundle into an external container repository
 
-Detailed information on this [guide](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md#push-to-quayio).
-
-```bash
-make push-manifest APPLICATION_REPOSITORY_NAMESPACE=YOUR_QUAY_NAMESPACE MANIFEST_RELEASE=1.0.0 TOKEN=YOUR_TOKEN
+```sh
+make docker-push IMG=quay.io/myorg/3scale-operator:myversiontag
 ```
 
 ## Licenses management
@@ -293,5 +251,6 @@ license_finder approval add github.com/golang/glog --decisions-file=doc/dependen
 [git_tool]:https://git-scm.com/downloads
 [operator-sdk]:https://github.com/operator-framework/operator-sdk
 [go]:https://golang.org/
+[docker]:https://docs.docker.com/install/
 [kubernetes]:https://kubernetes.io/
 [oc]:https://github.com/openshift/origin/releases
