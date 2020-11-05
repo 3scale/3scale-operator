@@ -25,6 +25,7 @@ func NewStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabil
 		BaseReconciler:   b,
 		backendResource:  backendResource,
 		backendAPIEntity: backendAPIEntity,
+		syncError:        syncError,
 		logger:           b.Logger().WithValues("Status Reconciler", backendResource.Name),
 	}
 }

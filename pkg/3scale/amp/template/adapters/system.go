@@ -279,8 +279,6 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels()
 	o.MemcachedLabels = s.memcachedLabels()
 	o.SMTPLabels = s.smtpLabels()
-	// Not used, can be anything
-	o.SidekiqMonitoringLabels = map[string]string{"a": "a"}
 
 	err := o.Validate()
 	return o, err

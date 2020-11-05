@@ -62,6 +62,18 @@ rules:
   verbs:
   - get
 - apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - apps.3scale.net
   resources:
   - '*'
@@ -172,6 +184,7 @@ rules:
 - apiGroups:
   - monitoring.coreos.com
   resources:
+  - podmonitors 
   - servicemonitors
   - prometheusrules
   verbs:
@@ -180,6 +193,7 @@ rules:
   - create
   - update
   - watch
+  - delete
 - apiGroups:
   - integreatly.org
   resources:
@@ -190,3 +204,4 @@ rules:
   - create
   - update
   - watch
+  - delete

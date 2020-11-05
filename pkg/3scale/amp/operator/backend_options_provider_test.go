@@ -60,9 +60,9 @@ func testBackendListenerPodLabels() map[string]string {
 		"threescale_component_element": "listener",
 		"com.redhat.component-name":    "backend-listener",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.9.1",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "backend-listener",
 	}
 }
@@ -74,9 +74,9 @@ func testBackendWorkerPodLabels() map[string]string {
 		"threescale_component_element": "worker",
 		"com.redhat.component-name":    "backend-worker",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.9.1",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "backend-worker",
 	}
 }
@@ -88,9 +88,9 @@ func testBackendCronPodLabels() map[string]string {
 		"threescale_component_element": "cron",
 		"com.redhat.component-name":    "backend-cron",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.9.1",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "backend-cron",
 	}
 }
@@ -118,25 +118,6 @@ func testBackendWorkerTolerations() []v1.Toleration {
 func testBackendCronTolerations() []v1.Toleration {
 	return getTestTolerations("backend-cron")
 }
-
-func testBackendMonitoringListenerLabels() map[string]string {
-	return map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "backend",
-		"threescale_component_element": "listener",
-		"monitoring-key":               "middleware",
-	}
-}
-
-func testBackendMonitoringWorkerLabels() map[string]string {
-	return map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "backend",
-		"threescale_component_element": "worker",
-		"monitoring-key":               "middleware",
-	}
-}
-
 
 func getInternalSecret() *v1.Secret {
 	data := map[string]string{
@@ -207,8 +188,6 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 		ListenerPodTemplateLabels:    testBackendListenerPodLabels(),
 		WorkerPodTemplateLabels:      testBackendWorkerPodLabels(),
 		CronPodTemplateLabels:        testBackendCronPodLabels(),
-		ListenerMonitoringLabels:     testBackendMonitoringListenerLabels(),
-		WorkerMonitoringLabels:       testBackendMonitoringWorkerLabels(),
 		WorkerMetrics:                true,
 		ListenerMetrics:              true,
 	}

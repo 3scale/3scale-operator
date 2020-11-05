@@ -7,92 +7,43 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func (apicast *Apicast) ApicastProductionMonitoringService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "apicast-production-metrics",
-			Labels: apicast.Options.ProductionMonitoringLabels,
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "metrics",
-					Protocol:   v1.ProtocolTCP,
-					Port:       9421,
-					TargetPort: intstr.FromInt(9421),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "apicast-production"},
-		},
-	}
-}
-
-func (apicast *Apicast) ApicastStagingMonitoringService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "apicast-staging-metrics",
-			Labels: apicast.Options.StagingMonitoringLabels,
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "metrics",
-					Protocol:   v1.ProtocolTCP,
-					Port:       9421,
-					TargetPort: intstr.FromInt(9421),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "apicast-staging"},
-		},
-	}
-}
-
-func (apicast *Apicast) ApicastProductionServiceMonitor() *monitoringv1.ServiceMonitor {
-	return &monitoringv1.ServiceMonitor{
+func (apicast *Apicast) ApicastProductionPodMonitor() *monitoringv1.PodMonitor {
+	return &monitoringv1.PodMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-production",
-			Labels: apicast.Options.ProductionMonitoringLabels,
+			Labels: apicast.Options.CommonProductionLabels,
 		},
-		Spec: monitoringv1.ServiceMonitorSpec{
-			Endpoints: []monitoringv1.Endpoint{{
+		Spec: monitoringv1.PodMonitorSpec{
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{{
 				Port:   "metrics",
 				Path:   "/metrics",
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: apicast.Options.ProductionMonitoringLabels,
+				MatchLabels: apicast.Options.CommonProductionLabels,
 			},
 		},
 	}
 }
 
-func (apicast *Apicast) ApicastStagingServiceMonitor() *monitoringv1.ServiceMonitor {
-	return &monitoringv1.ServiceMonitor{
+func (apicast *Apicast) ApicastStagingPodMonitor() *monitoringv1.PodMonitor {
+	return &monitoringv1.PodMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-staging",
-			Labels: apicast.Options.StagingMonitoringLabels,
+			Labels: apicast.Options.CommonStagingLabels,
 		},
-		Spec: monitoringv1.ServiceMonitorSpec{
-			Endpoints: []monitoringv1.Endpoint{{
+		Spec: monitoringv1.PodMonitorSpec{
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{{
 				Port:   "metrics",
 				Path:   "/metrics",
 				Scheme: "http",
 			}},
 			Selector: metav1.LabelSelector{
-				MatchLabels: apicast.Options.StagingMonitoringLabels,
+				MatchLabels: apicast.Options.CommonStagingLabels,
 			},
 		},
 	}
@@ -143,9 +94,8 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "apicast",
 			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-				"prometheus":     "application-monitoring",
-				"role":           "alert-rules",
+				"prometheus": "application-monitoring",
+				"role":       "alert-rules",
 			},
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
@@ -154,7 +104,19 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 					Name: fmt.Sprintf("%s/apicast.rules", ns),
 					Rules: []monitoringv1.Rule{
 						{
-							Alert: "ApicastRequestTime",
+							Alert: "ThreescaleApicastJobDown",
+							Annotations: map[string]string{
+								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
+							},
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/apicast-production|.*/apicast-staging",namespace="%s"} == 0`, ns)),
+							For:  "1m",
+							Labels: map[string]string{
+								"severity": "critical",
+							},
+						},
+						{
+							Alert: "ThreescaleApicastRequestTime",
 							Annotations: map[string]string{
 								"summary":     "Request on instance {{ $labels.instance }} is taking more than one second to process the requests",
 								"description": "High number of request taking more than a second to be processed",
@@ -166,7 +128,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							},
 						},
 						{
-							Alert: "APICastHttp4xxErrorRate",
+							Alert: "ThreescaleApicastHttp4xxErrorRate",
 							Annotations: map[string]string{
 								"summary":     "APICast high HTTP 4XX error rate (instance {{ $labels.instance }})",
 								"description": "The number of request with 4XX is bigger than the 5% of total request.",
@@ -178,7 +140,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 							},
 						},
 						{
-							Alert: "APICAstLatencyHigh",
+							Alert: "ThreescaleApicastLatencyHigh",
 							Annotations: map[string]string{
 								"summary":     "APICast latency high (instance {{ $labels.instance }})",
 								"description": "APIcast p99 latency is higher than 5 seconds\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}",

@@ -100,9 +100,6 @@ func (z *Zync) options() (*component.ZyncOptions, error) {
 	zo.ZyncPodTemplateLabels = z.zyncPodTemplateLabels()
 	zo.ZyncQuePodTemplateLabels = z.zyncQuePodTemplateLabels()
 	zo.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels()
-	// Not used, can be anything
-	zo.ZyncMonitoringLabels = map[string]string{"a": "a"}
-	zo.ZyncQueMonitoringLabels = map[string]string{"a": "a"}
 
 	zo.AuthenticationToken = "${ZYNC_AUTHENTICATION_TOKEN}"
 	zo.DatabasePassword = "${ZYNC_DATABASE_PASSWORD}"

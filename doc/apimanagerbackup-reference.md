@@ -60,7 +60,7 @@ Backups of the external databases used by 3scale is not part of the
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | `apiManagerName` | string | No | Name of the APIManager deployed in the same namespace as the deployed APIManagerBackup | Name of the APIManager to backup |
-| `backupSource` | [APIManagerBackupDestinationSpec](#APIManagerBackupDestinationSpec) | Yes | See [APIManagerBackupDestinationSpec](#APIManagerBackupDestinationSpec) | Configuration related to where the backup is performed |
+| `backupDestination` | [APIManagerBackupDestinationSpec](#APIManagerBackupDestinationSpec) | Yes | See [APIManagerBackupDestinationSpec](#APIManagerBackupDestinationSpec) | Configuration related to where the backup is performed |
 
 ### APIManagerBackupDestinationSpec
 
@@ -77,7 +77,9 @@ There are two main ways to provide a PersistentVolumeClaim for the backup:
 * Providing the volume name of an already existing Kubernetes PersistentVolume
   through the usage of the `volumeName` field. The already existing Kubernetes
   PersistentVolume has to be appropriately sized to contain
-  all [data that is backed up](#data-that-is-backed-up)
+  all [data that is backed up](#data-that-is-backed-up). In this case storage
+  size on the `resources` field has to be also specified, although it will be
+  ignored as per K8s PersistentVolumeClaim requirements behavior
 * Providing the desired size of the PersistentVolumeClaim through the
   `resources` field. In this case the `storageClass` field
   can be also set to specify what StorageClass will be used for the
@@ -86,7 +88,7 @@ There are two main ways to provide a PersistentVolumeClaim for the backup:
 
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- |
-| `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | See [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | 
+| `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | See [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | |
 | `volumeName` | string | No | N/A | A binding reference to the PersistentVolume backing this claim. This is not the persistentVolumeClaim name. See the field `volumeName` in the [Kubernetes PersistentVolumeClaim API reference](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaimspec-v1-core) for more information |
 | `storageClass` | string | No | N/A | Name of the StorageClass required by the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1 |
 

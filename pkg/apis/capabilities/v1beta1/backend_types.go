@@ -3,6 +3,7 @@ package v1beta1
 import (
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
@@ -141,12 +142,20 @@ type Backend struct {
 	Status BackendStatus `json:"status,omitempty"`
 }
 
-func (backend *Backend) SetDefaults() bool {
+func (backend *Backend) SetDefaults(logger logr.Logger) bool {
 	updated := false
 
 	// Respect 3scale API defaults
 	if backend.Spec.SystemName == "" {
 		backend.Spec.SystemName = backendSystemNameRegexp.ReplaceAllString(backend.Spec.Name, "")
+		updated = true
+	}
+
+	// 3scale API ignores case of the system name field
+	systemNameLowercase := strings.ToLower(backend.Spec.SystemName)
+	if backend.Spec.SystemName != systemNameLowercase {
+		logger.Info("System name updated", "from", backend.Spec.SystemName, "to", systemNameLowercase)
+		backend.Spec.SystemName = systemNameLowercase
 		updated = true
 	}
 
@@ -163,6 +172,7 @@ func (backend *Backend) SetDefaults() bool {
 		}
 	}
 	if !hitsFound {
+		logger.Info("Hits metric added")
 		backend.Spec.Metrics["hits"] = MetricSpec{
 			Name:        "Hits",
 			Unit:        "hit",

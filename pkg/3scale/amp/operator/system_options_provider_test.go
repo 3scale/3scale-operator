@@ -43,9 +43,9 @@ func testSystemAppPodTemplateLabels() map[string]string {
 		"threescale_component_element": "app",
 		"com.redhat.component-name":    "system-app",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.9.1",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "system-app",
 	}
 }
@@ -65,9 +65,9 @@ func testSystemSidekiqPodTemplateLabels() map[string]string {
 		"threescale_component_element": "sidekiq",
 		"com.redhat.component-name":    "system-sidekiq",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.9.1",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "system-sidekiq",
 	}
 }
@@ -111,9 +111,9 @@ func testSystemSphinxPodTemplateLabels() map[string]string {
 		"threescale_component_element": "sphinx",
 		"com.redhat.component-name":    "system-sphinx",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.9.1",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.9",
 		"deploymentConfig":             "system-sphinx",
 	}
 }
@@ -131,14 +131,6 @@ func testSystemSMTPLabels() map[string]string {
 		"app":                          appLabel,
 		"threescale_component":         "system",
 		"threescale_component_element": "smtp",
-	}
-}
-func testSystemSidekiqMonitoringLabels() map[string]string {
-	return map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "sidekiq",
-		"monitoring-key":               "middleware",
 	}
 }
 
@@ -327,7 +319,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		SphinxPodTemplateLabels:  testSystemSphinxPodTemplateLabels(),
 		MemcachedLabels:          testSystemMemcachedLabels(),
 		SMTPLabels:               testSystemSMTPLabels(),
-		SidekiqMonitoringLabels:  testSystemSidekiqMonitoringLabels(),
+		SideKiqMetrics:           true,
 	}
 
 	expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(opts.ApicastAccessToken)
