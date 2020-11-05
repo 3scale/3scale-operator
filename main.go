@@ -45,6 +45,9 @@ import (
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
 	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/prometheus/client_golang/prometheus"
+	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -228,6 +231,8 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "WebConsole")
 		os.Exit(1)
 	}
+
+	registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry()
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
@@ -255,4 +260,23 @@ func printVersion() {
 	setupLog.Info(fmt.Sprintf("Operator Version: %s", version.Version))
 	setupLog.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	setupLog.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
+}
+
+func registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry() {
+	register3scaleVersionInfoMetric()
+}
+
+func register3scaleVersionInfoMetric() {
+	threeScaleVersionInfo := prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "threescale_version_info",
+			Help: "3scale Operator version and product version",
+			ConstLabels: prometheus.Labels{
+				"operator_version": version.Version,
+				"version":          product.ThreescaleRelease,
+			},
+		},
+	)
+	// Register custom metrics with the global prometheus registry
+	controllerruntimemetrics.Registry.MustRegister(threeScaleVersionInfo)
 }
