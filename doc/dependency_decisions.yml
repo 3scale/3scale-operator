@@ -196,3 +196,143 @@
     :why: https://github.com/go-bindata/go-bindata/blob/master/LICENSE
     :versions: []
     :when: 2020-06-15 09:58:31.161619176 Z
+- - :license
+  - github.com/RHsyseng/operator-utils
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/RHsyseng/operator-utils/blob/main/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:32:57.258472908 Z
+- - :license
+  - github.com/3scale/3scale-porta-go-client
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/3scale/3scale-porta-go-client/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:34:33.193723648 Z
+- - :license
+  - github.com/coreos/prometheus-operator
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/prometheus-operator/prometheus-operator/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:35:28.565127839 Z
+- - :license
+  - github.com/getkin/kin-openapi
+  - MIT
+  - :who: 
+    :why: MIT License https://github.com/getkin/kin-openapi/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:36:13.723362521 Z
+- - :license
+  - github.com/ghodss/yaml
+  - MIT
+  - :who: 
+    :why: MIT License https://github.com/ghodss/yaml/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:36:33.892856046 Z
+- - :license
+  - github.com/go-logr/logr
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/go-logr/logr/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:36:51.127264243 Z
+- - :license
+  - github.com/go-playground/validator/v10
+  - MIT
+  - :who: 
+    :why: MIT License https://github.com/go-playground/validator/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:37:02.155357010 Z
+- - :license
+  - github.com/google/go-cmp
+  - 3-clause BSD License
+  - :who: 
+    :why: 3-clause BSD License https://github.com/google/go-cmp/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:38:12.612324180 Z
+- - :license
+  - github.com/google/uuid
+  - 3-clause BSD License
+  - :who: 
+    :why: 3-clause BSD License https://github.com/google/uuid/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:38:48.321534876 Z
+- - :license
+  - github.com/integr8ly/grafana-operator/v3
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/integr8ly/grafana-operator/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:39:44.967874727 Z
+- - :license
+  - github.com/mitchellh/go-homedir
+  - MIT
+  - :who: 
+    :why: MIT License https://github.com/mitchellh/go-homedir/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:40:21.787063904 Z
+- - :license
+  - github.com/openshift/api
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/openshift/api/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:41:06.715726526 Z
+- - :license
+  - github.com/stretchr/testify
+  - MIT
+  - :who: 
+    :why: MIT License https://github.com/stretchr/testify/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:41:28.064181638 Z
+- - :license
+  - k8s.io/api
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/kubernetes/api/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:41:51.531475811 Z
+- - :license
+  - k8s.io/apimachinery
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/kubernetes/apimachinery/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:42:07.899772339 Z
+- - :license
+  - k8s.io/client-go
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/kubernetes/client-go/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:42:19.690104963 Z
+- - :license
+  - sigs.k8s.io/controller-runtime
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/kubernetes-sigs/controller-runtime/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:42:32.442206940 Z
+- - :license
+  - github.com/spf13/viper
+  - MIT
+  - :who: 
+    :why: MIT License https://github.com/spf13/viper/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-04 13:43:36.791038647 Z
+- - :license
+  - gopkg.in/yaml.v2
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/go-yaml/yaml
+    :versions: []
+    :when: 2020-11-04 13:44:28.542040395 Z
+- - :license
+  - github.com/prometheus/client_golang
+  - Apache 2.0
+  - :who: 
+    :why: Apache 2.0 License https://github.com/prometheus/client_golang/blob/master/LICENSE
+    :versions: []
+    :when: 2020-11-05 10:19:33.685918301 Z
