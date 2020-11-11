@@ -21,7 +21,7 @@
 
 ## Prerequisites
 
-* [operator-sdk] version v1.1.0
+* [operator-sdk] version v1.2.0
 * [docker] version 17.03+
 * [git][git_tool]
 * [go] version 1.13+
