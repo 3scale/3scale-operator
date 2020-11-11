@@ -492,7 +492,7 @@ spec:
           - create
         serviceAccountName: 3scale-operator
       deployments:
-      - name: 3scale-operator-controller-manager
+      - name: threescale-operator-controller-manager
         spec:
           replicas: 1
           selector:

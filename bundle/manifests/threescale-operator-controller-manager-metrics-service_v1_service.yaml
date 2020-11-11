@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     control-plane: controller-manager
-  name: 3scale-operator-controller-manager-metrics-service
+  name: threescale-operator-controller-manager-metrics-service
 spec:
   ports:
   - name: https
