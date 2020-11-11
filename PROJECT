@@ -1,0 +1,30 @@
+domain: 3scale.net
+layout: go.kubebuilder.io/v2
+multigroup: true
+projectName: 3scale-operator
+repo: github.com/3scale/3scale-operator
+resources:
+- group: apps
+  kind: APIManager
+  version: v1alpha1
+- group: apps
+  kind: APIManagerBackup
+  version: v1alpha1
+- group: apps
+  kind: APIManagerRestore
+  version: v1alpha1
+- group: capabilities
+  kind: Tenant
+  version: v1alpha1
+- group: capabilities
+  kind: Backend
+  version: v1beta1
+- group: capabilities
+  kind: Product
+  version: v1beta1
+- group: capabilities
+  kind: OpenAPI
+  version: v1beta1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}

@@ -1,0 +1,20 @@
+# permissions for end users to view apimanagerbackups.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: apimanagerbackup-viewer-role
+rules:
+- apiGroups:
+  - apps.3scale.net
+  resources:
+  - apimanagerbackups
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.3scale.net
+  resources:
+  - apimanagerbackups/status
+  verbs:
+  - get

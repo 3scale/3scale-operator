@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	apps "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
-	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1alpha1"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/pkg/apis/capabilities/v1beta1"
+	apps "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/RHsyseng/operator-utils/pkg/validation"
 	"github.com/ghodss/yaml"
 
@@ -29,15 +29,16 @@ const (
 )
 
 func TestSampleCustomResources(t *testing.T) {
-	root := "../../deploy/crds"
+	root := "../../bundle/manifests"
+	// Map of CRD:CR_sample_prefix
 	crdCrMap := map[string]string{
-		"apps.3scale.net_apimanagers_crd.yaml":        "apps.3scale.net_v1alpha1_apimanager_cr",
-		"apps.3scale.net_apimanagerbackups_crd.yaml":  "apps.3scale.net_v1alpha1_apimanagerbackup_cr.yaml",
-		"apps.3scale.net_apimanagerrestores_crd.yaml": "apps.3scale.net_v1alpha1_apimanagerrestore_cr.yaml",
-		"capabilities.3scale.net_tenants_crd.yaml":    "capabilities.3scale.net_v1alpha1_tenant_cr",
-		"capabilities.3scale.net_backends_crd.yaml":   "capabilities.3scale.net_v1beta1_backend_cr",
-		"capabilities.3scale.net_products_crd.yaml":   "capabilities.3scale.net_v1beta1_product_cr",
-		"capabilities.3scale.net_openapis_crd.yaml":   "capabilities.3scale.net_v1beta1_openapi_cr",
+		"apps.3scale.net_apimanagers.yaml":        "apps_v1alpha1_apimanager_",
+		"apps.3scale.net_apimanagerbackups.yaml":  "apps_v1alpha1_apimanagerbackup.yaml",
+		"apps.3scale.net_apimanagerrestores.yaml": "apps_v1alpha1_apimanagerrestore.yaml",
+		"capabilities.3scale.net_tenants.yaml":    "capabilities_v1alpha1_tenant",
+		"capabilities.3scale.net_backends.yaml":   "capabilities_v1beta1_backend",
+		"capabilities.3scale.net_products.yaml":   "capabilities_v1beta1_product",
+		"capabilities.3scale.net_openapis.yaml":   "capabilities_v1beta1_openapi",
 	}
 	for crd, prefix := range crdCrMap {
 		validateCustomResources(t, root, crd, prefix)
@@ -68,15 +69,15 @@ func validateCustomResources(t *testing.T, root string, crd string, prefix strin
 }
 
 func TestCompleteCRD(t *testing.T) {
-	root := "../../deploy/crds"
+	root := "../../bundle/manifests"
 	crdStructMap := map[string]interface{}{
-		"apps.3scale.net_apimanagers_crd.yaml":        &apps.APIManager{},
-		"apps.3scale.net_apimanagerbackups_crd.yaml":  &apps.APIManagerBackup{},
-		"apps.3scale.net_apimanagerrestores_crd.yaml": &apps.APIManagerRestore{},
-		"capabilities.3scale.net_tenants_crd.yaml":    &capabilitiesv1alpha1.Tenant{},
-		"capabilities.3scale.net_backends_crd.yaml":   &capabilitiesv1beta1.Backend{},
-		"capabilities.3scale.net_products_crd.yaml":   &capabilitiesv1beta1.Product{},
-		"capabilities.3scale.net_openapis_crd.yaml":   &capabilitiesv1beta1.OpenAPI{},
+		"apps.3scale.net_apimanagers.yaml":        &apps.APIManager{},
+		"apps.3scale.net_apimanagerbackups.yaml":  &apps.APIManagerBackup{},
+		"apps.3scale.net_apimanagerrestores.yaml": &apps.APIManagerRestore{},
+		"capabilities.3scale.net_tenants.yaml":    &capabilitiesv1alpha1.Tenant{},
+		"capabilities.3scale.net_backends.yaml":   &capabilitiesv1beta1.Backend{},
+		"capabilities.3scale.net_products.yaml":   &capabilitiesv1beta1.Product{},
+		"capabilities.3scale.net_openapis.yaml":   &capabilitiesv1beta1.OpenAPI{},
 	}
 
 	pathOmissions := []string{

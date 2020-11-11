@@ -1,0 +1,9 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManagerRestore
+metadata:
+  name: apimanagerrestore-sample
+spec:
+  restoreSource:
+    persistentVolumeClaim:
+      claimSource:
+        claimName: "mybackeduppvc"

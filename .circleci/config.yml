@@ -42,7 +42,7 @@ commands:
       - run:
           name: Install operator-sdk
           command: |
-            export OPERATOR_SDK_RELEASE_VERSION=v0.15.2
+            export OPERATOR_SDK_RELEASE_VERSION=v1.1.0
             curl -OJL https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_RELEASE_VERSION}/operator-sdk-${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu
             chmod +x operator-sdk-${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu && sudo cp operator-sdk-${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu /usr/local/bin/operator-sdk && rm operator-sdk-${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu
 
@@ -50,15 +50,15 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - go-mod-v1-{{ arch }}-{{ checksum "go.sum" }}
+            - threescale-operator-go-mod-v1-{{ arch }}-{{ checksum "go.sum" }}
             # Find the most recently generated cache used from any branch
-            - go-mod-v1-{{ arch }}
+            - threescale-operator-go-mod-v1-{{ arch }}
       - run:
           name: Install go dependencies
           command: |
-            go mod download
+            make download
       - save_cache:
-          key: go-mod-v1-{{ arch }}-{{ checksum "go.sum" }}
+          key: threescale-operator-go-mod-v1-{{ arch }}-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
 
@@ -308,19 +308,6 @@ commands:
             oc observe pods --maximum-errors=-1 --no-headers --object-env-var=OBJECT --type-env-var=TYPE -- jq -n --raw-output 'env.OBJECT | fromjson | "\(env.TYPE) \(.kind) \(.metadata.name) started at \(.status.startTime) (\(.status.phase)) \(.status.conditions // [] | map("\(.type): \(.status) @ \(.lastTransitionTime)") | join(", "))"'
           background: true
 
-  watch-operator-pod-logs:
-    steps:
-      - run:
-          name: Watch pod logs
-          command: |
-            while [[ $(oc get pods -l name=threescale-operator -n operator-test -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
-              echo "waiting for pod" && sleep 1
-            done
-            OPERATOR_POD=$(oc get pods -l name=threescale-operator -n operator-test -o 'jsonpath={..metadata.name}')
-            echo "watching logs on $OPERATOR_POD"
-            kubectl -n operator-test logs -f $OPERATOR_POD
-          background: true
-
   oc-status:
     parameters:
       report_name:
@@ -346,16 +333,16 @@ commands:
       - run:
           name: Build Operator
           command: |
-              make build IMAGE=172.30.1.1:5000/openshift/3scale-operator VERSION=test
+              make docker-build-only IMG=172.30.1.1:5000/openshift/3scale-operator:test
 
   unit-tests:
     steps:
       - checkout
       - install-dependencies
       - run:
-          name: Run unit tests in pkg folder
+          name: Run unit tests
           command: |
-            make unit
+            make test-unit
 jobs:
   install-operator:
     docker:
@@ -484,11 +471,10 @@ jobs:
           command: |
             oc new-project operator-test
       - oc-observe
-      - watch-operator-pod-logs
       - run:
           name: run E2E tests
           command: |
-            make e2e-run IMAGE=172.30.1.1:5000/openshift/3scale-operator:test NAMESPACE=operator-test
+            make test-e2e
           no_output_timeout: 30m
       - oc-status
 
@@ -516,7 +502,6 @@ jobs:
       - checkout
       - install-dependencies
       - run: make test-manifests-version
-
   license-check:
     docker:
       - image: circleci/golang:1.13.7
@@ -545,14 +530,6 @@ jobs:
       - install-dependencies
       - run: make licenses-check
 
-  verify-manifest:
-    docker:
-      - image: circleci/python:3.6.4
-    steps:
-      - checkout
-      - run: sudo pip3 install -v operator-courier==2.1.7
-      - run: make verify-manifest
-
   unit-tests-coverage:
     docker:
       - image: circleci/golang:1.13.7
@@ -564,6 +541,15 @@ jobs:
             cp _output/unit.cov coverage.txt
             bash <(curl -s https://codecov.io/bash)
 
+  bundle-validate:
+    docker:
+      - image: circleci/golang:1.13.7
+    working_directory: /go/src/github.com/3scale/3scale-operator
+    steps:
+      - checkout
+      - install-operator-sdk
+      - run: make bundle-validate
+
 workflows:
   version: 2
   operator:
@@ -572,7 +558,7 @@ workflows:
       - test-crds
       - test-manifests-version
       - run-unit-tests
-      - verify-manifest
+      - bundle-validate
       - install-operator
       - run-operator-e2e-test:
           requires:

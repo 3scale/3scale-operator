@@ -11,7 +11,6 @@ import (
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	consolev1 "github.com/openshift/api/console/v1"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -172,34 +171,34 @@ func (b *BaseReconciler) UpdateResourceStatus(obj common.KubernetesObject) error
 
 //HasConsoleLink checks if the ConsoleLink is supported in current cluster
 func (b *BaseReconciler) HasConsoleLink() (bool, error) {
-	return k8sutil.ResourceExists(b.DiscoveryClient(),
+	return resourceExists(b.DiscoveryClient(),
 		consolev1.GroupVersion.String(), "ConsoleLink")
 }
 
 //HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
 func (b *BaseReconciler) HasGrafanaDashboards() (bool, error) {
-	return k8sutil.ResourceExists(b.DiscoveryClient(),
+	return resourceExists(b.DiscoveryClient(),
 		grafanav1alpha1.SchemeGroupVersion.String(),
 		grafanav1alpha1.GrafanaDashboardKind)
 }
 
 //HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
 func (b *BaseReconciler) HasPrometheusRules() (bool, error) {
-	return k8sutil.ResourceExists(b.DiscoveryClient(),
+	return resourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.PrometheusRuleKind)
 }
 
 //HasServiceMonitors checks if the ServiceMonitors CRD is supported in current cluster
 func (b *BaseReconciler) HasServiceMonitors() (bool, error) {
-	return k8sutil.ResourceExists(b.DiscoveryClient(),
+	return resourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.ServiceMonitorsKind)
 }
 
 //HasPodMonitors checks if the PodMonitors CRD is supported in current cluster
 func (b *BaseReconciler) HasPodMonitors() (bool, error) {
-	return k8sutil.ResourceExists(b.DiscoveryClient(),
+	return resourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.PodMonitorsKind)
 }
@@ -234,4 +233,22 @@ func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject
 	}
 
 	return changed, nil
+}
+
+func resourceExists(dc discovery.DiscoveryInterface, groupVersion, kind string) (bool, error) {
+	_, apiLists, err := dc.ServerGroupsAndResources()
+	if err != nil {
+		return false, err
+	}
+
+	for _, apiList := range apiLists {
+		if apiList.GroupVersion == groupVersion {
+			for _, r := range apiList.APIResources {
+				if r.Kind == kind {
+					return true, nil
+				}
+			}
+		}
+	}
+	return false, nil
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

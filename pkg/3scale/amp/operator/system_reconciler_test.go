@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -35,7 +35,7 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
+	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)

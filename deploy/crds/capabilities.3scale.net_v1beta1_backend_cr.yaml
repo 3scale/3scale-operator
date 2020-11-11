@@ -1,8 +1,0 @@
-apiVersion: capabilities.3scale.net/v1beta1
-kind: Backend
-metadata:
-  name: backend1
-spec:
-  name: "Operated Backend 1"
-  systemName: "backend1"
-  privateBaseURL: "https://api.example.com"

@@ -1,99 +1,212 @@
-MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
-.DEFAULT_GOAL := help
-.PHONY: build unit e2e test-crds verify-manifest licenses-check push-manifest
-UNAME := $(shell uname)
-
-ifeq (${UNAME}, Linux)
-  SED=sed
-else ifeq (${UNAME}, Darwin)
-  SED=gsed
+SHELL := /bin/bash
+# Current Operator version
+VERSION ?= 0.0.1
+# Default bundle image tag
+BUNDLE_IMG ?= controller-bundle:$(VERSION)
+# Options for 'bundle-build'
+ifneq ($(origin CHANNELS), undefined)
+BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
+ifneq ($(origin DEFAULT_CHANNEL), undefined)
+BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
+endif
+BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
-OPERATORCOURIER := $(shell command -v operator-courier 2> /dev/null)
-LICENSEFINDERBINARY := $(shell command -v license_finder 2> /dev/null)
-DEPENDENCY_DECISION_FILE = $(PROJECT_PATH)/doc/dependency_decisions.yml
-OPERATOR_SDK ?= operator-sdk
+# Image URL to use all building/pushing image targets
+IMG ?= quay.io/3scale/3scale-operator:nightly
+# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
+CRD_OPTIONS ?= "crd:trivialVersions=true"
+
 GO ?= go
-OC ?= oc
+KUBECTL ?= kubectl
+OPERATOR_SDK ?= operator-sdk
 DOCKER ?= docker
 
-help: Makefile
-	@sed -n 's/^##//p' $<
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell $(GO) env GOBIN))
+GOBIN=$(shell $(GO) env GOPATH)/bin
+else
+GOBIN=$(shell $(GO) env GOBIN)
+endif
 
-## vendor: Populate vendor directory
-vendor:
-	$(GO) mod vendor
+MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
-IMAGE ?= quay.io/3scale/3scale-operator
-SOURCE_VERSION ?= master
-VERSION ?= v0.0.1
-NAMESPACE ?= $(shell $(OC) project -q 2>/dev/null || echo operator-test)
-OPERATOR_NAME ?= threescale-operator
-MANIFEST_RELEASE ?= 1.0.$(shell git rev-list --count master)
-APPLICATION_REPOSITORY_NAMESPACE ?= 3scaleoperatormaster
-TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
+LICENSEFINDERBINARY := $(shell command -v license_finder 2> /dev/null)
+DEPENDENCY_DECISION_FILE = $(PROJECT_PATH)/doc/dependency_decisions.yml
 
-## download: Download go.mod dependencies
+all: manager
+
+# Run all tests
+test: test-unit test-e2e test-crds test-manifests-version
+
+# Run unit tests
+TEST_UNIT_PKGS = $(shell $(GO) list ./... | grep -E 'github.com/3scale/3scale-operator/pkg|github.com/3scale/3scale-operator/apis|github.com/3scale/3scale-operator/test/unitcontrollers')
+TEST_UNIT_COVERPKGS = $(shell $(GO) list ./... | grep -v test/unitcontrollers | tr "\n" ",") # Exclude test/unitcontrollers directory as coverpkg does not accept only-tests packages
+test-unit: clean-cov generate fmt vet manifests
+	mkdir -p "$(PROJECT_PATH)/_output"
+	$(GO) test  -v $(TEST_UNIT_PKGS) -covermode=count -coverprofile $(PROJECT_PATH)/_output/unit.cov -coverpkg=$(TEST_UNIT_COVERPKGS)
+
+$(PROJECT_PATH)/_output/unit.cov: test-unit
+
+# Run CRD tests
+TEST_CRD_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/crds')
+test-crds: generate fmt vet manifests
+	$(GO) test -v $(TEST_CRD_PKGS)
+
+TEST_MANIFESTS_VERSION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/manifests-version')
+## test-manifests-version: Run manifest version checks
+test-manifests-version:
+	$(GO) test -v $(TEST_MANIFESTS_VERSION_PKGS)
+
+# Run e2e tests
+TEST_E2E_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers')
+ENVTEST_ASSETS_DIR=$(PROJECT_PATH)/testbin
+test-e2e: generate fmt vet manifests
+	mkdir -p ${ENVTEST_ASSETS_DIR}
+	test -f $(ENVTEST_ASSETS_DIR)/setup-envtest.sh || curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.6.3/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); USE_EXISTING_CLUSTER=true $(GO) test $(TEST_E2E_PKGS) -coverprofile cover.out -ginkgo.v -ginkgo.progress -v -timeout 0
+
+# Build manager binary
+manager: generate fmt vet
+	$(GO) build -o bin/manager main.go
+
+# Run against the configured Kubernetes cluster in ~/.kube/config
+LOCAL_RUN_NAMESPACE ?= $(shell oc project -q 2>/dev/null || echo operator-test)
+run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
+run: generate fmt vet manifests
+	$(GO) run ./main.go
+
+# Install CRDs into a cluster
+install: manifests kustomize
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
+
+# Uninstall CRDs from a cluster
+uninstall: manifests kustomize
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
+
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
+
+# Generate manifests e.g. CRD, RBAC etc.
+manifests: controller-gen
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+# Run go fmt against code
+fmt:
+	$(GO) fmt ./...
+
+# Run go vet against code
+vet:
+	$(GO) vet ./...
+
+# Generate code
+generate: controller-gen
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+# Build the docker image
+docker-build: test
+	$(DOCKER) build . -t ${IMG}
+
+# Push the docker image
+docker-push:
+	$(DOCKER) push ${IMG}
+
+# find or download controller-gen
+# download controller-gen if necessary
+controller-gen:
+ifeq (, $(shell which controller-gen))
+	@{ \
+	set -e ;\
+	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$CONTROLLER_GEN_TMP_DIR ;\
+	$(GO) mod init tmp ;\
+	$(GO) get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
+	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
+	}
+CONTROLLER_GEN=$(GOBIN)/controller-gen
+else
+CONTROLLER_GEN=$(shell which controller-gen)
+endif
+
+kustomize:
+ifeq (, $(shell which kustomize))
+	@{ \
+	set -e ;\
+	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
+	$(GO) mod init tmp ;\
+	$(GO) get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
+	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
+	}
+KUSTOMIZE=$(GOBIN)/kustomize
+else
+KUSTOMIZE=$(shell which kustomize)
+endif
+
+# Generate bundle manifests and metadata, then validate generated files.
+.PHONY: bundle
+bundle: manifests kustomize
+	$(OPERATOR_SDK) generate kustomize manifests -q
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	$(OPERATOR_SDK) bundle validate ./bundle
+
+# Build the bundle image.
+.PHONY: bundle-build
+bundle-build:
+	$(DOCKER) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+# 3scale-specific targets
+
 download:
 	@echo Download go.mod dependencies
-	@go mod download
+	@$(GO) mod download
 
-## install-tools: Installing tools from tools.go
-install-tools: download
-	@echo Installing tools from tools.go
-	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+## licenses.xml: Generate licenses.xml file
+licenses.xml: $(DEPENDENCY_DECISION_FILE)
+ifndef LICENSEFINDERBINARY
+	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
+endif
+	license_finder report --decisions-file=$(DEPENDENCY_DECISION_FILE) --quiet --format=xml > licenses.xml
+
+## licenses-check: Check license compliance of dependencies
+licenses-check:
+ifndef LICENSEFINDERBINARY
+	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
+endif
+	@echo "Checking license compliance"
+	license_finder --decisions-file=$(DEPENDENCY_DECISION_FILE)
+
+docker-build-only:
+	$(DOCKER) build . -t ${IMG}
+
+go-bindata:
+ifeq (, $(shell which go-bindata))
+	@{ \
+	set -e ;\
+	GOBINDATA_TMP_DIR=$$(mktemp -d) ;\
+	cd $$GOBINDATA_TMP_DIR ;\
+	$(GO) mod init tmp ;\
+	$(GO) get github.com/go-bindata/go-bindata/v3/...@v3.1.3 ;\
+	rm -rf $$GOBINDATA_TMP_DIR ;\
+	}
+GOBINDATA=$(GOBIN)/go-bindata
+else
+GOBINDATA=$(shell which go-bindata)
+endif
 
 ## assets: Generate embedded assets
-assets: install-tools
+assets: go-bindata
 	@echo Generate Go embedded assets files by processing source
 	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
-## build: Build operator
-build:
-	$(OPERATOR_SDK) build $(IMAGE):$(VERSION)
-
-## push: push operator docker image to remote repo
-push:
-	$(DOCKER) push $(IMAGE):$(VERSION)
-
-## pull: pull operator docker image from remote repo
-pull:
-	$(DOCKER) pull $(IMAGE):$(VERSION)
-
-tag:
-	$(DOCKER) tag $(IMAGE):$(SOURCE_VERSION) $(IMAGE):$(VERSION)
-
-## local: Run operator locally
-local:
-	OPERATOR_NAME=$(OPERATOR_NAME) THREESCALE_DEBUG=1 $(OPERATOR_SDK) run --local --namespace $(NAMESPACE) --operator-flags '--zap-devel=true --zap-level 1'
-
-## e2e-setup: create OCP project for the operator
-e2e-setup:
-	$(OC) new-project $(NAMESPACE)
-
-## e2e-local-run: running operator locally with go run instead of as an image in the cluster
-e2e-local-run:
-	OPERATOR_NAME=$(OPERATOR_NAME) $(OPERATOR_SDK) test local ./test/e2e --up-local --namespace $(NAMESPACE) --go-test-flags '-v -timeout 0'
-
-## e2e-run: operator local test
-e2e-run:
-	$(OPERATOR_SDK) test local ./test/e2e --go-test-flags '-v -timeout 0' --debug --image $(IMAGE) --namespace $(NAMESPACE)
-
-## e2e-clean: delete operator OCP project
-e2e-clean:
-	$(OC) delete --force project $(NAMESPACE) || true
-
-## e2e: e2e-clean e2e-setup e2e-run
-e2e: e2e-clean e2e-setup e2e-run
-
-$(PROJECT_PATH)/_output/unit.cov:
-	mkdir -p "$(PROJECT_PATH)/_output"
-	$(GO) test ./pkg/... -v -tags=unit -covermode=count -coverprofile $(PROJECT_PATH)/_output/unit.cov -coverpkg ./...
-
-## unit: Run unit tests in pkg directory
-.PHONY: unit
-unit: clean $(PROJECT_PATH)/_output/unit.cov
+## templates: generate templates
+TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
+templates:
+	$(MAKE) -C $(TEMPLATES_MAKEFILE_PATH) clean all
 
 ## coverage_analysis: Analyze coverage via a browse
 .PHONY: coverage_analysis
@@ -105,47 +218,9 @@ coverage_analysis: $(PROJECT_PATH)/_output/unit.cov
 coverage_total_report: $(PROJECT_PATH)/_output/unit.cov
 	@$(GO) tool cover -func=$(PROJECT_PATH)/_output/unit.cov | grep total | awk '{print $$3}'
 
-## test-crds: Run CRD unittests
-test-crds:
-	cd $(PROJECT_PATH)/test/crds && $(GO) test -v
-
-## test-manifests-version: Run manifest version checks
-test-manifests-version:
-	cd $(PROJECT_PATH)/test/manifests-version && $(GO) test -v
-
-## verify-manifest: Test manifests have expected format
-verify-manifest:
-ifndef OPERATORCOURIER
-	$(error "operator-courier is not available please install pip3 install operator-courier")
-endif
-	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier verify --ui_validate_io 3scale-operator-master/
-
-## licenses.xml: Generate licenses.xml file
-licenses.xml: $(DEPENDENCY_DECISION_FILE)
-ifndef LICENSEFINDERBINARY
-	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
-endif
-	license_finder report --decisions-file=$(DEPENDENCY_DECISION_FILE) --quiet --format=xml > licenses.xml
-
-## licenses-check: Check license compliance of dependencies
-licenses-check: vendor
-ifndef LICENSEFINDERBINARY
-	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
-endif
-	@echo "Checking license compliance"
-	license_finder --decisions-file=$(DEPENDENCY_DECISION_FILE)
-
-## push-manifest: Push manifests to application repository
-push-manifest:
-ifndef OPERATORCOURIER
-	$(error "operator-courier is not available please install pip3 install operator-courier")
-endif
-	cd $(PROJECT_PATH)/deploy/olm-catalog && operator-courier push 3scale-operator-master/ $(APPLICATION_REPOSITORY_NAMESPACE) 3scale-operator-master $(MANIFEST_RELEASE) "$(TOKEN)"
-
-## templates: generate templates
-templates:
-	$(MAKE) -C $(TEMPLATES_MAKEFILE_PATH) clean all
-
-## clean: Clean build resources
-clean:
+clean-cov:
 	rm -rf $(PROJECT_PATH)/_output
+	rm -rf $(PROJECT_PATH)/cover.out
+
+bundle-validate:
+	$(OPERATOR_SDK) bundle validate ./bundle

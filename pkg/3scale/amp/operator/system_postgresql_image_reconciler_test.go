@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	imagev1 "github.com/openshift/api/image/v1"
@@ -50,7 +50,7 @@ func TestSystemPostgreSQLImageReconcilerCreate(t *testing.T) {
 		},
 	}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.SchemeGroupVersion, apimanager)
+	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
