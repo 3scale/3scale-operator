@@ -357,7 +357,7 @@ metadata:
     containerImage: quay.io/3scale/3scale-operator:nightly
     createdAt: "2019-05-30T22:40:00Z"
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.1.0
+    operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/3scale/3scale-operator
     support: Red Hat
