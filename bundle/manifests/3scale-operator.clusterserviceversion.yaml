@@ -354,7 +354,7 @@ metadata:
     capabilities: Full Lifecycle
     categories: Integration & Delivery
     certified: "false"
-    containerImage: quay.io/3scale/3scale-operator:nightly
+    containerImage: quay.io/3scale/3scale-operator:master
     createdAt: "2019-05-30T22:40:00Z"
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
@@ -553,7 +553,7 @@ spec:
                   value: centos/postgresql-10-centos7
                 - name: OC_CLI_IMAGE
                   value: quay.io/openshift/origin-cli:4.2
-                image: quay.io/3scale/3scale-operator:nightly
+                image: quay.io/3scale/3scale-operator:master
                 name: manager
                 resources:
                   limits:

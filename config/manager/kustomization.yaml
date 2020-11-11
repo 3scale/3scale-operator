@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quay.io/3scale/3scale-operator
-  newTag: nightly
+  newTag: master
