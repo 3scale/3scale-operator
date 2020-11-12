@@ -15,6 +15,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -113,14 +114,18 @@ var _ = Describe("APIManager controller", func() {
 				return true
 			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
+			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed DeploymentConfigs\n")
 			err = waitForAllAPIManagerStandardDeploymentConfigs(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "All APIManager managed DeploymentConfigs are ready\n")
 
-			// err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
-			// Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Routes\n")
+			err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "All APIManager managed Routes are available\n")
 
 			elapsed := time.Since(start)
-			fmt.Fprintf(GinkgoWriter, "APIcast creation and availability took '%s'\n", elapsed)
+			fmt.Fprintf(GinkgoWriter, "APIManager creation and availability took '%s'\n", elapsed)
 		})
 	})
 })
@@ -169,9 +174,7 @@ func waitForAllAPIManagerStandardDeploymentConfigs(namespace string, retryInterv
 			fmt.Fprintf(w, "Waiting for full availability of %s DeploymentConfig (%d/%d)\n", dcName, availableReplicas, desiredReplicas)
 			return false
 
-		}, 15*time.Minute, retryInterval).Should(BeTrue())
-
-		return nil
+		}, timeout, retryInterval).Should(BeTrue())
 	}
 
 	return nil
@@ -187,15 +190,33 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 		"3scale-admin." + wildcardDomain,                  // System's '3scale' tenant Admin Portal Route
 	}
 	for _, routeHost := range routeHosts {
-		lookupKey := types.NamespacedName{Name: routeHost, Namespace: namespace}
-		createdRoute := &routev1.Route{}
 		Eventually(func() bool {
-			err := testK8sClient.Get(context.Background(), lookupKey, createdRoute)
+			routeList := &routev1.RouteList{}
+			routeListOptions := client.ListOptions{
+				FieldSelector: fields.OneTermEqualSelector("spec.host", routeHost),
+			}
+			err := testK8sAPIClient.List(context.Background(), routeList, &routeListOptions)
 			if err != nil {
+				if errors.IsNotFound(err) {
+					fmt.Fprintf(w, "Waiting for availability of Route with host '%s'\n", routeHost)
+					return false
+				}
+				fmt.Fprintf(w, "Error Listing Routes with host '%s': %s\n", routeHost, err)
 				return false
 			}
 
-			routeStatusIngresses := createdRoute.Status.Ingress
+			routeItems := routeList.Items
+			if len(routeItems) == 0 {
+				fmt.Fprintf(w, "Waiting for availability of Route with host '%s'\n", routeHost)
+				return false
+			}
+			if len(routeItems) > 1 {
+				fmt.Fprintf(w, "Found unexpected routes with duplicated 'host' fields\n")
+				return false
+			}
+
+			route := routeItems[0]
+			routeStatusIngresses := route.Status.Ingress
 			if routeStatusIngresses == nil || len(routeStatusIngresses) == 0 {
 				fmt.Fprintf(w, "Waiting for availability of Route with host '%s'\n", routeHost)
 				return false
@@ -216,11 +237,10 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 				}
 			}
 
-			fmt.Fprintf(w, "Route '%s' with host '%s' available\n", createdRoute.Name, createdRoute.Spec.Host)
+			fmt.Fprintf(w, "Route '%s' with host '%s' available\n", route.Name, route.Spec.Host)
 			return true
-		}, 15*time.Minute, retryInterval).Should(BeTrue())
+		}, timeout, retryInterval).Should(BeTrue())
 
-		return nil
 	}
 
 	return nil
