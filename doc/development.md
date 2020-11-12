@@ -42,7 +42,7 @@ cd 3scale-operator
 Build the operator image
 
 ```sh
-make docker-build-only IMG=quay.io/myorg/apicast-operator:myversiontag
+make docker-build-only IMG=quay.io/myorg/3scale-operator:myversiontag
 ```
 
 ## Run 3scale Operator
