@@ -114,11 +114,15 @@ var _ = Describe("APIManager controller", func() {
 				return true
 			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
+			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed DeploymentConfigs\n")
 			err = waitForAllAPIManagerStandardDeploymentConfigs(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "All APIManager managed DeploymentConfigs are ready\n")
 
+			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Routes\n")
 			err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "All APIManager managed Routes are available\n")
 
 			elapsed := time.Since(start)
 			fmt.Fprintf(GinkgoWriter, "APIManager creation and availability took '%s'\n", elapsed)
