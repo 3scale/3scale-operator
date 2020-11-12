@@ -54,6 +54,10 @@ patchesStrategicMerge:
 # does not support `oneOf` statement OpenAPI validation
 - patches/product_authentication_openapi_validation_in_products.yaml
 # +kubebuilder:scaffold:crdkustomizeproductproductauthenticationopenapivalidationpatch
+#
+# [3scale CRDs additional app label]. This patch adds the 'app' label for the 3scale CRDs
+- patches/additional_app_label_in_crds.yaml
+# +kubebuilder:scaffold:crdkustomizeadditionalapplabelincrdspatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
 configurations:
