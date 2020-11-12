@@ -51,6 +51,7 @@ import (
 
 var cfg *rest.Config
 var testK8sClient client.Client
+var testK8sAPIClient client.Reader
 var testEnv *envtest.Environment
 
 func TestAPIs(t *testing.T) {
@@ -132,6 +133,8 @@ var _ = BeforeSuite(func(done Done) {
 
 	testK8sClient = mgr.GetClient()
 	Expect(testK8sClient).ToNot(BeNil())
+	testK8sAPIClient = mgr.GetAPIReader()
+	Expect(testK8sAPIClient).ToNot(BeNil())
 
 	close(done)
 }, 60)

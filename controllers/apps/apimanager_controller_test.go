@@ -191,7 +191,7 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 			routeListOptions := client.ListOptions{
 				FieldSelector: fields.OneTermEqualSelector("spec.host", routeHost),
 			}
-			err := testK8sClient.List(context.Background(), routeList, &routeListOptions)
+			err := testK8sAPIClient.List(context.Background(), routeList, &routeListOptions)
 			if err != nil {
 				if errors.IsNotFound(err) {
 					fmt.Fprintf(w, "Waiting for availability of Route with host '%s'\n", routeHost)
