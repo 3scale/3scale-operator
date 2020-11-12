@@ -33,21 +33,16 @@
 ## Clone repository
 
 ```sh
-mkdir -p $GOPATH/src/github.com/3scale
-cd $GOPATH/src/github.com/3scale
 git clone https://github.com/3scale/3scale-operator
 cd 3scale-operator
-git checkout master
 ```
 
 ## Building 3scale operator image
 
-[Clone the repository](#clone-repository)
-
 Build the operator image
 
 ```sh
-make docker-build IMG=quay.io/myorg/3scale-operator:myversiontag
+make docker-build-only IMG=quay.io/myorg/apicast-operator:myversiontag
 ```
 
 ## Run 3scale Operator
@@ -56,14 +51,10 @@ make docker-build IMG=quay.io/myorg/3scale-operator:myversiontag
 
 Run operator from the command line, it will not be deployed as a pod.
 
-* [Clone the repository](#clone-repository)
-
 * Register the 3scale-operator CRDs in the OpenShift API Server
 
 ```sh
-// As a cluster admin
-for i in `ls bundle/manifests/**apps.3scale.net_*.yaml`; do oc create -f $i ; done
-for i in `ls bundle/manifests/**capabilities.3scale.net_*.yaml`; do oc create -f $i ; done
+make install
 ```
 
 * Create a new OpenShift project (optional)
@@ -87,52 +78,22 @@ make run
 
 ### Deploy custom 3scale Operator using OLM
 
-To install this operator on an OpenShift 4.5+ cluster using OLM for end-to-end testing:
+* Build and upload custom operator image
+```
+make docker-build-only IMG=quay.io/myorg/3scale-operator:myversiontag
+make operator-image-push IMG=quay.io/myorg/3scale-operator:myversiontag
+```
 
-* Perform naming changes to avoid collision with existing 3scale Operator
-  official public operators catalog entries:
-  * Edit the `bundle/manifests/3scale-operator.clusterserviceversion.yaml` file
-    and perform the following changes:
-      * Change the current value of `.metadata.name` to a different name
-        than `3scale-operator.v*`. For example to `myorg-3scale-operator.v0.0.1`
-      * Change the current value of `.spec.displayName` to a value that helps you
-        identify the catalog entry name from other operators and the official
-        3scale operator entries. For example to `"MyOrg 3scale operator"`
-      * Change the current value of `.spec.provider.Name` to a value that helps
-        you identify the catalog entry name from other operators and the official
-        3scale operator entries. For example, to `MyOrg`
-  * Edit the `bundle.Dockerfile` file and change the value of
-    the Dockerfile label `LABEL operators.operatorframework.io.bundle.package.v1`
-    to a different value than `3scale-operator`. For example to
-    `myorg-3scale-operator`
-  * Edit the `bundle/metadata/annotations.yaml` file and change the value of
-    `.annotations.operators.operatorframework.io.bundle.package.v1` to a
-    different value than `3scale-operator`. For example to
-    `myorg-3scale-operator`. The new value should match the
-    Dockerfile label `LABEL operators.operatorframework.io.bundle.package.v1`
-    in the `bundle.Dockerfile` as explained in the point above
+* Build and upload custom operator bundle image. Changes to avoid conflicts will be made by the makefile.
+```
+make bundle-custom-build IMG=quay.io/myorg/3scale-operator:myversiontag BUNDLE_IMG=quay.io/myorg/3scale-operator-bundles:myversiontag
+make bundle-image-push BUNDLE_IMG=quay.io/myorg/3scale-operator-bundles:myversiontag
+```
 
-  It is really important that all the previously shown fields are changed
-  to avoid overwriting the 3scale operator official public operator
-  catalog entry in your cluster and to avoid confusion having two equal entries
-  on it.
-
-  * [Create an operator bundle image](#generate-an-operator-bundle-image) using the
-  changed contents above
-
-  * [Push the operator bundle into an external container repository](#push-an-operator-bundle-into-an-external-container-repository).
-
-  * Run the following command to deploy the operator in your currently configured
-    and active cluster in $HOME/.kube/config:
-    ```sh
-    operator-sdk run bundle --namespace <mynamespace> <BUNDLE_IMAGE_URL>
-    ```
-
-    Additionally, a specific kubeconfig file with a desired Kubernetes
-    configuration can be provided too:
-    ```sh
-    operator-sdk run bundle --namespace <mynamespace> --kubeconfig <path> <BUNDLE_IMAGE_URL>
-    ```
+* Deploy the operator in your currently configured and active cluster in $HOME/.kube/config:
+```
+make bundle-run BUNDLE_IMG=quay.io/myorg/3scale-operator-bundles:myversiontag
+```
 
 It will take a few minutes for the operator to become visible under
 the _OperatorHub_ section of the OpenShift console _Catalog_. It can be
@@ -183,21 +144,21 @@ pkg/3scale/amp/auto-generated-templates
 ### Generate an operator bundle image
 
 ```sh
-make bundle
-```
-
-The generated output will be saved in the `bundle` directory
-
-### Validate an operator bundle image
-
-```sh
-make bundle-validate
+make bundle-build BUNDLE_IMG=quay.io/myorg/myrepo:myversiontag
 ```
 
 ### Push an operator bundle into an external container repository
 
 ```sh
-make docker-push IMG=quay.io/myorg/3scale-operator:myversiontag
+make bundle-image-push BUNDLE_IMG=quay.io/myorg/myrepo:myversiontag
+```
+
+### Validate an operator bundle image
+
+NOTE: if validating an image, the image must exist in a remote registry, not just locally.
+
+```
+make bundle-validate-image BUNDLE_IMG=quay.io/myorg/myrepo:myversiontag
 ```
 
 ## Licenses management
