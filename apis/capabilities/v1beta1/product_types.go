@@ -698,6 +698,21 @@ func (d *ProductDeploymentSpec) GatewayResponse() *GatewayResponseSpec {
 	return d.ApicastSelfManaged.GatewayResponse()
 }
 
+// PolicyConfig defines policy definition
+type PolicyConfig struct {
+	// Name defines the policy unique name
+	Name string `json:"name"`
+
+	// Version defines the policy version
+	Version string `json:"version"`
+
+	// Configuration defines the policy configuration
+	Configuration map[string]string `json:"configuration"`
+
+	// Version defines the policy version
+	Enabled bool `json:"enabled"`
+}
+
 // ProductSpec defines the desired state of Product
 type ProductSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -752,6 +767,10 @@ type ProductSpec struct {
 	// ProviderAccountRef references account provider credentials
 	// +optional
 	ProviderAccountRef *corev1.LocalObjectReference `json:"providerAccountRef,omitempty"`
+
+	// Policies holds the product's policy chain
+	// +optional
+	Policies []PolicyConfig `json:"policies,omitempty"`
 }
 
 func (s *ProductSpec) DeploymentOption() *string {

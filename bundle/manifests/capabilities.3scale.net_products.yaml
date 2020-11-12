@@ -522,6 +522,32 @@ spec:
             name:
               description: Name is human readable name for the product
               type: string
+            policies:
+              description: Policies holds the product's policy chain
+              items:
+                description: PolicyConfig defines policy definition
+                properties:
+                  configuration:
+                    additionalProperties:
+                      type: string
+                    description: Configuration defines the policy configuration
+                    type: object
+                  enabled:
+                    description: Version defines the policy version
+                    type: boolean
+                  name:
+                    description: Name defines the policy unique name
+                    type: string
+                  version:
+                    description: Version defines the policy version
+                    type: string
+                required:
+                - configuration
+                - enabled
+                - name
+                - version
+                type: object
+              type: array
             providerAccountRef:
               description: ProviderAccountRef references account provider credentials
               properties:
