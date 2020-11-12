@@ -116,8 +116,8 @@ var _ = Describe("APIManager controller", func() {
 			err = waitForAllAPIManagerStandardDeploymentConfigs(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
 
-			// err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
-			// Expect(err).ToNot(HaveOccurred())
+			err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
 
 			elapsed := time.Since(start)
 			fmt.Fprintf(GinkgoWriter, "APIcast creation and availability took '%s'\n", elapsed)
@@ -218,7 +218,6 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 			return true
 		}, 15*time.Minute, retryInterval).Should(BeTrue())
 
-		return nil
 	}
 
 	return nil
