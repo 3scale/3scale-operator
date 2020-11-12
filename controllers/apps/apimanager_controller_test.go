@@ -174,7 +174,7 @@ func waitForAllAPIManagerStandardDeploymentConfigs(namespace string, retryInterv
 			fmt.Fprintf(w, "Waiting for full availability of %s DeploymentConfig (%d/%d)\n", dcName, availableReplicas, desiredReplicas)
 			return false
 
-		}, 15*time.Minute, retryInterval).Should(BeTrue())
+		}, timeout, retryInterval).Should(BeTrue())
 	}
 
 	return nil
@@ -239,7 +239,7 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 
 			fmt.Fprintf(w, "Route '%s' with host '%s' available\n", route.Name, route.Spec.Host)
 			return true
-		}, 15*time.Minute, retryInterval).Should(BeTrue())
+		}, timeout, retryInterval).Should(BeTrue())
 
 	}
 
