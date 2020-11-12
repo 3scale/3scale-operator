@@ -222,5 +222,11 @@ clean-cov:
 	rm -rf $(PROJECT_PATH)/_output
 	rm -rf $(PROJECT_PATH)/cover.out
 
+.PHONY: bundle-validate
 bundle-validate:
 	$(OPERATOR_SDK) bundle validate ./bundle
+
+.PHONY: bundle-update-test
+bundle-update-test:
+	git diff --exit-code ./bundle
+	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./bundle)" ]

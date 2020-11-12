@@ -548,7 +548,8 @@ jobs:
     steps:
       - checkout
       - install-operator-sdk
-      - run: make bundle-validate
+      - run: make bundle
+      - run: make bundle-update-test
 
 workflows:
   version: 2
