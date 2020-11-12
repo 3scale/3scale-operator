@@ -170,8 +170,6 @@ func waitForAllAPIManagerStandardDeploymentConfigs(namespace string, retryInterv
 			return false
 
 		}, 15*time.Minute, retryInterval).Should(BeTrue())
-
-		return nil
 	}
 
 	return nil
