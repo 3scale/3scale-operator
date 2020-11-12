@@ -121,7 +121,7 @@ var _ = Describe("APIManager controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			elapsed := time.Since(start)
-			fmt.Fprintf(GinkgoWriter, "APIcast creation and availability took '%s'\n", elapsed)
+			fmt.Fprintf(GinkgoWriter, "APIManager creation and availability took '%s'\n", elapsed)
 		})
 	})
 })
