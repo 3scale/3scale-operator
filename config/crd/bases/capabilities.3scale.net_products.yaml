@@ -651,7 +651,7 @@ spec:
                 properties:
                   configuration:
                     additionalProperties:
-                      type: string
+                      type: object
                     description: Configuration defines the policy configuration
                     type: object
                   enabled:

@@ -28,6 +28,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
@@ -57,6 +58,17 @@ const (
 	// ProductFailedConditionType indicates that an error occurred during synchronization.
 	// The operator will retry.
 	ProductFailedConditionType common.ConditionType = "Failed"
+)
+
+var (
+	// ApicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
+	// Needs to exist in the policy chain
+	ApicastPolicy = PolicyConfig{
+		Name:          "apicast",
+		Version:       "builtin",
+		Configuration: map[string]runtime.RawExtension{},
+		Enabled:       true,
+	}
 )
 
 var (
@@ -707,7 +719,7 @@ type PolicyConfig struct {
 	Version string `json:"version"`
 
 	// Configuration defines the policy configuration
-	Configuration map[string]string `json:"configuration"`
+	Configuration map[string]runtime.RawExtension `json:"configuration"`
 
 	// Version defines the policy version
 	Enabled bool `json:"enabled"`
@@ -1015,6 +1027,21 @@ func (product *Product) SetDefaults(logger logr.Logger) bool {
 			Unit:        "hit",
 			Description: "Number of API hits",
 		}
+		updated = true
+	}
+
+	// Apicast Policy must exist
+	apicastPolicyFound := false
+	for idx := range product.Spec.Policies {
+		if product.Spec.Policies[idx].Name == ApicastPolicy.Name {
+			apicastPolicyFound = true
+			break
+		}
+	}
+
+	if !apicastPolicyFound {
+		// Add to the end of the slice as the one with the lowest priority
+		product.Spec.Policies = append(product.Spec.Policies, ApicastPolicy)
 		updated = true
 	}
 
