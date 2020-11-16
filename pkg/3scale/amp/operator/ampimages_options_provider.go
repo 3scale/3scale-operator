@@ -53,6 +53,11 @@ func (a *AmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOp
 		a.ampImagesOptions.SystemMemcachedImage = *a.apimanager.Spec.System.MemcachedImage
 	}
 
+	a.ampImagesOptions.ImagePullSecrets = component.AmpImagesDefaultImagePullSecrets()
+	if a.apimanager.Spec.ImagePullSecrets != nil {
+		a.ampImagesOptions.ImagePullSecrets = a.apimanager.Spec.ImagePullSecrets
+	}
+
 	err := a.ampImagesOptions.Validate()
 	return a.ampImagesOptions, err
 }

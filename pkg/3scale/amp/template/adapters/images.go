@@ -99,6 +99,7 @@ func (i *ImagesAdapter) options() (*component.AmpImagesOptions, error) {
 	ao.ZyncDatabasePostgreSQLImage = "${ZYNC_DATABASE_IMAGE}"
 	ao.SystemMemcachedImage = "${MEMCACHED_IMAGE}"
 	ao.InsecureImportPolicy = false
+	ao.ImagePullSecrets = component.AmpImagesDefaultImagePullSecrets()
 
 	err := ao.Validate()
 	return ao, err

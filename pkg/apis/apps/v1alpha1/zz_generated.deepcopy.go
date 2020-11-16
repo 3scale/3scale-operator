@@ -203,6 +203,11 @@ func (in *APIManagerCommonSpec) DeepCopyInto(out *APIManagerCommonSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ImagePullSecrets != nil {
+		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
+		*out = make([]v1.LocalObjectReference, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

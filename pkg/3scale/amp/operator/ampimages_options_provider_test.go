@@ -9,6 +9,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -32,6 +33,14 @@ func defaultAmpImageOptions() *component.AmpImagesOptions {
 		ZyncDatabasePostgreSQLImage: component.ZyncPostgreSQLImageURL(),
 		SystemMemcachedImage:        SystemMemcachedImageURL(),
 		InsecureImportPolicy:        insecureImportPolicy,
+		ImagePullSecrets:            component.AmpImagesDefaultImagePullSecrets(),
+	}
+}
+
+func testAmpImagesCustomImagePullSecrets() []v1.LocalObjectReference {
+	return []v1.LocalObjectReference{
+		v1.LocalObjectReference{Name: "mysecret1"},
+		v1.LocalObjectReference{Name: "mysecret5"},
 	}
 }
 
@@ -125,6 +134,21 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 			},
 			func() *component.AmpImagesOptions {
 				opts := defaultAmpImageOptions()
+				opts.SystemMemcachedImage = tmpSystemMemcachedImage
+				return opts
+			},
+		},
+		{
+			"custom image pull secrets",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System = &appsv1alpha1.SystemSpec{MemcachedImage: &tmpSystemMemcachedImage}
+				apimanager.Spec.ImagePullSecrets = testAmpImagesCustomImagePullSecrets()
+				return apimanager
+			},
+			func() *component.AmpImagesOptions {
+				opts := defaultAmpImageOptions()
+				opts.ImagePullSecrets = testAmpImagesCustomImagePullSecrets()
 				opts.SystemMemcachedImage = tmpSystemMemcachedImage
 				return opts
 			},

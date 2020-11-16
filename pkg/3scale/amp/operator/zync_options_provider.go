@@ -59,6 +59,8 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 
 	z.zyncOptions.ZyncMetrics = true
 
+	z.zyncOptions.ZyncQueServiceAccountImagePullSecrets = z.zyncQueServiceAccountImagePullSecrets()
+
 	err = z.zyncOptions.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("GetZyncOptions validating: %w", err)
@@ -261,4 +263,12 @@ func (z *ZyncOptionsProvider) zyncDatabasePodTemplateLabels(image string) map[st
 	labels["deploymentConfig"] = "zync-database"
 
 	return labels
+}
+
+func (z *ZyncOptionsProvider) zyncQueServiceAccountImagePullSecrets() []v1.LocalObjectReference {
+	if z.apimanager.Spec.ImagePullSecrets != nil {
+		return z.apimanager.Spec.ImagePullSecrets
+	}
+
+	return component.DefaultZyncQueServiceAccountImagePullSecrets()
 }
