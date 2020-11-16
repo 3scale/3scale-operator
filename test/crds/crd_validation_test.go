@@ -26,6 +26,7 @@ const (
 	systemSharedPVCResourceRequestsPath      = "/spec/system/fileStorage/persistentVolumeClaim/resources/requests"
 	systemMySQLPVCResourceRequestsPath       = "/spec/system/database/mysql/persistentVolumeClaim/resources/requests"
 	systemPostgreSQLPVCResourceRequestsPath  = "/spec/system/database/postgresql/persistentVolumeClaim/resources/requests"
+	productPoliciesConfigurationPath         = "/spec/policies/configuration"
 )
 
 func TestSampleCustomResources(t *testing.T) {
@@ -85,6 +86,7 @@ func TestCompleteCRD(t *testing.T) {
 		systemSharedPVCResourceRequestsPath,
 		systemMySQLPVCResourceRequestsPath,
 		systemPostgreSQLPVCResourceRequestsPath,
+		productPoliciesConfigurationPath,
 	}
 
 	for crd, obj := range crdStructMap {
