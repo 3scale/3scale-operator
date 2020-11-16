@@ -75,6 +75,7 @@ manager: generate fmt vet
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
+run: export THREESCALE_DEBUG=1
 run: generate fmt vet manifests
 	$(GO) run ./main.go
 
