@@ -34,6 +34,7 @@ The following diagram shows available custom resource definitions and their rela
    * [Product application plan pricing rules](#product-application-plan-pricing-rules)
    * [Product backend usages](#product-backend-usages)
    * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
+   * [Product policy chain](#product-policy-chain)
    * [Product custom resource status field](#product-custom-resource-status-field)
    * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
 * [OpenAPI custom resource](#openapi-custom-resource)
@@ -550,7 +551,70 @@ spec:
 ```
 
 * **NOTE 1**: `backendUsages` map key names are references to `Backend system_name`. In the example: `backendA` and `backendB`.
-* **NOTE 1**: `path` field is required.
+* **NOTE 2**: `path` field is required.
+
+### Product policy chain
+
+Define desired product policy chain declaratively using the `policies` object.
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  policies:
+  - configuration:
+      http_proxy: http://example.com
+      https_proxy: https://example.com
+    enabled: true
+    name: camel
+    version: builtin
+  - configuration: {}
+    enabled: true
+    name: apicast
+    version: builtin
+```
+
+* **NOTE 1**: `apicast` policy item will be added by the operator if not included.
+
+Policy chain of a 3scale product can be exported using the 3scale Toolbox [export command](https://github.com/3scale/3scale_toolbox/blob/master/docs/export-import-policy-chain.md)
+
+```
+$ 3scale policies export <MY-3SCALE-PROVIDER-ACCOUNT> <MY-PRODUCT>
+---
+- name: apicast
+  version: builtin
+  configuration: {}
+  enabled: true
+- name: content_caching
+  version: builtin
+  configuration:
+    rules:
+    - header: X-Cache-Status
+      condition:
+        operations:
+        - left_type: plain
+          right_type: plain
+          op: "=="
+          right: GET
+          left: ein
+        - left_type: plain
+          right_type: plain
+          op: "!="
+          right: RIGHTein
+          left: elftein
+        combine_op: and
+      cache: true
+  enabled: true
+- name: camel
+  version: builtin
+  configuration:
+    https_proxy: https://example.com
+    http_proxy: http://example.com
+  enabled: true
+```
 
 ### Product custom gateway response on errors
 
