@@ -19,6 +19,7 @@ func (t *ProductThreescaleReconciler) syncPolicies(_ interface{}) error {
 
 	// Compare Go unmarshalled objects (not byte arrays)
 	// resilient to serialization differences like map key order differences or quotes.
+	// Policies order matters. If order does not match, will be updated
 	if !reflect.DeepEqual(desired, existing) {
 		diff := cmp.Diff(desired, existing)
 		t.logger.V(1).Info("syncPolicies", "policies not equal", diff)
@@ -38,13 +39,15 @@ func (t *ProductThreescaleReconciler) convertResourcePolicies() *threescaleapi.P
 	}
 
 	for _, crdPolicy := range t.resource.Spec.Policies {
-		configuration := map[string]interface{}{}
-		for key, rawValue := range crdPolicy.Configuration {
-			var obj interface{}
-			// CRD validation ensures no error happens
-			json.Unmarshal(rawValue.Raw, &obj)
-			configuration[key] = obj
-		}
+		var configuration map[string]interface{}
+		// CRD validation ensures no error happens
+		// "configuration` type is object
+		//properties:
+		//  configuration:
+		//    description: Configuration defines the policy configuration
+		//    type: object
+		//    x-kubernetes-preserve-unknown-fields: true
+		json.Unmarshal(crdPolicy.Configuration.Raw, &configuration)
 
 		policies.Policies = append(policies.Policies, threescaleapi.PolicyConfig{
 			Name:          crdPolicy.Name,

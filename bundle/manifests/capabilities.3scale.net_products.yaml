@@ -528,10 +528,9 @@ spec:
                 description: PolicyConfig defines policy definition
                 properties:
                   configuration:
-                    additionalProperties:
-                      type: string
                     description: Configuration defines the policy configuration
                     type: object
+                    x-kubernetes-preserve-unknown-fields: true
                   enabled:
                     description: Version defines the policy version
                     type: boolean

@@ -64,10 +64,12 @@ var (
 	// ApicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
 	// Needs to exist in the policy chain
 	ApicastPolicy = PolicyConfig{
-		Name:          "apicast",
-		Version:       "builtin",
-		Configuration: map[string]runtime.RawExtension{},
-		Enabled:       true,
+		Name:    "apicast",
+		Version: "builtin",
+		Configuration: runtime.RawExtension{
+			Raw: []byte(`{}`),
+		},
+		Enabled: true,
 	}
 )
 
@@ -719,7 +721,8 @@ type PolicyConfig struct {
 	Version string `json:"version"`
 
 	// Configuration defines the policy configuration
-	Configuration map[string]runtime.RawExtension `json:"configuration"`
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Configuration runtime.RawExtension `json:"configuration"`
 
 	// Version defines the policy version
 	Enabled bool `json:"enabled"`
