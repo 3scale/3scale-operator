@@ -187,16 +187,6 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "OpenAPI",
-          "metadata": {
-            "name": "openapi-sample"
-          },
-          "spec": {
-            "foo": "bar"
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Product",
           "metadata": {
             "name": "product1-apicast-hosted-sample"

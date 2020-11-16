@@ -16,7 +16,6 @@ resources:
 - capabilities_v1beta1_product_mappingrules.yaml
 - capabilities_v1beta1_product_plan_limits.yaml
 - capabilities_v1beta1_product_plan_pricingrules.yaml
-- capabilities_v1beta1_openapi.yaml
 - capabilities_v1beta1_openapi_secret.yaml
 - capabilities_v1beta1_openapi_url.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
