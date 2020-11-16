@@ -38,6 +38,8 @@ type ZyncOptions struct {
 	ZyncQuePodTemplateLabels      map[string]string `validate:"required"`
 	ZyncDatabasePodTemplateLabels map[string]string `validate:"required"`
 	ZyncMetrics                   bool
+
+	ZyncQueServiceAccountImagePullSecrets []v1.LocalObjectReference `validate:"required"`
 }
 
 func NewZyncOptions() *ZyncOptions {
@@ -100,6 +102,14 @@ func DefaultZyncDatabaseContainerResourceRequirements() v1.ResourceRequirements 
 		Requests: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("50m"),
 			v1.ResourceMemory: resource.MustParse("250M"),
+		},
+	}
+}
+
+func DefaultZyncQueServiceAccountImagePullSecrets() []v1.LocalObjectReference {
+	return []v1.LocalObjectReference{
+		v1.LocalObjectReference{
+			Name: "threescale-registry-auth",
 		},
 	}
 }

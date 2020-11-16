@@ -32,7 +32,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Zync Que SA
-	err = r.ReconcileServiceAccount(zync.QueServiceAccount(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceAccount(zync.QueServiceAccount(), reconcilers.ServiceAccountImagePullPolicyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

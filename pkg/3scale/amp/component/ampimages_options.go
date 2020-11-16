@@ -2,6 +2,7 @@ package component
 
 import (
 	"github.com/go-playground/validator/v10"
+	v1 "k8s.io/api/core/v1"
 )
 
 // AmpImagesOptions container object with all required to create components
@@ -15,6 +16,7 @@ type AmpImagesOptions struct {
 	ZyncDatabasePostgreSQLImage string `validate:"required"`
 	SystemMemcachedImage        string `validate:"required"`
 	InsecureImportPolicy        bool
+	ImagePullSecrets            []v1.LocalObjectReference `validate:"required"`
 }
 
 func NewAmpImagesOptions() *AmpImagesOptions {
@@ -24,4 +26,10 @@ func NewAmpImagesOptions() *AmpImagesOptions {
 func (a *AmpImagesOptions) Validate() error {
 	validate := validator.New()
 	return validate.Struct(a)
+}
+
+func AmpImagesDefaultImagePullSecrets() []v1.LocalObjectReference {
+	return []v1.LocalObjectReference{
+		v1.LocalObjectReference{Name: "threescale-registry-auth"},
+	}
 }
