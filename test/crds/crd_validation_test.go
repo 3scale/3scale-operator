@@ -29,7 +29,8 @@ const (
 )
 
 func TestSampleCustomResources(t *testing.T) {
-	root := "../../bundle/manifests"
+	schemaRoot := "../../bundle/manifests"
+	samplesRoot := "../../config/samples"
 	// Map of CRD:CR_sample_prefix
 	crdCrMap := map[string]string{
 		"apps.3scale.net_apimanagers.yaml":        "apps_v1alpha1_apimanager_",
@@ -41,18 +42,14 @@ func TestSampleCustomResources(t *testing.T) {
 		"capabilities.3scale.net_openapis.yaml":   "capabilities_v1beta1_openapi",
 	}
 	for crd, prefix := range crdCrMap {
-		validateCustomResources(t, root, crd, prefix)
+		validateCustomResources(t, schemaRoot, samplesRoot, crd, prefix)
 	}
 }
 
-func validateCustomResources(t *testing.T, root string, crd string, prefix string) {
-	schema := getSchema(t, fmt.Sprintf("%s/%s", root, crd))
+func validateCustomResources(t *testing.T, schemaRoot, samplesRoot, crd, prefix string) {
+	schema := getSchema(t, fmt.Sprintf("%s/%s", schemaRoot, crd))
 	assert.NotNil(t, schema)
 	walkFunc := func(path string, info os.FileInfo, err error) error {
-		if strings.HasSuffix(info.Name(), "crd.yaml") {
-			//Ignore CRD
-			return nil
-		}
 		if strings.HasPrefix(info.Name(), prefix) {
 			t.Run(info.Name(), func(subT *testing.T) {
 				bytes, err := ioutil.ReadFile(path)
@@ -64,8 +61,8 @@ func validateCustomResources(t *testing.T, root string, crd string, prefix strin
 		}
 		return nil
 	}
-	err := filepath.Walk(root, walkFunc)
-	assert.NoError(t, err, "Error reading CR yaml files from ", root)
+	err := filepath.Walk(samplesRoot, walkFunc)
+	assert.NoError(t, err, "Error reading CR yaml files from ", samplesRoot)
 }
 
 func TestCompleteCRD(t *testing.T) {
