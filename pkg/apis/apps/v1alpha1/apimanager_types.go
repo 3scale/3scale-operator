@@ -139,6 +139,8 @@ type APIManagerCommonSpec struct {
 	ImageStreamTagImportInsecure *bool `json:"imageStreamTagImportInsecure,omitempty"`
 	// +optional
 	ResourceRequirementsEnabled *bool `json:"resourceRequirementsEnabled,omitempty"`
+	// +optional
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 }
 
 type ApicastSpec struct {

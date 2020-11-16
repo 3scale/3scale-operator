@@ -67,11 +67,7 @@ func (zync *Zync) QueServiceAccount() *v1.ServiceAccount {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "zync-que-sa",
 		},
-		ImagePullSecrets: []v1.LocalObjectReference{
-			v1.LocalObjectReference{
-				Name: "threescale-registry-auth",
-			},
-		},
+		ImagePullSecrets: zync.Options.ZyncQueServiceAccountImagePullSecrets,
 	}
 }
 
