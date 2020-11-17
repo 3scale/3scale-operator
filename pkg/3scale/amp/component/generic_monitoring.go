@@ -11,6 +11,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+// Add alert sop urls here
+const (
+	ThreescalePodNotReadyURL                  = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/pod_not_ready.adoc"
+	ThreescaleZync5XXRequestsHighURL          = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_5xx_requests_high.adoc"
+	ThreescaleZyncQueScheduledJobCountHighURL = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_que_scheduled_job_count_high.adoc"
+	ThreescaleZyncQueFailedJobCountHighURL    = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_que_failed_job_count_high.adoc"
+	ThreescaleZyncQueReadyJobCountHighURL     = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_que_ready_job_count_high.adoc"
+)
+
 func KubernetesResourcesByNamespaceGrafanaDashboard(ns string, appLabel string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
