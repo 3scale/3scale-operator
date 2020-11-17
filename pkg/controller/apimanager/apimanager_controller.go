@@ -237,63 +237,64 @@ func (r *ReconcileAPIManager) setAPIManagerDefaults(cr *appsv1alpha1.APIManager)
 }
 
 func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	imageReconciler := operator.NewAMPImagesReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	baseAPIManagerLogicReconciler := operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr)
+	imageReconciler := operator.NewAMPImagesReconciler(baseAPIManagerLogicReconciler)
 	result, err := imageReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
 	if !cr.IsExternalDatabaseEnabled() {
-		redisReconciler := operator.NewRedisReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+		redisReconciler := operator.NewRedisReconciler(baseAPIManagerLogicReconciler)
 		result, err = redisReconciler.Reconcile()
 		if err != nil || result.Requeue {
 			return result, err
 		}
 
-		result, err = r.reconcileSystemDatabaseLogic(cr)
+		result, err = r.reconcileSystemDatabaseLogic(cr, baseAPIManagerLogicReconciler)
 		if err != nil || result.Requeue {
 			return result, err
 		}
 	} else {
 		// External databases
-		haReconciler := operator.NewHighAvailabilityReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+		haReconciler := operator.NewHighAvailabilityReconciler(baseAPIManagerLogicReconciler)
 		result, err = haReconciler.Reconcile()
 		if err != nil || result.Requeue {
 			return result, err
 		}
 	}
 
-	backendReconciler := operator.NewBackendReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	backendReconciler := operator.NewBackendReconciler(baseAPIManagerLogicReconciler)
 	result, err = backendReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	memcachedReconciler := operator.NewMemcachedReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	memcachedReconciler := operator.NewMemcachedReconciler(baseAPIManagerLogicReconciler)
 	result, err = memcachedReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	systemReconciler := operator.NewSystemReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	systemReconciler := operator.NewSystemReconciler(baseAPIManagerLogicReconciler)
 	result, err = systemReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	zyncReconciler := operator.NewZyncReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	zyncReconciler := operator.NewZyncReconciler(baseAPIManagerLogicReconciler)
 	result, err = zyncReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	apicastReconciler := operator.NewApicastReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	apicastReconciler := operator.NewApicastReconciler(baseAPIManagerLogicReconciler)
 	result, err = apicastReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	genericMonitoringReconciler := operator.NewGenericMonitoringReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	genericMonitoringReconciler := operator.NewGenericMonitoringReconciler(baseAPIManagerLogicReconciler)
 	result, err = genericMonitoringReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
@@ -302,35 +303,35 @@ func (r *ReconcileAPIManager) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManag
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileAPIManager) reconcileSystemDatabaseLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+func (r *ReconcileAPIManager) reconcileSystemDatabaseLogic(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) (reconcile.Result, error) {
 	if cr.Spec.System.DatabaseSpec != nil && cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
-		return r.reconcileSystemPostgreSQLLogic(cr)
+		return r.reconcileSystemPostgreSQLLogic(cr, baseAPIManagerLogicReconciler)
 	}
 
 	// Defaults to MySQL
-	return r.reconcileSystemMySQLLogic(cr)
+	return r.reconcileSystemMySQLLogic(cr, baseAPIManagerLogicReconciler)
 }
 
-func (r *ReconcileAPIManager) reconcileSystemPostgreSQLLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	reconciler := operator.NewSystemPostgreSQLReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+func (r *ReconcileAPIManager) reconcileSystemPostgreSQLLogic(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) (reconcile.Result, error) {
+	reconciler := operator.NewSystemPostgreSQLReconciler(baseAPIManagerLogicReconciler)
 	result, err := reconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	imageReconciler := operator.NewSystemPostgreSQLImageReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	imageReconciler := operator.NewSystemPostgreSQLImageReconciler(baseAPIManagerLogicReconciler)
 	result, err = imageReconciler.Reconcile()
 	return result, err
 }
 
-func (r *ReconcileAPIManager) reconcileSystemMySQLLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	reconciler := operator.NewSystemMySQLReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+func (r *ReconcileAPIManager) reconcileSystemMySQLLogic(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) (reconcile.Result, error) {
+	reconciler := operator.NewSystemMySQLReconciler(baseAPIManagerLogicReconciler)
 	result, err := reconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
 	}
 
-	imageReconciler := operator.NewSystemMySQLImageReconciler(operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr))
+	imageReconciler := operator.NewSystemMySQLImageReconciler(baseAPIManagerLogicReconciler)
 	result, err = imageReconciler.Reconcile()
 	return result, err
 }
