@@ -253,28 +253,11 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 			}
 
 			route := routeItems[0]
-			routeStatusIngresses := route.Status.Ingress
-			if routeStatusIngresses == nil || len(routeStatusIngresses) == 0 {
-				fmt.Fprintf(w, "Waiting for availability of Route with host '%s'\n", routeHost)
+			if !helper.IsRouteReady(&route) {
 				return false
 			}
 
-			for _, routeStatusIngress := range routeStatusIngresses {
-				routeStatusIngressConditions := routeStatusIngress.Conditions
-				isReady := false
-				for _, routeStatusIngressCondition := range routeStatusIngressConditions {
-					if routeStatusIngressCondition.Type == routev1.RouteAdmitted && routeStatusIngressCondition.Status == corev1.ConditionTrue {
-						isReady = true
-						break
-					}
-				}
-				if !isReady {
-					fmt.Fprintf(w, "Waiting for availability of Route with host '%s'\n", routeHost)
-					return false
-				}
-			}
-
-			fmt.Fprintf(w, "Route '%s' with host '%s' available\n", route.Name, route.Spec.Host)
+			fmt.Fprintf(w, "Route '%s' with host '%s' ready\n", route.Name, route.Spec.Host)
 			return true
 		}, timeout, retryInterval).Should(BeTrue())
 
