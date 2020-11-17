@@ -21,12 +21,15 @@ const (
 	ThreescaleBackendWorkerJobsCountRunningHighURL     = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/backend_worker_jobs_count_running_high.adoc"
 	ThreescaleBackendListener5XXRequestsHighURL        = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/backend_listener_5xx_requests_high.adoc"
 	ThreescalePodCrashLoopingURL                       = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/pod_crash_looping.adoc"
-	ThreescalePodNotReadyURL                           = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/pod_not_ready.adoc"
 	ThreescaleReplicationControllerReplicasMismatchURL = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/replication_controller_replicas_mismatch.adoc"
 	ThreescaleContainerWaitingURL                      = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/container_waiting.adoc"
 	ThreescaleContainerCPUHighURL                      = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/container_cpu_high.adoc"
 	ThreescaleContainerMemoryHighURL                   = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/container_memory_high.adoc"
-	ThreescaleContainerMemoryHighURL                   = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/container_cpu_throttling_high.adoc"
+	ThreescaleContainerCPUThrottlingHighURL            = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/container_cpu_throttling_high.adoc"
+	ThreescaleApicastRequestTimeURL                    = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_request_time.adoc"
+	ThreescaleApicastHttp4xxErrorRateURL               = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_http_4xx_error_rate.adoc"
+	ThreescaleApicastLatencyHighURL                    = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_apicast_latency.adoc"
+	ThreescaleApicastWorkerRestartURL                  = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_worker_restart.adoc"
 )
 
 func KubernetesResourcesByNamespaceGrafanaDashboard(ns string, appLabel string) *grafanav1alpha1.GrafanaDashboard {
@@ -161,7 +164,7 @@ func KubeStateMetricsPrometheusRules(ns string, appLabel string) *monitoringv1.P
 						{
 							Alert: "ThreescaleContainerCPUThrottlingHigh",
 							Annotations: map[string]string{
-								"sop_url": ThreescaleContainerMemoryHighURL,
+								"sop_url": ThreescaleContainerCPUThrottlingHighURL,
 								"message": `{{ $value | humanizePercentage }} throttling of CPU in namespace {{ $labels.namespace }} for container {{ $labels.container }} in pod {{ $labels.pod }}.`,
 							},
 							Expr: intstr.FromString(fmt.Sprintf(`sum(increase(container_cpu_cfs_throttled_periods_total{namespace="%s",container!="",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)" }[5m])) by (container, pod, namespace) / sum(increase(container_cpu_cfs_periods_total{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}[5m])) by (container, pod, namespace) > ( 25 / 100 )`, ns, ns)),
