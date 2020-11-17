@@ -13,6 +13,7 @@ import (
 
 // Add alert sop urls here
 const (
+	ThreescalePrometheusJobDownURL                     = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/prometheus_job_down.adoc"
 	ThreescalePodNotReadyURL                           = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/pod_not_ready.adoc"
 	ThreescaleZync5XXRequestsHighURL                   = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_5xx_requests_high.adoc"
 	ThreescaleZyncQueScheduledJobCountHighURL          = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_que_scheduled_job_count_high.adoc"

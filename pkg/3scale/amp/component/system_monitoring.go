@@ -114,6 +114,7 @@ func (system *System) SystemAppPrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleSystemApp5XXRequestsHigh",
 							Annotations: map[string]string{
+								"sop_url":     ThreescaleApicastLatencyHighURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 							},
