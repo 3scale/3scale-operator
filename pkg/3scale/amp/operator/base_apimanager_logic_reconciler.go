@@ -29,10 +29,10 @@ type BaseAPIManagerLogicReconciler struct {
 }
 
 type baseAPIManagerLogicReconcilerCRDAvailabilityCache struct {
-	grafanaCRDAvailable        *bool
-	prometheusRuleCRDAvailable *bool
-	podMonitorCRDAvailable     *bool
-	serviceMonitorCRDAvailable *bool
+	grafanaDashboardCRDAvailable *bool
+	prometheusRuleCRDAvailable   *bool
+	podMonitorCRDAvailable       *bool
+	serviceMonitorCRDAvailable   *bool
 }
 
 func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *BaseAPIManagerLogicReconciler {
@@ -217,16 +217,16 @@ func (r *BaseAPIManagerLogicReconciler) Logger() logr.Logger {
 }
 
 func (b *BaseAPIManagerLogicReconciler) HasGrafanaDashboards() (bool, error) {
-	if b.crdAvailabilityCache.grafanaCRDAvailable == nil {
+	if b.crdAvailabilityCache.grafanaDashboardCRDAvailable == nil {
 		res, err := b.BaseReconciler.HasGrafanaDashboards()
 		if err != nil {
 			return res, err
 		}
-		b.crdAvailabilityCache.grafanaCRDAvailable = &res
+		b.crdAvailabilityCache.grafanaDashboardCRDAvailable = &res
 		return res, err
 	}
 
-	return *b.crdAvailabilityCache.grafanaCRDAvailable, nil
+	return *b.crdAvailabilityCache.grafanaDashboardCRDAvailable, nil
 }
 
 //HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
