@@ -86,6 +86,7 @@ func (backend *Backend) BackendWorkerPrometheusRules() *monitoringv1.PrometheusR
 						{
 							Alert: "ThreescaleBackendWorkerJobsCountRunningHigh",
 							Annotations: map[string]string{
+								"sop_url":     ThreescaleBackendWorkerJobsCountRunningHighURL,
 								"summary":     "{{$labels.container_name}} replica controller on {{$labels.namespace}}: Has more than 10000 jobs processed in the last 5 minutes",
 								"description": "{{$labels.container_name}} replica controller on {{$labels.namespace}} project: Has more than 1000 jobs processed in the last 5 minutes",
 							},
@@ -98,6 +99,7 @@ func (backend *Backend) BackendWorkerPrometheusRules() *monitoringv1.PrometheusR
 						{
 							Alert: "ThreescaleBackendWorkerJobDown",
 							Annotations: map[string]string{
+								"sop_url":     ThreescalePodNotReadyURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
@@ -132,6 +134,7 @@ func (backend *Backend) BackendListenerPrometheusRules() *monitoringv1.Prometheu
 						{
 							Alert: "ThreescaleBackendListener5XXRequestsHigh",
 							Annotations: map[string]string{
+								"sop_url":     ThreescaleBackendListener5XXRequestsHighURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 5000 HTTP 5xx requests in the last 5 minutes",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 5000 HTTP 5xx requests in the last 5 minutes",
 							},
@@ -144,6 +147,7 @@ func (backend *Backend) BackendListenerPrometheusRules() *monitoringv1.Prometheu
 						{
 							Alert: "ThreescaleBackendListenerJobDown",
 							Annotations: map[string]string{
+								"sop_url":     ThreescalePodNotReadyURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
