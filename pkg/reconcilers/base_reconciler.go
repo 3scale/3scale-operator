@@ -236,19 +236,25 @@ func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject
 }
 
 func resourceExists(dc discovery.DiscoveryInterface, groupVersion, kind string) (bool, error) {
-	_, apiLists, err := dc.ServerGroupsAndResources()
+	apiLists, err := dc.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		// Workaround for K8s DiscoveryClient mock where does not return the same
+		// error when the GroupVersion queried does not exist when calling
+		// ServerResourcesForGroupVersion
+		if err.Error() == fmt.Sprintf("GroupVersion %q not found", groupVersion) {
+			return false, nil
+		}
 		return false, err
 	}
 
-	for _, apiList := range apiLists {
-		if apiList.GroupVersion == groupVersion {
-			for _, r := range apiList.APIResources {
-				if r.Kind == kind {
-					return true, nil
-				}
-			}
+	for _, r := range apiLists.APIResources {
+		if r.Kind == kind {
+			return true, nil
 		}
 	}
+
 	return false, nil
 }
