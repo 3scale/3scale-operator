@@ -87,6 +87,7 @@ func (zync *Zync) ZyncPrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleZyncJobDown",
 							Annotations: map[string]string{
+								"sop_url":     ThreescalePodNotReadyURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
@@ -99,6 +100,7 @@ func (zync *Zync) ZyncPrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleZync5XXRequestsHigh",
 							Annotations: map[string]string{
+								"sop_url":     ThreescaleZync5XXRequestsHighURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 							},
@@ -133,6 +135,7 @@ func (zync *Zync) ZyncQuePrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleZyncQueJobDown",
 							Annotations: map[string]string{
+								"sop_url":     ThreescalePodNotReadyURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
@@ -145,6 +148,7 @@ func (zync *Zync) ZyncQuePrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleZyncQueScheduledJobCountHigh",
 							Annotations: map[string]string{
+								"sop_url":     ThreescaleZyncQueScheduledJobCountHighURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job count over 100",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job count over 100",
 							},
@@ -157,6 +161,7 @@ func (zync *Zync) ZyncQuePrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleZyncQueFailedJobCountHigh",
 							Annotations: map[string]string{
+								"sop_url":     ThreescaleZyncQueFailedJobCountHighURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count over 100",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count over 100",
 							},
@@ -169,6 +174,7 @@ func (zync *Zync) ZyncQuePrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleZyncQueReadyJobCountHigh",
 							Annotations: map[string]string{
+								"sop_url":     ThreescaleZyncQueReadyJobCountHighURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count over 100",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count over 100",
 							},
