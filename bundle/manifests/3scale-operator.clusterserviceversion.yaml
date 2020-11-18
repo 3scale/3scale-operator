@@ -218,6 +218,38 @@ metadata:
           "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Product",
           "metadata": {
+            "name": "product1-gateway-response"
+          },
+          "spec": {
+            "deployment": {
+              "apicastHosted": {
+                "authentication": {
+                  "userkey": {
+                    "gatewayResponse": {
+                      "errorAuthFailed": "My custom reponse body",
+                      "errorAuthMissing": "My custom reponse body",
+                      "errorHeadersAuthFailed": "text/plain; charset=mycharset",
+                      "errorHeadersAuthMissing": "text/plain; charset=mycharset",
+                      "errorHeadersLimitsExceeded": "text/plain; charset=mycharset",
+                      "errorHeadersNoMatch": "text/plain; charset=mycharset",
+                      "errorLimitsExceeded": "My custom reponse body",
+                      "errorNoMatch": "My custom reponse body",
+                      "errorStatusAuthFailed": 500,
+                      "errorStatusAuthMissing": 500,
+                      "errorStatusLimitsExceeded": 502,
+                      "errorStatusNoMatch": 501
+                    }
+                  }
+                }
+              }
+            },
+            "name": "OperatedProduct 1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
             "name": "product1-mappingrules-sample"
           },
           "spec": {

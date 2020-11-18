@@ -1,0 +1,23 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1-gateway-response
+spec:
+  name: "OperatedProduct 1"
+  deployment:
+    apicastHosted:
+      authentication:
+        userkey:
+          gatewayResponse:
+            errorStatusAuthFailed: 500
+            errorHeadersAuthFailed: "text/plain; charset=mycharset"
+            errorAuthFailed: "My custom reponse body"
+            errorStatusAuthMissing: 500
+            errorHeadersAuthMissing: "text/plain; charset=mycharset"
+            errorAuthMissing: "My custom reponse body"
+            errorStatusNoMatch: 501
+            errorHeadersNoMatch: "text/plain; charset=mycharset"
+            errorNoMatch: "My custom reponse body"
+            errorStatusLimitsExceeded: 502
+            errorHeadersLimitsExceeded: "text/plain; charset=mycharset"
+            errorLimitsExceeded: "My custom reponse body"
