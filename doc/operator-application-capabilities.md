@@ -33,6 +33,7 @@ The following diagram shows available custom resource definitions and their rela
    * [Product application plan limits](#product-application-plan-limits)
    * [Product application plan pricing rules](#product-application-plan-pricing-rules)
    * [Product backend usages](#product-backend-usages)
+   * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
    * [Product custom resource status field](#product-custom-resource-status-field)
    * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
 * [OpenAPI custom resource](#openapi-custom-resource)
@@ -550,6 +551,41 @@ spec:
 
 * **NOTE 1**: `backendUsages` map key names are references to `Backend system_name`. In the example: `backendA` and `backendB`.
 * **NOTE 1**: `path` field is required.
+
+### Product custom gateway response on errors
+
+Define desired product custom gateway reponse on errors declaratively using the `gatewayResponse` object.
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  deployment:
+    apicastHosted:
+      authentication:
+        userkey:
+          gatewayResponse:
+            errorStatusAuthFailed: 500
+            errorHeadersAuthFailed: "text/plain; charset=mycharset"
+            errorAuthFailed: "My custom reponse body"
+            errorStatusAuthMissing: 500
+            errorHeadersAuthMissing: "text/plain; charset=mycharset"
+            errorAuthMissing: "My custom reponse body"
+            errorStatusNoMatch: 501
+            errorHeadersNoMatch: "text/plain; charset=mycharset"
+            errorNoMatch: "My custom reponse body"
+            errorStatusLimitsExceeded: 502
+            errorHeadersLimitsExceeded: "text/plain; charset=mycharset"
+            errorLimitsExceeded: "My custom reponse body"
+```
+
+* **NOTE 1**: The `gatewayResponse` optional field my be set in several different deployment options.
+The example just shows it for the apicast hosted deployment option and the authentication mode called UserKey.
+
+Check [Product CRD Reference](product-reference.md) documentation for all the details.
 
 ### Product custom resource status field
 

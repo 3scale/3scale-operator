@@ -14,6 +14,7 @@
     * [MappingRuleSpec](#mappingrulespec)
     * [MetricSpec](#metricspec)
     * [MethodSpec](#methodspec)
+    * [GatewayResponseSpec](#gatewayresponsespec)
     * [Provider Account Reference](#provider-account-reference)
     * [BackendUsageSpec](#backendusagespec)
     * [ApplicationPlanSpec](#applicationplanspec)
@@ -92,6 +93,7 @@ Specifies product user key authentication mode
 | Key | `authUserKey` | string | The application is identified & authenticated via a single string | No |
 | CredentialsLoc | `credentials` | string | Credentials location. Valid values: *headers*, *query*, *authorization* | No |
 | Security | `security` | object | See [SecuritySpec](#SecuritySpec) | No |
+| GatewayResponse | `gatewayResponse` | object | See [GatewayResponseSpec](#GatewayResponseSpec) | No |
 
 ##### AppKeyAppIDAuthenticationSpec
 
@@ -103,6 +105,7 @@ Specifies product appKey & appID authentication mode
 | AppKey | `appKey` | string | The application is authenticated via the *App_Key* | No |
 | CredentialsLoc | `credentials` | string | Credentials location. Valid values: *headers*, *query*, *authorization* | No |
 | Security | `security` | object | See [SecuritySpec](#SecuritySpec) | No |
+| GatewayResponse | `gatewayResponse` | object | See [GatewayResponseSpec](#GatewayResponseSpec) | No |
 
 ##### SecuritySpec
 
@@ -143,6 +146,25 @@ Specifies product method
 | --- | --- | --- | --- | --- |
 | Name | `friendlyName` | string | Method name | Yes |
 | Description | `description` | string | Method description message | No |
+
+##### GatewayResponseSpec
+
+Specifies custom gateway response on errors
+
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| ErrorStatusAuthFailed | `errorStatusAuthFailed` | int | The response code when authentication fails | No |
+| ErrorHeadersAuthFailed | `errorHeadersAuthFailed` | string | The Content-Type header when authentication fails | No |
+| ErrorAuthFailed | `errorAuthFailed` | string | The response body when authentication fails | No |
+| ErrorStatusAuthMissing | `errorStatusAuthMissing` | int | The response code when authentication is missing | No |
+| ErrorHeadersAuthMissing | `errorHeadersAuthMissing` | string | The Content-Type header when authentication is missing | No |
+| ErrorAuthMissing | `errorAuthMissing` | string | The response body when authentication is missing | No |
+| ErrorStatusNoMatch | `errorStatusNoMatch` | int | The response code when no match error | No |
+| ErrorHeadersNoMatch | `errorHeadersNoMatch` | string | The Content-Type header when no match error | No |
+| ErrorNoMatch | `errorNoMatch` | string | The response body when no match error | No |
+| ErrorStatusLimitsExceeded | `errorStatusLimitsExceeded` | int | The response code when usage limit exdeeded | No |
+| ErrorHeadersLimitsExceeded | `errorHeadersLimitsExceeded` | string | The Content-Type header when usage limit exceeded | No |
+| ErrorLimitsExceeded | `errorLimitsExceeded` | string | The response body when usage limit exceeded | No |
 
 #### Provider Account Reference
 
