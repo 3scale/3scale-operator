@@ -23,15 +23,24 @@ import (
 
 type BaseAPIManagerLogicReconciler struct {
 	*reconcilers.BaseReconciler
-	apiManager *appsv1alpha1.APIManager
-	logger     logr.Logger
+	apiManager           *appsv1alpha1.APIManager
+	logger               logr.Logger
+	crdAvailabilityCache *baseAPIManagerLogicReconcilerCRDAvailabilityCache
+}
+
+type baseAPIManagerLogicReconcilerCRDAvailabilityCache struct {
+	grafanaDashboardCRDAvailable *bool
+	prometheusRuleCRDAvailable   *bool
+	podMonitorCRDAvailable       *bool
+	serviceMonitorCRDAvailable   *bool
 }
 
 func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *BaseAPIManagerLogicReconciler {
 	return &BaseAPIManagerLogicReconciler{
-		BaseReconciler: b,
-		apiManager:     apiManager,
-		logger:         b.Logger().WithValues("APIManager Controller", apiManager.Name),
+		BaseReconciler:       b,
+		apiManager:           apiManager,
+		logger:               b.Logger().WithValues("APIManager Controller", apiManager.Name),
+		crdAvailabilityCache: &baseAPIManagerLogicReconcilerCRDAvailabilityCache{},
 	}
 }
 
@@ -205,4 +214,54 @@ func (r *BaseAPIManagerLogicReconciler) APIManagerMutator(mutateFn reconcilers.M
 
 func (r *BaseAPIManagerLogicReconciler) Logger() logr.Logger {
 	return r.logger
+}
+
+func (b *BaseAPIManagerLogicReconciler) HasGrafanaDashboards() (bool, error) {
+	if b.crdAvailabilityCache.grafanaDashboardCRDAvailable == nil {
+		res, err := b.BaseReconciler.HasGrafanaDashboards()
+		if err != nil {
+			return res, err
+		}
+		b.crdAvailabilityCache.grafanaDashboardCRDAvailable = &res
+		return res, err
+	}
+
+	return *b.crdAvailabilityCache.grafanaDashboardCRDAvailable, nil
+}
+
+//HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
+func (b *BaseAPIManagerLogicReconciler) HasPrometheusRules() (bool, error) {
+	if b.crdAvailabilityCache.prometheusRuleCRDAvailable == nil {
+		res, err := b.BaseReconciler.HasPrometheusRules()
+		if err != nil {
+			return res, err
+		}
+		b.crdAvailabilityCache.prometheusRuleCRDAvailable = &res
+		return res, err
+	}
+	return *b.crdAvailabilityCache.prometheusRuleCRDAvailable, nil
+}
+
+func (b *BaseAPIManagerLogicReconciler) HasServiceMonitors() (bool, error) {
+	if b.crdAvailabilityCache.serviceMonitorCRDAvailable == nil {
+		res, err := b.BaseReconciler.HasServiceMonitors()
+		if err != nil {
+			return res, err
+		}
+		b.crdAvailabilityCache.serviceMonitorCRDAvailable = &res
+		return res, err
+	}
+	return *b.crdAvailabilityCache.serviceMonitorCRDAvailable, nil
+}
+
+func (b *BaseAPIManagerLogicReconciler) HasPodMonitors() (bool, error) {
+	if b.crdAvailabilityCache.podMonitorCRDAvailable == nil {
+		res, err := b.BaseReconciler.HasPodMonitors()
+		if err != nil {
+			return res, err
+		}
+		b.crdAvailabilityCache.podMonitorCRDAvailable = &res
+		return res, err
+	}
+	return *b.crdAvailabilityCache.podMonitorCRDAvailable, nil
 }

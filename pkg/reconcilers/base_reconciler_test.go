@@ -243,3 +243,68 @@ func TestBaseReconcilerDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestResourceExistFunc(t *testing.T) {
+	customAPIResourceListOne := &metav1.APIResourceList{
+		GroupVersion: "mygroupversion/v1",
+		APIResources: []metav1.APIResource{
+			{Name: "pods", Namespaced: true, Kind: "Pod"},
+			{Name: "services", Namespaced: true, Kind: "Service"},
+			{Name: "namespaces", Namespaced: false, Kind: "Namespace"},
+		},
+	}
+	customAPIResourceListTwo := &metav1.APIResourceList{
+		GroupVersion: "anothergroupversion/v3",
+		APIResources: []metav1.APIResource{
+			{Name: "kindones", Namespaced: true, Kind: "Kindone"},
+			{Name: "kindtwos", Namespaced: true, Kind: "Kindtwo"},
+			{Name: "kindthrees", Namespaced: false, Kind: "Kindtree"},
+		},
+	}
+
+	customAPIResources := []*metav1.APIResourceList{
+		customAPIResourceListOne,
+		customAPIResourceListTwo,
+	}
+
+	cases := []struct {
+		testName      string
+		resourcesList []*metav1.APIResourceList
+		groupVersion  string
+		kind          string
+		expectExists  bool
+		expectErr     bool
+	}{
+		{
+			testName:      "Resource exists",
+			resourcesList: customAPIResources,
+			groupVersion:  "anothergroupversion/v3",
+			kind:          "Kindtwo",
+			expectErr:     false,
+			expectExists:  true,
+		},
+		{
+			testName:      "Resource does not exist",
+			resourcesList: customAPIResources,
+			groupVersion:  "unexistinggroup/v3",
+			kind:          "Kindtwo",
+			expectErr:     false,
+			expectExists:  false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			clientset := fakeclientset.NewSimpleClientset()
+			clientset.Resources = tc.resourcesList
+			exists, err := resourceExists(clientset.Discovery(), tc.groupVersion, tc.kind)
+			receivedErr := err != nil
+			if tc.expectErr != receivedErr {
+				subT.Errorf("Unexpected error: Expected: %s, Received: %s", "<nil>", err)
+			}
+			if tc.expectExists != exists {
+				subT.Errorf("Unexpected result: Expected: %t, Received: %t", tc.expectExists, exists)
+			}
+		})
+	}
+}
