@@ -61,9 +61,9 @@ const (
 )
 
 var (
-	// ApicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
+	// apicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
 	// Needs to exist in the policy chain
-	ApicastPolicy = PolicyConfig{
+	apicastPolicy = PolicyConfig{
 		Name:    "apicast",
 		Version: "builtin",
 		Configuration: runtime.RawExtension{
@@ -724,7 +724,7 @@ type PolicyConfig struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Configuration runtime.RawExtension `json:"configuration"`
 
-	// Version defines the policy version
+	// Enabled defines activation state
 	Enabled bool `json:"enabled"`
 }
 
@@ -1036,7 +1036,7 @@ func (product *Product) SetDefaults(logger logr.Logger) bool {
 	// Apicast Policy must exist
 	apicastPolicyFound := false
 	for idx := range product.Spec.Policies {
-		if product.Spec.Policies[idx].Name == ApicastPolicy.Name {
+		if product.Spec.Policies[idx].Name == apicastPolicy.Name {
 			apicastPolicyFound = true
 			break
 		}
@@ -1044,7 +1044,7 @@ func (product *Product) SetDefaults(logger logr.Logger) bool {
 
 	if !apicastPolicyFound {
 		// Add to the end of the slice as the one with the lowest priority
-		product.Spec.Policies = append(product.Spec.Policies, ApicastPolicy)
+		product.Spec.Policies = append(product.Spec.Policies, apicastPolicy)
 		updated = true
 	}
 

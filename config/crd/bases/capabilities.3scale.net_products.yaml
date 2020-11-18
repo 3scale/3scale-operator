@@ -654,7 +654,7 @@ spec:
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
                   enabled:
-                    description: Version defines the policy version
+                    description: Enabled defines activation state
                     type: boolean
                   name:
                     description: Name defines the policy unique name
