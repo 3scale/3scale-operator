@@ -191,6 +191,63 @@ spec:
                               - query
                               - authorization
                               type: string
+                            gatewayResponse:
+                              description: GatewayResponseSpec defines the desired
+                                gateway response configuration
+                              properties:
+                                errorAuthFailed:
+                                  description: ErrorAuthFailed specifies the response
+                                    body when authentication fails
+                                  type: string
+                                errorAuthMissing:
+                                  description: ErrorAuthMissing specifies the response
+                                    body when authentication is missing
+                                  type: string
+                                errorHeadersAuthFailed:
+                                  description: ErrorHeadersAuthFailed specifies the
+                                    Content-Type header when authentication fails
+                                  type: string
+                                errorHeadersAuthMissing:
+                                  description: ErrorHeadersAuthMissing specifies the
+                                    Content-Type header when authentication is missing
+                                  type: string
+                                errorHeadersLimitsExceeded:
+                                  description: ErrorHeadersLimitsExceeded specifies
+                                    the Content-Type header when usage limit exceeded
+                                  type: string
+                                errorHeadersNoMatch:
+                                  description: ErrorHeadersNoMatch specifies the Content-Type
+                                    header when no match error
+                                  type: string
+                                errorLimitsExceeded:
+                                  description: ErrorLimitsExceeded specifies the response
+                                    body when usage limit exceeded
+                                  type: string
+                                errorNoMatch:
+                                  description: ErrorNoMatch specifies the response
+                                    body when no match error
+                                  type: string
+                                errorStatusAuthFailed:
+                                  description: ErrorStatusAuthFailed specifies the
+                                    response code when authentication fails
+                                  format: int32
+                                  type: integer
+                                errorStatusAuthMissing:
+                                  description: ErrorStatusAuthMissing specifies the
+                                    response code when authentication is missing
+                                  format: int32
+                                  type: integer
+                                errorStatusLimitsExceeded:
+                                  description: ErrorStatusLimitsExceeded specifies
+                                    the response code when usage limit exceeded
+                                  format: int32
+                                  type: integer
+                                errorStatusNoMatch:
+                                  description: ErrorStatusNoMatch specifies the response
+                                    code when no match error
+                                  format: int32
+                                  type: integer
+                              type: object
                             security:
                               description: SecuritySpec defines the desired state
                                 of Authentication Security
@@ -227,6 +284,63 @@ spec:
                               - query
                               - authorization
                               type: string
+                            gatewayResponse:
+                              description: GatewayResponseSpec defines the desired
+                                gateway response configuration
+                              properties:
+                                errorAuthFailed:
+                                  description: ErrorAuthFailed specifies the response
+                                    body when authentication fails
+                                  type: string
+                                errorAuthMissing:
+                                  description: ErrorAuthMissing specifies the response
+                                    body when authentication is missing
+                                  type: string
+                                errorHeadersAuthFailed:
+                                  description: ErrorHeadersAuthFailed specifies the
+                                    Content-Type header when authentication fails
+                                  type: string
+                                errorHeadersAuthMissing:
+                                  description: ErrorHeadersAuthMissing specifies the
+                                    Content-Type header when authentication is missing
+                                  type: string
+                                errorHeadersLimitsExceeded:
+                                  description: ErrorHeadersLimitsExceeded specifies
+                                    the Content-Type header when usage limit exceeded
+                                  type: string
+                                errorHeadersNoMatch:
+                                  description: ErrorHeadersNoMatch specifies the Content-Type
+                                    header when no match error
+                                  type: string
+                                errorLimitsExceeded:
+                                  description: ErrorLimitsExceeded specifies the response
+                                    body when usage limit exceeded
+                                  type: string
+                                errorNoMatch:
+                                  description: ErrorNoMatch specifies the response
+                                    body when no match error
+                                  type: string
+                                errorStatusAuthFailed:
+                                  description: ErrorStatusAuthFailed specifies the
+                                    response code when authentication fails
+                                  format: int32
+                                  type: integer
+                                errorStatusAuthMissing:
+                                  description: ErrorStatusAuthMissing specifies the
+                                    response code when authentication is missing
+                                  format: int32
+                                  type: integer
+                                errorStatusLimitsExceeded:
+                                  description: ErrorStatusLimitsExceeded specifies
+                                    the response code when usage limit exceeded
+                                  format: int32
+                                  type: integer
+                                errorStatusNoMatch:
+                                  description: ErrorStatusNoMatch specifies the response
+                                    code when no match error
+                                  format: int32
+                                  type: integer
+                              type: object
                             security:
                               description: SecuritySpec defines the desired state
                                 of Authentication Security
@@ -279,6 +393,63 @@ spec:
                               - query
                               - authorization
                               type: string
+                            gatewayResponse:
+                              description: GatewayResponseSpec defines the desired
+                                gateway response configuration
+                              properties:
+                                errorAuthFailed:
+                                  description: ErrorAuthFailed specifies the response
+                                    body when authentication fails
+                                  type: string
+                                errorAuthMissing:
+                                  description: ErrorAuthMissing specifies the response
+                                    body when authentication is missing
+                                  type: string
+                                errorHeadersAuthFailed:
+                                  description: ErrorHeadersAuthFailed specifies the
+                                    Content-Type header when authentication fails
+                                  type: string
+                                errorHeadersAuthMissing:
+                                  description: ErrorHeadersAuthMissing specifies the
+                                    Content-Type header when authentication is missing
+                                  type: string
+                                errorHeadersLimitsExceeded:
+                                  description: ErrorHeadersLimitsExceeded specifies
+                                    the Content-Type header when usage limit exceeded
+                                  type: string
+                                errorHeadersNoMatch:
+                                  description: ErrorHeadersNoMatch specifies the Content-Type
+                                    header when no match error
+                                  type: string
+                                errorLimitsExceeded:
+                                  description: ErrorLimitsExceeded specifies the response
+                                    body when usage limit exceeded
+                                  type: string
+                                errorNoMatch:
+                                  description: ErrorNoMatch specifies the response
+                                    body when no match error
+                                  type: string
+                                errorStatusAuthFailed:
+                                  description: ErrorStatusAuthFailed specifies the
+                                    response code when authentication fails
+                                  format: int32
+                                  type: integer
+                                errorStatusAuthMissing:
+                                  description: ErrorStatusAuthMissing specifies the
+                                    response code when authentication is missing
+                                  format: int32
+                                  type: integer
+                                errorStatusLimitsExceeded:
+                                  description: ErrorStatusLimitsExceeded specifies
+                                    the response code when usage limit exceeded
+                                  format: int32
+                                  type: integer
+                                errorStatusNoMatch:
+                                  description: ErrorStatusNoMatch specifies the response
+                                    code when no match error
+                                  format: int32
+                                  type: integer
+                              type: object
                             security:
                               description: SecuritySpec defines the desired state
                                 of Authentication Security
@@ -315,6 +486,63 @@ spec:
                               - query
                               - authorization
                               type: string
+                            gatewayResponse:
+                              description: GatewayResponseSpec defines the desired
+                                gateway response configuration
+                              properties:
+                                errorAuthFailed:
+                                  description: ErrorAuthFailed specifies the response
+                                    body when authentication fails
+                                  type: string
+                                errorAuthMissing:
+                                  description: ErrorAuthMissing specifies the response
+                                    body when authentication is missing
+                                  type: string
+                                errorHeadersAuthFailed:
+                                  description: ErrorHeadersAuthFailed specifies the
+                                    Content-Type header when authentication fails
+                                  type: string
+                                errorHeadersAuthMissing:
+                                  description: ErrorHeadersAuthMissing specifies the
+                                    Content-Type header when authentication is missing
+                                  type: string
+                                errorHeadersLimitsExceeded:
+                                  description: ErrorHeadersLimitsExceeded specifies
+                                    the Content-Type header when usage limit exceeded
+                                  type: string
+                                errorHeadersNoMatch:
+                                  description: ErrorHeadersNoMatch specifies the Content-Type
+                                    header when no match error
+                                  type: string
+                                errorLimitsExceeded:
+                                  description: ErrorLimitsExceeded specifies the response
+                                    body when usage limit exceeded
+                                  type: string
+                                errorNoMatch:
+                                  description: ErrorNoMatch specifies the response
+                                    body when no match error
+                                  type: string
+                                errorStatusAuthFailed:
+                                  description: ErrorStatusAuthFailed specifies the
+                                    response code when authentication fails
+                                  format: int32
+                                  type: integer
+                                errorStatusAuthMissing:
+                                  description: ErrorStatusAuthMissing specifies the
+                                    response code when authentication is missing
+                                  format: int32
+                                  type: integer
+                                errorStatusLimitsExceeded:
+                                  description: ErrorStatusLimitsExceeded specifies
+                                    the response code when usage limit exceeded
+                                  format: int32
+                                  type: integer
+                                errorStatusNoMatch:
+                                  description: ErrorStatusNoMatch specifies the response
+                                    code when no match error
+                                  format: int32
+                                  type: integer
+                              type: object
                             security:
                               description: SecuritySpec defines the desired state
                                 of Authentication Security

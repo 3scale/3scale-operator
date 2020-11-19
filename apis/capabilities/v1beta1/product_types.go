@@ -224,7 +224,8 @@ type AppKeyAppIDAuthenticationSpec struct {
 	// +optional
 	Security *SecuritySpec `json:"security,omitempty"`
 
-	// TODO GATEWAY RESPONSE
+	// +optional
+	GatewayResponse *GatewayResponseSpec `json:"gatewayResponse,omitempty"`
 }
 
 func (a *AppKeyAppIDAuthenticationSpec) SecuritySecretToken() *string {
@@ -255,6 +256,10 @@ func (a *AppKeyAppIDAuthenticationSpec) AuthAppKey() *string {
 	return a.AppKey
 }
 
+func (a *AppKeyAppIDAuthenticationSpec) GatewayResponseSpec() *GatewayResponseSpec {
+	return a.GatewayResponse
+}
+
 // UserKeyAuthenticationSpec defines the desired state of User Key Authentication
 type UserKeyAuthenticationSpec struct {
 	// +optional
@@ -271,7 +276,8 @@ type UserKeyAuthenticationSpec struct {
 	// +optional
 	Security *SecuritySpec `json:"security,omitempty"`
 
-	// TODO GATEWAY RESPONSE
+	// +optional
+	GatewayResponse *GatewayResponseSpec `json:"gatewayResponse,omitempty"`
 }
 
 func (u *UserKeyAuthenticationSpec) SecuritySecretToken() *string {
@@ -296,6 +302,10 @@ func (u *UserKeyAuthenticationSpec) CredentialsLocation() *string {
 
 func (u *UserKeyAuthenticationSpec) AuthUserKey() *string {
 	return u.Key
+}
+
+func (u *UserKeyAuthenticationSpec) GatewayResponseSpec() *GatewayResponseSpec {
+	return u.GatewayResponse
 }
 
 // AuthenticationSpec defines the desired state of Product Authentication
@@ -384,6 +394,19 @@ func (a *AuthenticationSpec) AuthAppKey() *string {
 	return nil
 }
 
+func (a *AuthenticationSpec) GatewayResponse() *GatewayResponseSpec {
+	// authentication is oneOf by CRD openapiV3 validation
+	if a.UserKeyAuthentication != nil {
+		return a.UserKeyAuthentication.GatewayResponseSpec()
+	}
+
+	if a.AppKeyAppIDAuthentication == nil {
+		panic("product authenticationspec: both userkey and appid_appkeyare nil")
+	}
+
+	return a.AppKeyAppIDAuthentication.GatewayResponseSpec()
+}
+
 // ApicastHostedSpec defines the desired state of Product Apicast Hosted
 type ApicastHostedSpec struct {
 	// +optional
@@ -438,6 +461,13 @@ func (a *ApicastHostedSpec) AuthAppKey() *string {
 		return nil
 	}
 	return a.Authentication.AuthAppKey()
+}
+
+func (a *ApicastHostedSpec) GatewayResponse() *GatewayResponseSpec {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.GatewayResponse()
 }
 
 // ApicastSelfManagedSpec defines the desired state of Product Apicast Self Managed
@@ -508,6 +538,13 @@ func (a *ApicastSelfManagedSpec) AuthAppKey() *string {
 		return nil
 	}
 	return a.Authentication.AuthAppKey()
+}
+
+func (a *ApicastSelfManagedSpec) GatewayResponse() *GatewayResponseSpec {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.GatewayResponse()
 }
 
 // ProductDeploymentSpec defines the desired state of Product Deployment
@@ -648,6 +685,19 @@ func (d *ProductDeploymentSpec) AuthAppKey() *string {
 	return d.ApicastSelfManaged.AuthAppKey()
 }
 
+func (d *ProductDeploymentSpec) GatewayResponse() *GatewayResponseSpec {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.GatewayResponse()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.GatewayResponse()
+}
+
 // ProductSpec defines the desired state of Product
 type ProductSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -773,6 +823,64 @@ func (s *ProductSpec) AuthAppKey() *string {
 		return nil
 	}
 	return s.Deployment.AuthAppKey()
+}
+
+func (s *ProductSpec) GatewayResponse() *GatewayResponseSpec {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.GatewayResponse()
+}
+
+// GatewayResponseSpec defines the desired gateway response configuration
+type GatewayResponseSpec struct {
+	// ErrorStatusAuthFailed specifies the response code when authentication fails
+	// +optional
+	ErrorStatusAuthFailed *int32 `json:"errorStatusAuthFailed,omitempty"`
+
+	// ErrorHeadersAuthFailed specifies the Content-Type header when authentication fails
+	// +optional
+	ErrorHeadersAuthFailed *string `json:"errorHeadersAuthFailed,omitempty"`
+
+	// ErrorAuthFailed specifies the response body when authentication fails
+	// +optional
+	ErrorAuthFailed *string `json:"errorAuthFailed,omitempty"`
+
+	// ErrorStatusAuthMissing specifies the response code when authentication is missing
+	// +optional
+	ErrorStatusAuthMissing *int32 `json:"errorStatusAuthMissing,omitempty"`
+
+	// ErrorHeadersAuthMissing specifies the Content-Type header when authentication is missing
+	// +optional
+	ErrorHeadersAuthMissing *string `json:"errorHeadersAuthMissing,omitempty"`
+
+	// ErrorAuthMissing specifies the response body when authentication is missing
+	// +optional
+	ErrorAuthMissing *string `json:"errorAuthMissing,omitempty"`
+
+	// ErrorStatusNoMatch specifies the response code when no match error
+	// +optional
+	ErrorStatusNoMatch *int32 `json:"errorStatusNoMatch,omitempty"`
+
+	// ErrorHeadersNoMatch specifies the Content-Type header when no match error
+	// +optional
+	ErrorHeadersNoMatch *string `json:"errorHeadersNoMatch,omitempty"`
+
+	// ErrorNoMatch specifies the response body when no match error
+	// +optional
+	ErrorNoMatch *string `json:"errorNoMatch,omitempty"`
+
+	// ErrorStatusLimitsExceeded specifies the response code when usage limit exceeded
+	// +optional
+	ErrorStatusLimitsExceeded *int32 `json:"errorStatusLimitsExceeded,omitempty"`
+
+	// ErrorHeadersLimitsExceeded specifies the Content-Type header when usage limit exceeded
+	// +optional
+	ErrorHeadersLimitsExceeded *string `json:"errorHeadersLimitsExceeded,omitempty"`
+
+	// ErrorLimitsExceeded specifies the response body when usage limit exceeded
+	// +optional
+	ErrorLimitsExceeded *string `json:"errorLimitsExceeded,omitempty"`
 }
 
 // ProductStatus defines the observed state of Product

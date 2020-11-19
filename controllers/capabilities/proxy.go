@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -83,6 +84,8 @@ func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
 		}
 	}
 
+	t.syncProxyGatewayResponse(params, existing)
+
 	if len(params) > 0 {
 		err := t.productEntity.UpdateProxy(params)
 		if err != nil {
@@ -90,4 +93,95 @@ func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
 		}
 	}
 	return nil
+}
+
+func (t *ProductThreescaleReconciler) syncProxyGatewayResponse(params threescaleapi.Params, existing *threescaleapi.ProxyJSON) {
+	gatewayResponse := t.resource.Spec.GatewayResponse()
+	if gatewayResponse == nil {
+		return
+	}
+
+	intCases := []struct {
+		desired  *int32
+		existing int
+		field    string
+	}{
+		{
+			gatewayResponse.ErrorStatusAuthFailed,
+			existing.Element.ErrorStatusAuthFailed,
+			"error_status_auth_failed",
+		},
+		{
+			gatewayResponse.ErrorStatusAuthMissing,
+			existing.Element.ErrorStatusAuthMissing,
+			"error_status_auth_missing",
+		},
+		{
+			gatewayResponse.ErrorStatusNoMatch,
+			existing.Element.ErrorStatusNoMatch,
+			"error_status_no_match",
+		},
+		{
+			gatewayResponse.ErrorStatusLimitsExceeded,
+			existing.Element.ErrorStatusLimitsExceeded,
+			"error_status_limits_exceeded",
+		},
+	}
+	for _, intCase := range intCases {
+		if intCase.desired != nil && int32(intCase.existing) != *intCase.desired {
+			params[intCase.field] = strconv.Itoa(int(*intCase.desired))
+		}
+	}
+
+	strCases := []struct {
+		desired  *string
+		existing string
+		field    string
+	}{
+		{
+			gatewayResponse.ErrorHeadersAuthFailed,
+			existing.Element.ErrorHeadersAuthFailed,
+			"error_headers_auth_failed",
+		},
+		{
+			gatewayResponse.ErrorAuthFailed,
+			existing.Element.ErrorAuthFailed,
+			"error_auth_failed",
+		},
+		{
+			gatewayResponse.ErrorHeadersAuthMissing,
+			existing.Element.ErrorHeadersAuthMissing,
+			"error_headers_auth_missing",
+		},
+		{
+			gatewayResponse.ErrorAuthMissing,
+			existing.Element.ErrorAuthMissing,
+			"error_auth_missing",
+		},
+		{
+			gatewayResponse.ErrorHeadersNoMatch,
+			existing.Element.ErrorHeadersNoMatch,
+			"error_headers_no_match",
+		},
+		{
+			gatewayResponse.ErrorNoMatch,
+			existing.Element.ErrorNoMatch,
+			"error_no_match",
+		},
+		{
+			gatewayResponse.ErrorHeadersLimitsExceeded,
+			existing.Element.ErrorHeadersLimitsExceeded,
+			"error_headers_limits_exceeded",
+		},
+		{
+			gatewayResponse.ErrorLimitsExceeded,
+			existing.Element.ErrorLimitsExceeded,
+			"error_limits_exceeded",
+		},
+	}
+	for _, strCase := range strCases {
+		if strCase.desired != nil && strCase.existing != *strCase.desired {
+			params[strCase.field] = *strCase.desired
+		}
+	}
 }
