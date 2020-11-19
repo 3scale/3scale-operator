@@ -268,6 +268,140 @@ spec:
                                   type: string
                               type: object
                           type: object
+                        oidc:
+                          description: OIDCSpec defines the desired configuration
+                            of OpenID Connect Authentication
+                          properties:
+                            authenticationFlow:
+                              description: AuthenticationFlow is the OIDC issuer
+                              properties:
+                                directAccessGrantsEnabled:
+                                  type: boolean
+                                implicitFlowEnabled:
+                                  type: boolean
+                                serviceAccountsEnabled:
+                                  type: boolean
+                                standardFlowEnabled:
+                                  description: OIDCIssuer is the OIDC issuer
+                                  type: boolean
+                              required:
+                              - directAccessGrantsEnabled
+                              - implicitFlowEnabled
+                              - serviceAccountsEnabled
+                              - standardFlowEnabled
+                              type: object
+                            credentials:
+                              description: 'Credentials Location available options:
+                                headers: As HTTP Headers query: As query parameters
+                                (GET) or body parameters (POST/PUT/DELETE) authorization:
+                                As HTTP Basic Authentication'
+                              enum:
+                              - headers
+                              - query
+                              - authorization
+                              type: string
+                            gatewayResponse:
+                              description: GatewayResponseSpec defines the desired
+                                gateway response configuration
+                              properties:
+                                errorAuthFailed:
+                                  description: ErrorAuthFailed specifies the response
+                                    body when authentication fails
+                                  type: string
+                                errorAuthMissing:
+                                  description: ErrorAuthMissing specifies the response
+                                    body when authentication is missing
+                                  type: string
+                                errorHeadersAuthFailed:
+                                  description: ErrorHeadersAuthFailed specifies the
+                                    Content-Type header when authentication fails
+                                  type: string
+                                errorHeadersAuthMissing:
+                                  description: ErrorHeadersAuthMissing specifies the
+                                    Content-Type header when authentication is missing
+                                  type: string
+                                errorHeadersLimitsExceeded:
+                                  description: ErrorHeadersLimitsExceeded specifies
+                                    the Content-Type header when usage limit exceeded
+                                  type: string
+                                errorHeadersNoMatch:
+                                  description: ErrorHeadersNoMatch specifies the Content-Type
+                                    header when no match error
+                                  type: string
+                                errorLimitsExceeded:
+                                  description: ErrorLimitsExceeded specifies the response
+                                    body when usage limit exceeded
+                                  type: string
+                                errorNoMatch:
+                                  description: ErrorNoMatch specifies the response
+                                    body when no match error
+                                  type: string
+                                errorStatusAuthFailed:
+                                  description: ErrorStatusAuthFailed specifies the
+                                    response code when authentication fails
+                                  format: int32
+                                  type: integer
+                                errorStatusAuthMissing:
+                                  description: ErrorStatusAuthMissing specifies the
+                                    response code when authentication is missing
+                                  format: int32
+                                  type: integer
+                                errorStatusLimitsExceeded:
+                                  description: ErrorStatusLimitsExceeded specifies
+                                    the response code when usage limit exceeded
+                                  format: int32
+                                  type: integer
+                                errorStatusNoMatch:
+                                  description: ErrorStatusNoMatch specifies the response
+                                    code when no match error
+                                  format: int32
+                                  type: integer
+                              type: object
+                            issuerEndpoint:
+                              description: Issuer is the OIDC issuer
+                              type: string
+                            issuerType:
+                              description: IssuerType is the type of the OIDC issuer
+                              enum:
+                              - keycloak
+                              - rest
+                              type: string
+                            jwtClaimWithClientID:
+                              description: JwtClaimWithClientID is the JSON Web Token
+                                (JWT) Claim with ClientID that contains the clientID.
+                                Defaults to 'azp'.
+                              type: string
+                            jwtClaimWithClientIDType:
+                              description: JwtClaimWithClientIDType sets to process
+                                the ClientID Token Claim value as a string or as a
+                                liquid template.
+                              enum:
+                              - plain
+                              - liquid
+                              type: string
+                            security:
+                              description: SecuritySpec defines the desired state
+                                of Authentication Security
+                              properties:
+                                hostHeader:
+                                  description: HostHeader Lets you define a custom
+                                    Host request header. This is needed if your API
+                                    backend only accepts traffic from a specific host.
+                                  type: string
+                                secretToken:
+                                  description: SecretToken Enables you to block any
+                                    direct developer requests to your API backend;
+                                    each 3scale API gateway call to your API backend
+                                    contains a request header called X-3scale-proxy-secret-token.
+                                    The value of this header can be set by you here.
+                                    It's up to you ensure your backend only allows
+                                    calls with this secret header.
+                                  type: string
+                              type: object
+                          required:
+                          - issuerEndpoint
+                          - issuerType
+                          type: object
                         userkey:
                           description: UserKeyAuthenticationSpec defines the desired
                             state of User Key Authentication
@@ -469,6 +603,140 @@ spec:
                                     calls with this secret header.
                                   type: string
                               type: object
+                          type: object
+                        oidc:
+                          description: OIDCSpec defines the desired configuration
+                            of OpenID Connect Authentication
+                          properties:
+                            authenticationFlow:
+                              description: AuthenticationFlow is the OIDC issuer
+                              properties:
+                                directAccessGrantsEnabled:
+                                  type: boolean
+                                implicitFlowEnabled:
+                                  type: boolean
+                                serviceAccountsEnabled:
+                                  type: boolean
+                                standardFlowEnabled:
+                                  description: OIDCIssuer is the OIDC issuer
+                                  type: boolean
+                              required:
+                              - directAccessGrantsEnabled
+                              - implicitFlowEnabled
+                              - serviceAccountsEnabled
+                              - standardFlowEnabled
+                              type: object
+                            credentials:
+                              description: 'Credentials Location available options:
+                                headers: As HTTP Headers query: As query parameters
+                                (GET) or body parameters (POST/PUT/DELETE) authorization:
+                                As HTTP Basic Authentication'
+                              enum:
+                              - headers
+                              - query
+                              - authorization
+                              type: string
+                            gatewayResponse:
+                              description: GatewayResponseSpec defines the desired
+                                gateway response configuration
+                              properties:
+                                errorAuthFailed:
+                                  description: ErrorAuthFailed specifies the response
+                                    body when authentication fails
+                                  type: string
+                                errorAuthMissing:
+                                  description: ErrorAuthMissing specifies the response
+                                    body when authentication is missing
+                                  type: string
+                                errorHeadersAuthFailed:
+                                  description: ErrorHeadersAuthFailed specifies the
+                                    Content-Type header when authentication fails
+                                  type: string
+                                errorHeadersAuthMissing:
+                                  description: ErrorHeadersAuthMissing specifies the
+                                    Content-Type header when authentication is missing
+                                  type: string
+                                errorHeadersLimitsExceeded:
+                                  description: ErrorHeadersLimitsExceeded specifies
+                                    the Content-Type header when usage limit exceeded
+                                  type: string
+                                errorHeadersNoMatch:
+                                  description: ErrorHeadersNoMatch specifies the Content-Type
+                                    header when no match error
+                                  type: string
+                                errorLimitsExceeded:
+                                  description: ErrorLimitsExceeded specifies the response
+                                    body when usage limit exceeded
+                                  type: string
+                                errorNoMatch:
+                                  description: ErrorNoMatch specifies the response
+                                    body when no match error
+                                  type: string
+                                errorStatusAuthFailed:
+                                  description: ErrorStatusAuthFailed specifies the
+                                    response code when authentication fails
+                                  format: int32
+                                  type: integer
+                                errorStatusAuthMissing:
+                                  description: ErrorStatusAuthMissing specifies the
+                                    response code when authentication is missing
+                                  format: int32
+                                  type: integer
+                                errorStatusLimitsExceeded:
+                                  description: ErrorStatusLimitsExceeded specifies
+                                    the response code when usage limit exceeded
+                                  format: int32
+                                  type: integer
+                                errorStatusNoMatch:
+                                  description: ErrorStatusNoMatch specifies the response
+                                    code when no match error
+                                  format: int32
+                                  type: integer
+                              type: object
+                            issuerEndpoint:
+                              description: Issuer is the OIDC issuer
+                              type: string
+                            issuerType:
+                              description: IssuerType is the type of the OIDC issuer
+                              enum:
+                              - keycloak
+                              - rest
+                              type: string
+                            jwtClaimWithClientID:
+                              description: JwtClaimWithClientID is the JSON Web Token
+                                (JWT) Claim with ClientID that contains the clientID.
+                                Defaults to 'azp'.
+                              type: string
+                            jwtClaimWithClientIDType:
+                              description: JwtClaimWithClientIDType sets to process
+                                the ClientID Token Claim value as a string or as a
+                                liquid template.
+                              enum:
+                              - plain
+                              - liquid
+                              type: string
+                            security:
+                              description: SecuritySpec defines the desired state
+                                of Authentication Security
+                              properties:
+                                hostHeader:
+                                  description: HostHeader Lets you define a custom
+                                    Host request header. This is needed if your API
+                                    backend only accepts traffic from a specific host.
+                                  type: string
+                                secretToken:
+                                  description: SecretToken Enables you to block any
+                                    direct developer requests to your API backend;
+                                    each 3scale API gateway call to your API backend
+                                    contains a request header called X-3scale-proxy-secret-token.
+                                    The value of this header can be set by you here.
+                                    It's up to you ensure your backend only allows
+                                    calls with this secret header.
+                                  type: string
+                              type: object
+                          required:
+                          - issuerEndpoint
+                          - issuerType
                           type: object
                         userkey:
                           description: UserKeyAuthenticationSpec defines the desired

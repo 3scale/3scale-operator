@@ -22,6 +22,7 @@ type ProductEntity struct {
 	proxy             *threescaleapi.ProxyJSON
 	plans             *threescaleapi.ApplicationPlanJSONList
 	policies          *threescaleapi.PoliciesConfigList
+	oidcConf          *threescaleapi.OIDCConfiguration
 	logger            logr.Logger
 }
 
@@ -372,6 +373,29 @@ func (b *ProductEntity) UpdatePolicies(policies *threescaleapi.PoliciesConfigLis
 	return nil
 }
 
+func (b *ProductEntity) OIDCConfiguration() (*threescaleapi.OIDCConfiguration, error) {
+	b.logger.V(1).Info("OIDCConfiguration")
+	if b.oidcConf == nil {
+		obj, err := b.getOIDCConfiguration()
+		if err != nil {
+			return nil, err
+		}
+		b.oidcConf = obj
+	}
+	return b.oidcConf, nil
+}
+
+func (b *ProductEntity) UpdateOIDCConfiguration(oidcConf *threescaleapi.OIDCConfiguration) error {
+	b.logger.V(1).Info("UpdateOIDCConfiguration", "oidcConf", oidcConf)
+	obj, err := b.client.UpdateOidcConfiguration(b.productObj.Element.ID, oidcConf)
+	if err != nil {
+		return fmt.Errorf("product [%s] update oidc: %w", b.productObj.Element.SystemName, err)
+	}
+
+	b.oidcConf = obj
+	return nil
+}
+
 //
 // PRIVATE
 //
@@ -519,6 +543,16 @@ func (b *ProductEntity) getPolicies() (*threescaleapi.PoliciesConfigList, error)
 	obj, err := b.client.Policies(b.productObj.Element.ID)
 	if err != nil {
 		return nil, fmt.Errorf("product [%s] get policies: %w", b.productObj.Element.SystemName, err)
+	}
+
+	return obj, nil
+}
+
+func (b *ProductEntity) getOIDCConfiguration() (*threescaleapi.OIDCConfiguration, error) {
+	b.logger.V(1).Info("getOIDCConfiguration")
+	obj, err := b.client.OidcConfiguration(b.productObj.Element.ID)
+	if err != nil {
+		return nil, err
 	}
 
 	return obj, nil

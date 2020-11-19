@@ -22,9 +22,11 @@ spec:
                       oneOf:
                       - required: ["userkey"]
                       - required: ["appKeyAppID"]
+                      - required: ["oidc"]
                 apicastSelfManaged:
                   properties:
                     authentication:
                       oneOf:
                       - required: ["userkey"]
                       - required: ["appKeyAppID"]
+                      - required: ["oidc"]

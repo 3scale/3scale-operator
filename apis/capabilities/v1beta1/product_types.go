@@ -322,14 +322,86 @@ func (u *UserKeyAuthenticationSpec) GatewayResponseSpec() *GatewayResponseSpec {
 	return u.GatewayResponse
 }
 
+// OIDCAuthenticationFlowSpec defines the desired Oauth2 flow
+type OIDCAuthenticationFlowSpec struct {
+	// OIDCIssuer is the OIDC issuer
+	StandardFlowEnabled       bool `json:"standardFlowEnabled"`
+	ImplicitFlowEnabled       bool `json:"implicitFlowEnabled"`
+	ServiceAccountsEnabled    bool `json:"serviceAccountsEnabled"`
+	DirectAccessGrantsEnabled bool `json:"directAccessGrantsEnabled"`
+}
+
+// OIDCSpec defines the desired configuration of OpenID Connect Authentication
+type OIDCSpec struct {
+	// IssuerType is the type of the OIDC issuer
+	// +kubebuilder:validation:Enum=keycloak;rest
+	IssuerType string `json:"issuerType"`
+
+	// Issuer is the OIDC issuer
+	IssuerEndpoint string `json:"issuerEndpoint"`
+
+	// AuthenticationFlow is the OIDC issuer
+	// +optional
+	AuthenticationFlow *OIDCAuthenticationFlowSpec `json:"authenticationFlow,omitempty"`
+
+	// JwtClaimWithClientID is the JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.
+	// +optional
+	JwtClaimWithClientID *string `json:"jwtClaimWithClientID,omitempty"`
+
+	// JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template.
+	// +kubebuilder:validation:Enum=plain;liquid
+	// +optional
+	JwtClaimWithClientIDType *string `json:"jwtClaimWithClientIDType,omitempty"`
+
+	// Credentials Location available options:
+	// headers: As HTTP Headers
+	// query: As query parameters (GET) or body parameters (POST/PUT/DELETE)
+	// authorization: As HTTP Basic Authentication
+	// +optional
+	// +kubebuilder:validation:Enum=headers;query;authorization
+	CredentialsLoc *string `json:"credentials,omitempty"`
+
+	// +optional
+	Security *SecuritySpec `json:"security,omitempty"`
+
+	// +optional
+	GatewayResponse *GatewayResponseSpec `json:"gatewayResponse,omitempty"`
+}
+
+func (u *OIDCSpec) SecuritySecretToken() *string {
+	if u.Security == nil {
+		return nil
+	}
+
+	return u.Security.SecuritySecretToken()
+}
+
+func (u *OIDCSpec) HostRewrite() *string {
+	if u.Security == nil {
+		return nil
+	}
+
+	return u.Security.HostRewrite()
+}
+
+func (u *OIDCSpec) CredentialsLocation() *string {
+	return u.CredentialsLoc
+}
+
+func (u *OIDCSpec) GatewayResponseSpec() *GatewayResponseSpec {
+	return u.GatewayResponse
+}
+
 // AuthenticationSpec defines the desired state of Product Authentication
 type AuthenticationSpec struct {
 	// +optional
 	UserKeyAuthentication *UserKeyAuthenticationSpec `json:"userkey,omitempty"`
+
 	// +optional
 	AppKeyAppIDAuthentication *AppKeyAppIDAuthenticationSpec `json:"appKeyAppID,omitempty"`
 
-	// TODO OpenID
+	// +optional
+	OIDC *OIDCSpec `json:"oidc,omitempty"`
 }
 
 func (a *AuthenticationSpec) AuthenticationMode() string {
@@ -338,8 +410,15 @@ func (a *AuthenticationSpec) AuthenticationMode() string {
 		return "1"
 	}
 
-	// must be appKey&appID
-	return "2"
+	if a.AppKeyAppIDAuthentication != nil {
+		return "2"
+	}
+
+	if a.OIDC != nil {
+		return "oidc"
+	}
+
+	panic("product authenticationspec: all options are nil")
 }
 
 func (a *AuthenticationSpec) SecuritySecretToken() *string {
@@ -348,11 +427,15 @@ func (a *AuthenticationSpec) SecuritySecretToken() *string {
 		return a.UserKeyAuthentication.SecuritySecretToken()
 	}
 
-	if a.AppKeyAppIDAuthentication == nil {
-		panic("product authenticationspec: both userkey and appid_appkeyare nil")
+	if a.AppKeyAppIDAuthentication != nil {
+		return a.AppKeyAppIDAuthentication.SecuritySecretToken()
 	}
 
-	return a.AppKeyAppIDAuthentication.SecuritySecretToken()
+	if a.OIDC != nil {
+		return a.OIDC.SecuritySecretToken()
+	}
+
+	panic("product authenticationspec: all options are nil")
 }
 
 func (a *AuthenticationSpec) HostRewrite() *string {
@@ -361,11 +444,15 @@ func (a *AuthenticationSpec) HostRewrite() *string {
 		return a.UserKeyAuthentication.HostRewrite()
 	}
 
-	if a.AppKeyAppIDAuthentication == nil {
-		panic("product authenticationspec: both userkey and appid_appkeyare nil")
+	if a.AppKeyAppIDAuthentication != nil {
+		return a.AppKeyAppIDAuthentication.HostRewrite()
 	}
 
-	return a.AppKeyAppIDAuthentication.HostRewrite()
+	if a.OIDC != nil {
+		return a.OIDC.HostRewrite()
+	}
+
+	panic("product authenticationspec: all options are nil")
 }
 
 func (a *AuthenticationSpec) CredentialsLocation() *string {
@@ -374,11 +461,15 @@ func (a *AuthenticationSpec) CredentialsLocation() *string {
 		return a.UserKeyAuthentication.CredentialsLocation()
 	}
 
-	if a.AppKeyAppIDAuthentication == nil {
-		panic("product authenticationspec: both userkey and appid_appkeyare nil")
+	if a.AppKeyAppIDAuthentication != nil {
+		return a.AppKeyAppIDAuthentication.CredentialsLocation()
 	}
 
-	return a.AppKeyAppIDAuthentication.CredentialsLocation()
+	if a.OIDC != nil {
+		return a.OIDC.CredentialsLocation()
+	}
+
+	panic("product authenticationspec: all options are nil")
 }
 
 func (a *AuthenticationSpec) AuthUserKey() *string {
@@ -414,11 +505,19 @@ func (a *AuthenticationSpec) GatewayResponse() *GatewayResponseSpec {
 		return a.UserKeyAuthentication.GatewayResponseSpec()
 	}
 
-	if a.AppKeyAppIDAuthentication == nil {
-		panic("product authenticationspec: both userkey and appid_appkeyare nil")
+	if a.AppKeyAppIDAuthentication != nil {
+		return a.AppKeyAppIDAuthentication.GatewayResponseSpec()
 	}
 
-	return a.AppKeyAppIDAuthentication.GatewayResponseSpec()
+	if a.OIDC != nil {
+		return a.OIDC.GatewayResponseSpec()
+	}
+
+	panic("product authenticationspec: all options are nil")
+}
+
+func (a *AuthenticationSpec) OIDCSpec() *OIDCSpec {
+	return a.OIDC
 }
 
 // ApicastHostedSpec defines the desired state of Product Apicast Hosted
@@ -482,6 +581,13 @@ func (a *ApicastHostedSpec) GatewayResponse() *GatewayResponseSpec {
 		return nil
 	}
 	return a.Authentication.GatewayResponse()
+}
+
+func (a *ApicastHostedSpec) OIDCSpec() *OIDCSpec {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.OIDCSpec()
 }
 
 // ApicastSelfManagedSpec defines the desired state of Product Apicast Self Managed
@@ -559,6 +665,13 @@ func (a *ApicastSelfManagedSpec) GatewayResponse() *GatewayResponseSpec {
 		return nil
 	}
 	return a.Authentication.GatewayResponse()
+}
+
+func (a *ApicastSelfManagedSpec) OIDCSpec() *OIDCSpec {
+	if a.Authentication == nil {
+		return nil
+	}
+	return a.Authentication.OIDCSpec()
 }
 
 // ProductDeploymentSpec defines the desired state of Product Deployment
@@ -728,6 +841,19 @@ type PolicyConfig struct {
 	Enabled bool `json:"enabled"`
 }
 
+func (d *ProductDeploymentSpec) OIDCSpec() *OIDCSpec {
+	// spec.deployment is oneOf by CRD openapiV3 validation
+	if d.ApicastHosted != nil {
+		return d.ApicastHosted.OIDCSpec()
+	}
+
+	if d.ApicastSelfManaged == nil {
+		panic("product spec.deployment apicasthosted and selfmanaged are nil")
+	}
+
+	return d.ApicastSelfManaged.OIDCSpec()
+}
+
 // ProductSpec defines the desired state of Product
 type ProductSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -864,6 +990,13 @@ func (s *ProductSpec) GatewayResponse() *GatewayResponseSpec {
 		return nil
 	}
 	return s.Deployment.GatewayResponse()
+}
+
+func (s *ProductSpec) OIDCSpec() *OIDCSpec {
+	if s.Deployment == nil {
+		return nil
+	}
+	return s.Deployment.OIDCSpec()
 }
 
 // GatewayResponseSpec defines the desired gateway response configuration
