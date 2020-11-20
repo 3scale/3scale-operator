@@ -234,7 +234,7 @@ spec:
                           description: OIDCSpec defines the desired configuration of OpenID Connect Authentication
                           properties:
                             authenticationFlow:
-                              description: AuthenticationFlow is the OIDC issuer
+                              description: AuthenticationFlow specifies OAuth2.0 authorization grant type
                               properties:
                                 directAccessGrantsEnabled:
                                   type: boolean
@@ -491,7 +491,7 @@ spec:
                           description: OIDCSpec defines the desired configuration of OpenID Connect Authentication
                           properties:
                             authenticationFlow:
-                              description: AuthenticationFlow is the OIDC issuer
+                              description: AuthenticationFlow specifies OAuth2.0 authorization grant type
                               properties:
                                 directAccessGrantsEnabled:
                                   type: boolean

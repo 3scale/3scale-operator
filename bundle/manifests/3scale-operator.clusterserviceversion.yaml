@@ -286,6 +286,34 @@ metadata:
           "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Product",
           "metadata": {
+            "name": "product1-oidc"
+          },
+          "spec": {
+            "deployment": {
+              "apicastHosted": {
+                "authentication": {
+                  "oidc": {
+                    "authenticationFlow": {
+                      "directAccessGrantsEnabled": true,
+                      "implicitFlowEnabled": true,
+                      "serviceAccountsEnabled": true,
+                      "standardFlowEnabled": false
+                    },
+                    "issuerEndpoint": "https://myclientid:myclientsecret@mykeycloack.example.com/auth/realms/myrealm",
+                    "issuerType": "keycloak",
+                    "jwtClaimWithClientID": "azp",
+                    "jwtClaimWithClientIDType": "plain"
+                  }
+                }
+              }
+            },
+            "name": "OperatedProduct 1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Product",
+          "metadata": {
             "name": "product1-plan-limits-sample"
           },
           "spec": {

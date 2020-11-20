@@ -322,7 +322,7 @@ func (u *UserKeyAuthenticationSpec) GatewayResponseSpec() *GatewayResponseSpec {
 	return u.GatewayResponse
 }
 
-// OIDCAuthenticationFlowSpec defines the desired Oauth2 flow
+// OIDCAuthenticationFlowSpec defines the desired OAuth2.0 authorization grant type
 type OIDCAuthenticationFlowSpec struct {
 	// OIDCIssuer is the OIDC issuer
 	StandardFlowEnabled       bool `json:"standardFlowEnabled"`
@@ -340,7 +340,7 @@ type OIDCSpec struct {
 	// Issuer is the OIDC issuer
 	IssuerEndpoint string `json:"issuerEndpoint"`
 
-	// AuthenticationFlow is the OIDC issuer
+	// AuthenticationFlow specifies OAuth2.0 authorization grant type
 	// +optional
 	AuthenticationFlow *OIDCAuthenticationFlowSpec `json:"authenticationFlow,omitempty"`
 
