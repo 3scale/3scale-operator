@@ -46,6 +46,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | Methods | `methods` | object | Map with key as method system name and value as [Method Spec](#MethodSpec) | No |
 | Backend Usages | `backendUsages` | object | Map with key as backend system name and value as [BackendUsageSpec](#BackendUsageSpec) | No |
 | Application Plans | `applicationPlans` | object | Map with key as plan's system name and value as [ApplicationPlanSpec](#ApplicationPlanSpec) | No |
+| Policy Chain | `policies` | array | Array of [PolicyConfigSpec](#PolicyConfigSpec) objects | No |
 | Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
 
 #### ProductDeploymentSpec
@@ -165,6 +166,18 @@ Specifies custom gateway response on errors
 | ErrorStatusLimitsExceeded | `errorStatusLimitsExceeded` | int | The response code when usage limit exdeeded | No |
 | ErrorHeadersLimitsExceeded | `errorHeadersLimitsExceeded` | string | The Content-Type header when usage limit exceeded | No |
 | ErrorLimitsExceeded | `errorLimitsExceeded` | string | The response body when usage limit exceeded | No |
+
+
+#### PolicyConfigSpec
+
+Specifies product policy config object
+
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| Name | `name` | string | Policy name | Yes |
+| Version | `version` | string | Policy version | Yes |
+| Enabled | `enabled` | boolean | Policy enabling switch | Yes |
+| Configuration | `configuration` | object | Policy configuration object | Yes. Minimum required is the empty object `{}` |
 
 #### Provider Account Reference
 

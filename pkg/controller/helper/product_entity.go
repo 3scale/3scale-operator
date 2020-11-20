@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -20,6 +21,7 @@ type ProductEntity struct {
 	backendUsages     threescaleapi.BackendAPIUsageList
 	proxy             *threescaleapi.ProxyJSON
 	plans             *threescaleapi.ApplicationPlanJSONList
+	policies          *threescaleapi.PoliciesConfigList
 	logger            logr.Logger
 }
 
@@ -348,6 +350,28 @@ func (b *ProductEntity) PromoteProxyToStaging() error {
 	return nil
 }
 
+func (b *ProductEntity) Policies() (*threescaleapi.PoliciesConfigList, error) {
+	b.logger.V(1).Info("Policies")
+	if b.policies == nil {
+		policies, err := b.getPolicies()
+		if err != nil {
+			return nil, err
+		}
+		b.policies = policies
+	}
+	return b.policies, nil
+}
+
+func (b *ProductEntity) UpdatePolicies(policies *threescaleapi.PoliciesConfigList) error {
+	policiesJSON, _ := json.Marshal(policies)
+	b.logger.V(1).Info("UpdatePolicies", "policies", string(policiesJSON))
+	_, err := b.client.UpdatePolicies(b.productObj.Element.ID, policies)
+	if err != nil {
+		return fmt.Errorf("product [%s] update policies: %w", b.productObj.Element.SystemName, err)
+	}
+	return nil
+}
+
 //
 // PRIVATE
 //
@@ -488,4 +512,14 @@ func (b *ProductEntity) getApplicationPlans() (*threescaleapi.ApplicationPlanJSO
 	}
 
 	return list, nil
+}
+
+func (b *ProductEntity) getPolicies() (*threescaleapi.PoliciesConfigList, error) {
+	b.logger.V(1).Info("getPolicies")
+	obj, err := b.client.Policies(b.productObj.Element.ID)
+	if err != nil {
+		return nil, fmt.Errorf("product [%s] get policies: %w", b.productObj.Element.SystemName, err)
+	}
+
+	return obj, nil
 }

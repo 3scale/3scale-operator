@@ -1,0 +1,17 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1-policies
+spec:
+  name: "OperatedProduct 1"
+  policies:
+  - configuration:
+      http_proxy: http://example.com
+      https_proxy: https://example.com
+    enabled: true
+    name: camel
+    version: builtin
+  - configuration: {}
+    enabled: true
+    name: apicast
+    version: builtin

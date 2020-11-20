@@ -28,6 +28,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
@@ -57,6 +58,19 @@ const (
 	// ProductFailedConditionType indicates that an error occurred during synchronization.
 	// The operator will retry.
 	ProductFailedConditionType common.ConditionType = "Failed"
+)
+
+var (
+	// apicastPolicy refers to the main functionality of APIcast to work with the 3scale API manager
+	// Needs to exist in the policy chain
+	apicastPolicy = PolicyConfig{
+		Name:    "apicast",
+		Version: "builtin",
+		Configuration: runtime.RawExtension{
+			Raw: []byte(`{}`),
+		},
+		Enabled: true,
+	}
 )
 
 var (
@@ -698,6 +712,22 @@ func (d *ProductDeploymentSpec) GatewayResponse() *GatewayResponseSpec {
 	return d.ApicastSelfManaged.GatewayResponse()
 }
 
+// PolicyConfig defines policy definition
+type PolicyConfig struct {
+	// Name defines the policy unique name
+	Name string `json:"name"`
+
+	// Version defines the policy version
+	Version string `json:"version"`
+
+	// Configuration defines the policy configuration
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Configuration runtime.RawExtension `json:"configuration"`
+
+	// Enabled defines activation state
+	Enabled bool `json:"enabled"`
+}
+
 // ProductSpec defines the desired state of Product
 type ProductSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -752,6 +782,10 @@ type ProductSpec struct {
 	// ProviderAccountRef references account provider credentials
 	// +optional
 	ProviderAccountRef *corev1.LocalObjectReference `json:"providerAccountRef,omitempty"`
+
+	// Policies holds the product's policy chain
+	// +optional
+	Policies []PolicyConfig `json:"policies,omitempty"`
 }
 
 func (s *ProductSpec) DeploymentOption() *string {
@@ -996,6 +1030,21 @@ func (product *Product) SetDefaults(logger logr.Logger) bool {
 			Unit:        "hit",
 			Description: "Number of API hits",
 		}
+		updated = true
+	}
+
+	// Apicast Policy must exist
+	apicastPolicyFound := false
+	for idx := range product.Spec.Policies {
+		if product.Spec.Policies[idx].Name == apicastPolicy.Name {
+			apicastPolicyFound = true
+			break
+		}
+	}
+
+	if !apicastPolicyFound {
+		// Add to the end of the slice as the one with the lowest priority
+		product.Spec.Policies = append(product.Spec.Policies, apicastPolicy)
 		updated = true
 	}
 
