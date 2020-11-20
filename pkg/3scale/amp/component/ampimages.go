@@ -225,7 +225,6 @@ func (ampImages *AmpImages) DeploymentsServiceAccount() *v1.ServiceAccount {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amp",
 		},
-		ImagePullSecrets: []v1.LocalObjectReference{
-			v1.LocalObjectReference{
-				Name: "threescale-registry-auth"}}}
+		ImagePullSecrets: ampImages.Options.ImagePullSecrets,
+	}
 }
