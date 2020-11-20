@@ -1,9 +1,15 @@
 package helper
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
+)
+
+const (
+	colorReset = "\033[0m"
+	colorRed   = "\033[31m"
+	colorGreen = "\033[32m"
 )
 
 // Transport implements http.RoundTripper. When set as Transport of http.Client, it executes HTTP requests with logging.
@@ -34,12 +40,12 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func (t *Transport) logRequest(req *http.Request) {
 	dump, _ := httputil.DumpRequestOut(req, true)
-	log.Println(string(dump))
+	fmt.Printf("%s%s%s\n", colorRed, string(dump), colorReset)
 }
 
 func (t *Transport) logResponse(resp *http.Response) {
 	dump, _ := httputil.DumpResponse(resp, true)
-	log.Println(string(dump))
+	fmt.Printf("%s%s%s\n", colorGreen, string(dump), colorReset)
 }
 
 func (t *Transport) transport() http.RoundTripper {
