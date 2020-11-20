@@ -84,6 +84,7 @@ Specifies product authentication
 | --- | --- | --- | --- | --- |
 | UserKeyAuthentication | `userkey` | object | See [UserKeyAuthenticationSpec](#UserKeyAuthenticationSpec) | No |
 | AppKeyAppIDAuthentication | `appKeyAppID` | object | See [AppKeyAppIDAuthenticationSpec](#AppKeyAppIDAuthenticationSpec) | No |
+| OIDC | `oidc` | object | See [OIDCSpec](#OIDCSpec) | No |
 
 ##### UserKeyAuthenticationSpec
 
@@ -107,6 +108,32 @@ Specifies product appKey & appID authentication mode
 | CredentialsLoc | `credentials` | string | Credentials location. Valid values: *headers*, *query*, *authorization* | No |
 | Security | `security` | object | See [SecuritySpec](#SecuritySpec) | No |
 | GatewayResponse | `gatewayResponse` | object | See [GatewayResponseSpec](#GatewayResponseSpec) | No |
+
+##### OIDCSpec
+
+Specifies product OIDC authentication mode
+
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| IssuerEndpoint | `issuerEndpoint` | string | Location of your OpenID Provider. The format of this endpoint is determined on your OpenID Provider setup. A common guidance would be `https://<CLIENT_ID>:<CLIENT_SECRET>@<HOST>:<PORT>/auth/realms/<REALM_NAME>`.  | **Yes** |
+| IssuerType | `issuerType` | string | The type of the OIDC issuer. Valid values: *keycloak*, *rest* | **Yes** |
+| AuthenticationFlow | `authenticationFlow` | object | See [OIDCAuthenticationFlowSpec](#OIDCAuthenticationFlowSpec) | No |
+| JwtClaimWithClientID | `jwtClaimWithClientID` | string | The JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'. | No |
+| JwtClaimWithClientIDType | `jwtClaimWithClientIDType` | string | Sets to process the ClientID Token Claim value as a string or as a liquid template. Valid values: *plain*, *liquid* | No |
+| CredentialsLoc | `credentials` | string | Credentials location. Valid values: *headers*, *query*, *authorization* | No |
+| Security | `security` | object | See [SecuritySpec](#SecuritySpec) | No |
+| GatewayResponse | `gatewayResponse` | object | See [GatewayResponseSpec](#GatewayResponseSpec) | No |
+
+##### OIDCAuthenticationFlowSpec
+
+Specifies OAuth2.0 authorization grant type
+
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| StandardFlowEnabled | `standardFlowEnabled` | bool | OAuth 2 grant type: [*Authorization Code*](https://oauth.net/2/grant-types/authorization-code/) | **Yes** |
+| ImplicitFlowEnabled | `implicitFlowEnabled` | bool | OAuth 2 grant type: [*Implicit*](https://oauth.net/2/grant-types/implicit/) | **Yes** |
+| ServiceAccountsEnabled | `serviceAccountsEnabled` | bool | OAuth 2 grant type: [*Client Credentials*](https://oauth.net/2/grant-types/client-credentials/) | **Yes** |
+| DirectAccessGrantsEnabled | `directAccessGrantsEnabled` | bool | OAuth 2 grant type: [*Password Grant*](https://oauth.net/2/grant-types/password/) | **Yes** |
 
 ##### SecuritySpec
 
@@ -181,7 +208,7 @@ Specifies product policy config object
 
 #### Provider Account Reference
 
-Provider account credentials secret referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object. 
+Provider account credentials secret referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object.
 
 The secret must have `adminURL` and `token` fields with tenant credentials.
 Tenant controller will fetch the secret and read the following fields:

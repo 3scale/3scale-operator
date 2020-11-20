@@ -26,6 +26,10 @@ The following diagram shows available custom resource definitions and their rela
 * [Product custom resource](#product-custom-resource)
    * [Product Deployment Config: Apicast Hosted](#product-deployment-config-apicast-hosted)
    * [Product Deployment Config:Apicast Self Managed](#product-deployment-configapicast-self-managed)
+   * [Product authentication types](#product-authentication-types)
+      * [User Key](#user-key)
+      * [AppID and AppKey pair](#appid-and-appkey-pair)
+      * [OIDC](#oidc)
    * [Product metrics](#product-metrics)
    * [Product methods](#product-methods)
    * [Product mapping rules](#product-mapping-rules)
@@ -33,8 +37,8 @@ The following diagram shows available custom resource definitions and their rela
    * [Product application plan limits](#product-application-plan-limits)
    * [Product application plan pricing rules](#product-application-plan-pricing-rules)
    * [Product backend usages](#product-backend-usages)
-   * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
    * [Product policy chain](#product-policy-chain)
+   * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
    * [Product custom resource status field](#product-custom-resource-status-field)
    * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
 * [OpenAPI custom resource](#openapi-custom-resource)
@@ -357,6 +361,87 @@ spec:
       productionPublicBaseURL: "https://production.api.example.com"
 ```
 
+### Product authentication types
+
+#### User Key
+
+The application is identified & authenticated via a single string.
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  deployment:
+    <any>:
+      authentication:
+        userkey:
+          authUserKey: myKey
+```
+
+Check [Product CRD Reference](product-reference.md) documentation for all the details.
+
+#### AppID and AppKey pair
+
+The application is identified via the App_ID and authenticated via the App_Key.
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  deployment:
+    <any>:
+      authentication:
+        appKeyAppID:
+          appID: myAppID
+          appKey: myAppKey
+```
+
+* **NOTE 1**: `appID` is the name of the parameter that acts of behalf of app id.
+* **NOTE 2**: `appKey` is the name of the parameter that acts of behalf of app key.
+
+Check [Product CRD Reference](product-reference.md) documentation for all the details.
+
+#### OIDC
+
+Use OpenID Connect for any OAuth 2.0 flow.
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  deployment:
+    <any>:
+      authentication:
+        oidc:
+          issuerType: "keycloak"
+          issuerEndpoint: "https://myclientid:myclientsecret@mykeycloack.example.com/auth/realms/myrealm"
+          authenticationFlow:
+            standardFlowEnabled: false
+            implicitFlowEnabled: true
+            serviceAccountsEnabled: true
+            directAccessGrantsEnabled: true
+          jwtClaimWithClientID: "azp"
+          jwtClaimWithClientIDType: "plain"
+```
+
+* **NOTE 1**: `issuerType` and `issuerEndpoint` fields are required.
+* **NOTE 2**: `issuerType` Defines the type of the issuer with the following valid types:
+  * `keycloak`: Red Hat Single Sign-On
+  * `rest`: Rest API
+* **NOTE 3**: `issuerEndpoint` defines the location of your OpenID Provider. The format of this endpoint is determined on your OpenID Provider setup. A common guidance would be `https://<CLIENT_ID>:<CLIENT_SECRET>@<HOST>:<PORT>/auth/realms/<REALM_NAME>`
+* **NOTE 4**: The credentials (*CLIENT_ID* and *CLIENT_CREDENTIALS*) provided in `issuerEndpoint` should have sufficient permissions to manage other clients in the realm.
+
+Check [Product CRD Reference](product-reference.md) documentation for all the details.
+
 ### Product metrics
 
 Define desired product metrics using the *metrics* object.
@@ -650,6 +735,7 @@ spec:
 The example just shows it for the apicast hosted deployment option and the authentication mode called UserKey.
 
 Check [Product CRD Reference](product-reference.md) documentation for all the details.
+
 
 ### Product custom resource status field
 
@@ -973,10 +1059,7 @@ Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more info
 * Deletion of a [Backend CR](backend-reference.md) is not reconciled. Existing Backend in 3scale will not be deleted. [THREESCALE-5538](https://issues.redhat.com/browse/THREESCALE-5538)
 * Deletion of a [Product CR](product-reference.md) is not reconciled. Existing Product in 3scale will not be deleted. [THREESCALE-5539](https://issues.redhat.com/browse/THREESCALE-5539)
 * [Product CRD](product-reference.md) Single sign on (SSO) authentication for the admin and developers portal
-* [Product CRD](product-reference.md) OpenID Connect authentication [THREESCALE-5537](https://issues.redhat.com/browse/THREESCALE-5537)
-* [Product CRD](product-reference.md) Policy chain management [THREESCALE-6235](https://issues.redhat.com/browse/THREESCALE-6235)
 * ActiveDocs CRD [THREESCALE-5531](https://issues.redhat.com/browse/THREESCALE-5531)
 * Gateway Policy CRD [THREESCALE-6101](https://issues.redhat.com/browse/THREESCALE-6101)
 * Account CRD [THREESCALE-5530](https://issues.redhat.com/browse/THREESCALE-5530)
   * 3scale Applications are managed using Account CRD
-* [Product CRD](product-reference.md) Gateway response custom code and errors [THREESCALE-5536](https://issues.redhat.com/browse/THREESCALE-5536)
