@@ -387,7 +387,7 @@ func (b *ProductEntity) OIDCConfiguration() (*threescaleapi.OIDCConfiguration, e
 
 func (b *ProductEntity) UpdateOIDCConfiguration(oidcConf *threescaleapi.OIDCConfiguration) error {
 	b.logger.V(1).Info("UpdateOIDCConfiguration", "oidcConf", oidcConf)
-	obj, err := b.client.UpdateOidcConfiguration(b.productObj.Element.ID, oidcConf)
+	obj, err := b.client.UpdateOIDCConfiguration(b.productObj.Element.ID, oidcConf)
 	if err != nil {
 		return fmt.Errorf("product [%s] update oidc: %w", b.productObj.Element.SystemName, err)
 	}
@@ -550,7 +550,7 @@ func (b *ProductEntity) getPolicies() (*threescaleapi.PoliciesConfigList, error)
 
 func (b *ProductEntity) getOIDCConfiguration() (*threescaleapi.OIDCConfiguration, error) {
 	b.logger.V(1).Info("getOIDCConfiguration")
-	obj, err := b.client.OidcConfiguration(b.productObj.Element.ID)
+	obj, err := b.client.OIDCConfiguration(b.productObj.Element.ID)
 	if err != nil {
 		return nil, err
 	}
