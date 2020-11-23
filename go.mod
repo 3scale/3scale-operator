@@ -3,7 +3,7 @@ module github.com/3scale/3scale-operator
 go 1.13
 
 require (
-	github.com/3scale/3scale-porta-go-client v0.1.0
+	github.com/3scale/3scale-porta-go-client v0.2.0
 	github.com/RHsyseng/operator-utils v0.0.0-20200506183821-e3b4a2ba9c30
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/getkin/kin-openapi v0.22.1
