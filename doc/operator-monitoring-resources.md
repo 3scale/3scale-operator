@@ -64,8 +64,8 @@ In our dev clusters we configure authentication to be managed by Openshift (so h
 The prometheus operator is an operator that creates, configures, and manages Prometheus clusters atop Kubernetes. It provides `PodMonitor`, `ServiceMonitor` and `PrometheusRule` custom resources definitions required by 3scale monitoring.
 
 Tested releases:
-* Prometheus operator `v0.32.0`
-* Prometheus image: `quay.io/openshift/origin-prometheus: 4.2`
+* Prometheus operator `v0.37.0`
+* Prometheus image: `quay.io/prometheus/prometheus:v2.16.0`
 
 Make sure prometheus services are configured to monitor 3scale monitoring resources.
 When the prometheus services are deployed in the same namespace as 3scale, the simplest configuration is *catch-all* config in `Prometheus` custom resource spec:
@@ -89,13 +89,13 @@ The `app=3scale-api-management` label value can be overriden in the [APIManager 
 ```
 podMonitorSelector:
   matchExpressions:
-  - key: app 
+  - key: app
       operator: In
       values:
       - 3scale-api-management
 ruleSelector:
   matchExpressions:
-  - key: app 
+  - key: app
       operator: In
       values:
       - 3scale-api-management
@@ -128,8 +128,8 @@ Do not forget to provide required RBAC permissions. Check operator [doc](https:/
 The grafana operator is an operator for creating and managing Grafana instances. It provides `GrafanaDashboard` custom resource definition required by 3scale monitoring.
 
 Tested releases:
-* Grafana operator `v3.4.0`
-* Grafana image: `quay.io/openshift/origin-grafana:4.2`
+* Grafana operator `v3.6.0`
+* Grafana image: `grafana/grafana:7.1.1`
 
 Make sure grafana services are configured to monitor 3scale monitoring resources:
 * `GrafanaDashboards`
@@ -159,7 +159,7 @@ spec:
       - 3scale-api-management
 ```
 
-*NOTE*: If the grafana operator is installed in a different namespace than 3scale, then configure accordingly it to watch for resources outside the namespace. 
+*NOTE*: If the grafana operator is installed in a different namespace than 3scale, then configure accordingly it to watch for resources outside the namespace.
 Use `--namespaces` or `--scan-all` operator flags to enable watching for dashboards in a list of namespaces.
 Do not forget to provide required RBAC permissions.
 Check operator [doc](https://github.com/integr8ly/grafana-operator/blob/v2.0.0/documentation/deploy_grafana.md#operator-flags) regarding this issue.

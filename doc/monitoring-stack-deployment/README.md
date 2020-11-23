@@ -1,6 +1,6 @@
 1. Install Prometheus operator v0.37.0 from the Operator Hub.
 
-1. Install Grafana operator v3.5.0 from the Operator Hub.
+1. Install Grafana operator v3.6.0 from the Operator Hub.
 
 1. Create additional-scrape-configs secret with 3scale scrape config
 
