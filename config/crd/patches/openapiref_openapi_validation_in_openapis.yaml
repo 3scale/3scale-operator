@@ -4,17 +4,8 @@
 # of writing this (2020-11-02) kubebuilder
 # does not support `oneOf` statement
 # OpenAPI validation
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: openapis.capabilities.3scale.net
-spec:
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          properties:
-            openapiRef:
-              oneOf:
-              - required: ["secretRef"]
-              - required: ["url"]
+- op: add
+  path: /spec/versions/0/schema/openAPIV3Schema/properties/spec/properties/openapiRef/oneOf
+  value:
+    - required: ["secretRef"]
+    - required: ["url"]
