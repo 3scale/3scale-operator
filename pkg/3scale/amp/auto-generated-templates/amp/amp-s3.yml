@@ -1775,10 +1775,7 @@ objects:
                   key: route_endpoint
                   name: backend-listener
             - name: BACKEND_ROUTE
-              valueFrom:
-                secretKeyRef:
-                  key: route_endpoint
-                  name: backend-listener
+              value: http://backend-listener:3000/internal/
             - name: SMTP_ADDRESS
               valueFrom:
                 secretKeyRef:
@@ -2097,10 +2094,7 @@ objects:
                 key: route_endpoint
                 name: backend-listener
           - name: BACKEND_ROUTE
-            valueFrom:
-              secretKeyRef:
-                key: route_endpoint
-                name: backend-listener
+            value: http://backend-listener:3000/internal/
           - name: SMTP_ADDRESS
             valueFrom:
               secretKeyRef:
@@ -2436,10 +2430,7 @@ objects:
                 key: route_endpoint
                 name: backend-listener
           - name: BACKEND_ROUTE
-            valueFrom:
-              secretKeyRef:
-                key: route_endpoint
-                name: backend-listener
+            value: http://backend-listener:3000/internal/
           - name: SMTP_ADDRESS
             valueFrom:
               secretKeyRef:
@@ -2774,10 +2765,7 @@ objects:
                 key: route_endpoint
                 name: backend-listener
           - name: BACKEND_ROUTE
-            valueFrom:
-              secretKeyRef:
-                key: route_endpoint
-                name: backend-listener
+            value: http://backend-listener:3000/internal/
           - name: SMTP_ADDRESS
             valueFrom:
               secretKeyRef:
@@ -3171,10 +3159,7 @@ objects:
                 key: route_endpoint
                 name: backend-listener
           - name: BACKEND_ROUTE
-            valueFrom:
-              secretKeyRef:
-                key: route_endpoint
-                name: backend-listener
+            value: http://backend-listener:3000/internal/
           - name: SMTP_ADDRESS
             valueFrom:
               secretKeyRef:
