@@ -1,6 +1,8 @@
 package adapters
 
 import (
+	"fmt"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	templatev1 "github.com/openshift/api/template/v1"
@@ -264,6 +266,7 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels()
 	o.MemcachedLabels = s.memcachedLabels()
 	o.SMTPLabels = s.smtpLabels()
+	o.BackendRouteEndpoint = s.backendRouteEndpoint()
 
 	err := o.Validate()
 	return o, err
@@ -340,4 +343,8 @@ func (s *System) smtpLabels() map[string]string {
 	labels := s.commonLabels()
 	labels["threescale_component_element"] = "smtp"
 	return labels
+}
+
+func (s *System) backendRouteEndpoint() string {
+	return fmt.Sprintf("%s%s", component.DefaultBackendServiceEndpoint(), "/internal/")
 }

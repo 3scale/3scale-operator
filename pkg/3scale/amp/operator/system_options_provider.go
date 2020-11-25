@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"net/url"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -110,6 +111,11 @@ func (s *SystemOptionsProvider) setSecretBasedOptions() error {
 	err = s.setSystemSMTPOptions()
 	if err != nil {
 		return fmt.Errorf("unable to create System SMTP secret options - %s", err)
+	}
+
+	err = s.setBackendOptions()
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -339,6 +345,29 @@ func (s *SystemOptionsProvider) setSystemSMTPOptions() error {
 	}
 
 	s.options.SmtpSecretOptions = smtpSecretOptions
+	return nil
+}
+
+func (s *SystemOptionsProvider) setBackendOptions() error {
+	rawURL, err := s.secretSource.FieldValue(
+		component.BackendSecretBackendListenerSecretName,
+		component.BackendSecretBackendListenerServiceEndpointFieldName,
+		component.DefaultBackendServiceEndpoint())
+	if err != nil {
+		return err
+	}
+
+	urlObj, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("'%s' field of '%s' secret must have 'scheme://user:password@host/path' format", component.BackendSecretBackendListenerServiceEndpointFieldName, component.BackendSecretBackendListenerSecretName)
+	}
+
+	if urlObj.Path == "" {
+		urlObj.Path = "/internal/"
+	}
+
+	s.options.BackendRouteEndpoint = urlObj.String()
+
 	return nil
 }
 

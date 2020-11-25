@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -362,6 +363,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		SideKiqMetrics:                true,
 		AppMetrics:                    true,
 		IncludeOracleOptionalSettings: true,
+		BackendRouteEndpoint:          fmt.Sprintf("%s%s", component.DefaultBackendServiceEndpoint(), "/internal/"),
 	}
 
 	expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(opts.ApicastAccessToken)

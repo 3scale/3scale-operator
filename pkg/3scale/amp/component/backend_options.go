@@ -48,7 +48,7 @@ func (b *BackendOptions) Validate() error {
 }
 
 func DefaultBackendServiceEndpoint() string {
-	return "http://backend-listener:3000/internal/"
+	return "http://backend-listener:3000"
 }
 
 func DefaultBackendListenerResourceRequirements() v1.ResourceRequirements {
