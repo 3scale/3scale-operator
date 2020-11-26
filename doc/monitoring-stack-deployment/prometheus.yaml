@@ -5,8 +5,6 @@ metadata:
     prometheus: k8s
   name: example
 spec:
-  baseImage: quay.io/openshift/origin-prometheus
-  tag: "4.2"
   externalUrl: https://prometheus.namespace_name.apps.DOMAIN
   podMonitorSelector: {}
   replicas: 1
