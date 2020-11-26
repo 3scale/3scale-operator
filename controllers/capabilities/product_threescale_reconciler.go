@@ -51,6 +51,7 @@ func (t *ProductThreescaleReconciler) Reconcile() (*controllerhelper.ProductEnti
 	taskRunner.AddTask("SyncMappingRules", t.syncMappingRules)
 	taskRunner.AddTask("SyncApplicationPlans", t.syncApplicationPlans)
 	taskRunner.AddTask("SyncPolicies", t.syncPolicies)
+	taskRunner.AddTask("SyncOIDCConfiguration", t.syncOIDCConfiguration)
 
 	err = taskRunner.Run()
 	if err != nil {

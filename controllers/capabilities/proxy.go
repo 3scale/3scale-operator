@@ -86,6 +86,8 @@ func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
 
 	t.syncProxyGatewayResponse(params, existing)
 
+	t.syncProxyOIDC(params, existing)
+
 	if len(params) > 0 {
 		err := t.productEntity.UpdateProxy(params)
 		if err != nil {
@@ -183,5 +185,28 @@ func (t *ProductThreescaleReconciler) syncProxyGatewayResponse(params threescale
 		if strCase.desired != nil && strCase.existing != *strCase.desired {
 			params[strCase.field] = *strCase.desired
 		}
+	}
+}
+
+func (t *ProductThreescaleReconciler) syncProxyOIDC(params threescaleapi.Params, existing *threescaleapi.ProxyJSON) {
+	oidcSpec := t.resource.Spec.OIDCSpec()
+	if oidcSpec == nil {
+		return
+	}
+
+	if existing.Element.OidcIssuerEndpoint != oidcSpec.IssuerEndpoint {
+		params["oidc_issuer_endpoint"] = oidcSpec.IssuerEndpoint
+	}
+
+	if existing.Element.OidcIssuerType != oidcSpec.IssuerType {
+		params["oidc_issuer_type"] = oidcSpec.IssuerType
+	}
+
+	if oidcSpec.JwtClaimWithClientID != nil && existing.Element.JwtClaimWithClientID != *oidcSpec.JwtClaimWithClientID {
+		params["jwt_claim_with_client_id"] = *oidcSpec.JwtClaimWithClientID
+	}
+
+	if oidcSpec.JwtClaimWithClientIDType != nil && existing.Element.JwtClaimWithClientIDType != *oidcSpec.JwtClaimWithClientIDType {
+		params["jwt_claim_with_client_id_type"] = *oidcSpec.JwtClaimWithClientIDType
 	}
 }
