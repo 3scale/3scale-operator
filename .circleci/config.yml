@@ -122,8 +122,9 @@ commands:
           name: Deploy 3scale from amp-eval template without imagestreams
           command: |
             WILDCARD_DOMAIN="lvh.me"
-            ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
-              oc new-app -f- --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN}
+            oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml -o json --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN} --param AMP_RELEASE=master | \
+              jq -j '.items[] | select(.kind != "ImageStream")' | \
+              oc create -f -
           no_output_timeout: 30m
       - check-3scale-templates-deployed-deploymentconfigs
       - check-3scale-templates-openshift-events
