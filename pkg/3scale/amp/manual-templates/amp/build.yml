@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Template
 metadata:
@@ -89,10 +90,10 @@ objects:
         forcePull: true
         from:
           kind: ImageStreamTag
-          name: s2i-openresty-centos7:builder
+          name: s2i-openresty-centos8:builder
         runtimeImage:
           kind: ImageStreamTag
-          name: s2i-openresty-centos7:runtime
+          name: s2i-openresty-centos8:runtime
       type: Source
 
 - apiVersion: v1
@@ -100,18 +101,18 @@ objects:
   metadata:
     labels:
       app: apicast
-    name: s2i-openresty-centos7
+    name: s2i-openresty-centos8
   spec:
     tags:
     - from:
         kind: DockerImage
-        name: quay.io/3scale/s2i-openresty-centos7:master
+        name: quay.io/3scale/s2i-openresty-centos7:1.17.5.1-0-centos8
       name: builder
       importPolicy:
         scheduled: true
     - from:
         kind: DockerImage
-        name: quay.io/3scale/s2i-openresty-centos7:master-runtime
+        name: quay.io/3scale/s2i-openresty-centos7:1.17.5.1-0-centos8-runtime
       name: runtime
       importPolicy:
         scheduled: true
@@ -119,24 +120,24 @@ objects:
 - apiVersion: v1
   kind: BuildConfig
   metadata:
-      name: backend
+    name: backend
   spec:
-      output:
-          to:
-              kind: ImageStreamTag
-              name: "amp-backend:${IMAGESTREAM_TAG_NAME}"
-      source:
-          git:
-              uri: "https://github.com/3scale/apisonator.git"
-              ref: "${APISONATOR_GIT_REF}"
-          type: Git
-      strategy:
-          type: Docker
-          dockerStrategy:
-              pullSecret:
-                  name: "${PULLSECRET_NAME}"
-              contextDir: /
-              dockerfilePath: openshift/distro/centos/7/release/Dockerfile
+    output:
+      to:
+        kind: ImageStreamTag
+        name: "amp-backend:${IMAGESTREAM_TAG_NAME}"
+    source:
+      git:
+        uri: "https://github.com/3scale/apisonator.git"
+        ref: "${APISONATOR_GIT_REF}"
+      type: Git
+    strategy:
+      type: Docker
+      dockerStrategy:
+        pullSecret:
+          name: "${PULLSECRET_NAME}"
+        contextDir: /
+        dockerfilePath: openshift/distro/centos/7/release/Dockerfile
 
 parameters:
 - name: ZYNC_GIT_REF
@@ -160,6 +161,6 @@ parameters:
   value: "latest"
   required: true
 - name: PULLSECRET_NAME
-  description: PullSecret is the name of a Secret that would be used for setting up the authentication for pulling the Docker images from the private Docker egistries 
+  description: PullSecret is the name of a Secret that would be used for setting up the authentication for pulling the Docker images from the private Docker egistries
   value: "threescale-registry-auth"
   required: true
