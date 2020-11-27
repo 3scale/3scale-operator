@@ -88,18 +88,26 @@ type ActiveDocSpec struct {
 	// SystemName identifies uniquely the activedoc within the account provider
 	// Default value will be sanitized Name
 	// +optional
-	SystemName string `json:"systemName,omitempty"`
+	SystemName *string `json:"systemName,omitempty"`
 
-	// Description is a human readable text of the backend
+	// Description is a human readable text of the activedoc
 	// +optional
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 
-	// OpenAPIRef Reference to the OpenAPI Specification
+	// ActiveDocOpenAPIRef Reference to the OpenAPI Specification
 	ActiveDocOpenAPIRef ActiveDocOpenAPIRefSpec `json:"activeDocOpenAPIRef"`
 
 	// ProductSystemName identifies uniquely the product
 	// +optional
 	ProductSystemName *string `json:"productSystemName,omitempty"`
+
+	// Published switch to publish the activedoc
+	// +optional
+	Published *bool `json:"published,omitempty"`
+
+	// SkipSwaggerValidations switch to skip OpenAPI validation
+	// +optional
+	SkipSwaggerValidations *bool `json:"skipSwaggerValidations,omitempty"`
 }
 
 // ActiveDocStatus defines the observed state of ActiveDoc
@@ -183,16 +191,22 @@ func (a *ActiveDoc) SetDefaults(logger logr.Logger) bool {
 	updated := false
 
 	// Respect 3scale API defaults
-	if a.Spec.SystemName == "" {
-		a.Spec.SystemName = activeDocSystemNameRegexp.ReplaceAllString(a.Spec.Name, "")
+	if a.Spec.SystemName == nil || *a.Spec.SystemName == "" {
+		tmp := activeDocSystemNameRegexp.ReplaceAllString(a.Spec.Name, "")
+		a.Spec.SystemName = &tmp
 		updated = true
 	}
 
 	// 3scale API ignores case of the system name field
-	systemNameLowercase := strings.ToLower(a.Spec.SystemName)
-	if a.Spec.SystemName != systemNameLowercase {
-		logger.Info("System name updated", "from", a.Spec.SystemName, "to", systemNameLowercase)
-		a.Spec.SystemName = systemNameLowercase
+	systemNameLowercase := strings.ToLower(*a.Spec.SystemName)
+	if *a.Spec.SystemName != systemNameLowercase {
+		logger.Info("System name updated", "from", *a.Spec.SystemName, "to", systemNameLowercase)
+		a.Spec.SystemName = &systemNameLowercase
+		updated = true
+	}
+
+	if a.Spec.ActiveDocOpenAPIRef.SecretRef != nil && a.Spec.ActiveDocOpenAPIRef.SecretRef.Namespace == "" {
+		a.Spec.ActiveDocOpenAPIRef.SecretRef.Namespace = a.GetNamespace()
 		updated = true
 	}
 

@@ -14,7 +14,7 @@ import (
 // BackendList returns a list of backend custom resources where all elements:
 // - Sync state (ensure remote backend exist and in sync)
 // - Same 3scale provider Account
-func BackendList(ns string, cl client.Client, providerAccount *ProviderAccount, logger logr.Logger) ([]capabilitiesv1beta1.Backend, error) {
+func BackendList(ns string, cl client.Client, providerAccountURLStr string, logger logr.Logger) ([]capabilitiesv1beta1.Backend, error) {
 	backendList := &capabilitiesv1beta1.BackendList{}
 	opts := []controllerclient.ListOption{
 		controllerclient.InNamespace(ns),
@@ -39,7 +39,7 @@ func BackendList(ns string, cl client.Client, providerAccount *ProviderAccount, 
 		}
 
 		// Filter by provider account
-		if providerAccount.AdminURLStr != backendProviderAccount.AdminURLStr {
+		if providerAccountURLStr != backendProviderAccount.AdminURLStr {
 			continue
 		}
 		validBackends = append(validBackends, backendList.Items[idx])

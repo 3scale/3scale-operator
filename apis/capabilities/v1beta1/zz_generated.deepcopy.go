@@ -118,10 +118,30 @@ func (in *ActiveDocSpec) DeepCopyInto(out *ActiveDocSpec) {
 		*out = new(v1.LocalObjectReference)
 		**out = **in
 	}
+	if in.SystemName != nil {
+		in, out := &in.SystemName, &out.SystemName
+		*out = new(string)
+		**out = **in
+	}
+	if in.Description != nil {
+		in, out := &in.Description, &out.Description
+		*out = new(string)
+		**out = **in
+	}
 	in.ActiveDocOpenAPIRef.DeepCopyInto(&out.ActiveDocOpenAPIRef)
 	if in.ProductSystemName != nil {
 		in, out := &in.ProductSystemName, &out.ProductSystemName
 		*out = new(string)
+		**out = **in
+	}
+	if in.Published != nil {
+		in, out := &in.Published, &out.Published
+		*out = new(bool)
+		**out = **in
+	}
+	if in.SkipSwaggerValidations != nil {
+		in, out := &in.SkipSwaggerValidations, &out.SkipSwaggerValidations
+		*out = new(bool)
 		**out = **in
 	}
 }

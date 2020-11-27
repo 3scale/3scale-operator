@@ -14,7 +14,7 @@ import (
 // ProductList returns a list of product custom resources where all elements:
 // - Sync state (ensure remote product exist and in sync)
 // - Same 3scale provider Account
-func ProductList(ns string, cl client.Client, providerAccount *ProviderAccount, logger logr.Logger) ([]capabilitiesv1beta1.Product, error) {
+func ProductList(ns string, cl client.Client, providerAccountURLStr string, logger logr.Logger) ([]capabilitiesv1beta1.Product, error) {
 	productList := &capabilitiesv1beta1.ProductList{}
 	opts := []controllerclient.ListOption{
 		controllerclient.InNamespace(ns),
@@ -39,7 +39,7 @@ func ProductList(ns string, cl client.Client, providerAccount *ProviderAccount, 
 		}
 
 		// Filter by provider account
-		if providerAccount.AdminURLStr != productProviderAccount.AdminURLStr {
+		if providerAccountURLStr != productProviderAccount.AdminURLStr {
 			continue
 		}
 		validProducts = append(validProducts, productList.Items[idx])
@@ -47,4 +47,13 @@ func ProductList(ns string, cl client.Client, providerAccount *ProviderAccount, 
 
 	logger.V(1).Info("Product valid resources", "total", len(validProducts))
 	return validProducts, nil
+}
+
+func FindProductBySystemName(list []capabilitiesv1beta1.Product, systemName string) int {
+	for idx := range list {
+		if list[idx].Spec.SystemName == systemName {
+			return idx
+		}
+	}
+	return -1
 }

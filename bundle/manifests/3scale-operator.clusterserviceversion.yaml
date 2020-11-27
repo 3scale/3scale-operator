@@ -151,10 +151,28 @@ metadata:
           "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "ActiveDoc",
           "metadata": {
-            "name": "activedoc-sample"
+            "name": "activedoc-from-url"
           },
           "spec": {
-            "foo": "bar"
+            "activeDocOpenAPIRef": {
+              "url": "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.json"
+            },
+            "name": "Operated ActiveDoc From URL"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "ActiveDoc",
+          "metadata": {
+            "name": "activedoc-secret"
+          },
+          "spec": {
+            "activeDocOpenAPIRef": {
+              "secretRef": {
+                "name": "myactivedoc"
+              }
+            },
+            "name": "Operated ActiveDoc From secret"
           }
         },
         {

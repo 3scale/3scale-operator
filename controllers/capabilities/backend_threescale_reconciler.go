@@ -212,7 +212,7 @@ func (t *BackendThreescaleReconciler) deleteNotDesiredMethodsFrom3scale(notDesir
 
 // valid for metrics and methods as long as 3scale ensures system_names are unique among methods and metrics
 func (t *BackendThreescaleReconciler) deleteExternalMetricReferences(notDesiredMetrics []string) error {
-	productList, err := controllerhelper.ProductList(t.backendResource.Namespace, t.Client(), t.providerAccount, t.logger)
+	productList, err := controllerhelper.ProductList(t.backendResource.Namespace, t.Client(), t.providerAccount.AdminURLStr, t.logger)
 	if err != nil {
 		return fmt.Errorf("deleteExternalMetricReferences: %w", err)
 	}
