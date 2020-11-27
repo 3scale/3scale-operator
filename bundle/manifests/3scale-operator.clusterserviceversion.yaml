@@ -149,6 +149,16 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "ActiveDoc",
+          "metadata": {
+            "name": "activedoc-sample"
+          },
+          "spec": {
+            "foo": "bar"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Backend",
           "metadata": {
             "name": "backend1-sample"
@@ -445,6 +455,11 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: ActiveDoc is the Schema for the activedocs API
+      displayName: Active Doc
+      kind: ActiveDoc
+      name: activedocs.capabilities.3scale.net
+      version: v1beta1
     - description: APIManagerBackup represents an APIManager backup
       displayName: APIManagerBackup
       kind: APIManagerBackup
@@ -546,6 +561,26 @@ spec:
     spec:
       clusterPermissions:
       - rules:
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - activedocs
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - activedocs/status
+          verbs:
+          - get
+          - patch
+          - update
         - apiGroups:
           - console.openshift.io
           resources:

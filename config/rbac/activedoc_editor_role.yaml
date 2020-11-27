@@ -1,0 +1,24 @@
+# permissions for end users to edit activedocs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: activedoc-editor-role
+rules:
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - activedocs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - activedocs/status
+  verbs:
+  - get

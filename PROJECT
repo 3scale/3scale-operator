@@ -25,6 +25,9 @@ resources:
 - group: capabilities
   kind: OpenAPI
   version: v1beta1
+- group: capabilities
+  kind: ActiveDoc
+  version: v1beta1
 version: 3-alpha
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}

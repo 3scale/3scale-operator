@@ -1,0 +1,20 @@
+# permissions for end users to view activedocs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: activedoc-viewer-role
+rules:
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - activedocs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - activedocs/status
+  verbs:
+  - get
