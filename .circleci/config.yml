@@ -293,8 +293,8 @@ commands:
               jq -j '.items[] | select(.kind == "ImageStream")' | \
               oc create -f -
             oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml --allow-missing-imagestream-tags --param IMAGESTREAM_TAG_NAME="${imagestream_tag_name}"
-            until (oc get is s2i-openresty-centos7 -o json || echo '{}') | jq '[.status.tags[] | select(.tag == "builder")] | length == 1' --exit-status; do
-              echo "wating for s2i-openresty-centos7:builder imagestream"
+            until (oc get is s2i-openresty-centos8 -o json || echo '{}') | jq '[.status.tags[] | select(.tag == "builder")] | length == 1' --exit-status; do
+              echo "wating for s2i-openresty-centos8:builder imagestream"
               sleep 1
             done
             for bc in $(oc get bc --output=name); do oc start-build $bc --wait --follow; done
