@@ -594,9 +594,12 @@ workflows:
       - run-unit-tests
       - bundle-validate
       - install-operator
+      - hold:
+        type: approval
       - examplejob:
           context: msorianotestcontext
-          type: approval # <<< This key-value pair will set your workflow to a status of "On Hold"
+          requires:
+            - hold
       - run-operator-e2e-test-non-forked:
           requires:
             - install-operator
