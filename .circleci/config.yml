@@ -388,9 +388,9 @@ jobs:
       - image: circleci/golang:1.13.7
     steps:
       - run:
-        name: "example step"
-        command: |
-          echo "examplevar: '${examplevar}'"
+          name: "example step"
+          command: |
+            echo "examplevar: '${examplevar}'"
   install-operator:
     docker:
       - image: circleci/golang:1.13.7
