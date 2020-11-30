@@ -17,6 +17,18 @@ nightly-trigger: &nightly-trigger
         cron: "0 0 * * *"
         <<: *only-master-filter
 
+only-non-forked-branches-filter: &only-non-forked-branches-filter
+  filters:
+    branches:
+      # Forked pull requests have CIRCLE_BRANCH set to pull/XXX
+      ignore: /pull\/[0-9]+/
+
+only-forked-branches-filter: &only-forked-branches-filter
+  filters:
+    branches:
+      # Forked pull requests have CIRCLE_BRANCH set to pull/XXX
+      only: /pull\/[0-9]+/
+
 commands:
   attach-workspace:
     steps:
@@ -343,6 +355,33 @@ commands:
           name: Run unit tests
           command: |
             make test-unit
+
+  run-operator-e2e-test:
+    steps:
+      - attach-workspace
+      - install-openshift
+      - install-golang
+      - install-operator-sdk
+      - checkout
+      - install-dependencies
+      - run:
+          name: Unpack and push operator to internal registry
+          command: |
+            docker load -i /tmp/workspace/images/3scaleoperator-image.tar
+            oc whoami -t | docker login --username developer --password-stdin 172.30.1.1:5000
+            docker push 172.30.1.1:5000/openshift/3scale-operator:test
+      - run:
+          name: Change to new testing namespace
+          command: |
+            oc new-project operator-test
+      - oc-observe
+      - run:
+          name: run E2E tests
+          command: |
+            make test-e2e
+          no_output_timeout: 30m
+      - oc-status
+
 jobs:
   install-operator:
     docker:
@@ -448,35 +487,21 @@ jobs:
     steps:
       - unit-tests
 
-  run-operator-e2e-test:
+  run-operator-e2e-test-forked:
     machine:
       image: ubuntu-1604:202007-01
       docker_layer_caching: true
     resource_class: large
     steps:
-      - attach-workspace
-      - install-openshift
-      - install-golang
-      - install-operator-sdk
-      - checkout
-      - install-dependencies
-      - run:
-          name: Unpack and push operator to internal registry
-          command: |
-            docker load -i /tmp/workspace/images/3scaleoperator-image.tar
-            oc whoami -t | docker login --username developer --password-stdin 172.30.1.1:5000
-            docker push 172.30.1.1:5000/openshift/3scale-operator:test
-      - run:
-          name: Change to new testing namespace
-          command: |
-            oc new-project operator-test
-      - oc-observe
-      - run:
-          name: run E2E tests
-          command: |
-            make test-e2e
-          no_output_timeout: 30m
-      - oc-status
+    - run-operator-e2e-test
+
+  run-operator-e2e-test-non-forked:
+    machine:
+      image: ubuntu-1604:202007-01
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+    - run-operator-e2e-test
 
   generator:
     docker:
@@ -561,9 +586,15 @@ workflows:
       - run-unit-tests
       - bundle-validate
       - install-operator
-      - run-operator-e2e-test:
+      - run-operator-e2e-test-non-forked:
           requires:
             - install-operator
+          <<: *only-non-forked-branches-filter
+      - run-operator-e2e-test-forked:
+          requires:
+            - install-operator
+          <<: *only-forked-branches-filter
+          type: approval # <<< This key-value pair will set your workflow to a status of "On Hold"
       - unit-tests-coverage:
           requires:
             - run-unit-tests
@@ -583,7 +614,7 @@ workflows:
           requires:
             - build-push-3scale-nightly-images
       - install-operator
-      - run-operator-e2e-test:
+      - run-operator-e2e-test-non-forked:
           requires:
             - install-operator
             - build-push-3scale-nightly-images
