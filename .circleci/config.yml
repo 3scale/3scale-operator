@@ -595,7 +595,7 @@ workflows:
       - bundle-validate
       - install-operator
       - hold:
-        type: approval
+          type: approval
       - examplejob:
           context: msorianotestcontext
           requires:
