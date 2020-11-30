@@ -576,10 +576,21 @@ jobs:
       - run: make bundle
       - run: make bundle-update-test
 
+  examplejob:
+    docker:
+      - image: circleci/golang:1.13.7
+    steps:
+      - run:
+          name: "example step"
+          command: |
+            echo "examplevar: '${examplevar}'"
+
 workflows:
   version: 2
   operator:
     jobs:
+      - examplejob:
+          context: msorianotestcontext
       - license-check
       - test-crds
       - test-manifests-version
@@ -591,6 +602,7 @@ workflows:
             - install-operator
           <<: *only-non-forked-branches-filter
       - run-operator-e2e-test-forked:
+          context: msorianotestcontext
           requires:
             - install-operator
           <<: *only-forked-branches-filter
