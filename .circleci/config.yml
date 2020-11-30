@@ -383,6 +383,14 @@ commands:
       - oc-status
 
 jobs:
+  examplejob:
+    docker:
+      - image: circleci/golang:1.13.7
+    steps:
+      - run:
+        name: "example step"
+        command: |
+          echo "examplevar: '${examplevar}'"
   install-operator:
     docker:
       - image: circleci/golang:1.13.7
@@ -586,6 +594,8 @@ workflows:
       - run-unit-tests
       - bundle-validate
       - install-operator
+      - examplejob:
+          context: msorianotestcontext
       - run-operator-e2e-test-non-forked:
           requires:
             - install-operator
