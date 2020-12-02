@@ -163,3 +163,8 @@ spec:
 Use `--namespaces` or `--scan-all` operator flags to enable watching for dashboards in a list of namespaces.
 Do not forget to provide required RBAC permissions.
 Check operator [doc](https://github.com/integr8ly/grafana-operator/blob/v2.0.0/documentation/deploy_grafana.md#operator-flags) regarding this issue.
+
+To set Grafana to gather its data from Prometheus as its storage data
+source make sure you create a `GrafanaDataSource` with the type `prometheus`.
+You can find more information in the grafana operator's
+[GrafanaDataSource documentation](https://github.com/integr8ly/grafana-operator/blob/v2.0.0/documentation/datasources.md)
