@@ -266,7 +266,7 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels()
 	o.MemcachedLabels = s.memcachedLabels()
 	o.SMTPLabels = s.smtpLabels()
-	o.BackendRouteEndpoint = s.backendRouteEndpoint()
+	o.BackendServiceEndpoint = s.backendServiceEndpoint()
 
 	err := o.Validate()
 	return o, err
@@ -345,6 +345,6 @@ func (s *System) smtpLabels() map[string]string {
 	return labels
 }
 
-func (s *System) backendRouteEndpoint() string {
+func (s *System) backendServiceEndpoint() string {
 	return fmt.Sprintf("%s%s", component.DefaultBackendServiceEndpoint(), "/internal/")
 }

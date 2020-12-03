@@ -366,7 +366,7 @@ func (s *SystemOptionsProvider) setBackendOptions() error {
 		urlObj.Path = "/internal/"
 	}
 
-	s.options.BackendRouteEndpoint = urlObj.String()
+	s.options.BackendServiceEndpoint = urlObj.String()
 
 	return nil
 }

@@ -91,7 +91,7 @@ type SystemOptions struct {
 
 	IncludeOracleOptionalSettings bool
 
-	BackendRouteEndpoint string `validate:"required"`
+	BackendServiceEndpoint string `validate:"required"`
 }
 
 func NewSystemOptions() *SystemOptions {
