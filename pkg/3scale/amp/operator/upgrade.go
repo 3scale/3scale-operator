@@ -4,17 +4,13 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	appsv1 "github.com/openshift/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -37,14 +33,6 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 	res, err := u.upgradeImages()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading images: %w", err)
-	}
-	if res.Requeue {
-		return res, nil
-	}
-
-	res, err = u.upgradeMonitoringSettings()
-	if err != nil {
-		return res, fmt.Errorf("Upgrading monitoring settings: %w", err)
 	}
 	if res.Requeue {
 		return res, nil
@@ -404,114 +392,6 @@ func (u *UpgradeApiManager) findDeploymentTriggerOnImageChange(triggerPolicies [
 	}
 
 	return result, nil
-}
-
-func (u *UpgradeApiManager) upgradeMonitoringSettings() (reconcile.Result, error) {
-	updated := false
-
-	// Port and environment variable are exposed in DC for monitoring
-	updatedTmp, err := u.ensureSystemAppMonitoringSettings()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	updated = updated || updatedTmp
-
-	// We explicitely set the metrics environment variable in system-sidekiq
-	// for clarity
-	updatedTmp, err = u.ensureSystemSidekiqMonitoringSettings()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	updated = updated || updatedTmp
-
-	return reconcile.Result{Requeue: updated}, nil
-}
-
-func (u *UpgradeApiManager) ensureSystemSidekiqMonitoringSettings() (bool, error) {
-	existing := &appsv1.DeploymentConfig{}
-	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: component.SystemSidekiqName, Namespace: u.apiManager.Namespace}, existing)
-	if err != nil {
-		return false, err
-	}
-
-	if len(existing.Spec.Template.Spec.Containers) != 1 {
-		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
-			component.SystemSidekiqName, len(existing.Spec.Template.Spec.Containers))
-	}
-
-	update := false
-	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, component.SystemSidekiqPrometheusExporterPortEnvVarName); !ok {
-		existing.Spec.Template.Spec.Containers[0].Env = append(
-			existing.Spec.Template.Spec.Containers[0].Env,
-			helper.EnvVarFromValue(component.SystemSidekiqPrometheusExporterPortEnvVarName, strconv.Itoa(component.SystemSidekiqMetricsPort)),
-		)
-		update = true
-	}
-
-	if update {
-		u.Logger().Info(fmt.Sprintf("Adding prometheus metrics environment variable to DC %s", component.SystemSidekiqName))
-		err = u.UpdateResource(existing)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return update, nil
-}
-
-func (u *UpgradeApiManager) ensureSystemAppMonitoringSettings() (bool, error) {
-	existing := &appsv1.DeploymentConfig{}
-	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: component.SystemAppDeploymentName, Namespace: u.apiManager.Namespace}, existing)
-	if err != nil {
-		return false, err
-	}
-
-	if len(existing.Spec.Template.Spec.Containers) != 3 {
-		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 3",
-			existing.Name, len(existing.Spec.Template.Spec.Containers))
-	}
-
-	update := false
-	for idx := range existing.Spec.Template.Spec.Containers {
-		container := &existing.Spec.Template.Spec.Containers[idx]
-		var containerPrometheusMetricsPort int
-		var containerPrometheusMetricsPortName string
-		switch containerName := container.Name; {
-		case containerName == component.SystemAppMasterContainerName:
-			containerPrometheusMetricsPort = component.SystemAppMasterContainerPrometheusPort
-			containerPrometheusMetricsPortName = component.SystemAppMasterContainerMetricsPortName
-		case containerName == component.SystemAppProviderContainerName:
-			containerPrometheusMetricsPort = component.SystemAppProviderContainerPrometheusPort
-			containerPrometheusMetricsPortName = component.SystemAppProviderContainerMetricsPortName
-		case containerName == component.SystemAppDeveloperContainerName:
-			containerPrometheusMetricsPort = component.SystemAppDeveloperContainerPrometheusPort
-			containerPrometheusMetricsPortName = component.SystemAppDeveloperContainerMetricsPortName
-		default:
-			return false, fmt.Errorf("DeploymentConfig '%s' has unrecognized container name '%s'", existing.Name, containerName)
-		}
-
-		if _, ok := helper.FindEnvVar(container.Env, component.SystemAppPrometheusExporterPortEnvVarName); !ok {
-			container.Env = append(
-				container.Env,
-				helper.EnvVarFromValue(component.SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(containerPrometheusMetricsPort)),
-			)
-			update = true
-		}
-		if _, ok := helper.FindContainerPortByName(container.Ports, containerPrometheusMetricsPortName); !ok {
-			container.Ports = append(container.Ports, v1.ContainerPort{Name: containerPrometheusMetricsPortName, ContainerPort: int32(containerPrometheusMetricsPort), Protocol: v1.ProtocolTCP})
-			update = true
-		}
-	}
-
-	if update {
-		u.Logger().Info(fmt.Sprintf("Adding prometheus metrics environment variable and ports to DC %s", existing.Name))
-		err = u.UpdateResource(existing)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return update, nil
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {
