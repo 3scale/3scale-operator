@@ -47,10 +47,18 @@ The following diagram shows available custom resource definitions and their rela
    * [URL OpenAPI spec source](#url-openapi-spec-source)
    * [OpenAPI spec source with custom public base URL](#openapi-spec-source-with-custom-public-base-url)
    * [Link your OpenAPI spec to your 3scale tenant or provider account](#link-your-openapi-spec-to-your-3scale-tenant-or-provider-account)
+* [ActiveDoc custom resource](#activedoc-custom-resource)
+   * [Features](#features-1)
+   * [Reference your OpenAPI document using secret source](#reference-your-openapi-document-using-secret-source)
+   * [Reference your OpenAPI document using URL source](#reference-your-openapi-document-using-url-source)
+   * [ActiveDoc spec source linked with a 3scale product](#activedoc-spec-source-linked-with-a-3scale-product)
+   * [Link your ActiveDoc spec to your 3scale tenant or provider account](#link-your-activedoc-spec-to-your-3scale-tenant-or-provider-account)
 * [Tenant custom resource](#tenant-custom-resource)
    * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
    * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
 * [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
+
+Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
 ## CRD Index
 
@@ -928,6 +936,135 @@ spec:
 ```
 
 [OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
+
+The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mytenant
+type: Opaque
+stringData:
+  adminURL: https://my3scale-admin.example.com:443
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+* Default `threescale-provider-account` secret
+
+For example: `adminURL=https://3scale-admin.example.com` and `token=123456`.
+
+```
+oc create secret generic threescale-provider-account --from-literal=adminURL=https://3scale-admin.example.com --from-literal=token=123456
+```
+
+* Default provider account in the same namespace 3scale deployment
+
+The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
+
+## ActiveDoc custom resource
+
+### Features
+
+* [OpenAPI 3.0.2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md) specification
+* Accepted OpenAPI spec document formats are `json` and `yaml`.
+* OpenAPI spec document can be read from:
+  * Secret
+  * URL. Supported schemes are `http` and `https`
+* Optionally, link the activedoc with a 3scale product using the `productSystemName` field. The value must be the `system_name` of the 3scale product's CR.
+* Publish or hide the activedoc using the `published` field. By default, it will be `hidden`.
+* Skip OpenAPI 3.0 validations using the `skipSwaggerValidations` field. By default, the activedoc will be validated.
+
+### Reference your OpenAPI document using secret source
+
+Create a secret with the OpenAPI spec document. The name of the secret object will be referenced in the ActiveDoc CR.
+
+The following example shows how to create a secret out of a file:
+
+```
+$ cat myopenapi.yaml
+---
+openapi: "3.0.0"
+info:
+title: "some title"
+version: "1.0.0"
+
+$ oc create secret generic myopenapi --from-file myopenapi.yaml
+secret/myopenapi created
+```
+
+**NOTE** The field name inside the secret is not read by the operator. Only the content is read.
+
+Then, create your ActiveDoc CR providing reference to the secret holding the OpenAPI document.
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: activedoc-secret
+spec:
+  name: "Operated ActiveDoc From secret"
+  activeDocOpenAPIRef:
+    secretRef:
+      name: myopenapi
+```
+
+[ActiveDoc CRD Reference](activedoc-reference.md) for more info about fields.
+
+### Reference your OpenAPI document using URL source
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: activedoc-from-url
+spec:
+  name: "Operated ActiveDoc From URL"
+  activeDocOpenAPIRef:
+    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.json"
+```
+
+[ActiveDoc CRD Reference](activedoc-reference.md) for more info about fields.
+
+### ActiveDoc spec source linked with a 3scale product
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: activedoc-with-product-link
+spec:
+  name: "Operated ActiveDoc"
+  openapiRef:
+    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
+  productSystemName: myPetProduct
+```
+
+[ActiveDoc CRD Reference](activedoc-reference.md) for more info about fields.
+
+### Link your ActiveDoc spec to your 3scale tenant or provider account
+
+When some ActiveDoc custom resource is found by the 3scale operator,
+*LookupProviderAccount* process is started to figure out the tenant owning the resource.
+
+The process will check the following tenant credential sources. If none is found, an error is raised.
+
+* Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: activedoc1
+spec:
+  name: "Operated ActiveDoc"
+  openapiRef:
+    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
+  providerAccountRef:
+    name: mytenant
+```
+
+[ActiveDoc CRD Reference](activedoc-reference.md) for more info about fields.
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 
