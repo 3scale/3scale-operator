@@ -134,7 +134,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -256,7 +256,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -344,7 +344,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -419,7 +419,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -498,7 +498,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -573,7 +573,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -652,7 +652,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -727,7 +727,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -806,7 +806,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -881,7 +881,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -960,7 +960,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -1035,7 +1035,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -1215,7 +1215,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -1337,7 +1337,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -1425,7 +1425,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -1500,7 +1500,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -1579,7 +1579,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -1654,7 +1654,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -1733,7 +1733,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -1808,7 +1808,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -1887,7 +1887,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -1962,7 +1962,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -2041,7 +2041,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -2116,7 +2116,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -2195,7 +2195,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -2270,7 +2270,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -2349,7 +2349,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -2424,7 +2424,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -2503,7 +2503,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -2578,7 +2578,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -2657,7 +2657,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -2732,7 +2732,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -2811,7 +2811,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -2886,7 +2886,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -2965,7 +2965,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -3040,7 +3040,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -3119,7 +3119,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -3194,7 +3194,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -3286,7 +3286,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -3374,7 +3374,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -3449,7 +3449,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -3528,7 +3528,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
@@ -3603,7 +3603,7 @@
         "format": "s",
         "logBase": 1,
         "max": null,
-        "min": null,
+        "min": 0,
         "show": true,
         "splitFactor": null
       },
@@ -4204,7 +4204,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {
