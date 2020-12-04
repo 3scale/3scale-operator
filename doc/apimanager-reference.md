@@ -400,7 +400,7 @@ The available configurable secrets are:
 
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
-| service_endpoint | Backend listener service endpoint. Used by System | `http://backend-listener:3000` |
+| service_endpoint | Backend listener service endpoint. Used by System and Apicast | `http://backend-listener:3000` |
 | route_endpoint | Backend listener route endpoint. Used by System | `https://backend-<tenantName>.<wildcardDomain>` |
 
 ### backend-redis
