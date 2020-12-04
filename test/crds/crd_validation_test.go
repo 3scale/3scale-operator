@@ -41,6 +41,7 @@ func TestSampleCustomResources(t *testing.T) {
 		"capabilities.3scale.net_backends.yaml":   "capabilities_v1beta1_backend",
 		"capabilities.3scale.net_products.yaml":   "capabilities_v1beta1_product",
 		"capabilities.3scale.net_openapis.yaml":   "capabilities_v1beta1_openapi",
+		"capabilities.3scale.net_activedocs.yaml": "capabilities_v1beta1_activedoc",
 	}
 	for crd, prefix := range crdCrMap {
 		validateCustomResources(t, schemaRoot, samplesRoot, crd, prefix)
@@ -76,6 +77,7 @@ func TestCompleteCRD(t *testing.T) {
 		"capabilities.3scale.net_backends.yaml":   &capabilitiesv1beta1.Backend{},
 		"capabilities.3scale.net_products.yaml":   &capabilitiesv1beta1.Product{},
 		"capabilities.3scale.net_openapis.yaml":   &capabilitiesv1beta1.OpenAPI{},
+		"capabilities.3scale.net_activedocs.yaml": &capabilitiesv1beta1.ActiveDoc{},
 	}
 
 	pathOmissions := []string{
