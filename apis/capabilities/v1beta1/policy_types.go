@@ -145,6 +145,9 @@ func (p *PolicyStatus) Equals(other *PolicyStatus, logger logr.Logger) bool {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:JSONPath=".status.providerAccountHost",name="Provider Account",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.conditions[?(@.type=='Ready')].status",name=Ready,type=string
+// +kubebuilder:printcolumn:JSONPath=".status.policyID",name="3scale ID",type=integer
 
 // Policy is the Schema for the policies API
 type Policy struct {
