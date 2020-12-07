@@ -88,6 +88,11 @@ spec:
       kind: ActiveDoc
       name: activedocs.capabilities.3scale.net
       version: v1beta1
+    - description: Policy is the Schema for the policies API
+      displayName: Policy
+      kind: Policy
+      name: policies.capabilities.3scale.net
+      version: v1beta1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 

@@ -215,6 +215,16 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Policy",
+          "metadata": {
+            "name": "policy-sample"
+          },
+          "spec": {
+            "foo": "bar"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Product",
           "metadata": {
             "name": "product1-apicast-hosted-sample"
@@ -531,6 +541,11 @@ spec:
       kind: OpenAPI
       name: openapis.capabilities.3scale.net
       version: v1beta1
+    - description: Policy is the Schema for the policies API
+      displayName: Policy
+      kind: Policy
+      name: policies.capabilities.3scale.net
+      version: v1beta1
     - description: Product is the Schema for the products API
       displayName: 3scale Product
       kind: Product
@@ -595,6 +610,26 @@ spec:
           - capabilities.3scale.net
           resources:
           - activedocs/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - policies
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - policies/status
           verbs:
           - get
           - patch
