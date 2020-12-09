@@ -178,6 +178,9 @@ func (o *ActiveDocStatus) Equals(other *ActiveDocStatus, logger logr.Logger) boo
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:JSONPath=".status.providerAccountHost",name="Provider Account",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.conditions[?(@.type=='Ready')].status",name=Ready,type=string
+// +kubebuilder:printcolumn:JSONPath=".status.activeDocId",name="3scale ID",type=integer
 
 // ActiveDoc is the Schema for the activedocs API
 type ActiveDoc struct {

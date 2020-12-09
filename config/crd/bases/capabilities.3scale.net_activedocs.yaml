@@ -8,6 +8,16 @@ metadata:
   creationTimestamp: null
   name: activedocs.capabilities.3scale.net
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.providerAccountHost
+    name: Provider Account
+    type: string
+  - JSONPath: .status.conditions[?(@.type=='Ready')].status
+    name: Ready
+    type: string
+  - JSONPath: .status.activeDocId
+    name: 3scale ID
+    type: integer
   group: capabilities.3scale.net
   names:
     kind: ActiveDoc
