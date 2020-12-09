@@ -53,6 +53,8 @@ The following diagram shows available custom resource definitions and their rela
    * [Reference your OpenAPI document using URL source](#reference-your-openapi-document-using-url-source)
    * [ActiveDoc spec source linked with a 3scale product](#activedoc-spec-source-linked-with-a-3scale-product)
    * [Link your ActiveDoc spec to your 3scale tenant or provider account](#link-your-activedoc-spec-to-your-3scale-tenant-or-provider-account)
+* [Policy Custom Resource](#policy-custom-resource)
+   * [Link your Policy spec to your 3scale tenant or provider account](#link-your-policy-spec-to-your-3scale-tenant-or-provider-account)
 * [Tenant custom resource](#tenant-custom-resource)
    * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
    * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
@@ -1065,6 +1067,92 @@ spec:
 ```
 
 [ActiveDoc CRD Reference](activedoc-reference.md) for more info about fields.
+
+The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mytenant
+type: Opaque
+stringData:
+  adminURL: https://my3scale-admin.example.com:443
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+* Default `threescale-provider-account` secret
+
+For example: `adminURL=https://3scale-admin.example.com` and `token=123456`.
+
+```
+oc create secret generic threescale-provider-account --from-literal=adminURL=https://3scale-admin.example.com --from-literal=token=123456
+```
+
+* Default provider account in the same namespace 3scale deployment
+
+The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
+
+## Policy Custom Resource
+
+Example:
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Policy
+metadata:
+  name: policy-sample
+spec:
+  name: "MyCustomPolicy"
+  version: "0.0.1"
+  schema:
+    name: "MyCustomPolicy"
+    version: "0.0.1"
+    summary: "some summary"
+    $schema: "http://json-schema.org/draft-07/schema#"
+    configuration:
+      type: "object"
+      properties:
+        someAttr:
+            description: "Some attribute"
+            type: "integer"
+```
+
+[Policy CRD Reference](policy-reference.md) for more info about fields.
+
+### Link your Policy spec to your 3scale tenant or provider account
+
+When some Policy custom resource is found by the 3scale operator,
+*LookupProviderAccount* process is started to figure out the tenant owning the resource.
+
+The process will check the following tenant credential sources. If none is found, an error is raised.
+
+* Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Policy
+metadata:
+  name: policy-sample
+spec:
+  name: "MyCustomPolicy"
+  version: "0.0.1"
+  schema:
+    name: "MyCustomPolicy"
+    version: "0.0.1"
+    summary: "some summary"
+    $schema: "http://json-schema.org/draft-07/schema#"
+    configuration:
+      type: "object"
+      properties:
+        someAttr:
+            description: "Some attribute"
+            type: "integer"
+  providerAccountRef:
+    name: mytenant
+```
+
+[Policy CRD Reference](policy-reference.md) for more info about fields.
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 
