@@ -65,7 +65,8 @@ type PolicySchemaSpec struct {
 	// Schema the $schema keyword is used to declare that this is a JSON Schema.
 	Schema string `json:"$schema"`
 
-	// Configuration defines the structural schema
+	// Configuration defines the structural schema for the policy
+	// +kubebuilder:pruning:PreserveUnknownFields
 	Configuration runtime.RawExtension `json:"configuration"`
 }
 

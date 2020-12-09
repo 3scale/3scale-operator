@@ -27,6 +27,7 @@ const (
 	systemMySQLPVCResourceRequestsPath       = "/spec/system/database/mysql/persistentVolumeClaim/resources/requests"
 	systemPostgreSQLPVCResourceRequestsPath  = "/spec/system/database/postgresql/persistentVolumeClaim/resources/requests"
 	productPoliciesConfigurationPath         = "/spec/policies/configuration"
+	policyConfigurationPath                  = "/spec/schema/configuration"
 )
 
 func TestSampleCustomResources(t *testing.T) {
@@ -42,6 +43,7 @@ func TestSampleCustomResources(t *testing.T) {
 		"capabilities.3scale.net_products.yaml":   "capabilities_v1beta1_product",
 		"capabilities.3scale.net_openapis.yaml":   "capabilities_v1beta1_openapi",
 		"capabilities.3scale.net_activedocs.yaml": "capabilities_v1beta1_activedoc",
+		"capabilities.3scale.net_policies.yaml":   "capabilities_v1beta1_policy",
 	}
 	for crd, prefix := range crdCrMap {
 		validateCustomResources(t, schemaRoot, samplesRoot, crd, prefix)
@@ -78,6 +80,7 @@ func TestCompleteCRD(t *testing.T) {
 		"capabilities.3scale.net_products.yaml":   &capabilitiesv1beta1.Product{},
 		"capabilities.3scale.net_openapis.yaml":   &capabilitiesv1beta1.OpenAPI{},
 		"capabilities.3scale.net_activedocs.yaml": &capabilitiesv1beta1.ActiveDoc{},
+		"capabilities.3scale.net_policies.yaml":   &capabilitiesv1beta1.Policy{},
 	}
 
 	pathOmissions := []string{
@@ -89,6 +92,7 @@ func TestCompleteCRD(t *testing.T) {
 		systemMySQLPVCResourceRequestsPath,
 		systemPostgreSQLPVCResourceRequestsPath,
 		productPoliciesConfigurationPath,
+		policyConfigurationPath,
 	}
 
 	for crd, obj := range crdStructMap {

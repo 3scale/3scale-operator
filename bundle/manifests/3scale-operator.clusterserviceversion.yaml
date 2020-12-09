@@ -220,7 +220,23 @@ metadata:
             "name": "policy-sample"
           },
           "spec": {
-            "foo": "bar"
+            "name": "MyCustomPolicy",
+            "schema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "configuration": {
+                "properties": {
+                  "someAttr": {
+                    "description": "Some attribute",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "MyCustomPolicy",
+              "summary": "some summary",
+              "version": "0.0.1"
+            },
+            "version": "0.0.1"
           }
         },
         {

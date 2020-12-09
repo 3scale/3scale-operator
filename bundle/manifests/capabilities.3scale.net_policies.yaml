@@ -59,8 +59,9 @@ spec:
                   description: Schema the $schema keyword is used to declare that this is a JSON Schema.
                   type: string
                 configuration:
-                  description: Configuration defines the structural schema
+                  description: Configuration defines the structural schema for the policy
                   type: object
+                  x-kubernetes-preserve-unknown-fields: true
                 description:
                   description: Description is an array of description messages for the policy schema
                   items:
