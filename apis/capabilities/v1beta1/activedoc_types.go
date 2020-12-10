@@ -87,6 +87,7 @@ type ActiveDocSpec struct {
 
 	// SystemName identifies uniquely the activedoc within the account provider
 	// Default value will be sanitized Name
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]+$`
 	// +optional
 	SystemName *string `json:"systemName,omitempty"`
 
@@ -191,17 +192,12 @@ func (a *ActiveDoc) SetDefaults(logger logr.Logger) bool {
 	updated := false
 
 	// Respect 3scale API defaults
-	if a.Spec.SystemName == nil || *a.Spec.SystemName == "" {
+	// CRD OpenAPI validation ensures systemName is not empty and it is lowercase
+	if a.Spec.SystemName == nil {
 		tmp := activeDocSystemNameRegexp.ReplaceAllString(a.Spec.Name, "")
+		// 3scale API ignores case of the system name field
+		tmp = strings.ToLower(tmp)
 		a.Spec.SystemName = &tmp
-		updated = true
-	}
-
-	// 3scale API ignores case of the system name field
-	systemNameLowercase := strings.ToLower(*a.Spec.SystemName)
-	if *a.Spec.SystemName != systemNameLowercase {
-		logger.Info("System name updated", "from", *a.Spec.SystemName, "to", systemNameLowercase)
-		a.Spec.SystemName = &systemNameLowercase
 		updated = true
 	}
 

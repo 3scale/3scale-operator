@@ -107,6 +107,7 @@ spec:
             systemName:
               description: SystemName identifies uniquely the activedoc within the
                 account provider Default value will be sanitized Name
+              pattern: ^[a-z0-9]+$
               type: string
           required:
           - activeDocOpenAPIRef
