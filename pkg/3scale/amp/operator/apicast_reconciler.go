@@ -56,13 +56,21 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging DC
-	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Production DC
-	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	productionDCMutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigReplicasMutator,
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigEnvVarMergeMutator,
+	)
+
+	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
