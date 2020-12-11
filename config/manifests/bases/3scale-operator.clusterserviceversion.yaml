@@ -83,6 +83,11 @@ spec:
       kind: APIManagerBackup
       name: apimanagerbackups.apps.3scale.net
       version: v1alpha1
+    - description: ActiveDoc is the Schema for the activedocs API
+      displayName: Active Doc
+      kind: ActiveDoc
+      name: activedocs.capabilities.3scale.net
+      version: v1beta1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 

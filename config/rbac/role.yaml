@@ -7,6 +7,26 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - activedocs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - activedocs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - console.openshift.io
   resources:
   - consolelinks

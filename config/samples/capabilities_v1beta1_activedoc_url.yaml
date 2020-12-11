@@ -1,0 +1,8 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: activedoc-from-url
+spec:
+  name: "Operated ActiveDoc From URL"
+  activeDocOpenAPIRef:
+    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.json"

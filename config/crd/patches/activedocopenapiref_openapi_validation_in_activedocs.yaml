@@ -1,0 +1,20 @@
+# The following patch adds `oneOf` OpenAPI
+# validation for the activeDocOpenAPIRef attribute
+# to the ActiveDoc CRD due to at the moment
+# of writing this (2020-11-02) kubebuilder
+# does not support `oneOf` statement
+# OpenAPI validation
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: activedocs.capabilities.3scale.net
+spec:
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            activeDocOpenAPIRef:
+              oneOf:
+              - required: ["secretRef"]
+              - required: ["url"]

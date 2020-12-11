@@ -9,6 +9,7 @@ resources:
 - bases/capabilities.3scale.net_backends.yaml
 - bases/capabilities.3scale.net_products.yaml
 - bases/capabilities.3scale.net_openapis.yaml
+- bases/capabilities.3scale.net_activedocs.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -21,6 +22,7 @@ patchesStrategicMerge:
 #- patches/webhook_in_backends.yaml
 #- patches/webhook_in_products.yaml
 #- patches/webhook_in_openapis.yaml
+#- patches/webhook_in_activedocs.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
@@ -32,7 +34,15 @@ patchesStrategicMerge:
 #- patches/cainjection_in_backends.yaml
 #- patches/cainjection_in_products.yaml
 #- patches/cainjection_in_openapis.yaml
+#- patches/cainjection_in_activedocs.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
+
+# ActiveDoc CRD ActiveDocOpenAPIRef OpenAPI Validation]. This patch following patch adds `oneOf` OpenAPI
+# validation for the activeDocOpenAPIRef attribute to the ActiveDoc CRD due to at the moment
+# of writing this (2020-11-02) kubebuilder # does not support `oneOf` statement
+# OpenAPI validation
+- patches/activedocopenapiref_openapi_validation_in_activedocs.yaml
+# +kubebuilder:scaffold:crdkustomizeactivedocactivedocopenapirefopenapivalidationpatch
 
 # OpenAPI CRD OpenAPIRef OpenAPI Validation]. This patch following patch adds `oneOf` OpenAPI
 # validation for the openapiRef attribute to the OpenAPI CRD due to at the moment

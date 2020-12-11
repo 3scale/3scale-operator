@@ -190,7 +190,7 @@ func (r *ProductReconciler) checkExternalRefs(resource *capabilitiesv1beta1.Prod
 	logger := r.Logger().WithValues("product", resource.Name)
 	errors := field.ErrorList{}
 
-	backendList, err := controllerhelper.BackendList(resource.Namespace, r.Client(), providerAccount, logger)
+	backendList, err := controllerhelper.BackendList(resource.Namespace, r.Client(), providerAccount.AdminURLStr, logger)
 	if err != nil {
 		return fmt.Errorf("checking backend usage references: %w", err)
 	}

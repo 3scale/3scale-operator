@@ -31,14 +31,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/version"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	consolev1 "github.com/openshift/api/console/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	"github.com/prometheus/client_golang/prometheus"
+	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
@@ -46,8 +46,8 @@ import (
 	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
 	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-	"github.com/prometheus/client_golang/prometheus"
-	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -229,6 +229,23 @@ func main() {
 			mgr.GetEventRecorderFor("WebConsole")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "WebConsole")
+		os.Exit(1)
+	}
+
+	discoveryClientActiveDoc, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
+	if err = (&capabilitiescontroller.ActiveDocReconciler{
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("ActiveDoc"),
+			discoveryClientActiveDoc,
+			mgr.GetEventRecorderFor("ActiveDoc")),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ActiveDoc")
 		os.Exit(1)
 	}
 

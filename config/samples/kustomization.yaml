@@ -21,4 +21,6 @@ resources:
 - capabilities_v1beta1_product_oidc.yaml
 - capabilities_v1beta1_openapi_secret.yaml
 - capabilities_v1beta1_openapi_url.yaml
+- capabilities_v1beta1_activedoc_secret.yaml
+- capabilities_v1beta1_activedoc_url.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
