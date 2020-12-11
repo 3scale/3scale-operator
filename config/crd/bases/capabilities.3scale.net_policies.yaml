@@ -103,7 +103,7 @@ spec:
           description: PolicyStatus defines the observed state of Policy
           properties:
             conditions:
-              description: Current state of the activedoc resource. Conditions represent
+              description: Current state of the policy resource. Conditions represent
                 the latest available observations of an object's state
               items:
                 description: "Condition represents an observation of an object's state.

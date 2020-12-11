@@ -105,7 +105,7 @@ type PolicyStatus struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// Current state of the activedoc resource.
+	// Current state of the policy resource.
 	// Conditions represent the latest available observations of an object's state
 	// +optional
 	// +patchMergeKey=type
