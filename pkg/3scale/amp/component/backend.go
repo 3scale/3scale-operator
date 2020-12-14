@@ -17,6 +17,7 @@ import (
 const (
 	BackendListenerName = "backend-listener"
 	BackendWorkerName   = "backend-worker"
+	BackendCronName     = "backend-cron"
 )
 
 const (
@@ -141,7 +142,7 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-cron",
+			Name:   BackendCronName,
 			Labels: backend.Options.CommonCronLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -173,7 +174,7 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
 			},
 			Replicas: backend.Options.CronReplicas,
-			Selector: map[string]string{"deploymentConfig": "backend-cron"},
+			Selector: map[string]string{"deploymentConfig": BackendCronName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: backend.Options.CronPodTemplateLabels,

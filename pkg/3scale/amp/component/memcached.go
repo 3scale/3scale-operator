@@ -9,6 +9,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	SystemMemcachedDeploymentName = "system-memcache"
+)
+
 type Memcached struct {
 	Options *MemcachedOptions
 }
@@ -24,7 +28,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-memcache",
+			Name:   SystemMemcachedDeploymentName,
 			Labels: m.Options.DeploymentLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -61,7 +65,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": "system-memcache"},
+			Selector: map[string]string{"deploymentConfig": SystemMemcachedDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: m.Options.PodTemplateLabels,

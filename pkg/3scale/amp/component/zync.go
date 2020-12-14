@@ -14,7 +14,9 @@ import (
 )
 
 const (
-	ZyncName = "zync"
+	ZyncName                   = "zync"
+	ZyncQueDeploymentName      = "zync-que"
+	ZyncDatabaseDeploymentName = "zync-database"
 )
 
 const (
@@ -309,12 +311,12 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "zync-que",
+			Name:   ZyncQueDeploymentName,
 			Labels: zync.Options.CommonZyncQueLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: zync.Options.ZyncQueReplicas,
-			Selector: map[string]string{"deploymentConfig": "zync-que"},
+			Selector: map[string]string{"deploymentConfig": ZyncQueDeploymentName},
 			Strategy: appsv1.DeploymentStrategy{
 				Type: appsv1.DeploymentStrategyTypeRolling,
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
@@ -404,7 +406,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "zync-database",
+			Name:   ZyncDatabaseDeploymentName,
 			Labels: zync.Options.CommonZyncDatabaseLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -427,7 +429,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": "zync-database"},
+			Selector: map[string]string{"deploymentConfig": ZyncDatabaseDeploymentName},
 			Strategy: appsv1.DeploymentStrategy{
 				Type: appsv1.DeploymentStrategyTypeRecreate,
 			},
