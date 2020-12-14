@@ -7,6 +7,7 @@ import (
 	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -158,17 +159,11 @@ func waitForAllAPIManagerStandardDeploymentConfigs(namespace string, retryInterv
 				return false
 			}
 
-			isReady := false
-			dcConditions := createdDeployment.Status.Conditions
-			for _, dcCondition := range dcConditions {
-				if dcCondition.Type == appsv1.DeploymentAvailable && dcCondition.Status == corev1.ConditionTrue {
-					isReady = true
-				}
-			}
-			if isReady {
+			if helper.IsDeploymentConfigAvailable(createdDeployment) {
 				fmt.Fprintf(w, "DeploymentConfig '%s' available\n", dcName)
 				return true
 			}
+
 			availableReplicas := createdDeployment.Status.AvailableReplicas
 			desiredReplicas := createdDeployment.Spec.Replicas
 			fmt.Fprintf(w, "Waiting for full availability of %s DeploymentConfig (%d/%d)\n", dcName, availableReplicas, desiredReplicas)
