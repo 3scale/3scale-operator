@@ -19,11 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"sort"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -31,7 +28,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
-	"github.com/RHsyseng/operator-utils/pkg/olm"
 	appsv1 "github.com/openshift/api/apps/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -122,15 +118,14 @@ func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return result, nil
 	}
 
-	statusResult, err := r.reconcileAPIManagerStatus(instance)
-	if err != nil {
+	statusResult, statusErr := r.reconcileAPIManagerStatus(instance)
+	if statusErr != nil {
 		logger.Error(err, "Error updating status")
 		return ctrl.Result{}, err
 	}
-
 	if statusResult.Requeue {
-		logger.V(1).Info("Reconciling status not finished. Requeueing.")
-		return statusResult, nil
+		logger.Info("Reconciling not finished. Requeueing.")
+		return result, nil
 	}
 
 	return ctrl.Result{}, nil
@@ -291,55 +286,11 @@ func (r *APIManagerReconciler) reconcileSystemMySQLLogic(cr *appsv1alpha1.APIMan
 }
 
 func (r *APIManagerReconciler) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	updated, err := r.setDeploymentStatus(cr)
+	statusReconciler := NewAPIManagerStatusReconciler(r.BaseReconciler, cr)
+	res, err := statusReconciler.Reconcile()
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("Failed to update APIManager status: %w", err)
 	}
 
-	if updated {
-		err = r.Client().Status().Update(context.TODO(), cr)
-		if err != nil {
-			// Ignore conflicts, resource might just be outdated.
-			if errors.IsConflict(err) {
-				r.Logger().Info("Failed to update status: resource might just be outdated")
-				return ctrl.Result{Requeue: true}, nil
-			}
-
-			return ctrl.Result{}, fmt.Errorf("Failed to update API Manager deployment status: %w", err)
-		}
-	}
-
-	return ctrl.Result{}, nil
-}
-
-func (r *APIManagerReconciler) setDeploymentStatus(instance *appsv1alpha1.APIManager) (bool, error) {
-	updated := false
-
-	listOps := []client.ListOption{
-		client.InNamespace(instance.Namespace),
-	}
-	dcList := &appsv1.DeploymentConfigList{}
-	err := r.Client().List(context.TODO(), dcList, listOps...)
-	if err != nil {
-		return false, fmt.Errorf("Failed to list deployment configs: %w", err)
-	}
-	var dcs []appsv1.DeploymentConfig
-	for _, dc := range dcList.Items {
-		for _, ownerRef := range dc.GetOwnerReferences() {
-			if ownerRef.UID == instance.UID {
-				dcs = append(dcs, dc)
-				break
-			}
-		}
-	}
-	sort.Slice(dcs, func(i, j int) bool { return dcs[i].Name < dcs[j].Name })
-
-	deploymentStatus := olm.GetDeploymentConfigStatus(dcs)
-	if !reflect.DeepEqual(instance.Status.Deployments, deploymentStatus) {
-		r.Logger().Info("Deployment status will be updated")
-		instance.Status.Deployments = deploymentStatus
-		updated = true
-	}
-
-	return updated, nil
+	return res, nil
 }
