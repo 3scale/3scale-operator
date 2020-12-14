@@ -29,3 +29,14 @@ func IsRouteReady(route *routev1.Route) bool {
 
 	return true
 }
+
+// RouteFindByHost returns the smallest index i at which a route with a given host is found
+// or -1 if there is no such index.
+func RouteFindByHost(a []routev1.Route, routeHost string) int {
+	for i, n := range a {
+		if n.Spec.Host == routeHost {
+			return i
+		}
+	}
+	return -1
+}

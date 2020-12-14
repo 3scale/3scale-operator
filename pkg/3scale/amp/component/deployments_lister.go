@@ -45,7 +45,7 @@ func (d *DeploymentsLister) DeploymentNames() []string {
 	}
 
 	if !d.ExternalZyncDatabase {
-		deployments = append(deployments)
+		deployments = append(deployments, ZyncDatabaseDeploymentName)
 	}
 
 	return deployments

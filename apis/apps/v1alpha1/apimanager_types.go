@@ -18,11 +18,14 @@ package v1alpha1
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
+	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -87,6 +90,27 @@ type APIManagerStatus struct {
 	// APIManager Deployment Configs
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Deployments",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podStatuses"
 	Deployments olm.DeploymentStatus `json:"deployments"`
+}
+
+func (s *APIManagerStatus) Equals(other *APIManagerStatus, logger logr.Logger) bool {
+	// Marshalling sorts by condition type
+	currentMarshaledJSON, _ := s.Conditions.MarshalJSON()
+	otherMarshaledJSON, _ := other.Conditions.MarshalJSON()
+	if string(currentMarshaledJSON) != string(otherMarshaledJSON) {
+		diff := cmp.Diff(string(currentMarshaledJSON), string(otherMarshaledJSON))
+		logger.V(1).Info("Conditions not equal", "difference", diff)
+		return false
+	}
+
+	// Deployments should already be sorted at this point so there's no need
+	// to sort them and we can compare directly
+	if !reflect.DeepEqual(s.Deployments, other.Deployments) {
+		diff := cmp.Diff(s.Deployments, s.Deployments)
+		logger.V(1).Info("Deployments not equal", "difference", diff)
+		return false
+	}
+
+	return true
 }
 
 // +kubebuilder:object:root=true
