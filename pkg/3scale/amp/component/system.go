@@ -92,8 +92,9 @@ const (
 )
 
 const (
-	SystemSidekiqName       = "system-sidekiq"
-	SystemAppDeploymentName = "system-app"
+	SystemSidekiqName          = "system-sidekiq"
+	SystemAppDeploymentName    = "system-app"
+	SystemSphinxDeploymentName = "system-sphinx"
 
 	SystemAppMasterContainerName    = "system-master"
 	SystemAppProviderContainerName  = "system-provider"
@@ -1123,7 +1124,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-sphinx",
+			Name:   SystemSphinxDeploymentName,
 			Labels: system.Options.SphinxLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -1147,7 +1148,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": "system-sphinx"},
+			Selector: map[string]string{"deploymentConfig": SystemSphinxDeploymentName},
 			Strategy: appsv1.DeploymentStrategy{
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],

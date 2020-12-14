@@ -11,6 +11,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	BackendRedisDeploymentName = "backend-redis"
+	SystemRedisDeploymentName  = "system-redis"
+)
+
 type Redis struct {
 	Options *RedisOptions
 }
@@ -439,7 +444,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-redis",
+			Name:   SystemRedisDeploymentName,
 			Labels: redis.Options.SystemRedisLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -465,7 +470,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": "system-redis"},
+			Selector: map[string]string{"deploymentConfig": SystemRedisDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: redis.Options.SystemRedisPodTemplateLabels,

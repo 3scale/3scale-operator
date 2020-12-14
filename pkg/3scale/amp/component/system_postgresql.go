@@ -10,6 +10,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	SystemPostgreSQLDeploymentName = "system-postgresql"
+)
+
 type SystemPostgreSQL struct {
 	Options *SystemPostgreSQLOptions
 }
@@ -79,7 +83,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-postgresql",
+			Name:   SystemPostgreSQLDeploymentName,
 			Labels: p.Options.DeploymentLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -104,7 +108,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": "system-postgresql"},
+			Selector: map[string]string{"deploymentConfig": SystemPostgreSQLDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: p.Options.PodTemplateLabels,
