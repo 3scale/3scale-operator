@@ -3467,9 +3467,6 @@ objects:
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
-    annotations:
-      prometheus.io/port: "9393"
-      prometheus.io/scrape: "true"
     creationTimestamp: null
     labels:
       app: ${APP_LABEL}
@@ -3483,6 +3480,9 @@ objects:
       resources: {}
     template:
       metadata:
+        annotations:
+          prometheus.io/port: "9393"
+          prometheus.io/scrape: "true"
         creationTimestamp: null
         labels:
           app: ${APP_LABEL}
