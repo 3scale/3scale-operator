@@ -41,6 +41,14 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, nil
 	}
 
+	res, err = u.upgradeZyncPodTemplateAnnotations()
+	if err != nil {
+		return res, fmt.Errorf("Upgrading Zync DC PodTemplate: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
+	}
+
 	res, err = u.upgradeImages()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading images: %w", err)
@@ -521,6 +529,50 @@ func ensureBackendRouteEnvVar(desired v1.EnvVar, existingEnvVars *[]v1.EnvVar) b
 	}
 
 	return update
+}
+
+func (u *UpgradeApiManager) upgradeZyncPodTemplateAnnotations() (reconcile.Result, error) {
+	zync, err := Zync(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	desired := zync.DeploymentConfig()
+	existing := &appsv1.DeploymentConfig{}
+	err = u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if existing.Spec.Template.Annotations == nil {
+		existing.Spec.Template.Annotations = map[string]string{}
+	}
+	update := false
+
+	for desiredAnnotationKey, desiredAnnotationVal := range desired.Spec.Template.Annotations {
+		existingAnnotationVal, ok := existing.Spec.Template.Annotations[desiredAnnotationKey]
+		if !ok || existingAnnotationVal != desiredAnnotationVal {
+			existing.Spec.Template.Annotations[desiredAnnotationKey] = desiredAnnotationVal
+			update = true
+		}
+
+		if existing.Annotations != nil {
+			if _, ok := existing.Annotations[desiredAnnotationKey]; ok {
+				delete(existing.Annotations, desiredAnnotationKey)
+				update = true
+			}
+		}
+	}
+
+	if update {
+		u.Logger().Info(fmt.Sprintf("Upgrading zync DC %s PodTemplate annotations", existing.Name))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	return reconcile.Result{Requeue: update}, nil
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {
