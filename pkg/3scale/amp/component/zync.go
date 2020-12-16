@@ -170,10 +170,6 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   ZyncName,
 			Labels: zync.Options.CommonZyncLabels,
-			Annotations: map[string]string{
-				"prometheus.io/port":   "9393",
-				"prometheus.io/scrape": "true",
-			},
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Triggers: appsv1.DeploymentTriggerPolicies{
@@ -200,6 +196,10 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: zync.Options.ZyncPodTemplateLabels,
+					Annotations: map[string]string{
+						"prometheus.io/port":   "9393",
+						"prometheus.io/scrape": "true",
+					},
 				},
 				Spec: v1.PodSpec{
 					Affinity:           zync.Options.ZyncAffinity,
