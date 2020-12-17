@@ -2,7 +2,7 @@ version: 2.1
 
 ##################################### YAML ANCHORS  ############################################
 
-tag-triggerr: &tag-trigger
+tag-trigger: &tag-trigger
   tags:
     only: /^v.*/
 
@@ -117,18 +117,22 @@ commands:
             sudo chmod -R 777 "$GOPATH"
 
   deploy-3scale-eval-from-template-imagestreamsless:
+    parameters:
+      components_imagestream_tag_name:
+        type: string
     steps:
       - run:
           name: Deploy 3scale from amp-eval template without imagestreams
           command: |
             WILDCARD_DOMAIN="lvh.me"
-            ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
-              oc new-app -f- --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN}
+            imagestream_tag_name=<< parameters.components_imagestream_tag_name >>
+            oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml -o json \
+              --param WILDCARD_DOMAIN=$WILDCARD_DOMAIN --param AMP_RELEASE="${imagestream_tag_name}" | \
+              jq -j '.items[] | select(.kind != "ImageStream")' | oc create -f -
           no_output_timeout: 30m
       - check-3scale-templates-deployed-deploymentconfigs
       - check-3scale-templates-openshift-events
       - check-3scale-templates-deployed-routes
-
 
   check-3scale-templates-deployed-deploymentconfigs:
     parameters:
@@ -225,20 +229,31 @@ commands:
             done
 
   deploy-3scale-eval-from-template:
+    parameters:
+      components_tag_name:
+        type: string
     steps:
       - run:
           name: Deploy 3scale from amp-eval template
           command: |
             WILDCARD_DOMAIN="lvh.me"
             oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
+              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:<< parameters.components_tag_name >> \
+              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:<< parameters.components_tag_name >> \
+              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:<< parameters.components_tag_name >> \
+              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:<< parameters.components_tag_name >> \
+              --param MEMCACHED_IMAGE=memcached:1.5 \
               --param WILDCARD_DOMAIN=lvh.me --param TENANT_NAME=3scale
           no_output_timeout: 30m
       - check-3scale-templates-deployed-deploymentconfigs
       - check-3scale-templates-openshift-events
       - check-3scale-templates-deployed-routes
+
   push-3scale-images-to-quay:
     parameters:
       components_imagestream_tag_name:
+        type: string
+      components_tag_name:
         type: string
     steps:
       - docker-login
@@ -249,10 +264,12 @@ commands:
             project=$(oc project -q)
             imagestream_tag_name=<< parameters.components_imagestream_tag_name >>
 
-            oc image mirror $(for component in apicast zync ; do
-              echo 172.30.1.1:5000/$project/amp-$component:${imagestream_tag_name}=quay.io/3scale/$component:nightly
-            done) 172.30.1.1:5000/$project/amp-backend:${imagestream_tag_name}=quay.io/3scale/apisonator:nightly \
-            172.30.1.1:5000/$project/amp-system:${imagestream_tag_name}=quay.io/3scale/porta:nightly --insecure
+            oc image mirror \
+              172.30.1.1:5000/$project/amp-apicast:${imagestream_tag_name}=quay.io/3scale/apicast:<< parameters.components_tag_name >> \
+              172.30.1.1:5000/$project/amp-zync:${imagestream_tag_name}=quay.io/3scale/zync:<< parameters.components_tag_name >> \
+              172.30.1.1:5000/$project/amp-backend:${imagestream_tag_name}=quay.io/3scale/apisonator:<< parameters.components_tag_name >> \
+              172.30.1.1:5000/$project/amp-system:${imagestream_tag_name}=quay.io/3scale/porta:<< parameters.components_tag_name >> \
+              --insecure
 
   create-redhat-registry-io-secret:
     steps:
@@ -277,6 +294,8 @@ commands:
     parameters:
       components_imagestream_tag_name:
         type: string
+      components_git_ref:
+        type: string
     steps:
       - run:
           name: Build nightly images
@@ -289,10 +308,17 @@ commands:
               --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
               --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
               --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
+              --param MEMCACHED_IMAGE=memcached:1.5 \
               -o json --param WILDCARD_DOMAIN=lvh/me --param AMP_RELEASE="${imagestream_tag_name}" | \
               jq -j '.items[] | select(.kind == "ImageStream")' | \
               oc create -f -
-            oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml --allow-missing-imagestream-tags --param IMAGESTREAM_TAG_NAME="${imagestream_tag_name}"
+            oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml \
+              --allow-missing-imagestream-tags \
+              --param IMAGESTREAM_TAG_NAME="${imagestream_tag_name}" \
+              --param ZYNC_GIT_REF="<< parameters.components_git_ref >>" \
+              --param PORTA_GIT_REF="<< parameters.components_git_ref >>" \
+              --param APICAST_GIT_REF="<< parameters.components_git_ref >>" \
+              --param APISONATOR_GIT_REF="<< parameters.components_git_ref >>"
             until (oc get is s2i-openresty-centos7 -o json || echo '{}') | jq '[.status.tags[] | select(.tag == "builder")] | length == 1' --exit-status; do
               echo "wating for s2i-openresty-centos7:builder imagestream"
               sleep 1
@@ -415,15 +441,21 @@ jobs:
       image: ubuntu-1604:202007-01
       docker_layer_caching: true
     resource_class: large
+    parameters:
+      components_tag_name:
+        type: string
     steps:
       - checkout
       - install-openshift
-      - deploy-3scale-eval-from-template
+      - deploy-3scale-eval-from-template:
+          components_tag_name: << parameters.components_tag_name >>
       - oc-status
 
-  build-push-3scale-nightly-images:
+  build-push-3scale-images:
     parameters:
       components_imagestream_tag_name:
+        type: string
+      components_tag_name:
         type: string
     machine:
       image: ubuntu-1604:202007-01
@@ -436,11 +468,14 @@ jobs:
       - create-redhat-registry-io-secret
       - build-nightly-amp:
           components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
+          components_git_ref: << parameters.components_imagestream_tag_name >>
       - oc-observe
-      - deploy-3scale-eval-from-template-imagestreamsless
+      - deploy-3scale-eval-from-template-imagestreamsless:
+          components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
       - oc-status
       - push-3scale-images-to-quay:
           components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
+          components_tag_name: << parameters.components_tag_name >>
 
   run-unit-tests:
     docker:
@@ -572,21 +607,24 @@ workflows:
     jobs:
       - generator
       - deploy_templates:
+          components_tag_name: "nightly"
           requires:
             - generator
   nightly:
     jobs:
-      - build-push-3scale-nightly-images:
+      - build-push-3scale-images:
           context: org-global
           components_imagestream_tag_name: "master"
+          components_tag_name: "nightly"
       - deploy_templates:
+          components_tag_name: "nightly"
           requires:
-            - build-push-3scale-nightly-images
+            - build-push-3scale-images
       - install-operator
       - run-operator-e2e-test:
           requires:
             - install-operator
-            - build-push-3scale-nightly-images
+            - build-push-3scale-images
     <<: *nightly-trigger
   operator-release:
     jobs:
