@@ -225,16 +225,20 @@ commands:
             done
 
   deploy-3scale-eval-from-template:
+    parameters:
+      components_tag_name:
+        default: "nightly"
+        type: string
     steps:
       - run:
           name: Deploy 3scale from amp-eval template with nightly images
           command: |
             WILDCARD_DOMAIN="lvh.me"
             oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
-              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:nightly \
-              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
-              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
-              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
+              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:<< parameters.components_tag_name >> \
+              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:<< parameters.components_tag_name >> \
+              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:<< parameters.components_tag_name >> \
+              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:<< parameters.components_tag_name >> \
               --param MEMCACHED_IMAGE=registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.9 \
               --param WILDCARD_DOMAIN=lvh.me --param TENANT_NAME=3scale
           no_output_timeout: 30m
@@ -433,11 +437,16 @@ jobs:
       image: ubuntu-1604:202007-01
       docker_layer_caching: true
     resource_class: large
+    parameters:
+      components_tag_name:
+        default: nightly
+        type: string
     steps:
       - checkout
       - install-openshift
       - create-redhat-registry-io-secret
-      - deploy-3scale-eval-from-template
+      - deploy-3scale-eval-from-template:
+          components_tag_name: << parameters.components_tag_name >>
       - oc-status
 
   build-push-3scale-nightly-images:
@@ -582,6 +591,7 @@ workflows:
     jobs:
       - generator
       - deploy_templates:
+          components_tag_name: "3scale-2.10.0-CR1"
           requires:
             - generator
   nightly:

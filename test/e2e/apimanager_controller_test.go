@@ -4,6 +4,7 @@ import (
 	goctx "context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -41,31 +42,6 @@ func TestApiManagerController(t *testing.T) {
 	t.Run("apimanager-group", func(t *testing.T) {
 		t.Run("StandardDeploy", productizedUnconstrainedDeploymentSubtest)
 	})
-}
-
-func newAPIManagerCluster(t *testing.T) (*framework.Framework, *framework.TestCtx) {
-	t.Parallel()
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup()
-	err := ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: 5 * time.Minute, RetryInterval: cleanupRetryInterval})
-	if err != nil {
-		t.Fatalf("failed to initialize cluster resources: %v", err)
-	}
-	t.Log("initialized cluster resources")
-
-	namespace, err := ctx.GetNamespace()
-	if err != nil {
-		t.Fatal(err)
-	}
-	f := framework.Global
-	t.Log("waiting until operator Deployment is ready...")
-	err = frameworke2eutil.WaitForOperatorDeployment(t, f.KubeClient, namespace, "3scale-operator", 1, retryInterval, timeout)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("operator Deployment is ready")
-
-	return f, ctx
 }
 
 func registryRedhatIoSecret(t *testing.T, namespace string) *v1.Secret {
@@ -141,11 +117,12 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	}
 	t.Log("operator Deployment is ready")
 
+	imageTag := "3scale-2.10.0-CR1"
 	enableResourceRequirements := false
-	apicastNightlyImage := "quay.io/3scale/apicast:nightly"
-	backendNightlyImage := "quay.io/3scale/apisonator:nightly"
-	systemNightlyImage := "quay.io/3scale/porta:nightly"
-	zyncNightlyImage := "quay.io/3scale/zync:nightly"
+	apicastImage := fmt.Sprintf("quay.io/3scale/apicast:%s", imageTag)
+	backendImage := fmt.Sprintf("quay.io/3scale/apisonator:%s", imageTag)
+	systemImage := fmt.Sprintf("quay.io/3scale/porta:%s", imageTag)
+	zyncImage := fmt.Sprintf("quay.io/3scale/zync:%s", imageTag)
 	memcachedLastProductizedImage := "registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.9"
 	wildcardDomain := "test1.127.0.0.1.nip.io"
 	apimanager := &appsv1alpha1.APIManager{
@@ -155,17 +132,17 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 				ResourceRequirementsEnabled: &enableResourceRequirements,
 			},
 			Apicast: &appsv1alpha1.ApicastSpec{
-				Image: &apicastNightlyImage,
+				Image: &apicastImage,
 			},
 			Backend: &appsv1alpha1.BackendSpec{
-				Image: &backendNightlyImage,
+				Image: &backendImage,
 			},
 			System: &appsv1alpha1.SystemSpec{
-				Image:          &systemNightlyImage,
+				Image:          &systemImage,
 				MemcachedImage: &memcachedLastProductizedImage,
 			},
 			Zync: &appsv1alpha1.ZyncSpec{
-				Image: &zyncNightlyImage,
+				Image: &zyncImage,
 			},
 		},
 		ObjectMeta: metav1.ObjectMeta{
