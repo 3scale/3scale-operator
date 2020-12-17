@@ -117,13 +117,18 @@ commands:
             sudo chmod -R 777 "$GOPATH"
 
   deploy-3scale-eval-from-template-imagestreamsless:
+    parameters:
+      components_imagestream_tag_name:
+        type: string
     steps:
       - run:
           name: Deploy 3scale from amp-eval template without imagestreams
           command: |
             WILDCARD_DOMAIN="lvh.me"
-            ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
-              oc new-app -f- --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN}
+            imagestream_tag_name=<< parameters.components_imagestream_tag_name >>
+            oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml -o json \
+              --param WILDCARD_DOMAIN=$WILDCARD_DOMAIN --param AMP_RELEASE="${imagestream_tag_name}" | \
+              jq -j '.items[] | select(.kind != "ImageStream")' | oc create -f -
           no_output_timeout: 30m
       - check-3scale-templates-deployed-deploymentconfigs
       - check-3scale-templates-openshift-events
@@ -258,10 +263,12 @@ commands:
             project=$(oc project -q)
             imagestream_tag_name=<< parameters.components_imagestream_tag_name >>
 
-            oc image mirror $(for component in apicast zync ; do
-              echo 172.30.1.1:5000/$project/amp-$component:${imagestream_tag_name}=quay.io/3scale/$component:nightly
-            done) 172.30.1.1:5000/$project/amp-backend:${imagestream_tag_name}=quay.io/3scale/apisonator:nightly \
-            172.30.1.1:5000/$project/amp-system:${imagestream_tag_name}=quay.io/3scale/porta:nightly --insecure
+            oc image mirror \
+              172.30.1.1:5000/$project/amp-apicast:${imagestream_tag_name}=quay.io/3scale/apicast:${imagestream_tag_name} \
+              172.30.1.1:5000/$project/amp-zync:${imagestream_tag_name}=quay.io/3scale/zync:${imagestream_tag_name} \
+              172.30.1.1:5000/$project/amp-backend:${imagestream_tag_name}=quay.io/3scale/apisonator:${imagestream_tag_name} \
+              172.30.1.1:5000/$project/amp-system:${imagestream_tag_name}=quay.io/3scale/porta:${imagestream_tag_name} \
+              --insecure
 
   create-redhat-registry-io-secret:
     steps:
@@ -298,10 +305,17 @@ commands:
               --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
               --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
               --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
+              --param MEMCACHED_IMAGE=memcached:1.5 \
               -o json --param WILDCARD_DOMAIN=lvh/me --param AMP_RELEASE="${imagestream_tag_name}" | \
               jq -j '.items[] | select(.kind == "ImageStream")' | \
               oc create -f -
-            oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml --allow-missing-imagestream-tags --param IMAGESTREAM_TAG_NAME="${imagestream_tag_name}"
+            oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml \
+              --allow-missing-imagestream-tags \
+              --param IMAGESTREAM_TAG_NAME="${imagestream_tag_name}" \
+              --param ZYNC_GIT_REF="${imagestream_tag_name}" \
+              --param PORTA_GIT_REF="${imagestream_tag_name}" \
+              --param APICAST_GIT_REF="${imagestream_tag_name}" \
+              --param APISONATOR_GIT_REF="${imagestream_tag_name}"
             until (oc get is s2i-openresty-centos7 -o json || echo '{}') | jq '[.status.tags[] | select(.tag == "builder")] | length == 1' --exit-status; do
               echo "wating for s2i-openresty-centos7:builder imagestream"
               sleep 1
@@ -465,7 +479,8 @@ jobs:
       - build-nightly-amp:
           components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
       - oc-observe
-      - deploy-3scale-eval-from-template-imagestreamsless
+      - deploy-3scale-eval-from-template-imagestreamsless:
+          components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
       - oc-status
       - push-3scale-images-to-quay:
           components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
