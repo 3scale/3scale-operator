@@ -14,6 +14,9 @@ parameters:
   components_git_ref:
     type: string
     default: "master"
+  build_3scale_images_flag:
+    type: boolean
+    default: false
 
 ##################################### YAML ANCHORS  ############################################
 
@@ -292,10 +295,10 @@ commands:
               --docker-password="${DOCKER_PASSWORD}" \
               --docker-username="${DOCKER_USERNAME}" \
               --docker-server="${DOCKER_REGISTRY}"
-  build-nightly-amp:
+  build-amp-images:
     steps:
       - run:
-          name: Build nightly images
+          name: Build 3scale images
           no_output_timeout: 30m
           command: |
             set -o errexit
@@ -454,7 +457,7 @@ jobs:
       - install-openshift
       - create-secrets
       - create-redhat-registry-io-secret
-      - build-nightly-amp
+      - build-amp-images
       - oc-observe
       - deploy-3scale-eval-from-template-imagestreamsless
       - oc-status
@@ -625,3 +628,8 @@ workflows:
             <<: *tag-trigger
             branches:
               ignore: /.*/
+  images-build:
+    when: << pipeline.parameters.build_3scale_images_flag >>
+    jobs:
+      - build-push-3scale-images:
+          context: org-global
