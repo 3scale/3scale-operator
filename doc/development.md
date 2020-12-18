@@ -5,19 +5,22 @@
 * [Clone repository](#clone-repository)
 * [Building 3scale operator image](#building-3scale-operator-image)
 * [Run 3scale Operator](#run-3scale-operator)
-  * [Run 3scale Operator Locally](#run-3scale-operator-locally)
-  * [Deploy custom 3scale Operator using OLM](#deploy-custom-3scale-operator-using-olm)
-* [Run tests](#run-tests)
-  * [Run all tests](#run-all-tests)
-  * [Run unit tests](#run-unit-tests)
-  * [Run end-to-end tests](#run-end-to-end-tests)
+   * [Run 3scale Operator Locally](#run-3scale-operator-locally)
+   * [Deploy custom 3scale Operator using OLM](#deploy-custom-3scale-operator-using-olm)
+   * [Run tests](#run-tests)
+      * [Run all tests](#run-all-tests)
+      * [Run unit tests](#run-unit-tests)
+      * [Run end-to-end tests](#run-end-to-end-tests)
 * [Building 3scale templates](#building-3scale-templates)
 * [Bundle management](#bundle-management)
-  * [(re)Generate an operator bundle image](#generate-an-operator-bundle-image)
-  * [Validate an operator bundle image](#validate-an-operator-bundle-image)
-  * [Push an operator bundle into an external container repository](#push-an-operator-bundle-into-an-external-container-repository)
+   * [Generate an operator bundle image](#generate-an-operator-bundle-image)
+   * [Push an operator bundle into an external container repository](#push-an-operator-bundle-into-an-external-container-repository)
+   * [Validate an operator bundle image](#validate-an-operator-bundle-image)
 * [Licenses management](#licenses-management)
-  * [Adding manually a new license](#adding-manually-a-new-license)
+   * [Adding manually a new license](#adding-manually-a-new-license)
+* [Building and pushing 3scale component images](#building-and-pushing-3scale-component-images)
+
+Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
 ## Prerequisites
 
@@ -215,3 +218,42 @@ license_finder approval add github.com/golang/glog --decisions-file=doc/dependen
 [docker]:https://docs.docker.com/install/
 [kubernetes]:https://kubernetes.io/
 [oc]:https://github.com/openshift/origin/releases
+
+## Building and pushing 3scale component images
+
+3scale component images can be built and pushed with a single command using a CircleCI job.
+In other workds, the command will trigger one parametrized CircleCI job.
+
+Prerequisites:
+* [CircleCI Personal API token](https://circleci.com/docs/2.0/managing-api-tokens/)
+
+Export your CircleCI personal API token to be used to trigger the job.
+
+```
+export CIRCLE_CI_API_TOKEN=<< YOUR TOKEN >>
+```
+
+Command Parameters:
+| Name | Default | Description |
+| ---- | ------- | ----------- |
+| **IMAGES_GIT_REF** | *master* | 3scale component git reference (tag or branch) |
+| **IMAGES_REMOTE_TAG** | *nightly* | Image tag used when pushed to public registry (quay.io) |
+| **OPERATOR_BRANCH** | current branch | Revision of the build configuration |
+
+The workflow triggered is:
+
+* Build image of each 3scale component from revision specified by `IMAGES_GIT_REF`.
+* The images will be deployed using templates from `OPERATOR_BRANCH` revision and e2e tests will be run.
+* When the tests pass, the images will be pushed to `quay.io` repos.
+
+| Component | Quay repo |
+| --------- | --------- |
+| Apicast | quay.io/3scale/apicast:**IMAGES_REMOTE_TAG** |
+| Zync | quay.io/3scale/zync:**IMAGES_REMOTE_TAG** |
+| Apisonator | quay.io/3scale/apisonator:**IMAGES_REMOTE_TAG** |
+| Porta | quay.io/3scale/porta:**IMAGES_REMOTE_TAG** |
+
+
+```
+make build-3scale-images IMAGES_GIT_REF=master IMAGES_REMOTE_TAG=nightly OPERATOR_BRANCH=master
+```
