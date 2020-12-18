@@ -1,4 +1,16 @@
+---
 version: 2.1
+
+parameters:
+  memcached_image:
+    type: string
+    default: "registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.9"
+  components_tag_name:
+    type: string
+    default: "3scale-2.10.0-CR1"
+  components_imagestream_tag_name:
+    type: string
+    default: "2.10"
 
 ##################################### YAML ANCHORS  ############################################
 
@@ -122,8 +134,10 @@ commands:
           name: Deploy 3scale from amp-eval template without imagestreams
           command: |
             WILDCARD_DOMAIN="lvh.me"
-            ruby -ryaml -rjson -e 'puts YAML.load(ARGF).tap{|t| t["objects"].reject!{|o| o["kind"]=="ImageStream"}}.to_json' pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml | \
-              oc new-app -f- --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN}
+            imagestream_tag_name=<< pipeline.parameters.components_imagestream_tag_name >>
+            oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml -o json \
+              --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN} --param AMP_RELEASE="${imagestream_tag_name}" | \
+              jq -j '.items[] | select(.kind != "ImageStream")' | oc create -f -
           no_output_timeout: 30m
       - check-3scale-templates-deployed-deploymentconfigs
       - check-3scale-templates-openshift-events
@@ -231,20 +245,17 @@ commands:
           command: |
             WILDCARD_DOMAIN="lvh.me"
             oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
-              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:nightly \
-              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
-              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
-              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
-              --param MEMCACHED_IMAGE=registry.redhat.io/3scale-amp2/memcached-rhel7:3scale2.9 \
+              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:<< pipeline.parameters.components_tag_name >> \
+              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:<< pipeline.parameters.components_tag_name >> \
+              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:<< pipeline.parameters.components_tag_name >> \
+              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:<< pipeline.parameters.components_tag_name >> \
+              --param MEMCACHED_IMAGE=<< pipeline.parameters.memcached_image >> \
               --param WILDCARD_DOMAIN=lvh.me --param TENANT_NAME=3scale
           no_output_timeout: 30m
       - check-3scale-templates-deployed-deploymentconfigs
       - check-3scale-templates-openshift-events
       - check-3scale-templates-deployed-routes
   push-3scale-images-to-quay:
-    parameters:
-      components_imagestream_tag_name:
-        type: string
     steps:
       - docker-login
       - run:
@@ -252,12 +263,14 @@ commands:
           command: |
             oc whoami --show-token | docker login -u $(oc whoami) --password-stdin 172.30.1.1:5000
             project=$(oc project -q)
-            imagestream_tag_name=<< parameters.components_imagestream_tag_name >>
+            imagestream_tag_name=<< pipeline.parameters.components_imagestream_tag_name >>
 
-            oc image mirror $(for component in apicast zync ; do
-              echo 172.30.1.1:5000/$project/amp-$component:${imagestream_tag_name}=quay.io/3scale/$component:nightly
-            done) 172.30.1.1:5000/$project/amp-backend:${imagestream_tag_name}=quay.io/3scale/apisonator:nightly \
-            172.30.1.1:5000/$project/amp-system:${imagestream_tag_name}=quay.io/3scale/porta:nightly --insecure
+            oc image mirror \
+              172.30.1.1:5000/$project/amp-apicast:${imagestream_tag_name}=quay.io/3scale/apicast:${imagestream_tag_name} \
+              172.30.1.1:5000/$project/amp-zync:${imagestream_tag_name}=quay.io/3scale/zync:${imagestream_tag_name} \
+              172.30.1.1:5000/$project/amp-backend:${imagestream_tag_name}=quay.io/3scale/apisonator:${imagestream_tag_name} \
+              172.30.1.1:5000/$project/amp-system:${imagestream_tag_name}=quay.io/3scale/porta:${imagestream_tag_name} \
+              --insecure
 
   create-redhat-registry-io-secret:
     steps:
@@ -279,25 +292,29 @@ commands:
               --docker-username="${DOCKER_USERNAME}" \
               --docker-server="${DOCKER_REGISTRY}"
   build-nightly-amp:
-    parameters:
-      components_imagestream_tag_name:
-        type: string
     steps:
       - run:
           name: Build nightly images
           no_output_timeout: 30m
           command: |
             set -o errexit
-            imagestream_tag_name=<< parameters.components_imagestream_tag_name >>
+            imagestream_tag_name=<< pipeline.parameters.components_imagestream_tag_name >>
             oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
               --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:nightly \
               --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
               --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
               --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
+              --param MEMCACHED_IMAGE=<< pipeline.parameters.memcached_image >> \
               -o json --param WILDCARD_DOMAIN=lvh/me --param AMP_RELEASE="${imagestream_tag_name}" | \
               jq -j '.items[] | select(.kind == "ImageStream")' | \
               oc create -f -
-            oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml --allow-missing-imagestream-tags --param IMAGESTREAM_TAG_NAME="${imagestream_tag_name}"
+            oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml \
+              --allow-missing-imagestream-tags \
+              --param IMAGESTREAM_TAG_NAME="${imagestream_tag_name}" \
+              --param ZYNC_GIT_REF="${imagestream_tag_name}" \
+              --param PORTA_GIT_REF="${imagestream_tag_name}" \
+              --param APICAST_GIT_REF="${imagestream_tag_name}" \
+              --param APISONATOR_GIT_REF="${imagestream_tag_name}"
             until (oc get is s2i-openresty-centos7 -o json || echo '{}') | jq '[.status.tags[] | select(.tag == "builder")] | length == 1' --exit-status; do
               echo "wating for s2i-openresty-centos7:builder imagestream"
               sleep 1
@@ -441,9 +458,6 @@ jobs:
       - oc-status
 
   build-push-3scale-nightly-images:
-    parameters:
-      components_imagestream_tag_name:
-        type: string
     machine:
       image: ubuntu-1604:202007-01
       docker_layer_caching: true
@@ -453,13 +467,11 @@ jobs:
       - install-openshift
       - create-secrets
       - create-redhat-registry-io-secret
-      - build-nightly-amp:
-          components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
+      - build-nightly-amp
       - oc-observe
       - deploy-3scale-eval-from-template-imagestreamsless
       - oc-status
-      - push-3scale-images-to-quay:
-          components_imagestream_tag_name: << parameters.components_imagestream_tag_name >>
+      - push-3scale-images-to-quay
 
   run-unit-tests:
     docker:
@@ -588,7 +600,6 @@ workflows:
     jobs:
       - build-push-3scale-nightly-images:
           context: org-global
-          components_imagestream_tag_name: "master"
       - deploy_templates:
           requires:
             - build-push-3scale-nightly-images
