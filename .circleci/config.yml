@@ -127,7 +127,7 @@ commands:
             WILDCARD_DOMAIN="lvh.me"
             imagestream_tag_name=<< parameters.components_imagestream_tag_name >>
             oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml -o json \
-              --param WILDCARD_DOMAIN=$WILDCARD_DOMAIN --param AMP_RELEASE="${imagestream_tag_name}" | \
+              --param WILDCARD_DOMAIN=${WILDCARD_DOMAIN} --param AMP_RELEASE="${imagestream_tag_name}" | \
               jq -j '.items[] | select(.kind != "ImageStream")' | oc create -f -
           no_output_timeout: 30m
       - check-3scale-templates-deployed-deploymentconfigs
