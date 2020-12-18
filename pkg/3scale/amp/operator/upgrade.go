@@ -530,6 +530,10 @@ func (u *UpgradeApiManager) ensureSystemAppMonitoringSettings() (bool, error) {
 }
 
 func (u *UpgradeApiManager) upgradePrometheusRules(desired *monitoringv1.PrometheusRule) (bool, error) {
+	if !u.apiManager.IsMonitoringEnabled() {
+		return false, nil
+	}
+
 	existing := &monitoringv1.PrometheusRule{}
 	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
 	if err != nil {
