@@ -453,6 +453,14 @@ jobs:
       docker_layer_caching: true
     resource_class: large
     steps:
+      - run:
+          name: GITREF << pipeline.parameters.components_git_ref >>
+          command: |
+            exit 0
+      - run:
+          name: Remote Image TAG << pipeline.parameters.components_tag_name >>
+          command: |
+            exit 0
       - checkout
       - install-openshift
       - create-secrets
