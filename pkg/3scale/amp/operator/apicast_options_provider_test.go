@@ -153,6 +153,7 @@ func defaultApicastOptions() *component.ApicastOptions {
 		CommonProductionLabels:         testApicastProductionLabels(),
 		StagingPodTemplateLabels:       testApicastStagingPodLabels(),
 		ProductionPodTemplateLabels:    testApicastProductionPodLabels(),
+		Namespace:                      namespace,
 	}
 }
 

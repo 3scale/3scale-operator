@@ -212,6 +212,7 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 		CronPodTemplateLabels:        testBackendCronPodLabels(),
 		WorkerMetrics:                true,
 		ListenerMetrics:              true,
+		Namespace:                    opts.Namespace,
 	}
 }
 
