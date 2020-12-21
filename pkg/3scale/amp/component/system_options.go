@@ -90,6 +90,8 @@ type SystemOptions struct {
 	AppMetrics               bool
 
 	IncludeOracleOptionalSettings bool
+
+	Namespace string `validate:"required"`
 }
 
 func NewSystemOptions() *SystemOptions {
