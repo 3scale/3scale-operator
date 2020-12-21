@@ -58,6 +58,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 
 	o.backendOptions.WorkerMetrics = true
 	o.backendOptions.ListenerMetrics = true
+	o.backendOptions.Namespace = o.apimanager.Namespace
 
 	err = o.backendOptions.Validate()
 	if err != nil {
