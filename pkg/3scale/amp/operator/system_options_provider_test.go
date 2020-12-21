@@ -362,6 +362,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		SideKiqMetrics:                true,
 		AppMetrics:                    true,
 		IncludeOracleOptionalSettings: true,
+		Namespace:                     opts.Namespace,
 	}
 
 	expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(opts.ApicastAccessToken)
