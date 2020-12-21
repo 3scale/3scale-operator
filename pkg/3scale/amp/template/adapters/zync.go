@@ -118,6 +118,9 @@ func (z *Zync) options() (*component.ZyncOptions, error) {
 
 	zo.ZyncQueServiceAccountImagePullSecrets = component.DefaultZyncQueServiceAccountImagePullSecrets()
 
+	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
+	zo.Namespace = "mynamespace"
+
 	err := zo.Validate()
 	return zo, err
 }
