@@ -268,6 +268,9 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.SMTPLabels = s.smtpLabels()
 	o.BackendServiceEndpoint = s.backendServiceEndpoint()
 
+	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
+	o.Namespace = "mynamespace"
+
 	err := o.Validate()
 	return o, err
 }
