@@ -40,6 +40,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.CommonProductionLabels = a.commonProductionLabels()
 	a.apicastOptions.StagingPodTemplateLabels = a.stagingPodTemplateLabels(imageOpts.ApicastImage)
 	a.apicastOptions.ProductionPodTemplateLabels = a.productionPodTemplateLabels(imageOpts.ApicastImage)
+	a.apicastOptions.Namespace = a.apimanager.Namespace
 	a.apicastOptions.ProductionWorkers = a.apimanager.Spec.Apicast.ProductionSpec.Workers
 
 	a.setResourceRequirementsOptions()
