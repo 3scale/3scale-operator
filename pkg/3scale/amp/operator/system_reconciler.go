@@ -186,17 +186,17 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.SystemGrafanaDashboard(r.apiManager.Namespace), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboard(system.SystemGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.SystemAppPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(system.SystemAppPrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.SystemSidekiqPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(system.SystemSidekiqPrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

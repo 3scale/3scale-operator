@@ -265,6 +265,9 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.MemcachedLabels = s.memcachedLabels()
 	o.SMTPLabels = s.smtpLabels()
 
+	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
+	o.Namespace = "mynamespace"
+
 	err := o.Validate()
 	return o, err
 }
