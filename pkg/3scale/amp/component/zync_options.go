@@ -40,6 +40,8 @@ type ZyncOptions struct {
 	ZyncMetrics                   bool
 
 	ZyncQueServiceAccountImagePullSecrets []v1.LocalObjectReference `validate:"required"`
+
+	Namespace string `validate:"required"`
 }
 
 func NewZyncOptions() *ZyncOptions {

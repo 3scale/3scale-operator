@@ -61,6 +61,8 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 
 	z.zyncOptions.ZyncQueServiceAccountImagePullSecrets = z.zyncQueServiceAccountImagePullSecrets()
 
+	z.zyncOptions.Namespace = z.apimanager.Namespace
+
 	err = z.zyncOptions.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("GetZyncOptions validating: %w", err)
