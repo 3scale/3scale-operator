@@ -25,6 +25,7 @@ type ApicastOptions struct {
 	ProductionTolerations          []v1.Toleration   `validate:"-"`
 	StagingAffinity                *v1.Affinity      `validate:"-"`
 	StagingTolerations             []v1.Toleration   `validate:"-"`
+	Namespace                      string            `validate:"required"`
 	ProductionWorkers              *int32            `validate:"-"`
 }
 

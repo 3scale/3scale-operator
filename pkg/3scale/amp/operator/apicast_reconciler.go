@@ -105,17 +105,17 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.ApicastMainAppGrafanaDashboard(r.apiManager.Namespace), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboard(apicast.ApicastMainAppGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.ApicastServicesGrafanaDashboard(r.apiManager.Namespace), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboard(apicast.ApicastServicesGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.ApicastPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(apicast.ApicastPrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
