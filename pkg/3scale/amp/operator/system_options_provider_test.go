@@ -364,6 +364,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		AppMetrics:                    true,
 		IncludeOracleOptionalSettings: true,
 		BackendServiceEndpoint:        fmt.Sprintf("%s%s", component.DefaultBackendServiceEndpoint(), "/internal/"),
+		Namespace:                     opts.Namespace,
 	}
 
 	expectedOpts.ApicastSystemMasterProxyConfigEndpoint = component.DefaultApicastSystemMasterProxyConfigEndpoint(opts.ApicastAccessToken)
