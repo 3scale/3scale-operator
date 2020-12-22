@@ -63,3 +63,5 @@ replace github.com/openshift/api => github.com/openshift/api v0.0.0-202005271843
 replace github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20191125132246-f6563a70e19a
 
 replace github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.15.2
+
+replace github.com/containerd/containerd => github.com/containerd/containerd v1.3.9
