@@ -26,6 +26,8 @@ type ApicastOptions struct {
 	StagingAffinity                *v1.Affinity      `validate:"-"`
 	StagingTolerations             []v1.Toleration   `validate:"-"`
 	ProductionWorkers              *int32            `validate:"-"`
+	ProductionLogLevel             *string
+	StagingLogLevel                *string
 }
 
 func NewApicastOptions() *ApicastOptions {

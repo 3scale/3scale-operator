@@ -57,7 +57,14 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging DC
-	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
+	stagingDCMutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigReplicasMutator,
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+		r.apicastLogLevelEnvVarMutator,
+	)
+	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -69,6 +76,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.apicastProductionWorkersEnvVarMutator,
+		r.apicastLogLevelEnvVarMutator,
 	)
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
@@ -136,6 +144,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 func (r *ApicastReconciler) apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	// Reconcile EnvVar only for "APICAST_WORKERS"
 	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_WORKERS")
+}
+
+func (r *ApicastReconciler) apicastLogLevelEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	// Reconcile EnvVar only for "APICAST_LOG_LEVEL"
+	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL")
 }
 
 func Apicast(apimanager *appsv1alpha1.APIManager) (*component.Apicast, error) {

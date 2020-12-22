@@ -512,6 +512,11 @@ func (in *ApicastProductionSpec) DeepCopyInto(out *ApicastProductionSpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.LogLevel != nil {
+		in, out := &in.LogLevel, &out.LogLevel
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -600,6 +605,11 @@ func (in *ApicastStagingSpec) DeepCopyInto(out *ApicastStagingSpec) {
 		in, out := &in.Resources, &out.Resources
 		*out = new(v1.ResourceRequirements)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.LogLevel != nil {
+		in, out := &in.LogLevel, &out.LogLevel
+		*out = new(string)
+		**out = **in
 	}
 	return
 }
