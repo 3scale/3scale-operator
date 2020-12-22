@@ -122,7 +122,7 @@ func DeploymentConfigEnvVarMergeMutator(desired, existing *appsv1.DeploymentConf
 		desiredContainer := &desired.Spec.Template.Spec.Containers[idx]
 
 		for _, desiredEnvVar := range desiredContainer.Env {
-			envVarIdx := FindEnvVar(existingContainer.Env, desiredEnvVar.Name)
+			envVarIdx := helper.FindEnvVar(existingContainer.Env, desiredEnvVar.Name)
 			if envVarIdx < 0 {
 				existingContainer.Env = append(existingContainer.Env, desiredEnvVar)
 				update = true

@@ -6,6 +6,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -141,9 +142,9 @@ func (r *ApicastReconciler) apicastProductionWorkersEnvVarMutator(desired, exist
 	existingContainer := &existing.Spec.Template.Spec.Containers[0]
 	desiredContainer := desired.Spec.Template.Spec.Containers[0]
 
-	idx := reconcilers.FindEnvVar(desiredContainer.Env, "APICAST_WORKERS")
+	idx := helper.FindEnvVar(desiredContainer.Env, "APICAST_WORKERS")
 	if idx < 0 {
-		existingIdx := reconcilers.FindEnvVar(existingContainer.Env, "APICAST_WORKERS")
+		existingIdx := helper.FindEnvVar(existingContainer.Env, "APICAST_WORKERS")
 		if existingIdx >= 0 {
 			// Needs to be deleted from existing
 			// shift all of the elements at the right of the deleting index by one to the left
