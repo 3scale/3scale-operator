@@ -109,29 +109,36 @@ func DeploymentConfigContainerResourcesMutator(desired, existing *appsv1.Deploym
 	return update
 }
 
-func DeploymentConfigEnvVarMergeMutator(desired, existing *appsv1.DeploymentConfig) bool {
+// DeploymentConfigEnvVarReconciler implements basic env var reconcilliation for single container deployment configs.
+// Added when in desired and not in existing
+// Updated when in desired and in existing but not equal
+// Removed when not in desired and exists in existing DC
+func DeploymentConfigEnvVarReconciler(desired, existing *appsv1.DeploymentConfig, envVar string) bool {
 	update := false
 
-	if len(existing.Spec.Template.Spec.Containers) != len(desired.Spec.Template.Spec.Containers) {
-		existing.Spec.Template.Spec.Containers = desired.Spec.Template.Spec.Containers
+	existingContainer := &existing.Spec.Template.Spec.Containers[0]
+	desiredContainer := desired.Spec.Template.Spec.Containers[0]
+
+	desiredIdx := helper.FindEnvVar(desiredContainer.Env, envVar)
+	existingIdx := helper.FindEnvVar(existingContainer.Env, envVar)
+
+	if desiredIdx < 0 && existingIdx >= 0 {
+		// env var exists in existing and does not exist in desired => Remove from the list
+		// shift all of the elements at the right of the deleting index by one to the left
+		existingContainer.Env = append(existingContainer.Env[:existingIdx], existingContainer.Env[existingIdx+1:]...)
 		update = true
-	}
-
-	for idx := 0; idx < len(desired.Spec.Template.Spec.Containers); idx++ {
-		existingContainer := &existing.Spec.Template.Spec.Containers[idx]
-		desiredContainer := &desired.Spec.Template.Spec.Containers[idx]
-
-		for _, desiredEnvVar := range desiredContainer.Env {
-			envVarIdx := helper.FindEnvVar(existingContainer.Env, desiredEnvVar.Name)
-			if envVarIdx < 0 {
-				existingContainer.Env = append(existingContainer.Env, desiredEnvVar)
-				update = true
-			} else if !reflect.DeepEqual(existingContainer.Env[idx], desiredEnvVar) {
-				existingContainer.Env[envVarIdx] = desiredEnvVar
-				update = true
-			}
+	} else if desiredIdx < 0 && existingIdx < 0 {
+		// env var does not exist in existing and does not exist in desired => NOOP
+	} else if desiredIdx >= 0 && existingIdx < 0 {
+		// env var does not exist in existing and exists in desired => ADD it
+		existingContainer.Env = append(existingContainer.Env, desiredContainer.Env[desiredIdx])
+		update = true
+	} else {
+		// env var exists in existing and exists in desired
+		if !reflect.DeepEqual(existingContainer.Env[existingIdx], desiredContainer.Env[desiredIdx]) {
+			existingContainer.Env[existingIdx] = desiredContainer.Env[desiredIdx]
+			update = true
 		}
 	}
-
 	return update
 }

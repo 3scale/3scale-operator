@@ -286,7 +286,7 @@ func TestDeploymentConfigTolerationsMutator(t *testing.T) {
 
 }
 
-func TestDeploymentConfigEnvVarMergeMutator(t *testing.T) {
+func TestDeploymentConfigEnvVarReconciler(t *testing.T) {
 	dcFactory := func(envs []corev1.EnvVar) *appsv1.DeploymentConfig {
 		return &appsv1.DeploymentConfig{
 			TypeMeta: metav1.TypeMeta{
@@ -311,7 +311,12 @@ func TestDeploymentConfigEnvVarMergeMutator(t *testing.T) {
 			},
 		}
 	}
-	existingEnvs := []corev1.EnvVar{
+
+	sliceCopy := func(a []corev1.EnvVar) []corev1.EnvVar {
+		return append(a[:0:0], a...)
+	}
+
+	envVarAB := []corev1.EnvVar{
 		{
 			Name:  "A",
 			Value: "valueA",
@@ -320,75 +325,61 @@ func TestDeploymentConfigEnvVarMergeMutator(t *testing.T) {
 			Name:  "B",
 			Value: "valueB",
 		},
+	}
+
+	envVarB := []corev1.EnvVar{
 		{
-			// does not exist in desired
-			Name:  "C",
-			Value: "valueC",
+			Name:  "B",
+			Value: "valueB",
 		},
 	}
 
-	desiredEnvs := []corev1.EnvVar{
+	envVarBA := []corev1.EnvVar{
+		{
+			Name:  "B",
+			Value: "valueB",
+		},
 		{
 			Name:  "A",
 			Value: "valueA",
 		},
+	}
+
+	envVarAB2 := []corev1.EnvVar{
 		{
-			// Modified from existing one
+			Name:  "A",
+			Value: "valueOther",
+		},
+		{
 			Name:  "B",
-			Value: "valueBNew",
-		},
-		{
-			// does not exist in existing
-			Name:  "D",
-			Value: "valueD",
+			Value: "valueB",
 		},
 	}
 
-	existing := dcFactory(existingEnvs)
-	desired := dcFactory(desiredEnvs)
-	update := DeploymentConfigEnvVarMergeMutator(desired, existing)
-	if !update {
-		t.Fatal("expected update")
+	cases := []struct {
+		testName          string
+		existingEnvVar    []corev1.EnvVar
+		desiredEnvVar     []corev1.EnvVar
+		expectedResult    bool
+		expectedNewEnvVar []corev1.EnvVar
+	}{
+		{"NothingToReconcile", sliceCopy(envVarAB), sliceCopy(envVarAB), false, sliceCopy(envVarAB)},
+		{"MissingEnvVar", sliceCopy(envVarB), sliceCopy(envVarAB), true, sliceCopy(envVarBA)},
+		{"UpdatedEnvVar", sliceCopy(envVarAB), sliceCopy(envVarAB2), true, sliceCopy(envVarAB2)},
+		{"RemovedEnvVar", sliceCopy(envVarAB), sliceCopy(envVarB), true, sliceCopy(envVarB)},
 	}
 
-	newExistingMap := make(map[string]corev1.EnvVar)
-	for _, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
-		newExistingMap[envVar.Name] = envVar
-	}
-
-	envVar, ok := newExistingMap["A"]
-	if !ok {
-		t.Fatal("expected A in the result")
-	}
-
-	if envVar.Value != "valueA" {
-		t.Fatalf("expected value of A to be valueA, instead found %s", envVar.Value)
-	}
-
-	envVar, ok = newExistingMap["B"]
-	if !ok {
-		t.Fatal("expected B in the result")
-	}
-
-	if envVar.Value != "valueBNew" {
-		t.Fatalf("expected value of B to be valueBNew, instead found %s", envVar.Value)
-	}
-
-	envVar, ok = newExistingMap["C"]
-	if !ok {
-		t.Fatal("expected C in the result")
-	}
-
-	if envVar.Value != "valueC" {
-		t.Fatalf("expected value of C to be valueC, instead found %s", envVar.Value)
-	}
-
-	envVar, ok = newExistingMap["D"]
-	if !ok {
-		t.Fatal("expected D in the result")
-	}
-
-	if envVar.Value != "valueD" {
-		t.Fatalf("expected value of D to be valueD, instead found %s", envVar.Value)
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			existing := dcFactory(tc.existingEnvVar)
+			desired := dcFactory(tc.desiredEnvVar)
+			update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
+			if update != tc.expectedResult {
+				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
+			}
+			if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Env, tc.expectedNewEnvVar) {
+				subT.Fatal(cmp.Diff(existing.Spec.Template.Spec.Containers[0].Env, tc.expectedNewEnvVar))
+			}
+		})
 	}
 }

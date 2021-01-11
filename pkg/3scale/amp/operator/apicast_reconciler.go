@@ -6,7 +6,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -69,7 +68,6 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigEnvVarMergeMutator,
 		r.apicastProductionWorkersEnvVarMutator,
 	)
 
@@ -137,22 +135,8 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 func (r *ApicastReconciler) apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
-	update := false
-
-	existingContainer := &existing.Spec.Template.Spec.Containers[0]
-	desiredContainer := desired.Spec.Template.Spec.Containers[0]
-
-	idx := helper.FindEnvVar(desiredContainer.Env, "APICAST_WORKERS")
-	if idx < 0 {
-		existingIdx := helper.FindEnvVar(existingContainer.Env, "APICAST_WORKERS")
-		if existingIdx >= 0 {
-			// Needs to be deleted from existing
-			// shift all of the elements at the right of the deleting index by one to the left
-			existingContainer.Env = append(existingContainer.Env[:existingIdx], existingContainer.Env[existingIdx+1:]...)
-			update = true
-		}
-	}
-	return update
+	// Reconcile EnvVar only for "APICAST_WORKERS"
+	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_WORKERS")
 }
 
 func Apicast(apimanager *appsv1alpha1.APIManager) (*component.Apicast, error) {
