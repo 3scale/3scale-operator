@@ -61,9 +61,9 @@ spec:
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
 | Name | `name` | string | Schema Name | **Yes** |
-| Version | `version` | string | Schema Version | **Yes** o
+| Version | `version` | string | Schema Version | **Yes** |
 | Summary | `summary` | string | Schema Summary | **Yes** |
-| Schema | `$schema` | string | $schema keyword is used to declare that this is a JSON Schema | **Yes** |
+| Schema | `$schema` | string | `$schema` keyword is used to declare that this is a JSON Schema. Check [spec doc](https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.8.1.1) for more info. | **Yes** |
 | Description | `description` | array of string | Schema Description | No |
 | Configuration | `configuration` | object | Schema configuration object | Yes. Minimum required is the empty object `{}` |
 
