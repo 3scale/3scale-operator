@@ -10,6 +10,7 @@ resources:
 - bases/capabilities.3scale.net_products.yaml
 - bases/capabilities.3scale.net_openapis.yaml
 - bases/capabilities.3scale.net_activedocs.yaml
+- bases/capabilities.3scale.net_policies.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -23,6 +24,7 @@ patchesStrategicMerge:
 #- patches/webhook_in_products.yaml
 #- patches/webhook_in_openapis.yaml
 #- patches/webhook_in_activedocs.yaml
+#- patches/webhook_in_policies.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
@@ -35,6 +37,7 @@ patchesStrategicMerge:
 #- patches/cainjection_in_products.yaml
 #- patches/cainjection_in_openapis.yaml
 #- patches/cainjection_in_activedocs.yaml
+#- patches/cainjection_in_policies.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # ActiveDoc CRD ActiveDocOpenAPIRef OpenAPI Validation]. This patch following patch adds `oneOf` OpenAPI

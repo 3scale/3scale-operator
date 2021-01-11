@@ -27,6 +27,26 @@ rules:
   - patch
   - update
 - apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - policies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - policies/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - console.openshift.io
   resources:
   - consolelinks

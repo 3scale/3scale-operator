@@ -23,14 +23,6 @@ import (
 	"os"
 	"runtime"
 
-	apimachineryruntime "k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/discovery"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -38,6 +30,13 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/prometheus/client_golang/prometheus"
+	apimachineryruntime "k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/discovery"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -246,6 +245,24 @@ func main() {
 			mgr.GetEventRecorderFor("ActiveDoc")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ActiveDoc")
+		os.Exit(1)
+	}
+
+	discoveryClientPolicy, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
+
+	if err = (&capabilitiescontroller.PolicyReconciler{
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("Policy"),
+			discoveryClientPolicy,
+			mgr.GetEventRecorderFor("Policy")),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Policy")
 		os.Exit(1)
 	}
 
