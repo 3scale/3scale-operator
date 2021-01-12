@@ -98,7 +98,7 @@ func (b *Backend) options() (*component.BackendOptions, error) {
 	bo.CronPodTemplateLabels = b.cronPodTemplateLabels()
 
 	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
-	bo.Namespace = "mynamespace"
+	bo.Namespace = "${NAMESPACE}"
 
 	err := bo.Validate()
 	return bo, err

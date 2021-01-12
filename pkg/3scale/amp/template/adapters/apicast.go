@@ -112,7 +112,7 @@ func (a *Apicast) options() (*component.ApicastOptions, error) {
 	ao.ProductionPodTemplateLabels = a.productionPodTemplateLabels()
 
 	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
-	ao.Namespace = "mynamespace"
+	ao.Namespace = "${NAMESPACE}"
 
 	err := ao.Validate()
 	return ao, err
