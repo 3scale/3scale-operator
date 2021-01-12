@@ -74,13 +74,20 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
+
+	// https://v1-2-x.sdk.operatorframework.io/docs/building-operators/golang/references/logging/#a-simple-example
+	// Add the zap logger flag set to the CLI. The flag set must
+	// be added before calling flag.Parse().
+	loggerOpts := zap.Options{}
+	loggerOpts.BindFlags(flag.CommandLine)
+
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&loggerOpts)))
 
 	printVersion()
 
