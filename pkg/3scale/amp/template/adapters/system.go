@@ -266,7 +266,7 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.SMTPLabels = s.smtpLabels()
 
 	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
-	o.Namespace = "mynamespace"
+	o.Namespace = "${NAMESPACE}"
 
 	err := o.Validate()
 	return o, err
