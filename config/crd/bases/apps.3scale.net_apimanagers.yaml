@@ -744,6 +744,10 @@ spec:
                             type: string
                         type: object
                       type: array
+                    workers:
+                      format: int32
+                      minimum: 1
+                      type: integer
                   type: object
                 registryURL:
                   type: string

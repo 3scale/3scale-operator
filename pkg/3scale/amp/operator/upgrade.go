@@ -450,20 +450,20 @@ func (u *UpgradeApiManager) upgradeSystemAppBackendRouteEnv(desired *appsv1.Depl
 	for idx := 0; idx < 3; idx++ {
 		existingContainer := &existing.Spec.Template.Spec.Containers[idx]
 		desiredContainer := &desired.Spec.Template.Spec.Containers[idx]
-		desiredBackendRouteEnvVar, ok := helper.FindEnvVar(desiredContainer.Env, "BACKEND_ROUTE")
-		if !ok {
+		desiredBackendRouteEnvVarIdx := helper.FindEnvVar(desiredContainer.Env, "BACKEND_ROUTE")
+		if desiredBackendRouteEnvVarIdx < 0 {
 			return reconcile.Result{}, fmt.Errorf("%s desired spec.template.spec.containers env var '%s' does not exist", desiredName, "BACKEND_ROUTE")
 		}
-		tmpUpdate := ensureBackendRouteEnvVar(desiredBackendRouteEnvVar, &existingContainer.Env)
+		tmpUpdate := ensureBackendRouteEnvVar(desiredContainer.Env[desiredBackendRouteEnvVarIdx], &existingContainer.Env)
 		update = update || tmpUpdate
 	}
 
 	// Pre hook pod env vars
-	desiredBackendRouteEnvVar, ok := helper.FindEnvVar(desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env, "BACKEND_ROUTE")
-	if !ok {
+	desiredBackendRouteEnvVarIdx := helper.FindEnvVar(desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env, "BACKEND_ROUTE")
+	if desiredBackendRouteEnvVarIdx < 0 {
 		return reconcile.Result{}, fmt.Errorf("%s desired spec.strategy.rollingparams.pre.execnewpod env var '%s' does not exist", desiredName, "BACKEND_ROUTE")
 	}
-	tmpUpdate := ensureBackendRouteEnvVar(desiredBackendRouteEnvVar, &existing.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env)
+	tmpUpdate := ensureBackendRouteEnvVar(desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env[desiredBackendRouteEnvVarIdx], &existing.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env)
 	update = update || tmpUpdate
 
 	if update {
@@ -493,11 +493,11 @@ func (u *UpgradeApiManager) upgradeSidekiqBackendRouteEnv(desired *appsv1.Deploy
 
 	existingContainer := &existing.Spec.Template.Spec.Containers[0]
 	desiredContainer := &desired.Spec.Template.Spec.Containers[0]
-	desiredBackendRouteEnvVar, ok := helper.FindEnvVar(desiredContainer.Env, "BACKEND_ROUTE")
-	if !ok {
+	desiredBackendRouteEnvVarIdx := helper.FindEnvVar(desiredContainer.Env, "BACKEND_ROUTE")
+	if desiredBackendRouteEnvVarIdx < 0 {
 		return reconcile.Result{}, fmt.Errorf("%s desired spec.template.spec.containers env var '%s' does not exist", desiredName, "BACKEND_ROUTE")
 	}
-	update := ensureBackendRouteEnvVar(desiredBackendRouteEnvVar, &existingContainer.Env)
+	update := ensureBackendRouteEnvVar(desiredContainer.Env[desiredBackendRouteEnvVarIdx], &existingContainer.Env)
 
 	if update {
 		u.Logger().Info(fmt.Sprintf("Upgrading BACKEND_ROUTE environment variable to DC %s", existing.Name))
