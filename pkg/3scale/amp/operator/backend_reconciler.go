@@ -101,17 +101,17 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.BackendGrafanaDashboard(r.apiManager.Namespace), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboard(backend.BackendGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.BackendWorkerPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(backend.BackendWorkerPrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.BackendListenerPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(backend.BackendListenerPrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

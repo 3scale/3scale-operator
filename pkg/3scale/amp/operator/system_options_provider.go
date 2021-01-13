@@ -69,6 +69,8 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.options.AppMetrics = true
 	s.options.IncludeOracleOptionalSettings = true
 
+	s.options.Namespace = s.namespace
+
 	err = s.options.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("GetSystemOptions validating: %w", err)
