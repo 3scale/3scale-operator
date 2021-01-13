@@ -42,6 +42,8 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.ProductionPodTemplateLabels = a.productionPodTemplateLabels(imageOpts.ApicastImage)
 	a.apicastOptions.Namespace = a.apimanager.Namespace
 	a.apicastOptions.ProductionWorkers = a.apimanager.Spec.Apicast.ProductionSpec.Workers
+	a.apicastOptions.ProductionLogLevel = a.apimanager.Spec.Apicast.ProductionSpec.LogLevel
+	a.apicastOptions.StagingLogLevel = a.apimanager.Spec.Apicast.StagingSpec.LogLevel
 
 	a.setResourceRequirementsOptions()
 	a.setNodeAffinityAndTolerationsOptions()
