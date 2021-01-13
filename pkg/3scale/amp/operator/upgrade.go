@@ -455,7 +455,8 @@ func (u *UpgradeApiManager) ensureSystemSidekiqMonitoringSettings() (bool, error
 	}
 
 	update := false
-	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, component.SystemSidekiqPrometheusExporterPortEnvVarName); !ok {
+	existingEnvVarIdx := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, component.SystemSidekiqPrometheusExporterPortEnvVarName)
+	if existingEnvVarIdx < 0 {
 		existing.Spec.Template.Spec.Containers[0].Env = append(
 			existing.Spec.Template.Spec.Containers[0].Env,
 			helper.EnvVarFromValue(component.SystemSidekiqPrometheusExporterPortEnvVarName, strconv.Itoa(component.SystemSidekiqMetricsPort)),
@@ -505,7 +506,8 @@ func (u *UpgradeApiManager) ensureSystemAppMonitoringSettings() (bool, error) {
 			return false, fmt.Errorf("DeploymentConfig '%s' has unrecognized container name '%s'", existing.Name, containerName)
 		}
 
-		if _, ok := helper.FindEnvVar(container.Env, component.SystemAppPrometheusExporterPortEnvVarName); !ok {
+		existingEnvVarIdx := helper.FindEnvVar(container.Env, component.SystemAppPrometheusExporterPortEnvVarName)
+		if existingEnvVarIdx < 0 {
 			container.Env = append(
 				container.Env,
 				helper.EnvVarFromValue(component.SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(containerPrometheusMetricsPort)),
