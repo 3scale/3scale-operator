@@ -41,6 +41,10 @@ type ZyncOptions struct {
 
 	ZyncQueServiceAccountImagePullSecrets []v1.LocalObjectReference `validate:"required"`
 
+	// Used for monitoring objects
+	// Those objects are namespaced. However, objects includes labels, rules and expressions
+	// that need namespace filtering because they are "global" once imported
+	// to the prometheus or grafana services.
 	Namespace string `validate:"required"`
 }
 
