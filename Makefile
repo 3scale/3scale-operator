@@ -77,7 +77,7 @@ manager: generate fmt vet
 run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
 run: export THREESCALE_DEBUG=1
 run: generate fmt vet manifests
-	$(GO) run ./main.go
+	$(GO) run ./main.go --zap-devel
 
 # Install CRDs into a cluster
 install: manifests kustomize
