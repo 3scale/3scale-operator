@@ -34,3 +34,6 @@ replace github.com/openshift/api => github.com/openshift/api v0.0.0-202005271843
 // Required due to other libraries referencing v12.0.0+incompatible and without replace we can't have v0.18.6 specified
 // in the require section
 replace k8s.io/client-go => k8s.io/client-go v0.18.6
+
+// security release to address CVE-2020-15257
+replace github.com/containerd/containerd => github.com/containerd/containerd v1.3.9
