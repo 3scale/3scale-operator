@@ -2,12 +2,13 @@ package component
 
 import (
 	"fmt"
-
-	"k8s.io/api/policy/v1beta1"
+	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -346,6 +347,9 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 		helper.EnvVarFromValue("APICAST_CONFIGURATION_CACHE", "300"),
 		helper.EnvVarFromValue("THREESCALE_DEPLOYMENT_ENV", "production"),
 	)
+	if apicast.Options.ProductionWorkers != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_WORKERS", strconv.Itoa(int(*apicast.Options.ProductionWorkers))))
+	}
 	return result
 }
 
