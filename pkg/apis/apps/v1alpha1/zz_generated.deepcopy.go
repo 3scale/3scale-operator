@@ -507,6 +507,11 @@ func (in *ApicastProductionSpec) DeepCopyInto(out *ApicastProductionSpec) {
 		*out = new(v1.ResourceRequirements)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Workers != nil {
+		in, out := &in.Workers, &out.Workers
+		*out = new(int32)
+		**out = **in
+	}
 	return
 }
 
