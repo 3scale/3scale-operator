@@ -177,6 +177,9 @@ type ApicastProductionSpec struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=1
 	Workers *int32 `json:"workers,omitempty"`
+	// +optional
+	// +kubebuilder:validation:Enum=debug;info;notice;warn;error;crit;alert;emerg
+	LogLevel *string `json:"logLevel,omitempty"` // APICAST_LOG_LEVEL
 }
 
 type ApicastStagingSpec struct {
@@ -188,6 +191,9 @@ type ApicastStagingSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	// +kubebuilder:validation:Enum=debug;info;notice;warn;error;crit;alert;emerg
+	LogLevel *string `json:"logLevel,omitempty"` // APICAST_LOG_LEVEL
 }
 
 type BackendSpec struct {
