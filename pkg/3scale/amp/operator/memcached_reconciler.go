@@ -24,7 +24,12 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// DC
-	err = r.ReconcileDeploymentConfig(memcached.DeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
+	mutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+	)
+	err = r.ReconcileDeploymentConfig(memcached.DeploymentConfig(), mutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

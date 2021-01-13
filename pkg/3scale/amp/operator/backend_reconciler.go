@@ -26,13 +26,13 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Cron DC
-	err = r.ReconcileDeploymentConfig(backend.CronDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	err = r.ReconcileDeploymentConfig(backend.CronDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Listerner DC
-	err = r.ReconcileDeploymentConfig(backend.ListenerDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	err = r.ReconcileDeploymentConfig(backend.ListenerDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -50,7 +50,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Worker DC
-	err = r.ReconcileDeploymentConfig(backend.WorkerDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	err = r.ReconcileDeploymentConfig(backend.WorkerDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

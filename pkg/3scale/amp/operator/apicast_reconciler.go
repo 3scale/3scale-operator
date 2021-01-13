@@ -8,6 +8,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -56,13 +57,20 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging DC
-	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Production DC
-	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	productionDCMutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigReplicasMutator,
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+		r.apicastProductionWorkersEnvVarMutator,
+	)
+	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -123,6 +131,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *ApicastReconciler) apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	// Reconcile EnvVar only for "APICAST_WORKERS"
+	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_WORKERS")
 }
 
 func Apicast(apimanager *appsv1alpha1.APIManager) (*component.Apicast, error) {

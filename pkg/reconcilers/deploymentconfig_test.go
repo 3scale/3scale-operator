@@ -15,7 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestDeploymentConfigReplicasReconciler(t *testing.T) {
+func TestDeploymentConfigReplicasMutator(t *testing.T) {
 	dcFactory := func() *appsv1.DeploymentConfig {
 		return &appsv1.DeploymentConfig{
 			TypeMeta: metav1.TypeMeta{
@@ -50,7 +50,7 @@ func TestDeploymentConfigReplicasReconciler(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory()
-			update := DeploymentConfigReplicasReconciler(tc.desired(), existing)
+			update := DeploymentConfigReplicasMutator(tc.desired(), existing)
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
@@ -62,7 +62,7 @@ func TestDeploymentConfigReplicasReconciler(t *testing.T) {
 	}
 }
 
-func TestDeploymentConfigContainerResourcesReconciler(t *testing.T) {
+func TestDeploymentConfigContainerResourcesMutator(t *testing.T) {
 	emptyResourceRequirements := corev1.ResourceRequirements{
 		Limits:   corev1.ResourceList{},
 		Requests: corev1.ResourceList{},
@@ -118,7 +118,7 @@ func TestDeploymentConfigContainerResourcesReconciler(t *testing.T) {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory(tc.existingResources)
 			desired := dcFactory(tc.desiredResources)
-			update := DeploymentConfigContainerResourcesReconciler(desired, existing)
+			update := DeploymentConfigContainerResourcesMutator(desired, existing)
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
@@ -129,7 +129,7 @@ func TestDeploymentConfigContainerResourcesReconciler(t *testing.T) {
 	}
 }
 
-func TestDeploymentConfigAffinityReconciler(t *testing.T) {
+func TestDeploymentConfigAffinityMutator(t *testing.T) {
 	testAffinity1 := &corev1.Affinity{
 		NodeAffinity: &corev1.NodeAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
@@ -199,7 +199,7 @@ func TestDeploymentConfigAffinityReconciler(t *testing.T) {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory(tc.existingAffinity)
 			desired := dcFactory(tc.desiredAffinity)
-			update := DeploymentConfigAffinityReconciler(desired, existing)
+			update := DeploymentConfigAffinityMutator(desired, existing)
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
@@ -210,7 +210,7 @@ func TestDeploymentConfigAffinityReconciler(t *testing.T) {
 	}
 }
 
-func TestDeploymentConfigTolerationsReconciler(t *testing.T) {
+func TestDeploymentConfigTolerationsMutator(t *testing.T) {
 	testTolerations1 := []corev1.Toleration{
 		corev1.Toleration{
 			Key:      "key1",
@@ -274,7 +274,7 @@ func TestDeploymentConfigTolerationsReconciler(t *testing.T) {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory(tc.existingTolerations)
 			desired := dcFactory(tc.desiredTolerations)
-			update := DeploymentConfigTolerationsReconciler(desired, existing)
+			update := DeploymentConfigTolerationsMutator(desired, existing)
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
@@ -284,4 +284,102 @@ func TestDeploymentConfigTolerationsReconciler(t *testing.T) {
 		})
 	}
 
+}
+
+func TestDeploymentConfigEnvVarReconciler(t *testing.T) {
+	dcFactory := func(envs []corev1.EnvVar) *appsv1.DeploymentConfig {
+		return &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "myDC",
+				Namespace: "myNS",
+			},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							corev1.Container{
+								Name: "container1",
+								Env:  envs,
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	sliceCopy := func(a []corev1.EnvVar) []corev1.EnvVar {
+		return append(a[:0:0], a...)
+	}
+
+	envVarAB := []corev1.EnvVar{
+		{
+			Name:  "A",
+			Value: "valueA",
+		},
+		{
+			Name:  "B",
+			Value: "valueB",
+		},
+	}
+
+	envVarB := []corev1.EnvVar{
+		{
+			Name:  "B",
+			Value: "valueB",
+		},
+	}
+
+	envVarBA := []corev1.EnvVar{
+		{
+			Name:  "B",
+			Value: "valueB",
+		},
+		{
+			Name:  "A",
+			Value: "valueA",
+		},
+	}
+
+	envVarAB2 := []corev1.EnvVar{
+		{
+			Name:  "A",
+			Value: "valueOther",
+		},
+		{
+			Name:  "B",
+			Value: "valueB",
+		},
+	}
+
+	cases := []struct {
+		testName          string
+		existingEnvVar    []corev1.EnvVar
+		desiredEnvVar     []corev1.EnvVar
+		expectedResult    bool
+		expectedNewEnvVar []corev1.EnvVar
+	}{
+		{"NothingToReconcile", sliceCopy(envVarAB), sliceCopy(envVarAB), false, sliceCopy(envVarAB)},
+		{"MissingEnvVar", sliceCopy(envVarB), sliceCopy(envVarAB), true, sliceCopy(envVarBA)},
+		{"UpdatedEnvVar", sliceCopy(envVarAB), sliceCopy(envVarAB2), true, sliceCopy(envVarAB2)},
+		{"RemovedEnvVar", sliceCopy(envVarAB), sliceCopy(envVarB), true, sliceCopy(envVarB)},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			existing := dcFactory(tc.existingEnvVar)
+			desired := dcFactory(tc.desiredEnvVar)
+			update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
+			if update != tc.expectedResult {
+				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
+			}
+			if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Env, tc.expectedNewEnvVar) {
+				subT.Fatal(cmp.Diff(existing.Spec.Template.Spec.Containers[0].Env, tc.expectedNewEnvVar))
+			}
+		})
+	}
 }
