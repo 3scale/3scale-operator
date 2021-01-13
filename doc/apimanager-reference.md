@@ -102,6 +102,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
 | Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
 | Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Workers | `workers` | integer | No | Automatically computed. Check [apicast doc](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_workers) for further info. | Defines the number of worker processes |
 
 ### ApicastStagingSpec
 
