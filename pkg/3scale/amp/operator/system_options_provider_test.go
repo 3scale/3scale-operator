@@ -272,6 +272,13 @@ func getSystemAppSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.SystemSecretSystemAppSecretName, data)
 }
 
+func getSMTPSecretWithCustomSMTPAddress(address string) *v1.Secret {
+	data := map[string]string{
+		component.SystemSecretSystemSMTPFromAddressFieldName: address,
+	}
+	return GetTestSecret(namespace, component.SystemSecretSystemSMTPSecretName, data)
+}
+
 func getSystemSeedSecret() *v1.Secret {
 	data := map[string]string{
 		component.SystemSecretSystemSeedMasterDomainFieldName:      "masterDomainName",
@@ -306,6 +313,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 	tmpSMTPPassword := opts.SmtpSecretOptions.Password
 	tmpSMTPPort := component.DefaultSystemSMTPPort()
 	tmpSMTPUsername := component.DefaultSystemSMTPUsername()
+	tmpSMTPFromAddress := component.DefaultSystemSMTPFromAddress()
 	storageRequests := component.DefaultSharedStorageResources()
 
 	expectedOpts := &component.SystemOptions{
@@ -347,6 +355,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 			Password:          tmpSMTPPassword,
 			Port:              &tmpSMTPPort,
 			Username:          &tmpSMTPUsername,
+			FromAddress:       &tmpSMTPFromAddress,
 		},
 		CommonLabels:                  testSystemCommonLabels(),
 		CommonAppLabels:               testSystemCommonAppLabels(),
@@ -383,10 +392,11 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 		systemAppSecret           *v1.Secret
 		systemSeedSecret          *v1.Secret
 		systemMasterApicastSecret *v1.Secret
+		systemSMTPSecret          *v1.Secret
 		expectedOptionsFactory    func(*component.SystemOptions) *component.SystemOptions
 	}{
 		{"Default", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, nil, nil, nil,
+			nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				return defaultSystemOptions(opts)
 			},
@@ -396,7 +406,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppMasterContainerResourceRequirements = &v1.ResourceRequirements{}
@@ -408,7 +418,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithMemcachedSecret", basicApimanagerSpecTestSystemOptions,
-			getMemcachedSecret(), nil, nil, nil, nil, nil,
+			getMemcachedSecret(), nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.MemcachedServers = "mymemcache:11211"
@@ -416,7 +426,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithRecaptchaSecret", basicApimanagerSpecTestSystemOptions,
-			nil, getRecaptchaSecret(), nil, nil, nil, nil,
+			nil, getRecaptchaSecret(), nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				recaptchaPublicKey := "someCaptchaPK"
@@ -427,7 +437,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithEventsHookSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, getEventHookSecret(), nil, nil, nil,
+			nil, nil, getEventHookSecret(), nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.BackendSharedSecret = "somePassword"
@@ -436,7 +446,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAppSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, getSystemAppSecret(), nil, nil,
+			nil, nil, nil, getSystemAppSecret(), nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppSecretKeyBase = "somePassword234"
@@ -444,7 +454,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSeedSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, nil, getSystemSeedSecret(), nil,
+			nil, nil, nil, nil, getSystemSeedSecret(), nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.MasterName = "masterDomainName"
@@ -460,7 +470,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithMasterApicastSecret", basicApimanagerSpecTestSystemOptions,
-			nil, nil, nil, nil, nil, getSystemMasterApicastSecret(),
+			nil, nil, nil, nil, nil, getSystemMasterApicastSecret(), nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.ApicastAccessToken = "apicastAccessToken"
@@ -477,7 +487,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				}
 				return apimanager
 			},
-			nil, nil, nil, nil, nil, nil,
+			nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.S3FileStorageOptions = &component.S3FileStorageOptions{
@@ -500,7 +510,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 					VolumeName: &tmpVolumeName,
 				}
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				tmp := "mystorageclassname"
@@ -519,7 +529,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.SidekiqSpec.Affinity = testSystemSidekiqAffinity()
 				apimanager.Spec.System.SphinxSpec.Affinity = testSystemSphinxAffinity()
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppAffinity = testSystemAppAffinity()
@@ -535,7 +545,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.SidekiqSpec.Tolerations = testSystemSidekiqTolerations()
 				apimanager.Spec.System.SphinxSpec.Tolerations = testSystemSphinxTolerations()
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppTolerations = testSystemAppTolerations()
@@ -553,7 +563,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.SidekiqSpec.Resources = testSystemSidekiqCustomResourceRequirements()
 				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppMasterContainerResourceRequirements = testSystemMasterContainerCustomResourceRequirements()
@@ -574,7 +584,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.SidekiqSpec.Resources = testSystemSidekiqCustomResourceRequirements()
 				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
 				return apimanager
-			}, nil, nil, nil, nil, nil, nil,
+			}, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppMasterContainerResourceRequirements = testSystemMasterContainerCustomResourceRequirements()
@@ -582,6 +592,47 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				expectedOpts.AppDeveloperContainerResourceRequirements = testSystemDeveloperContainerCustomResourceRequirements()
 				expectedOpts.SidekiqContainerResourceRequirements = testSystemSidekiqCustomResourceRequirements()
 				expectedOpts.SphinxContainerResourceRequirements = testSystemSphinxCustomResourceRequirements()
+				return expectedOpts
+			},
+		},
+		{"WithCustomMailFromAddress",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				return apimanager
+			}, nil, nil, nil, nil, nil, nil, getSMTPSecretWithCustomSMTPAddress("customaddress@customdomain.com"),
+			func(opts *component.SystemOptions) *component.SystemOptions {
+				expectedOpts := defaultSystemOptions(opts)
+				exampleFromAddress := "customaddress@customdomain.com"
+				expectedOpts.SmtpSecretOptions.FromAddress = &exampleFromAddress
+				return expectedOpts
+			},
+		},
+		{"WithExplicitelyEmptyMailFromAddress",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				return apimanager
+			}, nil, nil, nil, nil, nil, nil, getSMTPSecretWithCustomSMTPAddress(""),
+			func(opts *component.SystemOptions) *component.SystemOptions {
+				expectedOpts := defaultSystemOptions(opts)
+				emptyStr := ""
+				expectedOpts.SmtpSecretOptions.FromAddress = &emptyStr
+				return expectedOpts
+			},
+		},
+		{"WithNoEmptyMailFromAddress",
+			// When no SMTP From mail address is defined in the secret then
+			// the corresponding SystemOption option is set as the empty string.
+			// Then in the component if the option is empty or nil the corresponding
+			// system environment variable will not be set
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+
+				return apimanager
+			}, nil, nil, nil, nil, nil, nil, nil,
+			func(opts *component.SystemOptions) *component.SystemOptions {
+				expectedOpts := defaultSystemOptions(opts)
+				emptyStr := ""
+				expectedOpts.SmtpSecretOptions.FromAddress = &emptyStr
 				return expectedOpts
 			},
 		},
@@ -607,6 +658,9 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			}
 			if tc.systemMasterApicastSecret != nil {
 				objs = append(objs, tc.systemMasterApicastSecret)
+			}
+			if tc.systemSMTPSecret != nil {
+				objs = append(objs, tc.systemSMTPSecret)
 			}
 			cl := fake.NewFakeClient(objs...)
 			optsProvider := NewSystemOptionsProvider(tc.apimanagerFactory(), namespace, cl)

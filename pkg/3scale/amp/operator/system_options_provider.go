@@ -336,6 +336,12 @@ func (s *SystemOptionsProvider) setSystemSMTPOptions() error {
 			component.SystemSecretSystemSMTPUserNameFieldName,
 			component.DefaultSystemSMTPUsername(),
 		},
+		{
+			&smtpSecretOptions.FromAddress,
+			component.SystemSecretSystemSMTPSecretName,
+			component.SystemSecretSystemSMTPFromAddressFieldName,
+			component.DefaultSystemSMTPFromAddress(),
+		},
 	}
 
 	for _, option := range cases {

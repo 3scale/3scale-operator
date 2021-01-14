@@ -85,6 +85,7 @@ const (
 	SystemSecretSystemSMTPPortFieldName              = "port"
 	SystemSecretSystemSMTPAuthenticationFieldName    = "authentication"
 	SystemSecretSystemSMTPOpenSSLVerifyModeFieldName = "openssl.verify.mode"
+	SystemSecretSystemSMTPFromAddressFieldName       = "from_address"
 )
 
 const (
@@ -148,6 +149,11 @@ func (system *System) getSystemSMTPEnvsFromSMTPSecret() []v1.EnvVar {
 		helper.EnvVarFromSecret("SMTP_PORT", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPPortFieldName),
 		helper.EnvVarFromSecret("SMTP_AUTHENTICATION", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPAuthenticationFieldName),
 		helper.EnvVarFromSecret("SMTP_OPENSSL_VERIFY_MODE", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPOpenSSLVerifyModeFieldName),
+	}
+
+	if system.Options.SmtpSecretOptions.FromAddress != nil &&
+		*system.Options.SmtpSecretOptions.FromAddress != "" {
+		result = append(result, helper.EnvVarFromSecret("NOREPLY_EMAIL", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPFromAddressFieldName))
 	}
 
 	return result
@@ -1043,7 +1049,7 @@ func (system *System) MemcachedService() *v1.Service {
 }
 
 func (system *System) SMTPSecret() *v1.Secret {
-	return &v1.Secret{
+	res := &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
 			APIVersion: "v1",
@@ -1062,6 +1068,12 @@ func (system *System) SMTPSecret() *v1.Secret {
 			SystemSecretSystemSMTPUserNameFieldName:          *system.Options.SmtpSecretOptions.Username,
 		},
 	}
+
+	if system.Options.SmtpSecretOptions.FromAddress != nil {
+		res.StringData[SystemSecretSystemSMTPFromAddressFieldName] = *system.Options.SmtpSecretOptions.FromAddress
+	}
+
+	return res
 }
 
 func (system *System) SystemConfigMap() *v1.ConfigMap {
