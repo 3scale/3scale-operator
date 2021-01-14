@@ -140,13 +140,13 @@ func (system *System) getSystemBaseEnvsFromEnvConfigMap() []v1.EnvVar {
 
 func (system *System) getSystemSMTPEnvsFromSMTPSecret() []v1.EnvVar {
 	result := []v1.EnvVar{
-		helper.EnvVarFromSecret("SMTP_ADDRESS", SystemSecretSystemSMTPSecretName, "address"),
-		helper.EnvVarFromSecret("SMTP_USER_NAME", SystemSecretSystemSMTPSecretName, "username"),
-		helper.EnvVarFromSecret("SMTP_PASSWORD", SystemSecretSystemSMTPSecretName, "password"),
-		helper.EnvVarFromSecret("SMTP_DOMAIN", SystemSecretSystemSMTPSecretName, "domain"),
-		helper.EnvVarFromSecret("SMTP_PORT", SystemSecretSystemSMTPSecretName, "port"),
-		helper.EnvVarFromSecret("SMTP_AUTHENTICATION", SystemSecretSystemSMTPSecretName, "authentication"),
-		helper.EnvVarFromSecret("SMTP_OPENSSL_VERIFY_MODE", SystemSecretSystemSMTPSecretName, "openssl.verify.mode"),
+		helper.EnvVarFromSecret("SMTP_ADDRESS", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPAddressFieldName),
+		helper.EnvVarFromSecret("SMTP_USER_NAME", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPUserNameFieldName),
+		helper.EnvVarFromSecret("SMTP_PASSWORD", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPPasswordFieldName),
+		helper.EnvVarFromSecret("SMTP_DOMAIN", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPDomainFieldName),
+		helper.EnvVarFromSecret("SMTP_PORT", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPPortFieldName),
+		helper.EnvVarFromSecret("SMTP_AUTHENTICATION", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPAuthenticationFieldName),
+		helper.EnvVarFromSecret("SMTP_OPENSSL_VERIFY_MODE", SystemSecretSystemSMTPSecretName, SystemSecretSystemSMTPOpenSSLVerifyModeFieldName),
 	}
 
 	return result
