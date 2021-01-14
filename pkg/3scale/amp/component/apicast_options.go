@@ -32,6 +32,9 @@ type ApicastOptions struct {
 	// that need namespace filtering because they are "global" once imported
 	// to the prometheus or grafana services.
 	Namespace string `validate:"required"`
+
+	ProductionLogLevel *string `validate:"-"`
+	StagingLogLevel    *string `validate:"-"`
 }
 
 func NewApicastOptions() *ApicastOptions {

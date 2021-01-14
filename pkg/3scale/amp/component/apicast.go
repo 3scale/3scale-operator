@@ -336,6 +336,9 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 		helper.EnvVarFromValue("APICAST_CONFIGURATION_CACHE", "0"),
 		helper.EnvVarFromValue("THREESCALE_DEPLOYMENT_ENV", "staging"),
 	)
+	if apicast.Options.StagingLogLevel != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_LOG_LEVEL", *apicast.Options.StagingLogLevel))
+	}
 	return result
 }
 
@@ -349,6 +352,9 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 	)
 	if apicast.Options.ProductionWorkers != nil {
 		result = append(result, helper.EnvVarFromValue("APICAST_WORKERS", strconv.Itoa(int(*apicast.Options.ProductionWorkers))))
+	}
+	if apicast.Options.ProductionLogLevel != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_LOG_LEVEL", *apicast.Options.ProductionLogLevel))
 	}
 	return result
 }

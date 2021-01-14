@@ -383,6 +383,17 @@ spec:
                               type: array
                           type: object
                       type: object
+                    logLevel:
+                      enum:
+                      - debug
+                      - info
+                      - notice
+                      - warn
+                      - error
+                      - crit
+                      - alert
+                      - emerg
+                      type: string
                     replicas:
                       format: int64
                       type: integer
@@ -782,6 +793,17 @@ spec:
                               type: array
                           type: object
                       type: object
+                    logLevel:
+                      enum:
+                      - debug
+                      - info
+                      - notice
+                      - warn
+                      - error
+                      - crit
+                      - alert
+                      - emerg
+                      type: string
                     replicas:
                       format: int64
                       type: integer
