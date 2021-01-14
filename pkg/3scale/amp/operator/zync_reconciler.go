@@ -108,17 +108,17 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.ZyncGrafanaDashboard(r.apiManager.Namespace), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboard(zync.ZyncGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.ZyncPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(zync.ZyncPrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.ZyncQuePrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(zync.ZyncQuePrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

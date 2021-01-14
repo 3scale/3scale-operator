@@ -49,39 +49,34 @@ func (backend *Backend) BackendWorkerPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func BackendGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func (backend *Backend) BackendGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
-		ns,
+		backend.Options.Namespace,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend",
-			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-			},
+			Name:   "backend",
+			Labels: backend.monitoringLabels(),
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/backend-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/backend-grafana-dashboard-1.json", ns),
+			Name: fmt.Sprintf("%s/backend-grafana-dashboard-1.json", backend.Options.Namespace),
 		},
 	}
 }
 
-func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func (backend *Backend) BackendWorkerPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-worker",
-			Labels: map[string]string{
-				"prometheus": "application-monitoring",
-				"role":       "alert-rules",
-			},
+			Name:   "backend-worker",
+			Labels: backend.prometheusRulesMonitoringLabels(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/backend-worker.rules", ns),
+					Name: fmt.Sprintf("%s/backend-worker.rules", backend.Options.Namespace),
 					Rules: []monitoringv1.Rule{
 						{
 							Alert: "ThreescaleBackendWorkerJobsCountRunningHigh",
@@ -89,7 +84,7 @@ func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "{{$labels.container_name}} replica controller on {{$labels.namespace}}: Has more than 10000 jobs processed in the last 5 minutes",
 								"description": "{{$labels.container_name}} replica controller on {{$labels.namespace}} project: Has more than 1000 jobs processed in the last 5 minutes",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(avg_over_time(apisonator_worker_job_count{job=~"backend.*",namespace="%s"} [5m])) by (namespace,job) > 10000`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(avg_over_time(apisonator_worker_job_count{job=~"backend.*",namespace="%s"} [5m])) by (namespace,job) > 10000`, backend.Options.Namespace)),
 							For:  "5m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -101,7 +96,7 @@ func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*backend-worker.*",namespace="%s"} == 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*backend-worker.*",namespace="%s"} == 0`, backend.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -114,19 +109,16 @@ func BackendWorkerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 	}
 }
 
-func BackendListenerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func (backend *Backend) BackendListenerPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "backend-listener",
-			Labels: map[string]string{
-				"prometheus": "application-monitoring",
-				"role":       "alert-rules",
-			},
+			Name:   "backend-listener",
+			Labels: backend.prometheusRulesMonitoringLabels(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/backend-listener.rules", ns),
+					Name: fmt.Sprintf("%s/backend-listener.rules", backend.Options.Namespace),
 					Rules: []monitoringv1.Rule{
 						{
 							Alert: "ThreescaleBackendListener5XXRequestsHigh",
@@ -134,7 +126,7 @@ func BackendListenerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 5000 HTTP 5xx requests in the last 5 minutes",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 5000 HTTP 5xx requests in the last 5 minutes",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(apisonator_listener_response_codes{job=~"backend.*",namespace="%s",resp_code="5xx"}[5m])) by (namespace,job,resp_code) > 5000`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(apisonator_listener_response_codes{job=~"backend.*",namespace="%s",resp_code="5xx"}[5m])) by (namespace,job,resp_code) > 5000`, backend.Options.Namespace)),
 							For:  "5m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -146,7 +138,7 @@ func BackendListenerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*backend-listener.*",namespace="%s"} == 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*backend-listener.*",namespace="%s"} == 0`, backend.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -157,4 +149,27 @@ func BackendListenerPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 			},
 		},
 	}
+}
+
+func (backend *Backend) monitoringLabels() map[string]string {
+	labels := make(map[string]string)
+
+	for key, value := range backend.Options.CommonLabels {
+		labels[key] = value
+	}
+
+	labels["monitoring-key"] = common.MonitoringKey
+	return labels
+}
+
+func (backend *Backend) prometheusRulesMonitoringLabels() map[string]string {
+	labels := make(map[string]string)
+
+	for key, value := range backend.Options.CommonLabels {
+		labels[key] = value
+	}
+
+	labels["prometheus"] = "application-monitoring"
+	labels["role"] = "alert-rules"
+	return labels
 }

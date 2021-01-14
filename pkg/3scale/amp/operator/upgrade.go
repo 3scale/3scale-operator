@@ -426,14 +426,22 @@ func (u *UpgradeApiManager) upgradeMonitoringSettings() (reconcile.Result, error
 	updated = updated || updatedTmp
 
 	// Apicast rules
-	updatedTmp, err = u.upgradePrometheusRules(component.ApicastPrometheusRules(u.apiManager.Namespace))
+	apicast, err := Apicast(u.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updatedTmp, err = u.upgradePrometheusRules(apicast.ApicastPrometheusRules())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 	updated = updated || updatedTmp
 
 	// System Sidekiq rules
-	updatedTmp, err = u.upgradePrometheusRules(component.SystemSidekiqPrometheusRules(u.apiManager.Namespace))
+	system, err := System(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updatedTmp, err = u.upgradePrometheusRules(system.SystemSidekiqPrometheusRules())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

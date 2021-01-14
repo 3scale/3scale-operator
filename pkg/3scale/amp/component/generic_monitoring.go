@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func KubernetesResourcesByNamespaceGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func KubernetesResourcesByNamespaceGrafanaDashboard(ns string, appLabel string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
@@ -22,6 +22,7 @@ func KubernetesResourcesByNamespaceGrafanaDashboard(ns string) *grafanav1alpha1.
 			Name: "kubernetes-resources-by-namespace",
 			Labels: map[string]string{
 				"monitoring-key": common.MonitoringKey,
+				"app":            appLabel,
 			},
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
@@ -31,7 +32,7 @@ func KubernetesResourcesByNamespaceGrafanaDashboard(ns string) *grafanav1alpha1.
 	}
 }
 
-func KubernetesResourcesByPodGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func KubernetesResourcesByPodGrafanaDashboard(ns string, appLabel string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
@@ -42,6 +43,7 @@ func KubernetesResourcesByPodGrafanaDashboard(ns string) *grafanav1alpha1.Grafan
 			Name: "kubernetes-resources-by-pod",
 			Labels: map[string]string{
 				"monitoring-key": common.MonitoringKey,
+				"app":            appLabel,
 			},
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
@@ -51,13 +53,14 @@ func KubernetesResourcesByPodGrafanaDashboard(ns string) *grafanav1alpha1.Grafan
 	}
 }
 
-func KubeStateMetricsPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func KubeStateMetricsPrometheusRules(ns string, appLabel string) *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "threescale-kube-state-metrics",
 			Labels: map[string]string{
 				"prometheus": "application-monitoring",
 				"role":       "alert-rules",
+				"app":        appLabel,
 			},
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{

@@ -231,6 +231,7 @@ func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 		ZyncDatabasePodTemplateLabels:         testZyncDatabasePodTemplateCommonLabels(),
 		ZyncMetrics:                           true,
 		ZyncQueServiceAccountImagePullSecrets: component.DefaultZyncQueServiceAccountImagePullSecrets(),
+		Namespace:                             opts.Namespace,
 	}
 
 	expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(expectedOpts.DatabasePassword)

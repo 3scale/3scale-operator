@@ -76,39 +76,34 @@ func (system *System) SystemAppPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func SystemGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func (system *System) SystemGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
-		ns,
+		system.Options.Namespace,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system",
-			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-			},
+			Name:   "system",
+			Labels: system.monitoringLabels(),
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/system-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/system-grafana-dashboard-1.json", ns),
+			Name: fmt.Sprintf("%s/system-grafana-dashboard-1.json", system.Options.Namespace),
 		},
 	}
 }
 
-func SystemAppPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func (system *System) SystemAppPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-app",
-			Labels: map[string]string{
-				"prometheus": "application-monitoring",
-				"role":       "alert-rules",
-			},
+			Name:   "system-app",
+			Labels: system.prometheusRulesMonitoringLabels(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/system-app.rules", ns),
+					Name: fmt.Sprintf("%s/system-app.rules", system.Options.Namespace),
 					Rules: []monitoringv1.Rule{
 						{
 							Alert: "ThreescaleSystemApp5XXRequestsHigh",
@@ -116,7 +111,7 @@ func SystemAppPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(rails_requests_total{namespace="%s",pod=~"system-app-[a-z0-9]+-[a-z0-9]+",status=~"5[0-9]*"}[1m])) by (namespace,job) > 50`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(rails_requests_total{namespace="%s",pod=~"system-app-[a-z0-9]+-[a-z0-9]+",status=~"5[0-9]*"}[1m])) by (namespace,job) > 50`, system.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -128,7 +123,7 @@ func SystemAppPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*system-app.*",namespace="%s"} == 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*system-app.*",namespace="%s"} == 0`, system.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -141,19 +136,16 @@ func SystemAppPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 	}
 }
 
-func SystemSidekiqPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func (system *System) SystemSidekiqPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "system-sidekiq",
-			Labels: map[string]string{
-				"prometheus": "application-monitoring",
-				"role":       "alert-rules",
-			},
+			Name:   "system-sidekiq",
+			Labels: system.prometheusRulesMonitoringLabels(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/system-sidekiq.rules", ns),
+					Name: fmt.Sprintf("%s/system-sidekiq.rules", system.Options.Namespace),
 					Rules: []monitoringv1.Rule{
 						{
 							Alert: "ThreescaleSystemSidekiqJobDown",
@@ -161,7 +153,7 @@ func SystemSidekiqPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*system-sidekiq.*",namespace="%s"} == 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*system-sidekiq.*",namespace="%s"} == 0`, system.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -172,4 +164,27 @@ func SystemSidekiqPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 			},
 		},
 	}
+}
+
+func (system *System) monitoringLabels() map[string]string {
+	labels := make(map[string]string)
+
+	for key, value := range system.Options.CommonLabels {
+		labels[key] = value
+	}
+
+	labels["monitoring-key"] = common.MonitoringKey
+	return labels
+}
+
+func (system *System) prometheusRulesMonitoringLabels() map[string]string {
+	labels := make(map[string]string)
+
+	for key, value := range system.Options.CommonLabels {
+		labels[key] = value
+	}
+
+	labels["prometheus"] = "application-monitoring"
+	labels["role"] = "alert-rules"
+	return labels
 }
