@@ -162,6 +162,11 @@ var _ = Describe("APIManager controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Routes are available\n")
 
+			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager's 'Available' condition is true\n")
+			err = waitForAPIManagerAvailableCondition(testNamespace, 5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is true\n")
+
 			elapsed := time.Since(start)
 			fmt.Fprintf(GinkgoWriter, "APIManager creation and availability took '%s'\n", elapsed)
 		})
@@ -257,6 +262,20 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 		}, timeout, retryInterval).Should(BeTrue())
 
 	}
+
+	return nil
+}
+
+func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) error {
+	Eventually(func() bool {
+		err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: apimanager.Name, Namespace: apimanager.Namespace}, apimanager)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting APIManager '%s': %v\n", apimanager.Name, err)
+			return false
+		}
+
+		return apimanager.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
+	}, timeout, retryInterval).Should(BeTrue())
 
 	return nil
 }
