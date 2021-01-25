@@ -24,4 +24,5 @@ resources:
 - capabilities_v1beta1_activedoc_secret.yaml
 - capabilities_v1beta1_activedoc_url.yaml
 - capabilities_v1beta1_policy.yaml
+- capabilities_v1beta1_developeraccount.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

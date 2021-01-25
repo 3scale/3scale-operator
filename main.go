@@ -274,6 +274,14 @@ func main() {
 	}
 
 	registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry()
+	if err = (&capabilitiescontroller.DeveloperAccountReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("DeveloperAccount"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DeveloperAccount")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
