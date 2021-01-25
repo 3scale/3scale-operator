@@ -45,6 +45,17 @@ type SpecError interface {
 	FieldType() FieldTypeError
 }
 
+// WaitError represents that the current cluster state is not ready to continue.
+// This is (should be) a transient error.
+// Example: expected resources have not been created by third party controllers
+type WaitError struct {
+	Err error
+}
+
+func (s *WaitError) Error() string {
+	return s.Err.Error()
+}
+
 func IsInvalidSpecError(err error) bool {
 	if specErrorObj, ok := err.(SpecError); ok && specErrorObj.FieldType() == InvalidError {
 		return true
@@ -57,4 +68,9 @@ func IsOrphanSpecError(err error) bool {
 		return true
 	}
 	return false
+}
+
+func IsWaitError(err error) bool {
+	_, ok := err.(*WaitError)
+	return ok
 }

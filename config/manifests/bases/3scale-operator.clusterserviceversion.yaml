@@ -93,6 +93,16 @@ spec:
       kind: Policy
       name: policies.capabilities.3scale.net
       version: v1beta1
+    - description: DeveloperAccount is the Schema for the developeraccounts API
+      displayName: Developer Account
+      kind: DeveloperAccount
+      name: developeraccounts.capabilities.3scale.net
+      version: v1beta1
+    - description: DeveloperUser is the Schema for the developerusers API
+      displayName: Developer User
+      kind: DeveloperUser
+      name: developerusers.capabilities.3scale.net
+      version: v1beta1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 

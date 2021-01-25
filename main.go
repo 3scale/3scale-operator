@@ -273,15 +273,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry()
+	discoveryClientDeveloperAccount, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
+
 	if err = (&capabilitiescontroller.DeveloperAccountReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("DeveloperAccount"),
-		Scheme: mgr.GetScheme(),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("DeveloperAccount"),
+			discoveryClientDeveloperAccount,
+			mgr.GetEventRecorderFor("DeveloperAccount")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DeveloperAccount")
 		os.Exit(1)
 	}
+
+	registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry()
+
 	if err = (&capabilitiescontroller.DeveloperUserReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("DeveloperUser"),
