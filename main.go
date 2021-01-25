@@ -291,16 +291,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry()
+	discoveryClientDeveloperUser, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
 
 	if err = (&capabilitiescontroller.DeveloperUserReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("DeveloperUser"),
-		Scheme: mgr.GetScheme(),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			context.Background(),
+			ctrl.Log.WithName("controllers").WithName("DeveloperUser"),
+			discoveryClientDeveloperUser,
+			mgr.GetEventRecorderFor("DeveloperUser")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DeveloperUser")
 		os.Exit(1)
 	}
+
+	registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry()
+
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
