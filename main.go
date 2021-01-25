@@ -282,6 +282,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DeveloperAccount")
 		os.Exit(1)
 	}
+	if err = (&capabilitiescontroller.DeveloperUserReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("DeveloperUser"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DeveloperUser")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

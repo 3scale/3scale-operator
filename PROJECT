@@ -34,6 +34,9 @@ resources:
 - group: capabilities
   kind: DeveloperAccount
   version: v1beta1
+- group: capabilities
+  kind: DeveloperUser
+  version: v1beta1
 version: 3-alpha
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}
