@@ -44,11 +44,11 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 
-func TestAPIs(t *testing.T) {
+func TestControllerCapabilities(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	RunSpecsWithDefaultAndCustomReporters(t,
-		"Controller Suite",
+		"Controllers capabilities Suite",
 		[]Reporter{printer.NewlineReporter{}})
 }
 
