@@ -7,12 +7,14 @@ import (
 	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -88,6 +90,32 @@ var _ = Describe("APIManager controller", func() {
 
 			start := time.Now()
 
+			// Create dummy secret needed to deploy an APIManager
+			// with S3 configuration for the E2E tests. As long as
+			// S3-related functionality is exercised it should work correctly.
+			dummyS3Secret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "dummy-s3-secret",
+					Namespace: testNamespace,
+				},
+				StringData: map[string]string{
+					component.AwsAccessKeyID:     "dummyaccesskey",
+					component.AwsSecretAccessKey: "dummysecretaccesskey",
+					component.AwsBucket:          "dummybucket",
+					component.AwsRegion:          "dummyregion",
+				},
+			}
+
+			err := testK8sClient.Create(context.Background(), dummyS3Secret)
+			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() bool {
+				err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: dummyS3Secret.Name, Namespace: dummyS3Secret.Namespace}, dummyS3Secret)
+				if err != nil {
+					return false
+				}
+				return true
+			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
+
 			enableResourceRequirements := false
 			wildcardDomain := "test1.127.0.0.1.nip.io"
 			apimanager := &appsv1alpha1.APIManager{
@@ -96,6 +124,15 @@ var _ = Describe("APIManager controller", func() {
 						WildcardDomain:              wildcardDomain,
 						ResourceRequirementsEnabled: &enableResourceRequirements,
 					},
+					System: &appsv1alpha1.SystemSpec{
+						FileStorageSpec: &appsv1alpha1.SystemFileStorageSpec{
+							S3: &appsv1alpha1.SystemS3Spec{
+								ConfigurationSecretRef: v1.LocalObjectReference{
+									Name: dummyS3Secret.Name,
+								},
+							},
+						},
+					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "example-apimanager",
@@ -103,7 +140,7 @@ var _ = Describe("APIManager controller", func() {
 				},
 			}
 
-			err := testK8sClient.Create(context.Background(), apimanager)
+			err = testK8sClient.Create(context.Background(), apimanager)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() bool {
