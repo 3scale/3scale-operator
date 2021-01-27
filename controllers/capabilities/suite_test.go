@@ -17,8 +17,10 @@ limitations under the License.
 package controllers
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -59,7 +61,17 @@ var _ = BeforeSuite(func(done Done) {
 	}
 
 	var err error
-	cfg, err = testEnv.Start()
+	Eventually(func() bool {
+		fmt.Fprintf(GinkgoWriter, "starting capabilities testEnv...\n")
+		cfg, err = testEnv.Start()
+		if err != nil {
+			fmt.Fprintf(GinkgoWriter, "capabilities testEnv start attempt failed: %v'\n", err)
+			return false
+		}
+		fmt.Fprintf(GinkgoWriter, "capabilities testEnv started\n")
+		return true
+	}, 5*time.Minute, 5*time.Second).Should(BeTrue(), "testEnv failed to start reached max attempts")
+
 	Expect(err).ToNot(HaveOccurred())
 	Expect(cfg).ToNot(BeNil())
 
@@ -82,4 +94,5 @@ var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
+
 })
