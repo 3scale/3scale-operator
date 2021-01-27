@@ -56,11 +56,11 @@ var testK8sClient client.Client
 var testK8sAPIClient client.Reader
 var testEnv *envtest.Environment
 
-func TestControllerApps(t *testing.T) {
+func TestAPIManager(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	RunSpecsWithDefaultAndCustomReporters(t,
-		"Controllers apps Suite",
+		"APIManager Controller Suite",
 		[]Reporter{printer.NewlineReporter{}})
 }
 
