@@ -18,10 +18,14 @@ package v1alpha1
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
+	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,11 +80,37 @@ type APIManagerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Conditions []APIManagerCondition `json:"conditions,omitempty" protobuf:"bytes,4,rep,name=conditions"`
+	// Current state of the APIManager resource.
+	// Conditions represent the latest available observations of an object's state
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 
 	// APIManager Deployment Configs
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Deployments",xDescriptors="urn:alm:descriptor:com.tectonic.ui:podStatuses"
 	Deployments olm.DeploymentStatus `json:"deployments"`
+}
+
+func (s *APIManagerStatus) Equals(other *APIManagerStatus, logger logr.Logger) bool {
+	// Marshalling sorts by condition type
+	currentMarshaledJSON, _ := s.Conditions.MarshalJSON()
+	otherMarshaledJSON, _ := other.Conditions.MarshalJSON()
+	if string(currentMarshaledJSON) != string(otherMarshaledJSON) {
+		diff := cmp.Diff(string(currentMarshaledJSON), string(otherMarshaledJSON))
+		logger.V(1).Info("Conditions not equal", "difference", diff)
+		return false
+	}
+
+	// Deployments should already be sorted at this point so there's no need
+	// to sort them and we can compare directly
+	if !reflect.DeepEqual(s.Deployments, other.Deployments) {
+		diff := cmp.Diff(s.Deployments, s.Deployments)
+		logger.V(1).Info("Deployments not equal", "difference", diff)
+		return false
+	}
+
+	return true
 }
 
 // +kubebuilder:object:root=true
@@ -102,35 +132,9 @@ type APIManager struct {
 	Status APIManagerStatus `json:"status,omitempty"`
 }
 
-type APIManagerConditionType string
-
 const (
-	// Ready means the APIManager is available. This is, when all of its
-	// elements are up and running
-	APIManagerReady APIManagerConditionType = "Ready"
-	// Progressing means the APIManager is being deployed
-	APIManagerProgressing APIManagerConditionType = "Progressing"
+	APIManagerAvailableConditionType common.ConditionType = "Available"
 )
-
-type APIManagerCondition struct {
-	Type   APIManagerConditionType `json:"type" description:"type of APIManager condition"`
-	Status v1.ConditionStatus      `json:"status" description:"status of the condition, one of True, False, Unknown"` //TODO should be a custom ConditionStatus or the core v1 one?
-
-	// The Reason, Message, LastHeartbeatTime and LastTransitionTime fields are
-	// optional. Unless we really use them they should directly not be used even
-	// if they are optional
-
-	// +optional
-	//Reason *string `json:"reason,omitempty" description:"one-word CamelCase reason for the condition's last transition"`
-	// +optional
-	//Message *string `json:"message,omitempty" description:"human-readable message indicating details about last transition"`
-
-	// +optional
-	//LastHeartbeatTime metav1.Time `json:"lastHeartbeatTime,omitempty" description:"last time we got an update on a given condition"` // TODO the Kubernetes API convention guide says *unversioned.Time should be used but that seems to be a client-side package. I've seen that objects like PersistentVolumeClaim use metav1.Time
-	// +optional
-	//metav1.Time        `json:"lastProbeTime,omitempty" protobuf:"bytes,3,opt,name=lastProbeTime"`
-	//LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" description:"last time the condition transit from one status to another"`
-}
 
 type APIManagerCommonSpec struct {
 	// Wildcard domain as configured in the API Manager object

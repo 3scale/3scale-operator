@@ -8,6 +8,7 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -161,6 +162,11 @@ var _ = Describe("APIManager controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Routes are available\n")
 
+			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager's 'Available' condition is true\n")
+			err = waitForAPIManagerAvailableCondition(testNamespace, 5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "APIManager 'Available' condition is true\n")
+
 			elapsed := time.Since(start)
 			fmt.Fprintf(GinkgoWriter, "APIManager creation and availability took '%s'\n", elapsed)
 		})
@@ -195,17 +201,11 @@ func waitForAllAPIManagerStandardDeploymentConfigs(namespace string, retryInterv
 				return false
 			}
 
-			isReady := false
-			dcConditions := createdDeployment.Status.Conditions
-			for _, dcCondition := range dcConditions {
-				if dcCondition.Type == appsv1.DeploymentAvailable && dcCondition.Status == corev1.ConditionTrue {
-					isReady = true
-				}
-			}
-			if isReady {
+			if helper.IsDeploymentConfigAvailable(createdDeployment) {
 				fmt.Fprintf(w, "DeploymentConfig '%s' available\n", dcName)
 				return true
 			}
+
 			availableReplicas := createdDeployment.Status.AvailableReplicas
 			desiredReplicas := createdDeployment.Spec.Replicas
 			fmt.Fprintf(w, "Waiting for full availability of %s DeploymentConfig (%d/%d)\n", dcName, availableReplicas, desiredReplicas)
@@ -253,32 +253,29 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 			}
 
 			route := routeItems[0]
-			routeStatusIngresses := route.Status.Ingress
-			if routeStatusIngresses == nil || len(routeStatusIngresses) == 0 {
-				fmt.Fprintf(w, "Waiting for availability of Route with host '%s'\n", routeHost)
+			if !helper.IsRouteReady(&route) {
 				return false
 			}
 
-			for _, routeStatusIngress := range routeStatusIngresses {
-				routeStatusIngressConditions := routeStatusIngress.Conditions
-				isReady := false
-				for _, routeStatusIngressCondition := range routeStatusIngressConditions {
-					if routeStatusIngressCondition.Type == routev1.RouteAdmitted && routeStatusIngressCondition.Status == corev1.ConditionTrue {
-						isReady = true
-						break
-					}
-				}
-				if !isReady {
-					fmt.Fprintf(w, "Waiting for availability of Route with host '%s'\n", routeHost)
-					return false
-				}
-			}
-
-			fmt.Fprintf(w, "Route '%s' with host '%s' available\n", route.Name, route.Spec.Host)
+			fmt.Fprintf(w, "Route '%s' with host '%s' ready\n", route.Name, route.Spec.Host)
 			return true
 		}, timeout, retryInterval).Should(BeTrue())
 
 	}
+
+	return nil
+}
+
+func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) error {
+	Eventually(func() bool {
+		err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: apimanager.Name, Namespace: apimanager.Namespace}, apimanager)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting APIManager '%s': %v\n", apimanager.Name, err)
+			return false
+		}
+
+		return apimanager.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
+	}, timeout, retryInterval).Should(BeTrue())
 
 	return nil
 }

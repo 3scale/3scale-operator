@@ -10,6 +10,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	SystemMySQLDeploymentName = "system-mysql"
+)
+
 type SystemMysql struct {
 	Options *SystemMysqlOptions
 }
@@ -105,7 +109,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-mysql",
+			Name:   SystemMySQLDeploymentName,
 			Labels: mysql.Options.DeploymentLabels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -130,7 +134,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": "system-mysql"},
+			Selector: map[string]string{"deploymentConfig": SystemMySQLDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: mysql.Options.PodTemplateLabels,

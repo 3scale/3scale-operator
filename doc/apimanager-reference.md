@@ -7,53 +7,55 @@ One APIManager custom resource per project is allowed.
 ## Table of Contents
 
 * [APIManager](#apimanager)
-   * [APIManagerSpec](#apimanagerspec)
-   * [ApicastSpec](#apicastspec)
-   * [ApicastProductionSpec](#apicastproductionspec)
-   * [ApicastStagingSpec](#apicaststagingspec)
-   * [BackendSpec](#backendspec)
-   * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
-   * [BackendListenerSpec](#backendlistenerspec)
-   * [BackendWorkerSpec](#backendworkerspec)
-   * [BackendCronSpec](#backendcronspec)
-   * [SystemSpec](#systemspec)
-   * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
-   * [FileStorageSpec](#filestoragespec)
-   * [SystemPVCSpec](#systempvcspec)
-   * [SystemS3Spec](#systems3spec)
-   * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
-   * [DatabaseSpec](#databasespec)
-   * [MySQLSpec](#mysqlspec)
-   * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
-   * [PostgreSQLSpec](#postgresqlspec)
-   * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
-   * [SystemAppSpec](#systemappspec)
-   * [SystemSidekiqSpec](#systemsidekiqspec)
-   * [SystemSphinxSpec](#systemsphinxspec)
-   * [ZyncSpec](#zyncspec)
-   * [ZyncAppSpec](#zyncappspec)
-   * [ZyncQueSpec](#zyncquespec)
-   * [HighAvailabilitySpec](#highavailabilityspec)
-   * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
-   * [MonitoringSpec](#monitoringspec)
-   * [APIManagerStatus](#apimanagerstatus)
+  * [APIManagerSpec](#apimanagerspec)
+  * [ApicastSpec](#apicastspec)
+  * [ApicastProductionSpec](#apicastproductionspec)
+  * [ApicastStagingSpec](#apicaststagingspec)
+  * [BackendSpec](#backendspec)
+  * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
+  * [BackendListenerSpec](#backendlistenerspec)
+  * [BackendWorkerSpec](#backendworkerspec)
+  * [BackendCronSpec](#backendcronspec)
+  * [SystemSpec](#systemspec)
+  * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
+  * [FileStorageSpec](#filestoragespec)
+  * [SystemPVCSpec](#systempvcspec)
+  * [SystemS3Spec](#systems3spec)
+  * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
+  * [DatabaseSpec](#databasespec)
+  * [MySQLSpec](#mysqlspec)
+  * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
+  * [PostgreSQLSpec](#postgresqlspec)
+  * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
+  * [SystemAppSpec](#systemappspec)
+  * [SystemSidekiqSpec](#systemsidekiqspec)
+  * [SystemSphinxSpec](#systemsphinxspec)
+  * [ZyncSpec](#zyncspec)
+  * [ZyncAppSpec](#zyncappspec)
+  * [ZyncQueSpec](#zyncquespec)
+  * [HighAvailabilitySpec](#highavailabilityspec)
+  * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
+  * [MonitoringSpec](#monitoringspec)
+  * [APIManagerStatus](#apimanagerstatus)
+    * [ConditionSpec](#conditionspec)
 * [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
 * [APIManager Secrets](#apimanager-secrets)
-   * [backend-internal-api](#backend-internal-api)
-   * [backend-listener](#backend-listener)
-   * [backend-redis](#backend-redis)
-   * [system-app](#system-app)
-   * [system-database](#system-database)
-   * [system-events-hook](#system-events-hook)
-   * [system-master-apicast](#system-master-apicast)
-   * [system-memcache](#system-memcache)
-   * [system-recaptcha](#system-recaptcha)
-   * [system-redis](#system-redis)
-   * [system-seed](#system-seed)
-   * [zync](#zync)
-   * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
-   * [system-smtp](#system-smtp)
+  * [backend-internal-api](#backend-internal-api)
+  * [backend-listener](#backend-listener)
+  * [backend-redis](#backend-redis)
+  * [system-app](#system-app)
+  * [system-database](#system-database)
+  * [system-events-hook](#system-events-hook)
+  * [system-master-apicast](#system-master-apicast)
+  * [system-memcache](#system-memcache)
+  * [system-recaptcha](#system-recaptcha)
+  * [system-redis](#system-redis)
+  * [system-seed](#system-seed)
+  * [zync](#zync)
+  * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
+  * [system-smtp](#system-smtp)
 * [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
+
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -376,7 +378,35 @@ an `APIManager` status field should never be modified by the user.
 
 | **Field** | **json/yaml field**| **Type** | **Info** |
 | --- | --- | --- | --- |
-| No fields for the moment | | | |
+| Available | `available` | v1.Condition | Indicates whether the APIManager is in `Available` state. See [ConditionSpec](#ConditionSpec) for a description on the meaning of `Available`|
+
+#### ConditionSpec
+
+The status object has an array of Conditions through which the Product has or has not passed.
+Each element of the Condition array has the following fields:
+
+* The *lastTransitionTime* field provides a timestamp for when the entity last transitioned from one status to another.
+* The *message* field is a human-readable message indicating details about the transition.
+* The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
+* The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
+* The *type* field is a string indicating the type of the condition. The types are:
+  * `Available`: An APIManager is in `Available` state when *all* of the following scenarios are true:
+    * All expected DeploymentConfigs to be deployed exist and have the `Available` condition set to true
+    * All 3scale default OpenShift routes exist and have the Admitted condition set to true. The default routes are:
+      * Master route
+      * Backend Listener route
+      * Default tenant admin route, developer route, APIcast staging and production routes beloinging to the default tenant
+
+
+| **Field** | **json field**| **Type** | **Info** |
+| --- | --- | --- | --- |
+| Type | `type` | string | Condition Type |
+| Status | `status` | string | Status: True, False, Unknown |
+| Reason | `reason` | string | Condition state reason |
+| Message | `message` | string | Condition state description |
+| LastTransitionTime | `lastTransitionTime` | timestamp | Last transition timestap |
+
+
 
 ## PersistentVolumeClaimResourcesSpec
 
