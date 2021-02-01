@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"reflect"
 	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -165,14 +164,24 @@ func (s *DeveloperAccountThreescaleReconciler) syncDeveloperAccount(devAccount *
 		deltaAccount.Element.OrgName = &s.resource.Spec.OrgName
 	}
 
-	if s.resource.Spec.MonthlyBillingEnabled != nil && !reflect.DeepEqual(devAccount.Element.MonthlyBillingEnabled, s.resource.Spec.MonthlyBillingEnabled) {
+	// MonthlyBilling defaults to True
+	desiredMonthlyBillingEnabled := true
+	if s.resource.Spec.MonthlyBillingEnabled != nil {
+		desiredMonthlyBillingEnabled = *s.resource.Spec.MonthlyBillingEnabled
+	}
+	if devAccount.Element.MonthlyBillingEnabled != nil && *devAccount.Element.MonthlyBillingEnabled != desiredMonthlyBillingEnabled {
 		update = true
-		deltaAccount.Element.MonthlyBillingEnabled = s.resource.Spec.MonthlyBillingEnabled
+		deltaAccount.Element.MonthlyBillingEnabled = &desiredMonthlyBillingEnabled
 	}
 
-	if s.resource.Spec.MonthlyChargingEnabled != nil && !reflect.DeepEqual(devAccount.Element.MonthlyChargingEnabled, s.resource.Spec.MonthlyChargingEnabled) {
+	// MonthlyChargingEnabled defaults to False
+	desiredMonthlyChargingEnabled := true
+	if s.resource.Spec.MonthlyChargingEnabled != nil {
+		desiredMonthlyChargingEnabled = *s.resource.Spec.MonthlyChargingEnabled
+	}
+	if devAccount.Element.MonthlyChargingEnabled != nil && *devAccount.Element.MonthlyChargingEnabled != desiredMonthlyChargingEnabled {
 		update = true
-		deltaAccount.Element.MonthlyChargingEnabled = s.resource.Spec.MonthlyChargingEnabled
+		deltaAccount.Element.MonthlyChargingEnabled = &desiredMonthlyChargingEnabled
 	}
 
 	updatedDevAccount := devAccount

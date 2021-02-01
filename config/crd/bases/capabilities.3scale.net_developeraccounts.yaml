@@ -37,10 +37,11 @@ spec:
           description: DeveloperAccountSpec defines the desired state of DeveloperAccount
           properties:
             monthlyBillingEnabled:
-              description: MonthlyBillingEnabled
+              description: MonthlyBillingEnabled sets the billing status. Defaults
+                to "true", ie., active
               type: boolean
             monthlyChargingEnabled:
-              description: MonthlyChargingEnabled
+              description: MonthlyChargingEnabled Defaults to "true"
               type: boolean
             orgName:
               description: OrgName is the organization name

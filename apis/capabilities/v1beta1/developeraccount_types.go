@@ -58,11 +58,11 @@ type DeveloperAccountSpec struct {
 	// OrgName is the organization name
 	OrgName string `json:"orgName"`
 
-	// MonthlyBillingEnabled
+	// MonthlyBillingEnabled sets the billing status. Defaults to "true", ie., active
 	// +optional
 	MonthlyBillingEnabled *bool `json:"monthlyBillingEnabled,omitempty"`
 
-	// MonthlyChargingEnabled
+	// MonthlyChargingEnabled Defaults to "true"
 	// +optional
 	MonthlyChargingEnabled *bool `json:"monthlyChargingEnabled,omitempty"`
 
