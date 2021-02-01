@@ -44,9 +44,7 @@ func (s *DeveloperUserThreescaleReconciler) Reconcile() (*threescaleapi.Develope
 		return nil, err
 	}
 
-	// Reconciliation is based on ID stored in Status field
-	// Nice to Have would be having that ID in status inmutable using admission webhooks
-	devUser, err := s.findDevUserByID()
+	devUser, err := s.findDevUser()
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +64,9 @@ func (s *DeveloperUserThreescaleReconciler) Reconcile() (*threescaleapi.Develope
 }
 
 func (s *DeveloperUserThreescaleReconciler) checkParentAccount() error {
-	if s.userCR.Status.AccountID != nil && !reflect.DeepEqual(s.userCR.Status.AccountID, s.parentAccountCR.Status.ID) {
+	if s.userCR.Status.AccountID != nil &&
+		!reflect.DeepEqual(s.userCR.Status.AccountID, s.parentAccountCR.Status.ID) &&
+		s.userCR.Status.ID != nil {
 		// Account ID from referenced CR does not much with status Account ID
 		// The referenced account might have changed.
 		// Since usernames and emails are unique, it needs to be removed first from old developer account
@@ -77,6 +77,40 @@ func (s *DeveloperUserThreescaleReconciler) checkParentAccount() error {
 	}
 
 	return nil
+}
+
+func (s *DeveloperUserThreescaleReconciler) findDevUser() (*threescaleapi.DeveloperUser, error) {
+	// Reconciliation is based on ID stored in Status field
+	// Nice to Have would be having that ID in status inmutable using admission webhooks
+	devUser, err := s.findDevUserByID()
+	if err != nil {
+		return nil, err
+	}
+
+	if devUser != nil {
+		return devUser, nil
+	}
+
+	// If not found by ID, try {username, email} set.
+	// Both fields are unique in the provider account scope.
+
+	return s.findDevUserByUsernameAndEmail()
+}
+
+func (s *DeveloperUserThreescaleReconciler) findDevUserByUsernameAndEmail() (*threescaleapi.DeveloperUser, error) {
+	devUserList, err := s.threescaleAPIClient.ListDeveloperUsers(*s.parentAccountCR.Status.ID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for idx := range devUserList.Items {
+		if devUserList.Items[idx].Element.Username != nil && *devUserList.Items[idx].Element.Username == s.userCR.Spec.Username &&
+			devUserList.Items[idx].Element.Email != nil && *devUserList.Items[idx].Element.Email == s.userCR.Spec.Email {
+			return &devUserList.Items[idx], nil
+		}
+	}
+
+	return nil, nil
 }
 
 func (s *DeveloperUserThreescaleReconciler) findDevUserByID() (*threescaleapi.DeveloperUser, error) {
