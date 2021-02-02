@@ -603,6 +603,9 @@ workflows:
       - deploy_templates:
           requires:
             - generator
+  custom-build:
+    jobs:
+      - test-manifests-version
   nightly:
     jobs:
       - build-push-3scale-images:
