@@ -1099,7 +1099,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
-      "description": "Number of jobs that executed successfully.",
+      "description": "Number of jobs that failed at least once, did not run out of attempts to retry and therefore are scheduled for retry any time soon.",
       "fill": 1,
       "gridPos": {
         "h": 8,
@@ -1188,7 +1188,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
-      "description": "Number of jobs that failed at least once, did not run out of attempts to retry and therefore are scheduled for retry any time soon.",
+      "description": "Number of jobs that executed successfully.",
       "fill": 1,
       "gridPos": {
         "h": 7,
