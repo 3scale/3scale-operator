@@ -973,7 +973,7 @@ The operator will gather required credentials automatically for the default 3sca
 * OpenAPI spec document can be read from:
   * Secret
   * URL. Supported schemes are `http` and `https`
-* Optionally, link the activedoc with a 3scale product using the `productSystemName` field. The value must be the `system_name` of the 3scale product's CR.
+* Optionally, link the activedoc with a 3scale product using the `productSystemName` field. The value must be the `system_name` of the 3scale product's CR. The referenced 3scale product must exist as CR, it cannot be some unmanaged 3scale product's system name.
 * Publish or hide the activedoc using the `published` field. By default, it will be `hidden`.
 * Skip OpenAPI 3.0 validations using the `skipSwaggerValidations` field. By default, the activedoc will be validated.
 
@@ -1029,6 +1029,9 @@ spec:
 [ActiveDoc CRD Reference](activedoc-reference.md) for more info about fields.
 
 ### ActiveDoc spec source linked with a 3scale product
+
+One Product custom resource can be linked to the ActiveDoc custom resource.
+The ActiveDoc custom resource cannot be linked to an unmanaged 3scale product by the system name.
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
