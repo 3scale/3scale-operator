@@ -603,26 +603,6 @@ workflows:
       - deploy_templates:
           requires:
             - generator
-  custom-build:
-    jobs:
-      - hold:
-          type: approval
-      - build-push-3scale-images:
-          context: org-global
-          requires:
-            - hold
-      - deploy_templates:
-          requires:
-            - hold
-            - build-push-3scale-images
-      - install-operator:
-          requires:
-            - hold
-      - run-operator-e2e-test:
-          requires:
-            - hold
-            - install-operator
-            - build-push-3scale-images
   nightly:
     jobs:
       - build-push-3scale-images:
