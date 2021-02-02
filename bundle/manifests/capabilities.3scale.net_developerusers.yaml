@@ -40,9 +40,16 @@ spec:
             email:
               description: Email
               type: string
-            password:
+            passwordCredentialsRef:
               description: Password
-              type: string
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret name must be unique.
+                  type: string
+              type: object
             providerAccountRef:
               description: ProviderAccountRef references account provider credentials
               properties:
@@ -65,7 +72,7 @@ spec:
           required:
           - developerAccountRef
           - email
-          - password
+          - passwordCredentialsRef
           - username
           type: object
         status:

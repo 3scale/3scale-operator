@@ -1,16 +1,20 @@
 package controllers
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -86,11 +90,16 @@ func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleap
 		}
 	}
 
+	password, err := s.getAdminUserPassword(devAdminUserCR)
+	if err != nil {
+		return nil, err
+	}
+
 	params := threescaleapi.Params{
 		"org_name": s.resource.Spec.OrgName,
 		"username": devAdminUserCR.Spec.Username,
 		"email":    devAdminUserCR.Spec.Email,
-		"password": devAdminUserCR.Spec.Password,
+		"password": password,
 	}
 
 	if s.resource.Spec.MonthlyBillingEnabled != nil {
@@ -196,4 +205,31 @@ func (s *DeveloperAccountThreescaleReconciler) syncDeveloperAccount(devAccount *
 	}
 
 	return updatedDevAccount, nil
+}
+
+func (s *DeveloperAccountThreescaleReconciler) getAdminUserPassword(adminUserCR *capabilitiesv1beta1.DeveloperUser) (string, error) {
+	// Get password from secret reference
+	secret := &corev1.Secret{}
+	namespace := s.resource.Namespace
+	if adminUserCR.Spec.PasswordCredentialsRef.Namespace != "" {
+		namespace = adminUserCR.Spec.PasswordCredentialsRef.Namespace
+	}
+
+	err := s.Client().Get(s.Context(),
+		types.NamespacedName{
+			Name:      adminUserCR.Spec.PasswordCredentialsRef.Name,
+			Namespace: namespace,
+		},
+		secret)
+	if err != nil {
+		return "", err
+	}
+
+	passwordByteArray, ok := secret.Data[capabilitiesv1beta1.DeveloperUserPasswordSecretField]
+	if !ok {
+		return "", fmt.Errorf("Not found password field in secret (ns: %s, name: %s) field: %s",
+			namespace, adminUserCR.Spec.PasswordCredentialsRef.Name, capabilitiesv1beta1.DeveloperUserPasswordSecretField)
+	}
+
+	return bytes.NewBuffer(passwordByteArray).String(), err
 }

@@ -54,6 +54,9 @@ const (
 	// DeveloperUserFailedConditionType indicates that an error occurred during synchronization.
 	// The operator will retry.
 	DeveloperUserFailedConditionType common.ConditionType = "Failed"
+
+	// DeveloperUserPasswordSecretField indicates the secret field name with developer user's password
+	DeveloperUserPasswordSecretField = "password"
 )
 
 // DeveloperUserSpec defines the desired state of DeveloperUser
@@ -68,7 +71,7 @@ type DeveloperUserSpec struct {
 	Email string `json:"email"`
 
 	// Password
-	Password string `json:"password"`
+	PasswordCredentialsRef corev1.SecretReference `json:"passwordCredentialsRef"`
 
 	// DeveloperAccountRef is the reference to the parent developer account
 	DeveloperAccountRef corev1.LocalObjectReference `json:"developerAccountRef"`

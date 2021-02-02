@@ -1,13 +1,19 @@
 package controllers
 
 import (
+	"bytes"
 	"reflect"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
+	apimachineryerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 type DeveloperUserThreescaleReconciler struct {
@@ -128,11 +134,16 @@ func (s *DeveloperUserThreescaleReconciler) findDevUserByID() (*threescaleapi.De
 }
 
 func (s *DeveloperUserThreescaleReconciler) createDevUser() (*threescaleapi.DeveloperUser, error) {
+	password, err := s.getPassword()
+	if err != nil {
+		return nil, err
+	}
+
 	devUser := &threescaleapi.DeveloperUser{
 		Element: threescaleapi.DeveloperUserItem{
 			Username: &s.userCR.Spec.Username,
 			Email:    &s.userCR.Spec.Email,
-			Password: &s.userCR.Spec.Password,
+			Password: &password,
 		},
 	}
 
@@ -225,4 +236,48 @@ func (s *DeveloperUserThreescaleReconciler) syncDeveloperUser(devUser *threescal
 	}
 
 	return updatedDevUser, nil
+}
+
+func (s *DeveloperUserThreescaleReconciler) getPassword() (string, error) {
+	passwdFieldPath := field.NewPath("spec").Child("passwordCredentialsRef")
+
+	// Get password from secret reference
+	secret := &corev1.Secret{}
+	namespace := s.userCR.Namespace
+	if s.userCR.Spec.PasswordCredentialsRef.Namespace != "" {
+		namespace = s.userCR.Spec.PasswordCredentialsRef.Namespace
+	}
+
+	err := s.Client().Get(s.Context(),
+		types.NamespacedName{
+			Name:      s.userCR.Spec.PasswordCredentialsRef.Name,
+			Namespace: namespace,
+		},
+		secret)
+	if err != nil {
+		if apimachineryerrors.IsNotFound(err) {
+			// Return spec field error if secret was not found
+			return "", &helper.SpecFieldError{
+				ErrorType: helper.InvalidError,
+				FieldErrorList: field.ErrorList{
+					field.Invalid(passwdFieldPath, s.userCR.Spec.PasswordCredentialsRef, "developeruser password reference not found"),
+				},
+			}
+		}
+
+		return "", err
+	}
+
+	passwordByteArray, ok := secret.Data[capabilitiesv1beta1.DeveloperUserPasswordSecretField]
+	if !ok {
+		// Return spec field error if secret field was not found
+		return "", &helper.SpecFieldError{
+			ErrorType: helper.InvalidError,
+			FieldErrorList: field.ErrorList{
+				field.Invalid(passwdFieldPath, s.userCR.Spec.PasswordCredentialsRef, "developeruser password secret missing expected field"),
+			},
+		}
+	}
+
+	return bytes.NewBuffer(passwordByteArray).String(), err
 }
