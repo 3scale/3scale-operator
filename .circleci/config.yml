@@ -7,7 +7,7 @@ parameters:
     default: "memcached:1.5"
   components_tag_name:
     type: string
-    default: "nightly"
+    default: "custom-v1"
   components_imagestream_tag_name:
     type: string
     default: "master"
@@ -605,7 +605,16 @@ workflows:
             - generator
   custom-build:
     jobs:
-      - test-manifests-version
+      - build-push-3scale-images:
+          context: org-global
+      - deploy_templates:
+          requires:
+            - build-push-3scale-images
+      - install-operator
+      - run-operator-e2e-test:
+          requires:
+            - install-operator
+            - build-push-3scale-images
   nightly:
     jobs:
       - build-push-3scale-images:
