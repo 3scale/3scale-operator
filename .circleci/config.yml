@@ -7,7 +7,7 @@ parameters:
     default: "memcached:1.5"
   components_tag_name:
     type: string
-    default: "custom-v1"
+    default: "nightly"
   components_imagestream_tag_name:
     type: string
     default: "master"
