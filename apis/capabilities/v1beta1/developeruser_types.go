@@ -20,6 +20,7 @@ import (
 	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
@@ -179,6 +180,13 @@ func (s *DeveloperUser) IsAdmin() bool {
 
 func (a *DeveloperUser) Validate() field.ErrorList {
 	errors := field.ErrorList{}
+
+	// Email validation
+	emailFldPath := field.NewPath("spec").Child("email")
+	if !helper.IsEmailValid(a.Spec.Email) {
+		errors = append(errors, field.Invalid(emailFldPath, a.Spec.Email, "Email address not valid"))
+	}
+
 	return errors
 }
 
