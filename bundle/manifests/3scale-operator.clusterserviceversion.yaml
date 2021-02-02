@@ -201,10 +201,35 @@ metadata:
           "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "DeveloperUser",
           "metadata": {
-            "name": "developeruser-sample"
+            "name": "developeruser-admin-sample"
           },
           "spec": {
-            "foo": "bar"
+            "developerAccountRef": {
+              "name": "developeraccount1"
+            },
+            "email": "myusername2@example.com",
+            "passwordCredentialsRef": {
+              "name": "mysecret"
+            },
+            "role": "admin",
+            "username": "myusername2"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "DeveloperUser",
+          "metadata": {
+            "name": "developeruser-member-sample"
+          },
+          "spec": {
+            "developerAccountRef": {
+              "name": "mydeveloperaccount"
+            },
+            "email": "myusername1@example.com",
+            "passwordCredentialsRef": {
+              "name": "mysecret"
+            },
+            "username": "myusername1"
           }
         },
         {
