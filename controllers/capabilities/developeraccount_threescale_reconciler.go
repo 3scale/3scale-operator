@@ -183,7 +183,7 @@ func (s *DeveloperAccountThreescaleReconciler) syncDeveloperAccount(devAccount *
 		deltaAccount.Element.MonthlyBillingEnabled = &desiredMonthlyBillingEnabled
 	}
 
-	// MonthlyChargingEnabled defaults to False
+	// MonthlyChargingEnabled defaults to True
 	desiredMonthlyChargingEnabled := true
 	if s.resource.Spec.MonthlyChargingEnabled != nil {
 		desiredMonthlyChargingEnabled = *s.resource.Spec.MonthlyChargingEnabled

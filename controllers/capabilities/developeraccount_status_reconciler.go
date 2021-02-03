@@ -86,8 +86,6 @@ func (s *DeveloperAccountStatusReconciler) calculateStatus() (*capabilitiesv1bet
 		ObservedGeneration:  s.resource.Status.ObservedGeneration,
 	}
 
-	// If there is an error and s.remoteDeveloperAccount is nil
-	// ID is not changed, as it is initialized with previous values d
 	if s.remoteDeveloperAccount != nil {
 		newStatus.ID = s.remoteDeveloperAccount.Element.ID
 		newStatus.AccountState = s.remoteDeveloperAccount.Element.State
