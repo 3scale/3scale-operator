@@ -21,6 +21,8 @@ github.com/3scale/3scale-porta-go-client v0.3.0 h1:xzHdcsqu8aHXt9UaOwW8R3TY9vpwp
 github.com/3scale/3scale-porta-go-client v0.3.0/go.mod h1:nUbuVh0fU2rs/lJfowmS5YhEk2tQoybL4htDIdxxMaM=
 github.com/3scale/3scale-porta-go-client v0.4.0 h1:zzmtLHO30hLVizIK1QcXc9PAbSwOsYRu2IkJMz53Utc=
 github.com/3scale/3scale-porta-go-client v0.4.0/go.mod h1:nUbuVh0fU2rs/lJfowmS5YhEk2tQoybL4htDIdxxMaM=
+github.com/3scale/3scale-porta-go-client v0.5.0 h1:lCxPKRYeHwXnIVnJSaQF0NkSWkFPisjTeh5vYMZUOwo=
+github.com/3scale/3scale-porta-go-client v0.5.0/go.mod h1:nUbuVh0fU2rs/lJfowmS5YhEk2tQoybL4htDIdxxMaM=
 github.com/Azure/azure-pipeline-go v0.2.1/go.mod h1:UGSo8XybXnIGZ3epmeBw7Jdz+HiUVpqIlpz/HKHylF4=
 github.com/Azure/azure-pipeline-go v0.2.2/go.mod h1:4rQ/NZncSvGqNkkOsNpOU1tgoNuIlp9AfUH5G1tvCHc=
 github.com/Azure/azure-sdk-for-go v16.2.1+incompatible/go.mod h1:9XXNKU+eRnpl9moKnB4QOLf1HestfXbmab5FXxiDBjc=
