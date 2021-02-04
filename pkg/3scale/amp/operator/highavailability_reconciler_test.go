@@ -77,21 +77,6 @@ func TestHighAvailabilityReconciler(t *testing.T) {
 				subT.Errorf("error fetching object %s: %v", tc.secretName, err)
 			}
 
-			// Assert owner ref
-			if len(secret.GetOwnerReferences()) == 0 {
-				subT.Errorf("secret %s: owner ref not set", tc.secretName)
-			}
-
-			ownerRef := secret.GetOwnerReferences()[0]
-
-			// apimanager.Kind is empty
-			if ownerRef.Kind != "APIManager" {
-				subT.Errorf("secret %s: owner ref kind not matched. Expected: %s, found: %s", tc.secretName, "APIManager", ownerRef.Kind)
-			}
-
-			if ownerRef.Name != apimanager.Name {
-				subT.Errorf("secret %s: owner ref name not matched. Expected: %s, found: %s", tc.secretName, apimanager.Name, ownerRef.Name)
-			}
 		})
 	}
 }

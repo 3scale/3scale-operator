@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
+	commonapps "github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -33,7 +36,15 @@ func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1alpha
 }
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
-	res, err := u.upgradeBackendRouteEnv()
+	res, err := u.deleteAPIManagerOwnerReferencesFromSecrets()
+	if err != nil {
+		return res, fmt.Errorf("Deleting secrets APIManager owner references: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
+	}
+
+	res, err = u.upgradeBackendRouteEnv()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading backend route env vars: %w", err)
 	}
@@ -577,4 +588,51 @@ func (u *UpgradeApiManager) upgradeZyncPodTemplateAnnotations() (reconcile.Resul
 
 func (u *UpgradeApiManager) Logger() logr.Logger {
 	return u.logger
+}
+
+func (u *UpgradeApiManager) deleteAPIManagerOwnerReferencesFromSecrets() (reconcile.Result, error) {
+	secretsToUpdate := []string{
+		component.BackendSecretInternalApiSecretName,
+		component.BackendSecretBackendListenerSecretName,
+		component.BackendSecretBackendRedisSecretName,
+		component.SystemSecretSystemAppSecretName,
+		component.SystemSecretSystemDatabaseSecretName,
+		component.SystemSecretSystemEventsHookSecretName,
+		component.SystemSecretSystemMasterApicastSecretName,
+		component.SystemSecretSystemMemcachedSecretName,
+		component.SystemSecretSystemRecaptchaSecretName,
+		component.SystemSecretSystemRedisSecretName,
+		component.SystemSecretSystemSeedSecretName,
+		component.SystemSecretSystemSMTPSecretName,
+		component.ZyncSecretName,
+	}
+
+	someChanged := false
+	for _, secretName := range secretsToUpdate {
+		existing := &v1.Secret{}
+		err := u.Client().Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: u.apiManager.Namespace}, existing)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		apimanagerOwnerReferenceIdx := -1
+		for currIdx, secretOwnerReference := range existing.OwnerReferences {
+			if secretOwnerReference.Kind == commonapps.APIManagerKind &&
+				secretOwnerReference.Controller != nil && *secretOwnerReference.Controller {
+				apimanagerOwnerReferenceIdx = currIdx
+			}
+		}
+
+		if apimanagerOwnerReferenceIdx != -1 {
+			u.Logger().Info(fmt.Sprintf("Removing APIManager OwnerReference from Secret %s", existing.Name))
+			existing.OwnerReferences = append(existing.OwnerReferences[:apimanagerOwnerReferenceIdx], existing.OwnerReferences[apimanagerOwnerReferenceIdx+1:]...)
+			err = u.UpdateResource(existing)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			someChanged = true
+		}
+	}
+
+	return reconcile.Result{Requeue: someChanged}, nil
 }

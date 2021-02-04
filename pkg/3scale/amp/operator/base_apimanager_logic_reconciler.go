@@ -181,8 +181,17 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutatefn reconcilers.MutateFn) error {
 	desired.SetNamespace(r.apiManager.GetNamespace())
-	if err := r.SetOwnerReference(r.apiManager, desired); err != nil {
-		return err
+
+	// Secrets are managed by users so they do not get APIManager-based
+	// owned references. In case we want to react to changes to secrets
+	// in the future we will need to implement an alternative mechanism to
+	// controller-based OwnerReferences due to user-managed secrets might
+	// already have controller-based OwnerReferences and K8s objects
+	// can only be owned by a single controller-based OwnerReference.
+	if desired.GetObjectKind().GroupVersionKind().Kind != "Secret" {
+		if err := r.SetOwnerReference(r.apiManager, desired); err != nil {
+			return err
+		}
 	}
 
 	return r.BaseReconciler.ReconcileResource(obj, desired, r.APIManagerMutator(mutatefn))
@@ -195,14 +204,22 @@ func (r *BaseAPIManagerLogicReconciler) APIManagerMutator(mutateFn reconcilers.M
 		// Metadata
 		updated := helper.EnsureObjectMeta(existing, desired)
 
-		// OwnerRefenrence
-		updatedTmp, err := r.EnsureOwnerReference(r.apiManager, existing)
-		if err != nil {
-			return false, err
+		// Secrets are managed by users so they do not get APIManager-based
+		// owned references. In case we want to react to changes to secrets
+		// in the future we will need to implement an alternative mechanism to
+		// controller-based OwnerReferences due to user-managed secrets might
+		// already have controller-based OwnerReferences and K8s objects
+		// can only be owned by a single controller-based OwnerReference.
+		if existing.GetObjectKind().GroupVersionKind().Kind != "Secret" {
+			// OwnerRefenrence
+			updatedTmp, err := r.EnsureOwnerReference(r.apiManager, existing)
+			if err != nil {
+				return false, err
+			}
+			updated = updated || updatedTmp
 		}
-		updated = updated || updatedTmp
 
-		updatedTmp, err = mutateFn(existing, desired)
+		updatedTmp, err := mutateFn(existing, desired)
 		if err != nil {
 			return false, err
 		}
