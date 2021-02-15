@@ -388,6 +388,15 @@ jobs:
           paths:
             - images/3scaleoperator-image.tar
 
+  build-operator-image-only:
+    docker:
+      - image: circleci/golang:1.13.7
+    working_directory: ~/project/3scale-operator
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - build-operator-image
+
   tag-operator-image-master:
     machine:
       image: ubuntu-1604:202007-01
@@ -559,7 +568,7 @@ workflows:
       - test-manifests-version
       - run-unit-tests
       - bundle-validate
-      - install-operator
+      - build-operator-image-only
       - unit-tests-coverage:
           requires:
             - run-unit-tests
@@ -577,7 +586,7 @@ workflows:
       - deploy_templates:
           requires:
             - build-push-3scale-images
-      - install-operator
+      - build-operator-image-only
     <<: *nightly-trigger
   operator-release:
     jobs:
