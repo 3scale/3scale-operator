@@ -4,29 +4,15 @@
 # of writing this (2020-11-02) kubebuilder
 # does not support `oneOf` statement
 # OpenAPI validation
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: products.capabilities.3scale.net
-spec:
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          properties:
-            deployment:
-              properties:
-                apicastHosted:
-                  properties:
-                    authentication:
-                      oneOf:
-                      - required: ["userkey"]
-                      - required: ["appKeyAppID"]
-                      - required: ["oidc"]
-                apicastSelfManaged:
-                  properties:
-                    authentication:
-                      oneOf:
-                      - required: ["userkey"]
-                      - required: ["appKeyAppID"]
-                      - required: ["oidc"]
+- op: add
+  path: /spec/versions/0/schema/openAPIV3Schema/properties/spec/properties/deployment/properties/apicastHosted/properties/authentication/oneOf
+  value:
+    - required: ["userkey"]
+    - required: ["appKeyAppID"]
+    - required: ["oidc"]
+- op: add
+  path: /spec/versions/0/schema/openAPIV3Schema/properties/spec/properties/deployment/properties/apicastSelfManaged/properties/authentication/oneOf
+  value:
+    - required: ["userkey"]
+    - required: ["appKeyAppID"]
+    - required: ["oidc"]
