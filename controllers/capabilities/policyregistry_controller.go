@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -32,27 +31,28 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+	"github.com/go-logr/logr"
 )
 
-// PolicyReconciler reconciles a Policy object
-type PolicyReconciler struct {
+// PolicyRegistryReconciler reconciles a PolicyRegistry object
+type PolicyRegistryReconciler struct {
 	*reconcilers.BaseReconciler
 }
 
-// blank assignment to verify that PolicyReconciler implements reconcile.Reconciler
-var _ reconcile.Reconciler = &PolicyReconciler{}
+// blank assignment to verify that PolicyRegistryReconciler implements reconcile.Reconciler
+var _ reconcile.Reconciler = &PolicyRegistryReconciler{}
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=policies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=policies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=policyregistries,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=policyregistries/status,verbs=get;update;patch
 
-func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *PolicyRegistryReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	reqLogger := r.Logger().WithValues("policy", req.NamespacedName)
 	reqLogger.Info("Reconcile Policy", "Operator version", version.Version)
 
 	// Fetch the instance
-	policyCR := &capabilitiesv1beta1.Policy{}
-	err := r.Client().Get(context.TODO(), req.NamespacedName, policyCR)
+	policyRegistryCR := &capabilitiesv1beta1.PolicyRegistry{}
+	err := r.Client().Get(context.TODO(), req.NamespacedName, policyRegistryCR)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -66,7 +66,7 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if reqLogger.V(1).Enabled() {
-		jsonData, err := json.MarshalIndent(policyCR, "", "  ")
+		jsonData, err := json.MarshalIndent(policyRegistryCR, "", "  ")
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -75,11 +75,11 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Ignore deleted resource, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
-	if policyCR.DeletionTimestamp != nil {
+	if policyRegistryCR.DeletionTimestamp != nil {
 		return ctrl.Result{}, nil
 	}
 
-	statusReconciler, reconcileErr := r.reconcileSpec(policyCR, reqLogger)
+	statusReconciler, reconcileErr := r.reconcileSpec(policyRegistryCR, reqLogger)
 	statusResult, statusUpdateErr := statusReconciler.Reconcile()
 	if statusUpdateErr != nil {
 		if reconcileErr != nil {
@@ -97,40 +97,40 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if helper.IsInvalidSpecError(reconcileErr) {
 			// On Validation error, no need to retry as spec is not valid and needs to be changed
 			reqLogger.Info("ERROR", "spec validation error", reconcileErr)
-			r.EventRecorder().Eventf(policyCR, corev1.EventTypeWarning, "Invalid Policy Spec", "%v", reconcileErr)
+			r.EventRecorder().Eventf(policyRegistryCR, corev1.EventTypeWarning, "Invalid Policy Spec", "%v", reconcileErr)
 			return ctrl.Result{}, nil
 		}
 
 		reqLogger.Error(reconcileErr, "Failed to reconcile")
-		r.EventRecorder().Eventf(policyCR, corev1.EventTypeWarning, "ReconcileError", "%v", reconcileErr)
+		r.EventRecorder().Eventf(policyRegistryCR, corev1.EventTypeWarning, "ReconcileError", "%v", reconcileErr)
 		return ctrl.Result{}, reconcileErr
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *PolicyReconciler) reconcileSpec(policyCR *capabilitiesv1beta1.Policy, logger logr.Logger) (*PolicyStatusReconciler, error) {
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), policyCR.Namespace, policyCR.Spec.ProviderAccountRef, logger)
+func (r *PolicyRegistryReconciler) reconcileSpec(policyRegistryCR *capabilitiesv1beta1.PolicyRegistry, logger logr.Logger) (*PolicyRegistryStatusReconciler, error) {
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), policyRegistryCR.Namespace, policyRegistryCR.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		statusReconciler := NewPolicyStatusReconciler(r.BaseReconciler, policyCR, "", nil, err)
+		statusReconciler := NewPolicyRegistryStatusReconciler(r.BaseReconciler, policyRegistryCR, "", nil, err)
 		return statusReconciler, err
 	}
 
 	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
 	if err != nil {
-		statusReconciler := NewPolicyStatusReconciler(r.BaseReconciler, policyCR, providerAccount.AdminURLStr, nil, err)
+		statusReconciler := NewPolicyRegistryStatusReconciler(r.BaseReconciler, policyRegistryCR, providerAccount.AdminURLStr, nil, err)
 		return statusReconciler, err
 	}
 
-	reconciler := NewPolicyThreescaleReconciler(r.BaseReconciler, policyCR, threescaleAPIClient, providerAccount.AdminURLStr, logger)
+	reconciler := NewPolicyRegistryThreescaleReconciler(r.BaseReconciler, policyRegistryCR, threescaleAPIClient, providerAccount.AdminURLStr, logger)
 	policyObj, err := reconciler.Reconcile()
 
-	statusReconciler := NewPolicyStatusReconciler(r.BaseReconciler, policyCR, providerAccount.AdminURLStr, policyObj, err)
+	statusReconciler := NewPolicyRegistryStatusReconciler(r.BaseReconciler, policyRegistryCR, providerAccount.AdminURLStr, policyObj, err)
 	return statusReconciler, err
 }
 
-func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *PolicyRegistryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&capabilitiesv1beta1.Policy{}).
+		For(&capabilitiesv1beta1.PolicyRegistry{}).
 		Complete(r)
 }

@@ -1,26 +1,26 @@
-# Policy CRD Reference
+# PolicyRegistry CRD Reference
 
 ## Table of Contents
 
-* [Policy CRD Reference](#policy-crd-reference)
+* [PolicyRegistry CRD Reference](#policyregistry-crd-reference)
    * [Table of Contents](#table-of-contents)
-   * [Policy](#policy)
-      * [PolicySpec](#policyspec)
-         * [PolicySchemaSpec](#policyschemaspec)
+   * [PolicyRegistry](#policyregistry)
+      * [PolicyRegistrySpec](#policyregistryspec)
+         * [PolicyRegistrySchemaSpec](#policyregistryschemaspec)
          * [Provider Account Reference](#provider-account-reference)
-      * [PolicyStatus](#policystatus)
+      * [PolicyRegistryStatus](#policyregistrystatus)
          * [ConditionSpec](#conditionspec)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
-## Policy
+## PolicyRegistry
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
-| Spec | `spec` | [PolicySpec](#policyspec) | The specfication for the custom resource |
-| Status | `status` | [PolicyStatus](#policystatus) | The status for the custom resource |
+| Spec | `spec` | [PolicyRegistrySpec](#policyspec) | The specfication for the custom resource |
+| Status | `status` | [PolicyRegistryStatus](#policystatus) | The status for the custom resource |
 
-### PolicySpec
+### PolicyRegistrySpec
 
 `.spec`
 
@@ -28,21 +28,21 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | --- | --- | --- | --- | --- |
 | Name | `name` | string | Name | **Yes** |
 | Version | `version` | string | Version | **Yes** |
-| Schema | `schema` | [PolicySchemaSpec](#policyschemaspec) | Policy schema definition | **Yes** |
+| Schema | `schema` | [PolicyRegistrySchemaSpec](#policyschemaspec) | PolicyRegistry schema definition | **Yes** |
 | Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
 
 Example:
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Policy
+kind: PolicyRegistry
 metadata:
-  name: policy-sample
+  name: policy-registry-sample
 spec:
-  name: "MyCustomPolicy"
+  name: "MyCustomPolicyRegistry"
   version: "0.0.1"
   schema:
-    name: "MyCustomPolicy"
+    name: "MyCustomPolicyRegistry"
     version: "0.0.1"
     summary: "some summary"
     $schema: "http://json-schema.org/draft-07/schema#"
@@ -54,7 +54,7 @@ spec:
             type: "integer"
 ```
 
-#### PolicySchemaSpec
+#### PolicyRegistrySchemaSpec
 
 `.spec.schema`
 
@@ -92,13 +92,13 @@ stringData:
   token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-### PolicyStatus
+### PolicyRegistryStatus
 
 `.status`
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
-| ID | `policyID` | string | Internal 3scale ID |
+| ID | `policyRegistryID` | string | Internal 3scale ID |
 | ProviderAccountHost | `providerAccountHost` | string | 3scale account's provider URL |
 | Observed Generation | `observedGeneration` | string | helper field to see if status info is up to date with latest resource spec |
 | Conditions | `conditions` | array of [condition](#ConditionSpec)s | resource conditions |
@@ -118,7 +118,7 @@ status:
     status: "True"
     type: Ready
   observedGeneration: 1
-  policyID: 20
+  policyRegistryID: 20
   providerAccountHost: https://3scale.example.com
 ```
 
@@ -132,8 +132,8 @@ Each element of the Condition array has the following fields:
 * The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
 * The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
 * The *type* field is a string with the following possible values:
-  * Invalid: Indicates that the combination of configuration in the PolicySpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
-  * Ready: Indicates the Policy resource has been successfully reconciled;
+  * Invalid: Indicates that the combination of configuration in the PolicyRegistrySpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
+  * Ready: Indicates the PolicyRegistry resource has been successfully reconciled;
   * Failed: Indicates that an error occurred during reconcilliation;
 
 | **Field** | **json field**| **Type** | **Info** |

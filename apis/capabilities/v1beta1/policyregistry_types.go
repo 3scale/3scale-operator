@@ -20,7 +20,6 @@ import (
 	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/common"
-
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
@@ -32,46 +31,46 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
-	PolicyKind = "Policy"
+	PolicyRegistryKind = "PolicyRegistry"
 
-	// PolicyInvalidConditionType represents that the combination of configuration
-	// in the PolicySpec is not supported. This is not a transient error, but
+	// PolicyRegistryInvalidConditionType represents that the combination of configuration
+	// in the PolicyRegistrySpec is not supported. This is not a transient error, but
 	// indicates a state that must be fixed before progress can be made.
-	PolicyInvalidConditionType common.ConditionType = "Invalid"
+	PolicyRegistryInvalidConditionType common.ConditionType = "Invalid"
 
-	// PolicyReadyConditionType indicates the policy has been successfully synchronized.
+	// PolicyRegistryReadyConditionType indicates the policy registry has been successfully synchronized.
 	// Steady state
-	PolicyReadyConditionType common.ConditionType = "Ready"
+	PolicyRegistryReadyConditionType common.ConditionType = "Ready"
 
-	// PolicyFailedConditionType indicates that an error occurred during synchronization.
+	// PolicyRegistryFailedConditionType indicates that an error occurred during synchronization.
 	// The operator will retry.
-	PolicyFailedConditionType common.ConditionType = "Failed"
+	PolicyRegistryFailedConditionType common.ConditionType = "Failed"
 )
 
-// PolicySchemaSpec defines the desired Policy schema
-type PolicySchemaSpec struct {
-	// Name is the name of the policy schema
+// PolicyRegistrySchemaSpec defines the desired Policy Registry schema
+type PolicyRegistrySchemaSpec struct {
+	// Name is the name of the policy registry schema
 	Name string `json:"name"`
 
-	// Version is the version of the policy schema
+	// Version is the version of the policy registry schema
 	Version string `json:"version"`
 
-	// Summary is the summary of the policy schema
+	// Summary is the summary of the policy registry schema
 	Summary string `json:"summary"`
 
-	// Description is an array of description messages for the policy schema
+	// Description is an array of description messages for the policy schema registry
 	Description *[]string `json:"description,omitempty"`
 
-	// Schema the $schema keyword is used to declare that this is a JSON Schema.
+	// Schema the $schema keyword is used to declare that this is a JSON Schema
 	Schema string `json:"$schema"`
 
-	// Configuration defines the structural schema for the policy
+	// Configuration defines the structural schema for the policy registry
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Configuration runtime.RawExtension `json:"configuration"`
 }
 
-// PolicySpec defines the desired state of Policy
-type PolicySpec struct {
+// PolicyRegistrySpec defines the desired state of PolicyRegistry
+type PolicyRegistrySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -79,23 +78,23 @@ type PolicySpec struct {
 	// +optional
 	ProviderAccountRef *corev1.LocalObjectReference `json:"providerAccountRef,omitempty"`
 
-	// Name is the name of the policy
+	// Name is the name of the policy registry
 	Name string `json:"name"`
 
-	// Version is the version of the policy
+	// Version is the version of the policy registry
 	Version string `json:"version"`
 
-	// Schema is the schema of the policy
-	Schema PolicySchemaSpec `json:"schema"`
+	// Schema is the schema of the policy registry
+	Schema PolicyRegistrySchemaSpec `json:"schema"`
 }
 
-// PolicyStatus defines the observed state of Policy
-type PolicyStatus struct {
+// PolicyRegistryStatus defines the observed state of PolicyRegistry
+type PolicyRegistryStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// +optional
-	ID *int64 `json:"policyID,omitempty"`
+	ID *int64 `json:"policyRegistryID,omitempty"`
 
 	// ProviderAccountHost contains the 3scale account's provider URL
 	// +optional
@@ -105,7 +104,7 @@ type PolicyStatus struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// Current state of the policy resource.
+	// Current state of the policy registry resource.
 	// Conditions represent the latest available observations of an object's state
 	// +optional
 	// +patchMergeKey=type
@@ -113,7 +112,7 @@ type PolicyStatus struct {
 	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
-func (p *PolicyStatus) Equals(other *PolicyStatus, logger logr.Logger) bool {
+func (p *PolicyRegistryStatus) Equals(other *PolicyRegistryStatus, logger logr.Logger) bool {
 	if !reflect.DeepEqual(p.ID, other.ID) {
 		diff := cmp.Diff(p.ID, other.ID)
 		logger.V(1).Info("ID not equal", "difference", diff)
@@ -148,26 +147,26 @@ func (p *PolicyStatus) Equals(other *PolicyStatus, logger logr.Logger) bool {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:JSONPath=".status.providerAccountHost",name="Provider Account",type=string
 // +kubebuilder:printcolumn:JSONPath=".status.conditions[?(@.type=='Ready')].status",name=Ready,type=string
-// +kubebuilder:printcolumn:JSONPath=".status.policyID",name="3scale ID",type=integer
+// +kubebuilder:printcolumn:JSONPath=".status.policyRegistryID",name="3scale ID",type=integer
 
-// Policy is the Schema for the policies API
-type Policy struct {
+// PolicyRegistry is the Schema for the policyregistries API
+type PolicyRegistry struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   PolicySpec   `json:"spec,omitempty"`
-	Status PolicyStatus `json:"status,omitempty"`
+	Spec   PolicyRegistrySpec   `json:"spec,omitempty"`
+	Status PolicyRegistryStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// PolicyList contains a list of Policy
-type PolicyList struct {
+// PolicyRegistryList contains a list of PolicyRegistry
+type PolicyRegistryList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Policy `json:"items"`
+	Items           []PolicyRegistry `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Policy{}, &PolicyList{})
+	SchemeBuilder.Register(&PolicyRegistry{}, &PolicyRegistryList{})
 }

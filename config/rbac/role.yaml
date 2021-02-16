@@ -29,7 +29,7 @@ rules:
 - apiGroups:
   - capabilities.3scale.net
   resources:
-  - policies
+  - policyregistries
   verbs:
   - create
   - delete
@@ -41,7 +41,7 @@ rules:
 - apiGroups:
   - capabilities.3scale.net
   resources:
-  - policies/status
+  - policyregistries/status
   verbs:
   - get
   - patch

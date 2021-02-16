@@ -255,21 +255,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	discoveryClientPolicy, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	discoveryClientPolicyRegistry, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
 	if err != nil {
 		setupLog.Error(err, "unable to create discovery client")
 		os.Exit(1)
 	}
 
-	if err = (&capabilitiescontroller.PolicyReconciler{
+	if err = (&capabilitiescontroller.PolicyRegistryReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
 			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			context.Background(),
-			ctrl.Log.WithName("controllers").WithName("Policy"),
-			discoveryClientPolicy,
-			mgr.GetEventRecorderFor("Policy")),
+			ctrl.Log.WithName("controllers").WithName("PolicyRegistry"),
+			discoveryClientPolicyRegistry,
+			mgr.GetEventRecorderFor("PolicyRegistry")),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Policy")
+		setupLog.Error(err, "unable to create controller", "controller", "PolicyRegistry")
 		os.Exit(1)
 	}
 

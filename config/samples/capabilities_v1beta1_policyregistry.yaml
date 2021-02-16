@@ -1,12 +1,12 @@
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Policy
+kind: PolicyRegistry
 metadata:
-  name: policy-sample
+  name: policyregistry-sample
 spec:
-  name: "MyCustomPolicy"
+  name: "MyCustomPolicyRegistry"
   version: "0.0.1"
   schema:
-    name: "MyCustomPolicy"
+    name: "MyCustomPolicyRegistry"
     version: "0.0.1"
     summary: "some summary"
     $schema: "http://json-schema.org/draft-07/schema#"

@@ -53,8 +53,8 @@ The following diagram shows available custom resource definitions and their rela
    * [Reference your OpenAPI document using URL source](#reference-your-openapi-document-using-url-source)
    * [ActiveDoc spec source linked with a 3scale product](#activedoc-spec-source-linked-with-a-3scale-product)
    * [Link your ActiveDoc spec to your 3scale tenant or provider account](#link-your-activedoc-spec-to-your-3scale-tenant-or-provider-account)
-* [Policy Custom Resource](#policy-custom-resource)
-   * [Link your Policy spec to your 3scale tenant or provider account](#link-your-policy-spec-to-your-3scale-tenant-or-provider-account)
+* [PolicyRegistry Custom Resource](#policyregistry-custom-resource)
+   * [Link your PolicyRegistry spec to your 3scale tenant or provider account](#link-your-policyregistry-spec-to-your-3scale-tenant-or-provider-account)
 * [Tenant custom resource](#tenant-custom-resource)
    * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
    * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
@@ -1096,20 +1096,20 @@ oc create secret generic threescale-provider-account --from-literal=adminURL=htt
 
 The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
-## Policy Custom Resource
+## PolicyRegistry Custom Resource
 
 Example:
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Policy
+kind: PolicyRegistry
 metadata:
-  name: policy-sample
+  name: policy-registry-sample
 spec:
-  name: "MyCustomPolicy"
+  name: "MyCustomPolicyRegistry"
   version: "0.0.1"
   schema:
-    name: "MyCustomPolicy"
+    name: "MyCustomPolicyRegistry"
     version: "0.0.1"
     summary: "some summary"
     $schema: "http://json-schema.org/draft-07/schema#"
@@ -1123,9 +1123,9 @@ spec:
 
 [Policy CRD Reference](policy-reference.md) for more info about fields.
 
-### Link your Policy spec to your 3scale tenant or provider account
+### Link your PolicyRegistry spec to your 3scale tenant or provider account
 
-When some Policy custom resource is found by the 3scale operator,
+When some PolicyRegistry custom resource is found by the 3scale operator,
 *LookupProviderAccount* process is started to figure out the tenant owning the resource.
 
 The process will check the following tenant credential sources. If none is found, an error is raised.
@@ -1134,14 +1134,14 @@ The process will check the following tenant credential sources. If none is found
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Policy
+kind: PolicyRegistry
 metadata:
-  name: policy-sample
+  name: policy-registry-sample
 spec:
-  name: "MyCustomPolicy"
+  name: "MyCustomPolicyRegistry"
   version: "0.0.1"
   schema:
-    name: "MyCustomPolicy"
+    name: "MyCustomPolicyRegistry"
     version: "0.0.1"
     summary: "some summary"
     $schema: "http://json-schema.org/draft-07/schema#"
@@ -1155,7 +1155,7 @@ spec:
     name: mytenant
 ```
 
-[Policy CRD Reference](policy-reference.md) for more info about fields.
+[PolicyRegistry CRD Reference](policy-registry-reference.md) for more info about fields.
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 

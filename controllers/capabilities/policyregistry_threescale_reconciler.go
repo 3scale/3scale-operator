@@ -12,16 +12,16 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-type PolicyThreescaleReconciler struct {
+type PolicyRegistryThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
-	resource            *capabilitiesv1beta1.Policy
+	resource            *capabilitiesv1beta1.PolicyRegistry
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	providerAccountHost string
 	logger              logr.Logger
 }
 
-func NewPolicyThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Policy, threescaleAPIClient *threescaleapi.ThreeScaleClient, providerAccountHost string, logger logr.Logger) *PolicyThreescaleReconciler {
-	return &PolicyThreescaleReconciler{
+func NewPolicyRegistryThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.PolicyRegistry, threescaleAPIClient *threescaleapi.ThreeScaleClient, providerAccountHost string, logger logr.Logger) *PolicyRegistryThreescaleReconciler {
+	return &PolicyRegistryThreescaleReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
 		threescaleAPIClient: threescaleAPIClient,
@@ -30,7 +30,7 @@ func NewPolicyThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capa
 	}
 }
 
-func (s *PolicyThreescaleReconciler) Reconcile() (*threescaleapi.APIcastPolicy, error) {
+func (s *PolicyRegistryThreescaleReconciler) Reconcile() (*threescaleapi.APIcastPolicy, error) {
 	s.logger.V(1).Info("START")
 
 	var remotePolicy *threescaleapi.APIcastPolicy

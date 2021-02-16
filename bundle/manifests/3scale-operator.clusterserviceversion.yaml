@@ -215,12 +215,12 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "Policy",
+          "kind": "PolicyRegistry",
           "metadata": {
-            "name": "policy-sample"
+            "name": "policyregistry-sample"
           },
           "spec": {
-            "name": "MyCustomPolicy",
+            "name": "MyCustomPolicyRegistry",
             "schema": {
               "$schema": "http://json-schema.org/draft-07/schema#",
               "configuration": {
@@ -232,7 +232,7 @@ metadata:
                 },
                 "type": "object"
               },
-              "name": "MyCustomPolicy",
+              "name": "MyCustomPolicyRegistry",
               "summary": "some summary",
               "version": "0.0.1"
             },
@@ -557,10 +557,10 @@ spec:
       kind: OpenAPI
       name: openapis.capabilities.3scale.net
       version: v1beta1
-    - description: Policy is the Schema for the policies API
-      displayName: Policy
-      kind: Policy
-      name: policies.capabilities.3scale.net
+    - description: PolicyRegistry is the Schema for the policyregistries API
+      displayName: Policy Registry
+      kind: PolicyRegistry
+      name: policyregistries.capabilities.3scale.net
       version: v1beta1
     - description: Product is the Schema for the products API
       displayName: 3scale Product
@@ -633,7 +633,7 @@ spec:
         - apiGroups:
           - capabilities.3scale.net
           resources:
-          - policies
+          - policyregistries
           verbs:
           - create
           - delete
@@ -645,7 +645,7 @@ spec:
         - apiGroups:
           - capabilities.3scale.net
           resources:
-          - policies/status
+          - policyregistries/status
           verbs:
           - get
           - patch
