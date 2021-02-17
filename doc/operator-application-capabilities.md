@@ -68,6 +68,8 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 * [Product CRD reference](product-reference.md)
 * [Tenant CRD reference](tenant-reference.md)
 * [OpenAPI CRD reference](openapi-reference.md)
+* [DeveloperAccont CRD reference](developeraccount-reference.md)
+* [DeveloperUser CRD reference](developeruser-reference.md)
 
 ## Quickstart Guide
 
@@ -1282,6 +1284,113 @@ stringData:
 
 Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more information.
 
+## DeveloperAccount custom resource
+
+The minimum configuration required to deploy and manage one 3scale developer account is:
+* Provide, at least, the organization name in the `spec.OrgName` field.
+* Create one [DeveloperUser CR](#developeruser-custom-resource) with the `admin` role. Without any admin developer user custom resource deployed, the account cannot be created.
+Like any other tenant owned entities, the developer account needs to be linked to some 3scale tenant or provider account.
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperAccount
+metadata:
+  name: developeraccount-simple-sample
+spec:
+  orgName: Ecorp
+```
+
+### DeveloperAccount custom resource status field
+
+The status field shows resource information useful for the end user.
+It is not regarded to be updated manually and it is being reconciled on every change of the resource.
+
+Fields:
+
+* **accountID**: developer account internal ID
+* **accountState**: developer account state
+* **creditCardStored**: info about credit card
+* **conditions**: status.Conditions k8s common pattern. States:
+  * *Invalid*: Invalid object. This is not a transient error, but it reports about invalid spec and should be changed. The operator will not retry.
+  * *Failed*: Indicates that an error occurred during synchronization. The operator will retry.
+  * *Ready*: Indicates the account has been successfully synchronized.
+  * *Waiting*: Indicates the account is waiting for some event to happen. The operator will retry.
+* **observedGeneration**: helper field to see if status info is up to date with latest resource spec.
+* **providerAccountHost**: 3scale provider account URL to which the backend is synchronized.
+
+Example of *Ready* resource.
+
+```yaml
+status:
+  accountID: 2445583436906
+  accountState: approved
+  conditions:
+  - lastTransitionTime: "2021-02-17T23:39:00Z"
+    status: "False"
+    type: Failed
+  - lastTransitionTime: "2021-02-17T23:39:00Z"
+    status: "False"
+    type: Invalid
+  - lastTransitionTime: "2021-02-17T23:39:00Z"
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2021-02-17T23:39:00Z"
+    status: "False"
+    type: Waiting
+  creditCardStored: false
+  observedGeneration: 1
+  providerAccountHost: https://3scale-admin.example.com
+```
+
+### Link your DeveloperAccount to your 3scale tenant or provider account
+
+When some openapi custom resource is found by the 3scale operator,
+*LookupProviderAccount* process is started to figure out the tenant owning the resource.
+
+The process will check the following tenant credential sources. If none is found, an error is raised.
+
+* Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperAccount
+metadata:
+  name: developeraccount-simple-sample
+spec:
+  orgName: Ecorp
+  providerAccountRef:
+    name: mytenant
+```
+
+[DeveloperAccont CRD reference](developeraccount-reference.md) for more info about fields.
+
+The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mytenant
+type: Opaque
+stringData:
+  adminURL: https://my3scale-admin.example.com:443
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+* Default `threescale-provider-account` secret
+
+For example: `adminURL=https://3scale-admin.example.com` and `token=123456`.
+
+```
+oc create secret generic threescale-provider-account --from-literal=adminURL=https://3scale-admin.example.com --from-literal=token=123456
+```
+
+* Default provider account in the same namespace 3scale deployment
+
+The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
+
+## DeveloperUser custom resource
+
 ## Limitations and unimplemented functionalities
 
 * Deletion of a [Backend CR](backend-reference.md) is not reconciled. Existing Backend in 3scale will not be deleted. [THREESCALE-5538](https://issues.redhat.com/browse/THREESCALE-5538)
@@ -1289,5 +1398,3 @@ Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more info
 * [Product CRD](product-reference.md) Single sign on (SSO) authentication for the admin and developers portal
 * ActiveDocs CRD [THREESCALE-5531](https://issues.redhat.com/browse/THREESCALE-5531)
 * Gateway Policy CRD [THREESCALE-6101](https://issues.redhat.com/browse/THREESCALE-6101)
-* Account CRD [THREESCALE-5530](https://issues.redhat.com/browse/THREESCALE-5530)
-  * 3scale Applications are managed using Account CRD
