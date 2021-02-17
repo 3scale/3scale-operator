@@ -136,7 +136,7 @@ objects:
               pullSecret:
                   name: "${PULLSECRET_NAME}"
               contextDir: /
-              dockerfilePath: openshift/distro/centos/7/release/Dockerfile
+              dockerfilePath: openshift/distro/ubi/8/release/Dockerfile.min
 
 parameters:
 - name: ZYNC_GIT_REF
@@ -160,6 +160,6 @@ parameters:
   value: "latest"
   required: true
 - name: PULLSECRET_NAME
-  description: PullSecret is the name of a Secret that would be used for setting up the authentication for pulling the Docker images from the private Docker egistries 
+  description: PullSecret is the name of a Secret that would be used for setting up the authentication for pulling the Docker images from the private Docker egistries
   value: "threescale-registry-auth"
   required: true
