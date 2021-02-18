@@ -26,8 +26,8 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | Email | `email` | string | Email | Yes |
 | PasswordCredentialsRef | `passwordCredentialsRef` | [v1.SecretReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#secretreference-v1-core) to [Password secret reference](#password-secret-reference)] | The secret that contains password | Yes |
 | DeveloperAccountRef | `developerAccountRef` | [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) | Local reference to the parent [DeveloperAccount CR](developeraccount-reference.md) | Yes |
-| Suspended | `suspended` | bool | State defines the desired state. Defaults to "false" | No |
-| Role | `role` | string | Role defines the desired 3scale role. Valid values are `member` or `admin`. Defaults to `member` | No |
+| Suspended | `suspended` | bool | Defines the desired state. Defaults to "false" | No |
+| Role | `role` | string | Defines the desired role. Valid values are `member` or `admin`. Defaults to `member` | No |
 | Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
 
 #### Password secret reference
@@ -36,7 +36,7 @@ The secret that contains the password referenced by a [v1.LocalObjectReference](
 
 | **Field** | **Description** | **Required** |
 | --- | --- | --- |
-| `password` | The password field | Yes |
+| `password` | The field containing the password value | Yes |
 
 For example:
 

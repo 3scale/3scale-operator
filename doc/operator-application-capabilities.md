@@ -76,7 +76,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 * [Product CRD reference](product-reference.md)
 * [Tenant CRD reference](tenant-reference.md)
 * [OpenAPI CRD reference](openapi-reference.md)
-* [DeveloperAccont CRD reference](developeraccount-reference.md)
+* [DeveloperAccount CRD reference](developeraccount-reference.md)
 * [DeveloperUser CRD reference](developeruser-reference.md)
 
 ## Quickstart Guide
