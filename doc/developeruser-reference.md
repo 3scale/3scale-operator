@@ -1,30 +1,54 @@
-# DeveloperAccount CRD Reference
+# DeveloperUser CRD Reference
 
 ## Table of Contents
 
-* [DeveloperAccount](#developeraccount)
-   * [DeveloperAccountSpec](#developeraccountspec)
+* [DeveloperUser](#developeruser)
+   * [DeveloperUserSpec](#developeruserspec)
+      * [Password secret reference](#password-secret-reference)
       * [Provider Account Reference](#provider-account-reference)
-   * [DeveloperAccountStatus](#developeraccountstatus)
+   * [DeveloperUserStatus](#developeruserstatus)
       * [ConditionSpec](#conditionspec)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
-## DeveloperAccount
+## DeveloperUser
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
-| Spec | `spec` | [DeveloperAccountSpec](#developeraccountspec) | The specfication for the custom resource |
-| Status | `status` | [DeveloperAccountStatus](#developeraccountstatus) | The status for the custom resource |
+| Spec | `spec` | [DeveloperUserSpec](#developeruserspec) | The specfication for the custom resource |
+| Status | `status` | [DeveloperUserStatus](#developeruserstatus) | The status for the custom resource |
 
-### DeveloperAccountSpec
+### DeveloperUserSpec
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
-| OrgName | `orgName` | string | Group/Org  | Yes |
-| MonthlyBillingEnabled | `monthlyBillingEnabled` | bool | The billing status. Defaults to `true` | No |
-| MonthlyChargingEnabled | `monthlyChargingEnabled` | bool | Defaults to `true` | No |
+| Username | `username` | string | Username  | Yes |
+| Email | `email` | string | Email | Yes |
+| PasswordCredentialsRef | `passwordCredentialsRef` | [v1.SecretReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#secretreference-v1-core) to [Password secret reference](#password-secret-reference)] | The secret that contains password | Yes |
+| DeveloperAccountRef | `developerAccountRef` | [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) | Local reference to the parent [DeveloperAccount CR](developeraccount-reference.md) | Yes |
+| Suspended | `suspended` | bool | State defines the desired state. Defaults to "false" | No |
+| Role | `role` | string | Role defines the desired 3scale role. Valid values are `member` or `admin`. Defaults to `member` | No |
 | Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
+
+#### Password secret reference
+
+The secret that contains the password referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object.
+
+| **Field** | **Description** | **Required** |
+| --- | --- | --- |
+| `password` | The password field | Yes |
+
+For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-user-password
+type: Opaque
+stringData:
+  password: <password value>
+```
 
 #### Provider Account Reference
 
@@ -51,13 +75,13 @@ stringData:
   token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-### DeveloperAccountStatus
+### DeveloperUserStatus
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
-| ID | `accountID` | int | Developer account internal ID |
-| AccountState | `accountState` | string | Developer account state |
-| CreditCardStored | `creditCardStored` | bool | Info about credit card |
+| ID | `developerUserID` | int | Developer user internal ID |
+| AccountID | `accoundID` | int | Parent developer account internal ID |
+| DeveloperUserState | `developerUserState` | string | Developer user state |
 | ProviderAccountHost | `providerAccountHost` | string | 3scale account's provider URL |
 | Observed Generation | `observedGeneration` | string | helper field to see if status info is up to date with latest resource spec |
 | Conditions | `conditions` | array of [condition](#ConditionSpec)s | resource conditions |
@@ -66,29 +90,29 @@ For example:
 
 ```
 status:
-  accountID: 2445583436906
-  accountState: approved
+  accoundID: 2445583436906
   conditions:
-  - lastTransitionTime: "2021-02-17T23:39:00Z"
+  - lastTransitionTime: "2021-02-17T23:38:48Z"
     status: "False"
     type: Failed
-  - lastTransitionTime: "2021-02-17T23:39:00Z"
+  - lastTransitionTime: "2021-02-17T23:38:48Z"
     status: "False"
     type: Invalid
-  - lastTransitionTime: "2021-02-17T23:39:00Z"
+  - lastTransitionTime: "2021-02-17T23:39:09Z"
+    status: "False"
+    type: Orphan
+  - lastTransitionTime: "2021-02-17T23:39:09Z"
     status: "True"
     type: Ready
-  - lastTransitionTime: "2021-02-17T23:39:00Z"
-    status: "False"
-    type: Waiting
-  creditCardStored: false
+  developerUserID: 2445583628982
+  developerUserState: active
   observedGeneration: 1
   providerAccountHost: https://3scale-admin.example.com
 ```
 
 #### ConditionSpec
 
-The status object has an array of Conditions through which the DeveloperAccount has or has not passed.
+The status object has an array of Conditions through which the DeveloperUser has or has not passed.
 Each element of the Condition array has the following fields:
 
 * The *lastTransitionTime* field provides a timestamp for when the entity last transitioned from one status to another.
@@ -98,8 +122,8 @@ Each element of the Condition array has the following fields:
 * The *type* field is a string with the following possible values:
   * *Invalid*: Invalid object. This is not a transient error, but it reports about invalid spec and should be changed. The operator will not retry.
   * *Failed*: Indicates that an error occurred during synchronization. The operator will retry.
-  * *Ready*: Indicates the account has been successfully synchronized.
-  * *Waiting*: Indicates the account is waiting for some event to happen. The operator will retry.
+  * *Ready*: Indicates the user has been successfully synchronized.
+  * *Orphan*: The spec contains reference(s) to non existing resources.
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |

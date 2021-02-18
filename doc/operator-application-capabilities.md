@@ -58,6 +58,14 @@ The following diagram shows available custom resource definitions and their rela
 * [Tenant custom resource](#tenant-custom-resource)
    * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
    * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
+* [DeveloperAccount custom resource](#developeraccount-custom-resource)
+   * [DeveloperAccount custom resource status field](#developeraccount-custom-resource-status-field)
+   * [Link your DeveloperAccount to your 3scale tenant or provider account](#link-your-developeraccount-to-your-3scale-tenant-or-provider-account)
+* [DeveloperUser custom resource](#developeruser-custom-resource)
+   * [Create developer user with member role](#create-developer-user-with-member-role)
+   * [Create developer user with admin role](#create-developer-user-with-admin-role)
+   * [DeveloperUser custom resource status field](#developeruser-custom-resource-status-field)
+   * [Link your DeveloperUser to your 3scale tenant or provider account](#link-your-developeruser-to-your-3scale-tenant-or-provider-account)
 * [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
@@ -1291,6 +1299,8 @@ The minimum configuration required to deploy and manage one 3scale developer acc
 * Create one [DeveloperUser CR](#developeruser-custom-resource) with the `admin` role. Without any admin developer user custom resource deployed, the account cannot be created.
 Like any other tenant owned entities, the developer account needs to be linked to some 3scale tenant or provider account.
 
+Custom resource example:
+
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperAccount
@@ -1390,6 +1400,161 @@ oc create secret generic threescale-provider-account --from-literal=adminURL=htt
 The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
 ## DeveloperUser custom resource
+
+Notes:
+
+* 3scale developer users belong to some developer account. Therefore, the `DeveloperUser` custom resource requires a reference to one [DeveloperAccount CR](#developeraccount-custom-resource)
+* `email` and `username` fields are unique among all developer users of the tenant.
+* The password for the developer user will be provided in a referenced secret in the `passwordCredentialsRef` field.
+* Developer users have the role of `admin` or `member`.
+
+Before creating the developer user custom resource, create a new secret to store the password
+
+```sh
+$ cat secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: developeruserpassword
+stringData:
+  password: <password value>
+
+$ oc apply -f secret.yaml
+```
+
+Alternatively
+
+```sh
+oc create secret generic developeruserpassword --from-literal=password=<password value>
+```
+
+### Create developer user with member role
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperUser
+metadata:
+  name: developeruser-member-sample
+spec:
+  username: myusername1
+  email: myusername1@example.com
+  role: member
+  passwordCredentialsRef:
+    name: developeruserpassword
+  developerAccountRef:
+    name: developeraccount-simple-sample
+```
+
+### Create developer user with admin role
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperUser
+metadata:
+  name: developeruser-member-sample
+spec:
+  username: myusername1
+  email: myusername1@example.com
+  role: admin
+  passwordCredentialsRef:
+    name: developeruserpassword
+  developerAccountRef:
+    name: developeraccount-simple-sample
+```
+
+### DeveloperUser custom resource status field
+
+The status field shows resource information useful for the end user.
+It is not regarded to be updated manually and it is being reconciled on every change of the resource.
+
+Fields:
+
+* **developerUserID**: developer user internal ID
+* **developerUserState**: developer user state
+* **accountID**: developer account internal ID to which developer user is linked
+* **conditions**: status.Conditions k8s common pattern. States:
+  * *Invalid*: Invalid object. This is not a transient error, but it reports about invalid spec and should be changed. The operator will not retry.
+  * *Failed*: Indicates that an error occurred during synchronization. The operator will retry.
+  * *Ready*: Indicates the account has been successfully synchronized.
+  * *Orphan*: Spec references non existing resource. The operator will retry.
+* **observedGeneration**: helper field to see if status info is up to date with latest resource spec.
+* **providerAccountHost**: 3scale provider account URL to which the backend is synchronized.
+
+Example of *Ready* resource.
+
+```yaml
+status:
+  accoundID: 2445583436906
+  conditions:
+  - lastTransitionTime: "2021-02-17T23:38:48Z"
+    status: "False"
+    type: Failed
+  - lastTransitionTime: "2021-02-17T23:38:48Z"
+    status: "False"
+    type: Invalid
+  - lastTransitionTime: "2021-02-17T23:39:09Z"
+    status: "False"
+    type: Orphan
+  - lastTransitionTime: "2021-02-17T23:39:09Z"
+    status: "True"
+    type: Ready
+  developerUserID: 2445583628982
+  developerUserState: active
+  observedGeneration: 1
+  providerAccountHost: https://3scale-admin.example.com
+```
+
+### Link your DeveloperUser to your 3scale tenant or provider account
+
+When some openapi custom resource is found by the 3scale operator,
+*LookupProviderAccount* process is started to figure out the tenant owning the resource.
+
+The process will check the following tenant credential sources. If none is found, an error is raised.
+
+* Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
+
+```
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperUser
+metadata:
+  name: developeruser-member-sample
+spec:
+  username: myusername1
+  email: myusername1@example.com
+  passwordCredentialsRef:
+    name: developeruserpassword
+  developerAccountRef:
+    name: developeraccount-simple-sample
+  providerAccountRef:
+    name: mytenant
+```
+
+[DeveloperUser CRD reference](developeruser-reference.md) for more info about fields.
+
+The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mytenant
+type: Opaque
+stringData:
+  adminURL: https://my3scale-admin.example.com:443
+  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+* Default `threescale-provider-account` secret
+
+For example: `adminURL=https://3scale-admin.example.com` and `token=123456`.
+
+```
+oc create secret generic threescale-provider-account --from-literal=adminURL=https://3scale-admin.example.com --from-literal=token=123456
+```
+
+* Default provider account in the same namespace 3scale deployment
+
+The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
 ## Limitations and unimplemented functionalities
 
