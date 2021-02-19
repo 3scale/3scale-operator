@@ -238,25 +238,10 @@ endif
 	@echo "Checking license compliance"
 	license_finder --decisions-file=$(DEPENDENCY_DECISION_FILE)
 
-go-bindata:
-ifeq (, $(shell which go-bindata))
-	@{ \
-	set -e ;\
-	GOBINDATA_TMP_DIR=$$(mktemp -d) ;\
-	cd $$GOBINDATA_TMP_DIR ;\
-	$(GO) mod init tmp ;\
-	$(GO) get github.com/go-bindata/go-bindata/v3/...@v3.1.3 ;\
-	rm -rf $$GOBINDATA_TMP_DIR ;\
-	}
-GOBINDATA=$(GOBIN)/go-bindata
-else
-GOBINDATA=$(shell which go-bindata)
-endif
-
-## assets: Generate embedded assets
-assets: go-bindata
-	@echo Generate Go embedded assets files by processing source
-	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
+.PHONY: assets-update-test
+assets-update-test:
+	git diff --exit-code ./pkg/assets
+	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./pkg/assets)" ]
 
 ## templates: generate templates
 TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
