@@ -559,6 +559,15 @@ jobs:
       - run: make bundle
       - run: make bundle-update-test
 
+  assets-validate:
+    docker:
+      - image: circleci/golang:1.13.7
+    steps:
+      - checkout
+      - install-operator-sdk
+      - run: make
+      - run: make assets-update-test
+
 workflows:
   version: 2
   operator:
@@ -568,6 +577,7 @@ workflows:
       - test-manifests-version
       - run-unit-tests
       - bundle-validate
+      - assets-validate
       - build-operator-image-only
       - unit-tests-coverage:
           requires:

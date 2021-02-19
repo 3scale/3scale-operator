@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-// Important: Run "make assets" to regenerate code after modifying/adding/removing any asset
+// Important: Run "make" to regenerate code after modifying/adding/removing any asset
 //go:generate go-bindata --prefix assets -pkg $GOPACKAGE -o bindata.go assets/...
 
 // SafeStringAsset Returns asset data as string
