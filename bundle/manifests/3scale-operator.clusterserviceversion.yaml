@@ -189,6 +189,32 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "CustomPolicyDefinition",
+          "metadata": {
+            "name": "custompolicydefinition-sample"
+          },
+          "spec": {
+            "name": "MyCustomPolicy",
+            "schema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "configuration": {
+                "properties": {
+                  "someAttr": {
+                    "description": "Some attribute",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "MyCustomPolicy",
+              "summary": "some summary",
+              "version": "0.0.1"
+            },
+            "version": "0.0.1"
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "DeveloperAccount",
           "metadata": {
             "name": "developeraccount-simple-sample"
@@ -256,32 +282,6 @@ metadata:
             "openapiRef": {
               "url": "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
             }
-          }
-        },
-        {
-          "apiVersion": "capabilities.3scale.net/v1beta1",
-          "kind": "Policy",
-          "metadata": {
-            "name": "policy-sample"
-          },
-          "spec": {
-            "name": "MyCustomPolicy",
-            "schema": {
-              "$schema": "http://json-schema.org/draft-07/schema#",
-              "configuration": {
-                "properties": {
-                  "someAttr": {
-                    "description": "Some attribute",
-                    "type": "integer"
-                  }
-                },
-                "type": "object"
-              },
-              "name": "MyCustomPolicy",
-              "summary": "some summary",
-              "version": "0.0.1"
-            },
-            "version": "0.0.1"
           }
         },
         {
@@ -597,6 +597,11 @@ spec:
       kind: Backend
       name: backends.capabilities.3scale.net
       version: v1beta1
+    - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions API
+      displayName: Custom Policy Definition
+      kind: CustomPolicyDefinition
+      name: custompolicydefinitions.capabilities.3scale.net
+      version: v1beta1
     - description: DeveloperAccount is the Schema for the developeraccounts API
       displayName: Developer Account
       kind: DeveloperAccount
@@ -611,11 +616,6 @@ spec:
       displayName: Open API
       kind: OpenAPI
       name: openapis.capabilities.3scale.net
-      version: v1beta1
-    - description: Policy is the Schema for the policies API
-      displayName: Policy
-      kind: Policy
-      name: policies.capabilities.3scale.net
       version: v1beta1
     - description: Product is the Schema for the products API
       displayName: 3scale Product
@@ -688,6 +688,26 @@ spec:
         - apiGroups:
           - capabilities.3scale.net
           resources:
+          - custompolicydefinitions
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - custompolicydefinitions/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
           - developeraccounts
           verbs:
           - create
@@ -721,26 +741,6 @@ spec:
           - capabilities.3scale.net
           resources:
           - developerusers/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - policies
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - capabilities.3scale.net
-          resources:
-          - policies/status
           verbs:
           - get
           - patch

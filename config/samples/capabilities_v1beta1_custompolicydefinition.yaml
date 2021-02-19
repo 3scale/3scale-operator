@@ -1,7 +1,7 @@
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Policy
+kind: CustomPolicyDefinition
 metadata:
-  name: policy-sample
+  name: custompolicydefinition-sample
 spec:
   name: "MyCustomPolicy"
   version: "0.0.1"

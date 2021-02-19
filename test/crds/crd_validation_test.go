@@ -72,8 +72,8 @@ func TestSampleCustomResources(t *testing.T) {
 			crPrefix:   "capabilities_v1beta1_activedoc",
 			apiVersion: capabilitiesv1beta1.GroupVersion.Version,
 		},
-		"capabilities.3scale.net_policies.yaml": testCRInfo{
-			crPrefix:   "capabilities_v1beta1_policy",
+		"capabilities.3scale.net_custompolicydefinitions.yaml": testCRInfo{
+			crPrefix:   "capabilities_v1beta1_custompolicydefinition",
 			apiVersion: capabilitiesv1beta1.GroupVersion.Version,
 		},
 		"capabilities.3scale.net_developeraccounts.yaml": testCRInfo{
@@ -150,8 +150,8 @@ func TestCompleteCRD(t *testing.T) {
 			obj:        &capabilitiesv1beta1.ActiveDoc{},
 			apiVersion: capabilitiesv1beta1.GroupVersion.Version,
 		},
-		"capabilities.3scale.net_policies.yaml": testCRDInfo{
-			obj:        &capabilitiesv1beta1.Policy{},
+		"capabilities.3scale.net_custompolicydefinitions.yaml": testCRDInfo{
+			obj:        &capabilitiesv1beta1.CustomPolicyDefinition{},
 			apiVersion: capabilitiesv1beta1.GroupVersion.Version,
 		},
 		"capabilities.3scale.net_developeraccounts.yaml": testCRDInfo{

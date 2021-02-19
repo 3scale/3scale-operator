@@ -20,7 +20,6 @@ import (
 	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/common"
-
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
@@ -32,34 +31,34 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
-	PolicyKind = "Policy"
+	CustomPolicyDefinitionKind = "CustomPolicyDefinition"
 
-	// PolicyInvalidConditionType represents that the combination of configuration
-	// in the PolicySpec is not supported. This is not a transient error, but
+	// CustomPolicyDefinitionInvalidConditionType represents that the combination of configuration
+	// in the CustomPolicyDefinitionSpec is not supported. This is not a transient error, but
 	// indicates a state that must be fixed before progress can be made.
-	PolicyInvalidConditionType common.ConditionType = "Invalid"
+	CustomPolicyDefinitionInvalidConditionType common.ConditionType = "Invalid"
 
-	// PolicyReadyConditionType indicates the policy has been successfully synchronized.
+	// CustomPolicyDefinitionReadyConditionType indicates the custom policy definition has been successfully synchronized.
 	// Steady state
-	PolicyReadyConditionType common.ConditionType = "Ready"
+	CustomPolicyDefinitionReadyConditionType common.ConditionType = "Ready"
 
-	// PolicyFailedConditionType indicates that an error occurred during synchronization.
+	// CustomPolicyDefinitionFailedConditionType indicates that an error occurred during synchronization.
 	// The operator will retry.
-	PolicyFailedConditionType common.ConditionType = "Failed"
+	CustomPolicyDefinitionFailedConditionType common.ConditionType = "Failed"
 )
 
-// PolicySchemaSpec defines the desired Policy schema
-type PolicySchemaSpec struct {
-	// Name is the name of the policy schema
+// CustomPolicyDefinitionSchemaSpec defines the desired Custom Policy schema
+type CustomPolicySchemaSpec struct {
+	// Name is the name of the custom policy schema
 	Name string `json:"name"`
 
-	// Version is the version of the policy schema
+	// Version is the version of the custom policy schema
 	Version string `json:"version"`
 
-	// Summary is the summary of the policy schema
+	// Summary is the summary of the custom policy schema
 	Summary string `json:"summary"`
 
-	// Description is an array of description messages for the policy schema
+	// Description is an array of description messages for the custom policy schema
 	Description *[]string `json:"description,omitempty"`
 
 	// Schema the $schema keyword is used to declare that this is a JSON Schema.
@@ -70,8 +69,8 @@ type PolicySchemaSpec struct {
 	Configuration runtime.RawExtension `json:"configuration"`
 }
 
-// PolicySpec defines the desired state of Policy
-type PolicySpec struct {
+// CustomPolicyDefinitionSpec defines the desired state of CustomPolicyDefinition
+type CustomPolicyDefinitionSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -79,22 +78,23 @@ type PolicySpec struct {
 	// +optional
 	ProviderAccountRef *corev1.LocalObjectReference `json:"providerAccountRef,omitempty"`
 
-	// Name is the name of the policy
+	// Name is the name of the custom policy
 	Name string `json:"name"`
 
-	// Version is the version of the policy
+	// Version is the version of the custom policy
 	Version string `json:"version"`
 
-	// Schema is the schema of the policy
-	Schema PolicySchemaSpec `json:"schema"`
+	// Schema is the schema of the custom policy
+	Schema CustomPolicySchemaSpec `json:"schema"`
 }
 
-// PolicyStatus defines the observed state of Policy
-type PolicyStatus struct {
+// CustomPolicyDefinitionStatus defines the observed state of CustomPolicyDefinition
+type CustomPolicyDefinitionStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// +optional
+	// ID of the custom policy
 	ID *int64 `json:"policyID,omitempty"`
 
 	// ProviderAccountHost contains the 3scale account's provider URL
@@ -105,7 +105,7 @@ type PolicyStatus struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// Current state of the policy resource.
+	// Current state of the custom policy resource.
 	// Conditions represent the latest available observations of an object's state
 	// +optional
 	// +patchMergeKey=type
@@ -113,7 +113,7 @@ type PolicyStatus struct {
 	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
-func (p *PolicyStatus) Equals(other *PolicyStatus, logger logr.Logger) bool {
+func (p *CustomPolicyDefinitionStatus) Equals(other *CustomPolicyDefinitionStatus, logger logr.Logger) bool {
 	if !reflect.DeepEqual(p.ID, other.ID) {
 		diff := cmp.Diff(p.ID, other.ID)
 		logger.V(1).Info("ID not equal", "difference", diff)
@@ -150,24 +150,24 @@ func (p *PolicyStatus) Equals(other *PolicyStatus, logger logr.Logger) bool {
 // +kubebuilder:printcolumn:JSONPath=".status.conditions[?(@.type=='Ready')].status",name=Ready,type=string
 // +kubebuilder:printcolumn:JSONPath=".status.policyID",name="3scale ID",type=integer
 
-// Policy is the Schema for the policies API
-type Policy struct {
+// CustomPolicyDefinition is the Schema for the custompolicydefinitions API
+type CustomPolicyDefinition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   PolicySpec   `json:"spec,omitempty"`
-	Status PolicyStatus `json:"status,omitempty"`
+	Spec   CustomPolicyDefinitionSpec   `json:"spec,omitempty"`
+	Status CustomPolicyDefinitionStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// PolicyList contains a list of Policy
-type PolicyList struct {
+// CustomPolicyDefinitionList contains a list of CustomPolicyDefinition
+type CustomPolicyDefinitionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Policy `json:"items"`
+	Items           []CustomPolicyDefinition `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Policy{}, &PolicyList{})
+	SchemeBuilder.Register(&CustomPolicyDefinition{}, &CustomPolicyDefinitionList{})
 }
