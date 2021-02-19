@@ -1007,6 +1007,8 @@ secret/myopenapi created
 
 **NOTE** The field name inside the secret is not read by the operator. Only the content is read.
 
+**NOTE** The secret is not monitored for updates. If the secret is updated after being created, the ActiveDoc custom resource has to be updated to force reconcilliation. It is safe to delete the `status` field to force the reconcilliation and the operator will re-create the `status` field again.
+
 Then, create your ActiveDoc CR providing reference to the secret holding the OpenAPI document.
 
 ```yaml
