@@ -29,6 +29,46 @@ rules:
 - apiGroups:
   - capabilities.3scale.net
   resources:
+  - developeraccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - developeraccounts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - developerusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - developerusers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
   - policies
   verbs:
   - create

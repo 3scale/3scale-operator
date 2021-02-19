@@ -1,0 +1,6 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperAccount
+metadata:
+  name: developeraccount-simple-sample
+spec:
+  orgName: Ecorp
