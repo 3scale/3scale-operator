@@ -43,8 +43,8 @@ type DeveloperAccountReconciler struct {
 // blank assignment to verify that DeveloperAccountReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &DeveloperAccountReconciler{}
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=developeraccounts,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=developeraccounts/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=developeraccounts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=developeraccounts/status,verbs=get;update;patch
 
 func (r *DeveloperAccountReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

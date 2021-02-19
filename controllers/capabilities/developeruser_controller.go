@@ -44,8 +44,8 @@ type DeveloperUserReconciler struct {
 // blank assignment to verify that DeveloperUserReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &DeveloperUserReconciler{}
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=developerusers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=developerusers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=developerusers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=developerusers/status,verbs=get;update;patch
 
 func (r *DeveloperUserReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Logger().WithValues("developeruser", req.NamespacedName)

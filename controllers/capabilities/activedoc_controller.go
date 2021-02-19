@@ -43,8 +43,8 @@ type ActiveDocReconciler struct {
 // blank assignment to verify that BackendReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &ActiveDocReconciler{}
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=activedocs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=activedocs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=activedocs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=activedocs/status,verbs=get;update;patch
 
 func (r *ActiveDocReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
