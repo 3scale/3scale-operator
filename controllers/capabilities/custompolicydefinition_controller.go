@@ -42,8 +42,8 @@ type CustomPolicyDefinitionReconciler struct {
 // blank assignment to verify that PolicyReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &CustomPolicyDefinitionReconciler{}
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=custompolicydefinitions,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=custompolicydefinitions/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=custompolicydefinitions,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=custompolicydefinitions/status,verbs=get;update;patch
 
 func (r *CustomPolicyDefinitionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

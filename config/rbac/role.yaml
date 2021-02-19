@@ -7,86 +7,6 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - activedocs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - activedocs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - custompolicydefinitions
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - custompolicydefinitions/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - developeraccounts
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - developeraccounts/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - developerusers
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - developerusers/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
   - console.openshift.io
   resources:
   - consolelinks
@@ -248,6 +168,26 @@ rules:
 - apiGroups:
   - capabilities.3scale.net
   resources:
+  - activedocs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - activedocs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
   - backends
   verbs:
   - create
@@ -273,6 +213,66 @@ rules:
   - capabilities.3scale.net
   resources:
   - backends/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - custompolicydefinitions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - custompolicydefinitions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - developeraccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - developeraccounts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - developerusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - developerusers/status
   verbs:
   - get
   - patch
