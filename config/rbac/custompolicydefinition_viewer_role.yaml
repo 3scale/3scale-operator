@@ -1,24 +1,20 @@
-# permissions for end users to edit policies.
+# permissions for end users to view custompolicydefinitions.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: policy-editor-role
+  name: custompolicydefinition-viewer-role
 rules:
 - apiGroups:
   - capabilities.3scale.net
   resources:
-  - policies
+  - custompolicydefinitions
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - capabilities.3scale.net
   resources:
-  - policies/status
+  - custompolicydefinitions/status
   verbs:
   - get

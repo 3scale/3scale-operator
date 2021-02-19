@@ -10,9 +10,9 @@ resources:
 - bases/capabilities.3scale.net_products.yaml
 - bases/capabilities.3scale.net_openapis.yaml
 - bases/capabilities.3scale.net_activedocs.yaml
-- bases/capabilities.3scale.net_policies.yaml
 - bases/capabilities.3scale.net_developeraccounts.yaml
 - bases/capabilities.3scale.net_developerusers.yaml
+- bases/capabilities.3scale.net_custompolicydefinitions.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -26,9 +26,9 @@ patchesStrategicMerge:
 #- patches/webhook_in_products.yaml
 #- patches/webhook_in_openapis.yaml
 #- patches/webhook_in_activedocs.yaml
-#- patches/webhook_in_policies.yaml
 #- patches/webhook_in_developeraccounts.yaml
 #- patches/webhook_in_developerusers.yaml
+#- patches/webhook_in_custompolicydefinitions.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
@@ -41,9 +41,9 @@ patchesStrategicMerge:
 #- patches/cainjection_in_products.yaml
 #- patches/cainjection_in_openapis.yaml
 #- patches/cainjection_in_activedocs.yaml
-#- patches/cainjection_in_policies.yaml
 #- patches/cainjection_in_developeraccounts.yaml
 #- patches/cainjection_in_developerusers.yaml
+#- patches/cainjection_in_custompolicydefinitions.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [3scale CRDs additional app label]. This patch adds the 'app' label for the 3scale CRDs

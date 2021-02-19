@@ -15,27 +15,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type PolicyStatusReconciler struct {
+type CustomPolicyDefinitionStatusReconciler struct {
 	*reconcilers.BaseReconciler
-	resource            *capabilitiesv1beta1.Policy
+	resource            *capabilitiesv1beta1.CustomPolicyDefinition
 	providerAccountHost string
-	policy              *threescaleapi.APIcastPolicy
+	customPolicy        *threescaleapi.APIcastPolicy
 	reconcileError      error
 	logger              logr.Logger
 }
 
-func NewPolicyStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Policy, providerAccountHost string, policy *threescaleapi.APIcastPolicy, reconcileError error) *PolicyStatusReconciler {
-	return &PolicyStatusReconciler{
+func NewCustomPolicyDefinitionStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.CustomPolicyDefinition, providerAccountHost string, customPolicy *threescaleapi.APIcastPolicy, reconcileError error) *CustomPolicyDefinitionStatusReconciler {
+	return &CustomPolicyDefinitionStatusReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
 		providerAccountHost: providerAccountHost,
-		policy:              policy,
+		customPolicy:        customPolicy,
 		reconcileError:      reconcileError,
 		logger:              b.Logger().WithValues("Status Reconciler", resource.Name),
 	}
 }
 
-func (s *PolicyStatusReconciler) Reconcile() (reconcile.Result, error) {
+func (s *CustomPolicyDefinitionStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
 
 	newStatus, err := s.calculateStatus()
@@ -74,11 +74,11 @@ func (s *PolicyStatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *PolicyStatusReconciler) calculateStatus() (*capabilitiesv1beta1.PolicyStatus, error) {
-	newStatus := &capabilitiesv1beta1.PolicyStatus{}
+func (s *CustomPolicyDefinitionStatusReconciler) calculateStatus() (*capabilitiesv1beta1.CustomPolicyDefinitionStatus, error) {
+	newStatus := &capabilitiesv1beta1.CustomPolicyDefinitionStatus{}
 
-	if s.policy != nil {
-		newStatus.ID = s.policy.Element.ID
+	if s.customPolicy != nil {
+		newStatus.ID = s.customPolicy.Element.ID
 	}
 
 	newStatus.ProviderAccountHost = s.providerAccountHost
@@ -93,9 +93,9 @@ func (s *PolicyStatusReconciler) calculateStatus() (*capabilitiesv1beta1.PolicyS
 	return newStatus, nil
 }
 
-func (s *PolicyStatusReconciler) readyCondition() common.Condition {
+func (s *CustomPolicyDefinitionStatusReconciler) readyCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.PolicyReadyConditionType,
+		Type:   capabilitiesv1beta1.CustomPolicyDefinitionReadyConditionType,
 		Status: corev1.ConditionFalse,
 	}
 
@@ -106,9 +106,9 @@ func (s *PolicyStatusReconciler) readyCondition() common.Condition {
 	return condition
 }
 
-func (s *PolicyStatusReconciler) invalidCondition() common.Condition {
+func (s *CustomPolicyDefinitionStatusReconciler) invalidCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.PolicyInvalidConditionType,
+		Type:   capabilitiesv1beta1.CustomPolicyDefinitionInvalidConditionType,
 		Status: corev1.ConditionFalse,
 	}
 
@@ -120,9 +120,9 @@ func (s *PolicyStatusReconciler) invalidCondition() common.Condition {
 	return condition
 }
 
-func (s *PolicyStatusReconciler) failedCondition() common.Condition {
+func (s *CustomPolicyDefinitionStatusReconciler) failedCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.PolicyFailedConditionType,
+		Type:   capabilitiesv1beta1.CustomPolicyDefinitionFailedConditionType,
 		Status: corev1.ConditionFalse,
 	}
 

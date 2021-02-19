@@ -88,10 +88,10 @@ spec:
       kind: ActiveDoc
       name: activedocs.capabilities.3scale.net
       version: v1beta1
-    - description: Policy is the Schema for the policies API
-      displayName: Policy
-      kind: Policy
-      name: policies.capabilities.3scale.net
+    - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions API
+      displayName: Custom Policy Definition
+      kind: CustomPolicyDefinition
+      name: custompolicydefinitions.capabilities.3scale.net
       version: v1beta1
     - description: DeveloperAccount is the Schema for the developeraccounts API
       displayName: Developer Account
