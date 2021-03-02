@@ -607,7 +607,7 @@
       "reverseYBuckets": false,
       "targets": [
         {
-          "expr": "sum(rate(rails_request_duration_seconds_bucket{namespace='$namespace',pod=~'system-app-.*'}[1m])) by (le)",
+          "expr": "sum(rails_request_duration_seconds_bucket{namespace='$namespace',pod=~'system-app-.*'}) by (le)",
           "format": "heatmap",
           "interval": "1m",
           "intervalFactor": 10,
