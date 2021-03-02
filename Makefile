@@ -105,8 +105,10 @@ vet:
 	$(GO) vet ./...
 
 # Generate code
-generate: controller-gen
+generate: controller-gen go-bindata
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	@echo Generate Go embedded assets files by processing source
+	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
 # Build the docker image
 .PHONY: docker-build
@@ -141,6 +143,21 @@ ifeq (, $(shell which controller-gen))
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
+endif
+
+go-bindata:
+ifeq (, $(shell which go-bindata))
+	@{ \
+	set -e ;\
+	GOBINDATA_TMP_DIR=$$(mktemp -d) ;\
+	cd $$GOBINDATA_TMP_DIR ;\
+	$(GO) mod init tmp ;\
+	$(GO) get github.com/go-bindata/go-bindata/v3/...@v3.1.3 ;\
+	rm -rf $$GOBINDATA_TMP_DIR ;\
+	}
+GOBINDATA=$(GOBIN)/go-bindata
+else
+GOBINDATA=$(shell which go-bindata)
 endif
 
 kustomize:
@@ -239,7 +256,7 @@ endif
 	license_finder --decisions-file=$(DEPENDENCY_DECISION_FILE)
 
 .PHONY: assets-update-test
-assets-update-test:
+assets-update-test: generate fmt
 	git diff --exit-code ./pkg/assets
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./pkg/assets)" ]
 
