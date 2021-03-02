@@ -99,7 +99,7 @@ func monitoringApicastGrafanaDashboard1JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/apicast-grafana-dashboard-1.json.tpl", size: 84787, mode: os.FileMode(436), modTime: time.Unix(1605030128, 0)}
+	info := bindataFileInfo{name: "monitoring/apicast-grafana-dashboard-1.json.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -119,7 +119,7 @@ func monitoringApicastGrafanaDashboard2JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/apicast-grafana-dashboard-2.json.tpl", size: 17167, mode: os.FileMode(436), modTime: time.Unix(1605030128, 0)}
+	info := bindataFileInfo{name: "monitoring/apicast-grafana-dashboard-2.json.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -139,7 +139,7 @@ func monitoringBackendGrafanaDashboard1JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/backend-grafana-dashboard-1.json.tpl", size: 252065, mode: os.FileMode(436), modTime: time.Unix(1608652245, 0)}
+	info := bindataFileInfo{name: "monitoring/backend-grafana-dashboard-1.json.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -159,7 +159,7 @@ func monitoringKubernetesResourcesByNamespaceGrafanaDashboard1JsonTpl() (*asset,
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/kubernetes-resources-by-namespace-grafana-dashboard-1.json.tpl", size: 46750, mode: os.FileMode(436), modTime: time.Unix(1605030128, 0)}
+	info := bindataFileInfo{name: "monitoring/kubernetes-resources-by-namespace-grafana-dashboard-1.json.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -179,7 +179,7 @@ func monitoringKubernetesResourcesByPodGrafanaDashboard1JsonTpl() (*asset, error
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl", size: 41705, mode: os.FileMode(436), modTime: time.Unix(1605030128, 0)}
+	info := bindataFileInfo{name: "monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -199,7 +199,7 @@ func monitoringSystemGrafanaDashboard1JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/system-grafana-dashboard-1.json.tpl", size: 85358, mode: os.FileMode(436), modTime: time.Unix(1614683788, 0)}
+	info := bindataFileInfo{name: "monitoring/system-grafana-dashboard-1.json.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -219,7 +219,7 @@ func monitoringZyncGrafanaDashboard1JsonTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "monitoring/zync-grafana-dashboard-1.json.tpl", size: 70873, mode: os.FileMode(436), modTime: time.Unix(1612286781, 0)}
+	info := bindataFileInfo{name: "monitoring/zync-grafana-dashboard-1.json.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
