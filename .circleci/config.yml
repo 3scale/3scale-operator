@@ -565,7 +565,6 @@ jobs:
     steps:
       - checkout
       - install-operator-sdk
-      - run: make
       - run: make assets-update-test
 
 workflows:

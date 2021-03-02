@@ -6,7 +6,8 @@ import (
 )
 
 // Important: Run "make" to regenerate code after modifying/adding/removing any asset
-//go:generate go-bindata --prefix assets -pkg $GOPACKAGE -o bindata.go assets/...
+// adding -nometadata to not preserve size, mode, and modtime info. It should not be necessary as the content will be embedded in custom resources.
+//go:generate go-bindata --prefix assets -pkg $GOPACKAGE -nometadata -o bindata.go assets/...
 
 // SafeStringAsset Returns asset data as string
 // panic if not found or any err is detected
