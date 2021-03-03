@@ -1,10 +1,14 @@
 package helper
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"testing"
 
@@ -76,4 +80,75 @@ func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
 		Transport: RoundTripFunc(fn),
 	}
+}
+
+func GetMethodsMetricsRoundTripFunc(req *http.Request) *http.Response {
+	metricList := &threescaleapi.MetricJSONList{
+		Metrics: []threescaleapi.MetricJSON{
+			{
+				Element: threescaleapi.MetricItem{
+					ID:         int64(1),
+					Name:       "Hits",
+					SystemName: "hits",
+					Unit:       "hit",
+				},
+			},
+			{
+				Element: threescaleapi.MetricItem{
+					ID:         int64(2),
+					Name:       "Metric 01",
+					SystemName: "metric_01",
+					Unit:       "1",
+				},
+			},
+			{
+				Element: threescaleapi.MetricItem{
+					ID:         int64(3),
+					Name:       "Method 01",
+					SystemName: "method_01",
+					Unit:       "hit",
+				},
+			},
+		},
+	}
+
+	methodList := &threescaleapi.MethodList{
+		Methods: []threescaleapi.Method{
+			{
+				Element: threescaleapi.MethodItem{
+					ID:         int64(3),
+					Name:       "Method 01",
+					ParentID:   int64(1),
+					SystemName: "method_01",
+				},
+			},
+		},
+	}
+
+	var respObject interface{}
+
+	if req.Method == "GET" && regexp.MustCompile("metrics.json").FindString(req.URL.Path) != "" {
+		respObject = metricList
+	}
+
+	if req.Method == "GET" && regexp.MustCompile("methods.json").FindString(req.URL.Path) != "" {
+		respObject = methodList
+	}
+
+	responseBodyBytes, _ := json.Marshal(respObject)
+
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       ioutil.NopCloser(bytes.NewBuffer(responseBodyBytes)),
+		Header:     make(http.Header),
+	}
+}
+
+func FindMetric(l *threescaleapi.MetricJSONList, systemName string) bool {
+	for _, n := range l.Metrics {
+		if systemName == n.Element.SystemName {
+			return true
+		}
+	}
+	return false
 }
