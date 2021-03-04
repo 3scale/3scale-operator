@@ -21,6 +21,7 @@ type SystemSMTPSecretOptions struct {
 	Password          *string `validate:"required"`
 	Port              *string `validate:"required"`
 	Username          *string `validate:"required"`
+	FromAddress       *string
 }
 
 type PVCFileStorageOptions struct {
@@ -204,6 +205,10 @@ func DefaultSystemSMTPPort() string {
 }
 
 func DefaultSystemSMTPUsername() string {
+	return ""
+}
+
+func DefaultSystemSMTPFromAddress() string {
 	return ""
 }
 

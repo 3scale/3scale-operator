@@ -551,7 +551,7 @@ existing secret names.
 | username | In case the mail server requires authentication and the authentication type requires it | `""` |
 | password | In case the mail server requires authentication and the authentication type requires it | `""` |
 | openssl.verify.mode | When using TLS, you can set how OpenSSL checks the certificate. This is really useful if you need to validate a self-signed and/or a wildcard certificate. You can use the name of an OpenSSL verify constant: `none` or `peer` | `""` |
-
+| from_address | `from` address value for the no-reply mail | `""` |
 
 ## Default APIManager components compute resources
 
