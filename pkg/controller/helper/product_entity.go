@@ -3,7 +3,6 @@ package helper
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
@@ -174,15 +173,6 @@ func (b *ProductEntity) Metrics() (*threescaleapi.MetricJSONList, error) {
 		b.metrics = metrics
 	}
 	return b.metrics, nil
-}
-
-func SanitizeProductSystemName(systemName string) string {
-	lastIndex := strings.LastIndex(systemName, ".")
-	if lastIndex < 0 {
-		return systemName
-	}
-
-	return systemName[:lastIndex]
 }
 
 func (b *ProductEntity) MappingRules() (*threescaleapi.MappingRuleJSONList, error) {

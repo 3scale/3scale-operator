@@ -152,3 +152,30 @@ func FindMetric(l *threescaleapi.MetricJSONList, systemName string) bool {
 	}
 	return false
 }
+
+func FindBackendUsage(l threescaleapi.BackendAPIUsageList, path string) bool {
+	for _, n := range l {
+		if path == n.Element.Path {
+			return true
+		}
+	}
+	return false
+}
+
+func FindApplicationPlan(plans []threescaleapi.ApplicationPlan, systemName string) bool {
+	for _, n := range plans {
+		if systemName == n.Element.SystemName {
+			return true
+		}
+	}
+	return false
+}
+
+func FindPolicy(policies []threescaleapi.PolicyConfig, name string) bool {
+	for _, n := range policies {
+		if name == n.Name {
+			return true
+		}
+	}
+	return false
+}
