@@ -55,7 +55,7 @@ func (b *ProductEntity) DeploymentOption() string {
 }
 
 func (b *ProductEntity) BackendVersion() string {
-	return b.productObj.Element.DeploymentOption
+	return b.productObj.Element.BackendVersion
 }
 
 func (b *ProductEntity) Update(params threescaleapi.Params) error {
