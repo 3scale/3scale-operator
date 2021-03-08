@@ -37,3 +37,6 @@ replace k8s.io/client-go => k8s.io/client-go v0.18.6
 
 // security release to address CVE-2020-15257
 replace github.com/containerd/containerd => github.com/containerd/containerd v1.3.9
+
+// security release to address CVE-2020-14040
+replace golang.org/x/text => golang.org/x/text v0.3.3
