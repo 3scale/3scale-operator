@@ -60,6 +60,11 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, nil
 	}
 
+	res, err = u.upgradeBackendCronDeploymentConfigMemoryLimits()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
 	res, err = u.upgradeImages()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading images: %w", err)
@@ -189,6 +194,63 @@ func (u *UpgradeApiManager) upgradeBackendDeploymentConfigs() (reconcile.Result,
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) backendCronResourcesOverriden() bool {
+	return u.apiManager.Spec.Backend != nil && u.apiManager.Spec.Backend.CronSpec != nil &&
+		u.apiManager.Spec.Backend.CronSpec.Resources != nil
+}
+
+func (u *UpgradeApiManager) upgradeBackendCronDeploymentConfigMemoryLimits() (reconcile.Result, error) {
+	backend, err := Backend(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	desired := backend.CronDeploymentConfig()
+
+	// We only upgrade the memory limits when resource requirements flag is enabled
+	// and the user has not intentionally overriden them at backend-cron level
+	if (u.apiManager.Spec.ResourceRequirementsEnabled != nil && *u.apiManager.Spec.ResourceRequirementsEnabled) && !u.backendCronResourcesOverriden() {
+		existing := &appsv1.DeploymentConfig{}
+		err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		changed, err := u.ensureBackendCronMemoryLimit(desired, existing)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if changed {
+			u.Logger().Info(fmt.Sprintf("Upgrading '%s' DeploymentConfig Resource Memory Limits", desired.Name))
+			return reconcile.Result{Requeue: true}, u.UpdateResource(existing)
+		}
+
+	}
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) ensureBackendCronMemoryLimit(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	if len(existing.Spec.Template.Spec.Containers) != 1 {
+		return false, fmt.Errorf("Existing DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
+			existing.Name, len(existing.Spec.Template.Spec.Containers))
+	}
+	if len(desired.Spec.Template.Spec.Containers) != 1 {
+		return false, fmt.Errorf("Desired DeploymentConfig %s spec.template.spec.containers length is %d, should be 1",
+			existing.Name, len(desired.Spec.Template.Spec.Containers))
+	}
+
+	existingResources := &existing.Spec.Template.Spec.Containers[0].Resources
+	desiredResources := &desired.Spec.Template.Spec.Containers[0].Resources
+	existingLimits := existingResources.Limits
+	desiredLimits := desiredResources.Limits
+
+	changed := false
+	if existingLimits.Memory().Cmp(*desiredLimits.Memory()) != 0 {
+		existing.Spec.Template.Spec.Containers[0].Resources.Limits[v1.ResourceMemory] = desiredLimits.Memory().DeepCopy()
+		changed = true
+	}
+	return changed, nil
 }
 
 func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, error) {
