@@ -40,3 +40,9 @@ replace github.com/containerd/containerd => github.com/containerd/containerd v1.
 
 // security release to address CVE-2020-14040
 replace golang.org/x/text => golang.org/x/text v0.3.3
+
+// security release to address CVE-2020-9283. First version
+// that addresses the CVE is golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
+// but we replace to the most recent version that appeared on go.sum before
+// this change
+replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
