@@ -87,7 +87,7 @@ func DefaultCronResourceRequirements() v1.ResourceRequirements {
 	return v1.ResourceRequirements{
 		Limits: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("150m"),
-			v1.ResourceMemory: resource.MustParse("80Mi"),
+			v1.ResourceMemory: resource.MustParse("150Mi"),
 		},
 		Requests: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("50m"),

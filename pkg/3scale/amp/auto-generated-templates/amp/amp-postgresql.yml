@@ -679,7 +679,7 @@ objects:
           resources:
             limits:
               cpu: 150m
-              memory: 80Mi
+              memory: 150Mi
             requests:
               cpu: 50m
               memory: 40Mi
