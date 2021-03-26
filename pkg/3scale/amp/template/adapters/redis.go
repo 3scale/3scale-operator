@@ -88,7 +88,7 @@ func (r *RedisAdapter) options() (*component.RedisOptions, error) {
 	ro.BackendImageTag = "${AMP_RELEASE}"
 	ro.BackendImage = "${REDIS_IMAGE}"
 	ro.SystemImageTag = "${AMP_RELEASE}"
-	ro.SystemImage = "${REDIS_IMAGE}"
+	ro.SystemImage = component.SystemRedisImageURL()
 
 	ro.BackendRedisContainerResourceRequirements = component.DefaultBackendRedisContainerResourceRequirements()
 	ro.SystemRedisContainerResourceRequirements = component.DefaultSystemRedisContainerResourceRequirements()
