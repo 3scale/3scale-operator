@@ -238,7 +238,7 @@ objects:
           - --daemonize
           - "no"
           command:
-          - /opt/rh/rh-redis32/root/usr/bin/redis-server
+          - /opt/rh/rh-redis5/root/usr/bin/redis-server
           image: backend-redis:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -594,7 +594,7 @@ objects:
         openshift.io/display-name: System ${AMP_RELEASE} Redis
       from:
         kind: DockerImage
-        name: ${REDIS_IMAGE}
+        name: centos/redis-32-centos7
       generation: null
       importPolicy:
         insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
@@ -4144,7 +4144,7 @@ parameters:
 - description: Redis image to use
   name: REDIS_IMAGE
   required: true
-  value: centos/redis-32-centos7
+  value: centos/redis-5-centos7
 - description: Username for PostgreSQL user that will be used for accessing the database.
   displayName: System PostgreSQL User
   name: SYSTEM_DATABASE_USER

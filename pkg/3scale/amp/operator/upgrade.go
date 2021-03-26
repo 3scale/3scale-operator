@@ -316,11 +316,29 @@ func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Res
 	}
 	changed = changed || tmpChanged
 
+	tmpChanged, err = u.ensureRedisPodTemplateLabels(desired, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	changed = changed || tmpChanged
+
 	if changed {
 		return reconcile.Result{Requeue: true}, u.UpdateResource(existing)
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) ensureRedisPodTemplateLabels(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	changed := false
+	existingPodTemplateLabels := &existing.Spec.Template.Labels
+	desiredPodTemplateLabels := desired.Spec.Template.Labels
+	helper.MergeMapStringString(&changed, existingPodTemplateLabels, desiredPodTemplateLabels)
+	if changed {
+		u.Logger().V(1).Info(fmt.Sprintf("%s DeploymentConfig's PodTemplate labels changed", desired.Name))
+	}
+
+	return changed, nil
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Result, error) {
