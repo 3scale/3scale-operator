@@ -53,7 +53,7 @@ const (
 	backendRedisConfigVolumeName  = "redis-config"
 	backendRedisConfigMapKey      = "redis.conf"
 	backendRedisContainerName     = "backend-redis"
-	backendRedisContainerCommand  = "/opt/rh/rh-redis32/root/usr/bin/redis-server"
+	backendRedisContainerCommand  = "/opt/rh/rh-redis5/root/usr/bin/redis-server"
 )
 
 func (redis *Redis) buildDeploymentConfigSpec() appsv1.DeploymentConfigSpec {

@@ -17,7 +17,7 @@ func ZyncImageURL() string {
 }
 
 func BackendRedisImageURL() string {
-	return "centos/redis-32-centos7"
+	return "centos/redis-5-centos7"
 }
 
 func SystemRedisImageURL() string {

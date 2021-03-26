@@ -67,7 +67,7 @@ func testRedisBackendRedisPodTemplateLabels() map[string]string {
 		"threescale_component_element": "redis",
 		"com.redhat.component-name":    "backend-redis",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "32",
+		"com.redhat.component-version": "5",
 		"com.redhat.product-name":      "3scale",
 		"com.redhat.product-version":   "master",
 		"deploymentConfig":             "backend-redis",
