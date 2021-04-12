@@ -295,13 +295,50 @@ func (u *UpgradeApiManager) upgradeBackendRedisDeploymentConfig() (reconcile.Res
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+	desired := redis.BackendDeploymentConfig()
 
-	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.BackendDeploymentConfig())
-	if res.Requeue || err != nil {
-		return res, err
+	existing := &appsv1.DeploymentConfig{}
+	err = u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	changed := false
+	tmpChanged, err := u.ensureDeploymentConfigImageChangeTrigger(desired, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	changed = changed || tmpChanged
+
+	tmpChanged, err = u.ensureRedisCommand(desired, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	changed = changed || tmpChanged
+
+	tmpChanged, err = u.ensureRedisPodTemplateLabels(desired, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	changed = changed || tmpChanged
+
+	if changed {
+		return reconcile.Result{Requeue: true}, u.UpdateResource(existing)
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) ensureRedisPodTemplateLabels(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	changed := false
+	existingPodTemplateLabels := &existing.Spec.Template.Labels
+	desiredPodTemplateLabels := desired.Spec.Template.Labels
+	helper.MergeMapStringString(&changed, existingPodTemplateLabels, desiredPodTemplateLabels)
+	if changed {
+		u.Logger().V(1).Info(fmt.Sprintf("%s DeploymentConfig's PodTemplate labels changed", desired.Name))
+	}
+
+	return changed, nil
 }
 
 func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Result, error) {
@@ -395,6 +432,25 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigImageChangeTrigger(desired *a
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) ensureRedisCommand(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	if len(existing.Spec.Template.Spec.Containers) == 0 {
+		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1", existing.Name, len(existing.Spec.Template.Spec.Containers))
+
+	}
+	if len(desired.Spec.Template.Spec.Containers) == 0 {
+		return false, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 1", desired.Name, len(desired.Spec.Template.Spec.Containers))
+	}
+
+	changed := false
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Command, desired.Spec.Template.Spec.Containers[0].Command) {
+		existing.Spec.Template.Spec.Containers[0].Command = desired.Spec.Template.Spec.Containers[0].Command
+		u.Logger().V(1).Info(fmt.Sprintf("DeploymentConfig %s container command changed", desired.Name))
+		changed = true
+	}
+
+	return changed, nil
 }
 
 func (u *UpgradeApiManager) ensureDeploymentConfigImageChangeTrigger(desired, existing *appsv1.DeploymentConfig) (bool, error) {
