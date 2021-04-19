@@ -1,19 +1,19 @@
 package component
 
 func ApicastImageURL() string {
-	return "quay.io/3scale/apicast:nightly"
+	return "quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA"
 }
 
 func BackendImageURL() string {
-	return "quay.io/3scale/apisonator:nightly"
+	return "quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA"
 }
 
 func SystemImageURL() string {
-	return "quay.io/3scale/porta:nightly"
+	return "quay.io/3scale/3scale210:porta-3scale-2.10.0-GA"
 }
 
 func ZyncImageURL() string {
-	return "quay.io/3scale/zync:nightly"
+	return "quay.io/3scale/3scale10:zync-3scale-2.10.0-GA"
 }
 
 func BackendRedisImageURL() string {
