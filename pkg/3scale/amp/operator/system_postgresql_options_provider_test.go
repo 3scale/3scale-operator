@@ -9,6 +9,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
@@ -45,9 +46,9 @@ func testSystemPostgreSQLPodTemplateLabels() map[string]string {
 		"threescale_component_element": "postgresql",
 		"com.redhat.component-name":    "system-postgresql",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "10",
+		"com.redhat.component-version": helper.ParseVersion(SystemPostgreSQLImageURL()),
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-postgresql",
 	}
 }

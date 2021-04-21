@@ -8,6 +8,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
@@ -64,9 +65,9 @@ func testZyncPodTemplateLabels() map[string]string {
 		"threescale_component_element": "zync",
 		"com.redhat.component-name":    "zync",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": helper.ParseVersion(ZyncImageURL()),
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "zync",
 	}
 }
@@ -78,9 +79,9 @@ func testZyncQuePodTemplateCommonLabels() map[string]string {
 		"threescale_component_element": "zync-que",
 		"com.redhat.component-name":    "zync-que",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": helper.ParseVersion(ZyncImageURL()),
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "zync-que",
 	}
 }
@@ -92,9 +93,9 @@ func testZyncDatabasePodTemplateCommonLabels() map[string]string {
 		"threescale_component_element": "database",
 		"com.redhat.component-name":    "zync-database",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "10",
+		"com.redhat.component-version": helper.ParseVersion(ZyncPostgreSQLImageURL()),
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "zync-database",
 	}
 }
