@@ -13,8 +13,8 @@ spec:
         name: threescale-operator
         com.redhat.product-name: 3scale
         com.redhat.component-name: 3scale-operator
-        com.redhat.product-version: master
-        com.redhat.component-version: 0.7.0
+        com.redhat.product-version: "2.10"
+        com.redhat.component-version: "0.7.0"
         com.redhat.component-type: infrastructure
     spec:
       serviceAccountName: 3scale-operator
@@ -40,13 +40,13 @@ spec:
             - name: OPERATOR_NAME
               value: "threescale-operator"
             - name: BACKEND_IMAGE
-              value: "quay.io/3scale/apisonator:nightly"
+              value: "quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA"
             - name: APICAST_IMAGE
-              value: "quay.io/3scale/apicast:nightly"
+              value: "quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA"
             - name: SYSTEM_IMAGE
-              value: "quay.io/3scale/porta:nightly"
+              value: "quay.io/3scale/3scale210:porta-3scale-2.10.0-GA"
             - name: ZYNC_IMAGE
-              value: "quay.io/3scale/zync:nightly"
+              value: "quay.io/3scale/3scale10:zync-3scale-2.10.0-GA"
             - name: SYSTEM_MEMCACHED_IMAGE
               value: "memcached:1.5"
             - name: BACKEND_REDIS_IMAGE

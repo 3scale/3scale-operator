@@ -545,14 +545,6 @@ jobs:
       - install-dependencies
       - run: make licenses-check
 
-  verify-manifest:
-    docker:
-      - image: circleci/python:3.6.4
-    steps:
-      - checkout
-      - run: sudo pip3 install -v operator-courier==2.1.7
-      - run: make verify-manifest
-
   unit-tests-coverage:
     docker:
       - image: circleci/golang:1.13.7
@@ -572,7 +564,6 @@ workflows:
       - test-crds
       - test-manifests-version
       - run-unit-tests
-      - verify-manifest
       - install-operator
       - run-operator-e2e-test:
           requires:

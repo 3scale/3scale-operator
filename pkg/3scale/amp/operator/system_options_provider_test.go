@@ -44,9 +44,9 @@ func testSystemAppPodTemplateLabels() map[string]string {
 		"threescale_component_element": "app",
 		"com.redhat.component-name":    "system-app",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.10.0",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.10",
 		"deploymentConfig":             "system-app",
 	}
 }
@@ -66,9 +66,9 @@ func testSystemSidekiqPodTemplateLabels() map[string]string {
 		"threescale_component_element": "sidekiq",
 		"com.redhat.component-name":    "system-sidekiq",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.10.0",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.10",
 		"deploymentConfig":             "system-sidekiq",
 	}
 }
@@ -112,9 +112,9 @@ func testSystemSphinxPodTemplateLabels() map[string]string {
 		"threescale_component_element": "sphinx",
 		"com.redhat.component-name":    "system-sphinx",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": "2.10.0",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   "2.10",
 		"deploymentConfig":             "system-sphinx",
 	}
 }
