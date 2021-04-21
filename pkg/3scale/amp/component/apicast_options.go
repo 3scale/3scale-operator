@@ -25,6 +25,13 @@ type ApicastOptions struct {
 	ProductionTolerations          []v1.Toleration   `validate:"-"`
 	StagingAffinity                *v1.Affinity      `validate:"-"`
 	StagingTolerations             []v1.Toleration   `validate:"-"`
+	ProductionWorkers              *int32            `validate:"-"`
+
+	// Used for monitoring objects
+	// Those objects are namespaced. However, objects includes labels, rules and expressions
+	// that need namespace filtering because they are "global" once imported
+	// to the prometheus or grafana services.
+	Namespace string `validate:"required"`
 }
 
 func NewApicastOptions() *ApicastOptions {

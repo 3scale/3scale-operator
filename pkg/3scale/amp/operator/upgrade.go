@@ -11,6 +11,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -424,6 +425,28 @@ func (u *UpgradeApiManager) upgradeMonitoringSettings() (reconcile.Result, error
 	}
 	updated = updated || updatedTmp
 
+	// Apicast rules
+	apicast, err := Apicast(u.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updatedTmp, err = u.upgradePrometheusRules(apicast.ApicastPrometheusRules())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
+	// System Sidekiq rules
+	system, err := System(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updatedTmp, err = u.upgradePrometheusRules(system.SystemSidekiqPrometheusRules())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	updated = updated || updatedTmp
+
 	return reconcile.Result{Requeue: updated}, nil
 }
 
@@ -440,7 +463,8 @@ func (u *UpgradeApiManager) ensureSystemSidekiqMonitoringSettings() (bool, error
 	}
 
 	update := false
-	if _, ok := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, component.SystemSidekiqPrometheusExporterPortEnvVarName); !ok {
+	existingEnvVarIdx := helper.FindEnvVar(existing.Spec.Template.Spec.Containers[0].Env, component.SystemSidekiqPrometheusExporterPortEnvVarName)
+	if existingEnvVarIdx < 0 {
 		existing.Spec.Template.Spec.Containers[0].Env = append(
 			existing.Spec.Template.Spec.Containers[0].Env,
 			helper.EnvVarFromValue(component.SystemSidekiqPrometheusExporterPortEnvVarName, strconv.Itoa(component.SystemSidekiqMetricsPort)),
@@ -490,7 +514,8 @@ func (u *UpgradeApiManager) ensureSystemAppMonitoringSettings() (bool, error) {
 			return false, fmt.Errorf("DeploymentConfig '%s' has unrecognized container name '%s'", existing.Name, containerName)
 		}
 
-		if _, ok := helper.FindEnvVar(container.Env, component.SystemAppPrometheusExporterPortEnvVarName); !ok {
+		existingEnvVarIdx := helper.FindEnvVar(container.Env, component.SystemAppPrometheusExporterPortEnvVarName)
+		if existingEnvVarIdx < 0 {
 			container.Env = append(
 				container.Env,
 				helper.EnvVarFromValue(component.SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(containerPrometheusMetricsPort)),
@@ -512,6 +537,40 @@ func (u *UpgradeApiManager) ensureSystemAppMonitoringSettings() (bool, error) {
 	}
 
 	return update, nil
+}
+
+func (u *UpgradeApiManager) upgradePrometheusRules(desired *monitoringv1.PrometheusRule) (bool, error) {
+	if !u.apiManager.IsMonitoringEnabled() {
+		return false, nil
+	}
+
+	existing := &monitoringv1.PrometheusRule{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	changed := u.ensurePrometheusRulesEqual(desired, existing)
+	if changed {
+		u.Logger().Info(fmt.Sprintf("Upgrading prometheus rules: %s", existing.Name))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return true, err
+		}
+	}
+
+	return changed, nil
+}
+
+func (u *UpgradeApiManager) ensurePrometheusRulesEqual(desired, existing *monitoringv1.PrometheusRule) bool {
+	if !reflect.DeepEqual(existing.Spec, desired.Spec) {
+		diff := cmp.Diff(existing.Spec, desired.Spec)
+		u.Logger().V(1).Info(fmt.Sprintf("%s prometheus rules changed: %s", desired.Name, diff))
+		existing.Spec = desired.Spec
+		return true
+	}
+
+	return false
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {

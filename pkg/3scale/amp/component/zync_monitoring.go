@@ -49,39 +49,34 @@ func (zync *Zync) ZyncQuePodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func ZyncGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func (zync *Zync) ZyncGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
-		ns,
+		zync.Options.Namespace,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync",
-			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-			},
+			Name:   "zync",
+			Labels: zync.monitoringLabels(),
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/zync-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/zync-grafana-dashboard-1.json", ns),
+			Name: fmt.Sprintf("%s/zync-grafana-dashboard-1.json", zync.Options.Namespace),
 		},
 	}
 }
 
-func ZyncPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func (zync *Zync) ZyncPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync",
-			Labels: map[string]string{
-				"prometheus": "application-monitoring",
-				"role":       "alert-rules",
-			},
+			Name:   "zync",
+			Labels: zync.prometheusRulesMonitoringLabels(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/zync.rules", ns),
+					Name: fmt.Sprintf("%s/zync.rules", zync.Options.Namespace),
 					Rules: []monitoringv1.Rule{
 						{
 							Alert: "ThreescaleZyncJobDown",
@@ -89,7 +84,7 @@ func ZyncPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/zync",namespace="%s"} == 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/zync",namespace="%s"} == 0`, zync.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -101,7 +96,7 @@ func ZyncPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(rails_requests_total{namespace="%s",pod=~"zync-[a-z0-9]+-[a-z0-9]+",status=~"5[0-9]*"}[1m])) by (namespace,job) > 50`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(rails_requests_total{namespace="%s",pod=~"zync-[a-z0-9]+-[a-z0-9]+",status=~"5[0-9]*"}[1m])) by (namespace,job) > 50`, zync.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -114,19 +109,16 @@ func ZyncPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 	}
 }
 
-func ZyncQuePrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func (zync *Zync) ZyncQuePrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "zync-que",
-			Labels: map[string]string{
-				"prometheus": "application-monitoring",
-				"role":       "alert-rules",
-			},
+			Name:   "zync-que",
+			Labels: zync.prometheusRulesMonitoringLabels(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/zync-que.rules", ns),
+					Name: fmt.Sprintf("%s/zync-que.rules", zync.Options.Namespace),
 					Rules: []monitoringv1.Rule{
 						{
 							Alert: "ThreescaleZyncQueJobDown",
@@ -134,7 +126,7 @@ func ZyncQuePrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/zync-que",namespace="%s"} == 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/zync-que",namespace="%s"} == 0`, zync.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -146,7 +138,7 @@ func ZyncQuePrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job count over 100",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job count over 100",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='scheduled',namespace="%s"}) by (namespace,job,exported_job) > 250`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='scheduled',namespace="%s"}) by (namespace,job,exported_job) > 250`, zync.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -158,7 +150,7 @@ func ZyncQuePrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count over 100",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count over 100",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='failed',namespace="%s"}) by (namespace,job,exported_job) > 250`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='failed',namespace="%s"}) by (namespace,job,exported_job) > 250`, zync.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -170,7 +162,7 @@ func ZyncQuePrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count over 100",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count over 100",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='ready',namespace="%s"}) by (namespace,job,exported_job) > 250`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`max(que_jobs_scheduled_total{pod=~'zync-que.*',type='ready',namespace="%s"}) by (namespace,job,exported_job) > 250`, zync.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -181,4 +173,27 @@ func ZyncQuePrometheusRules(ns string) *monitoringv1.PrometheusRule {
 			},
 		},
 	}
+}
+
+func (zync *Zync) monitoringLabels() map[string]string {
+	labels := make(map[string]string)
+
+	for key, value := range zync.Options.CommonLabels {
+		labels[key] = value
+	}
+
+	labels["monitoring-key"] = common.MonitoringKey
+	return labels
+}
+
+func (zync *Zync) prometheusRulesMonitoringLabels() map[string]string {
+	labels := make(map[string]string)
+
+	for key, value := range zync.Options.CommonLabels {
+		labels[key] = value
+	}
+
+	labels["prometheus"] = "application-monitoring"
+	labels["role"] = "alert-rules"
+	return labels
 }

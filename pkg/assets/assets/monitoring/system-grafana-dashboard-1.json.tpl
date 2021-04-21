@@ -1,4 +1,3 @@
-
 {
   "annotations": {
     "list": [
@@ -17,7 +16,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 42,
+  "id": 7,
   "iteration": 1601975151139,
   "links": [],
   "panels": [
@@ -28,6 +27,890 @@
         "w": 24,
         "x": 0,
         "y": 0
+      },
+      "id": 8,
+      "panels": [],
+      "title": "Web App",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 9,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {},
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+'}[1m])) by (status)",
+          "format": "time_series",
+          "interval": "1m",
+          "intervalFactor": 1,
+          "legendFormat": "{{`{{status}}`}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "System requests per second (by status)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 1,
+          "format": "reqps",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 10,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {},
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+'}[1m])) by (controller)",
+          "format": "time_series",
+          "interval": "1m",
+          "intervalFactor": 1,
+          "legendFormat": "{{`{{controller}}`}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "System requests per second (by controller)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 1,
+          "format": "reqps",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 11,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {},
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status=~'2[0-9]*'}[1m])) by (controller)",
+          "format": "time_series",
+          "interval": "1m",
+          "intervalFactor": 1,
+          "legendFormat": "{{`{{controller}}`}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "System 2xx requests per second (by controller)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 1,
+          "format": "reqps",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 9
+      },
+      "id": 12,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {},
+      "percentage": true,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status=~'4[0-9]*'}[1m])) by (controller)",
+          "format": "time_series",
+          "interval": "1m",
+          "intervalFactor": 1,
+          "legendFormat": "{{`{{controller}}`}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "System 4xx requests per second (by controller)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 1,
+          "format": "reqps",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 9
+      },
+      "id": 13,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {},
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status=~'5[0-9]*'}[1m])) by (controller)",
+          "format": "time_series",
+          "interval": "1m",
+          "intervalFactor": 1,
+          "legendFormat": "{{`{{controller}}`}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "System 5xx requests per second (by controller)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 1,
+          "format": "reqps",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 14,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {},
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_request_duration_seconds_sum{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+'}[1m])) / sum(rate(rails_request_duration_seconds_count{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+'}[1m]))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Total",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(rails_db_runtime_seconds_sum{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+'}[1m])) / sum(rate(rails_db_runtime_seconds_count{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+'}[1m]))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "ActiveRecord",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(rails_view_runtime_seconds_sum{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+'}[1m])) / sum(rate(rails_view_runtime_seconds_count{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+'}[1m]))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "View",
+          "refId": "C"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Rails average response time",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "s",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#5794F2",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolateBlues",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 15,
+      "legend": {
+        "show": false
+      },
+      "links": [],
+      "options": {},
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_request_duration_seconds_bucket{namespace='$namespace',pod=~'system-app-.*'}[1m])) by (le)",
+          "format": "heatmap",
+          "interval": "1m",
+          "intervalFactor": 10,
+          "legendFormat": "{{`{{le}}`}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Requests per second heatmap (by response time bucket in seconds)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#5794F2",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolateBlues",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 16,
+      "legend": {
+        "show": false
+      },
+      "links": [],
+      "options": {},
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_request_duration_seconds_bucket{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',controller='notifications'}[1m])) by (le)",
+          "format": "heatmap",
+          "interval": "1m",
+          "intervalFactor": 10,
+          "legendFormat": "{{`{{le}}`}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Notifications requests per second heatmap (by response time bucket in seconds)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#5794F2",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolateBlues",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 17,
+      "legend": {
+        "show": false
+      },
+      "links": [],
+      "options": {},
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_request_duration_seconds_bucket{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',controller='tenants'}[1m])) by (le)",
+          "format": "heatmap",
+          "interval": "1m",
+          "intervalFactor": 10,
+          "legendFormat": "{{`{{le}}`}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Tenants requests per second heatmap (by response time bucket in seconds)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#5794F2",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolateBlues",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 18,
+      "legend": {
+        "show": false
+      },
+      "links": [],
+      "options": {},
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_request_duration_seconds_bucket{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',controller='status/live'}[1m])) by (le)",
+          "format": "heatmap",
+          "interval": "1m",
+          "intervalFactor": 10,
+          "legendFormat": "{{`{{le}}`}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Liveness requests per second heatmap (by response time bucket in seconds)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#5794F2",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolateBlues",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 19,
+      "legend": {
+        "show": false
+      },
+      "links": [],
+      "options": {},
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "expr": "sum(rate(rails_request_duration_seconds_bucket{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',controller='status/ready'}[1m])) by (le)",
+          "format": "heatmap",
+          "interval": "1m",
+          "intervalFactor": 10,
+          "legendFormat": "{{`{{le}}`}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Readiness requests per second heatmap (by response time bucket in seconds)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
       },
       "id": 20,
       "panels": [],
@@ -45,9 +928,9 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 1
+        "y": 40
       },
-      "id": 22,
+      "id": 21,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -141,9 +1024,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 48
       },
-      "id": 38,
+      "id": 22,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -239,9 +1122,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 9
+        "y": 48
       },
-      "id": 40,
+      "id": 23,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -330,9 +1213,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 17
+        "y": 56
       },
-      "id": 39,
+      "id": 24,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -420,9 +1303,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 17
+        "y": 56
       },
-      "id": 41,
+      "id": 25,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -509,9 +1392,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 25
+        "y": 64
       },
-      "id": 45,
+      "id": 26,
       "legend": {
         "avg": false,
         "current": false,
@@ -595,9 +1478,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 25
+        "y": 64
       },
-      "id": 43,
+      "id": 27,
       "legend": {
         "avg": false,
         "current": false,
@@ -681,9 +1564,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 33
+        "y": 72
       },
-      "id": 42,
+      "id": 28,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -770,9 +1653,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 72
       },
-      "id": 44,
+      "id": 29,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -854,9 +1737,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 63
+        "y": 80
       },
-      "id": 13,
+      "id": 30,
       "panels": [],
       "repeat": "deploymentConfig",
       "title": "Pods ($deploymentConfig)",
@@ -885,10 +1768,10 @@
         "h": 3,
         "w": 6,
         "x": 0,
-        "y": 64
+        "y": 81
       },
       "hideTimeOverride": true,
-      "id": 64,
+      "id": 31,
       "interval": "",
       "links": [],
       "mappingType": 1,
@@ -972,10 +1855,10 @@
         "h": 3,
         "w": 6,
         "x": 6,
-        "y": 64
+        "y": 81
       },
       "hideTimeOverride": true,
-      "id": 65,
+      "id": 32,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -1057,10 +1940,10 @@
         "h": 3,
         "w": 6,
         "x": 12,
-        "y": 64
+        "y": 81
       },
       "hideTimeOverride": true,
-      "id": 66,
+      "id": 33,
       "interval": "",
       "links": [],
       "mappingType": 1,
@@ -1143,10 +2026,10 @@
         "h": 3,
         "w": 6,
         "x": 18,
-        "y": 64
+        "y": 81
       },
       "hideTimeOverride": true,
-      "id": 36,
+      "id": 34,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -1217,9 +2100,9 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 67
+        "y": 84
       },
-      "id": 11,
+      "id": 35,
       "legend": {
         "avg": false,
         "current": false,
@@ -1332,9 +2215,9 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 74
+        "y": 91
       },
-      "id": 9,
+      "id": 36,
       "legend": {
         "avg": false,
         "current": false,
@@ -1418,9 +2301,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 97
       },
-      "id": 4,
+      "id": 37,
       "panels": [],
       "repeat": "deploymentConfig",
       "title": "CPU Usage ($deploymentConfig)",
@@ -1437,9 +2320,9 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 81
+        "y": 98
       },
-      "id": 70,
+      "id": 38,
       "legend": {
         "avg": false,
         "current": false,
@@ -1523,9 +2406,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 88
+        "y": 105
       },
-      "id": 5,
+      "id": 39,
       "panels": [],
       "repeat": "deploymentConfig",
       "title": "CPU Quota ($deploymentConfig)",
@@ -1544,9 +2427,9 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 89
+        "y": 106
       },
-      "id": 1,
+      "id": 40,
       "legend": {
         "avg": false,
         "current": false,
@@ -1772,9 +2655,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 96
+        "y": 113
       },
-      "id": 6,
+      "id": 41,
       "panels": [],
       "repeat": "deploymentConfig",
       "title": "Memory Usage ($deploymentConfig)",
@@ -1791,9 +2674,9 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 97
+        "y": 114
       },
-      "id": 2,
+      "id": 42,
       "legend": {
         "avg": false,
         "current": false,
@@ -1874,9 +2757,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 104
+        "y": 121
       },
-      "id": 7,
+      "id": 43,
       "panels": [],
       "repeat": "deploymentConfig",
       "title": "Memory Quota ($deploymentConfig)",
@@ -1895,9 +2778,9 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 105
+        "y": 122
       },
-      "id": 3,
+      "id": 44,
       "legend": {
         "avg": false,
         "current": false,
@@ -2120,9 +3003,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 112
+        "y": 129
       },
-      "id": 15,
+      "id": 45,
       "panels": [],
       "repeat": "deploymentConfig",
       "title": "Network Usage ($deploymentConfig)",
@@ -2139,9 +3022,9 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 113
+        "y": 130
       },
-      "id": 17,
+      "id": 46,
       "legend": {
         "avg": false,
         "current": false,
@@ -2226,9 +3109,9 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 120
+        "y": 137
       },
-      "id": 18,
+      "id": 47,
       "legend": {
         "avg": false,
         "current": false,
@@ -2359,7 +3242,7 @@
         "options": [],
         "query": "label_values(kube_pod_info{namespace='$namespace',pod=~'system-.*'}, pod)",
         "refresh": 1,
-        ""regex": "/([a-z]+-[a-z]+)-[0-9]*/",
+        "regex": "/([a-z]+-[a-z]+)-[0-9]*/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",

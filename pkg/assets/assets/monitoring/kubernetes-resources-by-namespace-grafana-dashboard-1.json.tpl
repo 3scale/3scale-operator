@@ -1392,7 +1392,7 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "sum(irate(container_network_receive_packets_total{cluster=\"$cluster\", namespace=~\"$namespace\"}[$interval])) by (pod)",
+            "expr": "sum(irate(container_network_transmit_packets_total{cluster=\"$cluster\", namespace=~\"$namespace\"}[$interval])) by (pod)",
             "format": "time_series",
             "intervalFactor": 2,
             "legendFormat": "{{`{{pod}}`}}",

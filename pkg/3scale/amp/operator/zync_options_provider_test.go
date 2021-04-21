@@ -162,6 +162,13 @@ func testZyncDatabaseCustomResourceRequirements() *v1.ResourceRequirements {
 	}
 }
 
+func testZyncQueSACustomImagePullSecrets() []v1.LocalObjectReference {
+	return []v1.LocalObjectReference{
+		v1.LocalObjectReference{Name: "mysecret9"},
+		v1.LocalObjectReference{Name: "mysecret14"},
+	}
+}
+
 func getZyncSecret() *v1.Secret {
 	data := map[string]string{
 		component.ZyncSecretKeyBaseFieldName:             zyncSecretKeyBasename,
@@ -223,6 +230,8 @@ func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 		ZyncQuePodTemplateLabels:              testZyncQuePodTemplateCommonLabels(),
 		ZyncDatabasePodTemplateLabels:         testZyncDatabasePodTemplateCommonLabels(),
 		ZyncMetrics:                           true,
+		ZyncQueServiceAccountImagePullSecrets: component.DefaultZyncQueServiceAccountImagePullSecrets(),
+		Namespace:                             opts.Namespace,
 	}
 
 	expectedOpts.DatabaseURL = component.DefaultZyncDatabaseURL(expectedOpts.DatabasePassword)
@@ -340,6 +349,18 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 				expectedOpts.ContainerResourceRequirements = *testZyncCustomResourceRequirements()
 				expectedOpts.QueContainerResourceRequirements = *testQueZyncCustomResourceRequirements()
 				expectedOpts.DatabaseContainerResourceRequirements = *testZyncDatabaseCustomResourceRequirements()
+				return expectedOpts
+			},
+		},
+		{"WithoutResourceRequirements", nil,
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestZyncOptions()
+				apimanager.Spec.ImagePullSecrets = testZyncQueSACustomImagePullSecrets()
+				return apimanager
+			},
+			func(opts *component.ZyncOptions) *component.ZyncOptions {
+				expectedOpts := defaultZyncOptions(opts)
+				expectedOpts.ZyncQueServiceAccountImagePullSecrets = testZyncQueSACustomImagePullSecrets()
 				return expectedOpts
 			},
 		},

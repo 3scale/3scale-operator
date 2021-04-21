@@ -63,3 +63,11 @@ replace github.com/openshift/api => github.com/openshift/api v0.0.0-202005271843
 replace github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20191125132246-f6563a70e19a
 
 replace github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.15.2
+
+replace github.com/containerd/containerd => github.com/containerd/containerd v1.3.9
+
+// security release to address CVE-2020-14040
+replace golang.org/x/text => golang.org/x/text v0.3.3
+
+// security release to address CVE-2020-9283
+replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975

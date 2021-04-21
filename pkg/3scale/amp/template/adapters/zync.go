@@ -116,6 +116,11 @@ func (z *Zync) options() (*component.ZyncOptions, error) {
 
 	zo.DatabaseURL = component.DefaultZyncDatabaseURL(zo.DatabasePassword)
 
+	zo.ZyncQueServiceAccountImagePullSecrets = component.DefaultZyncQueServiceAccountImagePullSecrets()
+
+	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
+	zo.Namespace = "${NAMESPACE}"
+
 	err := zo.Validate()
 	return zo, err
 }

@@ -731,6 +731,10 @@ spec:
                             type: string
                         type: object
                       type: array
+                    workers:
+                      format: int32
+                      minimum: 1
+                      type: integer
                   type: object
                 registryURL:
                   type: string
@@ -4187,6 +4191,17 @@ spec:
                 externalZyncDatabaseEnabled:
                   type: boolean
               type: object
+            imagePullSecrets:
+              items:
+                description: LocalObjectReference contains enough information to let
+                  you locate the referenced object inside the same namespace.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+              type: array
             imageStreamTagImportInsecure:
               type: boolean
             monitoring:

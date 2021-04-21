@@ -38,6 +38,14 @@ type ZyncOptions struct {
 	ZyncQuePodTemplateLabels      map[string]string `validate:"required"`
 	ZyncDatabasePodTemplateLabels map[string]string `validate:"required"`
 	ZyncMetrics                   bool
+
+	ZyncQueServiceAccountImagePullSecrets []v1.LocalObjectReference `validate:"required"`
+
+	// Used for monitoring objects
+	// Those objects are namespaced. However, objects includes labels, rules and expressions
+	// that need namespace filtering because they are "global" once imported
+	// to the prometheus or grafana services.
+	Namespace string `validate:"required"`
 }
 
 func NewZyncOptions() *ZyncOptions {
@@ -100,6 +108,14 @@ func DefaultZyncDatabaseContainerResourceRequirements() v1.ResourceRequirements 
 		Requests: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("50m"),
 			v1.ResourceMemory: resource.MustParse("250M"),
+		},
+	}
+}
+
+func DefaultZyncQueServiceAccountImagePullSecrets() []v1.LocalObjectReference {
+	return []v1.LocalObjectReference{
+		v1.LocalObjectReference{
+			Name: "threescale-registry-auth",
 		},
 	}
 }

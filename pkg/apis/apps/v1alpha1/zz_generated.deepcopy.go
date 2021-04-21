@@ -203,6 +203,11 @@ func (in *APIManagerCommonSpec) DeepCopyInto(out *APIManagerCommonSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ImagePullSecrets != nil {
+		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
+		*out = make([]v1.LocalObjectReference, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -501,6 +506,11 @@ func (in *ApicastProductionSpec) DeepCopyInto(out *ApicastProductionSpec) {
 		in, out := &in.Resources, &out.Resources
 		*out = new(v1.ResourceRequirements)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.Workers != nil {
+		in, out := &in.Workers, &out.Workers
+		*out = new(int32)
+		**out = **in
 	}
 	return
 }

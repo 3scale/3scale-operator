@@ -32,7 +32,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Zync Que SA
-	err = r.ReconcileServiceAccount(zync.QueServiceAccount(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceAccount(zync.QueServiceAccount(), reconcilers.ServiceAccountImagePullPolicyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -44,13 +44,13 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Zync DC
-	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Zync Que DC
-	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -63,7 +63,12 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 
 	if !r.apiManager.IsZyncExternalDatabaseEnabled() {
 		// Zync DB DC
-		err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
+		zyncDBDCMutator := reconcilers.DeploymentConfigMutator(
+			reconcilers.DeploymentConfigContainerResourcesMutator,
+			reconcilers.DeploymentConfigAffinityMutator,
+			reconcilers.DeploymentConfigTolerationsMutator,
+		)
+		err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), zyncDBDCMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -103,17 +108,17 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.ZyncGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileGrafanaDashboard(zync.ZyncGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.ZyncPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(zync.ZyncPrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.ZyncQuePrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(zync.ZyncQuePrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

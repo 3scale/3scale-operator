@@ -49,59 +49,53 @@ func (apicast *Apicast) ApicastStagingPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func ApicastMainAppGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func (apicast *Apicast) ApicastMainAppGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
-		ns,
+		apicast.Options.Namespace,
 	}
+
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-mainapp",
-			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-			},
+			Name:   "apicast-mainapp",
+			Labels: apicast.monitoringLabels(),
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/apicast-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/apicast-grafana-dashboard-1.json", ns),
+			Name: fmt.Sprintf("%s/apicast-grafana-dashboard-1.json", apicast.Options.Namespace),
 		},
 	}
 }
 
-func ApicastServicesGrafanaDashboard(ns string) *grafanav1alpha1.GrafanaDashboard {
+func (apicast *Apicast) ApicastServicesGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace string
 	}{
-		ns,
+		apicast.Options.Namespace,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast-services",
-			Labels: map[string]string{
-				"monitoring-key": common.MonitoringKey,
-			},
+			Name:   "apicast-services",
+			Labels: apicast.monitoringLabels(),
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/apicast-grafana-dashboard-2.json.tpl", data),
-			Name: fmt.Sprintf("%s/apicast-grafana-dashboard-2.json", ns),
+			Name: fmt.Sprintf("%s/apicast-grafana-dashboard-2.json", apicast.Options.Namespace),
 		},
 	}
 }
 
-func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
+func (apicast *Apicast) ApicastPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "apicast",
-			Labels: map[string]string{
-				"prometheus": "application-monitoring",
-				"role":       "alert-rules",
-			},
+			Name:   "apicast",
+			Labels: apicast.prometheusRulesMonitoringLabels(),
 		},
 		Spec: monitoringv1.PrometheusRuleSpec{
 			Groups: []monitoringv1.RuleGroup{
 				{
-					Name: fmt.Sprintf("%s/apicast.rules", ns),
+					Name: fmt.Sprintf("%s/apicast.rules", apicast.Options.Namespace),
 					Rules: []monitoringv1.Rule{
 						{
 							Alert: "ThreescaleApicastJobDown",
@@ -109,7 +103,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/apicast-production|.*/apicast-staging",namespace="%s"} == 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`up{job=~".*/apicast-production|.*/apicast-staging",namespace="%s"} == 0`, apicast.Options.Namespace)),
 							For:  "1m",
 							Labels: map[string]string{
 								"severity": "critical",
@@ -121,7 +115,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "Request on instance {{ $labels.instance }} is taking more than one second to process the requests",
 								"description": "High number of request taking more than a second to be processed",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(total_response_time_seconds_bucket{namespace='%s', pod=~'apicast-production.*'}[1m])) - sum(rate(upstream_response_time_seconds_bucket{namespace='%s', pod=~'apicast-production.*'}[1m])) > 1`, ns, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(total_response_time_seconds_bucket{namespace='%s', pod=~'apicast-production.*'}[1m])) - sum(rate(upstream_response_time_seconds_bucket{namespace='%s', pod=~'apicast-production.*'}[1m])) > 1`, apicast.Options.Namespace, apicast.Options.Namespace)),
 							For:  "2m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -133,7 +127,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "APICast high HTTP 4XX error rate (instance {{ $labels.instance }})",
 								"description": "The number of request with 4XX is bigger than the 5% of total request.",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(apicast_status{namespace='%s', status=~"^4.."}[1m])) / sum(rate(apicast_status{namespace='%s'}[1m])) * 100 > 5`, ns, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(rate(apicast_status{namespace='%s', status=~"^4.."}[1m])) / sum(rate(apicast_status{namespace='%s'}[1m])) * 100 > 5`, apicast.Options.Namespace, apicast.Options.Namespace)),
 							For:  "5m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -145,7 +139,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "APICast latency high (instance {{ $labels.instance }})",
 								"description": "APIcast p99 latency is higher than 5 seconds\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`histogram_quantile(0.99, sum(rate(total_response_time_seconds_bucket{namespace='%s',}[30m])) by (le)) > 5`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`histogram_quantile(0.99, sum(rate(total_response_time_seconds_bucket{namespace='%s',}[30m])) by (le)) > 5`, apicast.Options.Namespace)),
 							For:  "5m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -157,7 +151,7 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 								"summary":     "A new worker process in Nginx has been started",
 								"description": "A new thread has been started. This could indicate that a worker process has died due to the memory limits being exceeded. Please investigate the memory pressure on pod (instance {{ $labels.instance }})",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`changes(worker_process{namespace='%s', pod=~'apicast-production.*'}[5m]) > 0`, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`changes(worker_process{namespace='%s', pod=~'apicast-production.*'}[5m]) > 0`, apicast.Options.Namespace)),
 							For:  "5m",
 							Labels: map[string]string{
 								"severity": "warning",
@@ -168,4 +162,27 @@ func ApicastPrometheusRules(ns string) *monitoringv1.PrometheusRule {
 			},
 		},
 	}
+}
+
+func (apicast *Apicast) monitoringLabels() map[string]string {
+	labels := make(map[string]string)
+
+	for key, value := range apicast.Options.CommonLabels {
+		labels[key] = value
+	}
+
+	labels["monitoring-key"] = common.MonitoringKey
+	return labels
+}
+
+func (apicast *Apicast) prometheusRulesMonitoringLabels() map[string]string {
+	labels := make(map[string]string)
+
+	for key, value := range apicast.Options.CommonLabels {
+		labels[key] = value
+	}
+
+	labels["prometheus"] = "application-monitoring"
+	labels["role"] = "alert-rules"
+	return labels
 }

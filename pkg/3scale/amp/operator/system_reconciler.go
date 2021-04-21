@@ -82,19 +82,30 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// SystemApp DC
-	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), r.systemAppDCMutator)
+	systemAppDCMutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigReplicasMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+		r.systemAppDCResourceMutator,
+	)
+	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), systemAppDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Sidekiq DC
-	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator)
+	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Sphinx DC
-	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), reconcilers.DeploymentConfigResourcesAndAffinityAndTolerationsMutator)
+	sphinxDCmutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+	)
+	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), sphinxDCmutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -175,12 +186,17 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.SystemGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileGrafanaDashboard(system.SystemGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.SystemSidekiqPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(system.SystemAppPrometheusRules(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.ReconcilePrometheusRules(system.SystemSidekiqPrometheusRules(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -226,29 +242,9 @@ func (r *SystemReconciler) validateS3StorageProvidedConfiguration() error {
 	return nil
 }
 
-func (r *SystemReconciler) systemAppDCMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-	existing, ok := existingObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
-	}
-	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
-	}
-
+func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	desiredName := common.ObjectInfo(desired)
 	update := false
-
-	// Check node affinity and tolerations
-
-	tmpUpdate := reconcilers.DeploymentConfigAffinityReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	tmpUpdate = reconcilers.DeploymentConfigTolerationsReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	tmpUpdate = reconcilers.DeploymentConfigReplicasReconciler(desired, existing)
-	update = update || tmpUpdate
 
 	//
 	// Check containers
@@ -276,7 +272,7 @@ func (r *SystemReconciler) systemAppDCMutator(existingObj, desiredObj common.Kub
 		}
 	}
 
-	return update, nil
+	return update
 }
 
 func System(cr *appsv1alpha1.APIManager, client client.Client) (*component.System, error) {

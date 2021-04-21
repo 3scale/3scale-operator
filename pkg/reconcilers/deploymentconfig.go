@@ -13,71 +13,42 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func DeploymentConfigResourcesMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-	existing, ok := existingObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
-	}
-	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
-	}
+// DCMutateFn is a function which mutates the existing DeploymentConfig into it's desired state.
+type DCMutateFn func(desired, existing *appsv1.DeploymentConfig) bool
 
-	return DeploymentConfigContainerResourcesReconciler(desired, existing), nil
+func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
+	return func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+		existing, ok := existingObj.(*appsv1.DeploymentConfig)
+		if !ok {
+			return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
+		}
+		desired, ok := desiredObj.(*appsv1.DeploymentConfig)
+		if !ok {
+			return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
+		}
+
+		update := false
+
+		// Loop through each option
+		for _, opt := range opts {
+			tmpUpdate := opt(desired, existing)
+			update = update || tmpUpdate
+		}
+
+		return update, nil
+	}
 }
 
-func DeploymentConfigResourcesAndAffinityAndTolerationsMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-	existing, ok := existingObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
-	}
-	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
-	}
-
-	update := false
-
-	tmpUpdate := DeploymentConfigContainerResourcesReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	tmpUpdate = DeploymentConfigAffinityReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	tmpUpdate = DeploymentConfigTolerationsReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	return update, nil
+func GenericDeploymentConfigMutator() MutateFn {
+	return DeploymentConfigMutator(
+		DeploymentConfigReplicasMutator,
+		DeploymentConfigContainerResourcesMutator,
+		DeploymentConfigAffinityMutator,
+		DeploymentConfigTolerationsMutator,
+	)
 }
 
-func GenericDeploymentConfigMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-	existing, ok := existingObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
-	}
-	desired, ok := desiredObj.(*appsv1.DeploymentConfig)
-	if !ok {
-		return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
-	}
-
-	update := false
-
-	tmpUpdate := DeploymentConfigReplicasReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	tmpUpdate = DeploymentConfigContainerResourcesReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	tmpUpdate = DeploymentConfigAffinityReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	tmpUpdate = DeploymentConfigTolerationsReconciler(desired, existing)
-	update = update || tmpUpdate
-
-	return update, nil
-}
-
-func DeploymentConfigReplicasReconciler(desired, existing *appsv1.DeploymentConfig) bool {
+func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	update := false
 
 	if desired.Spec.Replicas != existing.Spec.Replicas {
@@ -88,7 +59,7 @@ func DeploymentConfigReplicasReconciler(desired, existing *appsv1.DeploymentConf
 	return update
 }
 
-func DeploymentConfigAffinityReconciler(desired, existing *appsv1.DeploymentConfig) bool {
+func DeploymentConfigAffinityMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	updated := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity) {
@@ -101,7 +72,7 @@ func DeploymentConfigAffinityReconciler(desired, existing *appsv1.DeploymentConf
 	return updated
 }
 
-func DeploymentConfigTolerationsReconciler(desired, existing *appsv1.DeploymentConfig) bool {
+func DeploymentConfigTolerationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	updated := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations) {
@@ -114,13 +85,10 @@ func DeploymentConfigTolerationsReconciler(desired, existing *appsv1.DeploymentC
 	return updated
 }
 
-func DeploymentConfigContainerResourcesReconciler(desired, existing *appsv1.DeploymentConfig) bool {
+func DeploymentConfigContainerResourcesMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	desiredName := common.ObjectInfo(desired)
 	update := false
 
-	//
-	// Check container resource requirements
-	//
 	if len(desired.Spec.Template.Spec.Containers) != 1 {
 		panic(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 1", desiredName, len(desired.Spec.Template.Spec.Containers)))
 	}
@@ -138,5 +106,39 @@ func DeploymentConfigContainerResourcesReconciler(desired, existing *appsv1.Depl
 		update = true
 	}
 
+	return update
+}
+
+// DeploymentConfigEnvVarReconciler implements basic env var reconcilliation for single container deployment configs.
+// Added when in desired and not in existing
+// Updated when in desired and in existing but not equal
+// Removed when not in desired and exists in existing DC
+func DeploymentConfigEnvVarReconciler(desired, existing *appsv1.DeploymentConfig, envVar string) bool {
+	update := false
+
+	existingContainer := &existing.Spec.Template.Spec.Containers[0]
+	desiredContainer := desired.Spec.Template.Spec.Containers[0]
+
+	desiredIdx := helper.FindEnvVar(desiredContainer.Env, envVar)
+	existingIdx := helper.FindEnvVar(existingContainer.Env, envVar)
+
+	if desiredIdx < 0 && existingIdx >= 0 {
+		// env var exists in existing and does not exist in desired => Remove from the list
+		// shift all of the elements at the right of the deleting index by one to the left
+		existingContainer.Env = append(existingContainer.Env[:existingIdx], existingContainer.Env[existingIdx+1:]...)
+		update = true
+	} else if desiredIdx < 0 && existingIdx < 0 {
+		// env var does not exist in existing and does not exist in desired => NOOP
+	} else if desiredIdx >= 0 && existingIdx < 0 {
+		// env var does not exist in existing and exists in desired => ADD it
+		existingContainer.Env = append(existingContainer.Env, desiredContainer.Env[desiredIdx])
+		update = true
+	} else {
+		// env var exists in existing and exists in desired
+		if !reflect.DeepEqual(existingContainer.Env[existingIdx], desiredContainer.Env[desiredIdx]) {
+			existingContainer.Env[existingIdx] = desiredContainer.Env[desiredIdx]
+			update = true
+		}
+	}
 	return update
 }

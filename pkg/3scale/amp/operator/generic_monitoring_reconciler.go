@@ -18,17 +18,20 @@ func NewGenericMonitoringReconciler(baseAPIManagerLogicReconciler *BaseAPIManage
 }
 
 func (r *GenericMonitoringReconciler) Reconcile() (reconcile.Result, error) {
-	err := r.ReconcileGrafanaDashboard(component.KubernetesResourcesByNamespaceGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	grafanaDashboard := component.KubernetesResourcesByNamespaceGrafanaDashboard(r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	err := r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(component.KubernetesResourcesByPodGrafanaDashboard(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	grafanaDashboard = component.KubernetesResourcesByPodGrafanaDashboard(r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	err = r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(component.KubeStateMetricsPrometheusRules(r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	prometheusRule := component.KubeStateMetricsPrometheusRules(r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	err = r.ReconcilePrometheusRules(prometheusRule, reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

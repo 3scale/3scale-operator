@@ -139,6 +139,8 @@ type APIManagerCommonSpec struct {
 	ImageStreamTagImportInsecure *bool `json:"imageStreamTagImportInsecure,omitempty"`
 	// +optional
 	ResourceRequirementsEnabled *bool `json:"resourceRequirementsEnabled,omitempty"`
+	// +optional
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 }
 
 type ApicastSpec struct {
@@ -167,6 +169,9 @@ type ApicastProductionSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	// +kubebuilder:validation:Minimum=1
+	Workers *int32 `json:"workers,omitempty"`
 }
 
 type ApicastStagingSpec struct {

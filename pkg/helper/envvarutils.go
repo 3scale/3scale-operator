@@ -69,12 +69,13 @@ func EnvVarFromSecretOptional(envVarName string, secretName, secretKey string) v
 	}
 }
 
-func FindEnvVar(vars []v1.EnvVar, name string) (v1.EnvVar, bool) {
-	for idx := range vars {
-		if vars[idx].Name == name {
-			return vars[idx], true
+// FindEnvVar returns the smallest index i at which x == a[i],
+// or -1 if there is no such index.
+func FindEnvVar(a []v1.EnvVar, x string) int {
+	for i, n := range a {
+		if n.Name == x {
+			return i
 		}
 	}
-
-	return v1.EnvVar{}, false
+	return -1
 }

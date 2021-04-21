@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/pkg/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -21,15 +23,24 @@ import (
 
 type BaseAPIManagerLogicReconciler struct {
 	*reconcilers.BaseReconciler
-	apiManager *appsv1alpha1.APIManager
-	logger     logr.Logger
+	apiManager           *appsv1alpha1.APIManager
+	logger               logr.Logger
+	crdAvailabilityCache *baseAPIManagerLogicReconcilerCRDAvailabilityCache
+}
+
+type baseAPIManagerLogicReconcilerCRDAvailabilityCache struct {
+	grafanaDashboardCRDAvailable *bool
+	prometheusRuleCRDAvailable   *bool
+	podMonitorCRDAvailable       *bool
+	serviceMonitorCRDAvailable   *bool
 }
 
 func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *BaseAPIManagerLogicReconciler {
 	return &BaseAPIManagerLogicReconciler{
-		BaseReconciler: b,
-		apiManager:     apiManager,
-		logger:         b.Logger().WithValues("APIManager Controller", apiManager.Name),
+		BaseReconciler:       b,
+		apiManager:           apiManager,
+		logger:               b.Logger().WithValues("APIManager Controller", apiManager.Name),
+		crdAvailabilityCache: &baseAPIManagerLogicReconcilerCRDAvailabilityCache{},
 	}
 }
 
@@ -91,7 +102,11 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafa
 	}
 
 	if !kindExists {
-		r.Logger().Info("Install grafana-operator in your cluster to create grafanadashboards objects", "Error creating grafanadashboard object", desired.Name)
+		if r.apiManager.IsMonitoringEnabled() {
+			errToLog := fmt.Errorf("Error creating grafana dashboard object '%s'. Install grafana-operator in your cluster to create grafana dashboard objects", desired.Name)
+			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+			r.logger.Error(errToLog, "ReconcileError")
+		}
 		return nil
 	}
 
@@ -106,8 +121,13 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monito
 	if err != nil {
 		return err
 	}
+
 	if !kindExists {
-		r.Logger().Info("Install prometheus-operator in your cluster to create prometheusrules objects", "Error creating prometheusrule object", desired.Name)
+		if r.apiManager.IsMonitoringEnabled() {
+			errToLog := fmt.Errorf("Error creating prometheusrule object '%s'. Install prometheus-operator in your cluster to create prometheusrule objects", desired.Name)
+			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+			r.logger.Error(errToLog, "ReconcileError")
+		}
 		return nil
 	}
 
@@ -124,7 +144,11 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 	}
 
 	if !kindExists {
-		r.Logger().Info("Install prometheus-operator in your cluster to create servicemonitor objects", "Error creating servicemonitor object", desired.Name)
+		if r.apiManager.IsMonitoringEnabled() {
+			errToLog := fmt.Errorf("Error creating servicemonitor object '%s'. Install prometheus-operator in your cluster to create servicemonitor objects", desired.Name)
+			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+			r.logger.Error(errToLog, "ReconcileError")
+		}
 		return nil
 	}
 
@@ -141,7 +165,11 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv
 	}
 
 	if !kindExists {
-		r.Logger().Info("Install prometheus-operator in your cluster to create podmonitor objects", "Error creating podmonitor object", desired.Name)
+		if r.apiManager.IsMonitoringEnabled() {
+			errToLog := fmt.Errorf("Error creating podmonitor object '%s'. Install prometheus-operator in your cluster to create podmonitor objects", desired.Name)
+			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+			r.logger.Error(errToLog, "ReconcileError")
+		}
 		return nil
 	}
 
@@ -186,4 +214,54 @@ func (r *BaseAPIManagerLogicReconciler) APIManagerMutator(mutateFn reconcilers.M
 
 func (r *BaseAPIManagerLogicReconciler) Logger() logr.Logger {
 	return r.logger
+}
+
+func (b *BaseAPIManagerLogicReconciler) HasGrafanaDashboards() (bool, error) {
+	if b.crdAvailabilityCache.grafanaDashboardCRDAvailable == nil {
+		res, err := b.BaseReconciler.HasGrafanaDashboards()
+		if err != nil {
+			return res, err
+		}
+		b.crdAvailabilityCache.grafanaDashboardCRDAvailable = &res
+		return res, err
+	}
+
+	return *b.crdAvailabilityCache.grafanaDashboardCRDAvailable, nil
+}
+
+//HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
+func (b *BaseAPIManagerLogicReconciler) HasPrometheusRules() (bool, error) {
+	if b.crdAvailabilityCache.prometheusRuleCRDAvailable == nil {
+		res, err := b.BaseReconciler.HasPrometheusRules()
+		if err != nil {
+			return res, err
+		}
+		b.crdAvailabilityCache.prometheusRuleCRDAvailable = &res
+		return res, err
+	}
+	return *b.crdAvailabilityCache.prometheusRuleCRDAvailable, nil
+}
+
+func (b *BaseAPIManagerLogicReconciler) HasServiceMonitors() (bool, error) {
+	if b.crdAvailabilityCache.serviceMonitorCRDAvailable == nil {
+		res, err := b.BaseReconciler.HasServiceMonitors()
+		if err != nil {
+			return res, err
+		}
+		b.crdAvailabilityCache.serviceMonitorCRDAvailable = &res
+		return res, err
+	}
+	return *b.crdAvailabilityCache.serviceMonitorCRDAvailable, nil
+}
+
+func (b *BaseAPIManagerLogicReconciler) HasPodMonitors() (bool, error) {
+	if b.crdAvailabilityCache.podMonitorCRDAvailable == nil {
+		res, err := b.BaseReconciler.HasPodMonitors()
+		if err != nil {
+			return res, err
+		}
+		b.crdAvailabilityCache.podMonitorCRDAvailable = &res
+		return res, err
+	}
+	return *b.crdAvailabilityCache.podMonitorCRDAvailable, nil
 }
