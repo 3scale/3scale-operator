@@ -9,6 +9,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -45,7 +46,7 @@ func testSystemMysqlPodTemplateLabels() map[string]string {
 		"threescale_component_element": "mysql",
 		"com.redhat.component-name":    "system-mysql",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "57",
+		"com.redhat.component-version": helper.ParseVersion(SystemMySQLImageURL()),
 		"com.redhat.product-name":      "3scale",
 		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-mysql",

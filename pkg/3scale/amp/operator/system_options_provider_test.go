@@ -8,6 +8,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/helper"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -45,7 +46,7 @@ func testSystemAppPodTemplateLabels() map[string]string {
 		"threescale_component_element": "app",
 		"com.redhat.component-name":    "system-app",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": helper.ParseVersion(SystemImageURL()),
 		"com.redhat.product-name":      "3scale",
 		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-app",
@@ -67,7 +68,7 @@ func testSystemSidekiqPodTemplateLabels() map[string]string {
 		"threescale_component_element": "sidekiq",
 		"com.redhat.component-name":    "system-sidekiq",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": helper.ParseVersion(SystemImageURL()),
 		"com.redhat.product-name":      "3scale",
 		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-sidekiq",
@@ -113,7 +114,7 @@ func testSystemSphinxPodTemplateLabels() map[string]string {
 		"threescale_component_element": "sphinx",
 		"com.redhat.component-name":    "system-sphinx",
 		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": "nightly",
+		"com.redhat.component-version": helper.ParseVersion(SystemImageURL()),
 		"com.redhat.product-name":      "3scale",
 		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-sphinx",
