@@ -62,7 +62,7 @@ func testBackendListenerPodLabels() map[string]string {
 		"com.redhat.component-type":    "application",
 		"com.redhat.component-version": "nightly",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "backend-listener",
 	}
 }
@@ -76,7 +76,7 @@ func testBackendWorkerPodLabels() map[string]string {
 		"com.redhat.component-type":    "application",
 		"com.redhat.component-version": "nightly",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "backend-worker",
 	}
 }
@@ -90,7 +90,7 @@ func testBackendCronPodLabels() map[string]string {
 		"com.redhat.component-type":    "application",
 		"com.redhat.component-version": "nightly",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "backend-cron",
 	}
 }

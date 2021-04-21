@@ -66,7 +66,7 @@ func testZyncPodTemplateLabels() map[string]string {
 		"com.redhat.component-type":    "application",
 		"com.redhat.component-version": "nightly",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "zync",
 	}
 }
@@ -80,7 +80,7 @@ func testZyncQuePodTemplateCommonLabels() map[string]string {
 		"com.redhat.component-type":    "application",
 		"com.redhat.component-version": "nightly",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "zync-que",
 	}
 }
@@ -94,7 +94,7 @@ func testZyncDatabasePodTemplateCommonLabels() map[string]string {
 		"com.redhat.component-type":    "application",
 		"com.redhat.component-version": "10",
 		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   "master",
+		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "zync-database",
 	}
 }
