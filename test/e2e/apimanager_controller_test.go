@@ -64,7 +64,7 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	}
 	t.Log("operator Deployment is ready")
 
-	imageTag := "3scale-2.10.0-CR1"
+	imageTag := "3scale-2.10.0-GA"
 	enableResourceRequirements := false
 	apicastImage := fmt.Sprintf("quay.io/3scale/apicast:%s", imageTag)
 	backendImage := fmt.Sprintf("quay.io/3scale/apisonator:%s", imageTag)

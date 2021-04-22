@@ -7,7 +7,7 @@ parameters:
     default: "memcached:1.5"
   components_tag_name:
     type: string
-    default: "3scale-2.10.0-CR1"
+    default: "3scale-2.10.0-GA"
   components_imagestream_tag_name:
     type: string
     default: "2.10"
