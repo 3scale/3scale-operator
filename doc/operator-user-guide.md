@@ -34,7 +34,7 @@ Deploying the APIManager custom resource will make the operator begin processing
 * OpenShift Container Platform 4.1
 * Deploying 3scale using the operator first requires that you follow the steps
 in [quickstart guide](quickstart-guide.md) about *Install the 3scale operator*
-* Some [Deployment Configuration Options](#deployment-configuration-options) require OpenShift infraestructure to provide availablity for the following persistent volumes (PV):
+* Some [Deployment Configuration Options](#deployment-configuration-options) require OpenShift infrastructure to provide availablity for the following persistent volumes (PV):
   * 3 RWO (ReadWriteOnce) persistent volumes
   * 1 RWX (ReadWriteMany) persistent volume
     * 3scale's System component needs a RWX(ReadWriteMany) PersistentVolume for
@@ -68,8 +68,8 @@ spec:
   wildcardDomain: <wildcardDomain>
 ```
 
-The `wildcardDomain` parameter can be any desired name you wish to give that resolves to an IP address,
-which is a valid DNS domain. Be sure to remove the placeholder marks for your parameters: `< >`.
+The `wildcardDomain` parameter can be any desired name you wish to give that resolves to the IP addresses
+of OpenShift router nodes. Be sure to remove the placeholder marks for your parameters: `< >`.
 
 When 3scale has been installed, a default *tenant* is created for you ready to be used,
 with a fixed URL: `3scale-admin.${wildcardDomain}`.
