@@ -1284,7 +1284,7 @@ spec:
   maintainers:
   - email: msoriano+3scaleoperator@redhat.com
     name: Miguel Soriano
-  - email: eastizle+apicastoperator@redhat.com
+  - email: eastizle+3scaleoperator@redhat.com
     name: Eguzki Astiz
   maturity: stable
   provider:
