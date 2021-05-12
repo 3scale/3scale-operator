@@ -59,7 +59,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp.yml \
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale10:zync-3scale-2.10.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale210:zync-3scale-2.10.0-GA |
 | **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale210:porta-3scale-2.10.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
@@ -129,7 +129,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale10:zync-3scale-2.10.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale210:zync-3scale-2.10.0-GA |
 | **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale210:porta-3scale-2.10.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
@@ -205,7 +205,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-s3.yml \
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale10:zync-3scale-2.10.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale210:zync-3scale-2.10.0-GA |
 | **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale210:porta-3scale-2.10.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
@@ -286,7 +286,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale10:zync-3scale-2.10.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale210:zync-3scale-2.10.0-GA |
 | **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale210:porta-3scale-2.10.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
@@ -364,7 +364,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval-s3.yml \
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale10:zync-3scale-2.10.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale210:zync-3scale-2.10.0-GA |
 | **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale210:porta-3scale-2.10.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
@@ -434,7 +434,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
 | **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale10:zync-3scale-2.10.0-GA |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/3scale210:zync-3scale-2.10.0-GA |
 | **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA |
 | **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/3scale210:porta-3scale-2.10.0-GA |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |

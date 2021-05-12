@@ -46,7 +46,7 @@ spec:
             - name: SYSTEM_IMAGE
               value: "quay.io/3scale/3scale210:porta-3scale-2.10.0-GA"
             - name: ZYNC_IMAGE
-              value: "quay.io/3scale/3scale10:zync-3scale-2.10.0-GA"
+              value: "quay.io/3scale/3scale210:zync-3scale-2.10.0-GA"
             - name: SYSTEM_MEMCACHED_IMAGE
               value: "memcached:1.5"
             - name: BACKEND_REDIS_IMAGE
