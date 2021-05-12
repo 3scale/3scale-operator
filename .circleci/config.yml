@@ -5,9 +5,6 @@ parameters:
   memcached_image:
     type: string
     default: "memcached:1.5"
-  components_tag_name:
-    type: string
-    default: "3scale-2.10.0-CR1"
   components_imagestream_tag_name:
     type: string
     default: "2.10"
@@ -245,11 +242,6 @@ commands:
           command: |
             WILDCARD_DOMAIN="lvh.me"
             oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
-              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:<< pipeline.parameters.components_tag_name >> \
-              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:<< pipeline.parameters.components_tag_name >> \
-              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:<< pipeline.parameters.components_tag_name >> \
-              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:<< pipeline.parameters.components_tag_name >> \
-              --param MEMCACHED_IMAGE=<< pipeline.parameters.memcached_image >> \
               --param WILDCARD_DOMAIN=lvh.me --param TENANT_NAME=3scale
           no_output_timeout: 30m
       - check-3scale-templates-deployed-deploymentconfigs

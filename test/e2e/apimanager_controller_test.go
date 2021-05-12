@@ -2,7 +2,6 @@ package e2e
 
 import (
 	goctx "context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -64,32 +63,13 @@ func productizedUnconstrainedDeploymentSubtest(t *testing.T) {
 	}
 	t.Log("operator Deployment is ready")
 
-	imageTag := "3scale-2.10.0-CR1"
 	enableResourceRequirements := false
-	apicastImage := fmt.Sprintf("quay.io/3scale/apicast:%s", imageTag)
-	backendImage := fmt.Sprintf("quay.io/3scale/apisonator:%s", imageTag)
-	systemImage := fmt.Sprintf("quay.io/3scale/porta:%s", imageTag)
-	zyncImage := fmt.Sprintf("quay.io/3scale/zync:%s", imageTag)
-	memcachedLastProductizedImage := "memcached:1.5"
 	wildcardDomain := "test1.127.0.0.1.nip.io"
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
 				WildcardDomain:              wildcardDomain,
 				ResourceRequirementsEnabled: &enableResourceRequirements,
-			},
-			Apicast: &appsv1alpha1.ApicastSpec{
-				Image: &apicastImage,
-			},
-			Backend: &appsv1alpha1.BackendSpec{
-				Image: &backendImage,
-			},
-			System: &appsv1alpha1.SystemSpec{
-				Image:          &systemImage,
-				MemcachedImage: &memcachedLastProductizedImage,
-			},
-			Zync: &appsv1alpha1.ZyncSpec{
-				Image: &zyncImage,
 			},
 		},
 		ObjectMeta: metav1.ObjectMeta{

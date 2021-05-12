@@ -13,7 +13,7 @@ func SystemImageURL() string {
 }
 
 func ZyncImageURL() string {
-	return "quay.io/3scale/3scale10:zync-3scale-2.10.0-GA"
+	return "quay.io/3scale/3scale210:zync-3scale-2.10.0-GA"
 }
 
 func BackendRedisImageURL() string {

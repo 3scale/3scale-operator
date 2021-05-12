@@ -4190,7 +4190,7 @@ parameters:
   value: quay.io/3scale/3scale210:apisonator-3scale-2.10.0-GA
 - name: AMP_ZYNC_IMAGE
   required: true
-  value: quay.io/3scale/3scale10:zync-3scale-2.10.0-GA
+  value: quay.io/3scale/3scale210:zync-3scale-2.10.0-GA
 - name: AMP_APICAST_IMAGE
   required: true
   value: quay.io/3scale/3scale210:apicast-3scale-2.10.0-GA
