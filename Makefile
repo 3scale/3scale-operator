@@ -194,7 +194,7 @@ bundle-validate-image:
 
 .PHONY: bundle-custom-updates
 bundle-custom-updates: BUNDLE_PREFIX=dev$(CURRENT_DATE)
-bundle-custom-updates: yq
+bundle-custom-updates: $(YQ)
 	@echo "Update metadata to avoid collision with existing 3scale Operator official public operators catalog entries"
 	@echo "using BUNDLE_PREFIX $(BUNDLE_PREFIX)"
 	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml metadata.name $(BUNDLE_PREFIX)-3scale-operator.$(VERSION)
@@ -221,20 +221,11 @@ bundle-run:
 
 # find or download yq
 # download yq if necessary
-yq:
-ifeq (, $(shell command -v yq 2> /dev/null))
-	@{ \
-	set -e ;\
-	YQ_TMP_DIR=$$(mktemp -d) ;\
-	cd $$YQ_TMP_DIR ;\
-	go mod init tmp ;\
-	go get github.com/mikefarah/yq/v3 ;\
-	rm -rf $$YQ_TMP_DIR ;\
-	}
-YQ=$(GOBIN)/yq
-else
-YQ=$(shell command -v yq 2> /dev/null)
-endif
+YQ=$(PROJECT_PATH)/bin/yq
+$(YQ):
+	$(call go-get-tool,$(YQ)/bin/yq,github.com/mikefarah/yq/v3)
+
+yq: $(YQ)
 
 download:
 	@echo Download go.mod dependencies
@@ -308,3 +299,16 @@ endif
 	  --header "x-attribution-actor-id: $(INTERNAL_ID)" \
 	  --header "x-attribution-login: $(INTERNAL_ID)" \
 	  --data "$$CIRCLECI_DATA"
+
+# go-get-tool will 'go get' any package $2 and install it to $1.
+define go-get-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(PROJECT_PATH)/bin go get $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef
