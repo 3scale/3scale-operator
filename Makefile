@@ -102,6 +102,13 @@ $(OPERATOR_SDK):
 .PHONY: operator-sdk
 operator-sdk: $(OPERATOR_SDK)
 
+GO_BINDATA=$(PROJECT_PATH)/bin/go-bindata
+$(GO_BINDATA):
+	$(call go-get-tool,$(GO_BINDATA),github.com/go-bindata/go-bindata/v3/...@v3.1.3)
+
+.PHONY: go-bindata
+go-bindata: $(GO_BINDATA)
+
 # Install CRDs into a cluster
 install: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
@@ -128,10 +135,10 @@ vet:
 	$(GO) vet ./...
 
 # Generate code
-generate: $(CONTROLLER_GEN) go-bindata
+generate: $(CONTROLLER_GEN) $(GO_BINDATA)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 	@echo Generate Go embedded assets files by processing source
-	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
+	export PATH=$(PROJECT_PATH)/bin:$$PATH;	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
 # Build the docker image
 .PHONY: docker-build
@@ -152,20 +159,6 @@ bundle-image-push:
 	$(DOCKER) push ${BUNDLE_IMG}
 
 
-go-bindata:
-ifeq (, $(shell which go-bindata))
-	@{ \
-	set -e ;\
-	GOBINDATA_TMP_DIR=$$(mktemp -d) ;\
-	cd $$GOBINDATA_TMP_DIR ;\
-	$(GO) mod init tmp ;\
-	$(GO) get github.com/go-bindata/go-bindata/v3/...@v3.1.3 ;\
-	rm -rf $$GOBINDATA_TMP_DIR ;\
-	}
-GOBINDATA=$(GOBIN)/go-bindata
-else
-GOBINDATA=$(shell which go-bindata)
-endif
 
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
@@ -217,6 +210,7 @@ YQ=$(PROJECT_PATH)/bin/yq
 $(YQ):
 	$(call go-get-tool,$(YQ),github.com/mikefarah/yq/v3)
 
+.PHONY: yq
 yq: $(YQ)
 
 download:
