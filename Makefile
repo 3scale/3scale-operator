@@ -19,7 +19,6 @@ CRD_OPTIONS ?= "crd:crdVersions=v1"
 
 GO ?= go
 KUBECTL ?= kubectl
-OPERATOR_SDK ?= operator-sdk
 DOCKER ?= docker
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -79,21 +78,45 @@ run: export THREESCALE_DEBUG=1
 run: generate fmt vet manifests
 	$(GO) run ./main.go --zap-devel
 
+# find or download controller-gen
+# download controller-gen if necessary
+CONTROLLER_GEN=$(PROJECT_PATH)/bin/controller-gen
+$(CONTROLLER_GEN):
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0)
+
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN)
+
+KUSTOMIZE=$(PROJECT_PATH)/bin/kustomize
+$(KUSTOMIZE):
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.5.4)
+
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE)
+
+OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
+$(OPERATOR_SDK):
+	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/v1.2.0/operator-sdk-v1.2.0-x86_64-linux-gnu -o $(OPERATOR_SDK)
+	chmod +x $(OPERATOR_SDK)
+
+.PHONY: operator-sdk
+operator-sdk: $(OPERATOR_SDK)
+
 # Install CRDs into a cluster
-install: manifests kustomize
+install: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
 # Uninstall CRDs from a cluster
-uninstall: manifests kustomize
+uninstall: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests kustomize
+deploy: manifests $(KUSTOMIZE)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
+manifests: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Run go fmt against code
@@ -105,7 +128,7 @@ vet:
 	$(GO) vet ./...
 
 # Generate code
-generate: controller-gen go-bindata
+generate: $(CONTROLLER_GEN) go-bindata
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 	@echo Generate Go embedded assets files by processing source
 	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
@@ -128,22 +151,6 @@ operator-image-push:
 bundle-image-push:
 	$(DOCKER) push ${BUNDLE_IMG}
 
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	$(GO) mod init tmp ;\
-	$(GO) get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
 
 go-bindata:
 ifeq (, $(shell which go-bindata))
@@ -160,24 +167,9 @@ else
 GOBINDATA=$(shell which go-bindata)
 endif
 
-kustomize:
-ifeq (, $(shell which kustomize))
-	@{ \
-	set -e ;\
-	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
-	$(GO) mod init tmp ;\
-	$(GO) get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
-	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
-	}
-KUSTOMIZE=$(GOBIN)/kustomize
-else
-KUSTOMIZE=$(shell which kustomize)
-endif
-
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: manifests kustomize
+bundle: manifests $(KUSTOMIZE) $(OPERATOR_SDK)
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
@@ -189,7 +181,7 @@ bundle-build: bundle-validate
 	$(DOCKER) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-validate-image
-bundle-validate-image:
+bundle-validate-image: $(OPERATOR_SDK)
 	$(OPERATOR_SDK) bundle validate $(BUNDLE_IMG)
 
 .PHONY: bundle-custom-updates
@@ -214,7 +206,7 @@ bundle-restore:
 bundle-custom-build: | bundle-custom-updates bundle-build bundle-restore
 
 .PHONY: bundle-run
-bundle-run:
+bundle-run: $(OPERATOR_SDK)
 	$(OPERATOR_SDK) run bundle --namespace $(LOCAL_RUN_NAMESPACE) $(BUNDLE_IMG)
 
 # 3scale-specific targets
@@ -223,7 +215,7 @@ bundle-run:
 # download yq if necessary
 YQ=$(PROJECT_PATH)/bin/yq
 $(YQ):
-	$(call go-get-tool,$(YQ)/bin/yq,github.com/mikefarah/yq/v3)
+	$(call go-get-tool,$(YQ),github.com/mikefarah/yq/v3)
 
 yq: $(YQ)
 
@@ -271,7 +263,7 @@ clean-cov:
 	rm -rf $(PROJECT_PATH)/cover.out
 
 .PHONY: bundle-validate
-bundle-validate:
+bundle-validate: $(OPERATOR_SDK)
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 .PHONY: bundle-update-test
