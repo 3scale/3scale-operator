@@ -12,6 +12,9 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
+OS := $(shell uname | awk '{print tolower($$0)}' | sed -e s/linux/linux-gnu/ )
+ARCH := $(shell uname -m)
+
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/3scale/3scale-operator:master
 
@@ -19,7 +22,6 @@ CRD_OPTIONS ?= "crd:crdVersions=v1"
 
 GO ?= go
 KUBECTL ?= kubectl
-OPERATOR_SDK ?= operator-sdk
 DOCKER ?= docker
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -79,21 +81,55 @@ run: export THREESCALE_DEBUG=1
 run: generate fmt vet manifests
 	$(GO) run ./main.go --zap-devel
 
+# find or download controller-gen
+# download controller-gen if necessary
+CONTROLLER_GEN=$(PROJECT_PATH)/bin/controller-gen
+$(CONTROLLER_GEN):
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0)
+
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN)
+
+KUSTOMIZE=$(PROJECT_PATH)/bin/kustomize
+$(KUSTOMIZE):
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.5.4)
+
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE)
+
+OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
+# Note: release file patterns changed after v1.2.0
+# More info https://sdk.operatorframework.io/docs/installation/
+OPERATOR_SDK_VERSION=v1.2.0
+$(OPERATOR_SDK):
+	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk-${OPERATOR_SDK_VERSION}-$(ARCH)-${OS} -o $(OPERATOR_SDK)
+	chmod +x $(OPERATOR_SDK)
+
+.PHONY: operator-sdk
+operator-sdk: $(OPERATOR_SDK)
+
+GO_BINDATA=$(PROJECT_PATH)/bin/go-bindata
+$(GO_BINDATA):
+	$(call go-get-tool,$(GO_BINDATA),github.com/go-bindata/go-bindata/v3/...@v3.1.3)
+
+.PHONY: go-bindata
+go-bindata: $(GO_BINDATA)
+
 # Install CRDs into a cluster
-install: manifests kustomize
+install: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
 # Uninstall CRDs from a cluster
-uninstall: manifests kustomize
+uninstall: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests kustomize
+deploy: manifests $(KUSTOMIZE)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
+manifests: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Run go fmt against code
@@ -105,10 +141,10 @@ vet:
 	$(GO) vet ./...
 
 # Generate code
-generate: controller-gen go-bindata
+generate: $(CONTROLLER_GEN) $(GO_BINDATA)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 	@echo Generate Go embedded assets files by processing source
-	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
+	export PATH=$(PROJECT_PATH)/bin:$$PATH;	$(GO) generate github.com/3scale/3scale-operator/pkg/assets
 
 # Build the docker image
 .PHONY: docker-build
@@ -128,56 +164,11 @@ operator-image-push:
 bundle-image-push:
 	$(DOCKER) push ${BUNDLE_IMG}
 
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	$(GO) mod init tmp ;\
-	$(GO) get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
 
-go-bindata:
-ifeq (, $(shell which go-bindata))
-	@{ \
-	set -e ;\
-	GOBINDATA_TMP_DIR=$$(mktemp -d) ;\
-	cd $$GOBINDATA_TMP_DIR ;\
-	$(GO) mod init tmp ;\
-	$(GO) get github.com/go-bindata/go-bindata/v3/...@v3.1.3 ;\
-	rm -rf $$GOBINDATA_TMP_DIR ;\
-	}
-GOBINDATA=$(GOBIN)/go-bindata
-else
-GOBINDATA=$(shell which go-bindata)
-endif
-
-kustomize:
-ifeq (, $(shell which kustomize))
-	@{ \
-	set -e ;\
-	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
-	$(GO) mod init tmp ;\
-	$(GO) get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
-	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
-	}
-KUSTOMIZE=$(GOBIN)/kustomize
-else
-KUSTOMIZE=$(shell which kustomize)
-endif
 
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: manifests kustomize
+bundle: manifests $(KUSTOMIZE) $(OPERATOR_SDK)
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
@@ -189,12 +180,12 @@ bundle-build: bundle-validate
 	$(DOCKER) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-validate-image
-bundle-validate-image:
+bundle-validate-image: $(OPERATOR_SDK)
 	$(OPERATOR_SDK) bundle validate $(BUNDLE_IMG)
 
 .PHONY: bundle-custom-updates
 bundle-custom-updates: BUNDLE_PREFIX=dev$(CURRENT_DATE)
-bundle-custom-updates: yq
+bundle-custom-updates: $(YQ)
 	@echo "Update metadata to avoid collision with existing 3scale Operator official public operators catalog entries"
 	@echo "using BUNDLE_PREFIX $(BUNDLE_PREFIX)"
 	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml metadata.name $(BUNDLE_PREFIX)-3scale-operator.$(VERSION)
@@ -214,27 +205,19 @@ bundle-restore:
 bundle-custom-build: | bundle-custom-updates bundle-build bundle-restore
 
 .PHONY: bundle-run
-bundle-run:
+bundle-run: $(OPERATOR_SDK)
 	$(OPERATOR_SDK) run bundle --namespace $(LOCAL_RUN_NAMESPACE) $(BUNDLE_IMG)
 
 # 3scale-specific targets
 
 # find or download yq
 # download yq if necessary
-yq:
-ifeq (, $(shell command -v yq 2> /dev/null))
-	@{ \
-	set -e ;\
-	YQ_TMP_DIR=$$(mktemp -d) ;\
-	cd $$YQ_TMP_DIR ;\
-	go mod init tmp ;\
-	go get github.com/mikefarah/yq/v3 ;\
-	rm -rf $$YQ_TMP_DIR ;\
-	}
-YQ=$(GOBIN)/yq
-else
-YQ=$(shell command -v yq 2> /dev/null)
-endif
+YQ=$(PROJECT_PATH)/bin/yq
+$(YQ):
+	$(call go-get-tool,$(YQ),github.com/mikefarah/yq/v3)
+
+.PHONY: yq
+yq: $(YQ)
 
 download:
 	@echo Download go.mod dependencies
@@ -280,7 +263,7 @@ clean-cov:
 	rm -rf $(PROJECT_PATH)/cover.out
 
 .PHONY: bundle-validate
-bundle-validate:
+bundle-validate: $(OPERATOR_SDK)
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 .PHONY: bundle-update-test
@@ -308,3 +291,16 @@ endif
 	  --header "x-attribution-actor-id: $(INTERNAL_ID)" \
 	  --header "x-attribution-login: $(INTERNAL_ID)" \
 	  --data "$$CIRCLECI_DATA"
+
+# go-get-tool will 'go get' any package $2 and install it to $1.
+define go-get-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(PROJECT_PATH)/bin go get $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef
