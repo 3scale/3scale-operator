@@ -73,11 +73,21 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 ## CRD Index
 
 * [Backend CRD reference](backend-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1beta1_backend.yaml)
 * [Product CRD reference](product-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1beta1_product.yaml) [\[2\]](cr_samples/product/)
 * [Tenant CRD reference](tenant-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1alpha1_tenant.yaml)
 * [OpenAPI CRD reference](openapi-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1beta1_openapi_url.yaml) [\[2\]](cr_samples/openapi/)
 * [DeveloperAccount CRD reference](developeraccount-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1beta1_developeraccount.yaml)
 * [DeveloperUser CRD reference](developeruser-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1beta1_developeruser_admin.yaml) [\[2\]](cr_samples/developeruser/)
+* [ActiveDoc CRD reference](tenant-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1beta1_activedoc_url.yaml) [\[2\]](cr_samples/activedoc/)
+* [CustomPolicyDefinition CRD reference](custompolicydefinition-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1beta1_custompolicydefinition.yaml)
 
 ## Quickstart Guide
 

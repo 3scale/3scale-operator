@@ -1,30 +1,14 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
 - apps_v1alpha1_apimanager_simple.yaml
-- apps_v1alpha1_apimanager_devnightly.yaml
-- apps_v1alpha1_apimanager_ha.yaml
-- apps_v1alpha1_apimanager_monitoring.yaml
-- apps_v1alpha1_apimanager_pdb.yaml
-- apps_v1alpha1_apimanager_s3.yaml
 - apps_v1alpha1_apimanagerbackup.yaml
 - apps_v1alpha1_apimanagerrestore.yaml
 - capabilities_v1alpha1_tenant.yaml
 - capabilities_v1beta1_backend.yaml
 - capabilities_v1beta1_product.yaml
-- capabilities_v1beta1_product_apicast_hosted.yaml
-- capabilities_v1beta1_product_apicast_selfmanaged.yaml
-- capabilities_v1beta1_product_mappingrules.yaml
-- capabilities_v1beta1_product_plan_limits.yaml
-- capabilities_v1beta1_product_plan_pricingrules.yaml
-- capabilities_v1beta1_product_gateway_response.yaml
-- capabilities_v1beta1_product_policies.yaml
-- capabilities_v1beta1_product_oidc.yaml
-- capabilities_v1beta1_openapi_secret.yaml
 - capabilities_v1beta1_openapi_url.yaml
-- capabilities_v1beta1_activedoc_secret.yaml
 - capabilities_v1beta1_activedoc_url.yaml
 - capabilities_v1beta1_developeraccount.yaml
 - capabilities_v1beta1_developeruser_admin.yaml
-- capabilities_v1beta1_developeruser_member.yaml
 - capabilities_v1beta1_custompolicydefinition.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
