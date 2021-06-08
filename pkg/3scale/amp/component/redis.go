@@ -54,6 +54,7 @@ const (
 	backendRedisConfigMapKey      = "redis.conf"
 	backendRedisContainerName     = "backend-redis"
 	backendRedisContainerCommand  = "/opt/rh/rh-redis5/root/usr/bin/redis-server"
+	systemRedisContainerCommand   = "/opt/rh/rh-redis5/root/usr/bin/redis-server"
 )
 
 func (redis *Redis) buildDeploymentConfigSpec() appsv1.DeploymentConfigSpec {
@@ -500,7 +501,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 						v1.Container{
 							Name:      "system-redis",
 							Image:     "system-redis:latest",
-							Command:   []string{"/opt/rh/rh-redis32/root/usr/bin/redis-server"},
+							Command:   []string{systemRedisContainerCommand},
 							Args:      []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
 							Resources: *redis.Options.SystemRedisContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{

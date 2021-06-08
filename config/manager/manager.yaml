@@ -58,9 +58,9 @@ spec:
         - name: SYSTEM_MEMCACHED_IMAGE
           value: "memcached:1.5"
         - name: BACKEND_REDIS_IMAGE
-          value: "centos/redis-32-centos7"
+          value: "centos/redis-5-centos7"
         - name: SYSTEM_REDIS_IMAGE
-          value: "centos/redis-32-centos7"
+          value: "centos/redis-5-centos7"
         - name: SYSTEM_MYSQL_IMAGE
           value: "centos/mysql-57-centos7"
         - name: SYSTEM_POSTGRESQL_IMAGE
