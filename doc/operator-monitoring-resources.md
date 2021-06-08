@@ -6,6 +6,7 @@ The 3scale monitoring resources are (optionally) installed when 3scale is instal
 
 * [Enabling 3scale monitoring](#enabling-3scale-monitoring)
 * [Monitored components](#monitored-components)
+* [3scale Prometheus Rules](/doc/prometheusrules)
 * [Monitoring stack](#monitoring-stack)
    * [Prometheus](#prometheus)
    * [Grafana](#grafana)
@@ -26,6 +27,22 @@ spec:
 ```
 
 NOTE: All monitoring resources will be created by the operator using *Create only* reconciliation policy. That means that PrometheusRules and GrafanaDashboards objects can be updated preventing the operator to revert the changes. This policy allows us to tune, for instance, the alert thresholds, to your needs.
+
+Optionally, *PrometheusRules* deployment can be disabled. By default, *PrometheusRules* will be deployed.
+
+```
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: apimanager1
+spec:
+  wildcardDomain: example.com
+  monitoring:
+    enabled: true
+    enablePrometheusRules: false
+```
+
+Check available [3scale Prometheus Rules](/doc/prometheusrules).
 
 ## Monitored components
 
