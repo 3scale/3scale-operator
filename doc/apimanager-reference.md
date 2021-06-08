@@ -370,6 +370,7 @@ also enabled the user has to pre-create the following secret too:
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Enabled | `enabled` | bool | No | `false` | [Enable to automatically create monitoring resources](operator-monitoring-resources.md) |
+| EnablePrometheusRules | `enablePrometheusRules` | bool | No | `true` | Activate/Disable *PrometheusRules* deployment |
 
 ### APIManagerStatus
 
