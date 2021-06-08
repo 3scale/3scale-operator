@@ -4375,6 +4375,8 @@ spec:
                 type: boolean
               monitoring:
                 properties:
+                  enablePrometheusRules:
+                    type: boolean
                   enabled:
                     type: boolean
                 type: object

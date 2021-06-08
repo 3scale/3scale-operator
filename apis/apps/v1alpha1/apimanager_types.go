@@ -498,6 +498,8 @@ type PodDisruptionBudgetSpec struct {
 
 type MonitoringSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
+	// +optional
+	EnablePrometheusRules *bool `json:"enablePrometheusRules,omitempty"`
 }
 
 // PersistentVolumeClaimResources defines the resources configuration
@@ -836,6 +838,11 @@ func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
 
 func (apimanager *APIManager) IsMonitoringEnabled() bool {
 	return apimanager.Spec.Monitoring != nil && apimanager.Spec.Monitoring.Enabled
+}
+
+func (apimanager *APIManager) IsPrometheusRulesEnabled() bool {
+	return (apimanager.IsMonitoringEnabled() &&
+		(apimanager.Spec.Monitoring.EnablePrometheusRules == nil || *apimanager.Spec.Monitoring.EnablePrometheusRules))
 }
 
 // +kubebuilder:object:root=true
