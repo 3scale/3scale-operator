@@ -66,7 +66,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp.yml \
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
 | **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
 | **SYSTEM_DATABASE** | System MySQL Database Name | system |
@@ -136,7 +136,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
 | **SYSTEM_DATABASE_IMAGE** | System PostgreSQL image URL | centos/postgresql-10-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System PostgreSQL User | system |
 | **SYSTEM_DATABASE_PASSWORD** | System PostgreSQL Password | random value |
 | **SYSTEM_DATABASE** | System PostgreSQL Database Name | system |
@@ -212,7 +212,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-s3.yml \
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
 | **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
 | **SYSTEM_DATABASE** | System MySQL Database Name | system |
@@ -371,7 +371,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval-s3.yml \
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
 | **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
 | **SYSTEM_DATABASE** | System MySQL Database Name | system |
@@ -441,7 +441,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
 | **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
-| **REDIS_IMAGE** | Redis image to use | centos/redis-32-centos7 |
+| **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
 | **SYSTEM_DATABASE** | System MySQL Database Name | system |

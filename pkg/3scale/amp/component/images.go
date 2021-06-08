@@ -21,7 +21,7 @@ func BackendRedisImageURL() string {
 }
 
 func SystemRedisImageURL() string {
-	return "centos/redis-32-centos7"
+	return "centos/redis-5-centos7"
 }
 
 func SystemMySQLImageURL() string {
