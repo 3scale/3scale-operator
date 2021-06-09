@@ -66,6 +66,10 @@ func (s *System) Parameters() []templatev1.Parameter {
 			Required: false,
 		},
 		templatev1.Parameter{
+			Name:     "USER_SESSION_TTL",
+			Required: false,
+		},
+		templatev1.Parameter{
 			Name:        "ADMIN_ACCESS_TOKEN",
 			Description: "Admin Access Token with all scopes and write permissions for API access.",
 			Generate:    "expression",
@@ -208,6 +212,8 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.AdminUsername = "${ADMIN_USERNAME}"
 	adminEmail := "${ADMIN_EMAIL}"
 	o.AdminEmail = &adminEmail
+	userSessionTTL := "${USER_SESSION_TTL}"
+	o.UserSessionTTL = &userSessionTTL
 	o.AmpRelease = "${AMP_RELEASE}"
 	o.ImageTag = "${AMP_RELEASE}"
 	o.ApicastAccessToken = "${APICAST_ACCESS_TOKEN}"
