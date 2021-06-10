@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  creationTimestamp: null
+  labels:
+    app: 3scale-api-management
+    prometheus: application-monitoring
+    role: alert-rules
+    threescale_component: backend
+  name: backend-listener
+spec:
+  groups:
+  - name: __NAMESPACE__/backend-listener.rules
+    rules:
+    - alert: ThreescaleBackendListener5XXRequestsHigh
+      annotations:
+        description: Job {{ $labels.job }} on {{ $labels.namespace }} has more than 5000 HTTP 5xx requests in the last 5 minutes
+        summary: Job {{ $labels.job }} on {{ $labels.namespace }} has more than 5000 HTTP 5xx requests in the last 5 minutes
+      expr: sum(rate(apisonator_listener_response_codes{job=~"backend.*",namespace="__NAMESPACE__",resp_code="5xx"}[5m])) by (namespace,job,resp_code) > 5000
+      for: 5m
+      labels:
+        severity: critical
+    - alert: ThreescaleBackendListenerJobDown
+      annotations:
+        description: Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN
+        summary: Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN
+      expr: up{job=~".*backend-listener.*",namespace="__NAMESPACE__"} == 0
+      for: 1m
+      labels:
+        severity: critical

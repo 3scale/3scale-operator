@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  creationTimestamp: null
+  labels:
+    app: 3scale-api-management
+    prometheus: application-monitoring
+    role: alert-rules
+    threescale_component: zync
+  name: zync
+spec:
+  groups:
+  - name: __NAMESPACE__/zync.rules
+    rules:
+    - alert: ThreescaleZyncJobDown
+      annotations:
+        description: Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN
+        summary: Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN
+      expr: up{job=~".*/zync",namespace="__NAMESPACE__"} == 0
+      for: 1m
+      labels:
+        severity: critical
+    - alert: ThreescaleZync5XXRequestsHigh
+      annotations:
+        description: Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute
+        summary: Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute
+      expr: sum(rate(rails_requests_total{namespace="__NAMESPACE__",pod=~"zync-[a-z0-9]+-[a-z0-9]+",status=~"5[0-9]*"}[1m])) by (namespace,job) > 50
+      for: 1m
+      labels:
+        severity: warning
