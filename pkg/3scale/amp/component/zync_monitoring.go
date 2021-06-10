@@ -3,12 +3,14 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/assets"
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/3scale/3scale-operator/pkg/assets"
+	"github.com/3scale/3scale-operator/pkg/common"
 )
 
 func (zync *Zync) ZyncPodMonitor() *monitoringv1.PodMonitor {
@@ -69,6 +71,10 @@ func (zync *Zync) ZyncGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
 
 func (zync *Zync) ZyncPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PrometheusRuleKind,
+			APIVersion: fmt.Sprintf("%s/%s", monitoring.GroupName, monitoringv1.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync",
 			Labels: zync.prometheusRulesMonitoringLabels(),
@@ -111,6 +117,10 @@ func (zync *Zync) ZyncPrometheusRules() *monitoringv1.PrometheusRule {
 
 func (zync *Zync) ZyncQuePrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PrometheusRuleKind,
+			APIVersion: fmt.Sprintf("%s/%s", monitoring.GroupName, monitoringv1.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync-que",
 			Labels: zync.prometheusRulesMonitoringLabels(),
