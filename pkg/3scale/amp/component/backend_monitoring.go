@@ -5,6 +5,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,6 +70,10 @@ func (backend *Backend) BackendGrafanaDashboard() *grafanav1alpha1.GrafanaDashbo
 
 func (backend *Backend) BackendWorkerPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PrometheusRuleKind,
+			APIVersion: fmt.Sprintf("%s/%s", monitoring.GroupName, monitoringv1.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-worker",
 			Labels: backend.prometheusRulesMonitoringLabels(),
@@ -111,6 +116,10 @@ func (backend *Backend) BackendWorkerPrometheusRules() *monitoringv1.PrometheusR
 
 func (backend *Backend) BackendListenerPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PrometheusRuleKind,
+			APIVersion: fmt.Sprintf("%s/%s", monitoring.GroupName, monitoringv1.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-listener",
 			Labels: backend.prometheusRulesMonitoringLabels(),

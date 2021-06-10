@@ -3,12 +3,14 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/assets"
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/3scale/3scale-operator/pkg/assets"
+	"github.com/3scale/3scale-operator/pkg/common"
 )
 
 func (system *System) SystemSidekiqPodMonitor() *monitoringv1.PodMonitor {
@@ -96,6 +98,10 @@ func (system *System) SystemGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard
 
 func (system *System) SystemAppPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PrometheusRuleKind,
+			APIVersion: fmt.Sprintf("%s/%s", monitoring.GroupName, monitoringv1.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-app",
 			Labels: system.prometheusRulesMonitoringLabels(),
@@ -138,6 +144,10 @@ func (system *System) SystemAppPrometheusRules() *monitoringv1.PrometheusRule {
 
 func (system *System) SystemSidekiqPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PrometheusRuleKind,
+			APIVersion: fmt.Sprintf("%s/%s", monitoring.GroupName, monitoringv1.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-sidekiq",
 			Labels: system.prometheusRulesMonitoringLabels(),
