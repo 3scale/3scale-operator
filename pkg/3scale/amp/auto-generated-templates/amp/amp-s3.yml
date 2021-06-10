@@ -480,7 +480,7 @@ objects:
           - --daemonize
           - "no"
           command:
-          - /opt/rh/rh-redis32/root/usr/bin/redis-server
+          - /opt/rh/rh-redis5/root/usr/bin/redis-server
           image: system-redis:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -594,7 +594,7 @@ objects:
         openshift.io/display-name: System ${AMP_RELEASE} Redis
       from:
         kind: DockerImage
-        name: centos/redis-32-centos7
+        name: ${REDIS_IMAGE}
       generation: null
       importPolicy:
         insecure: ${{IMAGESTREAM_TAG_IMPORT_INSECURE}}
