@@ -567,6 +567,13 @@ jobs:
       - install-operator-sdk
       - run: make assets-update-test
 
+  prometheusrules-validate:
+    docker:
+      - image: circleci/golang:1.13.7
+    steps:
+      - checkout
+      - run: make prometheusrules-update-test
+
 workflows:
   version: 2
   operator:
@@ -577,6 +584,7 @@ workflows:
       - run-unit-tests
       - bundle-validate
       - assets-validate
+      - prometheusrules-validate
       - build-operator-image-only
       - unit-tests-coverage:
           requires:

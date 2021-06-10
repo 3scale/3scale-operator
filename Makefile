@@ -306,7 +306,7 @@ prometheus-rules-clean:
 	rm -f $(PROMETHEUS_RULES_TARGETS)
 
 .PHONY: prometheusrules-update-test
-prometheusrules-update-test: $(PROMETHEUS_RULES_TARGETS)
+prometheusrules-update-test: prometheus-rules-clean prometheus-rules
 	git diff --exit-code ./doc/prometheusrules
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./doc/prometheusrules)" ]
 
