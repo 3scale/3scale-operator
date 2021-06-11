@@ -268,7 +268,8 @@ func getEventHookSecret() *v1.Secret {
 
 func getSystemAppSecret() *v1.Secret {
 	data := map[string]string{
-		component.SystemSecretSystemAppSecretKeyBaseFieldName: "somePassword234",
+		component.SystemSecretSystemAppSecretKeyBaseFieldName:  "somePassword234",
+		component.SystemSecretSystemAppUserSessionTTLFieldName: "3333",
 	}
 	return GetTestSecret(namespace, component.SystemSecretSystemAppSecretName, data)
 }
@@ -307,6 +308,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 	tmpSystemAppReplicas := int32(systemAppReplicas)
 	tmpSystemSideKiqReplicas := int32(systemSidekiqReplicas)
 	tmpSystemAdminEmail := component.DefaultSystemAdminEmail()
+	tmpSystemUserSessionTTL := component.DefaultUserSessionTTL()
 	tmpSMTPAddress := component.DefaultSystemSMTPAddress()
 	tmpSMTPAuthentication := component.DefaultSystemSMTPAuthentication()
 	tmpSMTPDomain := component.DefaultSystemSMTPDomain()
@@ -345,6 +347,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		AppReplicas:                               &tmpSystemAppReplicas,
 		SidekiqReplicas:                           &tmpSystemSideKiqReplicas,
 		AdminEmail:                                &tmpSystemAdminEmail,
+		UserSessionTTL:                            &tmpSystemUserSessionTTL,
 		PvcFileStorageOptions: &component.PVCFileStorageOptions{
 			StorageRequests: storageRequests,
 		},
@@ -451,6 +454,8 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppSecretKeyBase = "somePassword234"
+				tmpUserSessionTTL := "3333"
+				expectedOpts.UserSessionTTL = &tmpUserSessionTTL
 				return expectedOpts
 			},
 		},

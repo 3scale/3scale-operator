@@ -35,6 +35,7 @@ type SystemOptions struct {
 	EventHooksURL                          string  `validate:"required"`
 	ApicastSystemMasterProxyConfigEndpoint string  `validate:"required"`
 	AdminEmail                             *string `validate:"required"`
+	UserSessionTTL                         *string `validate:"required"`
 
 	ImageTag string `validate:"required"`
 
@@ -173,6 +174,10 @@ func DefaultSystemMasterAccessToken() string {
 }
 
 func DefaultSystemAdminEmail() string {
+	return ""
+}
+
+func DefaultUserSessionTTL() string {
 	return ""
 }
 
