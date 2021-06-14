@@ -346,10 +346,35 @@ func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Resu
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+	desired := redis.SystemDeploymentConfig()
 
-	res, err := u.upgradeDeploymentConfigImageChangeTrigger(redis.SystemDeploymentConfig())
-	if res.Requeue || err != nil {
-		return res, err
+	existing := &appsv1.DeploymentConfig{}
+	err = u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	changed := false
+	tmpChanged, err := u.ensureDeploymentConfigImageChangeTrigger(desired, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	changed = changed || tmpChanged
+
+	tmpChanged, err = u.ensureRedisCommand(desired, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	changed = changed || tmpChanged
+
+	tmpChanged, err = u.ensureRedisPodTemplateLabels(desired, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	changed = changed || tmpChanged
+
+	if changed {
+		return reconcile.Result{Requeue: true}, u.UpdateResource(existing)
 	}
 
 	return reconcile.Result{}, nil
