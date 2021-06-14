@@ -44,6 +44,11 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, nil
 	}
 
+	res, err = u.upgradeSystemAppUserSessionTTL()
+	if err != nil {
+		return res, fmt.Errorf("Upgrading system app user session ttl: %w", err)
+	}
+
 	res, err = u.upgradeBackendRouteEnv()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading backend route env vars: %w", err)
@@ -567,6 +572,23 @@ func (u *UpgradeApiManager) findDeploymentTriggerOnImageChange(triggerPolicies [
 	return result, nil
 }
 
+func (u *UpgradeApiManager) upgradeSystemAppUserSessionTTL() (reconcile.Result, error) {
+	system, err := System(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager)
+
+	// SystemApp Secret
+	err = baseAPIManagerLogicReconciler.ReconcileSecret(system.AppSecret(), reconcilers.DefaultsOnlySecretMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err := u.upgradeSystemAppUserSessionTTLEnv(system.AppDeploymentConfig())
+	return res, err
+}
+
 func (u *UpgradeApiManager) upgradeBackendRouteEnv() (reconcile.Result, error) {
 	system, err := System(u.apiManager, u.Client())
 	if err != nil {
@@ -584,6 +606,42 @@ func (u *UpgradeApiManager) upgradeBackendRouteEnv() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) upgradeSystemAppUserSessionTTLEnv(desired *appsv1.DeploymentConfig) (reconcile.Result, error) {
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if len(existing.Spec.Template.Spec.Containers) != 3 {
+		return reconcile.Result{}, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 3",
+			existing.Name, len(existing.Spec.Template.Spec.Containers))
+	}
+	desiredName := common.ObjectInfo(desired)
+
+	update := false
+	for idx := 0; idx < 3; idx++ {
+		existingContainer := &existing.Spec.Template.Spec.Containers[idx]
+		desiredContainer := &desired.Spec.Template.Spec.Containers[idx]
+		desiredUserSessionTTLEnvVarIdx := helper.FindEnvVar(desiredContainer.Env, component.SystemSecretSystemAppUserSessionTTLFieldName)
+		if desiredUserSessionTTLEnvVarIdx < 0 {
+			return reconcile.Result{}, fmt.Errorf("%s desired spec.template.spec.containers env var '%s' does not exist", desiredName, component.SystemSecretSystemAppUserSessionTTLFieldName)
+		}
+		tmpUpdate := helper.EnsureEnvVar(desiredContainer.Env[desiredUserSessionTTLEnvVarIdx], &existingContainer.Env)
+		update = update || tmpUpdate
+	}
+
+	if update {
+		u.Logger().Info(fmt.Sprintf("Upgrading USER_SESSION_TTL environment variable to DC %s", existing.Name))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	return reconcile.Result{Requeue: update}, nil
 }
 
 func (u *UpgradeApiManager) upgradeSystemAppBackendRouteEnv(desired *appsv1.DeploymentConfig) (reconcile.Result, error) {
@@ -608,7 +666,7 @@ func (u *UpgradeApiManager) upgradeSystemAppBackendRouteEnv(desired *appsv1.Depl
 		if desiredBackendRouteEnvVarIdx < 0 {
 			return reconcile.Result{}, fmt.Errorf("%s desired spec.template.spec.containers env var '%s' does not exist", desiredName, "BACKEND_ROUTE")
 		}
-		tmpUpdate := ensureBackendRouteEnvVar(desiredContainer.Env[desiredBackendRouteEnvVarIdx], &existingContainer.Env)
+		tmpUpdate := helper.EnsureEnvVar(desiredContainer.Env[desiredBackendRouteEnvVarIdx], &existingContainer.Env)
 		update = update || tmpUpdate
 	}
 
@@ -617,7 +675,7 @@ func (u *UpgradeApiManager) upgradeSystemAppBackendRouteEnv(desired *appsv1.Depl
 	if desiredBackendRouteEnvVarIdx < 0 {
 		return reconcile.Result{}, fmt.Errorf("%s desired spec.strategy.rollingparams.pre.execnewpod env var '%s' does not exist", desiredName, "BACKEND_ROUTE")
 	}
-	tmpUpdate := ensureBackendRouteEnvVar(desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env[desiredBackendRouteEnvVarIdx], &existing.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env)
+	tmpUpdate := helper.EnsureEnvVar(desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env[desiredBackendRouteEnvVarIdx], &existing.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env)
 	update = update || tmpUpdate
 
 	if update {
@@ -651,7 +709,7 @@ func (u *UpgradeApiManager) upgradeSidekiqBackendRouteEnv(desired *appsv1.Deploy
 	if desiredBackendRouteEnvVarIdx < 0 {
 		return reconcile.Result{}, fmt.Errorf("%s desired spec.template.spec.containers env var '%s' does not exist", desiredName, "BACKEND_ROUTE")
 	}
-	update := ensureBackendRouteEnvVar(desiredContainer.Env[desiredBackendRouteEnvVarIdx], &existingContainer.Env)
+	update := helper.EnsureEnvVar(desiredContainer.Env[desiredBackendRouteEnvVarIdx], &existingContainer.Env)
 
 	if update {
 		u.Logger().Info(fmt.Sprintf("Upgrading BACKEND_ROUTE environment variable to DC %s", existing.Name))
@@ -661,28 +719,6 @@ func (u *UpgradeApiManager) upgradeSidekiqBackendRouteEnv(desired *appsv1.Deploy
 		}
 	}
 	return reconcile.Result{Requeue: update}, nil
-}
-
-func ensureBackendRouteEnvVar(desired v1.EnvVar, existingEnvVars *[]v1.EnvVar) bool {
-	update := false
-	envVarExists := false
-	for idx := range *existingEnvVars {
-		if (*existingEnvVars)[idx].Name == "BACKEND_ROUTE" {
-			envVarExists = true
-			if !reflect.DeepEqual((*existingEnvVars)[idx], desired) {
-				(*existingEnvVars)[idx] = desired
-				update = true
-			}
-			break
-		}
-	}
-
-	if !envVarExists {
-		*existingEnvVars = append(*existingEnvVars, desired)
-		update = true
-	}
-
-	return update
 }
 
 func (u *UpgradeApiManager) upgradeZyncPodTemplateAnnotations() (reconcile.Result, error) {

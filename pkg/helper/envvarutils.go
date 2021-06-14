@@ -1,6 +1,10 @@
 package helper
 
-import v1 "k8s.io/api/core/v1"
+import (
+	"reflect"
+
+	v1 "k8s.io/api/core/v1"
+)
 
 func EnvVarFromConfigMap(envVarName string, configMapName, configMapKey string) v1.EnvVar {
 	return v1.EnvVar{
@@ -78,4 +82,28 @@ func FindEnvVar(a []v1.EnvVar, x string) int {
 		}
 	}
 	return -1
+}
+
+// EnsureEnvVar updates existingEnvVars with desired, reconciling any
+// possible differences. It returns whether existingEnvVars has been modified.
+func EnsureEnvVar(desired v1.EnvVar, existingEnvVars *[]v1.EnvVar) bool {
+	update := false
+	envVarExists := false
+	for idx := range *existingEnvVars {
+		if (*existingEnvVars)[idx].Name == desired.Name {
+			envVarExists = true
+			if !reflect.DeepEqual((*existingEnvVars)[idx], desired) {
+				(*existingEnvVars)[idx] = desired
+				update = true
+			}
+			break
+		}
+	}
+
+	if !envVarExists {
+		*existingEnvVars = append(*existingEnvVars, desired)
+		update = true
+	}
+
+	return update
 }

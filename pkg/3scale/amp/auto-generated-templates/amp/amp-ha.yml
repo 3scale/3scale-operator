@@ -1604,6 +1604,11 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
+          - name: USER_SESSION_TTL
+            valueFrom:
+              secretKeyRef:
+                key: USER_SESSION_TTL
+                name: system-app
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -1899,6 +1904,11 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
+          - name: USER_SESSION_TTL
+            valueFrom:
+              secretKeyRef:
+                key: USER_SESSION_TTL
+                name: system-app
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2193,6 +2203,11 @@ objects:
               secretKeyRef:
                 key: password
                 name: backend-internal-api
+          - name: USER_SESSION_TTL
+            valueFrom:
+              secretKeyRef:
+                key: USER_SESSION_TTL
+                name: system-app
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -2868,6 +2883,7 @@ objects:
     name: system-app
   stringData:
     SECRET_KEY_BASE: ${SYSTEM_APP_SECRET_KEY_BASE}
+    USER_SESSION_TTL: ${USER_SESSION_TTL}
   type: Opaque
 - apiVersion: v1
   kind: Secret
@@ -3818,6 +3834,7 @@ parameters:
   required: true
   value: admin
 - name: ADMIN_EMAIL
+- name: USER_SESSION_TTL
 - description: Admin Access Token with all scopes and write permissions for API access.
   from: '[a-z0-9]{16}'
   generate: expression

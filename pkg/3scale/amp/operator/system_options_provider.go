@@ -190,6 +190,15 @@ func (s *SystemOptionsProvider) setSystemAppOptions() error {
 	}
 	s.options.AppSecretKeyBase = val
 
+	val, err = s.secretSource.FieldValue(
+		component.SystemSecretSystemAppSecretName,
+		component.SystemSecretSystemAppUserSessionTTLFieldName,
+		component.DefaultUserSessionTTL())
+	if err != nil {
+		return err
+	}
+	s.options.UserSessionTTL = &val
+
 	return nil
 }
 

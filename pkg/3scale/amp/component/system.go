@@ -53,8 +53,9 @@ const (
 )
 
 const (
-	SystemSecretSystemAppSecretName             = "system-app"
-	SystemSecretSystemAppSecretKeyBaseFieldName = "SECRET_KEY_BASE"
+	SystemSecretSystemAppSecretName              = "system-app"
+	SystemSecretSystemAppSecretKeyBaseFieldName  = "SECRET_KEY_BASE"
+	SystemSecretSystemAppUserSessionTTLFieldName = "USER_SESSION_TTL"
 )
 
 const (
@@ -261,11 +262,18 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	return result
 }
 
+func (system *System) buildAppEnv() []v1.EnvVar {
+	result := []v1.EnvVar{}
+	result = append(result, helper.EnvVarFromSecret(SystemSecretSystemAppUserSessionTTLFieldName, SystemSecretSystemAppSecretName, SystemSecretSystemAppUserSessionTTLFieldName))
+	return result
+}
+
 func (system *System) buildAppMasterContainerEnv() []v1.EnvVar {
 	result := system.buildSystemBaseEnv()
 	if system.Options.AppMetrics {
 		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppMasterContainerPrometheusPort)))
 	}
+	result = append(result, system.buildAppEnv()...)
 
 	return result
 }
@@ -275,6 +283,8 @@ func (system *System) buildAppProviderContainerEnv() []v1.EnvVar {
 	if system.Options.AppMetrics {
 		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppProviderContainerPrometheusPort)))
 	}
+	result = append(result, system.buildAppEnv()...)
+
 	return result
 }
 
@@ -283,6 +293,7 @@ func (system *System) buildAppDeveloperContainerEnv() []v1.EnvVar {
 	if system.Options.AppMetrics {
 		result = append(result, helper.EnvVarFromValue(SystemAppPrometheusExporterPortEnvVarName, strconv.Itoa(SystemAppDeveloperContainerPrometheusPort)))
 	}
+	result = append(result, system.buildAppEnv()...)
 
 	return result
 }
@@ -411,7 +422,7 @@ func (system *System) EventsHookSecret() *v1.Secret {
 }
 
 func (system *System) AppSecret() *v1.Secret {
-	return &v1.Secret{
+	result := &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Secret",
@@ -421,10 +432,13 @@ func (system *System) AppSecret() *v1.Secret {
 			Labels: system.Options.CommonLabels,
 		},
 		StringData: map[string]string{
-			SystemSecretSystemAppSecretKeyBaseFieldName: system.Options.AppSecretKeyBase,
+			SystemSecretSystemAppSecretKeyBaseFieldName:  system.Options.AppSecretKeyBase,
+			SystemSecretSystemAppUserSessionTTLFieldName: *system.Options.UserSessionTTL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
+
+	return result
 }
 
 func (system *System) SeedSecret() *v1.Secret {
