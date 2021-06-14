@@ -12,6 +12,7 @@
       * [Run unit tests](#run-unit-tests)
       * [Run end-to-end tests](#run-end-to-end-tests)
 * [Building 3scale templates](#building-3scale-templates)
+* [Building 3scale prometheus rules](#building-3scale-prometheus-rules)
 * [Bundle management](#bundle-management)
    * [Generate an operator bundle image](#generate-an-operator-bundle-image)
    * [Push an operator bundle into an external container repository](#push-an-operator-bundle-into-an-external-container-repository)
@@ -131,7 +132,7 @@ make test-e2e
 [Clone the repository](#clone-repository)
 
 ```sh
-cd cd pkg/3scale/amp && make clean all
+make templates
 ```
 
 The location of the templates:
@@ -141,6 +142,20 @@ pkg/3scale/amp/auto-generated-templates
 
 **NOTE**: If you want to use supported and stable templates you should go to the
 [official repository](https://github.com/3scale/3scale-amp-openshift-templates)
+
+## Building 3scale prometheus rules
+
+[Clone the repository](#clone-repository)
+
+```sh
+make prometheus-rules
+```
+
+Optionally, specify the namespace. By default, the namespace `__NAMESPACE__` will be used.
+
+```sh
+make prometheus-rules PROMETHEUS_RULES_NAMESPACE=my-custom-namespace
+```
 
 ## Bundle management
 

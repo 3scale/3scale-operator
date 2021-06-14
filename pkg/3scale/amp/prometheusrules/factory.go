@@ -5,7 +5,7 @@ import (
 )
 
 type PrometheusRuleFactory interface {
-	PrometheusRule() *monitoringv1.PrometheusRule
+	PrometheusRule(ns string) *monitoringv1.PrometheusRule
 	Type() string
 }
 

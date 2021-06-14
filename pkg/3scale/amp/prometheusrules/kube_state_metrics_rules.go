@@ -22,8 +22,7 @@ func (s *KubeStateMetricsPrometheusRuleFactory) Type() string {
 	return "threescale-kube-state-metrics"
 }
 
-func (s *KubeStateMetricsPrometheusRuleFactory) PrometheusRule() *monitoringv1.PrometheusRule {
-	ns := "__NAMESPACE__"
+func (s *KubeStateMetricsPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
 	appLabel := appsv1alpha1.Default3scaleAppLabel
 	return component.KubeStateMetricsPrometheusRules(ns, appLabel)
 }

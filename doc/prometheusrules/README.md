@@ -23,6 +23,10 @@ your desired namespace. It can be easily done, for instance, for the apicast pro
 sed -i 's/__NAMESPACE__/mynamespace/g' apicast.yaml
 ```
 
+Optionally, you can generate the prometheus rules with your own namespace name.
+Read the section about [Building 3scale prometheus rules](/doc/development.md#building-3scale-prometheus-rules)
+to follow the steps and know about required development tools needed to be installed.
+
 ### Tune the prometheus rules based on your infraestructure
 
 If you decided to not have the 3scale operator deploy the prometheus rules for you,

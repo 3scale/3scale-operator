@@ -22,20 +22,20 @@ func (b *ApicastPrometheusRuleFactory) Type() string {
 	return "apicast"
 }
 
-func (b *ApicastPrometheusRuleFactory) PrometheusRule() *monitoringv1.PrometheusRule {
-	options, err := apicastOptions()
+func (b *ApicastPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+	options, err := apicastOptions(ns)
 	if err != nil {
 		panic(err)
 	}
 	return component.NewApicast(options).ApicastPrometheusRules()
 }
 
-func apicastOptions() (*component.ApicastOptions, error) {
+func apicastOptions(ns string) (*component.ApicastOptions, error) {
 	o := component.NewApicastOptions()
 
 	// Required options for generating PrometheusRules
 	o.CommonLabels = commonApicastLabels()
-	o.Namespace = "__NAMESPACE__"
+	o.Namespace = ns
 
 	// Required options for passing validation, but not needed for generating the prometheus rules
 	// To fix this, more granularity at options level.
