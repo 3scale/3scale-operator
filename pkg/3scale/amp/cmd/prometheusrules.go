@@ -22,6 +22,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/prometheusrules"
 )
 
+var prometheusRulesNamespace string
+
 // templateCmd represents the template command
 var prometheusRulesCmd = &cobra.Command{
 	Use:   getPrometheusRulesUsage(),
@@ -60,7 +62,7 @@ func runPrometheusRulesCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Factory %s not found", prName)
 	}
 
-	prometheusRulesObj := factory.PrometheusRule()
+	prometheusRulesObj := factory.PrometheusRule(prometheusRulesNamespace)
 
 	serializer := json.NewSerializerWithOptions(json.DefaultMetaFactory, nil, nil,
 		json.SerializerOptions{Yaml: true, Pretty: true, Strict: true})
@@ -68,5 +70,7 @@ func runPrometheusRulesCommand(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
+	prometheusRulesCmd.PersistentFlags().StringVar(&prometheusRulesNamespace, "namespace", "", "Namespace to be used when generating the prometheus rules")
+	prometheusRulesCmd.MarkFlagRequired("namespace")
 	rootCmd.AddCommand(prometheusRulesCmd)
 }

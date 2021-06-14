@@ -21,8 +21,8 @@ func (b *BackendListenerPrometheusRuleFactory) Type() string {
 	return "backend-listener"
 }
 
-func (b *BackendListenerPrometheusRuleFactory) PrometheusRule() *monitoringv1.PrometheusRule {
-	options, err := backendOptions()
+func (b *BackendListenerPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+	options, err := backendOptions(ns)
 	if err != nil {
 		panic(err)
 	}

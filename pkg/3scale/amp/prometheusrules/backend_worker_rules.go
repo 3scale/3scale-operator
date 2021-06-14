@@ -22,20 +22,20 @@ func (b *BackendWorkerPrometheusRuleFactory) Type() string {
 	return "backend-worker"
 }
 
-func (b *BackendWorkerPrometheusRuleFactory) PrometheusRule() *monitoringv1.PrometheusRule {
-	options, err := backendOptions()
+func (b *BackendWorkerPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+	options, err := backendOptions(ns)
 	if err != nil {
 		panic(err)
 	}
 	return component.NewBackend(options).BackendWorkerPrometheusRules()
 }
 
-func backendOptions() (*component.BackendOptions, error) {
+func backendOptions(ns string) (*component.BackendOptions, error) {
 	bo := component.NewBackendOptions()
 
 	// Required options for generating PrometheusRules
 	bo.CommonLabels = commonBackendLabels()
-	bo.Namespace = "__NAMESPACE__"
+	bo.Namespace = ns
 
 	// Required options for passing validation, but not needed for generating the prometheus rules
 	// To fix this, more granularity at options level.

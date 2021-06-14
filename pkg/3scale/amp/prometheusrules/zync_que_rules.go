@@ -21,8 +21,8 @@ func (s *ZyncQuePrometheusRuleFactory) Type() string {
 	return "zync-que"
 }
 
-func (s *ZyncQuePrometheusRuleFactory) PrometheusRule() *monitoringv1.PrometheusRule {
-	options, err := zyncOptions()
+func (s *ZyncQuePrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+	options, err := zyncOptions(ns)
 	if err != nil {
 		panic(err)
 	}

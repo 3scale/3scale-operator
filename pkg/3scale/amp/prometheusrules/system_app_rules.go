@@ -23,15 +23,15 @@ func (s *SystemAppPrometheusRuleFactory) Type() string {
 	return "system-app"
 }
 
-func (s *SystemAppPrometheusRuleFactory) PrometheusRule() *monitoringv1.PrometheusRule {
-	options, err := systemOptions()
+func (s *SystemAppPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+	options, err := systemOptions(ns)
 	if err != nil {
 		panic(err)
 	}
 	return component.NewSystem(options).SystemAppPrometheusRules()
 }
 
-func systemOptions() (*component.SystemOptions, error) {
+func systemOptions(ns string) (*component.SystemOptions, error) {
 	o := component.NewSystemOptions()
 
 	tmp := "_"
@@ -39,7 +39,7 @@ func systemOptions() (*component.SystemOptions, error) {
 
 	// Required options for generating PrometheusRules
 	o.CommonLabels = commonSystemLabels()
-	o.Namespace = "__NAMESPACE__"
+	o.Namespace = ns
 
 	// Required options for passing validation, but not needed for generating the prometheus rules
 	// To fix this, more granularity at options level.

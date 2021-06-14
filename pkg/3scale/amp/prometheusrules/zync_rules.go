@@ -22,20 +22,20 @@ func (s *ZyncPrometheusRuleFactory) Type() string {
 	return "zync"
 }
 
-func (s *ZyncPrometheusRuleFactory) PrometheusRule() *monitoringv1.PrometheusRule {
-	options, err := zyncOptions()
+func (s *ZyncPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+	options, err := zyncOptions(ns)
 	if err != nil {
 		panic(err)
 	}
 	return component.NewZync(options).ZyncPrometheusRules()
 }
 
-func zyncOptions() (*component.ZyncOptions, error) {
+func zyncOptions(ns string) (*component.ZyncOptions, error) {
 	o := component.NewZyncOptions()
 
 	// Required options for generating PrometheusRules
 	o.CommonLabels = commonZyncLabels()
-	o.Namespace = "__NAMESPACE__"
+	o.Namespace = ns
 
 	// Required options for passing validation, but not needed for generating the prometheus rules
 	// To fix this, more granularity at options level.
