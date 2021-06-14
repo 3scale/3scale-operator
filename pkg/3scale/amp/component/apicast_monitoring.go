@@ -3,12 +3,14 @@ package component
 import (
 	"fmt"
 
-	"github.com/3scale/3scale-operator/pkg/assets"
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/3scale/3scale-operator/pkg/assets"
+	"github.com/3scale/3scale-operator/pkg/common"
 )
 
 func (apicast *Apicast) ApicastProductionPodMonitor() *monitoringv1.PodMonitor {
@@ -88,6 +90,10 @@ func (apicast *Apicast) ApicastServicesGrafanaDashboard() *grafanav1alpha1.Grafa
 
 func (apicast *Apicast) ApicastPrometheusRules() *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PrometheusRuleKind,
+			APIVersion: fmt.Sprintf("%s/%s", monitoring.GroupName, monitoringv1.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast",
 			Labels: apicast.prometheusRulesMonitoringLabels(),
