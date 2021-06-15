@@ -38,6 +38,10 @@ LICENSEFINDERBINARY := $(shell command -v license_finder 2> /dev/null)
 DEPENDENCY_DECISION_FILE = $(PROJECT_PATH)/doc/dependency_decisions.yml
 CURRENT_DATE=$(shell date +%s)
 LOCAL_RUN_NAMESPACE ?= $(shell oc project -q 2>/dev/null || echo operator-test)
+PROMETHEUS_RULES = backend-worker.yaml backend-listener.yaml system-app.yaml system-sidekiq.yaml zync.yaml zync-que.yaml threescale-kube-state-metrics.yaml apicast.yaml
+PROMETHEUS_RULES_TARGETS = $(foreach pr,$(PROMETHEUS_RULES),$(PROJECT_PATH)/doc/prometheusrules/$(pr))
+PROMETHEUS_RULES_DEPS = $(shell find $(PROJECT_PATH)/pkg/3scale/amp/component -name '*.go')
+PROMETHEUS_RULES_NAMESPACE ?= "__NAMESPACE__"
 
 all: manager
 
@@ -291,6 +295,21 @@ endif
 	  --header "x-attribution-actor-id: $(INTERNAL_ID)" \
 	  --header "x-attribution-login: $(INTERNAL_ID)" \
 	  --data "$$CIRCLECI_DATA"
+
+$(PROMETHEUS_RULES_TARGETS): $(PROMETHEUS_RULES_DEPS)
+	go run $(PROJECT_PATH)/pkg/3scale/amp/main.go prometheusrules --namespace $(PROMETHEUS_RULES_NAMESPACE) $(notdir $(basename $@)) >$@
+
+.PHONY: prometheus-rules
+prometheus-rules: prometheus-rules-clean $(PROMETHEUS_RULES_TARGETS)
+
+.PHONY: prometheus-rules-clean
+prometheus-rules-clean:
+	rm -f $(PROMETHEUS_RULES_TARGETS)
+
+.PHONY: prometheusrules-update-test
+prometheusrules-update-test: prometheus-rules
+	git diff --exit-code ./doc/prometheusrules
+	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./doc/prometheusrules)" ]
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 define go-get-tool

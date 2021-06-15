@@ -123,7 +123,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monito
 	}
 
 	if !kindExists {
-		if r.apiManager.IsMonitoringEnabled() {
+		if r.apiManager.IsPrometheusRulesEnabled() {
 			errToLog := fmt.Errorf("Error creating prometheusrule object '%s'. Install prometheus-operator in your cluster to create prometheusrule objects", desired.Name)
 			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
 			r.logger.Error(errToLog, "ReconcileError")
@@ -131,7 +131,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monito
 		return nil
 	}
 
-	if !r.apiManager.IsMonitoringEnabled() {
+	if !r.apiManager.IsPrometheusRulesEnabled() {
 		common.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&monitoringv1.PrometheusRule{}, desired, mutateFn)
