@@ -1,26 +1,26 @@
-# Policy CRD Reference
+# CustomCustomPolicyDefinitionDefinition CRD Reference
 
 ## Table of Contents
 
-* [Policy CRD Reference](#policy-crd-reference)
+* [CustomCustomPolicyDefinitionDefinition CRD Reference](#customcustompolicydefinitiondefinition-crd-reference)
    * [Table of Contents](#table-of-contents)
-   * [Policy](#policy)
-      * [PolicySpec](#policyspec)
-         * [PolicySchemaSpec](#policyschemaspec)
+   * [CustomPolicyDefinition](#custompolicydefinition)
+      * [CustomPolicyDefinitionSpec](#custompolicydefinitionspec)
+         * [CustomPolicyDefinitionSchemaSpec](#custompolicydefinitionschemaspec)
          * [Provider Account Reference](#provider-account-reference)
-      * [PolicyStatus](#policystatus)
+      * [CustomPolicyDefinitionStatus](#custompolicydefinitionstatus)
          * [ConditionSpec](#conditionspec)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
-## Policy
+## CustomPolicyDefinition
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |
-| Spec | `spec` | [PolicySpec](#policyspec) | The specfication for the custom resource |
-| Status | `status` | [PolicyStatus](#policystatus) | The status for the custom resource |
+| Spec | `spec` | [CustomPolicyDefinitionSpec](#custompolicydefinitionspec) | The specfication for the custom resource |
+| Status | `status` | [CustomPolicyDefinitionStatus](#custompolicydefinitionstatus) | The status for the custom resource |
 
-### PolicySpec
+### CustomPolicyDefinitionSpec
 
 `.spec`
 
@@ -28,16 +28,16 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | --- | --- | --- | --- | --- |
 | Name | `name` | string | Name | **Yes** |
 | Version | `version` | string | Version | **Yes** |
-| Schema | `schema` | [PolicySchemaSpec](#policyschemaspec) | Policy schema definition | **Yes** |
+| Schema | `schema` | [CustomPolicyDefinitionSchemaSpec](#custompolicydefinitionschemaspec) | CustomPolicyDefinition schema definition | **Yes** |
 | Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
 
 Example:
 
 ```
 apiVersion: capabilities.3scale.net/v1beta1
-kind: Policy
+kind: CustomPolicyDefinition
 metadata:
-  name: policy-sample
+ name: custompolicydefinition-sample
 spec:
   name: "MyCustomPolicy"
   version: "0.0.1"
@@ -54,7 +54,7 @@ spec:
             type: "integer"
 ```
 
-#### PolicySchemaSpec
+#### CustomPolicyDefinitionSchemaSpec
 
 `.spec.schema`
 
@@ -92,7 +92,7 @@ stringData:
   token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-### PolicyStatus
+### CustomPolicyDefinitionStatus
 
 `.status`
 
@@ -132,8 +132,8 @@ Each element of the Condition array has the following fields:
 * The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
 * The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
 * The *type* field is a string with the following possible values:
-  * Invalid: Indicates that the combination of configuration in the PolicySpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
-  * Ready: Indicates the Policy resource has been successfully reconciled;
+  * Invalid: Indicates that the combination of configuration in the CustomPolicyDefinitionSpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
+  * Ready: Indicates the CustomPolicyDefinition resource has been successfully reconciled;
   * Failed: Indicates that an error occurred during reconcilliation;
 
 | **Field** | **json field**| **Type** | **Info** |
