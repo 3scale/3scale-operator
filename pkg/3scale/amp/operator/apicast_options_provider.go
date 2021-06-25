@@ -4,23 +4,29 @@ import (
 	"fmt"
 	"strconv"
 
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
-
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	v1 "k8s.io/api/core/v1"
 )
 
 type ApicastOptionsProvider struct {
 	apimanager     *appsv1alpha1.APIManager
 	apicastOptions *component.ApicastOptions
+	client         client.Client
+	secretSource   *helper.SecretSource
 }
 
-func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager) *ApicastOptionsProvider {
+func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {
 	return &ApicastOptionsProvider{
 		apimanager:     apimanager,
 		apicastOptions: component.NewApicastOptions(),
+		client:         client,
+		secretSource:   helper.NewSecretSource(client, apimanager.Namespace),
 	}
 }
 
@@ -48,6 +54,11 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.setResourceRequirementsOptions()
 	a.setNodeAffinityAndTolerationsOptions()
 	a.setReplicas()
+
+	err = a.setCustomPolicies()
+	if err != nil {
+		return nil, err
+	}
 
 	err = a.apicastOptions.Validate()
 	if err != nil {
@@ -131,4 +142,63 @@ func (a *ApicastOptionsProvider) productionPodTemplateLabels(image string) map[s
 	labels["deploymentConfig"] = "apicast-production"
 
 	return labels
+}
+
+func (a *ApicastOptionsProvider) setCustomPolicies() error {
+	for idx, customPolicySpec := range a.apimanager.Spec.Apicast.ProductionSpec.CustomPolicies {
+		// CR Validation ensures secret name is not nil
+		err := a.validateCustomPolicySecret(customPolicySpec.SecretRef.Name)
+		if err != nil {
+			errors := field.ErrorList{}
+			customPoliciesIdxFldPath := field.NewPath("spec").
+				Child("apicast").
+				Child("productionSpec").
+				Child("customPolicies").Index(idx)
+			errors = append(errors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
+			return errors.ToAggregate()
+		}
+
+		a.apicastOptions.ProductionCustomPolicies = append(a.apicastOptions.ProductionCustomPolicies, component.CustomPolicy{
+			Name:      customPolicySpec.Name,
+			Version:   customPolicySpec.Version,
+			SecretRef: *customPolicySpec.SecretRef,
+		})
+	}
+
+	// TODO(eastizle): DRY!!
+	for idx, customPolicySpec := range a.apimanager.Spec.Apicast.StagingSpec.CustomPolicies {
+		// CR Validation ensures secret name is not nil
+		err := a.validateCustomPolicySecret(customPolicySpec.SecretRef.Name)
+		if err != nil {
+			errors := field.ErrorList{}
+			customPoliciesIdxFldPath := field.NewPath("spec").
+				Child("apicast").
+				Child("stagingSpec").
+				Child("customPolicies").Index(idx)
+			errors = append(errors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
+			return errors.ToAggregate()
+		}
+
+		a.apicastOptions.StagingCustomPolicies = append(a.apicastOptions.StagingCustomPolicies, component.CustomPolicy{
+			Name:      customPolicySpec.Name,
+			Version:   customPolicySpec.Version,
+			SecretRef: *customPolicySpec.SecretRef,
+		})
+	}
+
+	return nil
+}
+
+func (a *ApicastOptionsProvider) validateCustomPolicySecret(name string) error {
+	_, err := a.secretSource.RequiredFieldValueFromRequiredSecret(name, "init.lua")
+	if err != nil {
+		return err
+	}
+
+	_, err = a.secretSource.RequiredFieldValueFromRequiredSecret(name, "apicast-policy.json")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

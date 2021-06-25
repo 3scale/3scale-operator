@@ -383,6 +383,30 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      customPolicies:
+                        description: CustomPolicies specifies an array of defined custome policies to be loaded
+                        items:
+                          description: CustomPolicySpec contains or has reference to an APIcast custom policy
+                          properties:
+                            name:
+                              description: Name specifies the name of the custom policy
+                              type: string
+                            secretRef:
+                              description: SecretRef specifies the secret holding the custom policy metadata and lua code
+                              properties:
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                                  type: string
+                              type: object
+                            version:
+                              description: Version specifies the name of the custom policy
+                              type: string
+                          required:
+                          - name
+                          - secretRef
+                          - version
+                          type: object
+                        type: array
                       logLevel:
                         enum:
                         - debug
@@ -793,6 +817,30 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      customPolicies:
+                        description: CustomPolicies specifies an array of defined custome policies to be loaded
+                        items:
+                          description: CustomPolicySpec contains or has reference to an APIcast custom policy
+                          properties:
+                            name:
+                              description: Name specifies the name of the custom policy
+                              type: string
+                            secretRef:
+                              description: SecretRef specifies the secret holding the custom policy metadata and lua code
+                              properties:
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                                  type: string
+                              type: object
+                            version:
+                              description: Version specifies the name of the custom policy
+                              type: string
+                          required:
+                          - name
+                          - secretRef
+                          - version
+                          type: object
+                        type: array
                       logLevel:
                         enum:
                         - debug

@@ -20,6 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	appsv1 "github.com/openshift/api/apps/v1"
+	routev1 "github.com/openshift/api/route/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -31,11 +37,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/handlers"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
-	appsv1 "github.com/openshift/api/apps/v1"
-	routev1 "github.com/openshift/api/route/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 // APIManagerReconciler reconciles a APIManager object
@@ -78,6 +79,11 @@ func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	if instance == nil {
 		logger.Info("resource not found. Ignoring since object must have been deleted")
 		return ctrl.Result{}, nil
+	}
+
+	err = r.validateCR(instance)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	res, err := r.setAPIManagerDefaults(instance)
@@ -148,6 +154,18 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			},
 		}).
 		Complete(r)
+}
+
+func (r *APIManagerReconciler) validateCR(cr *appsv1alpha1.APIManager) error {
+	fieldError := field.ErrorList{}
+	// internal validation
+	fieldError = append(fieldError, cr.Validate()...)
+
+	if len(fieldError) == 0 {
+		return nil
+	}
+
+	return fieldError.ToAggregate()
 }
 
 func (r *APIManagerReconciler) updateVersionAnnotations(cr *appsv1alpha1.APIManager) error {

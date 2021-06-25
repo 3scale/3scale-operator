@@ -6,6 +6,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+type CustomPolicy struct {
+	Name      string
+	Version   string
+	SecretRef v1.LocalObjectReference
+}
+
 type ApicastOptions struct {
 	ManagementAPI                  string `validate:"required"`
 	OpenSSLVerify                  string `validate:"required"`
@@ -35,6 +41,9 @@ type ApicastOptions struct {
 
 	ProductionLogLevel *string `validate:"-"`
 	StagingLogLevel    *string `validate:"-"`
+
+	ProductionCustomPolicies []CustomPolicy `validate:"-"`
+	StagingCustomPolicies    []CustomPolicy `validate:"-"`
 }
 
 func NewApicastOptions() *ApicastOptions {
