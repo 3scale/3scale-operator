@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"reflect"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -10,6 +11,7 @@ import (
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -51,7 +53,7 @@ func NewApicastReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReco
 }
 
 func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
-	apicast, err := Apicast(r.apiManager)
+	apicast, err := Apicast(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -63,6 +65,8 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.apicastLogLevelEnvVarMutator,
+		r.volumeMountsMutator,
+		r.volumesMutator,
 	)
 	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
 	if err != nil {
@@ -77,6 +81,8 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.apicastProductionWorkersEnvVarMutator,
 		r.apicastLogLevelEnvVarMutator,
+		r.volumeMountsMutator,
+		r.volumesMutator,
 	)
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
@@ -151,8 +157,30 @@ func (r *ApicastReconciler) apicastLogLevelEnvVarMutator(desired, existing *apps
 	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL")
 }
 
-func Apicast(apimanager *appsv1alpha1.APIManager) (*component.Apicast, error) {
-	optsProvider := NewApicastOptionsProvider(apimanager)
+func (r *ApicastReconciler) volumeMountsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	changed := false
+
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].VolumeMounts, desired.Spec.Template.Spec.Containers[0].VolumeMounts) {
+		changed = true
+		existing.Spec.Template.Spec.Containers[0].VolumeMounts = desired.Spec.Template.Spec.Containers[0].VolumeMounts
+	}
+
+	return changed
+}
+
+func (r *ApicastReconciler) volumesMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	changed := false
+
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Volumes, desired.Spec.Template.Spec.Volumes) {
+		changed = true
+		existing.Spec.Template.Spec.Volumes = desired.Spec.Template.Spec.Volumes
+	}
+
+	return changed
+}
+
+func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.Apicast, error) {
+	optsProvider := NewApicastOptionsProvider(apimanager, cl)
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {
 		return nil, err

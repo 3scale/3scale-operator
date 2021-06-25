@@ -159,7 +159,7 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 }
 
 func (u *UpgradeApiManager) upgradeAPIcastDeploymentConfigs() (reconcile.Result, error) {
-	apicast, err := Apicast(u.apiManager)
+	apicast, err := Apicast(u.apiManager, u.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
