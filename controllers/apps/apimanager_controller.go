@@ -112,21 +112,22 @@ func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	result, err := r.reconcileAPIManagerLogic(instance)
-	if err != nil {
-		logger.Error(err, "Error during reconciliation")
-		return result, err
-	}
-	if result.Requeue {
+	specResult, specErr := r.reconcileAPIManagerLogic(instance)
+	if specErr != nil && specResult.Requeue {
 		logger.Info("Reconciling not finished. Requeueing.")
-		return result, nil
+		return specResult, nil
 	}
 
+	// reconcile status regardless specErr
 	statusResult, statusErr := r.reconcileAPIManagerStatus(instance)
 	if statusErr != nil {
-		logger.Error(err, "Error updating status")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, statusErr
 	}
+
+	if specErr != nil {
+		return ctrl.Result{}, specErr
+	}
+
 	if statusResult.Requeue {
 		logger.Info("Reconciling not finished. Requeueing.")
 		return statusResult, nil
