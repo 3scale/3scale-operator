@@ -7,55 +7,56 @@ One APIManager custom resource per project is allowed.
 ## Table of Contents
 
 * [APIManager](#apimanager)
-  * [APIManagerSpec](#apimanagerspec)
-  * [ApicastSpec](#apicastspec)
-  * [ApicastProductionSpec](#apicastproductionspec)
-  * [ApicastStagingSpec](#apicaststagingspec)
-  * [BackendSpec](#backendspec)
-  * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
-  * [BackendListenerSpec](#backendlistenerspec)
-  * [BackendWorkerSpec](#backendworkerspec)
-  * [BackendCronSpec](#backendcronspec)
-  * [SystemSpec](#systemspec)
-  * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
-  * [FileStorageSpec](#filestoragespec)
-  * [SystemPVCSpec](#systempvcspec)
-  * [SystemS3Spec](#systems3spec)
-  * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
-  * [DatabaseSpec](#databasespec)
-  * [MySQLSpec](#mysqlspec)
-  * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
-  * [PostgreSQLSpec](#postgresqlspec)
-  * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
-  * [SystemAppSpec](#systemappspec)
-  * [SystemSidekiqSpec](#systemsidekiqspec)
-  * [SystemSphinxSpec](#systemsphinxspec)
-  * [ZyncSpec](#zyncspec)
-  * [ZyncAppSpec](#zyncappspec)
-  * [ZyncQueSpec](#zyncquespec)
-  * [HighAvailabilitySpec](#highavailabilityspec)
-  * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
-  * [MonitoringSpec](#monitoringspec)
-  * [APIManagerStatus](#apimanagerstatus)
-    * [ConditionSpec](#conditionspec)
+   * [APIManagerSpec](#apimanagerspec)
+   * [ApicastSpec](#apicastspec)
+   * [ApicastProductionSpec](#apicastproductionspec)
+   * [ApicastStagingSpec](#apicaststagingspec)
+   * [CustomPolicySpec](#custompolicyspec)
+   * [CustomPolicySecret](#custompolicysecret)
+   * [BackendSpec](#backendspec)
+   * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
+   * [BackendListenerSpec](#backendlistenerspec)
+   * [BackendWorkerSpec](#backendworkerspec)
+   * [BackendCronSpec](#backendcronspec)
+   * [SystemSpec](#systemspec)
+   * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
+   * [FileStorageSpec](#filestoragespec)
+   * [SystemPVCSpec](#systempvcspec)
+   * [SystemS3Spec](#systems3spec)
+   * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
+   * [DatabaseSpec](#databasespec)
+   * [MySQLSpec](#mysqlspec)
+   * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
+   * [PostgreSQLSpec](#postgresqlspec)
+   * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
+   * [SystemAppSpec](#systemappspec)
+   * [SystemSidekiqSpec](#systemsidekiqspec)
+   * [SystemSphinxSpec](#systemsphinxspec)
+   * [ZyncSpec](#zyncspec)
+   * [ZyncAppSpec](#zyncappspec)
+   * [ZyncQueSpec](#zyncquespec)
+   * [HighAvailabilitySpec](#highavailabilityspec)
+   * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
+   * [MonitoringSpec](#monitoringspec)
+   * [APIManagerStatus](#apimanagerstatus)
+      * [ConditionSpec](#conditionspec)
 * [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
 * [APIManager Secrets](#apimanager-secrets)
-  * [backend-internal-api](#backend-internal-api)
-  * [backend-listener](#backend-listener)
-  * [backend-redis](#backend-redis)
-  * [system-app](#system-app)
-  * [system-database](#system-database)
-  * [system-events-hook](#system-events-hook)
-  * [system-master-apicast](#system-master-apicast)
-  * [system-memcache](#system-memcache)
-  * [system-recaptcha](#system-recaptcha)
-  * [system-redis](#system-redis)
-  * [system-seed](#system-seed)
-  * [zync](#zync)
-  * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
-  * [system-smtp](#system-smtp)
+   * [backend-internal-api](#backend-internal-api)
+   * [backend-listener](#backend-listener)
+   * [backend-redis](#backend-redis)
+   * [system-app](#system-app)
+   * [system-database](#system-database)
+   * [system-events-hook](#system-events-hook)
+   * [system-master-apicast](#system-master-apicast)
+   * [system-memcache](#system-memcache)
+   * [system-recaptcha](#system-recaptcha)
+   * [system-redis](#system-redis)
+   * [system-seed](#system-seed)
+   * [zync](#zync)
+   * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
+   * [system-smtp](#system-smtp)
 * [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
-
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -106,6 +107,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | Workers | `workers` | integer | No | Automatically computed. Check [apicast doc](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_workers) for further info. | Defines the number of worker processes |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
+| CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
 
 ### ApicastStagingSpec
 
@@ -116,6 +118,26 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
 | Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
+| CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
+
+### CustomPolicySpec
+
+| **json/yaml field** | **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- |
+| `name` | string | Yes | N/A | Name |
+| `version` | string | Yes | N/A | Version |
+| `SecretRef` | LocalObjectReference | Yes | N/A | Secret reference with the policy content. See [CustomPolicySecret](#CustomPolicySecret) for more information.
+
+### CustomPolicySecret
+
+Contains custom policy specific content. Two files,  `init.lua` and `apicast-policy.json`, are required, but more can be added optionally.
+
+Some examples are available [here](/doc/adding-custom-policies.md)
+
+| **Field** | **Description** |
+| --- | --- |
+| `init.lua` | Custom policy lua code entry point |
+| `apicast-policy.json` | Custom policy metadata |
 
 ### BackendSpec
 
