@@ -15,15 +15,15 @@ func TestImageURLFromEnv(t *testing.T) {
 		envVarName string
 		imageURL   func() string
 	}{
-		{"ApicastURL", "APICAST_IMAGE", func() string { return ApicastImageURL() }},
-		{"BackendURL", "BACKEND_IMAGE", func() string { return BackendImageURL() }},
-		{"SystemURL", "SYSTEM_IMAGE", func() string { return SystemImageURL() }},
-		{"ZyncURL", "ZYNC_IMAGE", func() string { return ZyncImageURL() }},
-		{"SystemMemcachedURL", "SYSTEM_MEMCACHED_IMAGE", func() string { return SystemMemcachedImageURL() }},
-		{"SystemRedisImageURL", "SYSTEM_REDIS_IMAGE", func() string { return SystemRedisImageURL() }},
-		{"SystemMySQLImageURL", "SYSTEM_MYSQL_IMAGE", func() string { return SystemMySQLImageURL() }},
-		{"SystemPostgreSQLImageURL", "SYSTEM_POSTGRESQL_IMAGE", func() string { return SystemPostgreSQLImageURL() }},
-		{"ZyncPostgreSQLImageURL", "ZYNC_POSTGRESQL_IMAGE", func() string { return ZyncPostgreSQLImageURL() }},
+		{"ApicastURL", "RELATED_IMAGE_APICAST", func() string { return ApicastImageURL() }},
+		{"BackendURL", "RELATED_IMAGE_BACKEND", func() string { return BackendImageURL() }},
+		{"SystemURL", "RELATED_IMAGE_SYSTEM", func() string { return SystemImageURL() }},
+		{"ZyncURL", "RELATED_IMAGE_ZYNC", func() string { return ZyncImageURL() }},
+		{"SystemMemcachedURL", "RELATED_IMAGE_SYSTEM_MEMCACHED", func() string { return SystemMemcachedImageURL() }},
+		{"SystemRedisImageURL", "RELATED_IMAGE_SYSTEM_REDIS", func() string { return SystemRedisImageURL() }},
+		{"SystemMySQLImageURL", "RELATED_IMAGE_SYSTEM_MYSQL", func() string { return SystemMySQLImageURL() }},
+		{"SystemPostgreSQLImageURL", "RELATED_IMAGE_SYSTEM_POSTGRESQL", func() string { return SystemPostgreSQLImageURL() }},
+		{"ZyncPostgreSQLImageURL", "RELATED_IMAGE_ZYNC_POSTGRESQL", func() string { return ZyncPostgreSQLImageURL() }},
 	}
 
 	for _, tc := range cases {

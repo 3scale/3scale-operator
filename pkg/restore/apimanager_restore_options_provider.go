@@ -56,5 +56,5 @@ func (a *APIManagerRestoreOptionsProvider) pvcRestoreOptions() (*APIManagerResto
 }
 
 func (a *APIManagerRestoreOptionsProvider) ocCLIImageURL() string {
-	return helper.GetEnvVar("OC_CLI_IMAGE", component.OCCLIImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_OC_CLI", component.OCCLIImageURL())
 }
