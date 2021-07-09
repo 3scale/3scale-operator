@@ -35,7 +35,7 @@ Deploying the APIManager custom resource will make the operator begin processing
 * OpenShift Container Platform 4.1
 * Deploying 3scale using the operator first requires that you follow the steps
 in [quickstart guide](quickstart-guide.md) about *Install the 3scale operator*
-* Some [Deployment Configuration Options](#deployment-configuration-options) require OpenShift infrastructure to provide availablity for the following persistent volumes (PV):
+* Some [Deployment Configuration Options](#deployment-configuration-options) require OpenShift infrastructure to provide availability for the following persistent volumes (PV):
   * 3 RWO (ReadWriteOnce) persistent volumes
   * 1 RWX (ReadWriteMany) persistent volume
     * 3scale's System component needs a RWX(ReadWriteMany) PersistentVolume for
@@ -102,7 +102,7 @@ By default, the following deployment configuration options will be applied:
 
 Default configuration option is suitable for PoC or evaluation by a customer.
 
-One, many or all of the default configuration options can be overriden with specific field values in
+One, many or all of the default configuration options can be overridden with specific field values in
 the [*APIManager*](apimanager-reference.md) custom resource.
 The 3scale operator allows all available combinations whereas templates only fixed deployment profiles.
 For instance, the operator allows you to deploy 3scale in evaluation mode and external databases mode.
