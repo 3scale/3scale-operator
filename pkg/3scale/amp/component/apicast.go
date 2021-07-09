@@ -1,8 +1,10 @@
 package component
 
 import (
+	"crypto/md5"
 	"fmt"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -22,6 +24,10 @@ const (
 	CustomPoliciesMountBasePath               = "/opt/app-root/src/policies"
 	CustomPoliciesAnnotationNameSegmentPrefix = "apicast-policy-volume"
 	CustomPoliciesAnnotationPartialKey        = "apps.3scale.net/" + CustomPoliciesAnnotationNameSegmentPrefix
+
+	CustomEnvironmentsMountBasePath               = "/opt/app-root/src/environments"
+	CustomEnvironmentsAnnotationNameSegmentPrefix = "apicast-env-volume"
+	CustomEnvironmentsAnnotationPartialKey        = "apps.3scale.net/" + CustomEnvironmentsAnnotationNameSegmentPrefix
 )
 
 const (
@@ -371,6 +377,19 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 		}
 	}
 
+	var customEnvPaths []string
+	for _, customEnvSecret := range apicast.Options.StagingCustomEnvironments {
+		for fileKey := range customEnvSecret.Data {
+			customEnvPaths = append(customEnvPaths, path.Join(CustomEnvironmentsMountBasePath, customEnvSecret.GetName(), fileKey))
+		}
+	}
+
+	if len(customEnvPaths) > 0 {
+		// Sort customenvPaths to ensure deterministic reconciliation
+		sort.Strings(customEnvPaths)
+		result = append(result, helper.EnvVarFromValue("APICAST_ENVIRONMENT", strings.Join(customEnvPaths, ":")))
+	}
+
 	return result
 }
 
@@ -397,6 +416,19 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 			result = append(result,
 				helper.EnvVarFromValue("OPENTRACING_CONFIG", path.Join(APIcastTracingConfigMountBasePath, productionTracingConfig.VolumeName())))
 		}
+	}
+
+	var customEnvPaths []string
+	for _, customEnvSecret := range apicast.Options.ProductionCustomEnvironments {
+		for fileKey := range customEnvSecret.Data {
+			customEnvPaths = append(customEnvPaths, path.Join(CustomEnvironmentsMountBasePath, customEnvSecret.GetName(), fileKey))
+		}
+	}
+
+	if len(customEnvPaths) > 0 {
+		// Sort customenvPaths to ensure deterministic reconciliation
+		sort.Strings(customEnvPaths)
+		result = append(result, helper.EnvVarFromValue("APICAST_ENVIRONMENT", strings.Join(customEnvPaths, ":")))
 	}
 
 	return result
@@ -476,6 +508,14 @@ func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
 		})
 	}
 
+	for _, customEnvSecret := range apicast.Options.ProductionCustomEnvironments {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      customEnvVolumeName(customEnvSecret),
+			MountPath: path.Join(CustomEnvironmentsMountBasePath, customEnvSecret.GetName()),
+			ReadOnly:  true,
+		})
+	}
+
 	return volumeMounts
 }
 
@@ -497,7 +537,31 @@ func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
 		})
 	}
 
+	for _, customEnvSecret := range apicast.Options.StagingCustomEnvironments {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      customEnvVolumeName(customEnvSecret),
+			MountPath: path.Join(CustomEnvironmentsMountBasePath, customEnvSecret.GetName()),
+			ReadOnly:  true,
+		})
+	}
+
 	return volumeMounts
+}
+
+func customEnvVolumeName(secret *v1.Secret) string {
+	return fmt.Sprintf("custom-env-%s", secret.GetName())
+}
+
+func customEnvAnnotationKey(secret *v1.Secret) string {
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+	// prefix/name: value
+	// The name segment is required and must be 63 characters or less
+	// Currently: len(CustomEnvironmentsAnnotationNameSegmentPrefix) + 32 (from the hash) = 50
+	return fmt.Sprintf("%s-%x", CustomEnvironmentsAnnotationPartialKey, md5.Sum([]byte(customEnvVolumeName(secret))))
+}
+
+func customEnvAnnotationValue(secret *v1.Secret) string {
+	return customEnvVolumeName(secret)
 }
 
 func (apicast *Apicast) productionVolumes() []v1.Volume {
@@ -526,6 +590,17 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 							Path: apicast.Options.ProductionTracingConfig.VolumeName(),
 						},
 					},
+				},
+			},
+		})
+	}
+
+	for _, customEnvSecret := range apicast.Options.ProductionCustomEnvironments {
+		volumes = append(volumes, v1.Volume{
+			Name: customEnvVolumeName(customEnvSecret),
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: customEnvSecret.GetName(),
 				},
 			},
 		})
@@ -565,6 +640,17 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 		})
 	}
 
+	for _, customEnvSecret := range apicast.Options.StagingCustomEnvironments {
+		volumes = append(volumes, v1.Volume{
+			Name: customEnvVolumeName(customEnvSecret),
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: customEnvSecret.GetName(),
+				},
+			},
+		})
+	}
+
 	return volumes
 }
 
@@ -578,6 +664,10 @@ func (apicast *Apicast) productionDeploymentConfigAnnotations() map[string]strin
 	productionTracingConfig := apicast.Options.ProductionTracingConfig
 	if productionTracingConfig.Enabled && productionTracingConfig.TracingConfigSecretName != nil {
 		annotations[productionTracingConfig.AnnotationKey()] = productionTracingConfig.VolumeName()
+	}
+
+	for _, customEnvSecret := range apicast.Options.ProductionCustomEnvironments {
+		annotations[customEnvAnnotationKey(customEnvSecret)] = customEnvAnnotationValue(customEnvSecret)
 	}
 
 	// keep backward compat
@@ -598,6 +688,10 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 	stagingTracingConfig := apicast.Options.StagingTracingConfig
 	if stagingTracingConfig.Enabled && stagingTracingConfig.TracingConfigSecretName != nil {
 		annotations[stagingTracingConfig.AnnotationKey()] = apicast.Options.StagingTracingConfig.VolumeName()
+	}
+
+	for _, customEnvSecret := range apicast.Options.StagingCustomEnvironments {
+		annotations[customEnvAnnotationKey(customEnvSecret)] = customEnvAnnotationValue(customEnvSecret)
 	}
 
 	// keep backward compat
@@ -627,4 +721,8 @@ func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []st
 
 func ApicastTracingConfigVolumeNamesFromAnnotations(annotations map[string]string) []string {
 	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, APIcastTracingConfigAnnotationPartialKey)
+}
+
+func ApicastEnvVolumeNamesFromAnnotations(annotations map[string]string) []string {
+	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, CustomEnvironmentsAnnotationPartialKey)
 }

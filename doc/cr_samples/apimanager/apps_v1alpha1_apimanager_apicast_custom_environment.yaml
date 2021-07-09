@@ -1,0 +1,17 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: apimanager-apicast-custom-environment
+spec:
+  wildcardDomain: <desired-domain>
+  apicast:
+    productionSpec:
+      customEnvironments:
+        - secretRef:
+            name: env1
+        - secretRef:
+            name: env2
+    stagingSpec:
+      customEnvironments:
+        - secretRef:
+            name: env1
