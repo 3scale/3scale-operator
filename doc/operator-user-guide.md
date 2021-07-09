@@ -20,7 +20,7 @@
 * [3scale installation Backup and Restore using the operator (in *TechPreview*)](operator-backup-and-restore.md)
 * [Application Capabilities (in *TechPreview*)](operator-application-capabilities.md)
 * [APIManager CRD reference](apimanager-reference.md)
-    * CR samples [\[1\]](../config/samples/apps_v1alpha1_apimanager_simple.yaml) [\[2\]](cr_samples/apimanager/)
+    * CR samples [\[1\]](../config/samples/apps_v1alpha1_apimanager_simple.yaml) [\[2\]](cr_samples/apimanager/)
 
 ## Installing 3scale
 
