@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -63,6 +64,11 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	}
 
 	err = a.setTracingConfiguration()
+	if err != nil {
+		return nil, err
+	}
+
+	err = a.setCustomEnvironments()
 	if err != nil {
 		return nil, err
 	}
@@ -302,4 +308,67 @@ func (a *ApicastOptionsProvider) validateTracingConfigSecret(nn types.Namespaced
 	}
 
 	return nil
+}
+
+func (a *ApicastOptionsProvider) setCustomEnvironments() error {
+	for idx, customEnvSpec := range a.apimanager.Spec.Apicast.ProductionSpec.CustomEnvironments {
+		// CR Validation ensures secret name is not nil
+		namespacedName := types.NamespacedName{
+			Name:      customEnvSpec.SecretRef.Name,
+			Namespace: a.apimanager.Namespace,
+		}
+
+		secret, err := a.customEnvironmentSecret(namespacedName)
+		if err != nil {
+			fieldErrors := field.ErrorList{}
+			customEnvIdxFldPath := field.NewPath("spec").
+				Child("apicast").
+				Child("productionSpec").
+				Child("customEnvironments").Index(idx)
+			fieldErrors = append(fieldErrors, field.Invalid(customEnvIdxFldPath, customEnvSpec, err.Error()))
+			return fieldErrors.ToAggregate()
+		}
+
+		a.apicastOptions.ProductionCustomEnvironments = append(a.apicastOptions.ProductionCustomEnvironments, secret)
+	}
+
+	// TODO(eastizle): DRY!!
+	for idx, customEnvSpec := range a.apimanager.Spec.Apicast.StagingSpec.CustomEnvironments {
+		// CR Validation ensures secret name is not nil
+		namespacedName := types.NamespacedName{
+			Name:      customEnvSpec.SecretRef.Name,
+			Namespace: a.apimanager.Namespace,
+		}
+
+		secret, err := a.customEnvironmentSecret(namespacedName)
+		if err != nil {
+			fieldErrors := field.ErrorList{}
+			customEnvIdxFldPath := field.NewPath("spec").
+				Child("apicast").
+				Child("stagingSpec").
+				Child("customEnvironments").Index(idx)
+			fieldErrors = append(fieldErrors, field.Invalid(customEnvIdxFldPath, customEnvSpec, err.Error()))
+			return fieldErrors.ToAggregate()
+		}
+
+		a.apicastOptions.StagingCustomEnvironments = append(a.apicastOptions.StagingCustomEnvironments, secret)
+	}
+
+	return nil
+}
+
+func (a *ApicastOptionsProvider) customEnvironmentSecret(nn types.NamespacedName) (*v1.Secret, error) {
+	secret := &v1.Secret{}
+	err := a.client.Get(context.TODO(), nn, secret)
+
+	if err != nil {
+		// NotFoundError is also an error, it is required to exist
+		return nil, err
+	}
+
+	if len(secret.Data) == 0 {
+		return nil, errors.New("empty secret")
+	}
+
+	return secret, nil
 }

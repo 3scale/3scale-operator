@@ -93,6 +93,9 @@ type ApicastOptions struct {
 
 	ProductionTracingConfig *APIcastTracingConfig `validate:"required"`
 	StagingTracingConfig    *APIcastTracingConfig `validate:"required"`
+
+	ProductionCustomEnvironments []*v1.Secret `validate:"-"`
+	StagingCustomEnvironments    []*v1.Secret `validate:"-"`
 }
 
 func NewApicastOptions() *ApicastOptions {
