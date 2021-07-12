@@ -11,12 +11,12 @@ objects:
     annotations:
     labels:
       app: zync
-    name: ruby-25-ubi7
+    name: ruby-27-ubi8
   spec:
     tags:
     - from:
         kind: DockerImage
-        name: registry.redhat.io/ubi7/ruby-25
+        name: registry.redhat.io/ubi8/ruby-27
       name: latest
 
 - apiVersion: v1
@@ -42,7 +42,7 @@ objects:
           name: "${PULLSECRET_NAME}"
         from:
           kind: ImageStreamTag
-          name: ruby-25-ubi7:latest
+          name: ruby-27-ubi8:latest
       type: Docker
 
 - apiVersion: v1
