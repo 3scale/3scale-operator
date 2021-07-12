@@ -28,6 +28,9 @@ const (
 	CustomEnvironmentsMountBasePath               = "/opt/app-root/src/environments"
 	CustomEnvironmentsAnnotationNameSegmentPrefix = "apicast-env-volume"
 	CustomEnvironmentsAnnotationPartialKey        = "apps.3scale.net/" + CustomEnvironmentsAnnotationNameSegmentPrefix
+
+	HTTPSCertificatesMountPath  = "/var/run/secrets/tls"
+	HTTPSCertificatesVolumeName = "https-certificates"
 )
 
 const (
@@ -57,20 +60,7 @@ func (apicast *Apicast) StagingService() *v1.Service {
 			Labels: apicast.Options.CommonStagingLabels,
 		},
 		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "gateway",
-					Protocol:   v1.ProtocolTCP,
-					Port:       8080,
-					TargetPort: intstr.FromInt(8080),
-				},
-				v1.ServicePort{
-					Name:       "management",
-					Protocol:   v1.ProtocolTCP,
-					Port:       8090,
-					TargetPort: intstr.FromInt(8090),
-				},
-			},
+			Ports:    apicast.stagingServicePorts(),
 			Selector: map[string]string{"deploymentConfig": ApicastStagingName},
 		},
 	}
@@ -87,20 +77,7 @@ func (apicast *Apicast) ProductionService() *v1.Service {
 			Labels: apicast.Options.CommonProductionLabels,
 		},
 		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "gateway",
-					Protocol:   v1.ProtocolTCP,
-					Port:       8080,
-					TargetPort: intstr.FromInt(8080),
-				},
-				v1.ServicePort{
-					Name:       "management",
-					Protocol:   v1.ProtocolTCP,
-					Port:       8090,
-					TargetPort: intstr.FromInt(8090),
-				},
-			},
+			Ports:    apicast.productionServicePorts(),
 			Selector: map[string]string{"deploymentConfig": ApicastProductionName},
 		},
 	}
@@ -168,21 +145,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 					Volumes:            apicast.stagingVolumes(),
 					Containers: []v1.Container{
 						v1.Container{
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
-									ContainerPort: 8080,
-									Protocol:      v1.ProtocolTCP,
-								},
-								v1.ContainerPort{
-									ContainerPort: 8090,
-									Protocol:      v1.ProtocolTCP,
-								},
-								v1.ContainerPort{
-									ContainerPort: 9421,
-									Protocol:      v1.ProtocolTCP,
-									Name:          "metrics",
-								},
-							},
+							Ports:           apicast.stagingContainerPorts(),
 							Env:             apicast.buildApicastStagingEnv(),
 							Image:           "amp-apicast:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
@@ -291,21 +254,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
-									ContainerPort: 8080,
-									Protocol:      v1.ProtocolTCP,
-								},
-								v1.ContainerPort{
-									ContainerPort: 8090,
-									Protocol:      v1.ProtocolTCP,
-								},
-								v1.ContainerPort{
-									ContainerPort: 9421,
-									Protocol:      v1.ProtocolTCP,
-									Name:          "metrics",
-								},
-							},
+							Ports:           apicast.productionContainerPorts(),
 							Env:             apicast.buildApicastProductionEnv(),
 							Image:           "amp-apicast:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
@@ -390,6 +339,20 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 		result = append(result, helper.EnvVarFromValue("APICAST_ENVIRONMENT", strings.Join(customEnvPaths, ":")))
 	}
 
+	if apicast.Options.StagingHTTPSPort != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_HTTPS_PORT", strconv.FormatInt(int64(*apicast.Options.StagingHTTPSPort), 10)))
+	}
+
+	if apicast.Options.StagingHTTPSVerifyDepth != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_HTTPS_VERIFY_DEPTH", strconv.FormatInt(*apicast.Options.StagingHTTPSVerifyDepth, 10)))
+	}
+
+	if apicast.Options.StagingHTTPSCertificateSecretName != nil {
+		result = append(result,
+			helper.EnvVarFromValue("APICAST_HTTPS_CERTIFICATE", fmt.Sprintf("%s/%s", HTTPSCertificatesMountPath, v1.TLSCertKey)),
+			helper.EnvVarFromValue("APICAST_HTTPS_CERTIFICATE_KEY", fmt.Sprintf("%s/%s", HTTPSCertificatesMountPath, v1.TLSPrivateKeyKey)))
+	}
+
 	return result
 }
 
@@ -429,6 +392,21 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 		// Sort customenvPaths to ensure deterministic reconciliation
 		sort.Strings(customEnvPaths)
 		result = append(result, helper.EnvVarFromValue("APICAST_ENVIRONMENT", strings.Join(customEnvPaths, ":")))
+	}
+
+	if apicast.Options.ProductionHTTPSPort != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_HTTPS_PORT", strconv.FormatInt(int64(*apicast.Options.ProductionHTTPSPort), 10)))
+	}
+
+	if apicast.Options.ProductionHTTPSVerifyDepth != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_HTTPS_VERIFY_DEPTH", strconv.FormatInt(*apicast.Options.ProductionHTTPSVerifyDepth, 10)))
+	}
+
+	if apicast.Options.ProductionHTTPSCertificateSecretName != nil {
+		result = append(result,
+			helper.EnvVarFromValue("APICAST_HTTPS_CERTIFICATE", path.Join(HTTPSCertificatesMountPath, v1.TLSCertKey)),
+			helper.EnvVarFromValue("APICAST_HTTPS_CERTIFICATE_KEY", path.Join(HTTPSCertificatesMountPath, v1.TLSPrivateKeyKey)),
+		)
 	}
 
 	return result
@@ -516,6 +494,14 @@ func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
 		})
 	}
 
+	if apicast.Options.ProductionHTTPSCertificateSecretName != nil {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      HTTPSCertificatesVolumeName,
+			MountPath: HTTPSCertificatesMountPath,
+			ReadOnly:  true,
+		})
+	}
+
 	return volumeMounts
 }
 
@@ -541,6 +527,14 @@ func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
 			Name:      customEnvVolumeName(customEnvSecret),
 			MountPath: path.Join(CustomEnvironmentsMountBasePath, customEnvSecret.GetName()),
+			ReadOnly:  true,
+		})
+	}
+
+	if apicast.Options.StagingHTTPSCertificateSecretName != nil {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      HTTPSCertificatesVolumeName,
+			MountPath: HTTPSCertificatesMountPath,
 			ReadOnly:  true,
 		})
 	}
@@ -606,6 +600,17 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 		})
 	}
 
+	if apicast.Options.ProductionHTTPSCertificateSecretName != nil {
+		volumes = append(volumes, v1.Volume{
+			Name: HTTPSCertificatesVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: *apicast.Options.ProductionHTTPSCertificateSecretName,
+				},
+			},
+		})
+	}
+
 	return volumes
 }
 
@@ -646,6 +651,17 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: customEnvSecret.GetName(),
+				},
+			},
+		})
+	}
+
+	if apicast.Options.StagingHTTPSCertificateSecretName != nil {
+		volumes = append(volumes, v1.Volume{
+			Name: HTTPSCertificatesVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: *apicast.Options.StagingHTTPSCertificateSecretName,
 				},
 			},
 		})
@@ -700,6 +716,66 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 	}
 
 	return annotations
+}
+
+func (apicast *Apicast) productionContainerPorts() []v1.ContainerPort {
+	ports := []v1.ContainerPort{
+		v1.ContainerPort{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
+		v1.ContainerPort{ContainerPort: 8090, Protocol: v1.ProtocolTCP},
+		v1.ContainerPort{ContainerPort: 9421, Protocol: v1.ProtocolTCP, Name: "metrics"},
+	}
+
+	if apicast.Options.ProductionHTTPSPort != nil {
+		ports = append(ports,
+			v1.ContainerPort{Name: "httpsproxy", ContainerPort: *apicast.Options.ProductionHTTPSPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
+}
+
+func (apicast *Apicast) productionServicePorts() []v1.ServicePort {
+	ports := []v1.ServicePort{
+		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt(8080)},
+		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt(8090)},
+	}
+
+	if apicast.Options.ProductionHTTPSPort != nil {
+		ports = append(ports,
+			v1.ServicePort{Name: "httpsproxy", Port: *apicast.Options.ProductionHTTPSPort, Protocol: v1.ProtocolTCP, TargetPort: intstr.FromString("httpsproxy")},
+		)
+	}
+
+	return ports
+}
+
+func (apicast *Apicast) stagingContainerPorts() []v1.ContainerPort {
+	ports := []v1.ContainerPort{
+		v1.ContainerPort{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
+		v1.ContainerPort{ContainerPort: 8090, Protocol: v1.ProtocolTCP},
+		v1.ContainerPort{ContainerPort: 9421, Protocol: v1.ProtocolTCP, Name: "metrics"},
+	}
+
+	if apicast.Options.StagingHTTPSPort != nil {
+		ports = append(ports,
+			v1.ContainerPort{Name: "httpsproxy", ContainerPort: *apicast.Options.StagingHTTPSPort, Protocol: v1.ProtocolTCP})
+	}
+
+	return ports
+}
+
+func (apicast *Apicast) stagingServicePorts() []v1.ServicePort {
+	ports := []v1.ServicePort{
+		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt(8080)},
+		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt(8090)},
+	}
+
+	if apicast.Options.StagingHTTPSPort != nil {
+		ports = append(ports,
+			v1.ServicePort{Name: "httpsproxy", Port: *apicast.Options.StagingHTTPSPort, Protocol: v1.ProtocolTCP, TargetPort: intstr.FromString("httpsproxy")},
+		)
+	}
+
+	return ports
 }
 
 // AnnotationsValuesWithAnnotationKeyPrefix returns the annotation values from

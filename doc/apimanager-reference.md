@@ -110,6 +110,9 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
 | OpenTracing | `openTracing` | [OpenTracingSpec](#OpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
 | CustomEnvironments | `customEnvironments` | [][CustomEnvironmentSpec](#CustomEnvironmentSpec) | No | N/A | List of custom environments |
+| HTTPSPort | `httpsPort` | int | No | **8443** only when `httpsCertificateSecretRef` is provided | Controls on which port APIcast should start listening for HTTPS connections. Do not use `8080` as HTTPS port (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_port)) |
+| HTTPSVerifyDepth | `httpsVerifyDepth` | int | No | N/A | Defines the maximum length of the client certificate chain. (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_verify_depth)) |
+| HTTPSCertificateSecretRef | `httpsCertificateSecretRef` | LocalObjectReference | No | APIcast has a default certificate used when `httpsPort` is provided | References secret containing the X.509 certificate in the PEM format and the X.509 certificate secret key |
 
 ### ApicastStagingSpec
 
@@ -123,6 +126,9 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
 | OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
 | CustomEnvironments | `customEnvironments` | [][CustomEnvironmentSpec](#CustomEnvironmentSpec) | No | N/A | List of custom environments |
+| HTTPSPort | `httpsPort` | int | No | **8443** only when `httpsCertificateSecretRef` is provided | Controls on which port APIcast should start listening for HTTPS connections. Do not use `8080` as HTTPS port (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_port)) |
+| HTTPSVerifyDepth | `httpsVerifyDepth` | int | No | N/A | Defines the maximum length of the client certificate chain. (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_verify_depth)) |
+| HTTPSCertificateSecretRef | `httpsCertificateSecretRef` | LocalObjectReference | No | APIcast has a default certificate used when `httpsPort` is provided | References secret containing the X.509 certificate in the PEM format and the X.509 certificate secret key |
 
 ### CustomPolicySpec
 

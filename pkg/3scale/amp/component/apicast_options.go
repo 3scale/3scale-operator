@@ -96,6 +96,13 @@ type ApicastOptions struct {
 
 	ProductionCustomEnvironments []*v1.Secret `validate:"-"`
 	StagingCustomEnvironments    []*v1.Secret `validate:"-"`
+
+	ProductionHTTPSPort                  *int32  `validate:"-"`
+	ProductionHTTPSVerifyDepth           *int64  `validate:"-"`
+	ProductionHTTPSCertificateSecretName *string `validate:"-"`
+	StagingHTTPSPort                     *int32  `validate:"-"`
+	StagingHTTPSVerifyDepth              *int64  `validate:"-"`
+	StagingHTTPSCertificateSecretName    *string `validate:"-"`
 }
 
 func NewApicastOptions() *ApicastOptions {

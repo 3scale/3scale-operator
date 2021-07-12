@@ -6,7 +6,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -84,12 +84,12 @@ type SecretCacheElement struct {
 }
 
 type SecretSource struct {
-	client      client.Client
+	client      k8sclient.Client
 	namespace   string
 	secretCache *MemoryCache
 }
 
-func NewSecretSource(client client.Client, namespace string) *SecretSource {
+func NewSecretSource(client k8sclient.Client, namespace string) *SecretSource {
 	return &SecretSource{
 		client:      client,
 		namespace:   namespace,
@@ -158,4 +158,26 @@ func (s *SecretSource) CachedSecret(secretName string) (*v1.Secret, error) {
 	}
 
 	return secret, err
+}
+
+func ValidateTLSSecret(nn types.NamespacedName, client k8sclient.Client) error {
+	secret := &v1.Secret{}
+	err := client.Get(context.TODO(), nn, secret)
+	if err != nil {
+		return err
+	}
+
+	if secret.Type != v1.SecretTypeTLS {
+		return fmt.Errorf("required kubernetes.io/tls secret type. Found %s", secret.Type)
+	}
+
+	if _, ok := secret.Data[v1.TLSCertKey]; !ok {
+		return fmt.Errorf("required secret key, %s, not found", v1.TLSCertKey)
+	}
+
+	if _, ok := secret.Data[v1.TLSPrivateKeyKey]; !ok {
+		return fmt.Errorf("required secret key, %s, not found", v1.TLSPrivateKeyKey)
+	}
+
+	return nil
 }

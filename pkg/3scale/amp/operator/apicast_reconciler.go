@@ -5,16 +5,16 @@ import (
 	"reflect"
 	"strings"
 
+	appsv1 "github.com/openshift/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
-	appsv1 "github.com/openshift/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
@@ -66,14 +66,16 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
-		r.apicastLogLevelEnvVarMutator,
-		r.apicastTracingConfigEnvVarsMutator,
-		r.apicastEnvironmentEnvVarMutator,
+		apicastLogLevelEnvVarMutator,
+		apicastTracingConfigEnvVarsMutator,
+		apicastEnvironmentEnvVarMutator,
+		apicastHTTPSEnvVarMutator,
 		apicastVolumeMountsMutator,
 		apicastVolumesMutator,
 		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
 		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume mutator
+		portsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
 	if err != nil {
@@ -86,15 +88,17 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
-		r.apicastProductionWorkersEnvVarMutator,
-		r.apicastLogLevelEnvVarMutator,
-		r.apicastTracingConfigEnvVarsMutator,
-		r.apicastEnvironmentEnvVarMutator,
+		apicastProductionWorkersEnvVarMutator,
+		apicastLogLevelEnvVarMutator,
+		apicastTracingConfigEnvVarsMutator,
+		apicastEnvironmentEnvVarMutator,
+		apicastHTTPSEnvVarMutator,
 		apicastVolumeMountsMutator,
 		apicastVolumesMutator,
 		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
 		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
+		portsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
@@ -102,13 +106,13 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging Service
-	err = r.ReconcileService(apicast.StagingService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(apicast.StagingService(), reconcilers.ServicePortMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Production Service
-	err = r.ReconcileService(apicast.ProductionService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(apicast.ProductionService(), reconcilers.ServicePortMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -159,17 +163,17 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (r *ApicastReconciler) apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	// Reconcile EnvVar only for "APICAST_WORKERS"
 	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_WORKERS")
 }
 
-func (r *ApicastReconciler) apicastLogLevelEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastLogLevelEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	// Reconcile EnvVar only for "APICAST_LOG_LEVEL"
 	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL")
 }
 
-func (r *ApicastReconciler) apicastTracingConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastTracingConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	// Reconcile EnvVars related to opentracing
 	var changed bool
 	changed = reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTRACING_TRACER")
@@ -180,9 +184,37 @@ func (r *ApicastReconciler) apicastTracingConfigEnvVarsMutator(desired, existing
 	return changed
 }
 
-func (r *ApicastReconciler) apicastEnvironmentEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastEnvironmentEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	// Reconcile EnvVar only for "APICAST_ENVIRONMENT"
 	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_ENVIRONMENT")
+}
+
+func apicastHTTPSEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	// Reconcile EnvVars related to opentracing
+	var changed bool
+
+	for _, envVar := range []string{
+		"APICAST_HTTPS_PORT",
+		"APICAST_HTTPS_VERIFY_DEPTH",
+		"APICAST_HTTPS_CERTIFICATE",
+		"APICAST_HTTPS_CERTIFICATE_KEY",
+	} {
+		tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed
+}
+
+func portsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	changed := false
+
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Ports, desired.Spec.Template.Spec.Containers[0].Ports) {
+		changed = true
+		existing.Spec.Template.Spec.Containers[0].Ports = desired.Spec.Template.Spec.Containers[0].Ports
+	}
+
+	return changed
 }
 
 // volumeMountsMutator implements basic VolumeMount reconcilliation
@@ -252,6 +284,17 @@ func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) bool
 			existingContainer.VolumeMounts = append(existingContainer.VolumeMounts[:idx], existingContainer.VolumeMounts[idx+1:]...)
 			changed = true
 		}
+	}
+
+	// Check for existing volumeMounts associated to the TLS port that is no longer desired
+	// Only the volumeMount associated to the TLS port is deleted. The operator still allows manually arbitrary mounted volumes
+	existingIdx := helper.FindVolumeMountByName(existingContainer.VolumeMounts, component.HTTPSCertificatesVolumeName)
+	desiredIdx := helper.FindVolumeMountByName(desiredContainer.VolumeMounts, component.HTTPSCertificatesVolumeName)
+	if desiredIdx < 0 && existingIdx >= 0 {
+		// volumeMount exists in existing and does not exist in desired => Remove from the list
+		// shift all of the elements at the right of the deleting index by one to the left
+		existingContainer.VolumeMounts = append(existingContainer.VolumeMounts[:existingIdx], existingContainer.VolumeMounts[existingIdx+1:]...)
+		changed = true
 	}
 
 	return changed
@@ -324,6 +367,17 @@ func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) bool {
 			existingSpec.Volumes = append(existingSpec.Volumes[:idx], existingSpec.Volumes[idx+1:]...)
 			changed = true
 		}
+	}
+
+	// Check for existing volume associated to the TLS port that is no longer desired
+	// Only the volume associated to the TLS port is deleted. The operator still allows manually arbitrary mounted volumes
+	existingIdx := helper.FindVolumeByName(existingSpec.Volumes, component.HTTPSCertificatesVolumeName)
+	desiredIdx := helper.FindVolumeByName(desiredSpec.Volumes, component.HTTPSCertificatesVolumeName)
+	if desiredIdx < 0 && existingIdx >= 0 {
+		// volume exists in existing and does not exist in desired => Remove from the list
+		// shift all of the elements at the right of the deleting index by one to the left
+		existingSpec.Volumes = append(existingSpec.Volumes[:existingIdx], existingSpec.Volumes[existingIdx+1:]...)
+		changed = true
 	}
 
 	return changed
