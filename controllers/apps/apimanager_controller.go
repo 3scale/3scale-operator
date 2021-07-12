@@ -35,6 +35,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/handlers"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 )
@@ -161,11 +162,13 @@ func (r *APIManagerReconciler) validateCR(cr *appsv1alpha1.APIManager) error {
 	// internal validation
 	fieldError = append(fieldError, cr.Validate()...)
 
-	if len(fieldError) == 0 {
-		return nil
+	fieldError = append(fieldError, r.validateApicastTLSCertificates(cr)...)
+
+	if len(fieldError) > 0 {
+		return fieldError.ToAggregate()
 	}
 
-	return fieldError.ToAggregate()
+	return nil
 }
 
 func (r *APIManagerReconciler) updateVersionAnnotations(cr *appsv1alpha1.APIManager) error {
@@ -322,4 +325,42 @@ func (r *APIManagerReconciler) reconcileAPIManagerStatus(cr *appsv1alpha1.APIMan
 	}
 
 	return res, nil
+}
+
+func (r *APIManagerReconciler) validateApicastTLSCertificates(cr *appsv1alpha1.APIManager) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	if cr.Spec.Apicast != nil && cr.Spec.Apicast.ProductionSpec != nil && cr.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil {
+		secretPath := field.NewPath("spec").Child("apicast").Child("productionSpec").Child("httpsCertificateSecretRef")
+		if cr.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef.Name == "" {
+			fieldErrors = append(fieldErrors, field.Required(secretPath.Child("name"), "secret name not provided"))
+		} else {
+			nn := types.NamespacedName{
+				Name:      cr.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef.Name,
+				Namespace: cr.Namespace,
+			}
+			err := helper.ValidateTLSSecret(nn, r.Client())
+			if err != nil {
+				fieldErrors = append(fieldErrors, field.Invalid(secretPath, cr.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef, err.Error()))
+			}
+		}
+	}
+
+	if cr.Spec.Apicast != nil && cr.Spec.Apicast.StagingSpec != nil && cr.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil {
+		secretPath := field.NewPath("spec").Child("apicast").Child("stagingSpec").Child("httpsCertificateSecretRef")
+		if cr.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef.Name == "" {
+			fieldErrors = append(fieldErrors, field.Required(secretPath.Child("name"), "secret name not provided"))
+		} else {
+			nn := types.NamespacedName{
+				Name:      cr.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef.Name,
+				Namespace: cr.Namespace,
+			}
+			err := helper.ValidateTLSSecret(nn, r.Client())
+			if err != nil {
+				fieldErrors = append(fieldErrors, field.Invalid(secretPath, cr.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef, err.Error()))
+			}
+		}
+	}
+
+	return fieldErrors
 }
