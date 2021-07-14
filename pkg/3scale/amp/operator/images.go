@@ -6,41 +6,41 @@ import (
 )
 
 func ApicastImageURL() string {
-	return helper.GetEnvVar("APICAST_IMAGE", component.ApicastImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_APICAST", component.ApicastImageURL())
 }
 
 func BackendImageURL() string {
-	return helper.GetEnvVar("BACKEND_IMAGE", component.BackendImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_BACKEND", component.BackendImageURL())
 }
 
 func SystemImageURL() string {
-	return helper.GetEnvVar("SYSTEM_IMAGE", component.SystemImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM", component.SystemImageURL())
 }
 
 func ZyncImageURL() string {
-	return helper.GetEnvVar("ZYNC_IMAGE", component.ZyncImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_ZYNC", component.ZyncImageURL())
 }
 
 func SystemMemcachedImageURL() string {
-	return helper.GetEnvVar("SYSTEM_MEMCACHED_IMAGE", component.SystemMemcachedImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_MEMCACHED", component.SystemMemcachedImageURL())
 }
 
 func BackendRedisImageURL() string {
-	return helper.GetEnvVar("BACKEND_REDIS_IMAGE", component.BackendRedisImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_BACKEND_REDIS", component.BackendRedisImageURL())
 }
 
 func SystemRedisImageURL() string {
-	return helper.GetEnvVar("SYSTEM_REDIS_IMAGE", component.SystemRedisImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_REDIS", component.SystemRedisImageURL())
 }
 
 func SystemMySQLImageURL() string {
-	return helper.GetEnvVar("SYSTEM_MYSQL_IMAGE", component.SystemMySQLImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_MYSQL", component.SystemMySQLImageURL())
 }
 
 func SystemPostgreSQLImageURL() string {
-	return helper.GetEnvVar("SYSTEM_POSTGRESQL_IMAGE", component.SystemPostgreSQLImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_POSTGRESQL", component.SystemPostgreSQLImageURL())
 }
 
 func ZyncPostgreSQLImageURL() string {
-	return helper.GetEnvVar("ZYNC_POSTGRESQL_IMAGE", component.ZyncPostgreSQLImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_ZYNC_POSTGRESQL", component.ZyncPostgreSQLImageURL())
 }
