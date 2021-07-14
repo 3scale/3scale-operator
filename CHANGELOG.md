@@ -4,6 +4,41 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2021-05-12
+
+### Added
+
+- APIManager CRD 3scale 2.10
+- Oracle support [#416](https://github.com/3scale/3scale-operator/pull/416) [#445](https://github.com/3scale/3scale-operator/pull/445)
+- Application Capabilities: provider account from 3scale in the same namespace [#443](https://github.com/3scale/3scale-operator/pull/443)
+- `last` attribute to MappingRule in Backend and Product types [#447](https://github.com/3scale/3scale-operator/pull/447)
+- Resource requirementes for each 3scale component [#454](https://github.com/3scale/3scale-operator/pull/454)
+- Resource requirementes for the 3scale operarator [#461](https://github.com/3scale/3scale-operator/pull/461)
+- Upgraded grafana dependency to 3.5.0 [#475](https://github.com/3scale/3scale-operator/pull/475)
+- System prometheus monitoring [#458](https://github.com/3scale/3scale-operator/pull/458)
+- Grafana dashboad for the apicast metrics [#473](https://github.com/3scale/3scale-operator/pull/473)
+- Resource pvc system storage and databases [#467](https://github.com/3scale/3scale-operator/pull/467)
+- ConsoleLink for the 3scale master route [#462](https://github.com/3scale/3scale-operator/pull/462)
+- Apicast workers monitoring alert [#484](https://github.com/3scale/3scale-operator/pull/484)
+- Allow Zync Database to be configured as an external database on the operator [#489](https://github.com/3scale/3scale-operator/pull/489)
+- Disconnected install support [#492](https://github.com/3scale/3scale-operator/pull/492)
+- Added grafana dashboard for System Sidekiq metrics [#466](https://github.com/3scale/3scale-operator/pull/466)
+- Reconcile monitoring resources [#599](https://github.com/3scale/3scale-operator/pull/599)
+- APIManager: configurable ServiceAccount ImagePullSecrets for the managed DCs [#599](https://github.com/3scale/3scale-operator/pull/599)
+- APIManager: apicast production worker field [#599](https://github.com/3scale/3scale-operator/pull/599)
+
+### Fixed
+
+- Regex validation in Product type for fields that specify USD [#446](https://github.com/3scale/3scale-operator/pull/446)
+- Tolerations in postgresql pvc [#465](https://github.com/3scale/3scale-operator/pull/465)
+- Reconciliate product type on backend type's metric deletion [#444](https://github.com/3scale/3scale-operator/pull/444)
+- Reconcile system database secret when external databases enabled [#486](https://github.com/3scale/3scale-operator/pull/486)
+- CVE-2020-14040 [#599](https://github.com/3scale/3scale-operator/pull/599)
+- CVE-2020-9283 [#599](https://github.com/3scale/3scale-operator/pull/599)
+
+### Changed
+- Monitoring alerts severity [#481](https://github.com/3scale/3scale-operator/pull/481) [#488](https://github.com/3scale/3scale-operator/pull/488)
+
 ## [0.6.0] - 2020-08-28
 
 ### Added
@@ -60,7 +95,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-[Unreleased]: https://github.com/3scale/3scale-operator/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/3scale/3scale-operator/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.7.0
 [0.6.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.6.0
 [0.5.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.5.0
 [0.4.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.4.0
