@@ -58,10 +58,10 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp.yml \
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:latest |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:latest |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:latest |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:latest |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -128,10 +128,10 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:latest |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:latest |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:latest |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:latest |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -204,10 +204,10 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-s3.yml \
 | **AMP_RELEASE** | AMP release tag | 2.7 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:latest |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:latest |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:latest |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:latest |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -285,10 +285,10 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:latest |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:latest |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:latest |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:latest |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -363,10 +363,10 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval-s3.yml \
 | **AMP_RELEASE** | AMP release tag | 2.7 |
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:latest |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:latest |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:latest |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:latest |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
@@ -433,10 +433,10 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 | **APP_LABEL** | Used for object app labels | 3scale-api-management |
 | **TENANT_NAME** | Default tenant prefix name. *-admin* suffix will be appended | 3scale |
 | **RWX_STORAGE_CLASS** | The Storage Class to be used by ReadWriteMany PVCs | 'null' |
-| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:nightly |
-| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:nightly |
-| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:nightly |
-| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:nightly |
+| **AMP_BACKEND_IMAGE** | 3scale Backend component docker image URL | quay.io/3scale/apisonator:latest |
+| **AMP_ZYNC_IMAGE** | 3scale Zync component docker image URL | quay.io/3scale/zync:latest |
+| **AMP_APICAST_IMAGE** | 3scale Apicast component docker image URL | quay.io/3scale/apicast:latest |
+| **AMP_SYSTEM_IMAGE** | 3scale System component docker image URL | quay.io/3scale/porta:latest |
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |

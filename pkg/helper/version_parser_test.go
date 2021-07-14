@@ -14,7 +14,7 @@ func TestParseVersion(t *testing.T) {
 		{"test02", "quay.io/3scale/3scale28:apicast-3scale-2.8.1-GA", "2.8.1"},
 		{"test03", "memcached:1.5", "1.5"},
 		{"test04", "redis-32-rhel7", "32"},
-		{"test05", "quay.io/3scale/apisonator:nightly", "nightly"},
+		{"test05", "quay.io/3scale/apisonator:latest", "latest"},
 	}
 
 	for _, tc := range cases {
