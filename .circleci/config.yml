@@ -295,37 +295,6 @@ commands:
               --docker-password="${DOCKER_PASSWORD}" \
               --docker-username="${DOCKER_USERNAME}" \
               --docker-server="${DOCKER_REGISTRY}"
-  build-amp-images:
-    steps:
-      - run:
-          name: Build 3scale images
-          no_output_timeout: 30m
-          command: |
-            set -o errexit
-            imagestream_tag_name=<< pipeline.parameters.components_imagestream_tag_name >>
-            oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
-              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:latest \
-              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:latest \
-              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:latest \
-              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:latest \
-              --param MEMCACHED_IMAGE=<< pipeline.parameters.memcached_image >> \
-              -o json --param WILDCARD_DOMAIN=lvh/me --param AMP_RELEASE="${imagestream_tag_name}" | \
-              jq -j '.items[] | select(.kind == "ImageStream")' | \
-              oc create -f -
-            oc new-app -f pkg/3scale/amp/manual-templates/amp/build.yml \
-              --allow-missing-imagestream-tags \
-              --param IMAGESTREAM_TAG_NAME="${imagestream_tag_name}" \
-              --param ZYNC_GIT_REF="<< pipeline.parameters.components_git_ref >>" \
-              --param PORTA_GIT_REF="<< pipeline.parameters.components_git_ref >>" \
-              --param APICAST_GIT_REF="<< pipeline.parameters.components_git_ref >>" \
-              --param APISONATOR_GIT_REF="<< pipeline.parameters.components_git_ref >>"
-            until (oc get is s2i-openresty-centos7 -o json || echo '{}') | jq '[.status.tags[] | select(.tag == "builder")] | length == 1' --exit-status; do
-              echo "wating for s2i-openresty-centos7:builder imagestream"
-              sleep 1
-            done
-            for bc in $(oc get bc --output=name); do oc start-build $bc --wait --follow; done
-            echo "Finished waiting for the processes"
-            oc delete events --all
   oc-observe:
     steps:
       - run:
@@ -455,30 +424,6 @@ jobs:
       - install-openshift
       - deploy-3scale-eval-from-template
       - oc-status
-
-  build-push-3scale-images:
-    machine:
-      image: ubuntu-1604:202007-01
-      docker_layer_caching: true
-    resource_class: large
-    steps:
-      - run:
-          name: GITREF << pipeline.parameters.components_git_ref >>
-          command: |
-            exit 0
-      - run:
-          name: Remote Image TAG << pipeline.parameters.components_tag_name >>
-          command: |
-            exit 0
-      - checkout
-      - install-openshift
-      - create-secrets
-      - create-redhat-registry-io-secret
-      - build-amp-images
-      - oc-observe
-      - deploy-3scale-eval-from-template-imagestreamsless
-      - oc-status
-      - push-3scale-images-to-quay
 
   run-unit-tests:
     docker:
@@ -621,8 +566,3 @@ workflows:
             <<: *tag-trigger
             branches:
               ignore: /.*/
-  images-build:
-    when: << pipeline.parameters.build_3scale_images_flag >>
-    jobs:
-      - build-push-3scale-images:
-          context: org-global
