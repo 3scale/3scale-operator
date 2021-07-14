@@ -7,7 +7,7 @@ parameters:
     default: "memcached:1.5"
   components_tag_name:
     type: string
-    default: "nightly"
+    default: "latest"
   components_imagestream_tag_name:
     type: string
     default: "master"
@@ -304,10 +304,10 @@ commands:
             set -o errexit
             imagestream_tag_name=<< pipeline.parameters.components_imagestream_tag_name >>
             oc new-app -f pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
-              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:nightly \
-              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:nightly \
-              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:nightly \
-              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:nightly \
+              --param AMP_BACKEND_IMAGE=quay.io/3scale/apisonator:latest \
+              --param AMP_ZYNC_IMAGE=quay.io/3scale/zync:latest \
+              --param AMP_APICAST_IMAGE=quay.io/3scale/apicast:latest \
+              --param AMP_SYSTEM_IMAGE=quay.io/3scale/porta:latest \
               --param MEMCACHED_IMAGE=<< pipeline.parameters.memcached_image >> \
               -o json --param WILDCARD_DOMAIN=lvh/me --param AMP_RELEASE="${imagestream_tag_name}" | \
               jq -j '.items[] | select(.kind == "ImageStream")' | \
@@ -598,11 +598,7 @@ workflows:
             - generator
   nightly:
     jobs:
-      - build-push-3scale-images:
-          context: org-global
-      - deploy_templates:
-          requires:
-            - build-push-3scale-images
+      - deploy_templates
       - build-operator-image-only
     <<: *nightly-trigger
   operator-release:
