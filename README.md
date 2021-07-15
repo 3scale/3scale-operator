@@ -5,6 +5,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/3scale/3scale-operator.svg)](https://github.com/3scale/3scale-operator/releases/latest)
 [![codecov](https://codecov.io/gh/3scale/3scale-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/3scale/3scale-operator)
 
+teststring
 ## Overview
 
 The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
