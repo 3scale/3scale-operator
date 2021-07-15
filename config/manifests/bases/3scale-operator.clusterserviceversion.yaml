@@ -3,7 +3,7 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: '[]'
-    capabilities: Full Lifecycle
+    capabilities: Deep Insights
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/3scale/3scale-operator:master
