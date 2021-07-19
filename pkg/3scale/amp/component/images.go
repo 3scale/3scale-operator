@@ -1,19 +1,19 @@
 package component
 
 func ApicastImageURL() string {
-	return "quay.io/3scale/apicast:nightly"
+	return "quay.io/3scale/apicast:latest"
 }
 
 func BackendImageURL() string {
-	return "quay.io/3scale/apisonator:nightly"
+	return "quay.io/3scale/apisonator:latest"
 }
 
 func SystemImageURL() string {
-	return "quay.io/3scale/porta:nightly"
+	return "quay.io/3scale/porta:latest"
 }
 
 func ZyncImageURL() string {
-	return "quay.io/3scale/zync:nightly"
+	return "quay.io/3scale/zync:latest"
 }
 
 func BackendRedisImageURL() string {
