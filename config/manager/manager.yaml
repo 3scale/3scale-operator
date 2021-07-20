@@ -47,26 +47,26 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: BACKEND_IMAGE
+        - name: RELATED_IMAGE_BACKEND
           value: "quay.io/3scale/apisonator:nightly"
-        - name: APICAST_IMAGE
+        - name: RELATED_IMAGE_APICAST
           value: "quay.io/3scale/apicast:nightly"
-        - name: SYSTEM_IMAGE
+        - name: RELATED_IMAGE_SYSTEM
           value: "quay.io/3scale/porta:nightly"
-        - name: ZYNC_IMAGE
+        - name: RELATED_IMAGE_ZYNC
           value: "quay.io/3scale/zync:nightly"
-        - name: SYSTEM_MEMCACHED_IMAGE
+        - name: RELATED_IMAGE_SYSTEM_MEMCACHED
           value: "memcached:1.5"
-        - name: BACKEND_REDIS_IMAGE
+        - name: RELATED_IMAGE_BACKEND_REDIS
           value: "centos/redis-5-centos7"
-        - name: SYSTEM_REDIS_IMAGE
+        - name: RELATED_IMAGE_SYSTEM_REDIS
           value: "centos/redis-5-centos7"
-        - name: SYSTEM_MYSQL_IMAGE
+        - name: RELATED_IMAGE_SYSTEM_MYSQL
           value: "centos/mysql-57-centos7"
-        - name: SYSTEM_POSTGRESQL_IMAGE
+        - name: RELATED_IMAGE_SYSTEM_POSTGRESQL
           value: "centos/postgresql-10-centos7"
-        - name: ZYNC_POSTGRESQL_IMAGE
+        - name: RELATED_IMAGE_ZYNC_POSTGRESQL
           value: "centos/postgresql-10-centos7"
-        - name: OC_CLI_IMAGE
+        - name: RELATED_IMAGE_OC_CLI
           value: "quay.io/openshift/origin-cli:4.2"
       terminationGracePeriodSeconds: 10
