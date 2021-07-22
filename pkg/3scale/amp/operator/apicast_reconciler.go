@@ -3,10 +3,12 @@ package operator
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -65,8 +67,9 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.apicastLogLevelEnvVarMutator,
-		r.volumeMountsMutator,
-		r.volumesMutator,
+		apicastVolumeMountsMutator,
+		apicastVolumesMutator,
+		apicastCustomPolicyAnnotationsMutator, // Should be always after volume mutator
 	)
 	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
 	if err != nil {
@@ -81,8 +84,9 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.apicastProductionWorkersEnvVarMutator,
 		r.apicastLogLevelEnvVarMutator,
-		r.volumeMountsMutator,
-		r.volumesMutator,
+		apicastVolumeMountsMutator,
+		apicastVolumesMutator,
+		apicastCustomPolicyAnnotationsMutator, // Should be always after volume mutator
 	)
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
@@ -157,26 +161,108 @@ func (r *ApicastReconciler) apicastLogLevelEnvVarMutator(desired, existing *apps
 	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL")
 }
 
-func (r *ApicastReconciler) volumeMountsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+// volumeMountsMutator implements basic VolumeMount reconcilliation
+// Added when in desired and not in existing
+// Updated when in desired and in existing but not equal
+// Existing not in desired will NOT be removed. Allows manually added volumemounts
+func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	changed := false
+	existingContainer := &existing.Spec.Template.Spec.Containers[0]
+	desiredContainer := &desired.Spec.Template.Spec.Containers[0]
 
-	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].VolumeMounts, desired.Spec.Template.Spec.Containers[0].VolumeMounts) {
-		changed = true
-		existing.Spec.Template.Spec.Containers[0].VolumeMounts = desired.Spec.Template.Spec.Containers[0].VolumeMounts
+	// Add desired not in existing
+	for desiredIdx := range desiredContainer.VolumeMounts {
+		existingIdx := helper.FindVolumeMountByMountPath(existingContainer.VolumeMounts, desiredContainer.VolumeMounts[desiredIdx])
+		if existingIdx < 0 {
+			existingContainer.VolumeMounts = append(existingContainer.VolumeMounts, desiredContainer.VolumeMounts[desiredIdx])
+			changed = true
+		} else if !reflect.DeepEqual(existingContainer.VolumeMounts[existingIdx], desiredContainer.VolumeMounts[desiredIdx]) {
+			existingContainer.VolumeMounts[existingIdx] = desiredContainer.VolumeMounts[desiredIdx]
+			changed = true
+		}
+	}
+
+	// Check custom policy annotations in existing and not in desired to delete volumes associated
+	// From the APIManager CR, operator does not know which custom policies have been deleted to reconcile volumes
+	// Only volumes associated to custom policies are deleted. The operator still allows manually arbitrary mounted volumes
+	existingCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(existing.Annotations)
+	desiredCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(desired.Annotations)
+	volumesToDelete := helper.ArrayStringDifference(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames)
+	for _, volumeNameToDelete := range volumesToDelete {
+		idx := helper.FindVolumeMountByName(existingContainer.VolumeMounts, volumeNameToDelete)
+		if idx >= 0 {
+			// Found a existing volume that needs to be removed
+			// remove index
+			existingContainer.VolumeMounts = append(existingContainer.VolumeMounts[:idx], existingContainer.VolumeMounts[idx+1:]...)
+			changed = true
+		}
 	}
 
 	return changed
 }
 
-func (r *ApicastReconciler) volumesMutator(desired, existing *appsv1.DeploymentConfig) bool {
+// volumeMountsMutator implements basic VolumeMount reconcilliation
+// Added when in desired and not in existing
+// Updated when in desired and in existing but not equal
+// Existing not in desired will NOT be removed. Allows manually added volumemounts
+func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	changed := false
+	existingSpec := &existing.Spec.Template.Spec
+	desiredSpec := &desired.Spec.Template.Spec
 
-	if !reflect.DeepEqual(existing.Spec.Template.Spec.Volumes, desired.Spec.Template.Spec.Volumes) {
-		changed = true
-		existing.Spec.Template.Spec.Volumes = desired.Spec.Template.Spec.Volumes
+	// Add desired not in existing
+	for desiredIdx := range desiredSpec.Volumes {
+		existingIdx := helper.FindVolumeByName(existingSpec.Volumes, desiredSpec.Volumes[desiredIdx].Name)
+		if existingIdx < 0 {
+			existingSpec.Volumes = append(existingSpec.Volumes, desiredSpec.Volumes[desiredIdx])
+			changed = true
+		} else if !helper.VolumeFromSecretEqual(existingSpec.Volumes[existingIdx], desiredSpec.Volumes[desiredIdx]) {
+			existingSpec.Volumes[existingIdx] = desiredSpec.Volumes[desiredIdx]
+			changed = true
+		}
+	}
+
+	// Check custom policy annotations in existing and not in desired to delete volumes associated
+	// From the APIManager CR, operator does not know which custom policies have been deleted to reconcile volumes
+	// Only volumes associated to custom policies are deleted. The operator still allows manually arbitrary mounted volumes
+	existingCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(existing.Annotations)
+	desiredCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(desired.Annotations)
+	volumesToDelete := helper.ArrayStringDifference(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames)
+	for _, volumeNameToDelete := range volumesToDelete {
+		idx := helper.FindVolumeByName(existingSpec.Volumes, volumeNameToDelete)
+		if idx >= 0 {
+			// Found a existing volume that needs to be removed
+			// remove index
+			existingSpec.Volumes = append(existingSpec.Volumes[:idx], existingSpec.Volumes[idx+1:]...)
+			changed = true
+		}
 	}
 
 	return changed
+}
+
+func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
+	// find existing custom policy annotations not in desired and delete them
+	updated := false
+	existingCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(existing.Annotations)
+	desiredCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(desired.Annotations)
+	if !helper.StringSliceEqualWithoutOrder(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames) {
+		for key := range existing.Annotations {
+			if strings.HasPrefix(key, component.CustomPoliciesAnnotationPrefix) {
+				delete(existing.Annotations, key)
+			}
+		}
+
+		for key := range desired.Annotations {
+			if strings.HasPrefix(key, component.CustomPoliciesAnnotationPrefix) {
+				existing.Annotations[key] = "true"
+			}
+		}
+
+		updated = true
+	}
+	return updated
 }
 
 func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.Apicast, error) {
