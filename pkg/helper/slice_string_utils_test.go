@@ -56,3 +56,27 @@ func TestArrayStringIntersection(t *testing.T) {
 		})
 	}
 }
+
+func TestStringSliceEqualWithoutOrder(t *testing.T) {
+	cases := []struct {
+		name        string
+		a           []string
+		b           []string
+		expectedRes bool
+	}{
+		{"test01", []string{"A", "B", "C"}, []string{"A", "D", "E"}, false},
+		{"test02", []string{"A", "B", "C"}, []string{"C", "B", "A"}, true},
+		{"test03", []string{"A", "B", "C"}, []string{}, false},
+		{"test04", []string{}, []string{"A", "B", "C"}, false},
+		{"test05", []string{}, []string{}, true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(subT *testing.T) {
+			res := StringSliceEqualWithoutOrder(tc.a, tc.b)
+			if res != tc.expectedRes {
+				subT.Errorf("Got %t, expected %t", res, tc.expectedRes)
+			}
+		})
+	}
+}

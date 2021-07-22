@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -18,7 +19,8 @@ const (
 	ApicastStagingName    = "apicast-staging"
 	ApicastProductionName = "apicast-production"
 
-	CustomPoliciesMountBasePath = "/opt/app-root/src/policies"
+	CustomPoliciesMountBasePath    = "/opt/app-root/src/policies"
+	CustomPoliciesAnnotationPrefix = "policy.apicast.3scale.redhat.com/"
 )
 
 type Apicast struct {
@@ -93,8 +95,9 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ApicastStagingName,
-			Labels: apicast.Options.CommonStagingLabels,
+			Name:        ApicastStagingName,
+			Labels:      apicast.Options.CommonStagingLabels,
+			Annotations: apicast.stagingDeploymentConfigAnnotations(),
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: apicast.Options.StagingReplicas,
@@ -201,8 +204,9 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ApicastProductionName,
-			Labels: apicast.Options.CommonProductionLabels,
+			Name:        ApicastProductionName,
+			Labels:      apicast.Options.CommonProductionLabels,
+			Annotations: apicast.productionDeploymentConfigAnnotations(),
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: apicast.Options.ProductionReplicas,
@@ -427,7 +431,7 @@ func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
-			Name:      policyVolumeName(customPolicy),
+			Name:      customPolicy.VolumeName(),
 			MountPath: path.Join(CustomPoliciesMountBasePath, customPolicy.Name, customPolicy.Version),
 			ReadOnly:  true,
 		})
@@ -441,7 +445,7 @@ func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
 
 	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
-			Name:      policyVolumeName(customPolicy),
+			Name:      customPolicy.VolumeName(),
 			MountPath: path.Join(CustomPoliciesMountBasePath, customPolicy.Name, customPolicy.Version),
 			ReadOnly:  true,
 		})
@@ -450,16 +454,12 @@ func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
 	return volumeMounts
 }
 
-func policyVolumeName(cp CustomPolicy) string {
-	return fmt.Sprintf("policy-%s-%s", helper.DNS1123Name(cp.Version), helper.DNS1123Name(cp.Name))
-}
-
 func (apicast *Apicast) productionVolumes() []v1.Volume {
 	var volumes []v1.Volume
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
 		volumes = append(volumes, v1.Volume{
-			Name: policyVolumeName(customPolicy),
+			Name: customPolicy.VolumeName(),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: customPolicy.SecretRef.Name,
@@ -476,7 +476,7 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 
 	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
 		volumes = append(volumes, v1.Volume{
-			Name: policyVolumeName(customPolicy),
+			Name: customPolicy.VolumeName(),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: customPolicy.SecretRef.Name,
@@ -486,4 +486,44 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 	}
 
 	return volumes
+}
+
+func (apicast *Apicast) productionDeploymentConfigAnnotations() map[string]string {
+	annotations := map[string]string{}
+
+	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
+		annotations[customPolicy.AnnotationKey()] = "true"
+	}
+
+	// keep backward compat
+	if len(annotations) == 0 {
+		return nil
+	}
+
+	return annotations
+}
+
+func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
+	annotations := map[string]string{}
+
+	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
+		annotations[customPolicy.AnnotationKey()] = "true"
+	}
+
+	// keep backward compat
+	if len(annotations) == 0 {
+		return nil
+	}
+
+	return annotations
+}
+
+func ApicastVolumeNamesFromAnnotations(annotations map[string]string) []string {
+	res := []string{}
+	for key := range annotations {
+		if strings.HasPrefix(key, CustomPoliciesAnnotationPrefix) {
+			res = append(res, strings.TrimPrefix(key, CustomPoliciesAnnotationPrefix))
+		}
+	}
+	return res
 }

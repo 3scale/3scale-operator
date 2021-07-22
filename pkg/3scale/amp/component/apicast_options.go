@@ -1,15 +1,27 @@
 package component
 
 import (
+	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 type CustomPolicy struct {
 	Name      string
 	Version   string
 	SecretRef v1.LocalObjectReference
+}
+
+func (c CustomPolicy) VolumeName() string {
+	return fmt.Sprintf("policy-%s-%s", helper.DNS1123Name(c.Version), helper.DNS1123Name(c.Name))
+}
+
+func (c CustomPolicy) AnnotationKey() string {
+	return CustomPoliciesAnnotationPrefix + c.VolumeName()
 }
 
 type ApicastOptions struct {
