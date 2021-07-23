@@ -20,7 +20,7 @@ const (
 	ApicastProductionName = "apicast-production"
 
 	CustomPoliciesMountBasePath    = "/opt/app-root/src/policies"
-	CustomPoliciesAnnotationPrefix = "policy.apicast.3scale.redhat.com/"
+	CustomPoliciesAnnotationPrefix = "apps.3scale.net/apicast-policy-volume"
 )
 
 type Apicast struct {
@@ -492,7 +492,7 @@ func (apicast *Apicast) productionDeploymentConfigAnnotations() map[string]strin
 	annotations := map[string]string{}
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
-		annotations[customPolicy.AnnotationKey()] = "true"
+		annotations[customPolicy.AnnotationKey()] = customPolicy.AnnotationValue()
 	}
 
 	// keep backward compat
@@ -507,7 +507,7 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 	annotations := map[string]string{}
 
 	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
-		annotations[customPolicy.AnnotationKey()] = "true"
+		annotations[customPolicy.AnnotationKey()] = customPolicy.AnnotationValue()
 	}
 
 	// keep backward compat
@@ -518,11 +518,11 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 	return annotations
 }
 
-func ApicastVolumeNamesFromAnnotations(annotations map[string]string) []string {
+func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []string {
 	res := []string{}
-	for key := range annotations {
+	for key, val := range annotations {
 		if strings.HasPrefix(key, CustomPoliciesAnnotationPrefix) {
-			res = append(res, strings.TrimPrefix(key, CustomPoliciesAnnotationPrefix))
+			res = append(res, val)
 		}
 	}
 	return res
