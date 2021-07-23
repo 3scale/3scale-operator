@@ -185,8 +185,8 @@ func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) bool
 	// Check custom policy annotations in existing and not in desired to delete volumes associated
 	// From the APIManager CR, operator does not know which custom policies have been deleted to reconcile volumes
 	// Only volumes associated to custom policies are deleted. The operator still allows manually arbitrary mounted volumes
-	existingCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(existing.Annotations)
-	desiredCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(desired.Annotations)
+	existingCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(existing.Annotations)
+	desiredCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(desired.Annotations)
 	volumesToDelete := helper.ArrayStringDifference(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames)
 	for _, volumeNameToDelete := range volumesToDelete {
 		idx := helper.FindVolumeMountByName(existingContainer.VolumeMounts, volumeNameToDelete)
@@ -225,8 +225,8 @@ func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	// Check custom policy annotations in existing and not in desired to delete volumes associated
 	// From the APIManager CR, operator does not know which custom policies have been deleted to reconcile volumes
 	// Only volumes associated to custom policies are deleted. The operator still allows manually arbitrary mounted volumes
-	existingCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(existing.Annotations)
-	desiredCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(desired.Annotations)
+	existingCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(existing.Annotations)
+	desiredCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(desired.Annotations)
 	volumesToDelete := helper.ArrayStringDifference(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames)
 	for _, volumeNameToDelete := range volumesToDelete {
 		idx := helper.FindVolumeByName(existingSpec.Volumes, volumeNameToDelete)
@@ -245,8 +245,8 @@ func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentC
 	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
 	// find existing custom policy annotations not in desired and delete them
 	updated := false
-	existingCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(existing.Annotations)
-	desiredCustomPolicyVolumeNames := component.ApicastVolumeNamesFromAnnotations(desired.Annotations)
+	existingCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(existing.Annotations)
+	desiredCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(desired.Annotations)
 	if !helper.StringSliceEqualWithoutOrder(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames) {
 		for key := range existing.Annotations {
 			if strings.HasPrefix(key, component.CustomPoliciesAnnotationPrefix) {
@@ -254,9 +254,9 @@ func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentC
 			}
 		}
 
-		for key := range desired.Annotations {
+		for key, val := range desired.Annotations {
 			if strings.HasPrefix(key, component.CustomPoliciesAnnotationPrefix) {
-				existing.Annotations[key] = "true"
+				existing.Annotations[key] = val
 			}
 		}
 
