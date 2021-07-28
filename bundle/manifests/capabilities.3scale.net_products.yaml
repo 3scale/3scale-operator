@@ -116,6 +116,9 @@ spec:
                         - to
                         type: object
                       type: array
+                    published:
+                      description: Controls whether the application plan is published. If not specified it is hidden by default
+                      type: boolean
                     setupFee:
                       description: Setup fee (USD)
                       pattern: ^\d+(\.\d{2})?$
