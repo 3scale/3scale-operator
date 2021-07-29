@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/version"
@@ -203,6 +204,10 @@ type ApicastProductionSpec struct {
 	// CustomPolicies specifies an array of defined custome policies to be loaded
 	// +optional
 	CustomPolicies []CustomPolicySpec `json:"customPolicies,omitempty"`
+	// OpenTracing contains the OpenTracing integration configuration
+	// with APIcast in the production environment.
+	// +optional
+	OpenTracing *APIcastOpenTracingSpec `json:"openTracing,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -220,6 +225,10 @@ type ApicastStagingSpec struct {
 	// CustomPolicies specifies an array of defined custome policies to be loaded
 	// +optional
 	CustomPolicies []CustomPolicySpec `json:"customPolicies,omitempty"`
+	// OpenTracing contains the OpenTracing integration configuration
+	// with APIcast in the staging environment.
+	// +optional
+	OpenTracing *APIcastOpenTracingSpec `json:"openTracing,omitempty"`
 }
 
 type BackendSpec struct {
@@ -531,6 +540,22 @@ type PersistentVolumeClaimResources struct {
 	// To learn more about resource requests see:
 	// https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 	Requests resource.Quantity `json:"requests"` // Should this be a string or a resoure.Quantity? it seems it is serialized as a string
+}
+
+type APIcastOpenTracingSpec struct {
+	// Enabled controls whether OpenTracing integration with APIcast is enabled.
+	// By default it is not enabled.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+	// +optional
+	// TracingLibrary controls which OpenTracing library is loaded. At the moment
+	// the only supported tracer is `jaeger`. If not set, `jaeger` will be used.
+	TracingLibrary *string `json:"tracingLibrary,omitempty"`
+	// TracingConfig contains a secret reference the OpenTracing configuration.
+	// Each supported tracing library provides a default configuration file
+	// that is used if TracingConfig is not specified.
+	// +optional
+	TracingConfigSecretRef *v1.LocalObjectReference `json:"tracingConfigRef,omitempty"`
 }
 
 // SetDefaults sets the default values for the APIManager spec and returns true if the spec was changed
@@ -867,6 +892,20 @@ func (apimanager *APIManager) IsPrometheusRulesEnabled() bool {
 		(apimanager.Spec.Monitoring.EnablePrometheusRules == nil || *apimanager.Spec.Monitoring.EnablePrometheusRules))
 }
 
+func (apimanager *APIManager) IsAPIcastProductionOpenTracingEnabled() bool {
+	return apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.ProductionSpec != nil &&
+		apimanager.Spec.Apicast.ProductionSpec.OpenTracing != nil &&
+		apimanager.Spec.Apicast.ProductionSpec.OpenTracing.Enabled != nil &&
+		*apimanager.Spec.Apicast.ProductionSpec.OpenTracing.Enabled
+}
+
+func (apimanager *APIManager) IsAPIcastStagingOpenTracingEnabled() bool {
+	return apimanager.Spec.Apicast != nil && apimanager.Spec.Apicast.StagingSpec != nil &&
+		apimanager.Spec.Apicast.StagingSpec.OpenTracing != nil &&
+		apimanager.Spec.Apicast.StagingSpec.OpenTracing.Enabled != nil &&
+		*apimanager.Spec.Apicast.StagingSpec.OpenTracing.Enabled
+}
+
 func (apimanager *APIManager) Validate() field.ErrorList {
 	fieldErrors := field.ErrorList{}
 
@@ -877,6 +916,7 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 
 		if apimanager.Spec.Apicast.ProductionSpec != nil {
 			prodSpecFldPath := apicastFldPath.Child("productionSpec")
+
 			customPoliciesFldPath := prodSpecFldPath.Child("customPolicies")
 			duplicateMap := make(map[string]int)
 			for idx, customPolicySpec := range apimanager.Spec.Apicast.ProductionSpec.CustomPolicies {
@@ -896,6 +936,28 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 				}
 				duplicateMap[customPolicySpec.VersionName()] = 0
 			}
+
+			if apimanager.IsAPIcastProductionOpenTracingEnabled() {
+				openTracingConfigSpec := apimanager.Spec.Apicast.ProductionSpec.OpenTracing
+				if openTracingConfigSpec.TracingConfigSecretRef != nil {
+					if openTracingConfigSpec.TracingConfigSecretRef.Name == "" {
+						apicastProductioOpenTracingFldPath := prodSpecFldPath.Child("openTracing")
+						customTracingConfigFldPath := apicastProductioOpenTracingFldPath.Child("tracingConfigSecretRef")
+						fieldErrors = append(fieldErrors, field.Invalid(customTracingConfigFldPath, apimanager.Spec.Apicast.ProductionSpec.OpenTracing, "custom tracing library secret name is empty"))
+					}
+				}
+
+				// For now only "jaeger" is accepted" as the tracing library
+				if openTracingConfigSpec.TracingLibrary != nil && *openTracingConfigSpec.TracingLibrary != component.APIcastDefaultTracingLibrary {
+					tracingLibraryFldPath := field.NewPath("spec").
+						Child("apicast").
+						Child("productionSpec").
+						Child("openTracing").
+						Child("tracingLibrary")
+					fieldErrors = append(fieldErrors, field.Invalid(tracingLibraryFldPath, openTracingConfigSpec, "invalid tracing library specified"))
+				}
+			}
+
 		}
 
 		if apimanager.Spec.Apicast.StagingSpec != nil {
@@ -919,6 +981,26 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 					break
 				}
 				duplicateMap[customPolicySpec.VersionName()] = 0
+			}
+
+			if apimanager.IsAPIcastStagingOpenTracingEnabled() {
+				openTracingConfigSpec := apimanager.Spec.Apicast.StagingSpec.OpenTracing
+				if openTracingConfigSpec.TracingConfigSecretRef != nil {
+					if openTracingConfigSpec.TracingConfigSecretRef.Name == "" {
+						apicastStagingOpenTracingFldPath := stagingSpecFldPath.Child("openTracing")
+						customTracingConfigFldPath := apicastStagingOpenTracingFldPath.Child("tracingConfigSecretRef")
+						fieldErrors = append(fieldErrors, field.Invalid(customTracingConfigFldPath, openTracingConfigSpec, "custom tracing library secret name is empty"))
+					}
+				}
+				// For now only "jaeger" is accepted" as the tracing library
+				if openTracingConfigSpec.TracingLibrary != nil && *openTracingConfigSpec.TracingLibrary != component.APIcastDefaultTracingLibrary {
+					tracingLibraryFldPath := field.NewPath("spec").
+						Child("apicast").
+						Child("stagingSpec").
+						Child("openTracing").
+						Child("tracingLibrary")
+					fieldErrors = append(fieldErrors, field.Invalid(tracingLibraryFldPath, openTracingConfigSpec, "invalid tracing library specified"))
+				}
 			}
 		}
 

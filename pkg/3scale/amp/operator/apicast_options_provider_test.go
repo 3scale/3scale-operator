@@ -158,6 +158,8 @@ func defaultApicastOptions() *component.ApicastOptions {
 		StagingPodTemplateLabels:       testApicastStagingPodLabels(),
 		ProductionPodTemplateLabels:    testApicastProductionPodLabels(),
 		Namespace:                      namespace,
+		ProductionTracingConfig:        &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary},
+		StagingTracingConfig:           &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary},
 	}
 }
 
