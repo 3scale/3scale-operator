@@ -108,6 +108,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | Workers | `workers` | integer | No | Automatically computed. Check [apicast doc](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_workers) for further info. | Defines the number of worker processes |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
+| OpenTracing | `openTracing` | [OpenTracingSpec](#OpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
 
 ### ApicastStagingSpec
 
@@ -119,6 +120,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
+| OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
 
 ### CustomPolicySpec
 
@@ -138,6 +140,28 @@ Some examples are available [here](/doc/adding-custom-policies.md)
 | --- | --- |
 | `init.lua` | Custom policy lua code entry point |
 | `apicast-policy.json` | Custom policy metadata |
+
+### APIcastOpenTracingSpec
+| **Field** | **json/yaml field** | **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Enabled | `enabled` | bool | No | `false` | Controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled |
+| TracingLibrary | `tracingLibrary` | string | No | `jaeger` | Controls which OpenTracing library is loaded. At the moment the supported values are: `jaeger`. If not set, `jaeger` will be used |
+| | TracingConfigRef | `tracingConfigRef` | LocalObjectReference | No | tracing library-specific default | Secret reference with the tracing library-specific configuration. Each supported tracing library provides a default configuration file which is used if `tracingConfigRef` is not specified. See [APIcastTracingConfigSecret](#APIcastTracingConfigSecret) for more information. |
+
+### APIcastTracingConfigSecret
+
+| **Field** | **Description** |
+| --- | --- |
+| `config` | Tracing library-specific configuration |
+
+*NOTE*: Once apicast has been deployed, the content of the secret should not be updated externally.
+If the content of the secret is updated externally, after apicast has been deployed, the container can automatically see the changes.
+However, apicast has the environment already loaded and it does not change the behavior.
+
+If the custom environment content needs to be changed, there are two options:
+
+* [**recommended way**] Create another secret with a different name and update the APIcast custom resource field `spec.apicast.<apicast-environment>.openTracing.tracingConfigRef.name`. The operator will trigger a rolling update loading the new custom environment content.
+* Update the existing secret content and redeploy apicast turning `spec.replicas` to 0 and then back to the previous value.
 
 ### BackendSpec
 

@@ -33,6 +33,31 @@ func (c CustomPolicy) AnnotationValue() string {
 	return c.VolumeName()
 }
 
+type APIcastTracingConfig struct {
+	Enabled                 bool
+	TracingLibrary          string `validate:"required"`
+	TracingConfigSecretName *string
+}
+
+func (c APIcastTracingConfig) AnnotationValue() string {
+	return c.VolumeName()
+}
+
+// VolumeName returns the volume name. It should only be used when c.TracingConfigSecretName is not nil
+func (c APIcastTracingConfig) VolumeName() string {
+	return fmt.Sprintf("tracing-config-%s-%s", helper.DNS1123Name(c.TracingLibrary), *c.TracingConfigSecretName)
+}
+
+// AnnotationKey returns the annotation key associated to the tracing config volume name. It should only be used
+// when c.TracingConfigSecretName is not nil
+func (c APIcastTracingConfig) AnnotationKey() string {
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+	// prefix/name: value
+	// The name segment is required and must be 63 characters or less
+	// Currently: len(APIcastTracingConfigAnnotationNameSegmentPrefix) + 32 (from the hash) + "-" = 62
+	return fmt.Sprintf("%s-%x", APIcastTracingConfigAnnotationPartialKey, md5.Sum([]byte(c.VolumeName())))
+}
+
 type ApicastOptions struct {
 	ManagementAPI                  string `validate:"required"`
 	OpenSSLVerify                  string `validate:"required"`
@@ -65,6 +90,9 @@ type ApicastOptions struct {
 
 	ProductionCustomPolicies []CustomPolicy `validate:"-"`
 	StagingCustomPolicies    []CustomPolicy `validate:"-"`
+
+	ProductionTracingConfig *APIcastTracingConfig `validate:"required"`
+	StagingTracingConfig    *APIcastTracingConfig `validate:"required"`
 }
 
 func NewApicastOptions() *ApicastOptions {
