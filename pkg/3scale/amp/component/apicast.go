@@ -607,22 +607,23 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 	return annotations
 }
 
-func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []string {
+// AnnotationsValuesWithAnnotationKeyPrefix returns the annotation values from
+// annotations whose keys have the prefix keyPrefix
+func AnnotationsValuesWithAnnotationKeyPrefix(annotations map[string]string, keyPrefix string) []string {
 	res := []string{}
 	for key, val := range annotations {
-		if strings.HasPrefix(key, CustomPoliciesAnnotationKeyPrefix) {
+		if strings.HasPrefix(key, keyPrefix) {
 			res = append(res, val)
 		}
 	}
+
 	return res
 }
 
+func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []string {
+	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, CustomPoliciesAnnotationKeyPrefix)
+}
+
 func ApicastTracingConfigVolumeNamesFromAnnotations(annotations map[string]string) []string {
-	res := []string{}
-	for key, val := range annotations {
-		if strings.HasPrefix(key, APIcastTracingConfigAnnotationPartialKey) {
-			res = append(res, val)
-		}
-	}
-	return res
+	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, APIcastTracingConfigAnnotationPartialKey)
 }
