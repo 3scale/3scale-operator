@@ -19,8 +19,8 @@ const (
 	ApicastStagingName    = "apicast-staging"
 	ApicastProductionName = "apicast-production"
 
-	CustomPoliciesMountBasePath    = "/opt/app-root/src/policies"
-	CustomPoliciesAnnotationPrefix = "apps.3scale.net/apicast-policy-volume"
+	CustomPoliciesMountBasePath       = "/opt/app-root/src/policies"
+	CustomPoliciesAnnotationKeyPrefix = "apps.3scale.net/apicast-policy-volume"
 )
 
 type Apicast struct {
@@ -521,7 +521,7 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []string {
 	res := []string{}
 	for key, val := range annotations {
-		if strings.HasPrefix(key, CustomPoliciesAnnotationPrefix) {
+		if strings.HasPrefix(key, CustomPoliciesAnnotationKeyPrefix) {
 			res = append(res, val)
 		}
 	}

@@ -249,13 +249,13 @@ func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentC
 	desiredCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(desired.Annotations)
 	if !helper.StringSliceEqualWithoutOrder(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames) {
 		for key := range existing.Annotations {
-			if strings.HasPrefix(key, component.CustomPoliciesAnnotationPrefix) {
+			if strings.HasPrefix(key, component.CustomPoliciesAnnotationKeyPrefix) {
 				delete(existing.Annotations, key)
 			}
 		}
 
 		for key, val := range desired.Annotations {
-			if strings.HasPrefix(key, component.CustomPoliciesAnnotationPrefix) {
+			if strings.HasPrefix(key, component.CustomPoliciesAnnotationKeyPrefix) {
 				existing.Annotations[key] = val
 			}
 		}
