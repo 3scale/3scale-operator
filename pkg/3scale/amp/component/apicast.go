@@ -19,8 +19,9 @@ const (
 	ApicastStagingName    = "apicast-staging"
 	ApicastProductionName = "apicast-production"
 
-	CustomPoliciesMountBasePath       = "/opt/app-root/src/policies"
-	CustomPoliciesAnnotationKeyPrefix = "apps.3scale.net/apicast-policy-volume"
+	CustomPoliciesMountBasePath               = "/opt/app-root/src/policies"
+	CustomPoliciesAnnotationNameSegmentPrefix = "apicast-policy-volume"
+	CustomPoliciesAnnotationPartialKey        = "apps.3scale.net/" + CustomPoliciesAnnotationNameSegmentPrefix
 )
 
 const (
@@ -621,7 +622,7 @@ func AnnotationsValuesWithAnnotationKeyPrefix(annotations map[string]string, key
 }
 
 func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []string {
-	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, CustomPoliciesAnnotationKeyPrefix)
+	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, CustomPoliciesAnnotationPartialKey)
 }
 
 func ApicastTracingConfigVolumeNamesFromAnnotations(annotations map[string]string) []string {
