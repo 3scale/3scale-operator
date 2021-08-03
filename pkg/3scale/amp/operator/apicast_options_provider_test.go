@@ -5,14 +5,17 @@ import (
 	"strconv"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 const (
@@ -241,7 +244,9 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(subT *testing.T) {
-			optsProvider := NewApicastOptionsProvider(tc.apimanagerFactory())
+			objs := []runtime.Object{}
+			cl := fake.NewFakeClient(objs...)
+			optsProvider := NewApicastOptionsProvider(tc.apimanagerFactory(), cl)
 			opts, err := optsProvider.GetApicastOptions()
 			if err != nil {
 				subT.Error(err)

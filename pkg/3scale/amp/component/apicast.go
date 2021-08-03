@@ -2,7 +2,9 @@ package component
 
 import (
 	"fmt"
+	"path"
 	"strconv"
+	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -16,6 +18,9 @@ import (
 const (
 	ApicastStagingName    = "apicast-staging"
 	ApicastProductionName = "apicast-production"
+
+	CustomPoliciesMountBasePath       = "/opt/app-root/src/policies"
+	CustomPoliciesAnnotationKeyPrefix = "apps.3scale.net/apicast-policy-volume"
 )
 
 type Apicast struct {
@@ -90,8 +95,9 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ApicastStagingName,
-			Labels: apicast.Options.CommonStagingLabels,
+			Name:        ApicastStagingName,
+			Labels:      apicast.Options.CommonStagingLabels,
+			Annotations: apicast.stagingDeploymentConfigAnnotations(),
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: apicast.Options.StagingReplicas,
@@ -144,6 +150,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 					Affinity:           apicast.Options.StagingAffinity,
 					Tolerations:        apicast.Options.StagingTolerations,
 					ServiceAccountName: "amp",
+					Volumes:            apicast.stagingVolumes(),
 					Containers: []v1.Container{
 						v1.Container{
 							Ports: []v1.ContainerPort{
@@ -166,6 +173,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            ApicastStagingName,
 							Resources:       apicast.Options.StagingResourceRequirements,
+							VolumeMounts:    apicast.stagingVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/live",
@@ -196,8 +204,9 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ApicastProductionName,
-			Labels: apicast.Options.CommonProductionLabels,
+			Name:        ApicastProductionName,
+			Labels:      apicast.Options.CommonProductionLabels,
+			Annotations: apicast.productionDeploymentConfigAnnotations(),
 		},
 		Spec: appsv1.DeploymentConfigSpec{
 			Replicas: apicast.Options.ProductionReplicas,
@@ -251,6 +260,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 					Affinity:           apicast.Options.ProductionAffinity,
 					Tolerations:        apicast.Options.ProductionTolerations,
 					ServiceAccountName: "amp",
+					Volumes:            apicast.productionVolumes(),
 					InitContainers: []v1.Container{
 						v1.Container{
 							Name:    "system-master-svc",
@@ -286,6 +296,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Name:            ApicastProductionName,
 							Resources:       apicast.Options.ProductionResourceRequirements,
+							VolumeMounts:    apicast.productionVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/live",
@@ -413,4 +424,106 @@ func (apicast *Apicast) ProductionPodDisruptionBudget() *v1beta1.PodDisruptionBu
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
 	}
+}
+
+func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
+	var volumeMounts []v1.VolumeMount
+
+	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      customPolicy.VolumeName(),
+			MountPath: path.Join(CustomPoliciesMountBasePath, customPolicy.Name, customPolicy.Version),
+			ReadOnly:  true,
+		})
+	}
+
+	return volumeMounts
+}
+
+func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
+	var volumeMounts []v1.VolumeMount
+
+	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      customPolicy.VolumeName(),
+			MountPath: path.Join(CustomPoliciesMountBasePath, customPolicy.Name, customPolicy.Version),
+			ReadOnly:  true,
+		})
+	}
+
+	return volumeMounts
+}
+
+func (apicast *Apicast) productionVolumes() []v1.Volume {
+	var volumes []v1.Volume
+
+	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
+		volumes = append(volumes, v1.Volume{
+			Name: customPolicy.VolumeName(),
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: customPolicy.SecretRef.Name,
+				},
+			},
+		})
+	}
+
+	return volumes
+}
+
+func (apicast *Apicast) stagingVolumes() []v1.Volume {
+	var volumes []v1.Volume
+
+	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
+		volumes = append(volumes, v1.Volume{
+			Name: customPolicy.VolumeName(),
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: customPolicy.SecretRef.Name,
+				},
+			},
+		})
+	}
+
+	return volumes
+}
+
+func (apicast *Apicast) productionDeploymentConfigAnnotations() map[string]string {
+	annotations := map[string]string{}
+
+	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
+		annotations[customPolicy.AnnotationKey()] = customPolicy.AnnotationValue()
+	}
+
+	// keep backward compat
+	if len(annotations) == 0 {
+		return nil
+	}
+
+	return annotations
+}
+
+func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
+	annotations := map[string]string{}
+
+	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
+		annotations[customPolicy.AnnotationKey()] = customPolicy.AnnotationValue()
+	}
+
+	// keep backward compat
+	if len(annotations) == 0 {
+		return nil
+	}
+
+	return annotations
+}
+
+func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []string {
+	res := []string{}
+	for key, val := range annotations {
+		if strings.HasPrefix(key, CustomPoliciesAnnotationKeyPrefix) {
+			res = append(res, val)
+		}
+	}
+	return res
 }

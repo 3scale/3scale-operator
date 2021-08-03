@@ -1,10 +1,37 @@
 package component
 
 import (
+	"crypto/md5"
+	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
+
+type CustomPolicy struct {
+	Name      string
+	Version   string
+	SecretRef v1.LocalObjectReference
+}
+
+func (c CustomPolicy) VolumeName() string {
+	return fmt.Sprintf("policy-%s-%s", helper.DNS1123Name(c.Version), helper.DNS1123Name(c.Name))
+}
+
+func (c CustomPolicy) AnnotationKey() string {
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+	// prefix/name: value
+	// The name segment is required and must be 63 characters or less
+	// Currently: len(CustomPoliciesAnnotationKeyPrefix) + 32 (from the hash) = 54
+	return fmt.Sprintf("%s-%x", CustomPoliciesAnnotationKeyPrefix, md5.Sum([]byte(c.VolumeName())))
+}
+
+func (c CustomPolicy) AnnotationValue() string {
+	return c.VolumeName()
+}
 
 type ApicastOptions struct {
 	ManagementAPI                  string `validate:"required"`
@@ -35,6 +62,9 @@ type ApicastOptions struct {
 
 	ProductionLogLevel *string `validate:"-"`
 	StagingLogLevel    *string `validate:"-"`
+
+	ProductionCustomPolicies []CustomPolicy `validate:"-"`
+	StagingCustomPolicies    []CustomPolicy `validate:"-"`
 }
 
 func NewApicastOptions() *ApicastOptions {

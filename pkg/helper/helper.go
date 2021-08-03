@@ -4,12 +4,19 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+)
+
+var (
+	// InvalidDNS1123Regexp not alphanumeric
+	InvalidDNS1123Regexp = regexp.MustCompile(`[^0-9A-Za-z-]`)
 )
 
 // PortFromURL infers port number if it is not explict
@@ -96,4 +103,9 @@ func GetStringPointerValueOrDefault(val *string, def string) string {
 		return *val
 	}
 	return def
+}
+
+func DNS1123Name(in string) string {
+	tmp := strings.ToLower(in)
+	return InvalidDNS1123Regexp.ReplaceAllString(tmp, "")
 }
