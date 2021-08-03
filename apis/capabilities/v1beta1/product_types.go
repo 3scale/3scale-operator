@@ -162,7 +162,16 @@ type ApplicationPlanSpec struct {
 	// +optional
 	Limits []LimitSpec `json:"limits,omitempty"`
 
+	// Controls whether the application plan is published. If not specified it is
+	// hidden by default
+	// +optional
+	Published *bool `json:"published,omitempty"`
+
 	// TODO Features
+}
+
+func (a *ApplicationPlanSpec) IsPublished() bool {
+	return a.Published != nil && *a.Published
 }
 
 // MethodSpec defines the desired state of Product's Method
