@@ -25,8 +25,8 @@ func (c CustomPolicy) AnnotationKey() string {
 	// https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 	// prefix/name: value
 	// The name segment is required and must be 63 characters or less
-	// Currently: len(CustomPoliciesAnnotationKeyPrefix) + 32 (from the hash) = 54
-	return fmt.Sprintf("%s-%x", CustomPoliciesAnnotationKeyPrefix, md5.Sum([]byte(c.VolumeName())))
+	// Currently: len(CustomPoliciesAnnotationNameSegmentPrefix) + 32 (from the hash) = 54
+	return fmt.Sprintf("%s-%x", CustomPoliciesAnnotationPartialKey, md5.Sum([]byte(c.VolumeName())))
 }
 
 func (c CustomPolicy) AnnotationValue() string {
