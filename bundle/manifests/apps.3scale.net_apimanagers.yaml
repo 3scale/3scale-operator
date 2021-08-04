@@ -418,6 +418,23 @@ spec:
                         - alert
                         - emerg
                         type: string
+                      openTracing:
+                        description: OpenTracing contains the OpenTracing integration configuration with APIcast in the production environment.
+                        properties:
+                          enabled:
+                            description: Enabled controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled.
+                            type: boolean
+                          tracingConfigRef:
+                            description: TracingConfig contains a secret reference the OpenTracing configuration. Each supported tracing library provides a default configuration file that is used if TracingConfig is not specified.
+                            properties:
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                                type: string
+                            type: object
+                          tracingLibrary:
+                            description: TracingLibrary controls which OpenTracing library is loaded. At the moment the only supported tracer is `jaeger`. If not set, `jaeger` will be used.
+                            type: string
+                        type: object
                       replicas:
                         format: int64
                         type: integer
@@ -852,6 +869,23 @@ spec:
                         - alert
                         - emerg
                         type: string
+                      openTracing:
+                        description: OpenTracing contains the OpenTracing integration configuration with APIcast in the staging environment.
+                        properties:
+                          enabled:
+                            description: Enabled controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled.
+                            type: boolean
+                          tracingConfigRef:
+                            description: TracingConfig contains a secret reference the OpenTracing configuration. Each supported tracing library provides a default configuration file that is used if TracingConfig is not specified.
+                            properties:
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                                type: string
+                            type: object
+                          tracingLibrary:
+                            description: TracingLibrary controls which OpenTracing library is loaded. At the moment the only supported tracer is `jaeger`. If not set, `jaeger` will be used.
+                            type: string
+                        type: object
                       replicas:
                         format: int64
                         type: integer

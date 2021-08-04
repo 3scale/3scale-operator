@@ -19,8 +19,17 @@ const (
 	ApicastStagingName    = "apicast-staging"
 	ApicastProductionName = "apicast-production"
 
-	CustomPoliciesMountBasePath       = "/opt/app-root/src/policies"
-	CustomPoliciesAnnotationKeyPrefix = "apps.3scale.net/apicast-policy-volume"
+	CustomPoliciesMountBasePath               = "/opt/app-root/src/policies"
+	CustomPoliciesAnnotationNameSegmentPrefix = "apicast-policy-volume"
+	CustomPoliciesAnnotationPartialKey        = "apps.3scale.net/" + CustomPoliciesAnnotationNameSegmentPrefix
+)
+
+const (
+	APIcastDefaultTracingLibrary                    = "jaeger"
+	APIcastTracingConfigSecretKey                   = "config"
+	APIcastTracingConfigMountBasePath               = "/opt/app-root/src/tracing-configs"
+	APIcastTracingConfigAnnotationNameSegmentPrefix = "apicast-tracing-config-volume"
+	APIcastTracingConfigAnnotationPartialKey        = "apps.3scale.net/" + APIcastTracingConfigAnnotationNameSegmentPrefix
 )
 
 type Apicast struct {
@@ -350,6 +359,18 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 	if apicast.Options.StagingLogLevel != nil {
 		result = append(result, helper.EnvVarFromValue("APICAST_LOG_LEVEL", *apicast.Options.StagingLogLevel))
 	}
+
+	stagingTracingConfig := apicast.Options.StagingTracingConfig
+	if stagingTracingConfig.Enabled {
+		result = append(result, helper.EnvVarFromValue("OPENTRACING_TRACER", stagingTracingConfig.TracingLibrary))
+
+		if stagingTracingConfig.TracingConfigSecretName != nil {
+			result = append(result,
+				helper.EnvVarFromValue("OPENTRACING_CONFIG",
+					path.Join(APIcastTracingConfigMountBasePath, stagingTracingConfig.VolumeName())))
+		}
+	}
+
 	return result
 }
 
@@ -367,6 +388,17 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 	if apicast.Options.ProductionLogLevel != nil {
 		result = append(result, helper.EnvVarFromValue("APICAST_LOG_LEVEL", *apicast.Options.ProductionLogLevel))
 	}
+
+	productionTracingConfig := apicast.Options.ProductionTracingConfig
+	if productionTracingConfig.Enabled {
+		result = append(result, helper.EnvVarFromValue("OPENTRACING_TRACER", productionTracingConfig.TracingLibrary))
+
+		if productionTracingConfig.TracingConfigSecretName != nil {
+			result = append(result,
+				helper.EnvVarFromValue("OPENTRACING_CONFIG", path.Join(APIcastTracingConfigMountBasePath, productionTracingConfig.VolumeName())))
+		}
+	}
+
 	return result
 }
 
@@ -437,6 +469,13 @@ func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
 		})
 	}
 
+	if apicast.Options.ProductionTracingConfig.Enabled && apicast.Options.ProductionTracingConfig.TracingConfigSecretName != nil {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      apicast.Options.ProductionTracingConfig.VolumeName(),
+			MountPath: APIcastTracingConfigMountBasePath,
+		})
+	}
+
 	return volumeMounts
 }
 
@@ -448,6 +487,13 @@ func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
 			Name:      customPolicy.VolumeName(),
 			MountPath: path.Join(CustomPoliciesMountBasePath, customPolicy.Name, customPolicy.Version),
 			ReadOnly:  true,
+		})
+	}
+
+	if apicast.Options.StagingTracingConfig.Enabled && apicast.Options.StagingTracingConfig.TracingConfigSecretName != nil {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      apicast.Options.StagingTracingConfig.VolumeName(),
+			MountPath: APIcastTracingConfigMountBasePath,
 		})
 	}
 
@@ -463,6 +509,23 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: customPolicy.SecretRef.Name,
+				},
+			},
+		})
+	}
+
+	if apicast.Options.ProductionTracingConfig.Enabled && apicast.Options.ProductionTracingConfig.TracingConfigSecretName != nil {
+		volumes = append(volumes, v1.Volume{
+			Name: apicast.Options.ProductionTracingConfig.VolumeName(),
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: *apicast.Options.ProductionTracingConfig.TracingConfigSecretName,
+					Items: []v1.KeyToPath{
+						v1.KeyToPath{
+							Key:  APIcastTracingConfigSecretKey,
+							Path: apicast.Options.ProductionTracingConfig.VolumeName(),
+						},
+					},
 				},
 			},
 		})
@@ -485,6 +548,23 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 		})
 	}
 
+	if apicast.Options.StagingTracingConfig.Enabled && apicast.Options.StagingTracingConfig.TracingConfigSecretName != nil {
+		volumes = append(volumes, v1.Volume{
+			Name: apicast.Options.StagingTracingConfig.VolumeName(),
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: *apicast.Options.StagingTracingConfig.TracingConfigSecretName,
+					Items: []v1.KeyToPath{
+						v1.KeyToPath{
+							Key:  APIcastTracingConfigSecretKey,
+							Path: apicast.Options.StagingTracingConfig.VolumeName(),
+						},
+					},
+				},
+			},
+		})
+	}
+
 	return volumes
 }
 
@@ -493,6 +573,11 @@ func (apicast *Apicast) productionDeploymentConfigAnnotations() map[string]strin
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
 		annotations[customPolicy.AnnotationKey()] = customPolicy.AnnotationValue()
+	}
+
+	productionTracingConfig := apicast.Options.ProductionTracingConfig
+	if productionTracingConfig.Enabled && productionTracingConfig.TracingConfigSecretName != nil {
+		annotations[productionTracingConfig.AnnotationKey()] = productionTracingConfig.VolumeName()
 	}
 
 	// keep backward compat
@@ -510,6 +595,11 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 		annotations[customPolicy.AnnotationKey()] = customPolicy.AnnotationValue()
 	}
 
+	stagingTracingConfig := apicast.Options.StagingTracingConfig
+	if stagingTracingConfig.Enabled && stagingTracingConfig.TracingConfigSecretName != nil {
+		annotations[stagingTracingConfig.AnnotationKey()] = apicast.Options.StagingTracingConfig.VolumeName()
+	}
+
 	// keep backward compat
 	if len(annotations) == 0 {
 		return nil
@@ -518,12 +608,23 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 	return annotations
 }
 
-func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []string {
+// AnnotationsValuesWithAnnotationKeyPrefix returns the annotation values from
+// annotations whose keys have the prefix keyPrefix
+func AnnotationsValuesWithAnnotationKeyPrefix(annotations map[string]string, keyPrefix string) []string {
 	res := []string{}
 	for key, val := range annotations {
-		if strings.HasPrefix(key, CustomPoliciesAnnotationKeyPrefix) {
+		if strings.HasPrefix(key, keyPrefix) {
 			res = append(res, val)
 		}
 	}
+
 	return res
+}
+
+func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []string {
+	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, CustomPoliciesAnnotationPartialKey)
+}
+
+func ApicastTracingConfigVolumeNamesFromAnnotations(annotations map[string]string) []string {
+	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, APIcastTracingConfigAnnotationPartialKey)
 }

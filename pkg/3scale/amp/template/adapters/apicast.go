@@ -111,6 +111,16 @@ func (a *Apicast) options() (*component.ApicastOptions, error) {
 	ao.StagingPodTemplateLabels = a.stagingPodTemplateLabels()
 	ao.ProductionPodTemplateLabels = a.productionPodTemplateLabels()
 
+	// Intentionally disable tracing as this is an operator-only functionality
+	ao.StagingTracingConfig = &component.APIcastTracingConfig{
+		Enabled:        false,
+		TracingLibrary: component.APIcastDefaultTracingLibrary,
+	}
+	ao.ProductionTracingConfig = &component.APIcastTracingConfig{
+		Enabled:        false,
+		TracingLibrary: component.APIcastDefaultTracingLibrary,
+	}
+
 	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
 	ao.Namespace = "${NAMESPACE}"
 

@@ -202,6 +202,8 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 	// P1 should be deleted from existing DC
 	apicastOptions := &component.ApicastOptions{
 		ProductionCustomPolicies: []component.CustomPolicy{p1CustomPolicy},
+		StagingTracingConfig:     &component.APIcastTracingConfig{},
+		ProductionTracingConfig:  &component.APIcastTracingConfig{},
 	}
 	apicast := component.NewApicast(apicastOptions)
 	existingProdDC := apicast.ProductionDeploymentConfig()
@@ -333,5 +335,218 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 
 	if !p2Found {
 		t.Fatal("P2 policy annotation not found. Should have been created")
+	}
+}
+
+func TestApicastReconcilerTracingConfigParts(t *testing.T) {
+	var (
+		name                                   = "example-apimanager"
+		namespace                              = "operator-unittest"
+		wildcardDomain                         = "test.3scale.net"
+		log                                    = logf.Log.WithName("operator_test")
+		appLabel                               = "someLabel"
+		tenantName                             = "someTenant"
+		apicastManagementAPI                   = "disabled"
+		trueValue                              = true
+		falseValue                             = false
+		oneValue                         int64 = 1
+		existingTracingConfig1SecretName       = "mysecretnameone"
+		desiredTracingConfig1SecretName        = "mysecretnametwo"
+
+		existingTracingConfig1 = component.APIcastTracingConfig{
+			TracingLibrary:          component.APIcastDefaultTracingLibrary,
+			Enabled:                 true,
+			TracingConfigSecretName: &existingTracingConfig1SecretName,
+		}
+
+		desiredTracingConfig1 = component.APIcastTracingConfig{
+			TracingLibrary:          component.APIcastDefaultTracingLibrary,
+			Enabled:                 true,
+			TracingConfigSecretName: &desiredTracingConfig1SecretName,
+		}
+	)
+
+	apicastOptions := &component.ApicastOptions{
+		StagingTracingConfig:    &component.APIcastTracingConfig{},
+		ProductionTracingConfig: &existingTracingConfig1,
+	}
+	apicast := component.NewApicast(apicastOptions)
+	existingProdDC := apicast.ProductionDeploymentConfig()
+	existingProdDC.Namespace = namespace
+
+	// - Tracing Configuration 1 added into the Production DC with the expected key
+	existingTracingConfig1Found := false
+	for key := range existingProdDC.Annotations {
+		if existingTracingConfig1.AnnotationKey() == key {
+			existingTracingConfig1Found = true
+		}
+	}
+
+	if !existingTracingConfig1Found {
+		t.Fatal("tracing config 1 annotation not found. Should have been created")
+	}
+
+	existingTc1Secret := &v1.Secret{
+		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
+		ObjectMeta: metav1.ObjectMeta{Name: *existingTracingConfig1.TracingConfigSecretName, Namespace: namespace},
+		Data: map[string][]byte{
+			"config": []byte("some existing tracing config"),
+		},
+		Type: v1.SecretTypeOpaque,
+	}
+
+	desiredTc1Secret := &v1.Secret{
+		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
+		ObjectMeta: metav1.ObjectMeta{Name: *desiredTracingConfig1.TracingConfigSecretName, Namespace: namespace},
+		Data: map[string][]byte{
+			"config": []byte("some desired tracing config"),
+		},
+		Type: v1.SecretTypeOpaque,
+	}
+
+	apimanager := &appsv1alpha1.APIManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appsv1alpha1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				AppLabel:                     &appLabel,
+				ImageStreamTagImportInsecure: &trueValue,
+				WildcardDomain:               wildcardDomain,
+				TenantName:                   &tenantName,
+				ResourceRequirementsEnabled:  &trueValue,
+			},
+			Apicast: &appsv1alpha1.ApicastSpec{
+				ApicastManagementAPI: &apicastManagementAPI,
+				OpenSSLVerify:        &trueValue,
+				IncludeResponseCodes: &trueValue,
+				StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+					Replicas: &oneValue,
+					OpenTracing: &appsv1alpha1.APIcastOpenTracingSpec{
+						Enabled: &falseValue,
+						TracingConfigSecretRef: &v1.LocalObjectReference{
+							Name: "anothersecret",
+						},
+					},
+				},
+				ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+					Replicas: &oneValue,
+					OpenTracing: &appsv1alpha1.APIcastOpenTracingSpec{
+						Enabled: &trueValue,
+						TracingConfigSecretRef: &v1.LocalObjectReference{
+							Name: desiredTracingConfig1SecretName,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Objects to track in the fake client.
+	objs := []runtime.Object{apimanager, existingProdDC, existingTc1Secret, desiredTc1Secret}
+	s := scheme.Scheme
+	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	err := appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = imagev1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = routev1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := monitoringv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+	if err := grafanav1alpha1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a fake client to mock API calls.
+	cl := fake.NewFakeClient(objs...)
+	clientAPIReader := fake.NewFakeClient(objs...)
+	clientset := fakeclientset.NewSimpleClientset()
+	recorder := record.NewFakeRecorder(10000)
+
+	ctx := context.TODO()
+	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+
+	apicastReconciler := NewApicastReconciler(baseAPIManagerLogicReconciler)
+	_, err = apicastReconciler.Reconcile()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	namespacedName := types.NamespacedName{
+		Name:      "apicast-production",
+		Namespace: namespace,
+	}
+	existing := &appsv1.DeploymentConfig{}
+	err = cl.Get(context.TODO(), namespacedName, existing)
+	// object must exist, that is all required to be tested
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// // Assert existing DC:
+	// // - Volume for existingTracingConfig1 deleted
+	for idx := range existing.Spec.Template.Spec.Volumes {
+		if existing.Spec.Template.Spec.Volumes[idx].Name == existingTracingConfig1.VolumeName() {
+			t.Fatal("existingTracingConfig1 volume found. Should have been deleted")
+		}
+	}
+	// // - VolumeMount for existingTracingConfig1 deleted
+	for idx := range existing.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if existing.Spec.Template.Spec.Containers[0].VolumeMounts[idx].Name == existingTracingConfig1.VolumeName() {
+			t.Fatal("existingTracingConfig1 volumemount found. Should have been deleted")
+		}
+	}
+
+	// // - Volume for desiredTracingConfig1 added
+	desiredTracingConfig1Found := false
+	for idx := range existing.Spec.Template.Spec.Volumes {
+		if existing.Spec.Template.Spec.Volumes[idx].Name == desiredTracingConfig1.VolumeName() {
+			desiredTracingConfig1Found = true
+		}
+	}
+
+	if !desiredTracingConfig1Found {
+		t.Fatal("desiredTracingConfig1 volume not found. Should have been created")
+	}
+
+	// // - VolumeMount for desiredTracingConfig1 added
+	desiredTracingConfig1Found = false
+	for idx := range existing.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if existing.Spec.Template.Spec.Containers[0].VolumeMounts[idx].Name == desiredTracingConfig1.VolumeName() {
+			desiredTracingConfig1Found = true
+		}
+	}
+
+	if !desiredTracingConfig1Found {
+		t.Fatal("desiredTracingConfig1 volumemount not found. Should have been created")
+	}
+
+	// // - Tracing config annotation for existingTracingConfig1 deleted
+	for key := range existing.Annotations {
+		if existingTracingConfig1.AnnotationKey() == key {
+			t.Fatal("existingTracingConfig1 annotation found. Should have been deleted")
+		}
+	}
+
+	// // - Tracing config annotation for desiredTracingConfig1 added
+	desiredTracingConfig1Found = false
+	for key := range existing.Annotations {
+		if desiredTracingConfig1.AnnotationKey() == key {
+			desiredTracingConfig1Found = true
+		}
+	}
+
+	if !desiredTracingConfig1Found {
+		t.Fatal("desiredTracingConfig1 tracing config annotation not found. Should have been created")
 	}
 }

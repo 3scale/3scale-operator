@@ -1,10 +1,12 @@
 package operator
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -56,6 +58,11 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.setReplicas()
 
 	err = a.setCustomPolicies()
+	if err != nil {
+		return nil, err
+	}
+
+	err = a.setTracingConfiguration()
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +205,100 @@ func (a *ApicastOptionsProvider) validateCustomPolicySecret(name string) error {
 	_, err = a.secretSource.RequiredFieldValueFromRequiredSecret(name, "apicast-policy.json")
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (a *ApicastOptionsProvider) setTracingConfiguration() error {
+	err := a.setProductionTracingConfiguration()
+	if err != nil {
+		return err
+	}
+
+	err = a.setStagingTracingConfiguration()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *ApicastOptionsProvider) setProductionTracingConfiguration() error {
+	tracingIsEnabled := a.apimanager.IsAPIcastProductionOpenTracingEnabled()
+	res := &component.APIcastTracingConfig{
+		Enabled:        tracingIsEnabled,
+		TracingLibrary: component.APIcastDefaultTracingLibrary,
+	}
+	if tracingIsEnabled {
+		openTracingConfigSpec := a.apimanager.Spec.Apicast.ProductionSpec.OpenTracing
+		if openTracingConfigSpec.TracingLibrary != nil {
+			res.TracingLibrary = *a.apimanager.Spec.Apicast.ProductionSpec.OpenTracing.TracingLibrary
+		}
+		if openTracingConfigSpec.TracingConfigSecretRef != nil {
+			namespacedName := types.NamespacedName{
+				Name:      openTracingConfigSpec.TracingConfigSecretRef.Name, // CR Validation ensures not nil
+				Namespace: a.apimanager.Namespace,
+			}
+			err := a.validateTracingConfigSecret(namespacedName)
+			if err != nil {
+				errors := field.ErrorList{}
+				tracingConfigFldPath := field.NewPath("spec").Child("openTracing").Child("tracingConfigSecretRef")
+				errors = append(errors, field.Invalid(tracingConfigFldPath, openTracingConfigSpec, err.Error()))
+				return errors.ToAggregate()
+			}
+			res.TracingConfigSecretName = &openTracingConfigSpec.TracingConfigSecretRef.Name
+		}
+	}
+
+	a.apicastOptions.ProductionTracingConfig = res
+
+	return nil
+}
+
+func (a *ApicastOptionsProvider) setStagingTracingConfiguration() error {
+	tracingIsEnabled := a.apimanager.IsAPIcastStagingOpenTracingEnabled()
+	res := &component.APIcastTracingConfig{
+		Enabled:        tracingIsEnabled,
+		TracingLibrary: component.APIcastDefaultTracingLibrary,
+	}
+	if tracingIsEnabled {
+		openTracingConfigSpec := a.apimanager.Spec.Apicast.StagingSpec.OpenTracing
+		if openTracingConfigSpec.TracingLibrary != nil {
+			res.TracingLibrary = *a.apimanager.Spec.Apicast.StagingSpec.OpenTracing.TracingLibrary
+		}
+		if openTracingConfigSpec.TracingConfigSecretRef != nil {
+			namespacedName := types.NamespacedName{
+				Name:      openTracingConfigSpec.TracingConfigSecretRef.Name, // CR Validation ensures not nil
+				Namespace: a.apimanager.Namespace,
+			}
+			err := a.validateTracingConfigSecret(namespacedName)
+			if err != nil {
+				errors := field.ErrorList{}
+				tracingConfigFldPath := field.NewPath("spec").Child("openTracing").Child("tracingConfigSecretRef")
+				errors = append(errors, field.Invalid(tracingConfigFldPath, openTracingConfigSpec, err.Error()))
+				return errors.ToAggregate()
+			}
+			res.TracingConfigSecretName = &openTracingConfigSpec.TracingConfigSecretRef.Name
+		}
+	}
+
+	a.apicastOptions.StagingTracingConfig = res
+
+	return nil
+}
+
+func (a *ApicastOptionsProvider) validateTracingConfigSecret(nn types.NamespacedName) error {
+	secret := &v1.Secret{}
+	err := a.client.Get(context.TODO(), nn, secret)
+
+	if err != nil {
+		// NotFoundError is also an error, it is required to exist
+		return err
+	}
+
+	if _, ok := secret.Data[component.APIcastTracingConfigSecretKey]; !ok {
+		return fmt.Errorf("Required secret key, %s not found", "config")
 	}
 
 	return nil
