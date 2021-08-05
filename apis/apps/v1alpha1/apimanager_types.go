@@ -258,7 +258,9 @@ type ApicastStagingSpec struct {
 	// CustomEnvironments specifies an array of defined custom environments to be loaded
 	// +optional
 	CustomEnvironments []CustomEnvironmentSpec `json:"customEnvironments,omitempty"` // APICAST_ENVIRONMENT
-	// HttpsPort controls on which port APIcast should start listening for HTTPS connections. If this clashes with HTTP port it will be used only for HTTPS.
+	// HttpsPort controls on which port APIcast should start listening for HTTPS connections.
+	// If this clashes with HTTP port it will be used only for HTTPS.
+	// Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
 	// +optional
 	HTTPSPort *int32 `json:"httpsPort,omitempty"` // APICAST_HTTPS_PORT
 	// HTTPSVerifyDepth defines the maximum length of the client certificate chain.
@@ -266,6 +268,7 @@ type ApicastStagingSpec struct {
 	// +optional
 	HTTPSVerifyDepth *int64 `json:"httpsVerifyDepth,omitempty"` // APICAST_HTTPS_VERIFY_DEPTH
 	// HTTPSCertificateSecretRef references secret containing the X.509 certificate in the PEM format and the X.509 certificate secret key.
+	// Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
 	// +optional
 	HTTPSCertificateSecretRef *v1.LocalObjectReference `json:"httpsCertificateSecretRef,omitempty"`
 }
