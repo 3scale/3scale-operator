@@ -3,6 +3,7 @@
 3scale managed APIcast pods can be deployed to serve HTTP endpoints over TLS. Each APIcast instance, i.e. `production` and `staging`, can be individually configured to serve, or not, HTTP over TLS.
 
 Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
+Activating TLS port does not disable plain HTTP port. The HTTP port will continue to work.
 
 Steps to enable TLS at pod level:
 
