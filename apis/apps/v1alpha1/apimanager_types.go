@@ -20,15 +20,17 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/version"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -152,6 +154,20 @@ type APIManagerCommonSpec struct {
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 }
 
+// CustomPolicySpec contains or has reference to an APIcast custom policy
+type CustomPolicySpec struct {
+	// Name specifies the name of the custom policy
+	Name string `json:"name"`
+	// Version specifies the name of the custom policy
+	Version string `json:"version"`
+	// SecretRef specifies the secret holding the custom policy metadata and lua code
+	SecretRef *v1.LocalObjectReference `json:"secretRef"`
+}
+
+func (c *CustomPolicySpec) VersionName() string {
+	return fmt.Sprintf("%s%s", c.Name, c.Version)
+}
+
 type ApicastSpec struct {
 	// +optional
 	ApicastManagementAPI *string `json:"managementAPI,omitempty"`
@@ -184,6 +200,9 @@ type ApicastProductionSpec struct {
 	// +optional
 	// +kubebuilder:validation:Enum=debug;info;notice;warn;error;crit;alert;emerg
 	LogLevel *string `json:"logLevel,omitempty"` // APICAST_LOG_LEVEL
+	// CustomPolicies specifies an array of defined custome policies to be loaded
+	// +optional
+	CustomPolicies []CustomPolicySpec `json:"customPolicies,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -198,6 +217,9 @@ type ApicastStagingSpec struct {
 	// +optional
 	// +kubebuilder:validation:Enum=debug;info;notice;warn;error;crit;alert;emerg
 	LogLevel *string `json:"logLevel,omitempty"` // APICAST_LOG_LEVEL
+	// CustomPolicies specifies an array of defined custome policies to be loaded
+	// +optional
+	CustomPolicies []CustomPolicySpec `json:"customPolicies,omitempty"`
 }
 
 type BackendSpec struct {
@@ -843,6 +865,66 @@ func (apimanager *APIManager) IsMonitoringEnabled() bool {
 func (apimanager *APIManager) IsPrometheusRulesEnabled() bool {
 	return (apimanager.IsMonitoringEnabled() &&
 		(apimanager.Spec.Monitoring.EnablePrometheusRules == nil || *apimanager.Spec.Monitoring.EnablePrometheusRules))
+}
+
+func (apimanager *APIManager) Validate() field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	specFldPath := field.NewPath("spec")
+
+	if apimanager.Spec.Apicast != nil {
+		apicastFldPath := specFldPath.Child("apicast")
+
+		if apimanager.Spec.Apicast.ProductionSpec != nil {
+			prodSpecFldPath := apicastFldPath.Child("productionSpec")
+			customPoliciesFldPath := prodSpecFldPath.Child("customPolicies")
+			duplicateMap := make(map[string]int)
+			for idx, customPolicySpec := range apimanager.Spec.Apicast.ProductionSpec.CustomPolicies {
+				customPoliciesIdxFldPath := customPoliciesFldPath.Index(idx)
+
+				// check custom policy secret is set
+				if customPolicySpec.SecretRef == nil {
+					fieldErrors = append(fieldErrors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, "custom policy secret is mandatory"))
+				} else if customPolicySpec.SecretRef.Name == "" {
+					fieldErrors = append(fieldErrors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, "custom policy secret name is empty"))
+				}
+
+				// check duplicated custom policy version name
+				if _, ok := duplicateMap[customPolicySpec.VersionName()]; ok {
+					fieldErrors = append(fieldErrors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, "custom policy secret name version tuple is duplicated"))
+					break
+				}
+				duplicateMap[customPolicySpec.VersionName()] = 0
+			}
+		}
+
+		if apimanager.Spec.Apicast.StagingSpec != nil {
+			stagingSpecFldPath := apicastFldPath.Child("stagingSpec")
+			customPoliciesFldPath := stagingSpecFldPath.Child("customPolicies")
+			duplicateMap := make(map[string]int)
+			for idx, customPolicySpec := range apimanager.Spec.Apicast.StagingSpec.CustomPolicies {
+				// TODO(eastizle): DRY!!
+				customPoliciesIdxFldPath := customPoliciesFldPath.Index(idx)
+
+				// check custom policy secret is set
+				if customPolicySpec.SecretRef == nil {
+					fieldErrors = append(fieldErrors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, "custom policy secret is mandatory"))
+				} else if customPolicySpec.SecretRef.Name == "" {
+					fieldErrors = append(fieldErrors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, "custom policy secret name is empty"))
+				}
+
+				// check duplicated custom policy version name
+				if _, ok := duplicateMap[customPolicySpec.VersionName()]; ok {
+					fieldErrors = append(fieldErrors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, "custom policy secret name version tuple is duplicated"))
+					break
+				}
+				duplicateMap[customPolicySpec.VersionName()] = 0
+			}
+		}
+
+	}
+
+	return fieldErrors
 }
 
 // +kubebuilder:object:root=true
