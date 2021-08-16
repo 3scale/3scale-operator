@@ -468,7 +468,7 @@ jobs:
             SUDO=sudo
             fi
             # Install ruby
-            $SUDO apt-get update && $SUDO apt-get install -y ruby-full
+            $SUDO apt-get update --allow-releaseinfo-change && $SUDO apt-get install -y ruby-full
       - run:
           name: Installing License tool
           command: |
