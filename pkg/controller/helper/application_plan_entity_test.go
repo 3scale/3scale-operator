@@ -22,6 +22,7 @@ func TestApplicationPlanEntityBasics(t *testing.T) {
 		TrialPeriodDays:  3,
 		SetupFee:         5.67,
 		CostPerMonth:     8.67,
+		State:            "hide",
 	}
 
 	client := threescaleapi.NewThreeScale(nil, token, nil)
@@ -33,6 +34,7 @@ func TestApplicationPlanEntityBasics(t *testing.T) {
 	equals(t, appPlanEntity.TrialPeriodDays(), planItem.TrialPeriodDays)
 	equals(t, appPlanEntity.SetupFee(), planItem.SetupFee)
 	equals(t, appPlanEntity.CostPerMonth(), planItem.CostPerMonth)
+	equals(t, appPlanEntity.State(), planItem.State)
 }
 
 func TestApplicationPlanEntityUpdate(t *testing.T) {
@@ -48,6 +50,7 @@ func TestApplicationPlanEntityUpdate(t *testing.T) {
 				TrialPeriodDays:  3,
 				SetupFee:         5.67,
 				CostPerMonth:     8.67,
+				State:            "publish",
 			},
 		}
 
@@ -72,6 +75,7 @@ func TestApplicationPlanEntityUpdate(t *testing.T) {
 	equals(t, appPlanEntity.TrialPeriodDays(), 3)
 	equals(t, appPlanEntity.SetupFee(), 5.67)
 	equals(t, appPlanEntity.CostPerMonth(), 8.67)
+	equals(t, appPlanEntity.State(), "publish")
 }
 
 func TestApplicationPlanEntityUpdateError(t *testing.T) {

@@ -111,6 +111,18 @@ func (a *applicationPlanReconciler) syncPlan(_ interface{}) error {
 		}
 	}
 
+	planEntityStateIsPublished := a.planEntity.State() == "published" // If the state is not published then we assume it is "hidden"
+	desiredApplicationPlanIsPublished := a.resource.IsPublished()
+	if planEntityStateIsPublished != desiredApplicationPlanIsPublished {
+		var stateEventValue string
+		if desiredApplicationPlanIsPublished {
+			stateEventValue = "publish"
+		} else {
+			stateEventValue = "hide"
+		}
+		params["state_event"] = stateEventValue
+	}
+
 	if len(params) > 0 {
 		err := a.planEntity.Update(params)
 		if err != nil {

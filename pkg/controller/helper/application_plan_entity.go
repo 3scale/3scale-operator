@@ -50,6 +50,10 @@ func (b *ApplicationPlanEntity) CostPerMonth() float64 {
 	return b.obj.CostPerMonth
 }
 
+func (b *ApplicationPlanEntity) State() string {
+	return b.obj.State
+}
+
 func (b *ApplicationPlanEntity) Update(params threescaleapi.Params) error {
 	b.logger.V(1).Info("Update", "params", params)
 	updated, err := b.client.UpdateApplicationPlan(b.productID, b.obj.ID, params)

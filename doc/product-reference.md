@@ -155,6 +155,7 @@ Specifies product mapping rules
 | Metric Method Reference | `metricMethodRef` | string | Existing method or metric **system name** | Yes |
 | Increment | `increment` | int | Increase the metric by this delta | Yes |
 | Last | `last` | \*bool | Last matched Mapping Rule to process | No |
+| Published | `published` | \*bool | Controls whether the application plan is published. If not specified it is hidden by default | No |
 
 #### MetricSpec
 
