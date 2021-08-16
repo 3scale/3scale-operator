@@ -56,6 +56,11 @@ const (
 	defaultApicastRegistryURL   = "http://apicast-staging:8090/policies"
 )
 
+const (
+	DefaultHTTPPort  int32 = 8080
+	DefaultHTTPSPort int32 = 8443
+)
+
 // APIManagerSpec defines the desired state of APIManager
 type APIManagerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -216,6 +221,19 @@ type ApicastProductionSpec struct {
 	// CustomEnvironments specifies an array of defined custom environments to be loaded
 	// +optional
 	CustomEnvironments []CustomEnvironmentSpec `json:"customEnvironments,omitempty"` // APICAST_ENVIRONMENT
+	// HttpsPort controls on which port APIcast should start listening for HTTPS connections.
+	// If this clashes with HTTP port it will be used only for HTTPS.
+	// Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
+	// +optional
+	HTTPSPort *int32 `json:"httpsPort,omitempty"` // APICAST_HTTPS_PORT
+	// HTTPSVerifyDepth defines the maximum length of the client certificate chain.
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	HTTPSVerifyDepth *int64 `json:"httpsVerifyDepth,omitempty"` // APICAST_HTTPS_VERIFY_DEPTH
+	// HTTPSCertificateSecretRef references secret containing the X.509 certificate in the PEM format and the X.509 certificate secret key.
+	// Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
+	// +optional
+	HTTPSCertificateSecretRef *v1.LocalObjectReference `json:"httpsCertificateSecretRef,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -240,6 +258,19 @@ type ApicastStagingSpec struct {
 	// CustomEnvironments specifies an array of defined custom environments to be loaded
 	// +optional
 	CustomEnvironments []CustomEnvironmentSpec `json:"customEnvironments,omitempty"` // APICAST_ENVIRONMENT
+	// HttpsPort controls on which port APIcast should start listening for HTTPS connections.
+	// If this clashes with HTTP port it will be used only for HTTPS.
+	// Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
+	// +optional
+	HTTPSPort *int32 `json:"httpsPort,omitempty"` // APICAST_HTTPS_PORT
+	// HTTPSVerifyDepth defines the maximum length of the client certificate chain.
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	HTTPSVerifyDepth *int64 `json:"httpsVerifyDepth,omitempty"` // APICAST_HTTPS_VERIFY_DEPTH
+	// HTTPSCertificateSecretRef references secret containing the X.509 certificate in the PEM format and the X.509 certificate secret key.
+	// Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
+	// +optional
+	HTTPSCertificateSecretRef *v1.LocalObjectReference `json:"httpsCertificateSecretRef,omitempty"`
 }
 
 type BackendSpec struct {
@@ -988,6 +1019,13 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 					duplicateEnvMap[customEnvSpec.SecretRef.Name] = 0
 				}
 			}
+
+			// check HTTPSPort does not conflict with default HTTPPort
+			httpsPortFldPath := prodSpecFldPath.Child("httpsPort")
+
+			if apimanager.Spec.Apicast.ProductionSpec.HTTPSPort != nil && *apimanager.Spec.Apicast.ProductionSpec.HTTPSPort == DefaultHTTPPort {
+				fieldErrors = append(fieldErrors, field.Invalid(httpsPortFldPath, apimanager.Spec.Apicast.ProductionSpec.HTTPSPort, "HTTPS port conflicts with HTTP port"))
+			}
 		}
 
 		if apimanager.Spec.Apicast.StagingSpec != nil {
@@ -1052,8 +1090,14 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 					duplicateEnvMap[customEnvSpec.SecretRef.Name] = 0
 				}
 			}
-		}
 
+			// check HTTPSPort does not conflict with default HTTPPort
+			httpsPortFldPath := stagingSpecFldPath.Child("httpsPort")
+
+			if apimanager.Spec.Apicast.StagingSpec.HTTPSPort != nil && *apimanager.Spec.Apicast.StagingSpec.HTTPSPort == DefaultHTTPPort {
+				fieldErrors = append(fieldErrors, field.Invalid(httpsPortFldPath, apimanager.Spec.Apicast.StagingSpec.HTTPSPort, "HTTPS port conflicts with HTTP port"))
+			}
+		}
 	}
 
 	return fieldErrors

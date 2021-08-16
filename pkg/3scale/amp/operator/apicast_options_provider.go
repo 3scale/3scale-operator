@@ -54,6 +54,31 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.ProductionLogLevel = a.apimanager.Spec.Apicast.ProductionSpec.LogLevel
 	a.apicastOptions.StagingLogLevel = a.apimanager.Spec.Apicast.StagingSpec.LogLevel
 
+	a.apicastOptions.ProductionHTTPSPort = a.apimanager.Spec.Apicast.ProductionSpec.HTTPSPort
+	a.apicastOptions.ProductionHTTPSVerifyDepth = a.apimanager.Spec.Apicast.ProductionSpec.HTTPSVerifyDepth
+	// when HTTPS certificate is provided and HTTPS port is not provided, assing default https port
+	if a.apimanager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil && a.apimanager.Spec.Apicast.ProductionSpec.HTTPSPort == nil {
+		tmpDefaultPort := appsv1alpha1.DefaultHTTPSPort
+		a.apicastOptions.ProductionHTTPSPort = &tmpDefaultPort
+	}
+	// when HTTPS port is provided and HTTPS Certificate secret is not provided,
+	// Apicast will use some default certificate
+	// Should the operator raise a warning?
+	if a.apimanager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil {
+		a.apicastOptions.ProductionHTTPSCertificateSecretName = &a.apimanager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef.Name
+	}
+
+	a.apicastOptions.StagingHTTPSPort = a.apimanager.Spec.Apicast.StagingSpec.HTTPSPort
+	a.apicastOptions.StagingHTTPSVerifyDepth = a.apimanager.Spec.Apicast.StagingSpec.HTTPSVerifyDepth
+	// when HTTPS certificate is provided and HTTPS port is not provided, assing default https port
+	if a.apimanager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil && a.apimanager.Spec.Apicast.StagingSpec.HTTPSPort == nil {
+		tmpDefaultPort := appsv1alpha1.DefaultHTTPSPort
+		a.apicastOptions.StagingHTTPSPort = &tmpDefaultPort
+	}
+	if a.apimanager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil {
+		a.apicastOptions.StagingHTTPSCertificateSecretName = &a.apimanager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef.Name
+	}
+
 	a.setResourceRequirementsOptions()
 	a.setNodeAffinityAndTolerationsOptions()
 	a.setReplicas()
