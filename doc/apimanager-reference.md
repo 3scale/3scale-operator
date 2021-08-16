@@ -109,6 +109,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
 | OpenTracing | `openTracing` | [OpenTracingSpec](#OpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
+| CustomEnvironments | `customEnvironments` | [][CustomEnvironmentSpec](#CustomEnvironmentSpec) | No | N/A | List of custom environments |
 
 ### ApicastStagingSpec
 
@@ -121,6 +122,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
 | OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
+| CustomEnvironments | `customEnvironments` | [][CustomEnvironmentSpec](#CustomEnvironmentSpec) | No | N/A | List of custom environments |
 
 ### CustomPolicySpec
 
@@ -128,7 +130,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | --- | --- | --- | --- | --- |
 | `name` | string | Yes | N/A | Name |
 | `version` | string | Yes | N/A | Version |
-| `SecretRef` | LocalObjectReference | Yes | N/A | Secret reference with the policy content. See [CustomPolicySecret](#CustomPolicySecret) for more information.
+| `secretRef` | LocalObjectReference | Yes | N/A | Secret reference with the policy content. See [CustomPolicySecret](#CustomPolicySecret) for more information.
 
 ### CustomPolicySecret
 
@@ -162,6 +164,24 @@ If the custom environment content needs to be changed, there are two options:
 
 * [**recommended way**] Create another secret with a different name and update the APIcast custom resource field `spec.apicast.<apicast-environment>.openTracing.tracingConfigRef.name`. The operator will trigger a rolling update loading the new custom environment content.
 * Update the existing secret content and redeploy apicast turning `spec.replicas` to 0 and then back to the previous value.
+
+#### CustomEnvironmentSpec
+
+| **json/yaml field** | **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- |
+| `secretRef` | LocalObjectReference | Yes | N/A | Secret reference with the custom environment content. See [CustomEnvironmentSecret](#CustomEnvironmentSecret) for more information.
+
+#### CustomEnvironmentSecret
+
+Generic (`opaque`) type secret holding one or more custom environments.
+The operator will load in the APIcast container all the files (keys) found in the secret.
+
+Some examples are available [here](/doc/adding-apicast-custom-environments.md)
+
+| **Field** | **Description** |
+| --- | --- |
+| *filename* | Custom environment lua code |
+
 
 ### BackendSpec
 

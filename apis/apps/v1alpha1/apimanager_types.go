@@ -155,6 +155,11 @@ type APIManagerCommonSpec struct {
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 }
 
+// CustomEnvironmentSpec contains or has reference to an APIcast custom environment
+type CustomEnvironmentSpec struct {
+	SecretRef *v1.LocalObjectReference `json:"secretRef"`
+}
+
 // CustomPolicySpec contains or has reference to an APIcast custom policy
 type CustomPolicySpec struct {
 	// Name specifies the name of the custom policy
@@ -208,6 +213,9 @@ type ApicastProductionSpec struct {
 	// with APIcast in the production environment.
 	// +optional
 	OpenTracing *APIcastOpenTracingSpec `json:"openTracing,omitempty"`
+	// CustomEnvironments specifies an array of defined custom environments to be loaded
+	// +optional
+	CustomEnvironments []CustomEnvironmentSpec `json:"customEnvironments,omitempty"` // APICAST_ENVIRONMENT
 }
 
 type ApicastStagingSpec struct {
@@ -229,6 +237,9 @@ type ApicastStagingSpec struct {
 	// with APIcast in the staging environment.
 	// +optional
 	OpenTracing *APIcastOpenTracingSpec `json:"openTracing,omitempty"`
+	// CustomEnvironments specifies an array of defined custom environments to be loaded
+	// +optional
+	CustomEnvironments []CustomEnvironmentSpec `json:"customEnvironments,omitempty"` // APICAST_ENVIRONMENT
 }
 
 type BackendSpec struct {
@@ -918,7 +929,7 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 			prodSpecFldPath := apicastFldPath.Child("productionSpec")
 
 			customPoliciesFldPath := prodSpecFldPath.Child("customPolicies")
-			duplicateMap := make(map[string]int)
+			duplicatePolicyMap := make(map[string]int)
 			for idx, customPolicySpec := range apimanager.Spec.Apicast.ProductionSpec.CustomPolicies {
 				customPoliciesIdxFldPath := customPoliciesFldPath.Index(idx)
 
@@ -930,11 +941,11 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 				}
 
 				// check duplicated custom policy version name
-				if _, ok := duplicateMap[customPolicySpec.VersionName()]; ok {
+				if _, ok := duplicatePolicyMap[customPolicySpec.VersionName()]; ok {
 					fieldErrors = append(fieldErrors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, "custom policy secret name version tuple is duplicated"))
 					break
 				}
-				duplicateMap[customPolicySpec.VersionName()] = 0
+				duplicatePolicyMap[customPolicySpec.VersionName()] = 0
 			}
 
 			if apimanager.IsAPIcastProductionOpenTracingEnabled() {
@@ -958,12 +969,31 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 				}
 			}
 
+			customEnvsFldPath := prodSpecFldPath.Child("customEnvironments")
+			duplicateEnvMap := make(map[string]int)
+			// check custom environment secret is set
+			for idx, customEnvSpec := range apimanager.Spec.Apicast.ProductionSpec.CustomEnvironments {
+				customEnvsIdxFldPath := customEnvsFldPath.Index(idx)
+
+				if customEnvSpec.SecretRef == nil {
+					fieldErrors = append(fieldErrors, field.Invalid(customEnvsIdxFldPath, customEnvSpec, "custom environment secret is mandatory"))
+				} else if customEnvSpec.SecretRef.Name == "" {
+					fieldErrors = append(fieldErrors, field.Invalid(customEnvsIdxFldPath, customEnvSpec, "custom environment secret name is empty"))
+				} else {
+					// check duplicated custom env secret
+					if _, ok := duplicateEnvMap[customEnvSpec.SecretRef.Name]; ok {
+						fieldErrors = append(fieldErrors, field.Invalid(customEnvsIdxFldPath, customEnvSpec.SecretRef.Name, "custom env secret name is duplicated"))
+						break
+					}
+					duplicateEnvMap[customEnvSpec.SecretRef.Name] = 0
+				}
+			}
 		}
 
 		if apimanager.Spec.Apicast.StagingSpec != nil {
 			stagingSpecFldPath := apicastFldPath.Child("stagingSpec")
 			customPoliciesFldPath := stagingSpecFldPath.Child("customPolicies")
-			duplicateMap := make(map[string]int)
+			duplicatePolicyMap := make(map[string]int)
 			for idx, customPolicySpec := range apimanager.Spec.Apicast.StagingSpec.CustomPolicies {
 				// TODO(eastizle): DRY!!
 				customPoliciesIdxFldPath := customPoliciesFldPath.Index(idx)
@@ -976,11 +1006,11 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 				}
 
 				// check duplicated custom policy version name
-				if _, ok := duplicateMap[customPolicySpec.VersionName()]; ok {
+				if _, ok := duplicatePolicyMap[customPolicySpec.VersionName()]; ok {
 					fieldErrors = append(fieldErrors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, "custom policy secret name version tuple is duplicated"))
 					break
 				}
-				duplicateMap[customPolicySpec.VersionName()] = 0
+				duplicatePolicyMap[customPolicySpec.VersionName()] = 0
 			}
 
 			if apimanager.IsAPIcastStagingOpenTracingEnabled() {
@@ -1000,6 +1030,26 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 						Child("openTracing").
 						Child("tracingLibrary")
 					fieldErrors = append(fieldErrors, field.Invalid(tracingLibraryFldPath, openTracingConfigSpec, "invalid tracing library specified"))
+				}
+			}
+
+			customEnvsFldPath := stagingSpecFldPath.Child("customEnvironments")
+			duplicateEnvMap := make(map[string]int)
+			// check custom environment secret is set
+			for idx, customEnvSpec := range apimanager.Spec.Apicast.StagingSpec.CustomEnvironments {
+				customEnvsIdxFldPath := customEnvsFldPath.Index(idx)
+
+				if customEnvSpec.SecretRef == nil {
+					fieldErrors = append(fieldErrors, field.Invalid(customEnvsIdxFldPath, customEnvSpec, "custom environment secret is mandatory"))
+				} else if customEnvSpec.SecretRef.Name == "" {
+					fieldErrors = append(fieldErrors, field.Invalid(customEnvsIdxFldPath, customEnvSpec, "custom environment secret name is empty"))
+				} else {
+					// check duplicated custom env secret
+					if _, ok := duplicateEnvMap[customEnvSpec.SecretRef.Name]; ok {
+						fieldErrors = append(fieldErrors, field.Invalid(customEnvsIdxFldPath, customEnvSpec.SecretRef.Name, "custom env secret name is duplicated"))
+						break
+					}
+					duplicateEnvMap[customEnvSpec.SecretRef.Name] = 0
 				}
 			}
 		}

@@ -16,6 +16,7 @@
     * [Setting custom storage resource requirements](#setting-custom-storage-resource-requirements)
     * [Enabling monitoring resources](operator-monitoring-resources.md)
     * [Adding custom policies](adding-custom-policies.md)
+    * [Adding apicast custom environments](adding-apicast-custom-environments.md)
 * [Reconciliation](#reconciliation)
 * [Upgrading 3scale](#upgrading-3scale)
 * [3scale installation Backup and Restore using the operator (in *TechPreview*)](operator-backup-and-restore.md)
