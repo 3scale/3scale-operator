@@ -67,9 +67,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.apicastLogLevelEnvVarMutator,
+		r.apicastTracingConfigEnvVarsMutator,
 		apicastVolumeMountsMutator,
 		apicastVolumesMutator,
-		apicastCustomPolicyAnnotationsMutator, // Should be always after volume mutator
+		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
+		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
 	)
 	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
 	if err != nil {
@@ -84,9 +86,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.apicastProductionWorkersEnvVarMutator,
 		r.apicastLogLevelEnvVarMutator,
+		r.apicastTracingConfigEnvVarsMutator,
 		apicastVolumeMountsMutator,
 		apicastVolumesMutator,
-		apicastCustomPolicyAnnotationsMutator, // Should be always after volume mutator
+		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
+		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
 	)
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
@@ -161,6 +165,17 @@ func (r *ApicastReconciler) apicastLogLevelEnvVarMutator(desired, existing *apps
 	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL")
 }
 
+func (r *ApicastReconciler) apicastTracingConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	// Reconcile EnvVars related to opentracing
+	var changed bool
+	changed = reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTRACING_TRACER")
+
+	tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTRACING_CONFIG")
+	changed = changed || tmpChanged
+
+	return changed
+}
+
 // volumeMountsMutator implements basic VolumeMount reconcilliation
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
@@ -188,6 +203,22 @@ func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) bool
 	existingCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(existing.Annotations)
 	desiredCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(desired.Annotations)
 	volumesToDelete := helper.ArrayStringDifference(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames)
+	for _, volumeNameToDelete := range volumesToDelete {
+		idx := helper.FindVolumeMountByName(existingContainer.VolumeMounts, volumeNameToDelete)
+		if idx >= 0 {
+			// Found a existing volume that needs to be removed
+			// remove index
+			existingContainer.VolumeMounts = append(existingContainer.VolumeMounts[:idx], existingContainer.VolumeMounts[idx+1:]...)
+			changed = true
+		}
+	}
+
+	// Check tracing config annotations in existing and not in desired to delete volumes associated
+	// From the APIManager CR, operator does not know which custom policies have been deleted to reconcile volumes
+	// Only volumes associated to custom policies are deleted. The operator still allows manually arbitrary mounted volumes
+	existingTracingConfigVolumeNames := component.ApicastTracingConfigVolumeNamesFromAnnotations(existing.Annotations)
+	desiredTracingConfigVolumeNames := component.ApicastTracingConfigVolumeNamesFromAnnotations(desired.Annotations)
+	volumesToDelete = helper.ArrayStringDifference(existingTracingConfigVolumeNames, desiredTracingConfigVolumeNames)
 	for _, volumeNameToDelete := range volumesToDelete {
 		idx := helper.FindVolumeMountByName(existingContainer.VolumeMounts, volumeNameToDelete)
 		if idx >= 0 {
@@ -238,6 +269,22 @@ func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) bool {
 		}
 	}
 
+	// Check custom policy annotations in existing and not in desired to delete volumes associated
+	// From the APIManager CR, operator does not know which tracing config have been deleted to reconcile volumes
+	// Only volumes associated to tracing configs are deleted. The operator still allows manually arbitrary mounted volumes
+	existingTracingConfigVolumeNames := component.ApicastTracingConfigVolumeNamesFromAnnotations(existing.Annotations)
+	desiredTracingConfigVolumeNames := component.ApicastTracingConfigVolumeNamesFromAnnotations(desired.Annotations)
+	volumesToDelete = helper.ArrayStringDifference(existingTracingConfigVolumeNames, desiredTracingConfigVolumeNames)
+	for _, volumeNameToDelete := range volumesToDelete {
+		idx := helper.FindVolumeByName(existingSpec.Volumes, volumeNameToDelete)
+		if idx >= 0 {
+			// Found a existing volume that needs to be removed
+			// remove index
+			existingSpec.Volumes = append(existingSpec.Volumes[:idx], existingSpec.Volumes[idx+1:]...)
+			changed = true
+		}
+	}
+
 	return changed
 }
 
@@ -249,13 +296,37 @@ func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentC
 	desiredCustomPolicyVolumeNames := component.ApicastPolicyVolumeNamesFromAnnotations(desired.Annotations)
 	if !helper.StringSliceEqualWithoutOrder(existingCustomPolicyVolumeNames, desiredCustomPolicyVolumeNames) {
 		for key := range existing.Annotations {
-			if strings.HasPrefix(key, component.CustomPoliciesAnnotationKeyPrefix) {
+			if strings.HasPrefix(key, component.CustomPoliciesAnnotationPartialKey) {
 				delete(existing.Annotations, key)
 			}
 		}
 
 		for key, val := range desired.Annotations {
-			if strings.HasPrefix(key, component.CustomPoliciesAnnotationKeyPrefix) {
+			if strings.HasPrefix(key, component.CustomPoliciesAnnotationPartialKey) {
+				existing.Annotations[key] = val
+			}
+		}
+
+		updated = true
+	}
+	return updated
+}
+
+func apicastTracingConfigAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
+	// find existing tracing config volume annotations not in desired and delete them
+	updated := false
+	existingTracingConfigVolumeNames := component.ApicastTracingConfigVolumeNamesFromAnnotations(existing.Annotations)
+	desiredTracingConfigVolumeNames := component.ApicastTracingConfigVolumeNamesFromAnnotations(desired.Annotations)
+	if !helper.StringSliceEqualWithoutOrder(existingTracingConfigVolumeNames, desiredTracingConfigVolumeNames) {
+		for key := range existing.Annotations {
+			if strings.HasPrefix(key, component.APIcastTracingConfigAnnotationPartialKey) {
+				delete(existing.Annotations, key)
+			}
+		}
+
+		for key, val := range desired.Annotations {
+			if strings.HasPrefix(key, component.APIcastTracingConfigAnnotationPartialKey) {
 				existing.Annotations[key] = val
 			}
 		}
