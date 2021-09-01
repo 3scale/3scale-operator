@@ -214,7 +214,6 @@ func (s *System) options() (*component.SystemOptions, error) {
 	o.AdminEmail = &adminEmail
 	userSessionTTL := "${USER_SESSION_TTL}"
 	o.UserSessionTTL = &userSessionTTL
-	o.AmpRelease = "${AMP_RELEASE}"
 	o.ImageTag = "${AMP_RELEASE}"
 	o.ApicastAccessToken = "${APICAST_ACCESS_TOKEN}"
 	o.ApicastRegistryURL = "${APICAST_REGISTRY_URL}"

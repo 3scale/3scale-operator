@@ -54,7 +54,6 @@ type SystemOptions struct {
 	AdminAccessToken    string  `validate:"required"`
 	AdminPassword       string  `validate:"required"`
 	AdminUsername       string  `validate:"required"`
-	AmpRelease          string  `validate:"required"`
 	ApicastAccessToken  string  `validate:"required"`
 	ApicastRegistryURL  string  `validate:"required"`
 	MasterAccessToken   string  `validate:"required"`

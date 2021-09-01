@@ -320,13 +320,12 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 	storageRequests := component.DefaultSharedStorageResources()
 
 	expectedOpts := &component.SystemOptions{
-		TenantName:                               tenantName,
-		WildcardDomain:                           wildcardDomain,
-		AmpRelease:                               product.ThreescaleRelease,
-		ImageTag:                                 product.ThreescaleRelease,
-		ApicastRegistryURL:                       apicastRegistryURL,
-		AppMasterContainerResourceRequirements:   component.DefaultAppMasterContainerResourceRequirements(),
-		AppProviderContainerResourceRequirements: component.DefaultAppProviderContainerResourceRequirements(),
+		TenantName:                                tenantName,
+		WildcardDomain:                            wildcardDomain,
+		ImageTag:                                  product.ThreescaleRelease,
+		ApicastRegistryURL:                        apicastRegistryURL,
+		AppMasterContainerResourceRequirements:    component.DefaultAppMasterContainerResourceRequirements(),
+		AppProviderContainerResourceRequirements:  component.DefaultAppProviderContainerResourceRequirements(),
 		AppDeveloperContainerResourceRequirements: component.DefaultAppDeveloperContainerResourceRequirements(),
 		SidekiqContainerResourceRequirements:      component.DefaultSidekiqContainerResourceRequirements(),
 		SphinxContainerResourceRequirements:       component.DefaultSphinxContainerResourceRequirements(),
