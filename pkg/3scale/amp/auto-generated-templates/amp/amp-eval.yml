@@ -1507,7 +1507,6 @@ objects:
     username: ""
 - apiVersion: v1
   data:
-    AMP_RELEASE: ${AMP_RELEASE}
     APICAST_REGISTRY_URL: ${APICAST_REGISTRY_URL}
     FORCE_SSL: "true"
     PROVIDER_PLAN: enterprise
@@ -1560,11 +1559,6 @@ objects:
             - bundle exec rake boot openshift:deploy
             containerName: system-master
             env:
-            - name: AMP_RELEASE
-              valueFrom:
-                configMapKeyRef:
-                  key: AMP_RELEASE
-                  name: system-environment
             - name: APICAST_REGISTRY_URL
               valueFrom:
                 configMapKeyRef:
@@ -1838,11 +1832,6 @@ objects:
           - -c
           - config/unicorn.rb
           env:
-          - name: AMP_RELEASE
-            valueFrom:
-              configMapKeyRef:
-                key: AMP_RELEASE
-                name: system-environment
           - name: APICAST_REGISTRY_URL
             valueFrom:
               configMapKeyRef:
@@ -2132,11 +2121,6 @@ objects:
           - -c
           - config/unicorn.rb
           env:
-          - name: AMP_RELEASE
-            valueFrom:
-              configMapKeyRef:
-                key: AMP_RELEASE
-                name: system-environment
           - name: APICAST_REGISTRY_URL
             valueFrom:
               configMapKeyRef:
@@ -2425,11 +2409,6 @@ objects:
           - -c
           - config/unicorn.rb
           env:
-          - name: AMP_RELEASE
-            valueFrom:
-              configMapKeyRef:
-                key: AMP_RELEASE
-                name: system-environment
           - name: APICAST_REGISTRY_URL
             valueFrom:
               configMapKeyRef:
@@ -2781,11 +2760,6 @@ objects:
           - sidekiq:worker
           - RAILS_MAX_THREADS=25
           env:
-          - name: AMP_RELEASE
-            valueFrom:
-              configMapKeyRef:
-                key: AMP_RELEASE
-                name: system-environment
           - name: APICAST_REGISTRY_URL
             valueFrom:
               configMapKeyRef:
