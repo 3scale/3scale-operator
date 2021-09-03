@@ -356,7 +356,6 @@ func (system *System) EnvironmentConfigMap() *v1.ConfigMap {
 			"RAILS_LOG_LEVEL":        "info",
 			"THINKING_SPHINX_PORT":   "9306",
 			"THREESCALE_SANDBOX_PROXY_OPENSSL_VERIFY_MODE": "VERIFY_NONE",
-			"AMP_RELEASE":  system.Options.AmpRelease,
 			"SSL_CERT_DIR": "/etc/pki/tls/certs",
 		},
 	}
