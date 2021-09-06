@@ -297,9 +297,11 @@ func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, er
 		return res, err
 	}
 
-	res, err = u.upgradeDeploymentConfigImageChangeTrigger(zync.DatabaseDeploymentConfig())
-	if res.Requeue || err != nil {
-		return res, err
+	if !u.apiManager.IsZyncExternalDatabaseEnabled() {
+		res, err = u.upgradeDeploymentConfigImageChangeTrigger(zync.DatabaseDeploymentConfig())
+		if res.Requeue || err != nil {
+			return res, err
+		}
 	}
 
 	return reconcile.Result{}, nil
