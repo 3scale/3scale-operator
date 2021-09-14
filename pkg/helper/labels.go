@@ -22,7 +22,7 @@ func MeteringLabels(componentName, componentVersion string, componentType Compon
 		"com.redhat.component-version": componentVersion,
 	}
 
-	if len(componentVersion) > validation.LabelValueMaxLength {
+	if len(validation.IsValidLabelValue(componentVersion)) > 0 {
 		labels["com.redhat.component-version"] = ""
 	}
 
