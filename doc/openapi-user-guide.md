@@ -29,7 +29,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 ## OpenAPI document sources
 
 The OpenAPI document <OAS> can be read from different sources:
-* Openshit secret
+* Kubernetes secret
 * URL. Supported schemes are `http` and `https`.
 
 *Note*: Accepted OpenAPI spec document formats are `json` and `yaml`.
@@ -106,13 +106,13 @@ spec:
 ### Product name
 
 The default product system name is taken from the `info.title` field in the OpenAPI definition.
-However, you can override this product name using the `spec.productSystemName` field 
+However, you can override this product name using the `spec.productSystemName` field
 of the [OpenAPI CRD](openapi-reference.md).
 
 ### Private Base URL
 
 Private base URL is read from OpenAPI `servers[0].url` field.
-You can override this using the `spec.privateBaseURL` field 
+You can override this using the `spec.privateBaseURL` field
 of the [OpenAPI CRD](openapi-reference.md).
 
 ### 3scale Methods
@@ -130,7 +130,7 @@ OpenAPI [paths](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/
 *Delta* value is hard-coded to `1`.
 
 By default, *Strict matching* policy is being configured.
-Matching policy can be switched to **Prefix matching** using the `spec.PrefixMatching` field 
+Matching policy can be switched to **Prefix matching** using the `spec.PrefixMatching` field
 of the [OpenAPI CRD](openapi-reference.md).
 
 ### Authentication
@@ -181,7 +181,7 @@ However, when the `spec.productionPublicBaseURL` or the `spec.stagingPublicBaseU
 fields are provided in the [OpenAPI custom resource](openapi-reference.md),
 the product's deployment mode will be `APIcast self-managed`.
 
-Example of a [OpenAPI custom resource](openapi-reference.md) with custom public base URL
+Example of a [OpenAPI custom resource](openapi-reference.md) with custom public base URL:
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
