@@ -15,58 +15,55 @@ The following diagram shows available custom resource definitions and their rela
 
 ## Table of contents
 
-* [CRD Index](#crd-index)
-* [Quickstart Guide](#quickstart-guide)
-* [Backend custom resource](#backend-custom-resource)
-   * [Backend metrics](#backend-metrics)
-   * [Backend methods](#backend-methods)
-   * [Backend mapping rules](#backend-mapping-rules)
-   * [Backend custom resource status field](#backend-custom-resource-status-field)
-   * [Link your 3scale backend to your 3scale tenant or provider account](#link-your-3scale-backend-to-your-3scale-tenant-or-provider-account)
-* [Product custom resource](#product-custom-resource)
-   * [Product Deployment Config: Apicast Hosted](#product-deployment-config-apicast-hosted)
-   * [Product Deployment Config:Apicast Self Managed](#product-deployment-configapicast-self-managed)
-   * [Product authentication types](#product-authentication-types)
-      * [User Key](#user-key)
-      * [AppID and AppKey pair](#appid-and-appkey-pair)
-      * [OIDC](#oidc)
-   * [Product metrics](#product-metrics)
-   * [Product methods](#product-methods)
-   * [Product mapping rules](#product-mapping-rules)
-   * [Product application plans](#product-application-plans)
-   * [Product application plan limits](#product-application-plan-limits)
-   * [Product application plan pricing rules](#product-application-plan-pricing-rules)
-   * [Product backend usages](#product-backend-usages)
-   * [Product policy chain](#product-policy-chain)
-   * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
-   * [Product custom resource status field](#product-custom-resource-status-field)
-   * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
-* [OpenAPI custom resource](#openapi-custom-resource)
-   * [Features](#features)
-   * [Secret OpenAPI spec source](#secret-openapi-spec-source)
-   * [URL OpenAPI spec source](#url-openapi-spec-source)
-   * [OpenAPI spec source with custom public base URL](#openapi-spec-source-with-custom-public-base-url)
-   * [Link your OpenAPI spec to your 3scale tenant or provider account](#link-your-openapi-spec-to-your-3scale-tenant-or-provider-account)
-* [ActiveDoc custom resource](#activedoc-custom-resource)
-   * [Features](#features-1)
-   * [Reference your OpenAPI document using secret source](#reference-your-openapi-document-using-secret-source)
-   * [Reference your OpenAPI document using URL source](#reference-your-openapi-document-using-url-source)
-   * [ActiveDoc spec source linked with a 3scale product](#activedoc-spec-source-linked-with-a-3scale-product)
-   * [Link your ActiveDoc spec to your 3scale tenant or provider account](#link-your-activedoc-spec-to-your-3scale-tenant-or-provider-account)
-* [CustomPolicyDefinition Custom Resource](#custompolicydefinition-custom-resource)
-   * [Link your CustomPolicyDefinition spec to your 3scale tenant or provider account](#link-your-custompolicydefinition-spec-to-your-3scale-tenant-or-provider-account)
-* [Tenant custom resource](#tenant-custom-resource)
-   * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
-   * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
-* [DeveloperAccount custom resource](#developeraccount-custom-resource)
-   * [DeveloperAccount custom resource status field](#developeraccount-custom-resource-status-field)
-   * [Link your DeveloperAccount to your 3scale tenant or provider account](#link-your-developeraccount-to-your-3scale-tenant-or-provider-account)
-* [DeveloperUser custom resource](#developeruser-custom-resource)
-   * [Create developer user with member role](#create-developer-user-with-member-role)
-   * [Create developer user with admin role](#create-developer-user-with-admin-role)
-   * [DeveloperUser custom resource status field](#developeruser-custom-resource-status-field)
-   * [Link your DeveloperUser to your 3scale tenant or provider account](#link-your-developeruser-to-your-3scale-tenant-or-provider-account)
-* [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
+* [Application Capabilities via 3scale Operator](#application-capabilities-via-3scale-operator)
+   * [Table of contents](#table-of-contents)
+   * [CRD Index](#crd-index)
+   * [Quickstart Guide](#quickstart-guide)
+   * [Backend custom resource](#backend-custom-resource)
+      * [Backend metrics](#backend-metrics)
+      * [Backend methods](#backend-methods)
+      * [Backend mapping rules](#backend-mapping-rules)
+      * [Backend custom resource status field](#backend-custom-resource-status-field)
+      * [Link your 3scale backend to your 3scale tenant or provider account](#link-your-3scale-backend-to-your-3scale-tenant-or-provider-account)
+   * [Product custom resource](#product-custom-resource)
+      * [Product Deployment Config: Apicast Hosted](#product-deployment-config-apicast-hosted)
+      * [Product Deployment Config:Apicast Self Managed](#product-deployment-configapicast-self-managed)
+      * [Product authentication types](#product-authentication-types)
+         * [User Key](#user-key)
+         * [AppID and AppKey pair](#appid-and-appkey-pair)
+         * [OIDC](#oidc)
+      * [Product metrics](#product-metrics)
+      * [Product methods](#product-methods)
+      * [Product mapping rules](#product-mapping-rules)
+      * [Product application plans](#product-application-plans)
+      * [Product application plan limits](#product-application-plan-limits)
+      * [Product application plan pricing rules](#product-application-plan-pricing-rules)
+      * [Product backend usages](#product-backend-usages)
+      * [Product policy chain](#product-policy-chain)
+      * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
+      * [Product custom resource status field](#product-custom-resource-status-field)
+      * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
+   * [<a href="openapi-user-guide.md">OpenAPI custom resource</a>](#openapi-custom-resource)
+   * [ActiveDoc custom resource](#activedoc-custom-resource)
+      * [Features](#features)
+      * [Reference your OpenAPI document using secret source](#reference-your-openapi-document-using-secret-source)
+      * [Reference your OpenAPI document using URL source](#reference-your-openapi-document-using-url-source)
+      * [ActiveDoc spec source linked with a 3scale product](#activedoc-spec-source-linked-with-a-3scale-product)
+      * [Link your ActiveDoc spec to your 3scale tenant or provider account](#link-your-activedoc-spec-to-your-3scale-tenant-or-provider-account)
+   * [CustomPolicyDefinition Custom Resource](#custompolicydefinition-custom-resource)
+      * [Link your CustomPolicyDefinition spec to your 3scale tenant or provider account](#link-your-custompolicydefinition-spec-to-your-3scale-tenant-or-provider-account)
+   * [Tenant custom resource](#tenant-custom-resource)
+      * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
+      * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
+   * [DeveloperAccount custom resource](#developeraccount-custom-resource)
+      * [DeveloperAccount custom resource status field](#developeraccount-custom-resource-status-field)
+      * [Link your DeveloperAccount to your 3scale tenant or provider account](#link-your-developeraccount-to-your-3scale-tenant-or-provider-account)
+   * [DeveloperUser custom resource](#developeruser-custom-resource)
+      * [Create developer user with member role](#create-developer-user-with-member-role)
+      * [Create developer user with admin role](#create-developer-user-with-admin-role)
+      * [DeveloperUser custom resource status field](#developeruser-custom-resource-status-field)
+      * [Link your DeveloperUser to your 3scale tenant or provider account](#link-your-developeruser-to-your-3scale-tenant-or-provider-account)
+   * [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -852,137 +849,7 @@ oc create secret generic threescale-provider-account --from-literal=adminURL=htt
 
 The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
-## OpenAPI custom resource
-
-### Features
-
-* [OpenAPI 3.0.2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md) specification
-  * Just a single top level security requirement supported. Operation level security requirements not supported.
-  * Only first `server.url` element in servers list parsed as private url. Path and operation level `servers` elements not supported.
-  * Supported security schemes: `apiKey`.
-* Accepted OpenAPI spec document formats are `json` and `yaml`.
-* OpenAPI spec document can be read from:
-  * Secret
-  * URL. Supported schemes are http and https
-* When the `spec.productionPublicBaseURL` or the `spec.stagingPublicBaseURL` (or both) fields are provided, implicitly the customer is asking for "APIcast self-managed" deployment mode. Otherwise, default deployment mode will be set, that is, "APIcast 3scale managed".
-* 3scale Product's `system_name` will be set out of OpenAPI Spec document `info.title`. It can be customized using the `spec.productSystemName` field.
-* Private API base URL will be read from the first `server.url` document element. It can be customized using the `spec.privateBaseURL` field.
-* By default, *strict matching* regular expressions used on mapping rule patterns read from OpenAPI spec operations. *Prefix matching* can be applied using the `spec.privateBaseURL` field.
-* Private API security can be configured using the `spec.privateAPIHostHeader` and the `spec.privateAPISecretToken` fields. Check [OpenAPI CR reference](openapi-reference.md) for more information.
-* OpenAPI Spec document `info.title` must not exceed `253-38 = 215` character length. It will be used to create some openshift object names with some length [limitations](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/).
-
-### Secret OpenAPI spec source
-
-Create a secret with the OpenAPI spec document. The name of the secret object will be referenced in the OpenAPI CR.
-
-The following example shows how to create a secret out of a file:
-
-```
-$ cat myopenapi.yaml
----
-openapi: "3.0.0"
-info:
-title: "some title"
-version: "1.0.0"
-
-$ oc create secret generic myopenapi --from-file myopenapi.yaml
-secret/myopenapi created
-```
-
-**NOTE** The field name inside the secret is not read by the operator. Only the content is read.
-
-Then, create your OpenAPI CR providing reference to the secret holding the OpenAPI document.
-
-```yaml
-apiVersion: capabilities.3scale.net/v1beta1
-kind: OpenAPI
-metadata:
-  name: openapi1
-spec:
-  openapiRef:
-    secretRef:
-      name: myopenapi
-```
-
-[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
-
-### URL OpenAPI spec source
-
-```yaml
-apiVersion: capabilities.3scale.net/v1beta1
-kind: OpenAPI
-metadata:
-  name: openapi1
-spec:
-  openapiRef:
-    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
-```
-
-[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
-
-### OpenAPI spec source with custom public base URL
-
-```yaml
-apiVersion: capabilities.3scale.net/v1beta1
-kind: OpenAPI
-metadata:
-  name: openapi1
-spec:
-  openapiRef:
-    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
-  productionPublicBaseURL: "https://production.my-gateway.example.com"
-  stagingPublicBaseURL: "https://staging.my-gateway.example.com"
-```
-
-[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
-
-### Link your OpenAPI spec to your 3scale tenant or provider account
-
-When some openapi custom resource is found by the 3scale operator,
-*LookupProviderAccount* process is started to figure out the tenant owning the resource.
-
-The process will check the following tenant credential sources. If none is found, an error is raised.
-
-* Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
-
-```
-apiVersion: capabilities.3scale.net/v1beta1
-kind: OpenAPI
-metadata:
-  name: openapi1
-spec:
-  openapiRef:
-    url: "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
-  providerAccountRef:
-    name: mytenant
-```
-
-[OpenAPI CRD Reference](openapi-reference.md) for more info about fields.
-
-The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
-
-```
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mytenant
-type: Opaque
-stringData:
-  adminURL: https://my3scale-admin.example.com:443
-  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-```
-
-* Default `threescale-provider-account` secret
-
-For example: `adminURL=https://3scale-admin.example.com` and `token=123456`.
-
-```
-oc create secret generic threescale-provider-account --from-literal=adminURL=https://3scale-admin.example.com --from-literal=token=123456
-```
-
-* Default provider account in the same namespace 3scale deployment
-
-The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
+## [OpenAPI custom resource](openapi-user-guide.md)
 
 ## ActiveDoc custom resource
 
