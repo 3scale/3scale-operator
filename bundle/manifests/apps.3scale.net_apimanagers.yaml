@@ -456,8 +456,8 @@ spec:
                           enabled:
                             description: Enabled controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled.
                             type: boolean
-                          tracingConfigRef:
-                            description: TracingConfig contains a secret reference the OpenTracing configuration. Each supported tracing library provides a default configuration file that is used if TracingConfig is not specified.
+                          tracingConfigSecretRef:
+                            description: TracingConfigSecretRef contains a secret reference the OpenTracing configuration. Each supported tracing library provides a default configuration file that is used if TracingConfig is not specified.
                             properties:
                               name:
                                 description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
@@ -939,8 +939,8 @@ spec:
                           enabled:
                             description: Enabled controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled.
                             type: boolean
-                          tracingConfigRef:
-                            description: TracingConfig contains a secret reference the OpenTracing configuration. Each supported tracing library provides a default configuration file that is used if TracingConfig is not specified.
+                          tracingConfigSecretRef:
+                            description: TracingConfigSecretRef contains a secret reference the OpenTracing configuration. Each supported tracing library provides a default configuration file that is used if TracingConfig is not specified.
                             properties:
                               name:
                                 description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
