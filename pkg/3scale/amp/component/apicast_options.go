@@ -103,6 +103,15 @@ type ApicastOptions struct {
 	StagingHTTPSPort                     *int32  `validate:"-"`
 	StagingHTTPSVerifyDepth              *int64  `validate:"-"`
 	StagingHTTPSCertificateSecretName    *string `validate:"-"`
+
+	ProductionAllProxy   *string
+	ProductionHTTPProxy  *string
+	ProductionHTTPSProxy *string
+	ProductionNoProxy    *string
+	StagingAllProxy      *string
+	StagingHTTPProxy     *string
+	StagingHTTPSProxy    *string
+	StagingNoProxy       *string
 }
 
 func NewApicastOptions() *ApicastOptions {

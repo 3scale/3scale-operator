@@ -70,6 +70,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastTracingConfigEnvVarsMutator,
 		apicastEnvironmentEnvVarMutator,
 		apicastHTTPSEnvVarMutator,
+		apicastProxyConfigurationsEnvVarMutator,
 		apicastVolumeMountsMutator,
 		apicastVolumesMutator,
 		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
@@ -93,6 +94,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastTracingConfigEnvVarsMutator,
 		apicastEnvironmentEnvVarMutator,
 		apicastHTTPSEnvVarMutator,
+		apicastProxyConfigurationsEnvVarMutator,
 		apicastVolumeMountsMutator,
 		apicastVolumesMutator,
 		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
@@ -198,6 +200,23 @@ func apicastHTTPSEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool 
 		"APICAST_HTTPS_VERIFY_DEPTH",
 		"APICAST_HTTPS_CERTIFICATE",
 		"APICAST_HTTPS_CERTIFICATE_KEY",
+	} {
+		tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed
+}
+
+func apicastProxyConfigurationsEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	// Reconcile EnvVars related to APIcast proxy-related configurations
+	var changed bool
+
+	for _, envVar := range []string{
+		"ALL_PROXY",
+		"HTTP_PROXY",
+		"HTTPS_PROXY",
+		"NO_PROXY",
 	} {
 		tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, envVar)
 		changed = changed || tmpChanged

@@ -353,6 +353,22 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 			helper.EnvVarFromValue("APICAST_HTTPS_CERTIFICATE_KEY", fmt.Sprintf("%s/%s", HTTPSCertificatesMountPath, v1.TLSPrivateKeyKey)))
 	}
 
+	if apicast.Options.StagingAllProxy != nil {
+		result = append(result, helper.EnvVarFromValue("ALL_PROXY", *apicast.Options.StagingAllProxy))
+	}
+
+	if apicast.Options.StagingHTTPProxy != nil {
+		result = append(result, helper.EnvVarFromValue("HTTP_PROXY", *apicast.Options.StagingHTTPProxy))
+	}
+
+	if apicast.Options.StagingHTTPSProxy != nil {
+		result = append(result, helper.EnvVarFromValue("HTTPS_PROXY", *apicast.Options.StagingHTTPSProxy))
+	}
+
+	if apicast.Options.StagingNoProxy != nil {
+		result = append(result, helper.EnvVarFromValue("NO_PROXY", *apicast.Options.StagingNoProxy))
+	}
+
 	return result
 }
 
@@ -407,6 +423,22 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 			helper.EnvVarFromValue("APICAST_HTTPS_CERTIFICATE", path.Join(HTTPSCertificatesMountPath, v1.TLSCertKey)),
 			helper.EnvVarFromValue("APICAST_HTTPS_CERTIFICATE_KEY", path.Join(HTTPSCertificatesMountPath, v1.TLSPrivateKeyKey)),
 		)
+	}
+
+	if apicast.Options.ProductionAllProxy != nil {
+		result = append(result, helper.EnvVarFromValue("ALL_PROXY", *apicast.Options.ProductionAllProxy))
+	}
+
+	if apicast.Options.ProductionHTTPProxy != nil {
+		result = append(result, helper.EnvVarFromValue("HTTP_PROXY", *apicast.Options.ProductionHTTPProxy))
+	}
+
+	if apicast.Options.ProductionHTTPSProxy != nil {
+		result = append(result, helper.EnvVarFromValue("HTTPS_PROXY", *apicast.Options.ProductionHTTPSProxy))
+	}
+
+	if apicast.Options.ProductionNoProxy != nil {
+		result = append(result, helper.EnvVarFromValue("NO_PROXY", *apicast.Options.ProductionNoProxy))
 	}
 
 	return result

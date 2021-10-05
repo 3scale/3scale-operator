@@ -234,6 +234,24 @@ type ApicastProductionSpec struct {
 	// Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
 	// +optional
 	HTTPSCertificateSecretRef *v1.LocalObjectReference `json:"httpsCertificateSecretRef,omitempty"`
+	// AllProxy specifies a HTTP(S) proxy to be used for connecting to services if
+	// a protocol-specific proxy is not specified. Authentication is not supported.
+	// Format is <scheme>://<host>:<port>
+	// +optional
+	AllProxy *string `json:"allProxy,omitempty"` // ALL_PROXY
+	// HTTPProxy specifies a HTTP(S) Proxy to be used for connecting to HTTP services.
+	// Authentication is not supported. Format is <scheme>://<host>:<port>
+	// +optional
+	HTTPProxy *string `json:"httpProxy,omitempty"` // HTTP_PROXY
+	// HTTPSProxy specifies a HTTP(S) Proxy to be used for connecting to HTTPS services.
+	// Authentication is not supported. Format is <scheme>://<host>:<port>
+	// +optional
+	HTTPSProxy *string `json:"httpsProxy,omitempty"` // HTTPS_PROXY
+	// NoProxy specifies a comma-separated list of hostnames and domain
+	// names for which the requests should not be proxied. Setting to a single
+	// * character, which matches all hosts, effectively disables the proxy.
+	// +optional
+	NoProxy *string `json:"noProxy,omitempty"` // NO_PROXY
 }
 
 type ApicastStagingSpec struct {
@@ -271,6 +289,24 @@ type ApicastStagingSpec struct {
 	// Enable TLS at APIcast pod level setting either `httpsPort` or `httpsCertificateSecretRef` fields or both.
 	// +optional
 	HTTPSCertificateSecretRef *v1.LocalObjectReference `json:"httpsCertificateSecretRef,omitempty"`
+	// AllProxy specifies a HTTP(S) proxy to be used for connecting to services if
+	// a protocol-specific proxy is not specified. Authentication is not supported.
+	// Format is <scheme>://<host>:<port>
+	// +optional
+	AllProxy *string `json:"allProxy,omitempty"` // ALL_PROXY
+	// HTTPProxy specifies a HTTP(S) Proxy to be used for connecting to HTTP services.
+	// Authentication is not supported. Format is <scheme>://<host>:<port>
+	// +optional
+	HTTPProxy *string `json:"httpProxy,omitempty"` // HTTP_PROXY
+	// HTTPSProxy specifies a HTTP(S) Proxy to be used for connecting to HTTPS services.
+	// Authentication is not supported. Format is <scheme>://<host>:<port>
+	// +optional
+	HTTPSProxy *string `json:"httpsProxy,omitempty"` // HTTPS_PROXY
+	// NoProxy specifies a comma-separated list of hostnames and domain
+	// names for which the requests should not be proxied. Setting to a single
+	// * character, which matches all hosts, effectively disables the proxy.
+	// +optional
+	NoProxy *string `json:"noProxy,omitempty"` // NO_PROXY
 }
 
 type BackendSpec struct {
