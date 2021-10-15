@@ -23,7 +23,7 @@ spec:
         control-plane: controller-manager
         com.redhat.product-name: 3scale
         com.redhat.component-name: 3scale-operator
-        com.redhat.product-version: master
+        com.redhat.product-version: "2.12"
         com.redhat.component-version: 0.9.0
         com.redhat.component-type: infrastructure
     spec:

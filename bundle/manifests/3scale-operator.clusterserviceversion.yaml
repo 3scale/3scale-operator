@@ -344,7 +344,7 @@ spec:
                 com.redhat.component-type: infrastructure
                 com.redhat.component-version: 0.9.0
                 com.redhat.product-name: 3scale
-                com.redhat.product-version: master
+                com.redhat.product-version: "2.12"
                 control-plane: controller-manager
             spec:
               containers:
