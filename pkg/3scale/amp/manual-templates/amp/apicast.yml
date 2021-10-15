@@ -121,7 +121,7 @@ parameters:
   value: "2.7.0"
   required: true
 - name: AMP_APICAST_IMAGE
-  value: "quay.io/3scale/apicast:latest"
+  value: "quay.io/3scale/3scale212:apicast-3scale-2.12.0-GA"
   required: true
 - description: "Name of the secret containing the THREESCALE_PORTAL_ENDPOINT with the access-token or provider key"
   value: apicast-configuration-url-secret
