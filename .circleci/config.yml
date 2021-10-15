@@ -11,12 +11,6 @@ parameters:
   components_imagestream_tag_name:
     type: string
     default: "master"
-  components_git_ref:
-    type: string
-    default: "master"
-  build_3scale_images_flag:
-    type: boolean
-    default: false
 
 ##################################### YAML ANCHORS  ############################################
 

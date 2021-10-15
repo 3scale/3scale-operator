@@ -275,27 +275,6 @@ bundle-update-test:
 	git diff --exit-code ./bundle
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./bundle)" ]
 
-.PHONY: build-3scale-images
-build-3scale-images: IMAGES_GIT_REF?=master
-build-3scale-images: IMAGES_REMOTE_TAG?=nightly
-build-3scale-images: INTERNAL_ID=$(shell git config user.email | cut -d '@' -f1)
-build-3scale-images: OPERATOR_BRANCH=$(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
-build-3scale-images:
-ifndef CIRCLE_CI_API_TOKEN
-	$(error "CIRCLE_CI_API_TOKEN not set")
-endif
-	CIRCLECI_DATA='$(shell jq -n -c \
-		--arg operator_branch "$(OPERATOR_BRANCH)" \
-		--arg git_ref "$(IMAGES_GIT_REF)" \
-		--arg remote_tag "$(IMAGES_REMOTE_TAG)" \
-		'{branch: $$operator_branch, parameters:{build_3scale_images_flag:true, components_tag_name: $$remote_tag, components_git_ref: $$git_ref}}' )'; \
-	curl -v --request POST -u $(CIRCLE_CI_API_TOKEN): \
-	  --url https://circleci.com/api/v2/project/gh/3scale/3scale-operator/pipeline \
-	  --header 'content-type: application/json' \
-	  --header "x-attribution-actor-id: $(INTERNAL_ID)" \
-	  --header "x-attribution-login: $(INTERNAL_ID)" \
-	  --data "$$CIRCLECI_DATA"
-
 $(PROMETHEUS_RULES_TARGETS): $(PROMETHEUS_RULES_DEPS)
 	go run $(PROJECT_PATH)/pkg/3scale/amp/main.go prometheusrules --namespace $(PROMETHEUS_RULES_NAMESPACE) $(notdir $(basename $@)) >$@
 
