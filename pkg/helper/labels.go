@@ -16,7 +16,7 @@ func MeteringLabels(componentName string, componentType ComponentType) map[strin
 		"com.company":   "Red_Hat",
 		"rht.prod_name": "Red_Hat_Integration",
 		// It should be updated on release branch
-		"rht.prod_ver":  "master",
+		"rht.prod_ver":  "2021.Q4",
 		"rht.comp":      "3scale",
 		"rht.comp_ver":  product.ThreescaleRelease,
 		"rht.subcomp":   componentName,

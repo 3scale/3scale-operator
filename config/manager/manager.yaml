@@ -23,9 +23,9 @@ spec:
         control-plane: controller-manager
         com.company: Red_Hat
         rht.prod_name: Red_Hat_Integration
-        rht.prod_ver: master
+        rht.prod_ver: "2021.Q4"
         rht.comp: 3scale
-        rht.comp_ver: master
+        rht.comp_ver: "2.12"
         rht.subcomp: 3scale_operator
         rht.subcomp_t: infrastructure
     spec:
