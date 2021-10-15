@@ -118,7 +118,7 @@ objects:
 parameters:
 - name: AMP_RELEASE
   description: "AMP release tag."
-  value: "2.7.0"
+  value: "2.12.0"
   required: true
 - name: AMP_APICAST_IMAGE
   value: "quay.io/3scale/3scale212:apicast-3scale-2.12.0-GA"

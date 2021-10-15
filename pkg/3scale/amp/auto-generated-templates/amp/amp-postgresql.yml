@@ -3947,7 +3947,7 @@ parameters:
 - description: AMP release tag.
   name: AMP_RELEASE
   required: true
-  value: master
+  value: "2.12"
 - description: Used for object app labels
   name: APP_LABEL
   required: true
@@ -3961,16 +3961,16 @@ parameters:
   value: "null"
 - name: AMP_BACKEND_IMAGE
   required: true
-  value: quay.io/3scale/apisonator:latest
+  value: quay.io/3scale/3scale212:apisonator-3scale-2.12.0-GA
 - name: AMP_ZYNC_IMAGE
   required: true
-  value: quay.io/3scale/zync:latest
+  value: quay.io/3scale/3scale212:zync-3scale-2.12.0-GA
 - name: AMP_APICAST_IMAGE
   required: true
-  value: quay.io/3scale/apicast:latest
+  value: quay.io/3scale/3scale212:apicast-3scale-2.12.0-GA
 - name: AMP_SYSTEM_IMAGE
   required: true
-  value: quay.io/3scale/porta:latest
+  value: quay.io/3scale/3scale212:porta-3scale-2.12.0-GA
 - description: Zync's PostgreSQL image to use
   name: ZYNC_DATABASE_IMAGE
   required: true
