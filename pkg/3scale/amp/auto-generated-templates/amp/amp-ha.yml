@@ -289,11 +289,11 @@ objects:
           name: backend-cron
           resources:
             limits:
-              cpu: 150m
-              memory: 150Mi
+              cpu: 500m
+              memory: 500Mi
             requests:
-              cpu: 50m
-              memory: 40Mi
+              cpu: 100m
+              memory: 100Mi
         initContainers:
         - command:
           - /opt/app/entrypoint.sh

@@ -86,12 +86,12 @@ func DefaultBackendWorkerResourceRequirements() v1.ResourceRequirements {
 func DefaultCronResourceRequirements() v1.ResourceRequirements {
 	return v1.ResourceRequirements{
 		Limits: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("150m"),
-			v1.ResourceMemory: resource.MustParse("150Mi"),
+			v1.ResourceCPU:    resource.MustParse("500m"),
+			v1.ResourceMemory: resource.MustParse("500Mi"),
 		},
 		Requests: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("50m"),
-			v1.ResourceMemory: resource.MustParse("40Mi"),
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("100Mi"),
 		},
 	}
 }
