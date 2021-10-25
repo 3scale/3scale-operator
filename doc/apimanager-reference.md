@@ -657,7 +657,7 @@ APIManager components are the following ones:
 | system-postgresql | 250m | No limit | 512Mi | 2Gi |
 | backend-listener | 500m | 1000m | 550Mi | 700Mi |
 | backend-worker | 150m | 1000m | 50Mi | 300Mi |
-| backend-cron | 50m | 150m | 40Mi | 150Mi |
+| backend-cron | 100m | 500m | 100Mi | 500Mi |
 | backend-redis | 1000m | 2000m | 1024Mi | 32Gi |
 | apicast-production | 500m | 1000m | 64Mi | 128Mi |
 | apicast-staging | 50m | 100m | 64Mi | 128Mi |
