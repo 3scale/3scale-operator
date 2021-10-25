@@ -98,6 +98,8 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 		return nil, err
 	}
 
+	a.setProxyConfigurations()
+
 	err = a.apicastOptions.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("GetApicastOptions validating: %w", err)
@@ -396,4 +398,24 @@ func (a *ApicastOptionsProvider) customEnvironmentSecret(nn types.NamespacedName
 	}
 
 	return secret, nil
+}
+
+func (a *ApicastOptionsProvider) setProxyConfigurations() {
+	a.setStagingProxyConfigurations()
+	a.setProductionProxyConfigurations()
+}
+
+func (a *ApicastOptionsProvider) setStagingProxyConfigurations() {
+	a.apicastOptions.StagingAllProxy = a.apimanager.Spec.Apicast.StagingSpec.AllProxy
+	a.apicastOptions.StagingHTTPProxy = a.apimanager.Spec.Apicast.StagingSpec.HTTPProxy
+	a.apicastOptions.StagingHTTPSProxy = a.apimanager.Spec.Apicast.StagingSpec.HTTPSProxy
+	a.apicastOptions.StagingNoProxy = a.apimanager.Spec.Apicast.StagingSpec.NoProxy
+
+}
+
+func (a *ApicastOptionsProvider) setProductionProxyConfigurations() {
+	a.apicastOptions.ProductionAllProxy = a.apimanager.Spec.Apicast.ProductionSpec.AllProxy
+	a.apicastOptions.ProductionHTTPProxy = a.apimanager.Spec.Apicast.ProductionSpec.HTTPProxy
+	a.apicastOptions.ProductionHTTPSProxy = a.apimanager.Spec.Apicast.ProductionSpec.HTTPSProxy
+	a.apicastOptions.ProductionNoProxy = a.apimanager.Spec.Apicast.ProductionSpec.NoProxy
 }

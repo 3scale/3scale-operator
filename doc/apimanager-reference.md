@@ -113,6 +113,11 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | HTTPSPort | `httpsPort` | int | No | **8443** only when `httpsCertificateSecretRef` is provided | Controls on which port APIcast should start listening for HTTPS connections. Do not use `8080` as HTTPS port (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_port)) |
 | HTTPSVerifyDepth | `httpsVerifyDepth` | int | No | N/A | Defines the maximum length of the client certificate chain. (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_verify_depth)) |
 | HTTPSCertificateSecretRef | `httpsCertificateSecretRef` | LocalObjectReference | No | APIcast has a default certificate used when `httpsPort` is provided | References secret containing the X.509 certificate in the PEM format and the X.509 certificate secret key |
+| AllProxy | `allProxy` | string | No | N/A | Specifies a HTTP(S) proxy to be used for connecting to services if a protocol-specific proxy is not specified. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#all_proxy-all_proxy)) |
+| HTTPProxy | `httpProxy` | string | No | N/A | Specifies a HTTP(S) Proxy to be used for connecting to HTTP services. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#http_proxy-http_proxy)) |
+| HTTPSProxy | `httpsProxy` | string | No | N/A | Specifies a HTTP(S) Proxy to be used for connecting to HTTPS services. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#https_proxy-https_proxy)) |
+| NoProxy | `noProxy` | string | No | N/A | Specifies a comma-separated list of hostnames and domain names for which the requests should not be proxied. Setting to a single `*` character, which matches all hosts, effectively disables the proxy (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#no_proxy-no_proxy)) |
+
 
 ### ApicastStagingSpec
 
@@ -129,6 +134,10 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | HTTPSPort | `httpsPort` | int | No | **8443** only when `httpsCertificateSecretRef` is provided | Controls on which port APIcast should start listening for HTTPS connections. Do not use `8080` as HTTPS port (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_port)) |
 | HTTPSVerifyDepth | `httpsVerifyDepth` | int | No | N/A | Defines the maximum length of the client certificate chain. (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_verify_depth)) |
 | HTTPSCertificateSecretRef | `httpsCertificateSecretRef` | LocalObjectReference | No | APIcast has a default certificate used when `httpsPort` is provided | References secret containing the X.509 certificate in the PEM format and the X.509 certificate secret key |
+| AllProxy | `allProxy` | string | No | N/A | Specifies a HTTP(S) proxy to be used for connecting to services if a protocol-specific proxy is not specified. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#all_proxy-all_proxy)) |
+| HTTPProxy | `httpProxy` | string | No | N/A | Specifies a HTTP(S) Proxy to be used for connecting to HTTP services. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#http_proxy-http_proxy)) |
+| HTTPSProxy | `httpsProxy` | string | No | N/A | Specifies a HTTP(S) Proxy to be used for connecting to HTTPS services. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#https_proxy-https_proxy)) |
+| NoProxy | `noProxy` | string | No | N/A | Specifies a comma-separated list of hostnames and domain names for which the requests should not be proxied. Setting to a single `*` character, which matches all hosts, effectively disables the proxy (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#no_proxy-no_proxy)) |
 
 ### CustomPolicySpec
 
