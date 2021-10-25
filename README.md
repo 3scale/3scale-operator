@@ -1,4 +1,5 @@
 # 3scale-operator
+test
 
 [![CircleCI](https://circleci.com/gh/3scale/3scale-operator/tree/master.svg?style=svg)](https://circleci.com/gh/3scale/3scale-operator/tree/master)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
