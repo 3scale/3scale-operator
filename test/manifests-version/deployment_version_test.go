@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-	"github.com/3scale/3scale-operator/version"
 
 	appsv1 "k8s.io/api/apps/v1"
 	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -54,11 +53,7 @@ func TestDeploymentVersions(t *testing.T) {
 		t.Errorf("Parsed object is not a Deployment object")
 	}
 
-	if deployment.Spec.Template.Labels["com.redhat.component-version"] != version.Version {
-		t.Errorf("com.redhat.component-version differ: expected: %s; found: %s", version.Version, deployment.Spec.Template.Labels["com.redhat.component-version"])
-	}
-
-	if deployment.Spec.Template.Labels["com.redhat.product-version"] != product.ThreescaleRelease {
+	if deployment.Spec.Template.Labels["rht.comp_ver"] != product.ThreescaleRelease {
 		t.Errorf("com.redhat.product-version differ: expected: %s; found: %s", product.ThreescaleRelease, deployment.Spec.Template.Labels["com.redhat.product-version"])
 	}
 }

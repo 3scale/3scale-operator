@@ -55,45 +55,39 @@ func testBackendCommonCronLabels() map[string]string {
 }
 
 func testBackendListenerPodLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "backend",
 		"threescale_component_element": "listener",
-		"com.redhat.component-name":    "backend-listener",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(BackendImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "backend-listener",
 	}
+	addExpectedMeteringLabels(labels, "backend-listener", helper.ApplicationType)
+
+	return labels
 }
 
 func testBackendWorkerPodLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "backend",
 		"threescale_component_element": "worker",
-		"com.redhat.component-name":    "backend-worker",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(BackendImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "backend-worker",
 	}
+	addExpectedMeteringLabels(labels, "backend-worker", helper.ApplicationType)
+
+	return labels
 }
 
 func testBackendCronPodLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "backend",
 		"threescale_component_element": "cron",
-		"com.redhat.component-name":    "backend-cron",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(BackendImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "backend-cron",
 	}
+	addExpectedMeteringLabels(labels, "backend-cron", helper.ApplicationType)
+
+	return labels
 }
 
 func testBackendListenerAffinity() *v1.Affinity {

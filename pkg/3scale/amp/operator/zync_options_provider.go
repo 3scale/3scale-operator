@@ -44,18 +44,13 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.setNodeAffinityAndTolerationsOptions()
 	z.setReplicas()
 
-	imageOpts, err := NewAmpImagesOptionsProvider(z.apimanager).GetAmpImagesOptions()
-	if err != nil {
-		return nil, fmt.Errorf("GetZyncOptions reading image options: %w", err)
-	}
-
 	z.zyncOptions.CommonLabels = z.commonLabels()
 	z.zyncOptions.CommonZyncLabels = z.commonZyncLabels()
 	z.zyncOptions.CommonZyncQueLabels = z.commonZyncQueLabels()
 	z.zyncOptions.CommonZyncDatabaseLabels = z.commonZyncDatabaseLabels()
-	z.zyncOptions.ZyncPodTemplateLabels = z.zyncPodTemplateLabels(imageOpts.ZyncImage)
-	z.zyncOptions.ZyncQuePodTemplateLabels = z.zyncQuePodTemplateLabels(imageOpts.ZyncImage)
-	z.zyncOptions.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels(imageOpts.ZyncDatabasePostgreSQLImage)
+	z.zyncOptions.ZyncPodTemplateLabels = z.zyncPodTemplateLabels()
+	z.zyncOptions.ZyncQuePodTemplateLabels = z.zyncQuePodTemplateLabels()
+	z.zyncOptions.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels()
 
 	z.zyncOptions.ZyncMetrics = true
 
@@ -231,8 +226,8 @@ func (z *ZyncOptionsProvider) commonZyncDatabaseLabels() map[string]string {
 	return labels
 }
 
-func (z *ZyncOptionsProvider) zyncPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("zync", helper.ParseVersion(image), helper.ApplicationType)
+func (z *ZyncOptionsProvider) zyncPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("zync", helper.ApplicationType)
 
 	for k, v := range z.commonZyncLabels() {
 		labels[k] = v
@@ -243,8 +238,8 @@ func (z *ZyncOptionsProvider) zyncPodTemplateLabels(image string) map[string]str
 	return labels
 }
 
-func (z *ZyncOptionsProvider) zyncQuePodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("zync-que", helper.ParseVersion(image), helper.ApplicationType)
+func (z *ZyncOptionsProvider) zyncQuePodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("zync-que", helper.ApplicationType)
 
 	for k, v := range z.commonZyncQueLabels() {
 		labels[k] = v
@@ -255,8 +250,8 @@ func (z *ZyncOptionsProvider) zyncQuePodTemplateLabels(image string) map[string]
 	return labels
 }
 
-func (z *ZyncOptionsProvider) zyncDatabasePodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("zync-database", helper.ParseVersion(image), helper.ApplicationType)
+func (z *ZyncOptionsProvider) zyncDatabasePodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("zync-database", helper.ApplicationType)
 
 	for k, v := range z.commonZyncDatabaseLabels() {
 		labels[k] = v

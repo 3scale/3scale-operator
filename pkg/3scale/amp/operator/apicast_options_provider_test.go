@@ -50,31 +50,27 @@ func testApicastProductionLabels() map[string]string {
 }
 
 func testApicastStagingPodLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "apicast",
 		"threescale_component_element": "staging",
-		"com.redhat.component-name":    "apicast-staging",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(ApicastImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "apicast-staging",
 	}
+	addExpectedMeteringLabels(labels, "apicast-staging", helper.ApplicationType)
+
+	return labels
 }
 
 func testApicastProductionPodLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "apicast",
 		"threescale_component_element": "production",
-		"com.redhat.component-name":    "apicast-production",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(ApicastImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "apicast-production",
 	}
+	addExpectedMeteringLabels(labels, "apicast-production", helper.ApplicationType)
+
+	return labels
 }
 
 func testApicastStagingAffinity() *v1.Affinity {

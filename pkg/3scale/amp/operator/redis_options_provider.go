@@ -48,10 +48,10 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 
 	r.options.SystemCommonLabels = r.systemCommonLabels()
 	r.options.SystemRedisLabels = r.systemRedisLabels()
-	r.options.SystemRedisPodTemplateLabels = r.systemRedisPodTemplateLabels(r.options.SystemImage)
+	r.options.SystemRedisPodTemplateLabels = r.systemRedisPodTemplateLabels()
 	r.options.BackendCommonLabels = r.backendCommonLabels()
 	r.options.BackendRedisLabels = r.backendRedisLabels()
-	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels(r.options.BackendImage)
+	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels()
 
 	r.setResourceRequirementsOptions()
 	r.setNodeAffinityAndTolerationsOptions()
@@ -219,8 +219,8 @@ func (r *RedisOptionsProvider) backendRedisLabels() map[string]string {
 	return labels
 }
 
-func (r *RedisOptionsProvider) systemRedisPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("system-redis", helper.ParseVersion(image), helper.ApplicationType)
+func (r *RedisOptionsProvider) systemRedisPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("system-redis", helper.ApplicationType)
 
 	for k, v := range r.systemRedisLabels() {
 		labels[k] = v
@@ -231,8 +231,8 @@ func (r *RedisOptionsProvider) systemRedisPodTemplateLabels(image string) map[st
 	return labels
 }
 
-func (r *RedisOptionsProvider) backendRedisPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("backend-redis", helper.ParseVersion(image), helper.ApplicationType)
+func (r *RedisOptionsProvider) backendRedisPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("backend-redis", helper.ApplicationType)
 
 	for k, v := range r.backendRedisLabels() {
 		labels[k] = v

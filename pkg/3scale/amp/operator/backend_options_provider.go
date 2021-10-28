@@ -44,17 +44,13 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.setNodeAffinityAndTolerationsOptions()
 	o.setReplicas()
 
-	imageOpts, err := NewAmpImagesOptionsProvider(o.apimanager).GetAmpImagesOptions()
-	if err != nil {
-		return nil, fmt.Errorf("GetBackendOptions reading image options: %w", err)
-	}
 	o.backendOptions.CommonLabels = o.commonLabels()
 	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
 	o.backendOptions.CommonWorkerLabels = o.commonWorkerLabels()
 	o.backendOptions.CommonCronLabels = o.commonCronLabels()
-	o.backendOptions.ListenerPodTemplateLabels = o.listenerPodTemplateLabels(imageOpts.BackendImage)
-	o.backendOptions.WorkerPodTemplateLabels = o.workerPodTemplateLabels(imageOpts.BackendImage)
-	o.backendOptions.CronPodTemplateLabels = o.cronPodTemplateLabels(imageOpts.BackendImage)
+	o.backendOptions.ListenerPodTemplateLabels = o.listenerPodTemplateLabels()
+	o.backendOptions.WorkerPodTemplateLabels = o.workerPodTemplateLabels()
+	o.backendOptions.CronPodTemplateLabels = o.cronPodTemplateLabels()
 
 	o.backendOptions.WorkerMetrics = true
 	o.backendOptions.ListenerMetrics = true
@@ -176,8 +172,8 @@ func (o *OperatorBackendOptionsProvider) commonCronLabels() map[string]string {
 	return labels
 }
 
-func (o *OperatorBackendOptionsProvider) listenerPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("backend-listener", helper.ParseVersion(image), helper.ApplicationType)
+func (o *OperatorBackendOptionsProvider) listenerPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("backend-listener", helper.ApplicationType)
 
 	for k, v := range o.commonListenerLabels() {
 		labels[k] = v
@@ -188,8 +184,8 @@ func (o *OperatorBackendOptionsProvider) listenerPodTemplateLabels(image string)
 	return labels
 }
 
-func (o *OperatorBackendOptionsProvider) workerPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("backend-worker", helper.ParseVersion(image), helper.ApplicationType)
+func (o *OperatorBackendOptionsProvider) workerPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("backend-worker", helper.ApplicationType)
 
 	for k, v := range o.commonWorkerLabels() {
 		labels[k] = v
@@ -200,8 +196,8 @@ func (o *OperatorBackendOptionsProvider) workerPodTemplateLabels(image string) m
 	return labels
 }
 
-func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("backend-cron", helper.ParseVersion(image), helper.ApplicationType)
+func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("backend-cron", helper.ApplicationType)
 
 	for k, v := range o.commonCronLabels() {
 		labels[k] = v

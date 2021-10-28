@@ -33,16 +33,11 @@ func NewSystemPostgresqlOptionsProvider(apimanager *appsv1alpha1.APIManager, nam
 
 func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*component.SystemPostgreSQLOptions, error) {
 	s.options.ImageTag = product.ThreescaleRelease
-
-	imageOpts, err := NewSystemPostgreSQLImageOptionsProvider(s.apimanager).GetSystemPostgreSQLImageOptions()
-	if err != nil {
-		return nil, fmt.Errorf("GetSystemPostgreSQLOptions reading image options: %w", err)
-	}
 	s.options.CommonLabels = s.commonLabels()
 	s.options.DeploymentLabels = s.deploymentLabels()
-	s.options.PodTemplateLabels = s.podTemplateLabels(imageOpts.Image)
+	s.options.PodTemplateLabels = s.podTemplateLabels()
 
-	err = s.setSecretBasedOptions()
+	err := s.setSecretBasedOptions()
 	if err != nil {
 		return nil, fmt.Errorf("GetSystemPostgreSQLOptions reading secret options: %w", err)
 	}
@@ -183,8 +178,8 @@ func (s *SystemPostgresqlOptionsProvider) deploymentLabels() map[string]string {
 	return labels
 }
 
-func (s *SystemPostgresqlOptionsProvider) podTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("system-postgresql", helper.ParseVersion(image), helper.ApplicationType)
+func (s *SystemPostgresqlOptionsProvider) podTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("system-postgresql", helper.ApplicationType)
 
 	for k, v := range s.deploymentLabels() {
 		labels[k] = v
