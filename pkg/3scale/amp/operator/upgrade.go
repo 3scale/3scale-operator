@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -48,6 +49,14 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 	res, err = u.deleteMessageBusConfigurations()
 	if err != nil {
 		return res, fmt.Errorf("Upgrade: delete message bus configurations: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
+	}
+
+	res, err = u.upgradePodTemplateLabels()
+	if err != nil {
+		return res, fmt.Errorf("Upgrading pod template labels: %w", err)
 	}
 	if res.Requeue {
 		return res, nil
@@ -756,6 +765,103 @@ func (u *UpgradeApiManager) findDeploymentTriggerOnImageChange(triggerPolicies [
 	}
 
 	return result, nil
+}
+
+func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error) {
+	apicast, err := Apicast(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	backend, err := Backend(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	zync, err := Zync(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	memcached, err := Memcached(u.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	system, err := System(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	deploymentConfigs := []*appsv1.DeploymentConfig{
+		apicast.StagingDeploymentConfig(),
+		apicast.ProductionDeploymentConfig(),
+		backend.ListenerDeploymentConfig(),
+		backend.WorkerDeploymentConfig(),
+		backend.CronDeploymentConfig(),
+		zync.DeploymentConfig(),
+		zync.QueDeploymentConfig(),
+		zync.DatabaseDeploymentConfig(),
+		memcached.DeploymentConfig(),
+		system.AppDeploymentConfig(),
+		system.SidekiqDeploymentConfig(),
+		system.SphinxDeploymentConfig(),
+	}
+
+	if !u.apiManager.IsExternalDatabaseEnabled() {
+		redis, err := Redis(u.apiManager, u.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		deploymentConfigs = append(deploymentConfigs, redis.SystemDeploymentConfig())
+		deploymentConfigs = append(deploymentConfigs, redis.BackendDeploymentConfig())
+	}
+
+	if u.apiManager.IsSystemPostgreSQLEnabled() {
+		systemPostgreSQL, err := SystemPostgreSQL(u.apiManager, u.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		deploymentConfigs = append(deploymentConfigs, systemPostgreSQL.DeploymentConfig())
+	}
+
+	if u.apiManager.IsSystemMysqlEnabled() {
+		systemMySQL, err := SystemMySQL(u.apiManager, u.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		deploymentConfigs = append(deploymentConfigs, systemMySQL.DeploymentConfig())
+	}
+	updated := false
+	for _, desired := range deploymentConfigs {
+		updatedTmp, err := u.ensurePodTemplateLabels(desired)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		updated = updated || updatedTmp
+	}
+
+	return reconcile.Result{Requeue: updated}, nil
+}
+
+func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentConfig) (bool, error) {
+	u.Logger().V(1).Info(fmt.Sprintf("ensurePodTemplateLabels object %s", common.ObjectInfo(desired)))
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return false, err
+	}
+
+	updated := false
+
+	diff := cmp.Diff(existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+	helper.MergeMapStringString(&updated, &existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+
+	if updated {
+		u.Logger().V(1).Info(fmt.Sprintf("DC %s template lables changed: %s", desired.Name, diff))
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return updated, nil
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {
