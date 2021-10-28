@@ -70,7 +70,7 @@ func TestAMPImagesReconciler(t *testing.T) {
 	recorder := record.NewFakeRecorder(10000)
 	clientset := fakeclientset.NewSimpleClientset()
 
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	imagesReconciler := NewAMPImagesReconciler(baseAPIManagerLogicReconciler)
@@ -162,7 +162,7 @@ func TestAMPImagesReconcilerWithAllExternalDatabases(t *testing.T) {
 	recorder := record.NewFakeRecorder(10000)
 	clientset := fakeclientset.NewSimpleClientset()
 
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	imagesReconciler := NewAMPImagesReconciler(baseAPIManagerLogicReconciler)

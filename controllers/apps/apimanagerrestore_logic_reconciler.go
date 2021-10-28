@@ -22,10 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
-	kubeclock "k8s.io/apimachinery/pkg/util/clock"
 )
-
-var apimanagerrestoreClock kubeclock.Clock = &kubeclock.RealClock{}
 
 type APIManagerRestoreLogicReconciler struct {
 	*reconcilers.BaseReconciler
@@ -378,6 +375,9 @@ func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*
 	serializedAPIManager := secret.Data[backup.APIManagerSerializedBackupFileName]
 
 	apimanagerRuntimeObj, _, err := deserializer.Decode(serializedAPIManager, nil, &appsv1alpha1.APIManager{})
+	if err != nil {
+		return nil, err
+	}
 	apimanager, ok := apimanagerRuntimeObj.(*appsv1alpha1.APIManager)
 	if !ok {
 		return nil, fmt.Errorf("%T is not a *appsv1alpha1.APIManager", apimanagerRuntimeObj)

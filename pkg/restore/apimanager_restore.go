@@ -361,20 +361,6 @@ func (b *APIManagerRestore) createAPIManagerSharedSecretContainerArgs() string {
 	)
 }
 
-func (b *APIManagerRestore) restoreAPIManagerContainerFromPVCContainerArgs() string {
-	return fmt.Sprintf(`
-  BASEPATH='%s';
-  SYSTEM_FILESTORAGE_PVC_DIR='%s'
-  APIMANAGER_BACKUP_SUBDDIR="${BASEPATH}/apimanager";
-  APIMANAGER_BACKUP_FILENAME="%s";
-  oc create -f ${APIMANAGER_BACKUP_SUBDDIR}/${APIMANAGER_BACKUP_FILENAME}
-`,
-		RestorePVCMountPath,
-		SystemFileStoragePVCMountPath,
-		backup.APIManagerSerializedBackupFileName,
-	)
-}
-
 func (b *APIManagerRestore) restoreSecretsAndConfigMapsContainerArgs() string {
 	return fmt.Sprintf(`
 	SECRETS='%s';
@@ -405,7 +391,7 @@ func (b *APIManagerRestore) restoreSecretsAndConfigMapsContainerArgs() string {
 }
 
 func (b *APIManagerRestore) zyncResyncDomainsContainerArgs() string {
-	return fmt.Sprintf(`
+	return `
 	dcname="system-sidekiq"
 	dcpods=$(oc get pods --ignore-not-found=true -l deploymentconfig=${dcname} --no-headers=true -o custom-columns=:metadata.name)
 	if [ -z "${dcpods}" ]; then
@@ -414,5 +400,5 @@ func (b *APIManagerRestore) zyncResyncDomainsContainerArgs() string {
 	fi
 	podname=$(echo -n $dcpods | awk '{print $1}')
 	oc exec ${podname} bash -- -c "bundle exec rake zync:resync:domains"
-`)
+`
 }

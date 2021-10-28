@@ -8,9 +8,6 @@ import (
 const lowercaseAlphabetCharset = "abcdefghijklmnopqrstuvwxyz"
 const uppercaseAlphabetCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const numericCharset = "0123456789"
-const alphabetCharset = lowercaseAlphabetCharset + uppercaseAlphabetCharset
-const alphanumericUppercaseCharset = uppercaseAlphabetCharset + numericCharset
-const alphanumericLowercaseCharset = lowercaseAlphabetCharset + numericCharset
 const alphanumericCharset = lowercaseAlphabetCharset + uppercaseAlphabetCharset + numericCharset
 const hexadecimalCharset = numericCharset + "ABCDEF"
 
@@ -21,7 +18,7 @@ func String(length int) string {
 	return StringWithCharset(length, alphanumericCharset)
 }
 
-// String generates random hexadecimal strings of size 'size'
+// HexadecimalString generates random hexadecimal strings of size 'size'
 func HexadecimalString(length int) string {
 	return StringWithCharset(length, hexadecimalCharset)
 }

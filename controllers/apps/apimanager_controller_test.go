@@ -45,10 +45,7 @@ var _ = Describe("APIManager controller", func() {
 		existingNamespace := &corev1.Namespace{}
 		Eventually(func() bool {
 			err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: generatedTestNamespace}, existingNamespace)
-			if err != nil {
-				return false
-			}
-			return true
+			return err == nil
 		}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
 		testNamespace = existingNamespace.Name
@@ -111,10 +108,7 @@ var _ = Describe("APIManager controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Eventually(func() bool {
 				err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: dummyS3Secret.Name, Namespace: dummyS3Secret.Namespace}, dummyS3Secret)
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
 			enableResourceRequirements := false
@@ -146,10 +140,7 @@ var _ = Describe("APIManager controller", func() {
 
 			Eventually(func() bool {
 				err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: apimanager.Name, Namespace: apimanager.Namespace}, apimanager)
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
 			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed DeploymentConfigs\n")

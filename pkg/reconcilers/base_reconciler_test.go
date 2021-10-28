@@ -49,7 +49,7 @@ func TestBaseReconcilerCreate(t *testing.T) {
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
 
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 
 	desiredConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -120,7 +120,7 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
 
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 
 	desiredConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -210,7 +210,7 @@ func TestBaseReconcilerDelete(t *testing.T) {
 	recorder := record.NewFakeRecorder(10000)
 	clientset := fakeclientset.NewSimpleClientset()
 
-	baseReconciler := NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 
 	desired := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
