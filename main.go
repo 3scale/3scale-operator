@@ -91,14 +91,13 @@ func main() {
 
 	printVersion()
 
-	namespace, err := getWatchNamespace()
+	_, err := getWatchNamespace()
 	if err != nil {
 		setupLog.Error(err, "Failed to get watch namespace")
-		os.Exit(1)
+		//os.Exit(1)
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Namespace:          namespace,
 		Scheme:             scheme,
 		MetricsBindAddress: metricsAddr,
 		Port:               9443,
