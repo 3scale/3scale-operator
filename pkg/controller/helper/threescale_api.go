@@ -42,6 +42,7 @@ func PortaClientFromURL(url *url.URL, token string) (*threescaleapi.ThreeScaleCl
 	// TODO By default should not skip verification
 	// Activated by some env var or Spec param
 	var transport http.RoundTripper = &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
