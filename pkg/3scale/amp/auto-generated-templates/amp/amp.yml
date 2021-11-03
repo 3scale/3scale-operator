@@ -4035,7 +4035,7 @@ parameters:
 - description: System MySQL image to use
   name: SYSTEM_DATABASE_IMAGE
   required: true
-  value: centos/mysql-57-centos7
+  value: centos/mysql-80-centos7
 - description: Redis image to use
   name: REDIS_IMAGE
   required: true

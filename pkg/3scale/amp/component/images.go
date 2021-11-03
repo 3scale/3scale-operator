@@ -25,7 +25,7 @@ func SystemRedisImageURL() string {
 }
 
 func SystemMySQLImageURL() string {
-	return "centos/mysql-57-centos7"
+	return "centos/mysql-80-centos7"
 }
 
 func SystemPostgreSQLImageURL() string {
