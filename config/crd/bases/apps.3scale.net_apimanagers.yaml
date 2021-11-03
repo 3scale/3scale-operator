@@ -14,7 +14,7 @@ spec:
     listKind: APIManagerList
     plural: apimanagers
     singular: apimanager
-  scope: Namespaced
+  scope: Cluster
   versions:
   - name: v1alpha1
     schema:
