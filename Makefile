@@ -121,7 +121,7 @@ go-bindata: $(GO_BINDATA)
 
 # Install CRDs into a cluster
 install: manifests $(KUSTOMIZE)
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) create -f - || $(KUSTOMIZE) build config/crd | $(KUBECTL) replace -f -
 
 # Uninstall CRDs from a cluster
 uninstall: manifests $(KUSTOMIZE)
