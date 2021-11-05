@@ -129,11 +129,6 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisURLFieldName,
 		},
-		{
-			&h.options.SystemMessageBusRedisURL,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusRedisURLFieldName,
-		},
 	}
 
 	for _, option := range cases {
@@ -164,28 +159,10 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 			component.DefaultSystemRedisSentinelRole(),
 		},
 		{
-			&h.options.SystemMessageBusRedisSentinelsHosts,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusSentinelHosts,
-			component.DefaultSystemMessageBusRedisSentinelHosts(),
-		},
-		{
-			&h.options.SystemMessageBusRedisSentinelsRole,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusSentinelRole,
-			component.DefaultSystemMessageBusRedisSentinelRole(),
-		},
-		{
 			&h.options.SystemRedisNamespace,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisNamespace,
 			component.DefaultSystemRedisNamespace(),
-		},
-		{
-			&h.options.SystemMessageBusRedisNamespace,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusRedisNamespace,
-			component.DefaultSystemMessageBusRedisNamespace(),
 		},
 	}
 

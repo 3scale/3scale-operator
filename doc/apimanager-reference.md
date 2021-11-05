@@ -430,8 +430,8 @@ When HighAvailability is enabled the following secrets have to be pre-created by
 * [system-database](#system-database) with the `URL` field with the value
   pointing to the desired external database. The database should be configured
   in high-availability mode
-* [system-redis](#system-redis) with the `URL` and `MESSAGE_BUS_URL` fields
-  with the value pointing to the desired external databases. The databases
+* [system-redis](#system-redis) with the `URL` field
+  with the value pointing to the desired external database. The database
   should be configured in high-availability mode
 
 Additionally, when HighAvailability is enabled, if the `externalZyncDatabaseEnabled` field is
@@ -578,13 +578,9 @@ The available configurable secrets are:
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
 | URL | System's Redis database URL | Mandatory when `.spec.highAvailability.enabled` is `true`. Otherwise the default value is: `redis://system-redis:6379/1` |
-| MESSAGE_BUS_URL | System's Message Bus Redis database URL | Mandatory when `.spec.highAvailability.enabled` is `true`. Otherwise the default value is: `redis://system-redis:6379/8` |
 | NAMESPACE | Define the namespace to be used by System's Redis Database. The empty value means not namespaced | `""` |
-| MESSAGE_BUS_NAMESPACE | Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced | `""` |
 | SENTINEL_HOSTS | System's Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
 | SENTINEL_ROLE | System's Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
-| MESSAGE_BUS_SENTINEL_HOSTS | System's Message Bus Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
-| MESSAGE_BUS_SENTINEL_ROLE | System's Message Bus Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
 
 ### system-seed
 

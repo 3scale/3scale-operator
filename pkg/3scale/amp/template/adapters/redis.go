@@ -106,10 +106,6 @@ func (r *RedisAdapter) options() (*component.RedisOptions, error) {
 	ro.SystemRedisSentinelsHosts = component.DefaultSystemRedisSentinelHosts()
 	ro.SystemRedisSentinelsRole = component.DefaultSystemRedisSentinelRole()
 	ro.SystemRedisNamespace = "${SYSTEM_REDIS_NAMESPACE}"
-	ro.SystemRedisMessageBusURL = "${SYSTEM_MESSAGE_BUS_REDIS_URL}"
-	ro.SystemMessageBusRedisSentinelsHosts = component.DefaultSystemMessageBusRedisSentinelHosts()
-	ro.SystemMessageBusRedisSentinelsRole = component.DefaultSystemMessageBusRedisSentinelRole()
-	ro.SystemMessageBusRedisNamespace = "${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}"
 
 	ro.BackendStorageURL = component.DefaultBackendRedisStorageURL()
 	ro.BackendQueuesURL = component.DefaultBackendRedisQueuesURL()

@@ -31,20 +31,16 @@ type RedisOptions struct {
 	BackendRedisPodTemplateLabels map[string]string `validate:"required"`
 
 	// secrets
-	BackendStorageURL                   string `validate:"required"`
-	BackendQueuesURL                    string `validate:"required"`
-	BackendRedisQueuesSentinelHosts     string
-	BackendRedisQueuesSentinelRole      string
-	BackendRedisStorageSentinelHosts    string
-	BackendRedisStorageSentinelRole     string
-	SystemRedisURL                      string `validate:"required"`
-	SystemRedisMessageBusURL            string
-	SystemRedisSentinelsHosts           string
-	SystemRedisSentinelsRole            string
-	SystemRedisNamespace                string
-	SystemMessageBusRedisSentinelsHosts string
-	SystemMessageBusRedisSentinelsRole  string
-	SystemMessageBusRedisNamespace      string
+	BackendStorageURL                string `validate:"required"`
+	BackendQueuesURL                 string `validate:"required"`
+	BackendRedisQueuesSentinelHosts  string
+	BackendRedisQueuesSentinelRole   string
+	BackendRedisStorageSentinelHosts string
+	BackendRedisStorageSentinelRole  string
+	SystemRedisURL                   string `validate:"required"`
+	SystemRedisSentinelsHosts        string
+	SystemRedisSentinelsRole         string
+	SystemRedisNamespace             string
 }
 
 func NewRedisOptions() *RedisOptions {
@@ -94,10 +90,6 @@ func DefaultSystemRedisURL() string {
 	return "redis://system-redis:6379/1"
 }
 
-func DefaultSystemRedisMessageBusURL() string {
-	return ""
-}
-
 func DefaultSystemRedisSentinelHosts() string {
 	return ""
 }
@@ -106,19 +98,7 @@ func DefaultSystemRedisSentinelRole() string {
 	return ""
 }
 
-func DefaultSystemMessageBusRedisSentinelHosts() string {
-	return ""
-}
-
-func DefaultSystemMessageBusRedisSentinelRole() string {
-	return ""
-}
-
 func DefaultSystemRedisNamespace() string {
-	return ""
-}
-
-func DefaultSystemMessageBusRedisNamespace() string {
 	return ""
 }
 

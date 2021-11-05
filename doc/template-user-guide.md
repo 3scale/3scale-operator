@@ -86,9 +86,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp.yml \
 | **RECAPTCHA_PUBLIC_KEY** | reCAPTCHA site key (used in spam protection) | - |
 | **RECAPTCHA_PRIVATE_KEY** | reCAPTCHA secret key (used in spam protection) | - |
 | **SYSTEM_REDIS_URL** | Define the external system-redis to connect to | redis://system-redis:6379/1 |
-| **SYSTEM_MESSAGE_BUS_REDIS_URL** | Define the external system-redis message bus to connect to | see note<sup>[1](#note1)</sup> |
 | **SYSTEM_REDIS_NAMESPACE** | namespace to be used by System's Redis Database | none |
-| **SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE** | namespace to be used by System's Message Bus Redis Database | none |
 | **ZYNC_DATABASE_PASSWORD** | Zync Database PostgreSQL Connection Password | random value |
 | **ZYNC_SECRET_KEY_BASE** | Zync application secret key base | random value |
 | **ZYNC_AUTHENTICATION_TOKEN** | Zync application authentication token | random value |
@@ -155,9 +153,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval.yml \
 | **RECAPTCHA_PUBLIC_KEY** | reCAPTCHA site key (used in spam protection) | - |
 | **RECAPTCHA_PRIVATE_KEY** | reCAPTCHA secret key (used in spam protection) | - |
 | **SYSTEM_REDIS_URL** | Define the external system-redis to connect to | redis://system-redis:6379/1 |
-| **SYSTEM_MESSAGE_BUS_REDIS_URL** | Define the external system-redis message bus to connect to | see note<sup>[1](#note1)</sup> |
 | **SYSTEM_REDIS_NAMESPACE** | namespace to be used by System's Redis Database | none |
-| **SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE** | namespace to be used by System's Message Bus Redis Database | none |
 | **ZYNC_DATABASE_PASSWORD** | Zync Database PostgreSQL Connection Password | random value |
 | **ZYNC_SECRET_KEY_BASE** | Zync application secret key base | random value |
 | **ZYNC_AUTHENTICATION_TOKEN** | Zync application authentication token | random value |
@@ -232,9 +228,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-s3.yml \
 | **RECAPTCHA_PUBLIC_KEY** | reCAPTCHA site key (used in spam protection) | - |
 | **RECAPTCHA_PRIVATE_KEY** | reCAPTCHA secret key (used in spam protection) | - |
 | **SYSTEM_REDIS_URL** | Define the external system-redis to connect to | redis://system-redis:6379/1 |
-| **SYSTEM_MESSAGE_BUS_REDIS_URL** | Define the external system-redis message bus to connect to | see note<sup>[1](#note1)</sup> |
 | **SYSTEM_REDIS_NAMESPACE** | namespace to be used by System's Redis Database | none |
-| **SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE** | namespace to be used by System's Message Bus Redis Database | none |
 | **ZYNC_DATABASE_PASSWORD** | Zync Database PostgreSQL Connection Password | random value |
 | **ZYNC_SECRET_KEY_BASE** | Zync application secret key base | random value |
 | **ZYNC_AUTHENTICATION_TOKEN** | Zync application authentication token | random value |
@@ -263,7 +257,6 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
            --param BACKEND_REDIS_QUEUES_ENDPOINT=redis://backend-redis:6379/1 \
            --param SYSTEM_DATABASE_URL=mysql2://root:password1@system-mysql/system \
            --param SYSTEM_REDIS_URL=redis://system-redis:6379/0 \
-           --param SYSTEM_MESSAGE_BUS_REDIS_URL=redis://system-redis:6379/1 \
            --param WILDCARD_DOMAIN=lvh.me
 ```
 
@@ -271,7 +264,6 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
 | Parameter Name | Description | Example |
 | :--- | :---| :--- |
 | **SYSTEM_REDIS_URL** | Define the external system-redis to connect to | redis://system-redis:6379/0 |
-| **SYSTEM_MESSAGE_BUS_REDIS_URL** | Define the external system-redis message bus to connect to | redis://system-redis:6379/1 |
 | **SYSTEM_DATABASE_URL** | Define the external system-mysql to connect to | mysql2://root:password1@system-mysql/system |
 | **BACKEND_REDIS_STORAGE_ENDPOINT** | Define the external backend-redis storage endpoint to connect to | redis://backend-redis:6379/0 |
 | **BACKEND_REDIS_QUEUES_ENDPOINT** | Define the external backend-redis queues endpoint to connect to | redis://backend-redis:6379/1 |
@@ -307,7 +299,6 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
 | **RECAPTCHA_PUBLIC_KEY** | reCAPTCHA site key (used in spam protection) | - |
 | **RECAPTCHA_PRIVATE_KEY** | reCAPTCHA secret key (used in spam protection) | - |
 | **SYSTEM_REDIS_NAMESPACE** | namespace to be used by System's Redis Database | none |
-| **SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE** | namespace to be used by System's Message Bus Redis Database | none |
 | **ZYNC_DATABASE_PASSWORD** | Zync Database PostgreSQL Connection Password | random value |
 | **ZYNC_SECRET_KEY_BASE** | Zync application secret key base | random value |
 | **ZYNC_AUTHENTICATION_TOKEN** | Zync application authentication token | random value |
@@ -316,8 +307,6 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-ha.yml \
 | **APICAST_OPENSSL_VERIFY** | OpenSSL peer verification when downloading the configuration | false |
 | **APICAST_RESPONSE_CODES** | Enable logging response codes in APIcast | true |
 | **APICAST_REGISTRY_URL** | The URL to point to APIcast policies registry management | http://apicast-staging:8090/policies |
-| **SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_HOSTS** | Define the external system message bus sentinel hosts | none |
-| **SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_ROLE** | Define the external system message bus sentinel role | none |
 | **SYSTEM_REDIS_SENTINEL_HOSTS** | Define the external system redis sentinel hosts | none |
 | **SYSTEM_REDIS_SENTINEL_ROLE** | Define the external system redis sentinel role | none |
 | **BACKEND_REDIS_QUEUE_SENTINEL_HOSTS** | Define the external backend redis queue sentinel hosts | none |
@@ -391,9 +380,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval-s3.yml \
 | **RECAPTCHA_PUBLIC_KEY** | reCAPTCHA site key (used in spam protection) | - |
 | **RECAPTCHA_PRIVATE_KEY** | reCAPTCHA secret key (used in spam protection) | - |
 | **SYSTEM_REDIS_URL** | Define the external system-redis to connect to | redis://system-redis:6379/1 |
-| **SYSTEM_MESSAGE_BUS_REDIS_URL** | Define the external system-redis message bus to connect to | see note<sup>[1](#note1)</sup> |
 | **SYSTEM_REDIS_NAMESPACE** | namespace to be used by System's Redis Database | none |
-| **SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE** | namespace to be used by System's Message Bus Redis Database | none |
 | **ZYNC_DATABASE_PASSWORD** | Zync Database PostgreSQL Connection Password | random value |
 | **ZYNC_SECRET_KEY_BASE** | Zync application secret key base | random value |
 | **ZYNC_AUTHENTICATION_TOKEN** | Zync application authentication token | random value |
@@ -461,9 +448,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 | **RECAPTCHA_PUBLIC_KEY** | reCAPTCHA site key (used in spam protection) | - |
 | **RECAPTCHA_PRIVATE_KEY** | reCAPTCHA secret key (used in spam protection) | - |
 | **SYSTEM_REDIS_URL** | Define the external system-redis to connect to | redis://system-redis:6379/1 |
-| **SYSTEM_MESSAGE_BUS_REDIS_URL** | Define the external system-redis message bus to connect to | see note<sup>[1](#note1)</sup> |
 | **SYSTEM_REDIS_NAMESPACE** | namespace to be used by System's Redis Database | none |
-| **SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE** | namespace to be used by System's Message Bus Redis Database | none |
 | **ZYNC_DATABASE_PASSWORD** | Zync Database PostgreSQL Connection Password | random value |
 | **ZYNC_SECRET_KEY_BASE** | Zync application secret key base | random value |
 | **ZYNC_AUTHENTICATION_TOKEN** | Zync application authentication token | random value |
@@ -473,5 +458,3 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 | **APICAST_RESPONSE_CODES** | Enable logging response codes in APIcast | true |
 | **APICAST_REGISTRY_URL** | The URL to point to APIcast policies registry management | http://apicast-staging:8090/policies |
 
-## Notes
-<a name="note1">1</a>: *SYSTEM_MESSAGE_BUS_REDIS_URL* by default is the same value as *SYSTEM_REDIS_URL* but with the logical database incremented by 1 and the result applied mod 16

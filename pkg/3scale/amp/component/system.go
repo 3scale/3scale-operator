@@ -41,15 +41,11 @@ const (
 )
 
 const (
-	SystemSecretSystemRedisSecretName                  = "system-redis"
-	SystemSecretSystemRedisURLFieldName                = "URL"
-	SystemSecretSystemRedisMessageBusRedisURLFieldName = "MESSAGE_BUS_URL"
-	SystemSecretSystemRedisNamespace                   = "NAMESPACE"
-	SystemSecretSystemRedisMessageBusRedisNamespace    = "MESSAGE_BUS_NAMESPACE"
-	SystemSecretSystemRedisSentinelHosts               = "SENTINEL_HOSTS"
-	SystemSecretSystemRedisSentinelRole                = "SENTINEL_ROLE"
-	SystemSecretSystemRedisMessageBusSentinelHosts     = "MESSAGE_BUS_SENTINEL_HOSTS"
-	SystemSecretSystemRedisMessageBusSentinelRole      = "MESSAGE_BUS_SENTINEL_ROLE"
+	SystemSecretSystemRedisSecretName    = "system-redis"
+	SystemSecretSystemRedisURLFieldName  = "URL"
+	SystemSecretSystemRedisNamespace     = "NAMESPACE"
+	SystemSecretSystemRedisSentinelHosts = "SENTINEL_HOSTS"
+	SystemSecretSystemRedisSentinelRole  = "SENTINEL_ROLE"
 )
 
 const (
@@ -181,13 +177,9 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 
 	result = append(result,
 		helper.EnvVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
-		helper.EnvVarFromSecret("MESSAGE_BUS_REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisURLFieldName),
 		helper.EnvVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
-		helper.EnvVarFromSecret("MESSAGE_BUS_REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusRedisNamespace),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
-		helper.EnvVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelHosts),
-		helper.EnvVarFromSecret("MESSAGE_BUS_REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisMessageBusSentinelRole),
 	)
 
 	return result
