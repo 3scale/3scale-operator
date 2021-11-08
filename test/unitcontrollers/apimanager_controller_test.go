@@ -76,7 +76,7 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
 
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, ctrl.Log.WithName("controllers").WithName("APIManager"),
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, ctrl.Log.WithName("controllers").WithName("APIManager"),
 		clientset.Discovery(), recorder)
 	// Create a ReconcileMemcached object with the scheme and fake client.
 	r := &appscontrollers.APIManagerReconciler{

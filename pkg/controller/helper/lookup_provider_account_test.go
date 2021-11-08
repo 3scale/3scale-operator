@@ -66,6 +66,7 @@ func TestLookupProviderAccountLocal3scale(t *testing.T) {
 
 	s := scheme.Scheme
 	err := appsv1alpha1.AddToScheme(s)
+	ok(t, err)
 
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{Name: "somename", Namespace: ns},

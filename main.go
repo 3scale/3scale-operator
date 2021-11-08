@@ -117,8 +117,7 @@ func main() {
 	}
 	if err = (&appscontroller.APIManagerReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("APIManager"),
 			discoveryClientAPIManager,
 			mgr.GetEventRecorderFor("APIManager")),
@@ -134,8 +133,7 @@ func main() {
 	}
 	if err = (&appscontroller.APIManagerBackupReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("APIManagerBackup"),
 			discoveryClientAPIManagerBackup,
 			mgr.GetEventRecorderFor("APIManagerBackup")),
@@ -151,8 +149,7 @@ func main() {
 	}
 	if err = (&appscontroller.APIManagerRestoreReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("APIManagerRestore"),
 			discoveryClientAPIManagerRestore,
 			mgr.GetEventRecorderFor("APIManagerRestore")),
@@ -177,8 +174,7 @@ func main() {
 	}
 	if err = (&capabilitiescontroller.BackendReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("Backend"),
 			discoveryClientBackend,
 			mgr.GetEventRecorderFor("Backend")),
@@ -194,8 +190,7 @@ func main() {
 	}
 	if err = (&capabilitiescontroller.ProductReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("Product"),
 			discoveryClientProduct,
 			mgr.GetEventRecorderFor("Product")),
@@ -211,8 +206,7 @@ func main() {
 	}
 	if err = (&capabilitiescontroller.OpenAPIReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("OpenAPI"),
 			discoveryClientOpenAPI,
 			mgr.GetEventRecorderFor("OpenAPI")),
@@ -228,8 +222,7 @@ func main() {
 	}
 	if err = (&appscontroller.WebConsoleReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("WebConsole"),
 			discoveryClientWebConsole,
 			mgr.GetEventRecorderFor("WebConsole")),
@@ -245,8 +238,7 @@ func main() {
 	}
 	if err = (&capabilitiescontroller.ActiveDocReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("ActiveDoc"),
 			discoveryClientActiveDoc,
 			mgr.GetEventRecorderFor("ActiveDoc")),
@@ -263,8 +255,7 @@ func main() {
 
 	if err = (&capabilitiescontroller.CustomPolicyDefinitionReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("CustomPolicyDefinition"),
 			discoveryClientCustomPolicyDefinition,
 			mgr.GetEventRecorderFor("CustomPolicyDefinition")),
@@ -281,8 +272,7 @@ func main() {
 
 	if err = (&capabilitiescontroller.DeveloperAccountReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("DeveloperAccount"),
 			discoveryClientDeveloperAccount,
 			mgr.GetEventRecorderFor("DeveloperAccount")),
@@ -299,8 +289,7 @@ func main() {
 
 	if err = (&capabilitiescontroller.DeveloperUserReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
-			mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			context.Background(),
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("DeveloperUser"),
 			discoveryClientDeveloperUser,
 			mgr.GetEventRecorderFor("DeveloperUser")),

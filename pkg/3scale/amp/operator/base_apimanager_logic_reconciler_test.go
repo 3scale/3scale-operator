@@ -55,7 +55,7 @@ func TestBaseAPIManagerLogicReconcilerUpdateOwnerRef(t *testing.T) {
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
 
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	apimanagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	desiredConfigmap := &v1.ConfigMap{
@@ -151,7 +151,7 @@ func TestBaseAPIManagerLogicReconcilerHasPrometheusRules(t *testing.T) {
 		prometheusAPIResourceList,
 		grafanaAPIResourceList,
 	}
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	apimanagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	// Test uncached request. Resource should exist
@@ -253,7 +253,7 @@ func TestBaseAPIManagerLogicReconcilerHasGrafanaDashboards(t *testing.T) {
 		prometheusAPIResourceList,
 		grafanaAPIResourceList,
 	}
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	apimanagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	// Test uncached request. Resource should exist
@@ -355,7 +355,7 @@ func TestBaseAPIManagerLogicReconcilerHasPodMonitors(t *testing.T) {
 		prometheusAPIResourceList,
 		grafanaAPIResourceList,
 	}
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	apimanagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	// Test uncached request. Resource should exist
@@ -457,7 +457,7 @@ func TestBaseAPIManagerLogicReconcilerHasServiceMonitors(t *testing.T) {
 		prometheusAPIResourceList,
 		grafanaAPIResourceList,
 	}
-	baseReconciler := reconcilers.NewBaseReconciler(cl, s, clientAPIReader, ctx, log, clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	apimanagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
 	// Test uncached request. Resource should exist

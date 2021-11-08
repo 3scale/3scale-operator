@@ -199,10 +199,7 @@ func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
 		return false, fmt.Errorf("Failed to list routes: %w", err)
 	}
 
-	var routes []routev1.Route
-	for _, route := range routeList.Items {
-		routes = append(routes, route)
-	}
+	routes := append([]routev1.Route(nil), routeList.Items...)
 	sort.Slice(routes, func(i, j int) bool { return routes[i].Name < routes[j].Name })
 
 	allDefaultRoutesReady := true

@@ -47,7 +47,7 @@ func (t *ProductThreescaleReconciler) convertResourcePolicies() *threescaleapi.P
 		//    description: Configuration defines the policy configuration
 		//    type: object
 		//    x-kubernetes-preserve-unknown-fields: true
-		json.Unmarshal(crdPolicy.Configuration.Raw, &configuration)
+		_ = json.Unmarshal(crdPolicy.Configuration.Raw, &configuration)
 
 		policies.Policies = append(policies.Policies, threescaleapi.PolicyConfig{
 			Name:          crdPolicy.Name,

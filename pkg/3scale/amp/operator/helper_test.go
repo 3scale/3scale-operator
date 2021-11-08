@@ -18,7 +18,6 @@ const (
 	tenantName           = "someTenant"
 	insecureImportPolicy = false
 	trueValue            = true
-	falseValue           = false
 )
 
 func basicApimanager() *appsv1alpha1.APIManager {

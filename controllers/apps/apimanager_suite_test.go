@@ -65,7 +65,7 @@ func TestAPIManager(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -125,10 +125,10 @@ var _ = BeforeSuite(func(done Done) {
 
 	err = (&APIManagerReconciler{
 		BaseReconciler: reconcilers.NewBaseReconciler(
+			context.Background(),
 			mgr.GetClient(),
 			mgr.GetScheme(),
 			mgr.GetAPIReader(),
-			context.Background(),
 			//zap.LoggerTo(ioutil.Discard, true),
 			ctrl.Log.WithName("controllers").WithName("APIManager"),
 			discoveryClientAPIManager,

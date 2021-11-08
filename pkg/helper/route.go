@@ -9,7 +9,7 @@ import (
 // "Admitted" Condition set to true
 func IsRouteReady(route *routev1.Route) bool {
 	routeStatusIngresses := route.Status.Ingress
-	if routeStatusIngresses == nil || len(routeStatusIngresses) == 0 {
+	if len(routeStatusIngresses) == 0 {
 		return false
 	}
 
