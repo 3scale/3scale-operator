@@ -116,16 +116,8 @@ func (s *System) Parameters() []templatev1.Parameter {
 			Value:       "redis://system-redis:6379/1",
 		},
 		templatev1.Parameter{
-			Name:        "SYSTEM_MESSAGE_BUS_REDIS_URL",
-			Description: "Define the external system-redis message bus to connect to. By default the same value as SYSTEM_REDIS_URL but with the logical database incremented by 1 and the result applied mod 16",
-		},
-		templatev1.Parameter{
 			Name:        "SYSTEM_REDIS_NAMESPACE",
 			Description: "Define the namespace to be used by System's Redis Database. The empty value means not namespaced",
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE",
-			Description: "Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced",
 		},
 	}
 }

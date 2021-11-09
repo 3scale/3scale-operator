@@ -186,10 +186,6 @@ stringData:
   SENTINEL_HOSTS: "redis://sentinel-0.example.com:26379,redis://sentinel-1.example.com:26379, redis://sentinel-2.example.com:26379"
   SENTINEL_ROLE: "master"
   NAMESPACE: ""
-  MESSAGE_BUS_URL: "redis://system-redis-messagebus"
-  MESSAGE_BUS_SENTINEL_HOSTS: "redis://sentinel-0.example.com:26379,redis://sentinel-1.example.com:26379, redis://sentinel-2.example.com:26379"
-  MESSAGE_BUS_SENTINEL_ROLE: "master"
-  MESSAGE_BUS_NAMESPACE: ""
 type: Opaque
 ```
 

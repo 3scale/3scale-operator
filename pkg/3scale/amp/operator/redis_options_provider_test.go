@@ -131,14 +131,10 @@ func testBackendRedisSecret() *v1.Secret {
 
 func testSystemRedisSecret() *v1.Secret {
 	data := map[string]string{
-		component.SystemSecretSystemRedisNamespace:                   "systemRedis",
-		component.SystemSecretSystemRedisURLFieldName:                "redis://system1:6379",
-		component.SystemSecretSystemRedisSentinelHosts:               "someHosts1",
-		component.SystemSecretSystemRedisSentinelRole:                "someRole1",
-		component.SystemSecretSystemRedisMessageBusRedisNamespace:    "mbus",
-		component.SystemSecretSystemRedisMessageBusSentinelHosts:     "someHosts2",
-		component.SystemSecretSystemRedisMessageBusSentinelRole:      "someRole2",
-		component.SystemSecretSystemRedisMessageBusRedisURLFieldName: "redis://system2:6379",
+		component.SystemSecretSystemRedisNamespace:     "systemRedis",
+		component.SystemSecretSystemRedisURLFieldName:  "redis://system1:6379",
+		component.SystemSecretSystemRedisSentinelHosts: "someHosts1",
+		component.SystemSecretSystemRedisSentinelRole:  "someRole1",
 	}
 	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
@@ -167,12 +163,8 @@ func defaultRedisOptions() *component.RedisOptions {
 		BackendRedisQueuesSentinelHosts:           component.DefaultBackendQueuesSentinelHosts(),
 		BackendRedisQueuesSentinelRole:            component.DefaultBackendQueuesSentinelRole(),
 		SystemRedisURL:                            component.DefaultSystemRedisURL(),
-		SystemRedisMessageBusURL:                  component.DefaultSystemRedisMessageBusURL(),
 		SystemRedisSentinelsHosts:                 component.DefaultSystemRedisSentinelHosts(),
 		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
-		SystemMessageBusRedisSentinelsHosts:       component.DefaultSystemMessageBusRedisSentinelHosts(),
-		SystemMessageBusRedisSentinelsRole:        component.DefaultSystemMessageBusRedisSentinelRole(),
-		SystemMessageBusRedisNamespace:            component.DefaultSystemMessageBusRedisNamespace(),
 		SystemRedisNamespace:                      component.DefaultSystemRedisNamespace(),
 	}
 }
@@ -391,11 +383,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				opts.SystemRedisURL = "redis://system1:6379"
 				opts.SystemRedisSentinelsHosts = "someHosts1"
 				opts.SystemRedisSentinelsRole = "someRole1"
-				opts.SystemRedisMessageBusURL = "redis://system2:6379"
-				opts.SystemMessageBusRedisSentinelsHosts = "someHosts2"
-				opts.SystemMessageBusRedisSentinelsRole = "someRole2"
 				opts.SystemRedisNamespace = "systemRedis"
-				opts.SystemMessageBusRedisNamespace = "mbus"
 				return opts
 			},
 		},

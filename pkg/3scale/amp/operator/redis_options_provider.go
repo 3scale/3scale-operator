@@ -125,12 +125,6 @@ func (r *RedisOptionsProvider) setSecretBasedOptions() error {
 			component.DefaultSystemRedisURL(),
 		},
 		{
-			&r.options.SystemRedisMessageBusURL,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusRedisURLFieldName,
-			component.DefaultSystemRedisMessageBusURL(),
-		},
-		{
 			&r.options.SystemRedisSentinelsHosts,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisSentinelHosts,
@@ -143,28 +137,10 @@ func (r *RedisOptionsProvider) setSecretBasedOptions() error {
 			component.DefaultSystemRedisSentinelRole(),
 		},
 		{
-			&r.options.SystemMessageBusRedisSentinelsHosts,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusSentinelHosts,
-			component.DefaultSystemMessageBusRedisSentinelHosts(),
-		},
-		{
-			&r.options.SystemMessageBusRedisSentinelsRole,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusSentinelRole,
-			component.DefaultSystemMessageBusRedisSentinelRole(),
-		},
-		{
 			&r.options.SystemRedisNamespace,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisNamespace,
 			component.DefaultSystemRedisNamespace(),
-		},
-		{
-			&r.options.SystemMessageBusRedisNamespace,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisMessageBusRedisNamespace,
-			component.DefaultSystemMessageBusRedisNamespace(),
 		},
 	}
 

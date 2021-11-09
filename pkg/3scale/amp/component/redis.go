@@ -633,14 +633,10 @@ func (redis *Redis) SystemRedisSecret() *v1.Secret {
 			Labels: redis.Options.SystemCommonLabels,
 		},
 		StringData: map[string]string{
-			SystemSecretSystemRedisURLFieldName:                redis.Options.SystemRedisURL,
-			SystemSecretSystemRedisSentinelHosts:               redis.Options.SystemRedisSentinelsHosts,
-			SystemSecretSystemRedisSentinelRole:                redis.Options.SystemRedisSentinelsRole,
-			SystemSecretSystemRedisMessageBusRedisURLFieldName: redis.Options.SystemRedisMessageBusURL,
-			SystemSecretSystemRedisMessageBusSentinelHosts:     redis.Options.SystemMessageBusRedisSentinelsHosts,
-			SystemSecretSystemRedisMessageBusSentinelRole:      redis.Options.SystemMessageBusRedisSentinelsRole,
-			SystemSecretSystemRedisNamespace:                   redis.Options.SystemRedisNamespace,
-			SystemSecretSystemRedisMessageBusRedisNamespace:    redis.Options.SystemMessageBusRedisNamespace,
+			SystemSecretSystemRedisURLFieldName:  redis.Options.SystemRedisURL,
+			SystemSecretSystemRedisSentinelHosts: redis.Options.SystemRedisSentinelsHosts,
+			SystemSecretSystemRedisSentinelRole:  redis.Options.SystemRedisSentinelsRole,
+			SystemSecretSystemRedisNamespace:     redis.Options.SystemRedisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

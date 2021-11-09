@@ -45,6 +45,14 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, nil
 	}
 
+	res, err = u.deleteMessageBusConfigurations()
+	if err != nil {
+		return res, fmt.Errorf("Upgrade: delete message bus configurations: %w", err)
+	}
+	if res.Requeue {
+		return res, nil
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -522,6 +530,214 @@ func (u *UpgradeApiManager) upgradeSystemPostgreSQLImageStream() (reconcile.Resu
 	// implement upgrade procedure by reconcile procedure
 	reconciler := NewSystemPostgreSQLImageReconciler(NewBaseAPIManagerLogicReconciler(u.BaseReconciler, u.apiManager))
 	return reconciler.Reconcile()
+}
+
+func (u *UpgradeApiManager) deleteMessageBusConfigurations() (reconcile.Result, error) {
+	res, err := u.deleteSystemAppMessageBusConfigurations()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+	res, err = u.deleteSystemSidekiqMessageBusConfigurations()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+	res, err = u.deleteSystemSphinxMessageBusConfigurations()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	if !u.apiManager.IsExternalDatabaseEnabled() {
+		res, err = u.deleteSystemRedisMessageBusSecretAttributes()
+		if res.Requeue || err != nil {
+			return res, err
+		}
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (u *UpgradeApiManager) messageBusEnvVarNames() []string {
+	return []string{
+		"MESSAGE_BUS_REDIS_URL",
+		"MESSAGE_BUS_REDIS_NAMESPACE",
+		"MESSAGE_BUS_REDIS_SENTINEL_HOSTS",
+		"MESSAGE_BUS_REDIS_SENTINEL_ROLE",
+	}
+}
+
+func (u *UpgradeApiManager) deleteSystemAppMessageBusConfigurations() (reconcile.Result, error) {
+	system, err := System(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	desired := system.AppDeploymentConfig()
+
+	res, err := u.deleteDeploymentConfigEnvVars(desired, u.messageBusEnvVarNames())
+	return res, err
+}
+
+func (u *UpgradeApiManager) deleteSystemSidekiqMessageBusConfigurations() (reconcile.Result, error) {
+	system, err := System(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	desired := system.SidekiqDeploymentConfig()
+
+	res, err := u.deleteDeploymentConfigEnvVars(desired, u.messageBusEnvVarNames())
+	return res, err
+}
+
+func (u *UpgradeApiManager) deleteSystemSphinxMessageBusConfigurations() (reconcile.Result, error) {
+	system, err := System(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	desired := system.SphinxDeploymentConfig()
+
+	res, err := u.deleteDeploymentConfigEnvVars(desired, u.messageBusEnvVarNames())
+	return res, err
+}
+
+func (u *UpgradeApiManager) deleteSystemRedisMessageBusSecretAttributes() (reconcile.Result, error) {
+	redis, err := Redis(u.apiManager, u.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	desired := redis.SystemRedisSecret()
+
+	// component.SystemSecretSystemRedisSecretName
+	existing := &v1.Secret{}
+	err = u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	systemRedisSecretMessageBusAttributeNames := []string{
+		"MESSAGE_BUS_URL",
+		"MESSAGE_BUS_NAMESPACE",
+		"MESSAGE_BUS_SENTINEL_HOSTS",
+		"MESSAGE_BUS_SENTINEL_ROLE",
+	}
+
+	update := false
+
+	for _, secretAttr := range systemRedisSecretMessageBusAttributeNames {
+		if _, ok := existing.Data[secretAttr]; ok {
+			update = true
+			delete(existing.Data, secretAttr)
+		}
+	}
+
+	if update {
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	return reconcile.Result{}, nil
+}
+
+// deleteDeploymentConfigEnvVars deletes the environment variable names specified in
+// envVarNames from the given `desired` DeploymentConfig name. It deletes the
+// environment variables from all of its containers, initContainers, pre-hook
+// pods, post-hook pods and mid-hook pods.
+func (u *UpgradeApiManager) deleteDeploymentConfigEnvVars(desired *appsv1.DeploymentConfig, envVarNames []string) (reconcile.Result, error) {
+	existing := &appsv1.DeploymentConfig{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	update := false
+
+	// containers
+	for containerIdx := range existing.Spec.Template.Spec.Containers {
+		container := &existing.Spec.Template.Spec.Containers[containerIdx]
+		for _, envVarName := range envVarNames {
+			if envVarIdx := helper.FindEnvVar(container.Env, envVarName); envVarIdx >= 0 {
+				// remove index
+				container.Env = append(container.Env[:envVarIdx], container.Env[envVarIdx+1:]...)
+				update = true
+			}
+		}
+	}
+
+	// initContainers
+	for initContainerIdx := range existing.Spec.Template.Spec.InitContainers {
+		initContainer := &existing.Spec.Template.Spec.InitContainers[initContainerIdx]
+		for _, envVarName := range envVarNames {
+			if envVarIdx := helper.FindEnvVar(initContainer.Env, envVarName); envVarIdx >= 0 {
+				// remove index
+				initContainer.Env = append(initContainer.Env[:envVarIdx], initContainer.Env[envVarIdx+1:]...)
+				update = true
+			}
+		}
+	}
+
+	// pre-hook pod
+	var preHookPod *appsv1.ExecNewPodHook
+	if existing.Spec.Strategy.RollingParams != nil && existing.Spec.Strategy.RollingParams.Pre != nil && existing.Spec.Strategy.RollingParams.Pre.ExecNewPod != nil {
+		preHookPod = existing.Spec.Strategy.RollingParams.Pre.ExecNewPod
+	}
+	if existing.Spec.Strategy.RecreateParams != nil && existing.Spec.Strategy.RecreateParams.Pre != nil && existing.Spec.Strategy.RecreateParams.Pre.ExecNewPod != nil {
+		preHookPod = existing.Spec.Strategy.RecreateParams.Pre.ExecNewPod
+	}
+
+	if preHookPod != nil {
+		for _, envVarName := range envVarNames {
+			if envVarIdx := helper.FindEnvVar(preHookPod.Env, envVarName); envVarIdx >= 0 {
+				// remove index
+				preHookPod.Env = append(preHookPod.Env[:envVarIdx], preHookPod.Env[envVarIdx+1:]...)
+				update = true
+			}
+		}
+	}
+
+	// post-hook pod
+	var postHookPod *appsv1.ExecNewPodHook
+	if existing.Spec.Strategy.RollingParams != nil && existing.Spec.Strategy.RollingParams.Post != nil && existing.Spec.Strategy.RollingParams.Post.ExecNewPod != nil {
+		postHookPod = existing.Spec.Strategy.RollingParams.Post.ExecNewPod
+	}
+	if existing.Spec.Strategy.RecreateParams != nil && existing.Spec.Strategy.RecreateParams.Post != nil && existing.Spec.Strategy.RecreateParams.Post.ExecNewPod != nil {
+		postHookPod = existing.Spec.Strategy.RecreateParams.Post.ExecNewPod
+	}
+
+	if postHookPod != nil {
+		for _, envVarName := range envVarNames {
+			if envVarIdx := helper.FindEnvVar(postHookPod.Env, envVarName); envVarIdx >= 0 {
+				// remove index
+				postHookPod.Env = append(postHookPod.Env[:envVarIdx], postHookPod.Env[envVarIdx+1:]...)
+				update = true
+			}
+		}
+	}
+
+	// mid-hook pod
+	var midHookPod *appsv1.ExecNewPodHook
+	if existing.Spec.Strategy.RecreateParams != nil && existing.Spec.Strategy.RecreateParams.Mid != nil && existing.Spec.Strategy.RecreateParams.Mid.ExecNewPod != nil {
+		midHookPod = existing.Spec.Strategy.RecreateParams.Mid.ExecNewPod
+	}
+
+	if midHookPod != nil {
+		for _, envVarName := range envVarNames {
+			if envVarIdx := helper.FindEnvVar(midHookPod.Env, envVarName); envVarIdx >= 0 {
+				// remove index
+				midHookPod.Env = append(midHookPod.Env[:envVarIdx], midHookPod.Env[envVarIdx+1:]...)
+				update = true
+			}
+		}
+	}
+
+	if update {
+		err = u.UpdateResource(existing)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	return reconcile.Result{}, nil
 }
 
 func (u *UpgradeApiManager) findDeploymentTriggerOnImageChange(triggerPolicies []appsv1.DeploymentTriggerPolicy) (int, error) {

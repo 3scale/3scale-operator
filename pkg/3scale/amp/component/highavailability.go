@@ -69,14 +69,10 @@ func (ha *HighAvailability) SystemRedisSecret() *v1.Secret {
 			Labels: ha.Options.SystemRedisLabels,
 		},
 		StringData: map[string]string{
-			SystemSecretSystemRedisURLFieldName:                ha.Options.SystemRedisURL,
-			SystemSecretSystemRedisSentinelHosts:               ha.Options.SystemRedisSentinelsHosts,
-			SystemSecretSystemRedisSentinelRole:                ha.Options.SystemRedisSentinelsRole,
-			SystemSecretSystemRedisMessageBusRedisURLFieldName: ha.Options.SystemMessageBusRedisURL,
-			SystemSecretSystemRedisMessageBusSentinelHosts:     ha.Options.SystemMessageBusRedisSentinelsHosts,
-			SystemSecretSystemRedisMessageBusSentinelRole:      ha.Options.SystemMessageBusRedisSentinelsRole,
-			SystemSecretSystemRedisNamespace:                   ha.Options.SystemRedisNamespace,
-			SystemSecretSystemRedisMessageBusRedisNamespace:    ha.Options.SystemMessageBusRedisNamespace,
+			SystemSecretSystemRedisURLFieldName:  ha.Options.SystemRedisURL,
+			SystemSecretSystemRedisSentinelHosts: ha.Options.SystemRedisSentinelsHosts,
+			SystemSecretSystemRedisSentinelRole:  ha.Options.SystemRedisSentinelsRole,
+			SystemSecretSystemRedisNamespace:     ha.Options.SystemRedisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

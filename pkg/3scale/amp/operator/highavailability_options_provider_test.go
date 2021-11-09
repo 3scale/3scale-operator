@@ -16,31 +16,20 @@ import (
 )
 
 const (
-	backendStorageURL   = "redis://storage.redis.example.com"
-	backendQueueURL     = "redis://queue.redis.example.com"
-	systemRedisURL      = "redis://system.redis.example.com"
-	systemMessageBusURL = "redis://messagebus.redis.example.com"
-	systemDatabaseURL   = "mysql://mysql.example.com"
+	backendStorageURL = "redis://storage.redis.example.com"
+	backendQueueURL   = "redis://queue.redis.example.com"
+	systemRedisURL    = "redis://system.redis.example.com"
+	systemDatabaseURL = "mysql://mysql.example.com"
 )
 
 func getSystemRedisSecretMissingRedisURL() *v1.Secret {
-	data := map[string]string{
-		component.SystemSecretSystemRedisMessageBusRedisURLFieldName: systemMessageBusURL,
-	}
-	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
-}
-
-func getSystemRedisSecretMissingMessageBusRedisURL() *v1.Secret {
-	data := map[string]string{
-		component.SystemSecretSystemRedisURLFieldName: systemRedisURL,
-	}
+	data := map[string]string{}
 	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
 
 func getSystemRedisSecretForHighAvailabilityTest() *v1.Secret {
 	data := map[string]string{
-		component.SystemSecretSystemRedisURLFieldName:                systemRedisURL,
-		component.SystemSecretSystemRedisMessageBusRedisURLFieldName: systemMessageBusURL,
+		component.SystemSecretSystemRedisURLFieldName: systemRedisURL,
 	}
 	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
@@ -96,22 +85,19 @@ func TestGetHighAvailabilityOptionsProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectedOptions := &component.HighAvailabilityOptions{
-		BackendRedisLabels:                  testBackendCommonLabels(),
-		SystemRedisLabels:                   testSystemCommonLabels(),
-		SystemDatabaseLabels:                testSystemCommonLabels(),
-		BackendRedisQueuesEndpoint:          backendQueueURL,
-		BackendRedisQueuesSentinelHosts:     "",
-		BackendRedisQueuesSentinelRole:      "",
-		BackendRedisStorageEndpoint:         backendStorageURL,
-		BackendRedisStorageSentinelHosts:    "",
-		BackendRedisStorageSentinelRole:     "",
-		SystemRedisURL:                      systemRedisURL,
-		SystemRedisSentinelsHosts:           "",
-		SystemRedisSentinelsRole:            "",
-		SystemMessageBusRedisURL:            systemMessageBusURL,
-		SystemMessageBusRedisSentinelsHosts: "",
-		SystemMessageBusRedisSentinelsRole:  "",
-		SystemDatabaseURL:                   systemDatabaseURL,
+		BackendRedisLabels:               testBackendCommonLabels(),
+		SystemRedisLabels:                testSystemCommonLabels(),
+		SystemDatabaseLabels:             testSystemCommonLabels(),
+		BackendRedisQueuesEndpoint:       backendQueueURL,
+		BackendRedisQueuesSentinelHosts:  "",
+		BackendRedisQueuesSentinelRole:   "",
+		BackendRedisStorageEndpoint:      backendStorageURL,
+		BackendRedisStorageSentinelHosts: "",
+		BackendRedisStorageSentinelRole:  "",
+		SystemRedisURL:                   systemRedisURL,
+		SystemRedisSentinelsHosts:        "",
+		SystemRedisSentinelsRole:         "",
+		SystemDatabaseURL:                systemDatabaseURL,
 	}
 
 	if !reflect.DeepEqual(expectedOptions, opts) {
@@ -168,13 +154,6 @@ func TestGetHighAvailabilityOptionsInvalid(t *testing.T) {
 			getSystemRedisSecretMissingRedisURL(),
 			getSystemDatabaseSecret(),
 			component.SystemSecretSystemRedisURLFieldName,
-		},
-		{
-			"SystemRedisMessagebusURLMissing",
-			getBackendRedisSecret(),
-			getSystemRedisSecretMissingMessageBusRedisURL(),
-			getSystemDatabaseSecret(),
-			component.SystemSecretSystemRedisMessageBusRedisURLFieldName,
 		},
 		{
 			"SystemDatabaseURLMissing",

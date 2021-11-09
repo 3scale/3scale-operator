@@ -440,10 +440,6 @@ objects:
       threescale_component: system
     name: system-redis
   stringData:
-    MESSAGE_BUS_NAMESPACE: ${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}
-    MESSAGE_BUS_SENTINEL_HOSTS: ""
-    MESSAGE_BUS_SENTINEL_ROLE: ""
-    MESSAGE_BUS_URL: ${SYSTEM_MESSAGE_BUS_REDIS_URL}
     NAMESPACE: ${SYSTEM_REDIS_NAMESPACE}
     SENTINEL_HOSTS: ""
     SENTINEL_ROLE: ""
@@ -1713,20 +1709,10 @@ objects:
                 secretKeyRef:
                   key: URL
                   name: system-redis
-            - name: MESSAGE_BUS_REDIS_URL
-              valueFrom:
-                secretKeyRef:
-                  key: MESSAGE_BUS_URL
-                  name: system-redis
             - name: REDIS_NAMESPACE
               valueFrom:
                 secretKeyRef:
                   key: NAMESPACE
-                  name: system-redis
-            - name: MESSAGE_BUS_REDIS_NAMESPACE
-              valueFrom:
-                secretKeyRef:
-                  key: MESSAGE_BUS_NAMESPACE
                   name: system-redis
             - name: REDIS_SENTINEL_HOSTS
               valueFrom:
@@ -1737,16 +1723,6 @@ objects:
               valueFrom:
                 secretKeyRef:
                   key: SENTINEL_ROLE
-                  name: system-redis
-            - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
-              valueFrom:
-                secretKeyRef:
-                  key: MESSAGE_BUS_SENTINEL_HOSTS
-                  name: system-redis
-            - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
-              valueFrom:
-                secretKeyRef:
-                  key: MESSAGE_BUS_SENTINEL_ROLE
                   name: system-redis
             - name: BACKEND_REDIS_URL
               valueFrom:
@@ -2027,20 +2003,10 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-redis
-          - name: MESSAGE_BUS_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_URL
-                name: system-redis
           - name: REDIS_NAMESPACE
             valueFrom:
               secretKeyRef:
                 key: NAMESPACE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_NAMESPACE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
           - name: REDIS_SENTINEL_HOSTS
             valueFrom:
@@ -2051,16 +2017,6 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: SENTINEL_ROLE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_HOSTS
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_ROLE
                 name: system-redis
           - name: BACKEND_REDIS_URL
             valueFrom:
@@ -2363,20 +2319,10 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-redis
-          - name: MESSAGE_BUS_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_URL
-                name: system-redis
           - name: REDIS_NAMESPACE
             valueFrom:
               secretKeyRef:
                 key: NAMESPACE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_NAMESPACE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
           - name: REDIS_SENTINEL_HOSTS
             valueFrom:
@@ -2387,16 +2333,6 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: SENTINEL_ROLE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_HOSTS
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_ROLE
                 name: system-redis
           - name: BACKEND_REDIS_URL
             valueFrom:
@@ -2698,20 +2634,10 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-redis
-          - name: MESSAGE_BUS_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_URL
-                name: system-redis
           - name: REDIS_NAMESPACE
             valueFrom:
               secretKeyRef:
                 key: NAMESPACE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_NAMESPACE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
           - name: REDIS_SENTINEL_HOSTS
             valueFrom:
@@ -2722,16 +2648,6 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: SENTINEL_ROLE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_HOSTS
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_ROLE
                 name: system-redis
           - name: BACKEND_REDIS_URL
             valueFrom:
@@ -3092,20 +3008,10 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-redis
-          - name: MESSAGE_BUS_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_URL
-                name: system-redis
           - name: REDIS_NAMESPACE
             valueFrom:
               secretKeyRef:
                 key: NAMESPACE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_NAMESPACE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
           - name: REDIS_SENTINEL_HOSTS
             valueFrom:
@@ -3116,16 +3022,6 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: SENTINEL_ROLE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_HOSTS
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_ROLE
                 name: system-redis
           - name: BACKEND_REDIS_URL
             valueFrom:
@@ -3273,20 +3169,10 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-redis
-          - name: MESSAGE_BUS_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_URL
-                name: system-redis
           - name: REDIS_NAMESPACE
             valueFrom:
               secretKeyRef:
                 key: NAMESPACE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_NAMESPACE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
           - name: REDIS_SENTINEL_HOSTS
             valueFrom:
@@ -3297,16 +3183,6 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: SENTINEL_ROLE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_HOSTS
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_ROLE
                 name: system-redis
           - name: SLEEP_SECONDS
             value: "1"
@@ -3408,20 +3284,10 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-redis
-          - name: MESSAGE_BUS_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_URL
-                name: system-redis
           - name: REDIS_NAMESPACE
             valueFrom:
               secretKeyRef:
                 key: NAMESPACE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_NAMESPACE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
           - name: REDIS_SENTINEL_HOSTS
             valueFrom:
@@ -3432,16 +3298,6 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: SENTINEL_ROLE
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_HOSTS
-                name: system-redis
-          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
-            valueFrom:
-              secretKeyRef:
-                key: MESSAGE_BUS_SENTINEL_ROLE
                 name: system-redis
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
@@ -4457,12 +4313,8 @@ parameters:
   name: SYSTEM_REDIS_URL
   required: true
   value: redis://system-redis:6379/1
-- description: Define the external system-redis message bus to connect to. By default the same value as SYSTEM_REDIS_URL but with the logical database incremented by 1 and the result applied mod 16
-  name: SYSTEM_MESSAGE_BUS_REDIS_URL
 - description: Define the namespace to be used by System's Redis Database. The empty value means not namespaced
   name: SYSTEM_REDIS_NAMESPACE
-- description: Define the namespace to be used by System's Message Bus Redis Database. The empty value means not namespaced
-  name: SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE
 - description: Password for the Zync Database PostgreSQL connection user.
   displayName: Zync Database PostgreSQL Connection Password
   from: '[a-zA-Z0-9]{16}'

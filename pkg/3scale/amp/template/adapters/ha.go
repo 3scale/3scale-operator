@@ -125,11 +125,8 @@ func (h *HAAdapter) updateDatabasesURLS(c *component.HighAvailability, objects [
 			switch secret.Name {
 			case "system-redis":
 				secret.StringData["URL"] = c.Options.SystemRedisURL
-				secret.StringData["MESSAGE_BUS_URL"] = c.Options.SystemMessageBusRedisURL
 				secret.StringData[component.SystemSecretSystemRedisSentinelHosts] = c.Options.SystemRedisSentinelsHosts
 				secret.StringData[component.SystemSecretSystemRedisSentinelRole] = c.Options.SystemRedisSentinelsRole
-				secret.StringData[component.SystemSecretSystemRedisMessageBusSentinelHosts] = c.Options.SystemMessageBusRedisSentinelsHosts
-				secret.StringData[component.SystemSecretSystemRedisMessageBusSentinelRole] = c.Options.SystemMessageBusRedisSentinelsRole
 			case "backend-redis":
 				secret.StringData["REDIS_STORAGE_URL"] = c.Options.BackendRedisStorageEndpoint
 				secret.StringData["REDIS_QUEUES_URL"] = c.Options.BackendRedisQueuesEndpoint
@@ -165,8 +162,7 @@ func (h *HAAdapter) deleteDBRelatedParameters(template *templatev1.Template) {
 
 func (h *HAAdapter) unsetSystemRedisDBDefaultValues(template *templatev1.Template) {
 	dbParamsToUpdate := map[string]bool{
-		"SYSTEM_REDIS_URL":             true,
-		"SYSTEM_MESSAGE_BUS_REDIS_URL": true,
+		"SYSTEM_REDIS_URL": true,
 	}
 
 	for paramIdx := range template.Parameters {
@@ -197,9 +193,6 @@ func (h *HAAdapter) options() (*component.HighAvailabilityOptions, error) {
 	o.SystemRedisURL = "${SYSTEM_REDIS_URL}"
 	o.SystemRedisSentinelsHosts = "${SYSTEM_REDIS_SENTINEL_HOSTS}"
 	o.SystemRedisSentinelsRole = "${SYSTEM_REDIS_SENTINEL_ROLE}"
-	o.SystemMessageBusRedisSentinelsHosts = "${SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_HOSTS}"
-	o.SystemMessageBusRedisSentinelsRole = "${SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_ROLE}"
-	o.SystemMessageBusRedisURL = "${SYSTEM_MESSAGE_BUS_REDIS_URL}"
 	o.SystemRedisLabels = h.systemRedisLabels()
 
 	err := o.Validate()
@@ -223,14 +216,7 @@ func (h *HAAdapter) parameters() []templatev1.Parameter {
 			Description: "Define the external system-mysql to connect to",
 			Required:    true,
 		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_HOSTS",
-			Description: "Define the external system message bus sentinel hosts",
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_MESSAGE_BUS_REDIS_SENTINEL_ROLE",
-			Description: "Define the external system message bus sentinel role",
-		},
+
 		templatev1.Parameter{
 			Name:        "SYSTEM_REDIS_SENTINEL_HOSTS",
 			Description: "Define the external system redis sentinel hosts",
