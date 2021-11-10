@@ -107,15 +107,15 @@ The `app=3scale-api-management` label value can be overriden in the [APIManager 
 podMonitorSelector:
   matchExpressions:
   - key: app
-      operator: In
-      values:
-      - 3scale-api-management
+    operator: In
+    values:
+    - 3scale-api-management
 ruleSelector:
   matchExpressions:
   - key: app
-      operator: In
-      values:
-      - 3scale-api-management
+    operator: In
+    values:
+    - 3scale-api-management
 ```
 
 *NOTE*: If the prometheus operator is installed in a different namespace than 3scale, then configure it accordingly to watch for resources outside the namespace.
