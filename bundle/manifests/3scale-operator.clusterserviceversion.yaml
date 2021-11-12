@@ -347,7 +347,9 @@ spec:
                 - /manager
                 env:
                 - name: WATCH_NAMESPACE
-                  value: ""
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
                 - name: RELATED_IMAGE_BACKEND
                   value: quay.io/3scale/apisonator:latest
                 - name: RELATED_IMAGE_APICAST
