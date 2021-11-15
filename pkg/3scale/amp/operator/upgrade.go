@@ -797,7 +797,6 @@ func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error)
 		backend.CronDeploymentConfig(),
 		zync.DeploymentConfig(),
 		zync.QueDeploymentConfig(),
-		zync.DatabaseDeploymentConfig(),
 		memcached.DeploymentConfig(),
 		system.AppDeploymentConfig(),
 		system.SidekiqDeploymentConfig(),
@@ -828,6 +827,11 @@ func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error)
 		}
 		deploymentConfigs = append(deploymentConfigs, systemMySQL.DeploymentConfig())
 	}
+
+	if !u.apiManager.IsZyncExternalDatabaseEnabled() {
+		deploymentConfigs = append(deploymentConfigs, zync.DatabaseDeploymentConfig())
+	}
+
 	updated := false
 	for _, desired := range deploymentConfigs {
 		updatedTmp, err := u.ensurePodTemplateLabels(desired)
