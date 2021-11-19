@@ -112,16 +112,7 @@ When tenant has been created, tenant level credentials will be created to operat
 Those credentials will be stored by **tenant controller** in a secret.
 `tenantSecretRef` in tenant's spec will reference this specific secret.
 
-Note that `tenantSecretRef` attribute is optional. If not provided by tenant custom resource spec,
-**tenant controller** will try to store tenant credentials in a secret with the following default values for name and namespace:
-
-```yaml
-tenantSecretRef:
-  name: ${tenantName}-${tenantOrgName}
-  namespace: YOUR-CURRENT-NAMESPACE
-```
-
-Fields available in tenant secret:
+Fields available in the tenant secret:
 
 | **Field** | **Description** |
 | --- | --- |
