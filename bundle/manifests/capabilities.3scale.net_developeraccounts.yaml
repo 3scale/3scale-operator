@@ -4,6 +4,8 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
+  labels:
+    app: 3scale-api-management
   name: developeraccounts.capabilities.3scale.net
 spec:
   group: capabilities.3scale.net
