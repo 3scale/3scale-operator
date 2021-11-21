@@ -335,11 +335,13 @@ spec:
           replicas: 1
           selector:
             matchLabels:
+              app: 3scale-api-management
               control-plane: controller-manager
           strategy: {}
           template:
             metadata:
               labels:
+                app: 3scale-api-management
                 com.redhat.component-name: 3scale-operator
                 com.redhat.component-type: infrastructure
                 com.redhat.component-version: 0.9.0
