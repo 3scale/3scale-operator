@@ -1,0 +1,18 @@
+# This patch exposes metrics endpoint in plain HTTP 8080 port
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        args:
+        - "--metrics-addr=0.0.0.0:8080"
+        - "--enable-leader-election"
+        ports:
+        - containerPort: 8080
+          name: metrics

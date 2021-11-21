@@ -199,7 +199,7 @@ bundle-custom-updates: $(YQ)
 	sed -E -i 's/(operators\.operatorframework\.io\.bundle\.package\.v1=).+/\1$(BUNDLE_PREFIX)-3scale-operator/' $(PROJECT_PATH)/bundle.Dockerfile
 	@echo "Update operator image reference URL"
 	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml metadata.annotations.containerImage $(IMG)
-	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml spec.install.spec.deployments[0].spec.template.spec.containers[1].image $(IMG)
+	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml spec.install.spec.deployments[0].spec.template.spec.containers[0].image $(IMG)
 
 .PHONY: bundle-restore
 bundle-restore:
