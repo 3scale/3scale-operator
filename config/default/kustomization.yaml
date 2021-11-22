@@ -9,8 +9,8 @@ namespace: 3scale-operator-system
 namePrefix: threescale-operator-
 
 # Labels to add to all resources and selectors.
-#commonLabels:
-#  someName: someValue
+commonLabels:
+  app: 3scale-api-management
 
 bases:
 - ../crd
