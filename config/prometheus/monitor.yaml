@@ -14,3 +14,4 @@ spec:
   selector:
     matchLabels:
       control-plane: controller-manager
+      app: 3scale-api-management
