@@ -10,4 +10,5 @@ spec:
     port: https
   selector:
     matchLabels:
+      app: 3scale-api-management
       control-plane: controller-manager
