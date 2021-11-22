@@ -34,6 +34,12 @@ oc apply -f prometheus.yaml
 oc expose service prometheus-operated --hostname prometheus.NAMESPACE_NAME.apps.CLUSTER_DOMAIN
 ```
 
+1. Grant operator metric reader permission (clusterrole `threescale-operator-metrics-reader`)
+
+```
+oc create clusterrolebinding prometheus-threescale-operator-metrics-reader --clusterrole=threescale-operator-metrics-reader --serviceaccount=NAMESPACE_NAME:prometheus-k8s
+```
+
 1. Deploy grafana datasource
 
 ```

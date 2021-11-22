@@ -130,7 +130,10 @@ For instance, label the namespace where 3scale in installed with `MYLABELKEY=MYL
           - MYLABELVALUE
 ```
 
-Do not forget to provide required RBAC permissions. Check operator [doc](https://github.com/coreos/prometheus-operator/blob/v0.32.0/Documentation/api.md#prometheusspec) regarding this issue.
+**NOTE**: Prometheus instances may require extra permissions defined in the ClusterRole `threescale-operator-metrics-reader` to scrape 3scale operator metrics. 
+This clusterrole is created when the 3scale operator is deployed.
+
+Check out operator [spec doc](https://github.com/coreos/prometheus-operator/blob/v0.32.0/Documentation/api.md#prometheusspec) for all available options.
 
 **Kubernetes metrics: kube-state-metrics**
 
