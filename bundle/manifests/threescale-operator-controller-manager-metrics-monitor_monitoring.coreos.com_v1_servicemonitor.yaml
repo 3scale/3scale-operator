@@ -11,4 +11,5 @@ spec:
     port: metrics
   selector:
     matchLabels:
+      app: 3scale-api-management
       control-plane: controller-manager
