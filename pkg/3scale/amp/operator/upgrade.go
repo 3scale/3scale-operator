@@ -857,6 +857,18 @@ func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentCo
 	diff := cmp.Diff(existing.Spec.Template.Labels, desired.Spec.Template.Labels)
 	helper.MergeMapStringString(&updated, &existing.Spec.Template.Labels, desired.Spec.Template.Labels)
 
+	// Remove old metering labels
+	oldLabelKeys := []string{"com.redhat.product-name", "com.redhat.component-type",
+		"com.redhat.product-version", "com.redhat.component-version",
+		"com.redhat.component-name"}
+
+	for _, key := range oldLabelKeys {
+		if _, ok := existing.Spec.Template.Labels[key]; ok {
+			delete(existing.Spec.Template.Labels, key)
+			updated = true
+		}
+	}
+
 	if updated {
 		u.Logger().V(1).Info(fmt.Sprintf("DC %s template lables changed: %s", desired.Name, diff))
 		err = u.UpdateResource(existing)
