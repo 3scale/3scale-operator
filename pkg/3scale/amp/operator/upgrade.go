@@ -54,6 +54,8 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, nil
 	}
 
+	// This method should be called in all upgrade procedures between releases,
+	// as some labels have as value the new release
 	res, err = u.upgradePodTemplateLabels()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading pod template labels: %w", err)
