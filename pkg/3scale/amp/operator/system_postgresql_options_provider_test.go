@@ -40,17 +40,15 @@ func testSystemPostgreSQLDeploymentLabels() map[string]string {
 }
 
 func testSystemPostgreSQLPodTemplateLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "system",
 		"threescale_component_element": "postgresql",
-		"com.redhat.component-name":    "system-postgresql",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(SystemPostgreSQLImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-postgresql",
 	}
+	addExpectedMeteringLabels(labels, "system-postgresql", helper.ApplicationType)
+
+	return labels
 }
 
 func testSystemPostgreSQLAffinity() *v1.Affinity {

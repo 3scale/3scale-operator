@@ -40,17 +40,15 @@ func testSystemCommonAppLabels() map[string]string {
 }
 
 func testSystemAppPodTemplateLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "system",
 		"threescale_component_element": "app",
-		"com.redhat.component-name":    "system-app",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(SystemImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-app",
 	}
+	addExpectedMeteringLabels(labels, "system-app", helper.ApplicationType)
+
+	return labels
 }
 
 func testSystemCommonSidekiqLabels() map[string]string {
@@ -62,17 +60,15 @@ func testSystemCommonSidekiqLabels() map[string]string {
 }
 
 func testSystemSidekiqPodTemplateLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "system",
 		"threescale_component_element": "sidekiq",
-		"com.redhat.component-name":    "system-sidekiq",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(SystemImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-sidekiq",
 	}
+	addExpectedMeteringLabels(labels, "system-sidekiq", helper.ApplicationType)
+
+	return labels
 }
 
 func testSystemProviderUILabels() map[string]string {
@@ -108,17 +104,15 @@ func testSystemSphinxLabels() map[string]string {
 }
 
 func testSystemSphinxPodTemplateLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "system",
 		"threescale_component_element": "sphinx",
-		"com.redhat.component-name":    "system-sphinx",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(SystemImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-sphinx",
 	}
+	addExpectedMeteringLabels(labels, "system-sphinx", helper.ApplicationType)
+
+	return labels
 }
 
 func testSystemMemcachedLabels() map[string]string {

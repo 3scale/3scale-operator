@@ -330,12 +330,14 @@ spec:
             metadata:
               labels:
                 app: 3scale-api-management
-                com.redhat.component-name: 3scale-operator
-                com.redhat.component-type: infrastructure
-                com.redhat.component-version: 0.9.0
-                com.redhat.product-name: 3scale
-                com.redhat.product-version: master
+                com.company: Red_Hat
                 control-plane: controller-manager
+                rht.comp: 3scale
+                rht.comp_ver: master
+                rht.prod_name: Red_Hat_Integration
+                rht.prod_ver: master
+                rht.subcomp: 3scale_operator
+                rht.subcomp_t: infrastructure
             spec:
               containers:
               - args:

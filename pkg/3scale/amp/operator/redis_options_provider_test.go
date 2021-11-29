@@ -33,17 +33,15 @@ func testRedisSystemRedisLabels() map[string]string {
 }
 
 func testRedisSystemRedisPodTemplateLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "system",
 		"threescale_component_element": "redis",
-		"com.redhat.component-name":    "system-redis",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(SystemRedisImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-redis",
 	}
+	addExpectedMeteringLabels(labels, "system-redis", helper.ApplicationType)
+
+	return labels
 }
 
 func testRedisBackendCommonLabels() map[string]string {
@@ -62,17 +60,15 @@ func testRedisBackendRedisLabels() map[string]string {
 }
 
 func testRedisBackendRedisPodTemplateLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "backend",
 		"threescale_component_element": "redis",
-		"com.redhat.component-name":    "backend-redis",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(BackendRedisImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "backend-redis",
 	}
+	addExpectedMeteringLabels(labels, "backend-redis", helper.ApplicationType)
+
+	return labels
 }
 
 func testBackendRedisAffinity() *v1.Affinity {
@@ -208,7 +204,6 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			func() *component.RedisOptions {
 				opts := defaultRedisOptions()
 				opts.BackendImage = backendRedisImageURL
-				opts.BackendRedisPodTemplateLabels["com.redhat.component-version"] = "backendCustomVersion"
 				return opts
 			},
 		},
@@ -223,7 +218,6 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			func() *component.RedisOptions {
 				opts := defaultRedisOptions()
 				opts.SystemImage = systemRedisImageURL
-				opts.SystemRedisPodTemplateLabels["com.redhat.component-version"] = "systemCustomVersion"
 				return opts
 			},
 		},
@@ -234,11 +228,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 					RedisPersistentVolumeClaimSpec: &appsv1alpha1.SystemRedisPersistentVolumeClaimSpec{},
 				}
 				return apimanager
-			},
-			func() *component.RedisOptions {
-				opts := defaultRedisOptions()
-				return opts
-			},
+			}, defaultRedisOptions,
 		},
 		{"BackendRedisOnlyPVCSpecSet", nil, nil,
 			func() *appsv1alpha1.APIManager {
@@ -247,11 +237,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 					RedisPersistentVolumeClaimSpec: &appsv1alpha1.BackendRedisPersistentVolumeClaimSpec{},
 				}
 				return apimanager
-			},
-			func() *component.RedisOptions {
-				opts := defaultRedisOptions()
-				return opts
-			},
+			}, defaultRedisOptions,
 		},
 		{"BackendRedisStoragePVCStorageClassSet", nil, nil,
 			func() *appsv1alpha1.APIManager {

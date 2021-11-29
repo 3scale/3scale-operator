@@ -2,8 +2,6 @@ package helper
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 type ComponentType string
@@ -13,18 +11,15 @@ const (
 	InfrastructureType ComponentType = "infrastructure"
 )
 
-func MeteringLabels(componentName, componentVersion string, componentType ComponentType) map[string]string {
-	labels := map[string]string{
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.component-name":    componentName,
-		"com.redhat.product-version":   product.ThreescaleRelease,
-		"com.redhat.component-type":    string(componentType),
-		"com.redhat.component-version": componentVersion,
+func MeteringLabels(componentName string, componentType ComponentType) map[string]string {
+	return map[string]string{
+		"com.company":   "Red_Hat",
+		"rht.prod_name": "Red_Hat_Integration",
+		// It should be updated on release branch
+		"rht.prod_ver":  "master",
+		"rht.comp":      "3scale",
+		"rht.comp_ver":  product.ThreescaleRelease,
+		"rht.subcomp":   componentName,
+		"rht.subcomp_t": string(componentType),
 	}
-
-	if len(validation.IsValidLabelValue(componentVersion)) > 0 {
-		labels["com.redhat.component-version"] = ""
-	}
-
-	return labels
 }

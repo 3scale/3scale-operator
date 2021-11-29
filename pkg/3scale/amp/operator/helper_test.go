@@ -3,11 +3,13 @@ package operator
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 const (
@@ -19,6 +21,24 @@ const (
 	insecureImportPolicy = false
 	trueValue            = true
 )
+
+func addExpectedMeteringLabels(src map[string]string, componentName string, componentType helper.ComponentType) {
+	labels := []struct {
+		k string
+		v string
+	}{
+		{"com.company", "Red_Hat"},
+		{"rht.prod_name", "Red_Hat_Integration"},
+		{"rht.prod_ver", "master"},
+		{"rht.comp", "3scale"},
+		{"rht.comp_ver", product.ThreescaleRelease},
+		{"rht.subcomp", componentName},
+		{"rht.subcomp_t", string(componentType)},
+	}
+	for _, label := range labels {
+		src[label.k] = label.v
+	}
+}
 
 func basicApimanager() *appsv1alpha1.APIManager {
 	tmpAppLabel := appLabel

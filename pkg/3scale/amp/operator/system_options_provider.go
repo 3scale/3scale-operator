@@ -37,24 +37,20 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.options.TenantName = *s.apimanager.Spec.TenantName
 	s.options.WildcardDomain = s.apimanager.Spec.WildcardDomain
 
-	imageOpts, err := NewAmpImagesOptionsProvider(s.apimanager).GetAmpImagesOptions()
-	if err != nil {
-		return nil, fmt.Errorf("GetSystemOptions reading image options: %w", err)
-	}
 	s.options.CommonLabels = s.commonLabels()
 	s.options.CommonAppLabels = s.commonAppLabels()
-	s.options.AppPodTemplateLabels = s.appPodTemplateLabels(imageOpts.SystemImage)
+	s.options.AppPodTemplateLabels = s.appPodTemplateLabels()
 	s.options.CommonSidekiqLabels = s.commonSidekiqLabels()
-	s.options.SidekiqPodTemplateLabels = s.sidekiqPodTemplateLabels(imageOpts.SystemImage)
+	s.options.SidekiqPodTemplateLabels = s.sidekiqPodTemplateLabels()
 	s.options.ProviderUILabels = s.providerUILabels()
 	s.options.MasterUILabels = s.masterUILabels()
 	s.options.DeveloperUILabels = s.developerUILabels()
 	s.options.SphinxLabels = s.sphinxLabels()
-	s.options.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels(imageOpts.SystemImage)
+	s.options.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels()
 	s.options.MemcachedLabels = s.memcachedLabels()
 	s.options.SMTPLabels = s.smtpLabels()
 
-	err = s.setSecretBasedOptions()
+	err := s.setSecretBasedOptions()
 	if err != nil {
 		return nil, fmt.Errorf("GetSystemOptions reading secret options: %w", err)
 	}
@@ -481,8 +477,8 @@ func (s *SystemOptionsProvider) commonAppLabels() map[string]string {
 	return labels
 }
 
-func (s *SystemOptionsProvider) appPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("system-app", helper.ParseVersion(image), helper.ApplicationType)
+func (s *SystemOptionsProvider) appPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("system-app", helper.ApplicationType)
 
 	for k, v := range s.commonAppLabels() {
 		labels[k] = v
@@ -499,8 +495,8 @@ func (s *SystemOptionsProvider) commonSidekiqLabels() map[string]string {
 	return labels
 }
 
-func (s *SystemOptionsProvider) sidekiqPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("system-sidekiq", helper.ParseVersion(image), helper.ApplicationType)
+func (s *SystemOptionsProvider) sidekiqPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("system-sidekiq", helper.ApplicationType)
 
 	for k, v := range s.commonSidekiqLabels() {
 		labels[k] = v
@@ -547,8 +543,8 @@ func (s *SystemOptionsProvider) smtpLabels() map[string]string {
 	return labels
 }
 
-func (s *SystemOptionsProvider) sphinxPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("system-sphinx", helper.ParseVersion(image), helper.ApplicationType)
+func (s *SystemOptionsProvider) sphinxPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("system-sphinx", helper.ApplicationType)
 
 	for k, v := range s.sphinxLabels() {
 		labels[k] = v

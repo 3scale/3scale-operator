@@ -40,17 +40,15 @@ func testSystemMysqlDeploymentLabels() map[string]string {
 }
 
 func testSystemMysqlPodTemplateLabels() map[string]string {
-	return map[string]string{
+	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "system",
 		"threescale_component_element": "mysql",
-		"com.redhat.component-name":    "system-mysql",
-		"com.redhat.component-type":    "application",
-		"com.redhat.component-version": helper.ParseVersion(SystemMySQLImageURL()),
-		"com.redhat.product-name":      "3scale",
-		"com.redhat.product-version":   product.ThreescaleRelease,
 		"deploymentConfig":             "system-mysql",
 	}
+	addExpectedMeteringLabels(labels, "system-mysql", helper.ApplicationType)
+
+	return labels
 }
 
 func testSystemMySQLAffinity() *v1.Affinity {

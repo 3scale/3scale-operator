@@ -25,18 +25,13 @@ func NewMemcachedOptionsProvider(apimanager *appsv1alpha1.APIManager) *Memcached
 
 func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOptions, error) {
 	m.memcachedOptions.ImageTag = product.ThreescaleRelease
-
-	imageOpts, err := NewAmpImagesOptionsProvider(m.apimanager).GetAmpImagesOptions()
-	if err != nil {
-		return nil, fmt.Errorf("GetMemcachedOptions reading image options: %w", err)
-	}
 	m.memcachedOptions.DeploymentLabels = m.deploymentLabels()
-	m.memcachedOptions.PodTemplateLabels = m.podTemplateLabels(imageOpts.SystemMemcachedImage)
+	m.memcachedOptions.PodTemplateLabels = m.podTemplateLabels()
 
 	m.setResourceRequirementsOptions()
 	m.setNodeAffinityAndTolerationsOptions()
 
-	err = m.memcachedOptions.Validate()
+	err := m.memcachedOptions.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("GetMemcachedOptions validating: %w", err)
 	}
@@ -71,8 +66,8 @@ func (m *MemcachedOptionsProvider) deploymentLabels() map[string]string {
 	}
 }
 
-func (m *MemcachedOptionsProvider) podTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("system-memcache", helper.ParseVersion(image), helper.ApplicationType)
+func (m *MemcachedOptionsProvider) podTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("system-memcache", helper.ApplicationType)
 
 	for k, v := range m.deploymentLabels() {
 		labels[k] = v

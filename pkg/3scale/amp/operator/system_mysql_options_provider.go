@@ -34,17 +34,11 @@ func NewSystemMysqlOptionsProvider(apimanager *appsv1alpha1.APIManager, namespac
 
 func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOptions, error) {
 	s.mysqlOptions.ImageTag = product.ThreescaleRelease
-
-	imageOpts, err := NewSystemMysqlImageOptionsProvider(s.apimanager).GetSystemMySQLImageOptions()
-	if err != nil {
-		return nil, fmt.Errorf("GetMysqlOptions reading image options: %w", err)
-	}
-
 	s.mysqlOptions.CommonLabels = s.commonLabels()
 	s.mysqlOptions.DeploymentLabels = s.deploymentLabels()
-	s.mysqlOptions.PodTemplateLabels = s.podTemplateLabels(imageOpts.Image)
+	s.mysqlOptions.PodTemplateLabels = s.podTemplateLabels()
 
-	err = s.setSecretBasedOptions()
+	err := s.setSecretBasedOptions()
 	if err != nil {
 		return nil, fmt.Errorf("GetMysqlOptions reading secret options: %w", err)
 	}
@@ -197,8 +191,8 @@ func (s *SystemMysqlOptionsProvider) deploymentLabels() map[string]string {
 	return labels
 }
 
-func (s *SystemMysqlOptionsProvider) podTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("system-mysql", helper.ParseVersion(image), helper.ApplicationType)
+func (s *SystemMysqlOptionsProvider) podTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("system-mysql", helper.ApplicationType)
 
 	for k, v := range s.deploymentLabels() {
 		labels[k] = v

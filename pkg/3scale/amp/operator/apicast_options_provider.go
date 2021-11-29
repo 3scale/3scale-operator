@@ -34,11 +34,6 @@ func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client clien
 }
 
 func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions, error) {
-	imageOpts, err := NewAmpImagesOptionsProvider(a.apimanager).GetAmpImagesOptions()
-	if err != nil {
-		return nil, fmt.Errorf("GetApicastOptions reading image options: %w", err)
-	}
-
 	a.apicastOptions.ManagementAPI = *a.apimanager.Spec.Apicast.ApicastManagementAPI
 	a.apicastOptions.ImageTag = product.ThreescaleRelease
 	a.apicastOptions.OpenSSLVerify = strconv.FormatBool(*a.apimanager.Spec.Apicast.OpenSSLVerify)
@@ -47,8 +42,8 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.CommonLabels = a.commonLabels()
 	a.apicastOptions.CommonStagingLabels = a.commonStagingLabels()
 	a.apicastOptions.CommonProductionLabels = a.commonProductionLabels()
-	a.apicastOptions.StagingPodTemplateLabels = a.stagingPodTemplateLabels(imageOpts.ApicastImage)
-	a.apicastOptions.ProductionPodTemplateLabels = a.productionPodTemplateLabels(imageOpts.ApicastImage)
+	a.apicastOptions.StagingPodTemplateLabels = a.stagingPodTemplateLabels()
+	a.apicastOptions.ProductionPodTemplateLabels = a.productionPodTemplateLabels()
 	a.apicastOptions.Namespace = a.apimanager.Namespace
 	a.apicastOptions.ProductionWorkers = a.apimanager.Spec.Apicast.ProductionSpec.Workers
 	a.apicastOptions.ProductionLogLevel = a.apimanager.Spec.Apicast.ProductionSpec.LogLevel
@@ -83,7 +78,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.setNodeAffinityAndTolerationsOptions()
 	a.setReplicas()
 
-	err = a.setCustomPolicies()
+	err := a.setCustomPolicies()
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +155,8 @@ func (a *ApicastOptionsProvider) commonProductionLabels() map[string]string {
 	return labels
 }
 
-func (a *ApicastOptionsProvider) stagingPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("apicast-staging", helper.ParseVersion(image), helper.ApplicationType)
+func (a *ApicastOptionsProvider) stagingPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("apicast-staging", helper.ApplicationType)
 
 	for k, v := range a.commonStagingLabels() {
 		labels[k] = v
@@ -172,8 +167,8 @@ func (a *ApicastOptionsProvider) stagingPodTemplateLabels(image string) map[stri
 	return labels
 }
 
-func (a *ApicastOptionsProvider) productionPodTemplateLabels(image string) map[string]string {
-	labels := helper.MeteringLabels("apicast-production", helper.ParseVersion(image), helper.ApplicationType)
+func (a *ApicastOptionsProvider) productionPodTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("apicast-production", helper.ApplicationType)
 
 	for k, v := range a.commonProductionLabels() {
 		labels[k] = v
