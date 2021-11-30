@@ -54,6 +54,6 @@ func TestDeploymentVersions(t *testing.T) {
 	}
 
 	if deployment.Spec.Template.Labels["rht.comp_ver"] != product.ThreescaleRelease {
-		t.Errorf("com.redhat.product-version differ: expected: %s; found: %s", product.ThreescaleRelease, deployment.Spec.Template.Labels["com.redhat.product-version"])
+		t.Errorf("rht.comp_ver differ: expected: %s; found: %s", product.ThreescaleRelease, deployment.Spec.Template.Labels["rht.comp_ver"])
 	}
 }
