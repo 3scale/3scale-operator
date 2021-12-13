@@ -318,7 +318,7 @@ spec:
           - update
         serviceAccountName: 3scale-operator
       deployments:
-      - name: threescale-operator-controller-manager
+      - name: threescale-operator-controller-manager-v2
         spec:
           replicas: 1
           selector:
