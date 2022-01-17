@@ -29,7 +29,7 @@ func addExpectedMeteringLabels(src map[string]string, componentName string, comp
 	}{
 		{"com.company", "Red_Hat"},
 		{"rht.prod_name", "Red_Hat_Integration"},
-		{"rht.prod_ver", "master"},
+		{"rht.prod_ver", "2021.Q4"},
 		{"rht.comp", "3scale"},
 		{"rht.comp_ver", product.ThreescaleRelease},
 		{"rht.subcomp", componentName},
