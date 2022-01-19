@@ -45,6 +45,10 @@ spec:
             cpu: 100m
             memory: 100Mi
         env:
+        - name: WATCH_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: RELATED_IMAGE_BACKEND
           value: "quay.io/3scale/apisonator:latest"
         - name: RELATED_IMAGE_APICAST
