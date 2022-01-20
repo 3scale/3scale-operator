@@ -1551,6 +1551,8 @@ objects:
             - bundle exec rake boot openshift:deploy
             containerName: system-master
             env:
+            - name: DEPLOY_INFO_RELEASE
+              value: master
             - name: APICAST_REGISTRY_URL
               valueFrom:
                 configMapKeyRef:
@@ -1824,6 +1826,8 @@ objects:
           - -c
           - config/unicorn.rb
           env:
+          - name: DEPLOY_INFO_RELEASE
+            value: master
           - name: APICAST_REGISTRY_URL
             valueFrom:
               configMapKeyRef:
@@ -2119,6 +2123,8 @@ objects:
           - -c
           - config/unicorn.rb
           env:
+          - name: DEPLOY_INFO_RELEASE
+            value: master
           - name: APICAST_REGISTRY_URL
             valueFrom:
               configMapKeyRef:
@@ -2413,6 +2419,8 @@ objects:
           - -c
           - config/unicorn.rb
           env:
+          - name: DEPLOY_INFO_RELEASE
+            value: master
           - name: APICAST_REGISTRY_URL
             valueFrom:
               configMapKeyRef:
@@ -2770,6 +2778,8 @@ objects:
           - sidekiq:worker
           - RAILS_MAX_THREADS=25
           env:
+          - name: DEPLOY_INFO_RELEASE
+            value: master
           - name: APICAST_REGISTRY_URL
             valueFrom:
               configMapKeyRef:

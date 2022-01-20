@@ -7,6 +7,7 @@ import (
 
 	"k8s.io/api/policy/v1beta1"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -194,7 +195,9 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 }
 
 func (system *System) buildSystemBaseEnv() []v1.EnvVar {
-	result := []v1.EnvVar{}
+	result := []v1.EnvVar{
+		helper.EnvVarFromValue("DEPLOY_INFO_RELEASE", product.ThreescaleRelease),
+	}
 
 	baseEnvConfigMapEnvs := system.getSystemBaseEnvsFromEnvConfigMap()
 	result = append(result, baseEnvConfigMapEnvs...)
