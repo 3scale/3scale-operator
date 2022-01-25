@@ -120,6 +120,7 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		reqLogger.Error(reconcileErr, "Failed to reconcile")
 		r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "ReconcileError", "%v", reconcileErr)
+		return ctrl.Result{}, reconcileErr
 	}
 
 	reqLogger.Info("END", "error", reconcileErr)
