@@ -100,7 +100,8 @@ func main() {
 
 	namespace, err := getWatchNamespace()
 	if err != nil {
-		setupLog.Error(err, "Failed to get watch namespace, the 3scale-operator will now watch all namespaces")
+		setupLog.Error(err, "Failed to get watch namespace")
+		os.Exit(1)
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
