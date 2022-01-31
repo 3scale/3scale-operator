@@ -123,7 +123,6 @@ func (r *TenantReconciler) FetchMasterCredentials(k8sClient client.Client, tenan
 	err := k8sClient.Get(context.TODO(),
 		types.NamespacedName{
 			Name: tenantR.Spec.MasterCredentialsRef.Name,
-			// Master credential secret MUST be on same namespace as tenant CR
 			Namespace: tenantR.Spec.MasterCredentialsRef.Namespace,
 		},
 		masterCredentialsSecret)
