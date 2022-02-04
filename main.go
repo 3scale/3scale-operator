@@ -24,6 +24,7 @@ import (
 	"runtime"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/getkin/kin-openapi/openapi3"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	consolev1 "github.com/openshift/api/console/v1"
@@ -56,6 +57,12 @@ var (
 )
 
 func init() {
+	// Avoid OpenAPI schema formatvalidation
+	// invalid components: unsupported 'format' value "uuid"
+	// https://github.com/getkin/kin-openapi/issues/442
+	// https://pkg.go.dev/github.com/getkin/kin-openapi@v0.80.0/openapi3#SchemaFormatValidationDisabled
+	openapi3.SchemaFormatValidationDisabled = true
+
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(appsv1alpha1.AddToScheme(scheme))
