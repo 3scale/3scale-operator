@@ -101,10 +101,17 @@ make bundle-custom-build IMG=$DOCKER_REGISTRY/$DOCKER_ORG/3scale-operator:myvers
 make bundle-image-push BUNDLE_IMG=$DOCKER_REGISTRY/$DOCKER_ORG/3scale-operator-bundles:myversiontag
 ```
 
-* Deploy the operator in your currently configured and active cluster in $HOME/.kube/config:
+* Deploy the operator in your currently configured and active cluster in $HOME/.kube/config
+
 ```
 make bundle-run BUNDLE_IMG=$DOCKER_REGISTRY/$DOCKER_ORG/3scale-operator-bundles:myversiontag
 ```
+
+**Note**: The _catalogsource_ will be installed in the `openshift-marketplace` namespace
+[issue](https://bugzilla.redhat.com/show_bug.cgi?id=1779080). By default, cluster scoped
+subscription will be created in the namespace `openshift-marketplace`.
+Feel free to delete the operator (from the UI **OperatorHub -> Installed Operators**)
+and install it namespace or cluster scoped.
 
 It will take a few minutes for the operator to become visible under
 the _OperatorHub_ section of the OpenShift console _Catalog_. It can be
