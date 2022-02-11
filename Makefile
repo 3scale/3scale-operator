@@ -210,7 +210,7 @@ bundle-custom-build: | bundle-custom-updates bundle-build bundle-restore
 
 .PHONY: bundle-run
 bundle-run: $(OPERATOR_SDK)
-	$(OPERATOR_SDK) run bundle --namespace $(LOCAL_RUN_NAMESPACE) $(BUNDLE_IMG)
+	$(OPERATOR_SDK) run bundle --namespace openshift-marketplace $(BUNDLE_IMG)
 
 # 3scale-specific targets
 
