@@ -17,6 +17,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	tenantFinalizer = "tenant.3scale.net/finalizer"
+)
+
 // TenantInternalReconciler reconciles a Tenant object
 type TenantInternalReconciler struct {
 	k8sClient   client.Client
@@ -41,6 +45,7 @@ func NewTenantInternalReconciler(k8sClient client.Client, tenantR *apiv1alpha1.T
 // - Have 3scale Tenant Account
 // - Have active admin user
 // - Have secret with tenant's access_token
+// - Finalizers to support deletion logic
 func (r *TenantInternalReconciler) Run() error {
 	tenantDef, err := r.reconcileTenant()
 	if err != nil {
@@ -53,6 +58,12 @@ func (r *TenantInternalReconciler) Run() error {
 	}
 
 	err = r.reconcileAccessTokenSecret(tenantDef)
+	if err != nil {
+		return err
+	}
+
+	// add or remove finalizer
+	err = controllerhelper.ReconcileFinalizers(r.tenantR, r.k8sClient, tenantFinalizer)
 	if err != nil {
 		return err
 	}
@@ -72,12 +83,48 @@ func (r *TenantInternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, 
 		return nil, err
 	}
 
+	// if tenant is found in 3scale and deletion timestamp is present, attempt to delete
+	if tenantDef != nil && r.tenantR.DeletionTimestamp != nil {
+		// only try deleting tenant if it's not already marked for deletion
+		isTenantDeleted, err := r.confirmTenantDeleted(tenantDef)
+		if err != nil {
+			return nil, err
+		}
+
+		if !isTenantDeleted {
+			r.portaClient.DeleteTenant(r.tenantR.Status.TenantId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// re-fetch tenant to get current state
+		tenantDef, err = r.fetchTenant()
+		if err != nil {
+			return nil, err
+		}
+
+		isTenantDeleted, err = r.confirmTenantDeleted(tenantDef)
+		if err != nil {
+			return nil, err
+		}
+
+		// fail if tenant is not marked for deletion
+		if !isTenantDeleted {
+			return nil, fmt.Errorf("tenant deletion failed - re-trying")
+		}
+	}
+
+	// create tenant if tenant is NOT found in 3scale and deletion timestamp is not present
 	if tenantDef == nil {
 		tenantDef, err = r.createTenant()
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	}
+
+	// syncing but skip if deletion timestamp is present
+	if tenantDef != nil && r.tenantR.DeletionTimestamp == nil {
 		r.logger.Info("Tenant already exists", "TenantId", tenantDef.Signup.Account.ID)
 		// Tenant is not created, check tenant desired state matches current state
 		// When created, not needed to update
@@ -88,6 +135,14 @@ func (r *TenantInternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, 
 	}
 
 	return tenantDef, nil
+}
+
+func (r *TenantInternalReconciler) confirmTenantDeleted(tenant *porta_client_pkg.Tenant) (bool, error) {
+	if tenant.Signup.Account.State == "scheduled_for_deletion" {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
 func (r *TenantInternalReconciler) fetchTenant() (*porta_client_pkg.Tenant, error) {
