@@ -21,18 +21,19 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/validation/field"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+const backendFinalizer = "backendapi.3scale.net/finalizer"
 
 // BackendReconciler reconciles a Backend object
 type BackendReconciler struct {
@@ -74,9 +75,18 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		reqLogger.V(1).Info(string(jsonData))
 	}
 
+	err = controllerhelper.ReconcileFinalizers(backend, r.Client(), backendFinalizer)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// Ignore deleted Backends, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if backend.DeletionTimestamp != nil {
+		err = r.removeBackend(backend)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -172,4 +182,31 @@ func (r *BackendReconciler) validateSpec(backendResource *capabilitiesv1beta1.Ba
 		ErrorType:      helper.InvalidError,
 		FieldErrorList: errors,
 	}
+}
+
+func (r *BackendReconciler) removeBackend(backendResource *capabilitiesv1beta1.Backend) error {
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return err
+	}
+
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	if err != nil {
+		return err
+	}
+
+	err = threescaleAPIClient.DeleteBackendApi(*backendResource.Status.ID)
+	if err != nil {
+		return err
+	}
+
+	// confirm that backendAPI has been removed
+	backendAPIs, err := threescaleAPIClient.ListBackendApis()
+	for _, backendAPI := range backendAPIs.Backends {
+		if backendAPI.Element.ID == *backendResource.Status.ID {
+			return err
+		}
+	}
+
+	return nil
 }
