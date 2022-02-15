@@ -180,6 +180,10 @@ metadata:
     repository: https://github.com/3scale/3scale-operator
     support: Red Hat
     tectonic-visibility: ocs
+  labels:
+    operatorframework.io/arch.amd64: supported
+    operatorframework.io/arch.ppc64le: supported
+    operatorframework.io/arch.s390x: supported
   name: 3scale-operator.v0.0.1
   namespace: placeholder
 spec:
