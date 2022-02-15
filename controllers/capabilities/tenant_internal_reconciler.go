@@ -116,7 +116,7 @@ func (r *TenantInternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, 
 	}
 
 	// create tenant if tenant is NOT found in 3scale and deletion timestamp is not present
-	if tenantDef == nil {
+	if tenantDef == nil && r.tenantR.Finalizers == nil {
 		tenantDef, err = r.createTenant()
 		if err != nil {
 			return nil, err
