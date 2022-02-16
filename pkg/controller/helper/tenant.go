@@ -56,7 +56,7 @@ func ConfirmTenantDeleted(tenant *capabilitiesv1alpha1.Tenant, portaClient *port
 	// confirm tenant status
 	if tenantDef.Signup.Account.State == "scheduled_for_deletion" {
 		return true, nil
-	} 
-	
+	}
+
 	return false, nil
 }

@@ -16,21 +16,16 @@ If the deletion timestamp is not present, a finalizer will be reconciled
 */
 func ReconcileFinalizers(object controllerutil.Object, client client.Client, finalizer string) error {
 	var err error
-
 	if object.GetDeletionTimestamp() == nil {
-		_, err = controllerutil.CreateOrUpdate(context.TODO(), client, object, func() error {
-			controllerutil.AddFinalizer(object, finalizer)
-			return nil
-		})
+		controllerutil.AddFinalizer(object, finalizer)
+		err = client.Update(context.TODO(), object)
 	} else {
-		_, err = controllerutil.CreateOrUpdate(context.TODO(), client, object, func() error {
-			controllerutil.RemoveFinalizer(object, finalizer)
-			return nil
-		})
+		controllerutil.RemoveFinalizer(object, finalizer)
+		err = client.Update(context.TODO(), object)
 	}
-
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

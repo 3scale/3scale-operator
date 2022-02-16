@@ -77,17 +77,6 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	changed := tenantR.SetDefaults()
-	if changed {
-		err = r.Client.Update(context.TODO(), tenantR)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		reqLogger.Info("Tenant resource updated with defaults")
-		// Expect for re-trigger
-		return ctrl.Result{}, nil
-	}
-
 	masterAccessToken, err := r.FetchMasterCredentials(r.Client, tenantR)
 	if err != nil {
 		reqLogger.Error(err, "Error fetching master credentials secret")
@@ -104,7 +93,7 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Tenant has been marked for deletion
 	if tenantR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
-		// your deletion handling
+		// delete tenant
 		err := controllerhelper.DeleteTenant(tenantR, portaClient)
 		if err != nil {
 			return ctrl.Result{}, err
@@ -116,14 +105,33 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, err
 		}
 
-		if isTenantDeleted {
-			// add or remove finalizer
-			err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
+		if !isTenantDeleted {
+			return ctrl.Result{Requeue: true}, nil
 		}
 
+		// add or remove finalizer
+		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	// Ignore deleted resources, this can happen when foregroundDeletion is enabled
+	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
+	if tenantR.GetDeletionTimestamp() != nil {
+		return ctrl.Result{}, nil
+	}
+
+	changed := tenantR.SetDefaults()
+	if changed {
+		err = r.Client.Update(context.TODO(), tenantR)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		reqLogger.Info("Tenant resource updated with defaults")
+		// Expect for re-trigger
 		return ctrl.Result{}, nil
 	}
 

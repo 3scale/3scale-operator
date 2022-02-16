@@ -9,7 +9,6 @@ import (
 	apiv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -73,7 +72,7 @@ func (r *TenantInternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, 
 		return nil, err
 	}
 
-	if tenantDef == nil && controllerutil.ContainsFinalizer(r.tenantR, tenantFinalizer){
+	if tenantDef == nil {
 		tenantDef, err = r.createTenant()
 		if err != nil {
 			return nil, err
