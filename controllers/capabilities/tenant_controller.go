@@ -28,11 +28,15 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 )
+
+// tenant finalizer
+const tenantFinalizer = "tenant.capabilities.3scale.net/finalizer"
 
 // Secret field name with Tenant's admin user password
 const TenantAdminPasswordSecretField = "admin_password"
@@ -73,17 +77,6 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	changed := tenantR.SetDefaults()
-	if changed {
-		err = r.Client.Update(context.TODO(), tenantR)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		reqLogger.Info("Tenant resource updated with defaults")
-		// Expect for re-trigger
-		return ctrl.Result{}, nil
-	}
-
 	masterAccessToken, err := r.FetchMasterCredentials(r.Client, tenantR)
 	if err != nil {
 		reqLogger.Error(err, "Error fetching master credentials secret")
@@ -96,6 +89,50 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		reqLogger.Error(err, "Error creating porta client object")
 		// Error reading the object - requeue the request.
 		return ctrl.Result{}, err
+	}
+
+	// Tenant has been marked for deletion
+	if tenantR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
+		// your deletion handling
+		err := controllerhelper.DeleteTenant(tenantR, portaClient)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		// confirm tenant deletion
+		isTenantDeleted, err := controllerhelper.ConfirmTenantDeleted(tenantR, portaClient)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		if isTenantDeleted {
+			// add or remove finalizer
+			err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
+		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	changed := tenantR.SetDefaults()
+	if changed {
+		err = r.Client.Update(context.TODO(), tenantR)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		reqLogger.Info("Tenant resource updated with defaults")
+		// Expect for re-trigger
+		return ctrl.Result{}, nil
 	}
 
 	internalReconciler := NewTenantInternalReconciler(r.Client, tenantR, portaClient, reqLogger)

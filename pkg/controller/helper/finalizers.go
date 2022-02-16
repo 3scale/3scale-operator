@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 /*
@@ -13,18 +14,18 @@ This function reconciles the finalizers, it requires
 If the deletion timestamp is found, the finalizer will be removed.
 If the deletion timestamp is not present, a finalizer will be reconciled
 */
-func ReconcileFinalizers(object Object, client client.Client, finalizer string) error {
+func ReconcileFinalizers(object controllerutil.Object, client client.Client, finalizer string) error {
 	if object.GetDeletionTimestamp() == nil {
-		_, err := CreateOrUpdate(context.TODO(), client, object, func() error {
-			AddFinalizer(object, finalizer)
+		_, err := controllerutil.CreateOrUpdate(context.TODO(), client, object, func() error {
+			controllerutil.AddFinalizer(object, finalizer)
 			return nil
 		})
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err := CreateOrUpdate(context.TODO(), client, object, func() error {
-			RemoveFinalizer(object, finalizer)
+		_, err := controllerutil.CreateOrUpdate(context.TODO(), client, object, func() error {
+			controllerutil.RemoveFinalizer(object, finalizer)
 			return nil
 		})
 		if err != nil {
