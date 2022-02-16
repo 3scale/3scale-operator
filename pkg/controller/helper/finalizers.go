@@ -7,7 +7,7 @@ import (
 )
 
 /*
-This function reconciles the finalizers, it requires
+ReconcileFinalizers reconciles the finalizers, it requires
 - object
 - k8client
 - finalizer
@@ -15,23 +15,22 @@ If the deletion timestamp is found, the finalizer will be removed.
 If the deletion timestamp is not present, a finalizer will be reconciled
 */
 func ReconcileFinalizers(object controllerutil.Object, client client.Client, finalizer string) error {
+	var err error
+
 	if object.GetDeletionTimestamp() == nil {
-		_, err := controllerutil.CreateOrUpdate(context.TODO(), client, object, func() error {
+		_, err = controllerutil.CreateOrUpdate(context.TODO(), client, object, func() error {
 			controllerutil.AddFinalizer(object, finalizer)
 			return nil
 		})
-		if err != nil {
-			return err
-		}
 	} else {
-		_, err := controllerutil.CreateOrUpdate(context.TODO(), client, object, func() error {
+		_, err = controllerutil.CreateOrUpdate(context.TODO(), client, object, func() error {
 			controllerutil.RemoveFinalizer(object, finalizer)
 			return nil
 		})
-		if err != nil {
-			return err
-		}
 	}
 
+	if err != nil {
+		return err
+	}
 	return nil
 }

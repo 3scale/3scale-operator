@@ -77,6 +77,17 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
+	changed := tenantR.SetDefaults()
+	if changed {
+		err = r.Client.Update(context.TODO(), tenantR)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		reqLogger.Info("Tenant resource updated with defaults")
+		// Expect for re-trigger
+		return ctrl.Result{}, nil
+	}
+
 	masterAccessToken, err := r.FetchMasterCredentials(r.Client, tenantR)
 	if err != nil {
 		reqLogger.Error(err, "Error fetching master credentials secret")
@@ -121,17 +132,6 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		return ctrl.Result{Requeue: true}, nil
-	}
-
-	changed := tenantR.SetDefaults()
-	if changed {
-		err = r.Client.Update(context.TODO(), tenantR)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		reqLogger.Info("Tenant resource updated with defaults")
-		// Expect for re-trigger
 		return ctrl.Result{}, nil
 	}
 
