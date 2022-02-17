@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -38,6 +39,8 @@ import (
 type ProductReconciler struct {
 	*reconcilers.BaseReconciler
 }
+
+const productFinalizer = "product.capabilities.3scale.net/finalizer"
 
 // blank assignment to verify that ProductReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &ProductReconciler{}
@@ -74,9 +77,30 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		reqLogger.V(1).Info(string(jsonData))
 	}
 
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), product.Namespace, product.Spec.ProviderAccountRef, reqLogger)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	portaClient, err := controllerhelper.PortaClient(providerAccount)
+	if err != nil {
+		reqLogger.Error(err, "Error creating porta client object")
+		// Error reading the object - requeue the request.
+		return ctrl.Result{}, err
+	}
+
+	err = controllerhelper.ReconcileFinalizers(product, r.Client(), productFinalizer)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// Ignore deleted Products, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
-	if product.DeletionTimestamp != nil {
+	if product.DeletionTimestamp != nil && controllerutil.ContainsFinalizer(product, productFinalizer) {
+		err = r.removeProduct(product)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -88,6 +112,22 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
 		return ctrl.Result{Requeue: true}, nil
+	}
+
+	// confirm product deletion
+	isProductDeleted, err := controllerhelper.ConfirmProductDeleted(product, portaClient)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if !isProductDeleted {
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	// add or remove finalizer
+	err = controllerhelper.ReconcileFinalizers(product, r.Client(), tenantFinalizer)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	statusReconciler, reconcileErr := r.reconcile(product)
@@ -328,4 +368,31 @@ func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap
 	}
 
 	return result
+}
+
+func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.Product) error {
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return err
+	}
+
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	if err != nil {
+		return err
+	}
+
+	err = threescaleAPIClient.DeleteProduct(*productResource.Status.ID)
+	if err != nil {
+		return err
+	}
+
+	// confirm that backendAPI has been removed
+	products, err := threescaleAPIClient.ListProducts()
+	for _, product := range products.Products {
+		if product.Element.ID == *productResource.Status.ID {
+			return err
+		}
+	}
+
+	return nil
 }
