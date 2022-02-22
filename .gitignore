@@ -96,3 +96,5 @@ _output
 
 # controller-runtime testenv binaries
 testbin/*
+
+3scale-operator
