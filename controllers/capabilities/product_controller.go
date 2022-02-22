@@ -20,19 +20,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/validation/field"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // ProductReconciler reconciles a Product object
@@ -65,7 +63,7 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
 			return ctrl.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
+		// Error reading the object - requeue the request
 		return ctrl.Result{}, err
 	}
 
@@ -77,27 +75,29 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		reqLogger.V(1).Info(string(jsonData))
 	}
 
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), product.Namespace, product.Spec.ProviderAccountRef, reqLogger)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	portaClient, err := controllerhelper.PortaClient(providerAccount)
-	if err != nil {
-		reqLogger.Error(err, "Error creating porta client object")
-		// Error reading the object - requeue the request.
-		return ctrl.Result{}, err
-	}
-
-	err = controllerhelper.ReconcileFinalizers(product, r.Client(), productFinalizer)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// Ignore deleted Products, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
-	if product.DeletionTimestamp != nil && controllerutil.ContainsFinalizer(product, productFinalizer) {
+	if product.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(product, productFinalizer) {
+		err = controllerhelper.ReconcileFinalizers(product, r.Client(), productFinalizer)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
 		err = r.removeProduct(product)
+		if err != nil {
+			r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "Failed to delete product", "%v", err)
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	if product.GetDeletionTimestamp() != nil {
+		return ctrl.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(product, productFinalizer) {
+		err = controllerhelper.ReconcileFinalizers(product, r.Client(), productFinalizer)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -112,22 +112,6 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
 		return ctrl.Result{Requeue: true}, nil
-	}
-
-	// confirm product deletion
-	isProductDeleted, err := controllerhelper.ConfirmProductDeleted(product, portaClient)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if !isProductDeleted {
-		return ctrl.Result{Requeue: true}, nil
-	}
-
-	// add or remove finalizer
-	err = controllerhelper.ReconcileFinalizers(product, r.Client(), tenantFinalizer)
-	if err != nil {
-		return ctrl.Result{}, err
 	}
 
 	statusReconciler, reconcileErr := r.reconcile(product)
@@ -386,7 +370,7 @@ func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.P
 		return err
 	}
 
-	// confirm that backendAPI has been removed
+	//Confirm that product has been removed
 	products, err := threescaleAPIClient.ListProducts()
 	for _, product := range products.Products {
 		if product.Element.ID == *productResource.Status.ID {
