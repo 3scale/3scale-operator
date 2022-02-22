@@ -39,24 +39,3 @@ func DeleteTenant(tenant *capabilitiesv1alpha1.Tenant, portaClient *porta_client
 
 	return nil
 }
-
-/*
-ConfirmTenantDeleted confirms that tenant has been deleted from 3scale
-- tenant
-- portaClient
-If tenant is not marked as "scheduled_for_deletion" the function returns false
-*/
-func ConfirmTenantDeleted(tenant *capabilitiesv1alpha1.Tenant, portaClient *porta_client_pkg.ThreeScaleClient) (bool, error) {
-	// fetch tenant
-	tenantDef, err := FetchTenant(tenant, portaClient)
-	if err != nil {
-		return false, err
-	}
-
-	// confirm tenant status
-	if tenantDef.Signup.Account.State == "scheduled_for_deletion" {
-		return true, nil
-	}
-
-	return false, nil
-}

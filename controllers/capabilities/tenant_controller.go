@@ -22,10 +22,12 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -34,6 +36,9 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 )
+
+// tenant deletion state
+const scheduledForDeletionState = "scheduled_for_deletion"
 
 // tenant finalizer
 const tenantFinalizer = "tenant.capabilities.3scale.net/finalizer"
@@ -49,9 +54,10 @@ const TenantAdminDomainKeySecretField = "adminURL"
 
 // TenantReconciler reconciles a Tenant object
 type TenantReconciler struct {
-	Client client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Client        client.Client
+	Log           logr.Logger
+	Scheme        *runtime.Scheme
+	EventRecorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants,verbs=get;list;watch;create;update;patch;delete
@@ -93,20 +99,18 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Tenant has been marked for deletion
 	if tenantR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
-		// delete tenant
-		err := controllerhelper.DeleteTenant(tenantR, portaClient)
+		existingTenant, err := controllerhelper.FetchTenant(tenantR, portaClient)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
 
-		// confirm tenant deletion
-		isTenantDeleted, err := controllerhelper.ConfirmTenantDeleted(tenantR, portaClient)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-		if !isTenantDeleted {
-			return ctrl.Result{Requeue: true}, nil
+		// do not attempt to delete tenant that is already scheduled for deletion
+		if existingTenant.Signup.Account.State != scheduledForDeletionState {
+			err := controllerhelper.DeleteTenant(tenantR, portaClient)
+			if err != nil {
+				r.EventRecorder.Eventf(tenantR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
+				return ctrl.Result{}, err
+			}
 		}
 
 		// add or remove finalizer
