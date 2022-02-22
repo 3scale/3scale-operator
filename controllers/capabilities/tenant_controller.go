@@ -133,6 +133,14 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
+	if !controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
+		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
 	changed := tenantR.SetDefaults()
 	if changed {
 		err = r.Client.Update(context.TODO(), tenantR)
@@ -141,14 +149,6 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		reqLogger.Info("Tenant resource updated with defaults")
 		// Expect for re-trigger
-		return ctrl.Result{}, nil
-	}
-
-	if !controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
-		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
 		return ctrl.Result{}, nil
 	}
 
