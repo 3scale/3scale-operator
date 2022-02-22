@@ -104,16 +104,21 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, err
 		}
 
-		// do not attempt to delete tenant that is already scheduled for deletion
-		if existingTenant.Signup.Account.State != scheduledForDeletionState {
-			err := controllerhelper.DeleteTenant(tenantR, portaClient)
-			if err != nil {
-				r.EventRecorder.Eventf(tenantR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
-				return ctrl.Result{}, err
+		// delete tenantCR if tenant is present in 3scale
+		if existingTenant != nil {
+			// do not attempt to delete tenant that is already scheduled for deletion
+			if existingTenant.Signup.Account.State != scheduledForDeletionState {
+				err := controllerhelper.DeleteTenant(tenantR, portaClient)
+				if err != nil {
+					r.EventRecorder.Eventf(tenantR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
+					return ctrl.Result{}, err
+				}
+			} else {
+				reqLogger.Info("Removing tenant CR - tenant is already scheduled for deletion %v", existingTenant.Signup.Account.ID)
 			}
 		}
 
-		// add or remove finalizer
+		// add or remove finalizer, tenant CR will be deleted if tenant in 3scale does not exists, if tenant is deleted or if it's already marked for deletion
 		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
 		if err != nil {
 			return ctrl.Result{}, err
