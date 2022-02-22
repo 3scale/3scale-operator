@@ -156,6 +156,7 @@ func defaultApicastOptions() *component.ApicastOptions {
 		Namespace:                      namespace,
 		ProductionTracingConfig:        &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary},
 		StagingTracingConfig:           &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary},
+		AdditionalPodAnnotations:       map[string]string{APIcastEnvironmentCMAnnotation: "788712912"},
 	}
 }
 

@@ -77,6 +77,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume mutator
 		portsMutator,
+		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
 	if err != nil {
@@ -101,6 +102,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
 		portsMutator,
+		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
@@ -471,6 +473,26 @@ func apicastCustomEnvAnnotationsMutator(desired, existing *appsv1.DeploymentConf
 
 		updated = true
 	}
+	return updated
+}
+
+func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+	// Only reconcile the pod annotation regarding apicast-environment hash
+	desiredVal, ok := desired.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation]
+	if !ok {
+		return false
+	}
+
+	updated := false
+	existingVal, ok := existing.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation]
+	if !ok || existingVal != desiredVal {
+		if existing.Spec.Template.Annotations == nil {
+			existing.Spec.Template.Annotations = map[string]string{}
+		}
+		existing.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation] = desiredVal
+		updated = true
+	}
+
 	return updated
 }
 

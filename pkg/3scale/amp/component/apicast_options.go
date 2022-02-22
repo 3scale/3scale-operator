@@ -112,6 +112,8 @@ type ApicastOptions struct {
 	StagingHTTPProxy     *string
 	StagingHTTPSProxy    *string
 	StagingNoProxy       *string
+
+	AdditionalPodAnnotations map[string]string `validate:"required"`
 }
 
 func NewApicastOptions() *ApicastOptions {
