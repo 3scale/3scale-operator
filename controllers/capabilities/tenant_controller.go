@@ -108,7 +108,7 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if existingTenant != nil {
 			// do not attempt to delete tenant that is already scheduled for deletion
 			if existingTenant.Signup.Account.State != scheduledForDeletionState {
-				err := controllerhelper.DeleteTenant(tenantR, portaClient)
+				err := portaClient.DeleteTenant(tenantR.Status.TenantId)
 				if err != nil {
 					r.EventRecorder.Eventf(tenantR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
 					return ctrl.Result{}, err

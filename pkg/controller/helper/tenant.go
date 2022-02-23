@@ -25,17 +25,3 @@ func FetchTenant(tenant *capabilitiesv1alpha1.Tenant, portaClient *porta_client_
 	}
 	return tenantDef, nil
 }
-
-/*
-DeleteTenant deletes tenant from 3scale
-- tenant
-- portaClient
-*/
-func DeleteTenant(tenant *capabilitiesv1alpha1.Tenant, portaClient *porta_client_pkg.ThreeScaleClient) error {
-	err := portaClient.DeleteTenant(tenant.Status.TenantId)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
