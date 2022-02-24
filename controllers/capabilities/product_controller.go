@@ -31,6 +31,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"strings"
 )
 
 // ProductReconciler reconciles a Product object
@@ -64,6 +65,16 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
+		return ctrl.Result{}, err
+	}
+
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), product.GetNamespace(), product.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = addLabels(product, providerAccount)
+	if err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -376,6 +387,29 @@ func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.P
 		if product.Element.ID == *productResource.Status.ID {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func addLabels(object controllerutil.Object, providerAccount *controllerhelper.ProviderAccount) error {
+	owner := strings.Split(providerAccount.AdminURLStr[8:len(providerAccount.AdminURLStr)], "-")
+
+	labels := object.GetLabels()
+	if labels == nil {
+		labels = map[string]string{}
+	}
+
+	labelExists := false
+	for _, label := range labels {
+		if label == owner[0] {
+			labelExists = true
+		}
+	}
+
+	if !labelExists {
+		labels["ownerRef"] = owner[0]
+		object.SetLabels(labels)
 	}
 
 	return nil
