@@ -55,6 +55,7 @@ The following diagram shows available custom resource definitions and their rela
    * [Tenant custom resource](#tenant-custom-resource)
       * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
       * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
+      * [Tenant deletion](#tenant-deletion)
    * [DeveloperAccount custom resource](#developeraccount-custom-resource)
       * [DeveloperAccount custom resource status field](#developeraccount-custom-resource-status-field)
       * [Link your DeveloperAccount to your 3scale tenant or provider account](#link-your-developeraccount-to-your-3scale-tenant-or-provider-account)
@@ -1170,6 +1171,10 @@ stringData:
 ```
 
 Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more information.
+
+### Tenant deletion
+
+If a tenant has been created via CR it can be marked for deletion in 3scale API Management solution by deleting the tenant CR. 
 
 ## DeveloperAccount custom resource
 
