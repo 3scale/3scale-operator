@@ -67,7 +67,7 @@ func (r *TenantInternalReconciler) Run() error {
 // * tenant will exist
 // * tenant's attributes will be updated if required
 func (r *TenantInternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, error) {
-	tenantDef, err := r.fetchTenant()
+	tenantDef, err := controllerhelper.FetchTenant(r.tenantR, r.portaClient)
 	if err != nil {
 		return nil, err
 	}
@@ -87,22 +87,6 @@ func (r *TenantInternalReconciler) reconcileTenant() (*porta_client_pkg.Tenant, 
 		}
 	}
 
-	return tenantDef, nil
-}
-
-func (r *TenantInternalReconciler) fetchTenant() (*porta_client_pkg.Tenant, error) {
-	if r.tenantR.Status.TenantId == 0 {
-		// tenantId not in status field
-		// Tenant has to be created
-		return nil, nil
-	}
-
-	tenantDef, err := r.portaClient.ShowTenant(r.tenantR.Status.TenantId)
-	if err != nil && porta_client_pkg.IsNotFound(err) {
-		return nil, nil
-	} else if err != nil {
-		return nil, err
-	}
 	return tenantDef, nil
 }
 

@@ -22,17 +22,26 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 )
+
+// tenant deletion state
+const scheduledForDeletionState = "scheduled_for_deletion"
+
+// tenant finalizer
+const tenantFinalizer = "tenant.capabilities.3scale.net/finalizer"
 
 // Secret field name with Tenant's admin user password
 const TenantAdminPasswordSecretField = "admin_password"
@@ -45,9 +54,10 @@ const TenantAdminDomainKeySecretField = "adminURL"
 
 // TenantReconciler reconciles a Tenant object
 type TenantReconciler struct {
-	Client client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Client        client.Client
+	Log           logr.Logger
+	Scheme        *runtime.Scheme
+	EventRecorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants,verbs=get;list;watch;create;update;patch;delete
@@ -73,17 +83,6 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	changed := tenantR.SetDefaults()
-	if changed {
-		err = r.Client.Update(context.TODO(), tenantR)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		reqLogger.Info("Tenant resource updated with defaults")
-		// Expect for re-trigger
-		return ctrl.Result{}, nil
-	}
-
 	masterAccessToken, err := r.FetchMasterCredentials(r.Client, tenantR)
 	if err != nil {
 		reqLogger.Error(err, "Error fetching master credentials secret")
@@ -96,6 +95,61 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		reqLogger.Error(err, "Error creating porta client object")
 		// Error reading the object - requeue the request.
 		return ctrl.Result{}, err
+	}
+
+	// Tenant has been marked for deletion
+	if tenantR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
+		existingTenant, err := controllerhelper.FetchTenant(tenantR, portaClient)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		// delete tenantCR if tenant is present in 3scale
+		if existingTenant != nil {
+			// do not attempt to delete tenant that is already scheduled for deletion
+			if existingTenant.Signup.Account.State != scheduledForDeletionState {
+				err := portaClient.DeleteTenant(tenantR.Status.TenantId)
+				if err != nil {
+					r.EventRecorder.Eventf(tenantR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
+					return ctrl.Result{}, err
+				}
+			} else {
+				reqLogger.Info("Removing tenant CR - tenant is already scheduled for deletion %v", existingTenant.Signup.Account.ID)
+			}
+		}
+
+		// add or remove finalizer, tenant CR will be deleted if tenant in 3scale does not exists, if tenant is deleted or if it's already marked for deletion
+		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	// Ignore deleted resources, this can happen when foregroundDeletion is enabled
+	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
+	if tenantR.GetDeletionTimestamp() != nil {
+		return ctrl.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
+		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	changed := tenantR.SetDefaults()
+	if changed {
+		err = r.Client.Update(context.TODO(), tenantR)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		reqLogger.Info("Tenant resource updated with defaults")
+		// Expect for re-trigger
+		return ctrl.Result{}, nil
 	}
 
 	internalReconciler := NewTenantInternalReconciler(r.Client, tenantR, portaClient, reqLogger)
