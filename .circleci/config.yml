@@ -362,7 +362,7 @@ jobs:
 
   tag-operator-image-master:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202201-02
       docker_layer_caching: true
     steps:
       - attach-workspace
@@ -390,7 +390,7 @@ jobs:
 
   tag-operator-image-release:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202201-02
       docker_layer_caching: true
     steps:
       - attach-workspace
@@ -410,7 +410,7 @@ jobs:
 
   deploy_templates:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202201-02
       docker_layer_caching: true
     resource_class: large
     steps:
