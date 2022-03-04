@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
@@ -23,6 +24,10 @@ type ApicastOptionsProvider struct {
 	client         client.Client
 	secretSource   *helper.SecretSource
 }
+
+const (
+	APIcastEnvironmentCMAnnotation = "apps.3scale.net/env-configmap-hash"
+)
 
 func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {
 	return &ApicastOptionsProvider{
@@ -94,6 +99,9 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	}
 
 	a.setProxyConfigurations()
+
+	// Pod Annotations. Used to rollout apicast deployment if any secrets/configmap changes
+	a.apicastOptions.AdditionalPodAnnotations = a.additionalPodAnnotations()
 
 	err = a.apicastOptions.Validate()
 	if err != nil {
@@ -413,4 +421,24 @@ func (a *ApicastOptionsProvider) setProductionProxyConfigurations() {
 	a.apicastOptions.ProductionHTTPProxy = a.apimanager.Spec.Apicast.ProductionSpec.HTTPProxy
 	a.apicastOptions.ProductionHTTPSProxy = a.apimanager.Spec.Apicast.ProductionSpec.HTTPSProxy
 	a.apicastOptions.ProductionNoProxy = a.apimanager.Spec.Apicast.ProductionSpec.NoProxy
+}
+
+func (a *ApicastOptionsProvider) additionalPodAnnotations() map[string]string {
+	annotations := map[string]string{
+		APIcastEnvironmentCMAnnotation: a.envConfigMapHash(),
+	}
+
+	return annotations
+}
+
+// APIcast environment hash
+// When any of the fields used to compute the hash change the value, the hash will change
+// and the apicast deployment will rollout
+func (a *ApicastOptionsProvider) envConfigMapHash() string {
+	h := fnv.New32a()
+	h.Write([]byte(a.apicastOptions.ManagementAPI))
+	h.Write([]byte(a.apicastOptions.OpenSSLVerify))
+	h.Write([]byte(a.apicastOptions.ResponseCodes))
+	val := h.Sum32()
+	return fmt.Sprint(val)
 }

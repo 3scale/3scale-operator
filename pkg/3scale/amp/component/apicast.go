@@ -31,6 +31,8 @@ const (
 
 	HTTPSCertificatesMountPath  = "/var/run/secrets/tls"
 	HTTPSCertificatesVolumeName = "https-certificates"
+
+	APIcastEnvironmentConfigMapName = "apicast-environment"
 )
 
 const (
@@ -132,11 +134,8 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: apicast.Options.StagingPodTemplateLabels,
-					Annotations: map[string]string{
-						"prometheus.io/scrape": "true",
-						"prometheus.io/port":   "9421",
-					},
+					Labels:      apicast.Options.StagingPodTemplateLabels,
+					Annotations: apicast.podAnnotations(),
 				},
 				Spec: v1.PodSpec{
 					Affinity:           apicast.Options.StagingAffinity,
@@ -228,11 +227,8 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: apicast.Options.ProductionPodTemplateLabels,
-					Annotations: map[string]string{
-						"prometheus.io/scrape": "true",
-						"prometheus.io/port":   "9421",
-					},
+					Labels:      apicast.Options.ProductionPodTemplateLabels,
+					Annotations: apicast.podAnnotations(),
 				},
 				Spec: v1.PodSpec{
 					Affinity:           apicast.Options.ProductionAffinity,
@@ -291,9 +287,9 @@ func (apicast *Apicast) buildApicastCommonEnv() []v1.EnvVar {
 	result := []v1.EnvVar{
 		helper.EnvVarFromSecret("THREESCALE_PORTAL_ENDPOINT", "system-master-apicast", SystemSecretSystemMasterApicastProxyConfigsEndpointFieldName),
 		helper.EnvVarFromSecret("BACKEND_ENDPOINT_OVERRIDE", BackendSecretBackendListenerSecretName, BackendSecretBackendListenerServiceEndpointFieldName),
-		helper.EnvVarFromConfigMap("APICAST_MANAGEMENT_API", "apicast-environment", "APICAST_MANAGEMENT_API"),
-		helper.EnvVarFromConfigMap("OPENSSL_VERIFY", "apicast-environment", "OPENSSL_VERIFY"),
-		helper.EnvVarFromConfigMap("APICAST_RESPONSE_CODES", "apicast-environment", "APICAST_RESPONSE_CODES"),
+		helper.EnvVarFromConfigMap("APICAST_MANAGEMENT_API", APIcastEnvironmentConfigMapName, "APICAST_MANAGEMENT_API"),
+		helper.EnvVarFromConfigMap("OPENSSL_VERIFY", APIcastEnvironmentConfigMapName, "OPENSSL_VERIFY"),
+		helper.EnvVarFromConfigMap("APICAST_RESPONSE_CODES", APIcastEnvironmentConfigMapName, "APICAST_RESPONSE_CODES"),
 	}
 
 	if apicast.Options.ExtendedMetrics {
@@ -808,6 +804,19 @@ func (apicast *Apicast) stagingServicePorts() []v1.ServicePort {
 	}
 
 	return ports
+}
+
+func (apicast *Apicast) podAnnotations() map[string]string {
+	annotations := map[string]string{
+		"prometheus.io/scrape": "true",
+		"prometheus.io/port":   "9421",
+	}
+
+	for key, val := range apicast.Options.AdditionalPodAnnotations {
+		annotations[key] = val
+	}
+
+	return annotations
 }
 
 // AnnotationsValuesWithAnnotationKeyPrefix returns the annotation values from

@@ -123,6 +123,7 @@ func (a *Apicast) options() (*component.ApicastOptions, error) {
 
 	// Currently, only used for monitoring resources. Thus, it does not apply to templates.
 	ao.Namespace = "${NAMESPACE}"
+	ao.AdditionalPodAnnotations = map[string]string{}
 
 	err := ao.Validate()
 	return ao, err
