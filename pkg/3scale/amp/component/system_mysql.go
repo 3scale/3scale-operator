@@ -70,8 +70,7 @@ func (mysql *SystemMysql) ExtraConfigConfigMap() *v1.ConfigMap {
 			Labels: mysql.Options.DeploymentLabels,
 		},
 		Data: map[string]string{
-			"mysql-charset.cnf": `
-[client]
+			"mysql-charset.cnf": `[client]
 default-character-set = utf8
 
 [mysql]
@@ -81,8 +80,7 @@ default-character-set = utf8
 character-set-server = utf8
 collation-server = utf8_unicode_ci
 `,
-			"mysql-default-authentication-plugin.cnf": `
-[mysqld]
+			"mysql-default-authentication-plugin.cnf": `[mysqld]
 default_authentication_plugin=mysql_native_password
 `,
 		},

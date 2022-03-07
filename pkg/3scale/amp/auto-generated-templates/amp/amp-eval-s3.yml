@@ -1217,8 +1217,7 @@ objects:
     name: mysql-main-conf
 - apiVersion: v1
   data:
-    mysql-charset.cnf: |2
-
+    mysql-charset.cnf: |
       [client]
       default-character-set = utf8
 
@@ -1228,8 +1227,7 @@ objects:
       [mysqld]
       character-set-server = utf8
       collation-server = utf8_unicode_ci
-    mysql-default-authentication-plugin.cnf: |2
-
+    mysql-default-authentication-plugin.cnf: |
       [mysqld]
       default_authentication_plugin=mysql_native_password
   kind: ConfigMap
