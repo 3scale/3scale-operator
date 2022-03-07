@@ -904,8 +904,7 @@ func (u *UpgradeApiManager) upgradeMysqlConfigmap() (reconcile.Result, error) {
 	}
 
 	if _, ok := mysqlExtraConfigMap.Data["mysql-default-authentication-plugin.cnf"]; !ok {
-		mysqlExtraConfigMap.Data["mysql-default-authentication-plugin.cnf"] = `
-[mysqld]
+		mysqlExtraConfigMap.Data["mysql-default-authentication-plugin.cnf"] = `[mysqld]
 default_authentication_plugin=mysql_native_password
 `
 		err = u.UpdateResource(mysqlExtraConfigMap)
