@@ -69,7 +69,24 @@ func (mysql *SystemMysql) ExtraConfigConfigMap() *v1.ConfigMap {
 			Name:   "mysql-extra-conf",
 			Labels: mysql.Options.DeploymentLabels,
 		},
-		Data: map[string]string{"mysql-charset.cnf": "[client]\ndefault-character-set = utf8\n\n[mysql]\ndefault-character-set = utf8\n\n[mysqld]\ncharacter-set-server = utf8\ncollation-server = utf8_unicode_ci\n"}}
+		Data: map[string]string{
+			"mysql-charset.cnf": `
+[client]
+default-character-set = utf8
+
+[mysql]
+default-character-set = utf8
+
+[mysqld]
+character-set-server = utf8
+collation-server = utf8_unicode_ci
+`,
+			"mysql-default-authentication-plugin.cnf": `
+[mysqld]
+default_authentication_plugin=mysql_native_password
+`,
+		},
+	}
 }
 
 func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
