@@ -165,11 +165,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	discoveryClientTenant, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
 	if err = (&capabilitiescontroller.TenantReconciler{
-		Client:        mgr.GetClient(),
-		Log:           ctrl.Log.WithName("controllers").WithName("Tenant"),
-		Scheme:        mgr.GetScheme(),
-		EventRecorder: mgr.GetEventRecorderFor("Tenant"),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			ctrl.Log.WithName("controllers").WithName("Tenant"),
+			discoveryClientTenant,
+			mgr.GetEventRecorderFor("Tenant")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Tenant")
 		os.Exit(1)

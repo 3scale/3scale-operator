@@ -19,21 +19,21 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 
-	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 )
 
 // tenant deletion state
@@ -46,18 +46,18 @@ const tenantFinalizer = "tenant.capabilities.3scale.net/finalizer"
 const TenantAdminPasswordSecretField = "admin_password"
 
 // Tenant's credentials secret field name for access token
-const TenantProviderKeySecretField = "token"
+const TenantAccessTokenSecretField = "token"
 
 // Tenant's credentials secret field name for admin domain url
 const TenantAdminDomainKeySecretField = "adminURL"
 
 // TenantReconciler reconciles a Tenant object
 type TenantReconciler struct {
-	Client        client.Client
-	Log           logr.Logger
-	Scheme        *runtime.Scheme
-	EventRecorder record.EventRecorder
+	*reconcilers.BaseReconciler
 }
+
+// blank assignment to verify that TenantReconciler implements reconcile.Reconciler
+var _ reconcile.Reconciler = &TenantReconciler{}
 
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants/status,verbs=get;update;patch
@@ -65,11 +65,12 @@ type TenantReconciler struct {
 
 func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	reqLogger := r.Log.WithValues("tenant", req.NamespacedName)
+	reqLogger := r.Logger().WithValues("tenant", req.NamespacedName)
+	reqLogger.Info("Reconcile Tenant", "Operator version", version.Version)
 
 	// Fetch the Tenant instance
 	tenantR := &capabilitiesv1alpha1.Tenant{}
-	err := r.Client.Get(context.TODO(), req.NamespacedName, tenantR)
+	err := r.Client().Get(context.TODO(), req.NamespacedName, tenantR)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -82,7 +83,15 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	masterAccessToken, err := r.FetchMasterCredentials(r.Client, tenantR)
+	if reqLogger.V(1).Enabled() {
+		jsonData, err := json.MarshalIndent(tenantR, "", "  ")
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		reqLogger.V(1).Info(string(jsonData))
+	}
+
+	masterAccessToken, err := r.fetchMasterCredentials(tenantR)
 	if err != nil {
 		reqLogger.Error(err, "Error fetching master credentials secret")
 		// Error reading the object - requeue the request.
@@ -98,7 +107,7 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Tenant has been marked for deletion
 	if tenantR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
-		existingTenant, err := controllerhelper.FetchTenant(tenantR, portaClient)
+		existingTenant, err := controllerhelper.FetchTenant(tenantR.Status.TenantId, portaClient)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -109,7 +118,7 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if existingTenant.Signup.Account.State != scheduledForDeletionState {
 				err := portaClient.DeleteTenant(tenantR.Status.TenantId)
 				if err != nil {
-					r.EventRecorder.Eventf(tenantR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
+					r.EventRecorder().Eventf(tenantR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
 					return ctrl.Result{}, err
 				}
 			} else {
@@ -117,8 +126,8 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			}
 		}
 
-		// add or remove finalizer, tenant CR will be deleted if tenant in 3scale does not exists, if tenant is deleted or if it's already marked for deletion
-		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
+		controllerutil.RemoveFinalizer(tenantR, tenantFinalizer)
+		err = r.UpdateResource(tenantR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -133,7 +142,8 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
-		err = controllerhelper.ReconcileFinalizers(tenantR, r.Client, tenantFinalizer)
+		controllerutil.AddFinalizer(tenantR, tenantFinalizer)
+		err = r.UpdateResource(tenantR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -142,7 +152,7 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	changed := tenantR.SetDefaults()
 	if changed {
-		err = r.Client.Update(context.TODO(), tenantR)
+		err = r.UpdateResource(tenantR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -151,12 +161,16 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	internalReconciler := NewTenantInternalReconciler(r.Client, tenantR, portaClient, reqLogger)
-	err = internalReconciler.Run()
+	internalReconciler := NewTenantInternalReconciler(r.BaseReconciler, tenantR, portaClient, reqLogger)
+	res, err := internalReconciler.Run()
 	if err != nil {
 		reqLogger.Error(err, "Error in tenant reconciliation")
 		// Error reading the object - requeue the request.
 		return ctrl.Result{}, err
+	}
+
+	if res.Requeue {
+		return res, nil
 	}
 
 	reqLogger.Info("Tenant reconciled successfully")
@@ -169,11 +183,11 @@ func (r *TenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// FetchMasterCredentials get secret using k8s client
-func (r *TenantReconciler) FetchMasterCredentials(k8sClient client.Client, tenantR *capabilitiesv1alpha1.Tenant) (string, error) {
+func (r *TenantReconciler) fetchMasterCredentials(tenantR *capabilitiesv1alpha1.Tenant) (string, error) {
 	masterCredentialsSecret := &v1.Secret{}
 
-	err := k8sClient.Get(context.TODO(), tenantR.MasterSecretKey(), masterCredentialsSecret)
+	err := r.Client().Get(context.TODO(), tenantR.MasterSecretKey(), masterCredentialsSecret)
+
 	if err != nil {
 		return "", err
 	}
