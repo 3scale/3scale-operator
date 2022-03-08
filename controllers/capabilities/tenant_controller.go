@@ -107,6 +107,19 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Tenant has been marked for deletion
 	if tenantR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
+		// First remove the finalizer
+		// Then try to delete the tenant.
+		// If the tenant cannot be deleted for any reason,
+		// the controller cannot know whether it is transient error or not.
+		// If finalizer was removed after actual tenant deletion in 3scale, on not transient error
+		// the controller would keep trying (with exponential backoff retry intervals)
+		// and the CR would not be deleted until the error is fixed externally.
+		controllerutil.RemoveFinalizer(tenantR, tenantFinalizer)
+		err = r.UpdateResource(tenantR)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
 		existingTenant, err := controllerhelper.FetchTenant(tenantR.Status.TenantId, portaClient)
 		if err != nil {
 			return ctrl.Result{}, err
@@ -124,12 +137,6 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			} else {
 				reqLogger.Info("Removing tenant CR - tenant is already scheduled for deletion %v", existingTenant.Signup.Account.ID)
 			}
-		}
-
-		controllerutil.RemoveFinalizer(tenantR, tenantFinalizer)
-		err = r.UpdateResource(tenantR)
-		if err != nil {
-			return ctrl.Result{}, err
 		}
 
 		return ctrl.Result{}, nil
