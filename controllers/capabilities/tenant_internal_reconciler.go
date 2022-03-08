@@ -142,23 +142,19 @@ func (r *TenantInternalReconciler) reconcileAdminUser(tenantDef *porta_client_pk
 
 // This method makes sure secret with tenant's access_token exists
 func (r *TenantInternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_client_pkg.Tenant) error {
-	tenantProviderKeySecretNN := types.NamespacedName{
-		Name:      r.tenantR.Spec.TenantSecretRef.Name,
-		Namespace: r.tenantR.Spec.TenantSecretRef.Namespace,
-	}
-	tenantProviderKeySecret, err := r.findAccessTokenSecret(tenantProviderKeySecretNN)
+	tenantProviderKeySecret, err := r.findAccessTokenSecret(r.tenantR.TenantSecretKey())
 	if err != nil {
 		return err
 	}
 
 	if tenantProviderKeySecret == nil {
-		err = r.createTenantProviderKeySecret(tenantDef, tenantProviderKeySecretNN)
+		err = r.createTenantProviderKeySecret(tenantDef, r.tenantR.TenantSecretKey())
 		if err != nil {
 			return err
 		}
 	} else {
 		r.logger.Info("Admin user access token secret already exists",
-			"Secret NS", tenantProviderKeySecretNN.Namespace, "Secret name", tenantProviderKeySecretNN.Name)
+			"key", r.tenantR.TenantSecretKey())
 	}
 	return nil
 }
@@ -184,21 +180,15 @@ func (r *TenantInternalReconciler) getAdminPassword() (string, error) {
 	// Get tenant admin password from secret reference
 	tenantAdminSecret := &v1.Secret{}
 
-	err := r.k8sClient.Get(context.TODO(),
-		types.NamespacedName{
-			Name:      r.tenantR.Spec.PasswordCredentialsRef.Name,
-			Namespace: r.tenantR.Namespace,
-		},
-		tenantAdminSecret)
-
+	err := r.k8sClient.Get(context.TODO(), r.tenantR.AdminPassSecretKey(), tenantAdminSecret)
 	if err != nil {
 		return "", err
 	}
 
 	passwordByteArray, ok := tenantAdminSecret.Data[TenantAdminPasswordSecretField]
 	if !ok {
-		return "", fmt.Errorf("Not found admin password secret (ns: %s, name: %s) attribute: %s",
-			r.tenantR.Namespace, r.tenantR.Spec.PasswordCredentialsRef.Name,
+		return "", fmt.Errorf("Not found admin password secret (%s) attribute: %s",
+			r.tenantR.AdminPassSecretKey(),
 			TenantAdminPasswordSecretField)
 	}
 

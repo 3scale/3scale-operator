@@ -26,7 +26,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -174,21 +173,15 @@ func (r *TenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *TenantReconciler) FetchMasterCredentials(k8sClient client.Client, tenantR *capabilitiesv1alpha1.Tenant) (string, error) {
 	masterCredentialsSecret := &v1.Secret{}
 
-	err := k8sClient.Get(context.TODO(),
-		types.NamespacedName{
-			Name:      tenantR.Spec.MasterCredentialsRef.Name,
-			Namespace: tenantR.Spec.MasterCredentialsRef.Namespace,
-		},
-		masterCredentialsSecret)
-
+	err := k8sClient.Get(context.TODO(), tenantR.MasterSecretKey(), masterCredentialsSecret)
 	if err != nil {
 		return "", err
 	}
 
 	masterAccessTokenByteArray, ok := masterCredentialsSecret.Data[component.SystemSecretSystemSeedMasterAccessTokenFieldName]
 	if !ok {
-		return "", fmt.Errorf("Key not found in master secret (ns: %s, name: %s) key: %s",
-			tenantR.Spec.MasterCredentialsRef.Namespace, tenantR.Spec.MasterCredentialsRef.Name,
+		return "", fmt.Errorf("Key not found in master secret (%s) key: %s",
+			tenantR.MasterSecretKey(),
 			component.SystemSecretSystemSeedMasterAccessTokenFieldName)
 	}
 
