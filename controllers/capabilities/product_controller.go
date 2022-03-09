@@ -20,17 +20,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
-	"github.com/3scale/3scale-operator/pkg/helper"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/version"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 )
 
 // ProductReconciler reconciles a Product object
@@ -102,27 +104,6 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
-	}
-
-	if product.Spec.ProviderAccountRef != nil {
-		providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), product.GetNamespace(), product.Spec.ProviderAccountRef, r.Logger())
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-		// Retrieve UID of tenant CR that owns the Product CR
-		tenantCR, err := controllerhelper.RetrieveTenantCR(providerAccount, r.Client())
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-		// If tenant CR is found, set it's UID as ownerReference in the Product CR
-		if tenantCR != nil {
-			err := controllerhelper.SetOwnersReference(product, r.Client(), tenantCR)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-		}
 	}
 
 	if product.SetDefaults(reqLogger) {
