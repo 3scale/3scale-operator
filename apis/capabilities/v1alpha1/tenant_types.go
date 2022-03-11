@@ -22,6 +22,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -77,6 +78,45 @@ func (t *Tenant) SetDefaults() bool {
 		changed = true
 	}
 	return changed
+}
+
+func (t *Tenant) MasterSecretKey() client.ObjectKey {
+	namespace := t.Spec.MasterCredentialsRef.Namespace
+
+	if namespace == "" {
+		namespace = t.Namespace
+	}
+
+	return client.ObjectKey{
+		Name:      t.Spec.MasterCredentialsRef.Name,
+		Namespace: namespace,
+	}
+}
+
+func (t *Tenant) AdminPassSecretKey() client.ObjectKey {
+	namespace := t.Spec.PasswordCredentialsRef.Namespace
+
+	if namespace == "" {
+		namespace = t.Namespace
+	}
+
+	return client.ObjectKey{
+		Name:      t.Spec.PasswordCredentialsRef.Name,
+		Namespace: namespace,
+	}
+}
+
+func (t *Tenant) TenantSecretKey() client.ObjectKey {
+	namespace := t.Spec.TenantSecretRef.Namespace
+
+	if namespace == "" {
+		namespace = t.Namespace
+	}
+
+	return client.ObjectKey{
+		Name:      t.Spec.TenantSecretRef.Name,
+		Namespace: namespace,
+	}
 }
 
 // +kubebuilder:object:root=true
