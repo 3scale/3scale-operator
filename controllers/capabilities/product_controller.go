@@ -85,11 +85,16 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, err
 		}
 
-		err = r.removeProduct(product)
-		if err != nil {
-			r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "Failed to delete product", "%v", err)
-			return ctrl.Result{}, err
+		if product.Status.ID != nil {
+			err = r.removeProduct(product)
+			if err != nil {
+				r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "Failed to delete product", "%v", err)
+				return ctrl.Result{}, err
+			}
+		} else {
+			return ctrl.Result{}, fmt.Errorf("product %s .status.ID is missing, cannot remove product", product.Spec.Name)
 		}
+
 
 		return ctrl.Result{}, nil
 	}

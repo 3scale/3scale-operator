@@ -81,10 +81,16 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Ignore deleted Backends, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if backend.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(backend, backendFinalizer) {
-		err = r.removeBackend(backend)
-		if err != nil {
-			return ctrl.Result{}, err
+		// Attempt to remove backend only if backend.Status.ID is present
+		if backend.Status.ID != nil {
+			err = r.removeBackend(backend)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		} else {
+			return ctrl.Result{}, fmt.Errorf("backend %s .status.ID is missing, cannot remove backend", backend.Spec.Name)
 		}
+
 
 		err = controllerhelper.ReconcileFinalizers(backend, r.Client(), backendFinalizer)
 		if err != nil {
