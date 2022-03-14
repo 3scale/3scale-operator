@@ -122,24 +122,22 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	if backend.Spec.ProviderAccountRef != nil {
-		providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backend.GetNamespace(), backend.Spec.ProviderAccountRef, r.Logger())
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backend.GetNamespace(), backend.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Retrieve ownersReference of tenant CR that owns the Backend CR
+	tenantCR, err := controllerhelper.RetrieveTenantCR(providerAccount, r.Client(), r.Logger())
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// If tenant CR is found, set it's ownersReference as ownerReference in the BackendCR CR
+	if tenantCR != nil {
+		err := controllerhelper.SetOwnersReference(backend, r.Client(), tenantCR)
 		if err != nil {
 			return ctrl.Result{}, err
-		}
-
-		// Retrieve ownersReference of tenant CR that owns the Backend CR
-		tenantCR, err := controllerhelper.RetrieveTenantCR(providerAccount, r.Client(), r.Logger())
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-		// If tenant CR is found, set it's ownersReference as ownerReference in the BackendCR CR
-		if tenantCR != nil {
-			err := controllerhelper.SetOwnersReference(backend, r.Client(), tenantCR)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
 		}
 	}
 

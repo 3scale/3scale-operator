@@ -76,10 +76,10 @@ retrieveTenantSecret retrieves tenants secret
 - k8client
 - tenantCR
 */
-func retrieveTenantSecret(client k8sclient.Client, tenantCR *capabilitiesv1alpha1.Tenant) (corev1.Secret, error) {
-	secret := corev1.Secret{}
+func retrieveTenantSecret(client k8sclient.Client, tenantCR *capabilitiesv1alpha1.Tenant) (*corev1.Secret, error) {
+	secret := &corev1.Secret{}
 
-	err := client.Get(context.TODO(), k8sclient.ObjectKey{Name: tenantCR.Spec.TenantSecretRef.Name, Namespace: tenantCR.Spec.TenantSecretRef.Namespace}, &secret)
+	err := client.Get(context.TODO(), k8sclient.ObjectKey{Name: tenantCR.Spec.TenantSecretRef.Name, Namespace: tenantCR.Spec.TenantSecretRef.Namespace}, secret)
 	if err != nil {
 		return secret, err
 	}
