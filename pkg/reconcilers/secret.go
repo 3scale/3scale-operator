@@ -37,27 +37,55 @@ func DefaultsOnlySecretMutator(existingObj, desiredObj common.KubernetesObject) 
 	return updated, nil
 }
 
-func SecretReconcileField(desired, existing *v1.Secret, fieldName string) bool {
-	updated := false
+// SecretMutateFn is a function which mutates the existing Secret into it's desired state.
+type SecretMutateFn func(desired, existing *v1.Secret) bool
 
-	if existing.Data == nil {
-		existing.Data = map[string][]byte{}
-	}
-	if existing.StringData == nil {
-		existing.StringData = map[string]string{}
-	}
+func DeploymentSecretMutator(opts ...SecretMutateFn) MutateFn {
+	return func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+		existing, ok := existingObj.(*v1.Secret)
+		if !ok {
+			return false, fmt.Errorf("%T is not a *v1.Secret", existingObj)
+		}
+		desired, ok := desiredObj.(*v1.Secret)
+		if !ok {
+			return false, fmt.Errorf("%T is not a *v1.Secret", desiredObj)
+		}
 
-	valB, ok := existing.Data[fieldName]
-	if !ok {
-		existing.StringData[fieldName] = desired.StringData[fieldName]
-		updated = true
-	} else {
-		valStr := string(valB)
-		if desired.StringData[fieldName] != valStr {
-			// should merge existing key in Data struct
+		update := false
+
+		// Loop through each option
+		for _, opt := range opts {
+			tmpUpdate := opt(desired, existing)
+			update = update || tmpUpdate
+		}
+
+		return update, nil
+	}
+}
+
+func SecretReconcileField(fieldName string) func(desired, existing *v1.Secret) bool {
+	return func(desired, existing *v1.Secret) bool {
+		updated := false
+
+		if existing.Data == nil {
+			existing.Data = map[string][]byte{}
+		}
+		if existing.StringData == nil {
+			existing.StringData = map[string]string{}
+		}
+
+		valB, ok := existing.Data[fieldName]
+		if !ok {
 			existing.StringData[fieldName] = desired.StringData[fieldName]
 			updated = true
+		} else {
+			valStr := string(valB)
+			if desired.StringData[fieldName] != valStr {
+				// should merge existing key in Data struct
+				existing.StringData[fieldName] = desired.StringData[fieldName]
+				updated = true
+			}
 		}
+		return updated
 	}
-	return updated
 }
