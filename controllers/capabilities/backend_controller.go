@@ -97,8 +97,8 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			return ctrl.Result{}, fmt.Errorf("backend %s .status.ID is missing, cannot remove backend", backend.Spec.Name)
 		}
 
-
-		err = controllerhelper.ReconcileFinalizers(backend, r.Client(), backendFinalizer)
+		controllerutil.RemoveFinalizer(backend, backendFinalizer)
+		err = r.UpdateResource(backend)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -113,7 +113,8 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !controllerutil.ContainsFinalizer(backend, backendFinalizer) {
-		err = controllerhelper.ReconcileFinalizers(backend, r.Client(), backendFinalizer)
+		controllerutil.AddFinalizer(backend, backendFinalizer)
+		err = r.UpdateResource(backend)
 		if err != nil {
 			return ctrl.Result{}, err
 		}

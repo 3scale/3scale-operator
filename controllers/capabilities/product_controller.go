@@ -80,7 +80,8 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Ignore deleted Products, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if product.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(product, productFinalizer) {
-		err = controllerhelper.ReconcileFinalizers(product, r.Client(), productFinalizer)
+		controllerutil.RemoveFinalizer(product, productFinalizer)
+		err = r.UpdateResource(product)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -104,7 +105,8 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !controllerutil.ContainsFinalizer(product, productFinalizer) {
-		err = controllerhelper.ReconcileFinalizers(product, r.Client(), productFinalizer)
+		controllerutil.AddFinalizer(product, productFinalizer)
+		err = r.UpdateResource(product)
 		if err != nil {
 			return ctrl.Result{}, err
 		}

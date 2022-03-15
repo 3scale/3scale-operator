@@ -1136,7 +1136,8 @@ type Product struct {
 	Status ProductStatus `json:"status,omitempty"`
 }
 
-
+// RemoveBackendReferencesRequired returns true if product CR has mentions of a backend that matches
+// backendSystemName in: backendUsage, Pricing Plans, Limits
 func (product *Product) RemoveBackendReferencesRequired(backendSystemName string) bool {
 	removalRequired := false
 
