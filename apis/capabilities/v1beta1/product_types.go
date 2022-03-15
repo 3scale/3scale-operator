@@ -1136,6 +1136,35 @@ type Product struct {
 	Status ProductStatus `json:"status,omitempty"`
 }
 
+
+func (product *Product) RemoveBackendReferencesRequired(backendSystemName string) bool {
+	removalRequired := false
+
+	// Check if backend is mentioned in the backendUsages
+	if _, ok := product.Spec.BackendUsages[backendSystemName]; ok {
+		removalRequired = true
+	}
+
+	for _, applicationPlan := range product.Spec.ApplicationPlans {
+		// For each application plan check pricing rules mentions of the backend
+		for _, pricingRule := range applicationPlan.PricingRules {
+			if pricingRule.MetricMethodRef.BackendSystemName != nil && *pricingRule.MetricMethodRef.BackendSystemName == backendSystemName {
+				removalRequired = true
+			}
+		}
+
+		// For each application plan check plan limits mentions of the backend
+		for _, planLimits := range applicationPlan.Limits {
+			if planLimits.MetricMethodRef.BackendSystemName != nil && *planLimits.MetricMethodRef.BackendSystemName == backendSystemName {
+				removalRequired = true
+			}
+		}
+	}
+
+	return removalRequired
+}
+
+
 func (product *Product) SetDefaults(logger logr.Logger) bool {
 	updated := false
 

@@ -86,9 +86,12 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if backend.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(backend, backendFinalizer) {
 		// Attempt to remove backend only if backend.Status.ID is present
 		if backend.Status.ID != nil {
-			err = r.removeBackend(backend.Spec.ProviderAccountRef, *backend.Status.ID, backend.Namespace, backend.Spec.SystemName)
+			requeue, err := r.removeBackend(backend.Spec.ProviderAccountRef, *backend.Status.ID, backend.Namespace, backend.Spec.SystemName)
 			if err != nil {
-				return ctrl.Result{RequeueAfter: requeueTime}, err
+				return ctrl.Result{}, err
+			}
+			if requeue {
+				return ctrl.Result{RequeueAfter: requeueTime}, nil
 			}
 		} else {
 			return ctrl.Result{}, fmt.Errorf("backend %s .status.ID is missing, cannot remove backend", backend.Spec.Name)
@@ -212,15 +215,15 @@ func (r *BackendReconciler) validateSpec(backendResource *capabilitiesv1beta1.Ba
 	}
 }
 
-func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObjectReference, backendID int64, backendNamespace string, systemName string) error {
+func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObjectReference, backendID int64, backendNamespace string, systemName string) (requeue bool, err error) {
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendNamespace, providerAccountRef, r.Logger())
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// Retrieve all product CRs that are under the same ns as the backend CR
@@ -230,28 +233,49 @@ func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObject
 	productCRsList := &capabilitiesv1beta1.ProductList{}
 	err = r.Client().List(context.TODO(), productCRsList, &opts)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	// fetch CRs that belong to a tenant
+	// fetch CRs that belong to a tenant and require removal of the backend mentions in 
+	// Application Plan pricing rules
+	// Application Plan limits
+	// Backend usages
 	tenantProductCRs, err := r.fetchTenantProductCRs(productCRsList, providerAccountRef, backendNamespace, systemName)
+	
+	var needToRequeue = false
 
 	// update backendUsages for each product retrieved
 	for _, productCR := range tenantProductCRs {
-		delete(productCR.Spec.BackendUsages, systemName)
+
+		// remove backend usages from productCR
+		if _, ok := productCR.Spec.BackendUsages[systemName]; ok {
+			delete(productCR.Spec.BackendUsages, systemName)
+		}
+
+		// remove backend from productCR pricing rules
+		removeBackendFromPricingRules(&productCR, systemName)
+
+		// remove backend from productCR limit rules
+		removeBackendFromLimitRules(&productCR, systemName)
+		
 		err = r.Client().Update(context.TODO(), &productCR)
 		if err != nil {
-			return err
+			return false, err
 		}
+		needToRequeue = true
+	}
+
+	if needToRequeue {
+		return true, nil
 	}
 
 	// Attempt to remove backendAPI - expect error on first attempt as the backendUsage has not been removed yet from 3scale
 	err = threescaleAPIClient.DeleteBackendApi(backendID)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return false, nil
 }
 
 func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv1beta1.ProductList, providerAccountRef *corev1.LocalObjectReference, backendNs string, systemName string) ([]capabilitiesv1beta1.Product, error) {
@@ -261,9 +285,7 @@ func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv
 		return nil, err
 	}
 	
-	// range through productCRs 
 	for _, productCR := range productsCRsList.Items {
-		// retrieve productCR providerAccount
 		productProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productCR.Namespace, productCR.Spec.ProviderAccountRef, r.Logger())
 		if err != nil {
 			// skip product CR if productProviderAccount is not found
@@ -271,11 +293,47 @@ func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv
 		}
 
 		if backendProviderAccount.AdminURLStr == productProviderAccount.AdminURLStr {
-			if _, ok := productCR.Spec.BackendUsages[systemName]; ok {
+			if productCR.RemoveBackendReferencesRequired(systemName) {
 				productsList = append(productsList, productCR)
 			}
 		}
 	}
 
 	return productsList, nil
+}
+
+func removeBackendFromPricingRules(productCR *capabilitiesv1beta1.Product, systemName string) {
+	for appPlanIDX, applicationPlan := range productCR.Spec.ApplicationPlans {
+		currentApplicationPlan := applicationPlan
+
+		for pricingRuleIDX, pricingRule := range applicationPlan.PricingRules {
+			if pricingRule.MetricMethodRef.BackendSystemName != nil && *pricingRule.MetricMethodRef.BackendSystemName == systemName {
+				currentApplicationPlan.PricingRules = removePricingRule(applicationPlan.PricingRules, pricingRuleIDX)
+			}
+		}
+
+		productCR.Spec.ApplicationPlans[appPlanIDX] = currentApplicationPlan
+	}
+}
+
+func removeBackendFromLimitRules(productCR *capabilitiesv1beta1.Product, systemName string) {
+	for appPlanIDX, applicationPlan := range productCR.Spec.ApplicationPlans {
+		currentApplicationPlan := applicationPlan
+
+		for limitRuleIDX, limitRule := range applicationPlan.Limits {
+			if limitRule.MetricMethodRef.BackendSystemName != nil && *limitRule.MetricMethodRef.BackendSystemName == systemName {
+				currentApplicationPlan.Limits = removeLimitRule(applicationPlan.Limits, limitRuleIDX)
+			}
+		}
+
+		productCR.Spec.ApplicationPlans[appPlanIDX] = currentApplicationPlan
+	}
+}
+
+func removePricingRule(s []capabilitiesv1beta1.PricingRuleSpec, index int) []capabilitiesv1beta1.PricingRuleSpec {
+	return append(s[:index], s[index+1:]...)
+}
+
+func removeLimitRule(s []capabilitiesv1beta1.LimitSpec, index int) []capabilitiesv1beta1.LimitSpec {
+	return append(s[:index], s[index+1:]...)
 }
