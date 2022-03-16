@@ -243,31 +243,18 @@ func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObject
 	// Backend usages
 	tenantProductCRs, err := r.fetchTenantProductCRs(productCRsList, providerAccountRef, backendNamespace, systemName)
 	
-	var needToRequeue = false
+	var productCrUpdated = false
 
 	// update backendUsages for each product retrieved
 	for _, productCR := range tenantProductCRs {
-
-		// remove backend usages from productCR
-		if _, ok := productCR.Spec.BackendUsages[systemName]; ok {
-			delete(productCR.Spec.BackendUsages, systemName)
+		productCrUpdated = productCR.RemoveBackendReferences(systemName)
+		if productCrUpdated {
+			err = r.UpdateResource(&productCR)
+			if err != nil {
+				return false, err
+			}
+			return true, nil
 		}
-
-		// remove backend from productCR pricing rules
-		removeBackendFromPricingRules(&productCR, systemName)
-
-		// remove backend from productCR limit rules
-		removeBackendFromLimitRules(&productCR, systemName)
-		
-		err = r.Client().Update(context.TODO(), &productCR)
-		if err != nil {
-			return false, err
-		}
-		needToRequeue = true
-	}
-
-	if needToRequeue {
-		return true, nil
 	}
 
 	// Attempt to remove backendAPI - expect error on first attempt as the backendUsage has not been removed yet from 3scale
@@ -294,47 +281,9 @@ func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv
 		}
 
 		if backendProviderAccount.AdminURLStr == productProviderAccount.AdminURLStr {
-			if productCR.RemoveBackendReferencesRequired(systemName) {
-				productsList = append(productsList, productCR)
-			}
+			productsList = append(productsList, productCR)
 		}
 	}
 
 	return productsList, nil
-}
-
-func removeBackendFromPricingRules(productCR *capabilitiesv1beta1.Product, systemName string) {
-	for appPlanIDX, applicationPlan := range productCR.Spec.ApplicationPlans {
-		currentApplicationPlan := applicationPlan
-
-		for pricingRuleIDX, pricingRule := range applicationPlan.PricingRules {
-			if pricingRule.MetricMethodRef.BackendSystemName != nil && *pricingRule.MetricMethodRef.BackendSystemName == systemName {
-				currentApplicationPlan.PricingRules = removePricingRule(applicationPlan.PricingRules, pricingRuleIDX)
-			}
-		}
-
-		productCR.Spec.ApplicationPlans[appPlanIDX] = currentApplicationPlan
-	}
-}
-
-func removeBackendFromLimitRules(productCR *capabilitiesv1beta1.Product, systemName string) {
-	for appPlanIDX, applicationPlan := range productCR.Spec.ApplicationPlans {
-		currentApplicationPlan := applicationPlan
-
-		for limitRuleIDX, limitRule := range applicationPlan.Limits {
-			if limitRule.MetricMethodRef.BackendSystemName != nil && *limitRule.MetricMethodRef.BackendSystemName == systemName {
-				currentApplicationPlan.Limits = removeLimitRule(applicationPlan.Limits, limitRuleIDX)
-			}
-		}
-
-		productCR.Spec.ApplicationPlans[appPlanIDX] = currentApplicationPlan
-	}
-}
-
-func removePricingRule(s []capabilitiesv1beta1.PricingRuleSpec, index int) []capabilitiesv1beta1.PricingRuleSpec {
-	return append(s[:index], s[index+1:]...)
-}
-
-func removeLimitRule(s []capabilitiesv1beta1.LimitSpec, index int) []capabilitiesv1beta1.LimitSpec {
-	return append(s[:index], s[index+1:]...)
 }

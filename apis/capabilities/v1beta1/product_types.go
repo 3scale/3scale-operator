@@ -1136,35 +1136,40 @@ type Product struct {
 	Status ProductStatus `json:"status,omitempty"`
 }
 
-// RemoveBackendReferencesRequired returns true if product CR has mentions of a backend that matches
-// backendSystemName in: backendUsage, Pricing Plans, Limits
-func (product *Product) RemoveBackendReferencesRequired(backendSystemName string) bool {
-	removalRequired := false
+// RemoveBackendReferences returns true if product CR has mentions of a backend that matches
+// backendSystemName in: backendUsage, Pricing Plans, Limits and removes the references of backend.
+func (product *Product) RemoveBackendReferences(backendSystemName string) bool {
+	removalDone := false
 
-	// Check if backend is mentioned in the backendUsages
 	if _, ok := product.Spec.BackendUsages[backendSystemName]; ok {
-		removalRequired = true
+		delete(product.Spec.BackendUsages, backendSystemName)
+		removalDone = true
 	}
 
-	for _, applicationPlan := range product.Spec.ApplicationPlans {
-		// For each application plan check pricing rules mentions of the backend
-		for _, pricingRule := range applicationPlan.PricingRules {
+	for appIDX, applicationPlan := range product.Spec.ApplicationPlans {
+		currentApplicationPlan := applicationPlan
+
+		// remove pricing rules that mention the systemName
+		for pricingRuleIDX, pricingRule := range applicationPlan.PricingRules {
 			if pricingRule.MetricMethodRef.BackendSystemName != nil && *pricingRule.MetricMethodRef.BackendSystemName == backendSystemName {
-				removalRequired = true
+				currentApplicationPlan.PricingRules = removePricingRule(applicationPlan.PricingRules, pricingRuleIDX)
+				removalDone = true
+			}
+		}
+		
+		// remove limit rules that mention the systemName
+		for limitRuleIDX, limitRule := range applicationPlan.Limits {
+			if limitRule.MetricMethodRef.BackendSystemName != nil && *limitRule.MetricMethodRef.BackendSystemName == backendSystemName {
+				currentApplicationPlan.Limits = removeLimitRule(applicationPlan.Limits, limitRuleIDX)
+				removalDone = true
 			}
 		}
 
-		// For each application plan check plan limits mentions of the backend
-		for _, planLimits := range applicationPlan.Limits {
-			if planLimits.MetricMethodRef.BackendSystemName != nil && *planLimits.MetricMethodRef.BackendSystemName == backendSystemName {
-				removalRequired = true
-			}
-		}
+		product.Spec.ApplicationPlans[appIDX] = currentApplicationPlan
 	}
 
-	return removalRequired
+	return removalDone
 }
-
 
 func (product *Product) SetDefaults(logger logr.Logger) bool {
 	updated := false
@@ -1436,4 +1441,12 @@ type ProductList struct {
 
 func init() {
 	SchemeBuilder.Register(&Product{}, &ProductList{})
+}
+
+func removePricingRule(s []PricingRuleSpec, index int) []PricingRuleSpec {
+	return append(s[:index], s[index+1:]...)
+}
+
+func removeLimitRule(s []LimitSpec, index int) []LimitSpec {
+	return append(s[:index], s[index+1:]...)
 }
