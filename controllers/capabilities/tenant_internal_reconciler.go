@@ -3,10 +3,13 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"reflect"
 
 	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -50,9 +53,13 @@ func (r *TenantInternalReconciler) Run() (ctrl.Result, error) {
 		return res, nil
 	}
 
-	err = r.reconcileAdminUser()
+	res, err = r.reconcileAdminUser()
 	if err != nil {
 		return ctrl.Result{}, err
+	}
+
+	if res.Requeue {
+		return res, nil
 	}
 
 	return ctrl.Result{}, err
@@ -82,104 +89,76 @@ func (r *TenantInternalReconciler) reconcileTenant() (ctrl.Result, error) {
 			return ctrl.Result{}, err
 		}
 
-		// Early update status with tenantID
-		r.tenantR.Status.TenantId = tenantDef.Signup.Account.ID
+		// Early update status with the new tenantID
+		newStatus := &apiv1alpha1.TenantStatus{
+			// reset adminID. It could keep old stale value
+			AdminId:  0,
+			TenantId: tenantDef.Signup.Account.ID,
+		}
 
-		r.logger.Info("Update tenant status with tenantID", "tenantID", tenantDef.Signup.Account.ID)
-		err = r.UpdateResourceStatus(r.tenantR)
+		updated, err := r.reconcileStatus(newStatus)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
 
-		// requeue to have a new run with the updated tenant resource
-		return ctrl.Result{Requeue: true}, nil
-	}
-
-	r.logger.Info("Tenant already exists", "TenantId", tenantDef.Signup.Account.ID)
-	// Check tenant desired state matches current state
-	err = r.syncTenant(tenantDef)
-	if err != nil {
-		return ctrl.Result{}, err
+		if updated {
+			// requeue to have a new run with the updated tenant resource
+			return ctrl.Result{Requeue: true}, nil
+		}
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *TenantInternalReconciler) syncTenant(tenantDef *porta_client_pkg.Tenant) error {
-	// If tenant desired state is not current state, update
-	triggerSync := func() bool {
-		if r.tenantR.Spec.OrganizationName != tenantDef.Signup.Account.OrgName {
-			return true
-		}
-
-		if r.tenantR.Spec.Email != tenantDef.Signup.Account.SupportEmail {
-			return true
-		}
-
-		return false
-	}()
-
-	if triggerSync {
-		r.logger.Info("Syncing tenant", "TenantId", tenantDef.Signup.Account.ID)
-		tenantDef.Signup.Account.OrgName = r.tenantR.Spec.OrganizationName
-		tenantDef.Signup.Account.SupportEmail = r.tenantR.Spec.Email
-		params := porta_client_pkg.Params{
-			"support_email": r.tenantR.Spec.Email,
-			"org_name":      r.tenantR.Spec.OrganizationName,
-		}
-		_, err := r.portaClient.UpdateTenant(r.tenantR.Status.TenantId, params)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-////
-//
 // This method makes sure admin user:
 // * is active
 // * user's attributes will be updated if required
-func (r *TenantInternalReconciler) reconcileAdminUser() error {
-	tenantDef, err := controllerhelper.FetchTenant(r.tenantR.Status.TenantId, r.portaClient)
+func (r *TenantInternalReconciler) reconcileAdminUser() (ctrl.Result, error) {
+	if r.tenantR.Status.TenantId == 0 {
+		return ctrl.Result{}, errors.New("Trying to reconcile admin user when tenantID 0")
+	}
+
+	adminUser, err := controllerhelper.FindUser(r.portaClient, r.tenantR.Status.TenantId,
+		r.tenantR.Spec.Email, r.tenantR.Spec.Username)
 	if err != nil {
-		return err
+		return ctrl.Result{}, err
 	}
 
-	if tenantDef == nil {
-		return fmt.Errorf("tenant with ID %d not found", r.tenantR.Status.TenantId)
-	}
-
-	var adminUserDef *porta_client_pkg.User
-	if r.tenantR.Status.AdminId == 0 {
-		// UserID not in status field
-		adminUserDef, err = r.findAdminUser(tenantDef)
+	if adminUser == nil {
+		adminUser, err = controllerhelper.CreateAdminUser(r.portaClient,
+			r.tenantR.Status.TenantId, r.tenantR.Spec.Email, r.tenantR.Spec.Username)
 		if err != nil {
-			return err
-		}
-
-		r.tenantR.Status.AdminId = adminUserDef.ID
-
-		r.logger.Info("Update tenant status with adminID", "adminID", adminUserDef.ID)
-		err = r.UpdateResourceStatus(r.tenantR)
-		if err != nil {
-			return err
-		}
-
-	} else {
-		adminUserDef, err = r.portaClient.ReadUser(tenantDef.Signup.Account.ID, r.tenantR.Status.AdminId)
-		if err != nil {
-			return err
+			return ctrl.Result{}, err
 		}
 	}
 
-	err = r.syncAdminUser(tenantDef, adminUserDef)
+	if adminUser.Element.ID == nil {
+		return ctrl.Result{}, fmt.Errorf("admin returned nil ID for tenantID %d;"+
+			"email %s; username:%s", r.tenantR.Status.TenantId, r.tenantR.Spec.Email,
+			r.tenantR.Spec.Username)
+	}
+
+	err = r.syncAdminUser(r.tenantR.Status.TenantId, adminUser)
 	if err != nil {
-		return err
+		return ctrl.Result{}, err
 	}
 
-	return nil
+	newStatus := &apiv1alpha1.TenantStatus{
+		AdminId:  *adminUser.Element.ID,
+		TenantId: r.tenantR.Status.TenantId,
+	}
+
+	updated, err := r.reconcileStatus(newStatus)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if updated {
+		// requeue to have a new run with the updated tenant resource
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	return ctrl.Result{}, nil
 }
 
 // This method makes sure secret with tenant's access_token exists
@@ -256,69 +235,44 @@ func (r *TenantInternalReconciler) getAdminPassword() (string, error) {
 	return bytes.NewBuffer(passwordByteArray).String(), err
 }
 
-func (r *TenantInternalReconciler) findAdminUser(tenantDef *porta_client_pkg.Tenant) (*porta_client_pkg.User, error) {
-	// Only admin users
-	// Any state
-	filterParams := porta_client_pkg.Params{
-		"role": "admin",
-	}
-	userList, err := r.portaClient.ListUsers(tenantDef.Signup.Account.ID, filterParams)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, user := range userList.Users {
-		if user.User.Email == r.tenantR.Spec.Email && user.User.UserName == r.tenantR.Spec.Username {
-			// user is already a copy from User slice element
-			return &user.User, nil
-		}
-	}
-	return nil, fmt.Errorf("Admin user not found and should be available"+
-		"TenantId: %d. Admin Username: %s, Admin email: %s", tenantDef.Signup.Account.ID,
-		r.tenantR.Spec.Username, r.tenantR.Spec.Email)
-}
-
-func (r *TenantInternalReconciler) syncAdminUser(tenantDef *porta_client_pkg.Tenant, adminUser *porta_client_pkg.User) error {
+func (r *TenantInternalReconciler) syncAdminUser(tenantID int64, adminUser *porta_client_pkg.DeveloperUser) error {
 	// If adminUser desired state is not current state, update
-	if adminUser.State == "pending" {
-		err := r.activateAdminUser(tenantDef, adminUser)
+	if adminUser.Element.State != nil && *adminUser.Element.State == "pending" {
+		r.logger.Info("Activating pending admin user", "Account ID", tenantID, "ID", *adminUser.Element.ID)
+		updatedAdminUser, err := r.portaClient.ActivateDeveloperUser(tenantID, *adminUser.Element.ID)
 		if err != nil {
 			return err
 		}
-	} else {
-		r.logger.Info("Admin user already active", "TenantId", tenantDef.Signup.Account.ID, "UserID", adminUser.ID)
+
+		adminUser.Element.State = updatedAdminUser.Element.State
 	}
 
-	triggerSync := func() bool {
-		if r.tenantR.Spec.Username != adminUser.UserName {
-			return true
-		}
-
-		if r.tenantR.Spec.Email != adminUser.Email {
-			return true
-		}
-
-		return false
-	}()
-
-	if triggerSync {
-		r.logger.Info("Syncing adminUser", "TenantId", tenantDef.Signup.Account.ID, "UserID", adminUser.ID)
-		adminUser.UserName = r.tenantR.Spec.Username
-		adminUser.Email = r.tenantR.Spec.Email
-		params := porta_client_pkg.Params{
-			"username": r.tenantR.Spec.Username,
-			"email":    r.tenantR.Spec.Email,
-		}
-		_, err := r.portaClient.UpdateUser(tenantDef.Signup.Account.ID, adminUser.ID, params)
+	// If adminUser desired role is not current state, update
+	if adminUser.Element.Role != nil && *adminUser.Element.Role != "admin" {
+		r.logger.Info("Change role to admin", "Account ID", tenantID, "ID", *adminUser.Element.ID)
+		updatedAdminUser, err := r.portaClient.ChangeRoleToAdminDeveloperUser(tenantID, *adminUser.Element.ID)
 		if err != nil {
 			return err
 		}
+
+		adminUser.Element.Role = updatedAdminUser.Element.Role
 	}
 
 	return nil
 }
 
-func (r *TenantInternalReconciler) activateAdminUser(tenantDef *porta_client_pkg.Tenant, adminUser *porta_client_pkg.User) error {
-	r.logger.Info("Activating pending admin user", "Account ID", tenantDef.Signup.Account.ID, "ID", adminUser.ID)
-	return r.portaClient.ActivateUser(tenantDef.Signup.Account.ID, adminUser.ID)
+// Returns whether the status have been updated or not and the error
+func (r *TenantInternalReconciler) reconcileStatus(desiredStatus *apiv1alpha1.TenantStatus) (bool, error) {
+	if !reflect.DeepEqual(r.tenantR.Status, *desiredStatus) {
+		diff := cmp.Diff(r.tenantR.Status, *desiredStatus)
+		r.logger.V(1).Info(fmt.Sprintf("status has changed: %s", diff))
+		r.tenantR.Status = *desiredStatus
+		r.logger.Info("Update tenant status with tenantID", "tenantID", r.tenantR.Status.TenantId)
+		err := r.UpdateResourceStatus(r.tenantR)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
 }
