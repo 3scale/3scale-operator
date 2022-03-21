@@ -20,9 +20,14 @@ RetrieveTenantCR retrieves tenantCR of a tenant that matches the provider accoun
 If the tenantList is empty it will return nil, nil
 If tenantCR for given providerAccount org is not present, it will return nil, nil
 */
-func RetrieveTenantCR(providerAccount *ProviderAccount, client k8sclient.Client, logger logr.Logger) (*capabilitiesv1alpha1.Tenant, error) {
+func RetrieveTenantCR(providerAccount *ProviderAccount, client k8sclient.Client, logger logr.Logger, namespace string) (*capabilitiesv1alpha1.Tenant, error) {
+	// Retrieve all product CRs that are under the same ns as the backend CR
+	opts := k8sclient.ListOptions{
+		Namespace: namespace,
+	}
+	
 	tenantList := &capabilitiesv1alpha1.TenantList{}
-	err := client.List(context.TODO(), tenantList)
+	err := client.List(context.TODO(), tenantList, &opts)
 	if err != nil {
 		return nil, err
 	}

@@ -128,7 +128,7 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	// Retrieve ownersReference of tenant CR that owns the Backend CR
-	tenantCR, err := controllerhelper.RetrieveTenantCR(providerAccount, r.Client(), r.Logger())
+	tenantCR, err := controllerhelper.RetrieveTenantCR(providerAccount, r.Client(), r.Logger(), backend.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
