@@ -38,6 +38,11 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 		return res, fmt.Errorf("Upgrade: remove system AMP_RELEASE error: %w", err)
 	}
 
+	res, err = u.upgradeMysqlConfigmap()
+	if err != nil {
+		return res, fmt.Errorf("Upgrade: update mysql configmap. error: %w", err)
+	}
+
 	res, err = u.upgradeImages()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading images: %w", err)
@@ -880,6 +885,35 @@ func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentCo
 	}
 
 	return updated, nil
+}
+
+func (u *UpgradeApiManager) upgradeMysqlConfigmap() (reconcile.Result, error) {
+	if u.apiManager.IsExternalDatabaseEnabled() {
+		return reconcile.Result{}, nil
+	}
+
+	if u.apiManager.Spec.System.DatabaseSpec != nil &&
+		u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
+		return reconcile.Result{}, nil
+	}
+
+	mysqlExtraConfigMap := &v1.ConfigMap{}
+	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: "mysql-extra-conf", Namespace: u.apiManager.Namespace}, mysqlExtraConfigMap)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if _, ok := mysqlExtraConfigMap.Data["mysql-default-authentication-plugin.cnf"]; !ok {
+		mysqlExtraConfigMap.Data["mysql-default-authentication-plugin.cnf"] = `[mysqld]
+default_authentication_plugin=mysql_native_password
+`
+		err = u.UpdateResource(mysqlExtraConfigMap)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	return reconcile.Result{}, nil
 }
 
 func (u *UpgradeApiManager) Logger() logr.Logger {

@@ -65,7 +65,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp.yml \
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-80-centos7 |
 | **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
@@ -207,7 +207,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-s3.yml \
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-80-centos7 |
 | **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
@@ -359,7 +359,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-eval-s3.yml \
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-80-centos7 |
 | **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |
@@ -427,7 +427,7 @@ oc new-app --file pkg/3scale/amp/auto-generated-templates/amp/amp-postgresql.yml
 | **ZYNC_DATABASE_IMAGE** | Zync's PostgreSQL image to use | centos/postgresql-10-centos7 |
 | **MEMCACHED_IMAGE** | Memcached image to use | memcached:1.5 |
 | **IMAGESTREAM_TAG_IMPORT_INSECURE** | the server may bypass certificate verification | false |
-| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-57-centos7 |
+| **SYSTEM_DATABASE_IMAGE** | System MySQL image URL | centos/mysql-80-centos7 |
 | **REDIS_IMAGE** | Redis image to use | centos/redis-5-centos7 |
 | **SYSTEM_DATABASE_USER** | System MySQL User | mysql |
 | **SYSTEM_DATABASE_PASSWORD** | System MySQL Password | random value |

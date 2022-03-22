@@ -1262,6 +1262,9 @@ objects:
       [mysqld]
       character-set-server = utf8
       collation-server = utf8_unicode_ci
+    mysql-default-authentication-plugin.cnf: |
+      [mysqld]
+      default_authentication_plugin=mysql_native_password
   kind: ConfigMap
   metadata:
     creationTimestamp: null
@@ -4228,7 +4231,7 @@ parameters:
 - description: System MySQL image to use
   name: SYSTEM_DATABASE_IMAGE
   required: true
-  value: centos/mysql-57-centos7
+  value: centos/mysql-80-centos7
 - description: Redis image to use
   name: REDIS_IMAGE
   required: true
