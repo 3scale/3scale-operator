@@ -94,7 +94,7 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				return ctrl.Result{RequeueAfter: requeueTime}, nil
 			}
 		} else {
-			return ctrl.Result{}, fmt.Errorf("backend %s .status.ID is missing, cannot remove backend", backend.Spec.Name)
+			reqLogger.Info("ERROR", "could not remove backend because backend ID is missing for backend name", backend.Name)
 		}
 
 		controllerutil.RemoveFinalizer(backend, backendFinalizer)

@@ -80,12 +80,6 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Ignore deleted Products, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if product.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(product, productFinalizer) {
-		controllerutil.RemoveFinalizer(product, productFinalizer)
-		err = r.UpdateResource(product)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
 		if product.Status.ID != nil {
 			err = r.removeProduct(product)
 			if err != nil {
@@ -93,9 +87,14 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				return ctrl.Result{}, err
 			}
 		} else {
-			return ctrl.Result{}, fmt.Errorf("product %s .status.ID is missing, cannot remove product", product.Spec.Name)
+			reqLogger.Info("ERROR", "could not remove backend because product ID is missing for product name", product.Name)
 		}
 
+		controllerutil.RemoveFinalizer(product, productFinalizer)
+		err = r.UpdateResource(product)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 
 		return ctrl.Result{}, nil
 	}
@@ -377,14 +376,6 @@ func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.P
 	err = threescaleAPIClient.DeleteProduct(*productResource.Status.ID)
 	if err != nil {
 		return err
-	}
-
-	//Confirm that product has been removed
-	products, err := threescaleAPIClient.ListProducts()
-	for _, product := range products.Products {
-		if product.Element.ID == *productResource.Status.ID {
-			return err
-		}
 	}
 
 	return nil
