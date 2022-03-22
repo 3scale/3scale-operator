@@ -247,14 +247,17 @@ func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObject
 
 	// update backendUsages for each product retrieved
 	for _, productCR := range tenantProductCRs {
-		productCrUpdated = productCR.RemoveBackendReferences(systemName)
-		if productCrUpdated {
+		if productCR.RemoveBackendReferences(systemName) {
 			err = r.UpdateResource(&productCR)
 			if err != nil {
 				return false, err
 			}
-			return true, nil
+			productCrUpdated = true
 		}
+	}
+
+	if productCrUpdated {
+		return true, nil
 	}
 
 	// Attempt to remove backendAPI - expect error on first attempt as the backendUsage has not been removed yet from 3scale
