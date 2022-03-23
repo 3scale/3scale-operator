@@ -20,10 +20,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -31,13 +35,16 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // BackendReconciler reconciles a Backend object
 type BackendReconciler struct {
 	*reconcilers.BaseReconciler
 }
+
+const requeueTime = time.Duration(2)*time.Second
+
+const backendFinalizer = "backend.capabilities.3scale.net/finalizer"
 
 // blank assignment to verify that BackendReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &BackendReconciler{}
@@ -76,7 +83,41 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Ignore deleted Backends, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
+	if backend.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(backend, backendFinalizer) {
+		// Attempt to remove backend only if backend.Status.ID is present
+		if backend.Status.ID != nil {
+			requeue, err := r.removeBackend(backend.Spec.ProviderAccountRef, *backend.Status.ID, backend.Namespace, backend.Spec.SystemName)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+			if requeue {
+				return ctrl.Result{RequeueAfter: requeueTime}, nil
+			}
+		} else {
+			reqLogger.Info("ERROR", "could not remove backend because backend ID is missing for backend name", backend.Name)
+		}
+
+		controllerutil.RemoveFinalizer(backend, backendFinalizer)
+		err = r.UpdateResource(backend)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	// Ignore deleted Backends, this can happen when foregroundDeletion is enabled
+	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if backend.DeletionTimestamp != nil {
+		return ctrl.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(backend, backendFinalizer) {
+		controllerutil.AddFinalizer(backend, backendFinalizer)
+		err = r.UpdateResource(backend)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, nil
 	}
 
@@ -173,4 +214,79 @@ func (r *BackendReconciler) validateSpec(backendResource *capabilitiesv1beta1.Ba
 		ErrorType:      helper.InvalidError,
 		FieldErrorList: errors,
 	}
+}
+
+func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObjectReference, backendID int64, backendNamespace string, systemName string) (requeue bool, err error) {
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendNamespace, providerAccountRef, r.Logger())
+	if err != nil {
+		return false, err
+	}
+
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	if err != nil {
+		return false, err
+	}
+
+	// Retrieve all product CRs that are under the same ns as the backend CR
+	opts := k8sclient.ListOptions{
+		Namespace: backendNamespace,
+	}
+	productCRsList := &capabilitiesv1beta1.ProductList{}
+	err = r.Client().List(context.TODO(), productCRsList, &opts)
+	if err != nil {
+		return false, err
+	}
+
+	// fetch CRs that belong to a tenant and require removal of the backend mentions in 
+	// Application Plan pricing rules
+	// Application Plan limits
+	// Backend usages
+	tenantProductCRs, err := r.fetchTenantProductCRs(productCRsList, providerAccountRef, backendNamespace, systemName)
+	
+	var productCrUpdated = false
+
+	// update backendUsages for each product retrieved
+	for _, productCR := range tenantProductCRs {
+		if productCR.RemoveBackendReferences(systemName) {
+			err = r.UpdateResource(&productCR)
+			if err != nil {
+				return false, err
+			}
+			productCrUpdated = true
+		}
+	}
+
+	if productCrUpdated {
+		return true, nil
+	}
+
+	// Attempt to remove backendAPI - expect error on first attempt as the backendUsage has not been removed yet from 3scale
+	err = threescaleAPIClient.DeleteBackendApi(backendID)
+	if err != nil {
+		return false, err
+	}
+
+	return false, nil
+}
+
+func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv1beta1.ProductList, providerAccountRef *corev1.LocalObjectReference, backendNs string, systemName string) ([]capabilitiesv1beta1.Product, error) {
+	var productsList []capabilitiesv1beta1.Product
+	backendProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendNs, providerAccountRef, r.Logger())
+	if err != nil {
+		return nil, err
+	}
+	
+	for _, productCR := range productsCRsList.Items {
+		productProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productCR.Namespace, productCR.Spec.ProviderAccountRef, r.Logger())
+		if err != nil {
+			// skip product CR if productProviderAccount is not found
+			continue
+		}
+
+		if backendProviderAccount.AdminURLStr == productProviderAccount.AdminURLStr {
+			productsList = append(productsList, productCR)
+		}
+	}
+
+	return productsList, nil
 }

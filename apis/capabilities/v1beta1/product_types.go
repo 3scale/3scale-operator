@@ -1136,6 +1136,41 @@ type Product struct {
 	Status ProductStatus `json:"status,omitempty"`
 }
 
+// RemoveBackendReferences returns true if product CR has mentions of a backend that matches
+// backendSystemName in: backendUsage, Pricing Plans, Limits and removes the references of backend.
+func (product *Product) RemoveBackendReferences(backendSystemName string) bool {
+	removalDone := false
+
+	if _, ok := product.Spec.BackendUsages[backendSystemName]; ok {
+		delete(product.Spec.BackendUsages, backendSystemName)
+		removalDone = true
+	}
+
+	for appIDX, applicationPlan := range product.Spec.ApplicationPlans {
+		currentApplicationPlan := applicationPlan
+
+		// remove pricing rules that mention the systemName
+		for pricingRuleIDX, pricingRule := range applicationPlan.PricingRules {
+			if pricingRule.MetricMethodRef.BackendSystemName != nil && *pricingRule.MetricMethodRef.BackendSystemName == backendSystemName {
+				currentApplicationPlan.PricingRules = removePricingRule(applicationPlan.PricingRules, pricingRuleIDX)
+				removalDone = true
+			}
+		}
+		
+		// remove limit rules that mention the systemName
+		for limitRuleIDX, limitRule := range applicationPlan.Limits {
+			if limitRule.MetricMethodRef.BackendSystemName != nil && *limitRule.MetricMethodRef.BackendSystemName == backendSystemName {
+				currentApplicationPlan.Limits = removeLimitRule(applicationPlan.Limits, limitRuleIDX)
+				removalDone = true
+			}
+		}
+
+		product.Spec.ApplicationPlans[appIDX] = currentApplicationPlan
+	}
+
+	return removalDone
+}
+
 func (product *Product) SetDefaults(logger logr.Logger) bool {
 	updated := false
 
@@ -1406,4 +1441,12 @@ type ProductList struct {
 
 func init() {
 	SchemeBuilder.Register(&Product{}, &ProductList{})
+}
+
+func removePricingRule(s []PricingRuleSpec, index int) []PricingRuleSpec {
+	return append(s[:index], s[index+1:]...)
+}
+
+func removeLimitRule(s []LimitSpec, index int) []LimitSpec {
+	return append(s[:index], s[index+1:]...)
 }
