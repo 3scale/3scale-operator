@@ -1156,7 +1156,7 @@ func (product *Product) RemoveBackendReferences(backendSystemName string) bool {
 				removalDone = true
 			}
 		}
-		
+
 		// remove limit rules that mention the systemName
 		for limitRuleIDX, limitRule := range applicationPlan.Limits {
 			if limitRule.MetricMethodRef.BackendSystemName != nil && *limitRule.MetricMethodRef.BackendSystemName == backendSystemName {

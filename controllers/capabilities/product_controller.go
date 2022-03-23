@@ -87,7 +87,7 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				return ctrl.Result{}, err
 			}
 		} else {
-			reqLogger.Info("ERROR", "could not remove backend because product ID is missing for product name", product.Name)
+			reqLogger.Info("ERROR", "could not remove product from 3scale because product ID is missing for product name", product.Name)
 		}
 
 		controllerutil.RemoveFinalizer(product, productFinalizer)
