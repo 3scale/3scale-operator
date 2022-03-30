@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"time"
 
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -265,7 +266,7 @@ func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObject
 
 	// Attempt to remove backendAPI - expect error on first attempt as the backendUsage has not been removed yet from 3scale
 	err = threescaleAPIClient.DeleteBackendApi(backendID)
-	if err != nil {
+	if err != nil && !threescaleapi.IsNotFound(err) {
 		return false, err
 	}
 

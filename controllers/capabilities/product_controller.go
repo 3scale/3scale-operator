@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -374,7 +375,7 @@ func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.P
 	}
 
 	err = threescaleAPIClient.DeleteProduct(*productResource.Status.ID)
-	if err != nil {
+	if err != nil && !threescaleapi.IsNotFound(err) {
 		return err
 	}
 
