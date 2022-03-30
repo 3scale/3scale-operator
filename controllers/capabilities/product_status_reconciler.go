@@ -76,8 +76,6 @@ func (s *ProductStatusReconciler) calculateStatus() *capabilitiesv1beta1.Product
 	if s.entity != nil {
 		tmpID := s.entity.ID()
 		newStatus.ID = &tmpID
-		tmpState := s.entity.State()
-		newStatus.State = &tmpState
 	}
 
 	newStatus.ProviderAccountHost = s.providerAccountHost
