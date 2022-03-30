@@ -42,7 +42,7 @@ type BackendReconciler struct {
 	*reconcilers.BaseReconciler
 }
 
-const requeueTime = time.Duration(2)*time.Second
+const requeueTime = time.Duration(2) * time.Second
 
 const backendFinalizer = "backend.capabilities.3scale.net/finalizer"
 
@@ -237,12 +237,15 @@ func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObject
 		return false, err
 	}
 
-	// fetch CRs that belong to a tenant and require removal of the backend mentions in 
+	// fetch CRs that belong to a tenant and require removal of the backend mentions in
 	// Application Plan pricing rules
 	// Application Plan limits
 	// Backend usages
 	tenantProductCRs, err := r.fetchTenantProductCRs(productCRsList, providerAccountRef, backendNamespace, systemName)
-	
+	if err != nil {
+		return false, err
+	}
+
 	var productCrUpdated = false
 
 	// update backendUsages for each product retrieved
@@ -275,7 +278,7 @@ func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv
 	if err != nil {
 		return nil, err
 	}
-	
+
 	for _, productCR := range productsCRsList.Items {
 		productProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productCR.Namespace, productCR.Spec.ProviderAccountRef, r.Logger())
 		if err != nil {
