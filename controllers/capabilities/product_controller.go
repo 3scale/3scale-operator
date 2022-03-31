@@ -126,9 +126,13 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// If tenant CR is found, set it's ownersReference as ownerReference in the BackendCR CR
 	if tenantCR != nil {
-		err := controllerhelper.SetOwnersReference(product, r.Client(), tenantCR)
+		updated, err := controllerhelper.SetOwnersReference(product, r.Client(), tenantCR)
 		if err != nil {
 			return ctrl.Result{}, err
+		}
+
+		if updated {
+			return ctrl.Result{Requeue: true}, nil
 		}
 	}
 

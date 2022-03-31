@@ -57,7 +57,7 @@ SetOwnersReference sets ownersReference in given object
 - k8client
 - tenantCR
 */
-func SetOwnersReference(object controllerutil.Object, client k8sclient.Client, tenantCR *capabilitiesv1alpha1.Tenant) error {
+func SetOwnersReference(object controllerutil.Object, client k8sclient.Client, tenantCR *capabilitiesv1alpha1.Tenant) (bool, error) {
 	ownerReference := []metav1.OwnerReference{
 		{
 			APIVersion: tenantCR.APIVersion,
@@ -67,13 +67,19 @@ func SetOwnersReference(object controllerutil.Object, client k8sclient.Client, t
 		},
 	}
 
+	originalSize := len(object.GetOwnerReferences())
 	object.SetOwnerReferences(ownerReference)
-	err := client.Update(context.TODO(), object)
-	if err != nil {
-		return err
+	newSize := len(object.GetOwnerReferences())
+
+	if originalSize != newSize {
+		err := client.Update(context.TODO(), object)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
 /*
