@@ -113,6 +113,29 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), product.GetNamespace(), product.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Retrieve ownersReference of tenant CR that owns the Backend CR
+	tenantCR, err := controllerhelper.RetrieveTenantCR(providerAccount, r.Client(), r.Logger(), product.Namespace)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// If tenant CR is found, set it's ownersReference as ownerReference in the BackendCR CR
+	if tenantCR != nil {
+		updated, err := controllerhelper.SetOwnersReference(product, r.Client(), tenantCR)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		if updated {
+			return ctrl.Result{Requeue: true}, nil
+		}
+	}
+
 	if product.SetDefaults(reqLogger) {
 		err := r.Client().Update(r.Context(), product)
 		if err != nil {
