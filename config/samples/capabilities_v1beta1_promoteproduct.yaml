@@ -1,0 +1,7 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: PromoteProduct
+metadata:
+  name: promoteproduct-sample
+spec:
+  # Add fields here
+  foo: bar

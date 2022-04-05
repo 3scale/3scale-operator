@@ -314,6 +314,22 @@ func main() {
 
 	registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry()
 
+	discoveryPromoteProduct, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
+
+	if err = (&capabilitiescontroller.PromoteProductReconciler{
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			ctrl.Log.WithName("controllers").WithName("PromoteProduct"),
+			discoveryPromoteProduct,
+			mgr.GetEventRecorderFor("PromoteProduct")),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "PromoteProduct")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
