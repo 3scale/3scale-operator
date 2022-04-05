@@ -24,14 +24,14 @@ import (
 type OpenAPIBackendReconciler struct {
 	*reconcilers.BaseReconciler
 	openapiCR       *capabilitiesv1beta1.OpenAPI
-	openapiObj      *openapi3.Swagger
+	openapiObj      *openapi3.T
 	providerAccount *controllerhelper.ProviderAccount
 	logger          logr.Logger
 }
 
 func NewOpenAPIBackendReconciler(b *reconcilers.BaseReconciler,
 	openapiCR *capabilitiesv1beta1.OpenAPI,
-	openapiObj *openapi3.Swagger,
+	openapiObj *openapi3.T,
 	providerAccount *controllerhelper.ProviderAccount,
 	logger logr.Logger,
 ) *OpenAPIBackendReconciler {

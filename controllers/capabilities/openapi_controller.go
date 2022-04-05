@@ -220,7 +220,7 @@ func (r *OpenAPIReconciler) checkProductSynced(resource *capabilitiesv1beta1.Ope
 	return product.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductSyncedConditionType), nil
 }
 
-func (r *OpenAPIReconciler) readOpenAPI(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
+func (r *OpenAPIReconciler) readOpenAPI(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.T, error) {
 	// OpenAPIRef is oneOf by CRD openapiV3 validation
 	if resource.Spec.OpenAPIRef.SecretRef != nil {
 		return r.readOpenAPISecret(resource)
@@ -230,7 +230,7 @@ func (r *OpenAPIReconciler) readOpenAPI(resource *capabilitiesv1beta1.OpenAPI) (
 	return r.readOpenAPIFromURL(resource)
 }
 
-func (r *OpenAPIReconciler) readOpenAPISecret(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
+func (r *OpenAPIReconciler) readOpenAPISecret(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.T, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
@@ -269,7 +269,7 @@ func (r *OpenAPIReconciler) readOpenAPISecret(resource *capabilitiesv1beta1.Open
 		return nil
 	}(openapiSecretObj)
 
-	openapiObj, err := openapi3.NewSwaggerLoader().LoadSwaggerFromData(dataByteArray)
+	openapiObj, err := openapi3.NewLoader().LoadFromData(dataByteArray)
 	if err != nil {
 		fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, resource.Spec.OpenAPIRef.SecretRef, err.Error()))
 		return nil, &helper.SpecFieldError{
@@ -290,7 +290,7 @@ func (r *OpenAPIReconciler) readOpenAPISecret(resource *capabilitiesv1beta1.Open
 	return openapiObj, nil
 }
 
-func (r *OpenAPIReconciler) validateOpenAPIAs3scaleProduct(openapiCR *capabilitiesv1beta1.OpenAPI, openapiObj *openapi3.Swagger) error {
+func (r *OpenAPIReconciler) validateOpenAPIAs3scaleProduct(openapiCR *capabilitiesv1beta1.OpenAPI, openapiObj *openapi3.T) error {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
@@ -322,7 +322,7 @@ func (r *OpenAPIReconciler) validateOpenAPIAs3scaleProduct(openapiCR *capabiliti
 	return nil
 }
 
-func (r *OpenAPIReconciler) readOpenAPIFromURL(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.Swagger, error) {
+func (r *OpenAPIReconciler) readOpenAPIFromURL(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.T, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
@@ -337,7 +337,7 @@ func (r *OpenAPIReconciler) readOpenAPIFromURL(resource *capabilitiesv1beta1.Ope
 		}
 	}
 
-	openapiObj, err := openapi3.NewSwaggerLoader().LoadSwaggerFromURI(openAPIURL)
+	openapiObj, err := openapi3.NewLoader().LoadFromURI(openAPIURL)
 	if err != nil {
 		fieldErrors = append(fieldErrors, field.Invalid(urlRefFldPath, resource.Spec.OpenAPIRef.URL, err.Error()))
 		return nil, &helper.SpecFieldError{

@@ -4,12 +4,12 @@ import (
 	"context"
 
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
-	
+
+	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"github.com/go-logr/logr"
-	corev1 "k8s.io/api/core/v1"
 )
 
 /*
@@ -25,7 +25,7 @@ func RetrieveTenantCR(providerAccount *ProviderAccount, client k8sclient.Client,
 	opts := k8sclient.ListOptions{
 		Namespace: namespace,
 	}
-	
+
 	tenantList := &capabilitiesv1alpha1.TenantList{}
 	err := client.List(context.TODO(), tenantList, &opts)
 	if err != nil {

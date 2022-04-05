@@ -14,6 +14,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
 	apimachineryerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -140,7 +141,7 @@ func (s *ActiveDocThreescaleReconciler) Reconcile() (*threescaleapi.ActiveDoc, e
 		}
 	}
 
-	existingOpenapiObj, err := openapi3.NewSwaggerLoader().LoadSwaggerFromData([]byte(*remoteActiveDoc.Element.Body))
+	existingOpenapiObj, err := openapi3.NewLoader().LoadFromData([]byte(*remoteActiveDoc.Element.Body))
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +149,8 @@ func (s *ActiveDocThreescaleReconciler) Reconcile() (*threescaleapi.ActiveDoc, e
 	// Compare parsed openapi3 objects
 	// Avoid detecting differences from serialization
 	if !reflect.DeepEqual(desiredOpenapiObj, existingOpenapiObj) {
-		s.logger.V(1).Info("update BODY", "Difference", cmp.Diff(desiredOpenapiObj, existingOpenapiObj))
+		s.logger.V(1).Info("update BODY", "Difference",
+			cmp.Diff(desiredOpenapiObj, existingOpenapiObj, cmpopts.IgnoreUnexported(openapi3.Schema{})))
 		updatedActiveDoc.Element.Body = &desiredBody
 		update = true
 	}
@@ -194,7 +196,7 @@ func (s *ActiveDocThreescaleReconciler) getDesiredProductIDFromCR() (*int64, err
 	return productList[idx].Status.ID, nil
 }
 
-func (s *ActiveDocThreescaleReconciler) getDesiredActiveDocBody() (*openapi3.Swagger, error) {
+func (s *ActiveDocThreescaleReconciler) getDesiredActiveDocBody() (*openapi3.T, error) {
 	// OpenAPIRef is oneOf by CRD openapiV3 validation
 	if s.resource.Spec.ActiveDocOpenAPIRef.SecretRef != nil {
 		return s.readOpenAPISecret()
@@ -204,7 +206,7 @@ func (s *ActiveDocThreescaleReconciler) getDesiredActiveDocBody() (*openapi3.Swa
 	return s.readOpenAPIFromURL()
 }
 
-func (s *ActiveDocThreescaleReconciler) readOpenAPISecret() (*openapi3.Swagger, error) {
+func (s *ActiveDocThreescaleReconciler) readOpenAPISecret() (*openapi3.T, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("activeDocOpenAPIRef")
@@ -244,7 +246,7 @@ func (s *ActiveDocThreescaleReconciler) readOpenAPISecret() (*openapi3.Swagger, 
 		return nil
 	}(openapiSecretObj)
 
-	openapiObj, err := openapi3.NewSwaggerLoader().LoadSwaggerFromData(dataByteArray)
+	openapiObj, err := openapi3.NewLoader().LoadFromData(dataByteArray)
 	if err != nil {
 		fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, s.resource.Spec.ActiveDocOpenAPIRef.SecretRef, err.Error()))
 		return nil, &helper.SpecFieldError{
@@ -265,7 +267,7 @@ func (s *ActiveDocThreescaleReconciler) readOpenAPISecret() (*openapi3.Swagger, 
 	return openapiObj, nil
 }
 
-func (s *ActiveDocThreescaleReconciler) readOpenAPIFromURL() (*openapi3.Swagger, error) {
+func (s *ActiveDocThreescaleReconciler) readOpenAPIFromURL() (*openapi3.T, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("activeDocOpenAPIRef")
@@ -280,7 +282,7 @@ func (s *ActiveDocThreescaleReconciler) readOpenAPIFromURL() (*openapi3.Swagger,
 		}
 	}
 
-	openapiObj, err := openapi3.NewSwaggerLoader().LoadSwaggerFromURI(openAPIURL)
+	openapiObj, err := openapi3.NewLoader().LoadFromURI(openAPIURL)
 	if err != nil {
 		fieldErrors = append(fieldErrors, field.Invalid(urlRefFldPath, s.resource.Spec.ActiveDocOpenAPIRef.URL, err.Error()))
 		return nil, &helper.SpecFieldError{

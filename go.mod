@@ -6,7 +6,7 @@ require (
 	github.com/3scale/3scale-porta-go-client v0.6.0
 	github.com/RHsyseng/operator-utils v0.0.0-20200506183821-e3b4a2ba9c30
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
-	github.com/getkin/kin-openapi v0.22.1
+	github.com/getkin/kin-openapi v0.94.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.1.0
 	github.com/go-playground/validator/v10 v10.2.0
