@@ -32,9 +32,10 @@ type PromoteProductSpec struct {
 	// product id you wish to promote
 	ProductId string `json:"productId,omitempty"`
 	// promotion configuration version you wish to promote too
+	// +optional
 	PromoteVersion string `json:"promoteVersion,omitempty"`
 
-	// Environment you wish to promote to staging or production
+	// Environment you wish to promote to 'staging' or 'production'
 	PromoteEnvironment string `json:"promoteEnvironment,omitempty"`
 
 	// Promote when true
@@ -51,25 +52,15 @@ type PromoteProductStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// +optional
-	ProductId *string `json:"productId,omitempty"`
-	// +optional
-	State *string `json:"state,omitempty"`
+	ProductId string `json:"productId,omitempty"`
 
-	// Environment you have promoted to i.e. staging or production
+	// The most recent Environment you have promoted to i.e. staging or production
 	//+optional
-	PromoteEnvironment string `json:"promoteEnvironment,omitempty"`
+	LatestPromoteEnvironment string `json:"promoteEnvironment,omitempty"`
 
-	// promotion configuration version you wish to promote too
+	// The most recent promoted configuration version
 	//+optional
-	PromoteVersion string `json:"promoteVersion,omitempty"`
-
-	// 3scale control plane host
-	// +optional
-	ProviderAccountHost string `json:"providerAccountHost,omitempty"`
-
-	// ObservedGeneration reflects the generation of the most recently observed PromoteProduct Spec.
-	// +optional
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	LatestPromoteVersion int `json:"promoteVersion,omitempty"`
 }
 
 // +kubebuilder:object:root=true

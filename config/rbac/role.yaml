@@ -7,26 +7,6 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - promoteproducts
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - promoteproducts/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
   - console.openshift.io
   resources:
   - consolelinks
@@ -357,6 +337,38 @@ rules:
   - capabilities.3scale.net
   resources:
   - products/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - promoteproducts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - promoteproducts/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - promoteproducts/status
   verbs:
   - get
   - patch

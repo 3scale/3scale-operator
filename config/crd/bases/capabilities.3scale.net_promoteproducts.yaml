@@ -43,7 +43,7 @@ spec:
                 description: Promote when true
                 type: boolean
               promoteEnvironment:
-                description: Environment you wish to promote to staging or production
+                description: Environment you wish to promote to 'staging' or 'production'
                 type: string
               promoteVersion:
                 description: promotion configuration version you wish to promote too
@@ -60,24 +60,15 @@ spec:
           status:
             description: PromoteProductStatus defines the observed state of PromoteProduct
             properties:
-              observedGeneration:
-                description: ObservedGeneration reflects the generation of the most
-                  recently observed PromoteProduct Spec.
-                format: int64
-                type: integer
               productId:
                 type: string
               promoteEnvironment:
-                description: Environment you have promoted to i.e. staging or production
+                description: The most recent Environment you have promoted to i.e.
+                  staging or production
                 type: string
               promoteVersion:
-                description: promotion configuration version you wish to promote too
-                type: string
-              providerAccountHost:
-                description: 3scale control plane host
-                type: string
-              state:
-                type: string
+                description: The most recent promoted configuration version
+                type: integer
             type: object
         type: object
     served: true

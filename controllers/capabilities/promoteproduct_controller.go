@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-porta-go-client/client"
+	"github.com/go-logr/logr"
 	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -34,8 +36,9 @@ type PromoteProductReconciler struct {
 	*reconcilers.BaseReconciler
 }
 
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=promoteproducts,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=capabilities.3scale.net,resources=promoteproducts/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=promoteproducts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=promoteproducts/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=promoteproducts/finalizers,verbs=get;list;watch;create;update;patch;delete
 
 func (r *PromoteProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
@@ -65,54 +68,103 @@ func (r *PromoteProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		reqLogger.V(1).Info(string(jsonData))
 	}
 
+	status, err := r.promoteProductReconciler(promoteProduct, reqLogger)
+	reqLogger.WithValues("status", status)
+
+	return ctrl.Result{}, nil
+}
+
+/** promoteProduct reconciler acts on the following fields in promoteProduct.spec
+- promote
+- productId
+- promoteVersion
+- promoteEnvironment
+**/
+func (r *PromoteProductReconciler) promoteProductReconciler(promoteProduct *capabilitiesv1beta1.PromoteProduct, reqLogger logr.Logger) (capabilitiesv1beta1.PromoteProductStatus, error) {
+
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), promoteProduct.GetNamespace(), promoteProduct.Spec.ProviderAccountRef, r.Logger())
 	if err != nil {
-		return ctrl.Result{}, err
+		status := r.promoteProductStatus(nil, promoteProduct, err, reqLogger)
+		return status, err
 	}
 
 	// connect to the 3scale porta client
 	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
 	if err != nil {
-		return ctrl.Result{}, err
+		status := r.promoteProductStatus(threescaleAPIClient, promoteProduct, err, reqLogger)
+		return status, err
 	}
 
 	if promoteProduct.Spec.ProductId == "" {
 		reqLogger.Info("empty productId selected, expected string number productId")
-		return ctrl.Result{}, nil
+		status := r.promoteProductStatus(threescaleAPIClient, promoteProduct, err, reqLogger)
+		return status, err
 	}
+
 	// check if promotion is enabled in the CR
 	if promoteProduct.Spec.Promote && promoteProduct.Spec.ProductId != "" {
-		// convert productId to int64
 		productIdInt64, err := strconv.ParseInt(promoteProduct.Spec.ProductId, 10, 64)
 		if err != nil {
-			return ctrl.Result{}, err
+			status := r.promoteProductStatus(threescaleAPIClient, promoteProduct, err, reqLogger)
+			return status, err
 		}
 
 		if promoteProduct.Spec.PromoteEnvironment == "staging" {
 			_, err = threescaleAPIClient.DeployProductProxy(productIdInt64)
 			if err != nil {
-				return ctrl.Result{}, err
+				status := r.promoteProductStatus(threescaleAPIClient, promoteProduct, err, reqLogger)
+				return status, err
 			}
+			promoteProduct.Spec.Promote = false
+			err = r.Client().Update(r.Context(), promoteProduct)
 		}
 		if promoteProduct.Spec.PromoteEnvironment == "production" {
 			if promoteProduct.Spec.PromoteVersion == "" {
 				reqLogger.Info("empty configuration version selected, expected a number string for promoteVersion")
-				return ctrl.Result{}, nil
+				status := r.promoteProductStatus(threescaleAPIClient, promoteProduct, err, reqLogger)
+				return status, err
 			}
 			if promoteProduct.Spec.PromoteVersion != "" {
 				_, err = threescaleAPIClient.PromoteProxyConfig(promoteProduct.Spec.ProductId, "sandbox", promoteProduct.Spec.PromoteVersion, promoteProduct.Spec.PromoteEnvironment)
 				if err != nil {
-					return ctrl.Result{}, err
+					status := r.promoteProductStatus(threescaleAPIClient, promoteProduct, err, reqLogger)
+					return status, err
 				}
 			}
+			promoteProduct.Spec.Promote = false
+			err = r.Client().Update(r.Context(), promoteProduct)
 		}
+
 		if promoteProduct.Spec.PromoteEnvironment != "staging" && promoteProduct.Spec.PromoteEnvironment != "production" {
 			reqLogger.Info("invalid environment selected, expected 'staging' or 'production' for promoteEnvironment")
-			return ctrl.Result{}, nil
+			status := r.promoteProductStatus(threescaleAPIClient, promoteProduct, err, reqLogger)
+			return status, err
 		}
 	}
+	status := r.promoteProductStatus(threescaleAPIClient, promoteProduct, err, reqLogger)
+	return status, nil
+}
 
-	return ctrl.Result{}, nil
+//  promoteProductStatus generates the status for existing promoteProduct CR
+func (r *PromoteProductReconciler) promoteProductStatus(threescaleAPIClient *client.ThreeScaleClient, promoteProduct *capabilitiesv1beta1.PromoteProduct, err error, reqLogger logr.Logger) capabilitiesv1beta1.PromoteProductStatus {
+	promoteProduct.Status.ProductId = promoteProduct.Spec.ProductId
+	promoteProduct.Status.LatestPromoteEnvironment = promoteProduct.Spec.PromoteEnvironment
+	if threescaleAPIClient != nil {
+		getLatestProxyConfig, err := threescaleAPIClient.GetLatestProxyConfig(promoteProduct.Spec.ProductId, promoteProduct.Spec.PromoteEnvironment)
+		if err != nil {
+			reqLogger.Info("Failed to get latest proxy config ", err)
+		}
+		promoteProduct.Status.LatestPromoteVersion = getLatestProxyConfig.ProxyConfig.Version
+	}
+	err = r.Client().Status().Update(r.Context(), promoteProduct)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			reqLogger.Info("failed to update the status in promoteProduct", promoteProduct.Name)
+		}
+
+	}
+
+	return promoteProduct.Status
 }
 
 func (r *PromoteProductReconciler) SetupWithManager(mgr ctrl.Manager) error {
