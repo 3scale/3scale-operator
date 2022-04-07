@@ -12,7 +12,7 @@ type SystemMySQLReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
 
-func NewSystemMySQLReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemMySQLReconciler {
+func NewSystemMySQLReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) DependencyReconciler {
 	return &SystemMySQLReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}

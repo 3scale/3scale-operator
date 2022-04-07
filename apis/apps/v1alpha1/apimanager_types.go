@@ -78,6 +78,9 @@ type APIManagerSpec struct {
 	// +optional
 	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 	// +optional
+	ExternalComponents *ExternalComponentsSpec `json:"externalComponents,omitempty"`
+
+	// +optional
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
@@ -601,6 +604,23 @@ type HighAvailabilitySpec struct {
 	ExternalZyncDatabaseEnabled *bool `json:"externalZyncDatabaseEnabled,omitempty"`
 }
 
+type ExternalComponentsSpec struct {
+	System  ExternalSystemComponents  `json:"system"`
+	Backend ExternalBackendComponents `json:"backend"`
+	Zync    ExternalZyncComponents    `json:"zync"`
+}
+
+type ExternalSystemComponents struct {
+	Database bool `json:"database"`
+	Redis    bool `json:"redis"`
+}
+type ExternalBackendComponents struct {
+	Redis bool `json:"redis"`
+}
+type ExternalZyncComponents struct {
+	Database bool `json:"database"`
+}
+
 type PodDisruptionBudgetSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
@@ -886,7 +906,7 @@ func (apimanager *APIManager) setSystemDatabaseSpecDefaults() (bool, error) {
 	changed := false
 	systemSpec := apimanager.Spec.System
 
-	if apimanager.IsExternalDatabaseEnabled() {
+	if apimanager.IsExternal(SystemDatabase) {
 		if systemSpec.DatabaseSpec != nil {
 			systemSpec.DatabaseSpec = nil
 			changed = true
@@ -936,27 +956,80 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 	return changed
 }
 
-func (apimanager *APIManager) IsExternalDatabaseEnabled() bool {
-	return apimanager.Spec.HighAvailability != nil && apimanager.Spec.HighAvailability.Enabled
+func AllComponentsInternal() *ExternalComponentsSpec {
+	return &ExternalComponentsSpec{}
 }
 
-func (apimanager *APIManager) IsZyncExternalDatabaseEnabled() bool {
-	return apimanager.IsExternalDatabaseEnabled() &&
-		apimanager.Spec.HighAvailability.ExternalZyncDatabaseEnabled != nil &&
-		*apimanager.Spec.HighAvailability.ExternalZyncDatabaseEnabled
+func AllComponentsExternal() *ExternalComponentsSpec {
+	return &ExternalComponentsSpec{
+		System:  ExternalSystemComponents{Database: true, Redis: true},
+		Backend: ExternalBackendComponents{Redis: true},
+		Zync:    ExternalZyncComponents{Database: true},
+	}
 }
+
+func (apimanager *APIManager) HighAvailabilityToExternalComponents() {
+	// The external components field is already populated. Nothing to do
+	if apimanager.Spec.ExternalComponents != nil {
+		return
+	}
+
+	apimanager.Spec.ExternalComponents = AllComponentsInternal()
+
+	// The hight availability field is empty. Default to no external
+	// components
+	if apimanager.Spec.HighAvailability == nil {
+		return
+	}
+
+	// HighAvailability is enabled. Default to all external components
+	if apimanager.Spec.HighAvailability.Enabled {
+		apimanager.Spec.ExternalComponents.System.Database = true
+		apimanager.Spec.ExternalComponents.System.Redis = true
+		apimanager.Spec.ExternalComponents.Backend.Redis = true
+
+		if apimanager.Spec.HighAvailability.ExternalZyncDatabaseEnabled != nil && *apimanager.Spec.HighAvailability.ExternalZyncDatabaseEnabled {
+			apimanager.Spec.ExternalComponents.Zync.Database = true
+		}
+	}
+
+	// Remove the deprecated field
+	apimanager.Spec.HighAvailability = nil
+}
+
+func (apimanager *APIManager) IsExternal(selector func(*ExternalComponentsSpec) bool) bool {
+	if apimanager.Spec.ExternalComponents == nil {
+		return false
+	}
+
+	return selector(apimanager.Spec.ExternalComponents)
+}
+
+func SystemDatabase(e *ExternalComponentsSpec) bool {
+	return e.System.Database
+}
+func SystemRedis(e *ExternalComponentsSpec) bool {
+	return e.System.Redis
+}
+func BackendRedis(e *ExternalComponentsSpec) bool {
+	return e.Backend.Redis
+}
+func ZyncDatabase(e *ExternalComponentsSpec) bool {
+	return e.Zync.Database
+}
+
 func (apimanager *APIManager) IsPDBEnabled() bool {
 	return apimanager.Spec.PodDisruptionBudget != nil && apimanager.Spec.PodDisruptionBudget.Enabled
 }
 
 func (apimanager *APIManager) IsSystemPostgreSQLEnabled() bool {
-	return !apimanager.IsExternalDatabaseEnabled() &&
+	return !apimanager.IsExternal(SystemDatabase) &&
 		apimanager.Spec.System.DatabaseSpec != nil &&
 		apimanager.Spec.System.DatabaseSpec.PostgreSQL != nil
 }
 
 func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
-	return !apimanager.IsExternalDatabaseEnabled() &&
+	return !apimanager.IsExternal(SystemDatabase) &&
 		apimanager.Spec.System.DatabaseSpec != nil &&
 		apimanager.Spec.System.DatabaseSpec.MySQL != nil
 }

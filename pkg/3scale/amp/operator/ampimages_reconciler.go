@@ -48,7 +48,7 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	if !r.apiManager.IsZyncExternalDatabaseEnabled() {
+	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
 		// zync db postresql IS
 		err = r.ReconcileImagestream(ampImages.ZyncDatabasePostgreSQLImageStream(), reconcilers.GenericImageStreamMutator)
 		if err != nil {

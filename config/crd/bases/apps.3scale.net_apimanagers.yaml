@@ -4603,6 +4603,37 @@ spec:
                         type: array
                     type: object
                 type: object
+              externalComponents:
+                properties:
+                  backend:
+                    properties:
+                      redis:
+                        type: boolean
+                    required:
+                    - redis
+                    type: object
+                  system:
+                    properties:
+                      database:
+                        type: boolean
+                      redis:
+                        type: boolean
+                    required:
+                    - database
+                    - redis
+                    type: object
+                  zync:
+                    properties:
+                      database:
+                        type: boolean
+                    required:
+                    - database
+                    type: object
+                required:
+                - backend
+                - system
+                - zync
+                type: object
               highAvailability:
                 properties:
                   enabled:

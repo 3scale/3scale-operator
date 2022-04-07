@@ -13,7 +13,7 @@ type SystemPostgreSQLReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
 
-func NewSystemPostgreSQLReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemPostgreSQLReconciler {
+func NewSystemPostgreSQLReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) DependencyReconciler {
 	return &SystemPostgreSQLReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}

@@ -11,7 +11,7 @@ type SystemMySQLImageReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
 
-func NewSystemMySQLImageReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemMySQLImageReconciler {
+func NewSystemMySQLImageReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) DependencyReconciler {
 	return &SystemMySQLImageReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}

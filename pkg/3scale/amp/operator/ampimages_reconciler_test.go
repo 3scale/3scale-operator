@@ -137,6 +137,7 @@ func TestAMPImagesReconcilerWithAllExternalDatabases(t *testing.T) {
 				Enabled:                     true,
 				ExternalZyncDatabaseEnabled: &trueValue,
 			},
+			ExternalComponents: appsv1alpha1.AllComponentsExternal(),
 		},
 	}
 	// Objects to track in the fake client.
