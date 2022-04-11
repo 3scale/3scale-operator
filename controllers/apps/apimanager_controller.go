@@ -336,11 +336,12 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 	// Helper function that instantiates a dependency reconciler depending
 	// on whether it's external or internal
 	selectReconciler := func(cs constructors, selectIsExternal func(*appsv1alpha1.ExternalComponentsSpec) bool) operator.DependencyReconciler {
+		constructor := cs.Internal
 		if selectIsExternal(componentsSpec) {
-			return cs.External(baseAPIManagerLogicReconciler)
-		} else {
-			return cs.Internal(baseAPIManagerLogicReconciler)
+			constructor = cs.External
 		}
+
+		return constructor(baseAPIManagerLogicReconciler)
 	}
 
 	// Select whether to use PostgreSQL or MySQL for the System database
