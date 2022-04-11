@@ -605,21 +605,39 @@ type HighAvailabilitySpec struct {
 }
 
 type ExternalComponentsSpec struct {
-	System  ExternalSystemComponents  `json:"system"`
+	// +optional
+	System ExternalSystemComponents `json:"system"`
+	// +optional
 	Backend ExternalBackendComponents `json:"backend"`
-	Zync    ExternalZyncComponents    `json:"zync"`
+	// +optional
+	Zync ExternalZyncComponents `json:"zync"`
 }
 
 type ExternalSystemComponents struct {
-	Database bool `json:"database"`
-	Redis    bool `json:"redis"`
+	ExternalDatabaseSpec `json:",omitempty"`
+	ExternalRedisSpec    `json:",omitempty"`
 }
+
 type ExternalBackendComponents struct {
+	ExternalRedisSpec `json:",omitempty"`
+}
+
+type ExternalZyncComponents struct {
+	ExternalDatabaseSpec `json:",omitempty"`
+}
+
+type ExternalDatabaseSpec struct {
+	// +optional
+	Database bool `json:"database"`
+}
+
+type ExternalRedisSpec struct {
+	// +optional
 	Redis bool `json:"redis"`
 }
-type ExternalZyncComponents struct {
-	Database bool `json:"database"`
-}
+
+var ExternalDatabase ExternalDatabaseSpec = ExternalDatabaseSpec{true}
+var ExternalRedis ExternalRedisSpec = ExternalRedisSpec{true}
 
 type PodDisruptionBudgetSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
@@ -962,9 +980,9 @@ func AllComponentsInternal() *ExternalComponentsSpec {
 
 func AllComponentsExternal() *ExternalComponentsSpec {
 	return &ExternalComponentsSpec{
-		System:  ExternalSystemComponents{Database: true, Redis: true},
-		Backend: ExternalBackendComponents{Redis: true},
-		Zync:    ExternalZyncComponents{Database: true},
+		System:  ExternalSystemComponents{ExternalDatabase, ExternalRedis},
+		Backend: ExternalBackendComponents{ExternalRedis},
+		Zync:    ExternalZyncComponents{ExternalDatabase},
 	}
 }
 
