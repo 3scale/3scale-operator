@@ -75,6 +75,9 @@ func (r *RedisDependencyReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(r.DeploymentConfig(redis), dcMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
 	// redis Service
 	err = r.ReconcileService(r.Service(redis), reconcilers.CreateOnlyMutator)
