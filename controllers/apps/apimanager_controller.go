@@ -226,9 +226,6 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 		return result, err
 	}
 
-	// Convert the HighAvailability field to ExternalComponents
-	cr.HighAvailabilityToExternalComponents()
-
 	dependencyReconciler := r.dependencyReconcilerForComponents(cr, baseAPIManagerLogicReconciler)
 	result, err = dependencyReconciler.Reconcile()
 	if err != nil || result.Requeue {
