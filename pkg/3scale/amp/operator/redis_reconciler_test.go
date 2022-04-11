@@ -76,39 +76,53 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
-	reconciler := NewRedisReconciler(baseAPIManagerLogicReconciler)
-	_, err = reconciler.Reconcile()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	cases := []struct {
-		testName string
-		objName  string
-		obj      runtime.Object
+		testName              string
+		reconcilerConstructor DependencyReconcilerConstructor
+		expectedObjs          []struct {
+			objName string
+			obj     runtime.Object
+		}
 	}{
-		{"backendRedisDC", "backend-redis", &appsv1.DeploymentConfig{}},
-		{"backendRedisService", "backend-redis", &v1.Service{}},
-		{"backendRedisCM", "redis-config", &v1.ConfigMap{}},
-		{"backendRedisPVC", "backend-redis-storage", &v1.PersistentVolumeClaim{}},
-		{"backendRedisIS", "backend-redis", &imagev1.ImageStream{}},
-		{"systemRedisDC", "system-redis", &appsv1.DeploymentConfig{}},
-		{"systemRedisPVC", "system-redis-storage", &v1.PersistentVolumeClaim{}},
-		{"systemRedisIS", "system-redis", &imagev1.ImageStream{}},
-		{"systemRedisService", "system-redis", &v1.Service{}},
+		{"backendRedis", NewBackendRedisDependencyReconciler, []struct {
+			objName string
+			obj     runtime.Object
+		}{
+			{"backend-redis", &appsv1.DeploymentConfig{}},
+			{"backend-redis", &v1.Service{}},
+			{"redis-config", &v1.ConfigMap{}},
+			{"backend-redis-storage", &v1.PersistentVolumeClaim{}},
+			{"backend-redis", &imagev1.ImageStream{}},
+		}},
+		{"systemRedis", NewSystemRedisDependencyReconciler, []struct {
+			objName string
+			obj     runtime.Object
+		}{
+			{"system-redis", &appsv1.DeploymentConfig{}},
+			{"system-redis-storage", &v1.PersistentVolumeClaim{}},
+			{"system-redis", &imagev1.ImageStream{}},
+			{"system-redis", &v1.Service{}},
+		}},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			obj := tc.obj
-			namespacedName := types.NamespacedName{
-				Name:      tc.objName,
-				Namespace: namespace,
-			}
-			err = cl.Get(context.TODO(), namespacedName, obj)
-			// object must exist, that is all required to be tested
+			reconciler := tc.reconcilerConstructor(baseAPIManagerLogicReconciler)
+			_, err := reconciler.Reconcile()
 			if err != nil {
-				subT.Errorf("error fetching object %s: %v", tc.objName, err)
+				subT.Fatal(err)
+			}
+
+			for _, obj := range tc.expectedObjs {
+				namespacedName := types.NamespacedName{
+					Name:      obj.objName,
+					Namespace: namespace,
+				}
+				err = cl.Get(context.TODO(), namespacedName, obj.obj)
+				// object must exist, that is all required to be tested
+				if err != nil {
+					subT.Errorf("error fetching object %s: %v", obj.objName, err)
+				}
 			}
 		})
 	}
