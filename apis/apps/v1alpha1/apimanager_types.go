@@ -986,10 +986,10 @@ func AllComponentsExternal() *ExternalComponentsSpec {
 	}
 }
 
-func (apimanager *APIManager) HighAvailabilityToExternalComponents() {
+func (apimanager *APIManager) HighAvailabilityToExternalComponents() bool {
 	// The external components field is already populated. Nothing to do
 	if apimanager.Spec.ExternalComponents != nil {
-		return
+		return false
 	}
 
 	apimanager.Spec.ExternalComponents = AllComponentsInternal()
@@ -997,7 +997,7 @@ func (apimanager *APIManager) HighAvailabilityToExternalComponents() {
 	// The hight availability field is empty. Default to no external
 	// components
 	if apimanager.Spec.HighAvailability == nil {
-		return
+		return true
 	}
 
 	// HighAvailability is enabled. Default to all external components
@@ -1013,6 +1013,7 @@ func (apimanager *APIManager) HighAvailabilityToExternalComponents() {
 
 	// Remove the deprecated field
 	apimanager.Spec.HighAvailability = nil
+	return true
 }
 
 func (apimanager *APIManager) IsExternal(selector func(*ExternalComponentsSpec) bool) bool {

@@ -205,13 +205,13 @@ func (r *APIManagerReconciler) apiManagerInstance(namespacedName types.Namespace
 }
 
 func (r *APIManagerReconciler) setAPIManagerDefaults(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	cr.HighAvailabilityToExternalComponents()
+	externalChanged := cr.HighAvailabilityToExternalComponents()
 	changed, err := cr.SetDefaults() // TODO check where to put this
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	if changed {
+	if changed || externalChanged {
 		err = r.Client().Update(context.TODO(), cr)
 	}
 
