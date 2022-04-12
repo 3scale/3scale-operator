@@ -25,6 +25,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var apimanger_secret_name = "system-seed"
+
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
@@ -39,7 +41,8 @@ type TenantSpec struct {
 	SystemMasterUrl        string             `json:"systemMasterUrl"`
 	TenantSecretRef        v1.SecretReference `json:"tenantSecretRef"`
 	PasswordCredentialsRef v1.SecretReference `json:"passwordCredentialsRef"`
-	MasterCredentialsRef   v1.SecretReference `json:"masterCredentialsRef"`
+	// Namespace of the existing APIManager that you wish to used to create the Tenant
+	APIManagerNamespaceRef string `json:"apiManagerNamespaceRef"`
 }
 
 // TenantStatus defines the observed state of Tenant
@@ -81,14 +84,14 @@ func (t *Tenant) SetDefaults() bool {
 }
 
 func (t *Tenant) MasterSecretKey() client.ObjectKey {
-	namespace := t.Spec.MasterCredentialsRef.Namespace
+	namespace := t.Spec.APIManagerNamespaceRef
 
 	if namespace == "" {
 		namespace = t.Namespace
 	}
 
 	return client.ObjectKey{
-		Name:      t.Spec.MasterCredentialsRef.Name,
+		Name:      apimanger_secret_name,
 		Namespace: namespace,
 	}
 }
