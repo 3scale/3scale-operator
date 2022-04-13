@@ -22,19 +22,19 @@ var (
 	NonAlphanumRegexp = regexp.MustCompile(`[^0-9A-Za-z]`)
 )
 
-func SystemNameFromOpenAPITitle(obj *openapi3.Swagger) string {
+func SystemNameFromOpenAPITitle(obj *openapi3.T) string {
 	openapiTitle := obj.Info.Title
 	openapiTitleToLower := strings.ToLower(openapiTitle)
 	return NonWordCharRegexp.ReplaceAllString(openapiTitleToLower, "_")
 }
 
-func K8sNameFromOpenAPITitle(obj *openapi3.Swagger) string {
+func K8sNameFromOpenAPITitle(obj *openapi3.T) string {
 	openapiTitle := obj.Info.Title
 	openapiTitleToLower := strings.ToLower(openapiTitle)
 	return NonAlphanumRegexp.ReplaceAllString(openapiTitleToLower, "")
 }
 
-func FirstServerFromOpenAPI(obj *openapi3.Swagger) *openapi3.Server {
+func FirstServerFromOpenAPI(obj *openapi3.T) *openapi3.Server {
 	if obj == nil {
 		return nil
 	}
@@ -66,7 +66,7 @@ func RenderOpenAPIServerURLStr(server *openapi3.Server) (string, error) {
 	}
 
 	for variableName, variable := range server.Variables {
-		data.Data[variableName] = variable.Default.(string)
+		data.Data[variableName] = variable.Default
 	}
 
 	urlTemplate := TemplateRegexp.ReplaceAllString(server.URL, `{{ index .Data "$1" }}`)
@@ -112,7 +112,7 @@ func NewExtendedSecurityRequirement(secSchemeRef *openapi3.SecuritySchemeRef, sc
 	}
 }
 
-func OpenAPIGlobalSecurityRequirements(openapiObj *openapi3.Swagger) []*ExtendedSecurityRequirement {
+func OpenAPIGlobalSecurityRequirements(openapiObj *openapi3.T) []*ExtendedSecurityRequirement {
 	extendedSecRequirements := make([]*ExtendedSecurityRequirement, 0)
 
 	for _, secReq := range openapiObj.Security {
@@ -146,7 +146,7 @@ func MethodSystemNameFromOpenAPIOperation(path, opVerb string, op *openapi3.Oper
 	return NonWordCharRegexp.ReplaceAllString(nameToLower, "_")
 }
 
-func BaseURLFromOpenAPI(obj *openapi3.Swagger) (string, error) {
+func BaseURLFromOpenAPI(obj *openapi3.T) (string, error) {
 	server := FirstServerFromOpenAPI(obj)
 	serverURL, err := RenderOpenAPIServerURL(server)
 	if err != nil {
@@ -162,7 +162,7 @@ func BaseURLFromOpenAPI(obj *openapi3.Swagger) (string, error) {
 	return fmt.Sprintf("%s://%s", scheme, serverURL.Host), nil
 }
 
-func BasePathFromOpenAPI(obj *openapi3.Swagger) (string, error) {
+func BasePathFromOpenAPI(obj *openapi3.T) (string, error) {
 	server := FirstServerFromOpenAPI(obj)
 	serverURL, err := RenderOpenAPIServerURL(server)
 	if err != nil {

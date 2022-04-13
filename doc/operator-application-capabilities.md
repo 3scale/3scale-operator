@@ -856,7 +856,7 @@ The operator will gather required credentials automatically for the default 3sca
 
 ### Features
 
-* [OpenAPI 3.0.2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md) specification
+* [OpenAPI 3.X](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md) specification
 * Accepted OpenAPI spec document formats are `json` and `yaml`.
 * OpenAPI spec document can be read from:
   * Secret

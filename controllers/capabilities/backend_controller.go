@@ -139,7 +139,7 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		
+
 		if updated {
 			return ctrl.Result{Requeue: true}, nil
 		}
