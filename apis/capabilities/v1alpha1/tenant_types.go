@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var apimanger_secret_name = "system-seed"
+var apimangerSecretName = "system-seed"
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -91,7 +91,7 @@ func (t *Tenant) MasterSecretKey() client.ObjectKey {
 	}
 
 	return client.ObjectKey{
-		Name:      apimanger_secret_name,
+		Name:      apimangerSecretName,
 		Namespace: namespace,
 	}
 }
