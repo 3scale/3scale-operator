@@ -170,6 +170,7 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 				Enabled:                     true,
 				ExternalZyncDatabaseEnabled: &trueValue,
 			},
+			ExternalComponents: appsv1alpha1.AllComponentsExternal(),
 		},
 	}
 

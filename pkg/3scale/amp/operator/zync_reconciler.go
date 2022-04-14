@@ -61,7 +61,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	if !r.apiManager.IsZyncExternalDatabaseEnabled() {
+	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
 		// Zync DB DC
 		zyncDBDCMutator := reconcilers.DeploymentConfigMutator(
 			reconcilers.DeploymentConfigContainerResourcesMutator,

@@ -52,20 +52,23 @@ func TestHighAvailabilityReconciler(t *testing.T) {
 	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	BaseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
-	reconciler := NewHighAvailabilityReconciler(BaseAPIManagerLogicReconciler)
-	_, err = reconciler.Reconcile()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	cases := []struct {
-		testName   string
-		secretName string
+		reconcilerConstructor DependencyReconcilerConstructor
+		testName              string
+		secretName            string
 	}{
-		{"backendRedisTest", component.BackendSecretBackendRedisSecretName},
+		{NewBackendExternalRedisReconciler, "backendRedisTest", component.BackendSecretBackendRedisSecretName},
+		{NewSystemExternalRedisReconciler, "systemRedisTest", component.SystemSecretSystemRedisSecretName},
+		{NewSystemExternalDatabaseReconciler, "systemDatabaseTest", component.SystemSecretSystemDatabaseSecretName},
 	}
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
+			reconciler := tc.reconcilerConstructor(BaseAPIManagerLogicReconciler)
+			_, err = reconciler.Reconcile()
+			if err != nil {
+				subT.Fatal(err)
+			}
+
 			secret := &v1.Secret{}
 			namespacedName := types.NamespacedName{
 				Name:      tc.secretName,

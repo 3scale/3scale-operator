@@ -135,6 +135,7 @@ func TestZyncExternalDatabaseIsEnabled(t *testing.T) {
 					Enabled:                     true,
 					ExternalZyncDatabaseEnabled: &trueVal,
 				}
+				apimanager.Spec.ExternalComponents = AllComponentsExternal()
 				return apimanager
 			},
 			true,
@@ -165,7 +166,7 @@ func TestZyncExternalDatabaseIsEnabled(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			receivedResult := tc.apimanagerFactory().IsZyncExternalDatabaseEnabled()
+			receivedResult := tc.apimanagerFactory().IsExternal(ZyncDatabase)
 			if !reflect.DeepEqual(tc.expectedResult, receivedResult) {
 				subT.Errorf("Expected result differs: Expected: %t, Received: %t", tc.expectedResult, receivedResult)
 			}

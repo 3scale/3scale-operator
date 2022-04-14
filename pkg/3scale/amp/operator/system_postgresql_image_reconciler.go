@@ -12,7 +12,7 @@ type SystemPostgreSQLImageReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
 
-func NewSystemPostgreSQLImageReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemPostgreSQLImageReconciler {
+func NewSystemPostgreSQLImageReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) DependencyReconciler {
 	return &SystemPostgreSQLImageReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}

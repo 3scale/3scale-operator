@@ -2595,6 +2595,26 @@ spec:
                         type: array
                     type: object
                 type: object
+              externalComponents:
+                properties:
+                  backend:
+                    properties:
+                      redis:
+                        type: boolean
+                    type: object
+                  system:
+                    properties:
+                      database:
+                        type: boolean
+                      redis:
+                        type: boolean
+                    type: object
+                  zync:
+                    properties:
+                      database:
+                        type: boolean
+                    type: object
+                type: object
               highAvailability:
                 properties:
                   enabled:
