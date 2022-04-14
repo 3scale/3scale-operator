@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	appsv1 "github.com/openshift/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -104,6 +105,34 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 	)
+
+	manualHPA := "false"
+
+	if metav1.HasAnnotation(r.apiManager.ObjectMeta, "manualHPA") {
+		manualHPA = r.apiManager.Annotations["manualHPA"]
+	}
+
+	if manualHPA == "true" {
+		productionDCMutator = reconcilers.DeploymentConfigMutator(
+			reconcilers.DeploymentConfigContainerResourcesMutator,
+			reconcilers.DeploymentConfigAffinityMutator,
+			reconcilers.DeploymentConfigTolerationsMutator,
+			apicastProductionWorkersEnvVarMutator,
+			apicastLogLevelEnvVarMutator,
+			apicastTracingConfigEnvVarsMutator,
+			apicastEnvironmentEnvVarMutator,
+			apicastHTTPSEnvVarMutator,
+			apicastProxyConfigurationsEnvVarMutator,
+			apicastVolumeMountsMutator,
+			apicastVolumesMutator,
+			apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
+			apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
+			apicastCustomEnvAnnotationsMutator,     // Should be always after volume
+			portsMutator,
+			apicastPodTemplateEnvConfigMapAnnotationsMutator,
+		)
+	}
+
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err

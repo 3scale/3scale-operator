@@ -48,6 +48,14 @@ func GenericDeploymentConfigMutator() MutateFn {
 	)
 }
 
+func ManualHPADeploymentConfigMutator() MutateFn {
+	return DeploymentConfigMutator(
+		DeploymentConfigContainerResourcesMutator,
+		DeploymentConfigAffinityMutator,
+		DeploymentConfigTolerationsMutator,
+	)
+}
+
 func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	update := false
 
