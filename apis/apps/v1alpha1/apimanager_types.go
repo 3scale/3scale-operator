@@ -606,38 +606,29 @@ type HighAvailabilitySpec struct {
 
 type ExternalComponentsSpec struct {
 	// +optional
-	System ExternalSystemComponents `json:"system"`
+	System *ExternalSystemComponents `json:"system,omitempty"`
 	// +optional
-	Backend ExternalBackendComponents `json:"backend"`
+	Backend *ExternalBackendComponents `json:"backend,omitempty"`
 	// +optional
-	Zync ExternalZyncComponents `json:"zync"`
+	Zync *ExternalZyncComponents `json:"zync,omitempty"`
 }
 
 type ExternalSystemComponents struct {
-	ExternalDatabaseSpec `json:",omitempty"`
-	ExternalRedisSpec    `json:",omitempty"`
+	// +optional
+	Redis *bool `json:"redis,omitempty"`
+	// +optional
+	Database *bool `json:"database,omitempty"`
 }
 
 type ExternalBackendComponents struct {
-	ExternalRedisSpec `json:",omitempty"`
+	// +optional
+	Redis *bool `json:"redis,omitempty"`
 }
 
 type ExternalZyncComponents struct {
-	ExternalDatabaseSpec `json:",omitempty"`
-}
-
-type ExternalDatabaseSpec struct {
 	// +optional
-	Database bool `json:"database"`
+	Database *bool `json:"database,omitempty"`
 }
-
-type ExternalRedisSpec struct {
-	// +optional
-	Redis bool `json:"redis"`
-}
-
-var ExternalDatabase ExternalDatabaseSpec = ExternalDatabaseSpec{true}
-var ExternalRedis ExternalRedisSpec = ExternalRedisSpec{true}
 
 type PodDisruptionBudgetSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
@@ -974,67 +965,93 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 	return changed
 }
 
-func AllComponentsInternal() *ExternalComponentsSpec {
-	return &ExternalComponentsSpec{}
-}
-
-func AllComponentsExternal() *ExternalComponentsSpec {
-	return &ExternalComponentsSpec{
-		System:  ExternalSystemComponents{ExternalDatabase, ExternalRedis},
-		Backend: ExternalBackendComponents{ExternalRedis},
-		Zync:    ExternalZyncComponents{ExternalDatabase},
-	}
-}
-
-func (apimanager *APIManager) HighAvailabilityToExternalComponents() bool {
+func (apimanager *APIManager) UpdateExternalComponentsFromHighAvailability() bool {
 	// The external components field is already populated. Nothing to do
 	if apimanager.Spec.ExternalComponents != nil {
 		return false
 	}
 
-	apimanager.Spec.ExternalComponents = AllComponentsInternal()
+	updated := false
+	// When the info comes from the deprecated .spec.highAvailability field
+	e := mapHighAvailabilityToExternalComponents(apimanager)
 
-	// The hight availability field is empty. Default to no external
-	// components
-	if apimanager.Spec.HighAvailability == nil {
-		return true
-	}
-
-	// HighAvailability is enabled. Default to all external components
-	if apimanager.Spec.HighAvailability.Enabled {
-		apimanager.Spec.ExternalComponents.System.Database = true
-		apimanager.Spec.ExternalComponents.System.Redis = true
-		apimanager.Spec.ExternalComponents.Backend.Redis = true
-
-		if apimanager.Spec.HighAvailability.ExternalZyncDatabaseEnabled != nil && *apimanager.Spec.HighAvailability.ExternalZyncDatabaseEnabled {
-			apimanager.Spec.ExternalComponents.Zync.Database = true
-		}
+	if e != nil {
+		apimanager.Spec.ExternalComponents = e
+		updated = true
 	}
 
 	// Remove the deprecated field
-	apimanager.Spec.HighAvailability = nil
-	return true
+	if apimanager.Spec.HighAvailability != nil {
+		apimanager.Spec.HighAvailability = nil
+		updated = true
+	}
+
+	return updated
 }
 
 func (apimanager *APIManager) IsExternal(selector func(*ExternalComponentsSpec) bool) bool {
-	if apimanager.Spec.ExternalComponents == nil {
-		return false
+	// ExternalComponents has precedence over HighAvailability
+	if apimanager.Spec.ExternalComponents != nil {
+		return selector(apimanager.Spec.ExternalComponents)
 	}
 
-	return selector(apimanager.Spec.ExternalComponents)
+	// When the info comes from the deprecated .spec.highAvailability field
+	e := mapHighAvailabilityToExternalComponents(apimanager)
+
+	if e != nil {
+		return selector(e)
+	}
+
+	return false
+}
+
+func mapHighAvailabilityToExternalComponents(apiManager *APIManager) *ExternalComponentsSpec {
+	if apiManager.Spec.HighAvailability == nil {
+		return nil
+	}
+
+	if !apiManager.Spec.HighAvailability.Enabled {
+		return nil
+	}
+
+	trueVal := true
+
+	e := &ExternalComponentsSpec{
+		System:  &ExternalSystemComponents{Redis: &trueVal, Database: &trueVal},
+		Backend: &ExternalBackendComponents{Redis: &trueVal},
+	}
+
+	if apiManager.Spec.HighAvailability.ExternalZyncDatabaseEnabled != nil &&
+		*apiManager.Spec.HighAvailability.ExternalZyncDatabaseEnabled {
+		e.Zync = &ExternalZyncComponents{Database: &trueVal}
+	}
+
+	return e
+}
+
+func AllComponentsExternal() *ExternalComponentsSpec {
+	trueVal := true
+	return &ExternalComponentsSpec{
+		System:  &ExternalSystemComponents{Redis: &trueVal, Database: &trueVal},
+		Backend: &ExternalBackendComponents{Redis: &trueVal},
+		Zync:    &ExternalZyncComponents{Database: &trueVal},
+	}
 }
 
 func SystemDatabase(e *ExternalComponentsSpec) bool {
-	return e.System.Database
+	return e != nil && e.System != nil && e.System.Database != nil && *e.System.Database
 }
+
 func SystemRedis(e *ExternalComponentsSpec) bool {
-	return e.System.Redis
+	return e != nil && e.System != nil && e.System.Redis != nil && *e.System.Redis
 }
+
 func BackendRedis(e *ExternalComponentsSpec) bool {
-	return e.Backend.Redis
+	return e != nil && e.Backend != nil && e.Backend.Redis != nil && *e.Backend.Redis
 }
+
 func ZyncDatabase(e *ExternalComponentsSpec) bool {
-	return e.Zync.Database
+	return e != nil && e.Zync != nil && e.Zync.Database != nil && *e.Zync.Database
 }
 
 func (apimanager *APIManager) IsPDBEnabled() bool {

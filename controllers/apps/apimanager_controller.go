@@ -205,8 +205,8 @@ func (r *APIManagerReconciler) apiManagerInstance(namespacedName types.Namespace
 }
 
 func (r *APIManagerReconciler) setAPIManagerDefaults(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	externalChanged := cr.HighAvailabilityToExternalComponents()
-	changed, err := cr.SetDefaults() // TODO check where to put this
+	externalChanged := cr.UpdateExternalComponentsFromHighAvailability()
+	changed, err := cr.SetDefaults()
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -320,12 +320,6 @@ func (r *APIManagerReconciler) validateApicastTLSCertificates(cr *appsv1alpha1.A
 }
 
 func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) operator.DependencyReconciler {
-	// Get the external components spec. Default to all internal if not set
-	componentsSpec := cr.Spec.ExternalComponents
-	if componentsSpec == nil {
-		componentsSpec = appsv1alpha1.AllComponentsInternal()
-	}
-
 	// Helper type that contains the constructors for a dependency reconciler
 	// whether it's external or internal
 	type constructors struct {
@@ -337,7 +331,7 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 	// on whether it's external or internal
 	selectReconciler := func(cs constructors, selectIsExternal func(*appsv1alpha1.ExternalComponentsSpec) bool) operator.DependencyReconciler {
 		constructor := cs.Internal
-		if selectIsExternal(componentsSpec) {
+		if selectIsExternal(cr.Spec.ExternalComponents) {
 			constructor = cs.External
 		}
 
