@@ -1065,9 +1065,7 @@ func (apimanager *APIManager) IsSystemPostgreSQLEnabled() bool {
 }
 
 func (apimanager *APIManager) IsSystemMysqlEnabled() bool {
-	return !apimanager.IsExternal(SystemDatabase) &&
-		apimanager.Spec.System.DatabaseSpec != nil &&
-		apimanager.Spec.System.DatabaseSpec.MySQL != nil
+	return !apimanager.IsExternal(SystemDatabase) && !apimanager.IsSystemPostgreSQLEnabled()
 }
 
 func (apimanager *APIManager) IsMonitoringEnabled() bool {
