@@ -205,17 +205,22 @@ func (r *APIManagerReconciler) apiManagerInstance(namespacedName types.Namespace
 }
 
 func (r *APIManagerReconciler) setAPIManagerDefaults(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	updated := false
+
 	externalChanged := cr.UpdateExternalComponentsFromHighAvailability()
-	changed, err := cr.SetDefaults()
+	updated = updated || externalChanged
+
+	defaultsUpdated, err := cr.SetDefaults()
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+	updated = updated || defaultsUpdated
 
-	if changed || externalChanged {
+	if updated {
 		err = r.Client().Update(context.TODO(), cr)
 	}
 
-	return ctrl.Result{Requeue: changed}, err
+	return ctrl.Result{Requeue: updated}, err
 }
 
 func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
