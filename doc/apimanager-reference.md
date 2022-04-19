@@ -35,7 +35,7 @@ One APIManager custom resource per project is allowed.
    * [ZyncSpec](#zyncspec)
    * [ZyncAppSpec](#zyncappspec)
    * [ZyncQueSpec](#zyncquespec)
-   * [HighAvailabilitySpec](#highavailabilityspec)
+   * [ExternalComponentsSpec](#externalcomponentsspec)
    * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
    * [MonitoringSpec](#monitoringspec)
    * [APIManagerStatus](#apimanagerstatus)
@@ -81,7 +81,8 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | BackendSpec | `backend` | \*BackendSpec | No | See [BackendSpec](#BackendSpec) reference | Spec of the Backend part |
 | SystemSpec  | `system`  | \*SystemSpec  | No | See [SystemSpec](#SystemSpec) reference | Spec of the System part |
 | ZyncSpec    | `zync`    | \*ZyncSpec    | No | See [ZyncSpec](#ZyncSpec) reference | Spec of the Zync part    |
-| HighAvailabilitySpec | `highAvailability` | \*HighAvailabilitySpec | No | See [HighAvailabilitySpec](#HighAvailabilitySpec) reference | Spec of the HighAvailability part |
+| HighAvailabilitySpec | `highAvailability` | \*HighAvailabilitySpec | No | **[DEPRECATED**] See [ExternalComponentsSpec](#ExternalComponentsSpec) reference | |
+| ExternalComponentsSpec | `externalComponents` | \*ExternalComponentsSpec | No | See [ExternalComponentsSpec](#ExternalComponentsSpec) reference | Spec of the ExternalComponentsSpec part |
 | PodDisruptionBudgetSpec | `podDisruptionBudget` | \*PodDisruptionBudgetSpec | No | See [PodDisruptionBudgetSpec](#PodDisruptionBudgetSpec) reference | Spec of the PodDisruptionBudgetSpec part |
 | MonitoringSpec | `monitoring` | \*MonitoringSpec | No | Disabled | [MonitoringSpec](#MonitoringSpec) reference |
 
@@ -203,11 +204,11 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Backend |
-| RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by backend. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
-| RedisAffinity | `redisAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
-| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
+| RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by backend. Only takes effect when redis is not managed externally |
+| RedisAffinity | `redisAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when redis is not managed externally |
+| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when redis is not managed externally |
 | RedisResources | `redisResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | RedisResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
-| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[BackendRedisPersistentVolumeClaimSpec](#BackendRedisPersistentVolumeClaimSpec) | No | nil | Backend's Redis PersistentVolumeClaim configuration options. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
+| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[BackendRedisPersistentVolumeClaimSpec](#BackendRedisPersistentVolumeClaimSpec) | No | nil | Backend's Redis PersistentVolumeClaim configuration options. Only takes effect when redis is not managed externally |
 | ListenerSpec | `listenerSpec` | \*BackendListenerSpec | No | See [BackendListenerSpec](#BackendListenerSpec) reference | Spec of Backend Listener part |
 | WorkerSpec | `workerSpec` | \*BackendWorkerSpec | No | See [BackendWorkerSpec](#BackendWorkerSpec) reference | Spec of Backend Worker part |
 | CronSpec | `cronSpec` | \*BackendCronSpec | No | See [BackendCronSpec](#BackendCronSpec) reference | Spec of Backend Cron part |
@@ -250,10 +251,10 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System |
-| RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by System. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
-| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[SystemRedisPersistentVolumeClaimSpec](#SystemRedisPersistentVolumeClaimSpec) | No | nil | System's Redis PersistentVolumeClaim configuration options. Only takes effect when `.spec.highAvailability.enabled` is not set to true  |
-| RedisAffinity | `redisAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
-| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when `.spec.highAvailability.enabled` is not set to true |
+| RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by System. Only takes effect when redis is not managed externally |
+| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[SystemRedisPersistentVolumeClaimSpec](#SystemRedisPersistentVolumeClaimSpec) | No | nil | System's Redis PersistentVolumeClaim configuration options. Only takes effect when redis is not managed externally |
+| RedisAffinity | `redisAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when redis is not managed externally |
+| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when redis is not managed externally |
 | RedisResources | `redisResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | RedisResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | MemcachedImage | `memcachedImage` | string | No | nil | Used to overwrite the desired Memcached image for the Memcached used by System |
 | MemcachedAffinity | `memcachedAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
@@ -313,12 +314,12 @@ that should be set on it.
 
 ### DatabaseSpec
 
-Note: Deploying databases internally with this section is meant for evaluation purposes. Check [HighAvailabilitySpec](#highavailabilityspec) for production ready recommended deployments.
+Note: Deploying databases internally with this section is meant for evaluation purposes. Check [ExternalComponentsSpec](#ExternalComponentsSpec) for production ready recommended deployments.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| MySQL | `mysql`| \*SystemMySQLSpec | No | nil | Enable MySQL database as System's database. Only takes effect when `.spec.highAvailability.enabled` is not set to true. See [MySQLSpec](#MySQLSpec) specification |
-| PostgreSQL | `postgresql` | \*SystemPostgreSQLSpec | No | nil | Enable PostgreSQL database as System's database. Only takes effect when `.spec.highAvailability.enabled` is not set to true. See [PostgreSQLSpec](#PostgreSQLSpec)
+| MySQL | `mysql`| \*SystemMySQLSpec | No | nil | Enable MySQL database as System's database. Only takes effect when the instance is not managed externally. See [MySQLSpec](#MySQLSpec) specification |
+| PostgreSQL | `postgresql` | \*SystemPostgreSQLSpec | No | nil | Enable PostgreSQL database as System's database. Only takes effect when the instance is not managed externally. See [PostgreSQLSpec](#PostgreSQLSpec)
 
 ### MySQLSpec
 
@@ -389,12 +390,12 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Zync |
-| PostgreSQLImage | `postgreSQLImage` | string | No | nil | Used to overwrite the desired PostgreSQL image for the PostgreSQL used by Zync. Does not take effect when `.spec.highAvailability.enabled` and `spec.highAvailability.externalZyncDatabase` are set to true |
+| PostgreSQLImage | `postgreSQLImage` | string | No | nil | Used to overwrite the desired PostgreSQL image for the PostgreSQL used by Zync. Does not take effect when the database is managed externally |
 | AppSpec | `appSpec` | \*ZyncAppSpec | No | See [ZyncAppSpec](#ZyncAppSpec) reference | Spec of Zync App part |
 | QueSpec | `queSpec` | \*ZyncQueSpec | No | See [ZyncQueSpec](#ZyncQueSpec) reference | Spec of Zync Que part |
-| DatabaseAffinity | `databaseAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Does not take effect when `.spec.highAvailability.enabled` and `spec.highAvailability.externalZyncDatabase` are set to true |
-| DatabaseTolerations | `databaseTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Does not take effect when `.spec.highAvailability.enabled` and `spec.highAvailability.externalZyncDatabase` are set to true |
-| DatabaseResources | `databaseResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | DatabaseResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior. Does not take effect when `.spec.highAvailability.enabled` and `spec.highAvailability.externalZyncDatabase` are set to true |
+| DatabaseAffinity | `databaseAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Does not take effect when the database is managed externally |
+| DatabaseTolerations | `databaseTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Does not take effect when the database is managed externally |
+| DatabaseResources | `databaseResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | DatabaseResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior. Does not take effect when the database is managed externally |
 
 ### ZyncAppSpec
 
@@ -415,6 +416,8 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### HighAvailabilitySpec
+
+[**DEPRECATED**] See [ExternalComponentsSpec](#ExternalComponentsSpec) reference
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
@@ -439,6 +442,54 @@ also enabled the user has to pre-create the following secret too:
 * [zync](#zync) with the `DATABASE_URL` and `DATABASE_PASSWORD` fields
   with the values pointing to the desired external database settings.
   The database should be configured in high-availability mode
+
+### ExternalComponentsSpec
+
+| **json/yaml field**| **Type** | **Required** | **Description** |
+| --- | --- | --- | --- |
+| `system` | \*[ExternalSystemComponents](#ExternalSystemComponents) | No | Use external system databases |
+| `backend` | \*[ExternalBackendComponents](#ExternalBackendComponents) | No | Use external backend databases |
+| `zync` | \*[ExternalZyncComponents](#ExternalZyncComponents) | No | Use external zync databases |
+
+### ExternalSystemComponents
+
+| **json/yaml field**| **Type** | **Required** | **Description** |
+| --- | --- | --- | --- |
+| `redis` | `bool` | No | Use external redis databases. Defaults to `false` |
+| `database` | `bool` | No | Use external RDBMS database. Defaults to `false` |
+
+When system `redis` is enabled the following secret has to be pre-created by the user:
+
+* [system-redis](#system-redis) with the `URL` field
+  with the value pointing to the desired external database.
+
+When system `database` is enabled the following secret has to be pre-created by the user:
+
+* [system-database](#system-database) with the `URL` field with the value
+  pointing to the desired external database.
+
+### ExternalBackendComponents
+
+| **json/yaml field**| **Type** | **Required** | **Description** |
+| --- | --- | --- | --- |
+| `redis` | `bool` | No | Use external redis databases. Defaults to `false` |
+
+When backend `redis` is enabled the following secret has to be pre-created by the user:
+
+* [backend-redis](#backend-redis) with the `REDIS_STORAGE_URL` and
+  `REDIS_QUEUES_URL` fields with values pointing to the desired external
+  databases.
+
+### ExternalZyncComponents
+
+| **json/yaml field**| **Type** | **Required** | **Description** |
+| --- | --- | --- | --- |
+| `database` | `bool` | No | Use external RDBMS database. Defaults to `false` |
+
+When zync `database` is enabled the following secret has to be pre-created by the user:
+
+* [zync](#zync) with the `DATABASE_URL` and `DATABASE_PASSWORD` fields
+  with the values pointing to the desired external database settings.
 
 ### PodDisruptionBudgetSpec
 
@@ -522,10 +573,10 @@ The available configurable secrets are:
 
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
-| REDIS_STORAGE_URL | Backend's redis storage database URL. | Mandatory when `.spec.highAvailability.enabled` is `true`. Otherwise the default value is: `redis://backend-redis:6379/0` |
+| REDIS_STORAGE_URL | Backend's redis storage database URL. | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/0` |
 | REDIS_STORAGE_SENTINEL_ROLE | Backend's redis storage sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
 | REDIS_STORAGE_SENTINEL_HOSTS | Backend's redis storage sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
-| REDIS_QUEUES_URL | Backend's redis queues database URL  | Mandatory when `.spec.highAvailability.enabled` is `true`. Otherwise the default value is: `redis://backend-redis:6379/1` |
+| REDIS_QUEUES_URL | Backend's redis queues database URL  | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/1` |
 | REDIS_QUEUES_SENTINEL_ROLE | Backend's redis queues sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
 | REDIS_QUEUES_SENTINEL_HOSTS | Backend's redis queues sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
 
@@ -540,9 +591,9 @@ The available configurable secrets are:
 
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
-| URL | URL of the Porta database. When `.spec.highAvailability.enabled` is `true` this parameter is mandatory and the format of the URL must be: `<DBScheme>://<AdminUser>:<AdminPassword>@<DatabaseHost>/<DatabaseName>`, where `<AdminUser>` must be an already existing user in the external database with full permissions on the specified `<DatabaseName>` logical database and `<DatabaseName>` must be an already existing logical database in the external database.<br/>When `.spec.highAvailability.enabled` is set to `false` the `<AdminPassword>` part of the URL can be set instead of an autogenerated one. In order to do that (if desired) set `URL` as the value specified in the `Default Value` column with the `<AutoGeneratedValue>` placeholder replaced with the desired value.| A default is only set when `spec.highAvailability.enabled` is `false`.Otherwise it is a mandatory field.<br/>When `spec.highAvailability.enabled` is `false`:<br/>If MySQL is used as System's database (the default behavior):  `mysql2://root:<AutogeneratedValue>@system-mysql/mysql`.<br/>If PostgreSQL is used(when `.spec.system.database.postgresql` is set): `postgresql://root:<AutoGeneratedValue>@system-postgresql/system`. |
-| DB_USER | Non-administrative database username. Not used when `spec.highAvailability.enabled` is set to `false` | `mysql` |
-| DB_PASSWORD | Password of the non-administrative database user. Not used when `spec.highAvailability.enabled` is set to `false` | Autogenerated value |
+| URL | URL of the Porta database. Mandatory when the instance is managed externally. The format of the URL must be: `<DBScheme>://<AdminUser>:<AdminPassword>@<DatabaseHost>/<DatabaseName>`, where `<AdminUser>` must be an already existing user in the external database with full permissions on the specified `<DatabaseName>` logical database and `<DatabaseName>` must be an already existing logical database in the external database.<br/>When the database is managed internally, the `<AdminPassword>` part of the URL can be set instead of an autogenerated one. In order to do that (if desired) set `URL` as the value specified in the `Default Value` column with the `<AutoGeneratedValue>` placeholder replaced with the desired value.| A default is only set when database is managed internally. Otherwise it is a mandatory field.<br/>When managed internally:<br/>If MySQL is used as System's database (the default behavior):  `mysql2://root:<AutogeneratedValue>@system-mysql/mysql`.<br/>If PostgreSQL is used(when `.spec.system.database.postgresql` is set): `postgresql://root:<AutoGeneratedValue>@system-postgresql/system`. |
+| DB_USER | Non-administrative database username. Only used when the database is managed externally | `mysql` |
+| DB_PASSWORD | Password of the non-administrative database user. Only used when the database is managed externally | Autogenerated value |
 | ORACLE_SYSTEM_PASSWORD | Password of Oracle's `SYSTEM` administrative user. Required and only used when system's database provided in `URL` field is an external Oracle database | N/A |
 
 ### system-events-hook
@@ -577,7 +628,7 @@ The available configurable secrets are:
 
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
-| URL | System's Redis database URL | Mandatory when `.spec.highAvailability.enabled` is `true`. Otherwise the default value is: `redis://system-redis:6379/1` |
+| URL | System's Redis database URL | Mandatory when instance is managed externally. Otherwise the default value is: `redis://system-redis:6379/1` |
 | NAMESPACE | Define the namespace to be used by System's Redis Database. The empty value means not namespaced | `""` |
 | SENTINEL_HOSTS | System's Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
 | SENTINEL_ROLE | System's Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
@@ -599,8 +650,8 @@ The available configurable secrets are:
 
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
-| DATABASE_URL | PostgreSQL database used by Zync. Not configurable when `spec.highAvailability.enabled` is false | When `.spec.highAvailability.enabled` and `.spec.highAvailability.zyncExternalDatabaseEnabled` are set to `true` this parameter is mandatory and has to follow the format: `postgresql://<zync-db-username>:<ZYNC_DATABASE_PASSWORD>@<zync-db-host>:<zync-db-port>/zync_production`, where `<zync-db-username>` must be an already existing user in the external database with full permissions on the `zync_production` logical database, `zync_production` logical database must be an already existing logical database in the external database and the specified value of `<ZYNC_DATABASE_PASSWORD>` must be the same as the `ZYNC_DATABASE_PASSWORD` parameter in this secret. Otherwise it has a default value, which is `postgresql://zync:<ZYNC_DATABASE_PASSWORD>@zync-database:5432/zync_production` |
-| ZYNC_DATABASE_PASSWORD | Database password associated to the user specified in the `DATABASE_URL` parameter | When `.spec.highAvailability.enabled` and `.spec.highAvailability.zyncExternalDatabaseEnabled` are set to `true` this parameter is mandatory and must have the same value as the password part of the `DATABASE_URL` parameter in this secret . Otherwise the default value is an autogenerated value if not defined |
+| DATABASE_URL | PostgreSQL database used by Zync. Only used when the database is managed externally | Format: `postgresql://<zync-db-username>:<ZYNC_DATABASE_PASSWORD>@<zync-db-host>:<zync-db-port>/zync_production`, where `<zync-db-username>` must be an already existing user in the external database with full permissions on the `zync_production` logical database, `zync_production` logical database must be an already existing logical database in the external database and the specified value of `<ZYNC_DATABASE_PASSWORD>` must be the same as the `ZYNC_DATABASE_PASSWORD` parameter in this secret. Otherwise it has a default value, which is `postgresql://zync:<ZYNC_DATABASE_PASSWORD>@zync-database:5432/zync_production` |
+| ZYNC_DATABASE_PASSWORD | Database password associated to the user specified in the `DATABASE_URL` parameter | When the database is managed externally, this parameter is mandatory and must have the same value as the password part of the `DATABASE_URL` parameter in this secret. Otherwise the default value is an autogenerated value if not defined |
 | SECRET_KEY_BASE | Zync's application key generator to encrypt communications | Autogenerated value |
 | ZYNC_AUTHENTICATION_TOKEN | Authentication token used to authenticate System when calling Zync | Autogenerated value |
 
