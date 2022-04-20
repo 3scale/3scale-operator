@@ -132,18 +132,50 @@ spec:
 Check [*APIManager*](apimanager-reference.md) custom resource for reference.
 
 #### External Databases Installation
-Suitable for production use where customer wants HA or to re-use DB of their own.
+Suitable for production use where customers want self-managed databases.
 
-3scale API Management has been tested and it’s supported with the following databases:
+3scale API Management has been tested and it’s supported with the following database versions:
 
 | Database | Version |
 | :--- | :--- |
-| MySQL | 5.7 |
-| Redis | 3.2 |
+| MySQL | 8.0 |
+| Redis | 5 |
 | PostgreSQL | 10.6 |
 
-Before creating *APIManager* custom resource to deploy 3scale,
-connection settings for the external databases needs to be provided using openshift secrets.
+
+3scale API Management requires the following database instances:
+
+* Backend Redis (two instances: storage and queue)
+* System Redis
+* System RDBMS
+* Zync RDBMS
+
+The [*APIManager External Component Spec*](apimanager-reference.md#ExternalComponentsSpec)
+allows to pick which databases will be externally managed and with databases will be managed by the
+3scale operator. The following example helps to illustrate:
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  wildcardDomain: lvh.me
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      database: false
+      redis: true
+    zync:
+      database: false
+```
+
+In the example above, backend redis and system redis will be externally managed and the 3scale
+operator will deploy and configure system database and zync database components.
+
+The 3scale operator requires a secret with the connection string for every single external database
+component. If a externally managed database secret does not exist, the operator will not deploy 3scale.
 
 * **Backend redis secret**
 
@@ -214,22 +246,7 @@ Secret name must be `system-database`.
 
 See [System database secret](apimanager-reference.md#system-database) for reference.
 
-Finally, create *APIManager* custom resource to deploy 3scale
-
-```yaml
-apiVersion: apps.3scale.net/v1alpha1
-kind: APIManager
-metadata:
-  name: example-apimanager
-spec:
-  wildcardDomain: lvh.me
-  highAvailability:
-    enabled: true
-```
-
-Additionally, Zync Database can also be configured as an external database.
-
-* **Zync secret**
+* **Zync database secret**
 
 Example:
 
@@ -247,24 +264,6 @@ type: Opaque
 Secret name must be `zync`.
 
 See [Zync secret](apimanager-reference.md#zync) for reference.
-
-
-In this case, finally create *APIManager* custom resource to deploy 3scale
-with the previous external databases and zync database externally too:
-
-```yaml
-apiVersion: apps.3scale.net/v1alpha1
-kind: APIManager
-metadata:
-  name: example-apimanager
-spec:
-  wildcardDomain: lvh.me
-  highAvailability:
-    enabled: true
-    externalZyncDatabaseEnabled: true
-```
-
-Check [*APIManager HighAvailabilitySpec*](apimanager-reference.md#HighAvailabilitySpec) for reference.
 
 #### S3 Filestorage Installation
 3scale’s FileStorage being in a S3 service instead of in a PVC.

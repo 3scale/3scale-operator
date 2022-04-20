@@ -1,0 +1,16 @@
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager-external-components-sample
+spec:
+  wildcardDomain: example.com
+  # External databases mode expects to have pre-created secrets with the desired database URL.
+  # See reference documentation.
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      database: true
+      redis: true
+    zync:
+      database: true

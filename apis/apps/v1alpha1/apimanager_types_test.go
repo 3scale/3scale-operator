@@ -135,7 +135,9 @@ func TestZyncExternalDatabaseIsEnabled(t *testing.T) {
 					Enabled:                     true,
 					ExternalZyncDatabaseEnabled: &trueVal,
 				}
-				apimanager.Spec.ExternalComponents = AllComponentsExternal()
+				apimanager.Spec.ExternalComponents = &ExternalComponentsSpec{
+					Zync: &ExternalZyncComponents{Database: &trueVal},
+				}
 				return apimanager
 			},
 			true,
