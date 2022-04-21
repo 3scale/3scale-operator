@@ -407,7 +407,7 @@ func (u *UpgradeApiManager) upgradeSystemRedisDeploymentConfig() (reconcile.Resu
 }
 
 func (u *UpgradeApiManager) upgradeSystemDatabaseDeploymentConfig() (reconcile.Result, error) {
-	if u.apiManager.Spec.System.DatabaseSpec != nil && u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if u.apiManager.IsSystemPostgreSQLEnabled() {
 		return u.upgradeSystemPostgreSQLDeploymentConfig()
 	}
 
@@ -900,12 +900,7 @@ func (u *UpgradeApiManager) ensurePodTemplateLabels(desired *appsv1.DeploymentCo
 }
 
 func (u *UpgradeApiManager) upgradeMysqlConfigmap() (reconcile.Result, error) {
-	if u.apiManager.IsExternal(appsv1alpha1.SystemDatabase) {
-		return reconcile.Result{}, nil
-	}
-
-	if u.apiManager.Spec.System.DatabaseSpec != nil &&
-		u.apiManager.Spec.System.DatabaseSpec.PostgreSQL != nil {
+	if !u.apiManager.IsSystemMysqlEnabled() {
 		return reconcile.Result{}, nil
 	}
 
