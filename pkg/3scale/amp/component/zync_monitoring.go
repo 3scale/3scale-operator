@@ -11,6 +11,7 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 func (zync *Zync) ZyncPodMonitor() *monitoringv1.PodMonitor {
@@ -51,12 +52,12 @@ func (zync *Zync) ZyncQuePodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (zync *Zync) ZyncGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
-	data := &struct {
+func (zync *Zync) ZyncGrafanaDashboard(templateDataMutation helper.TemplateDataMutation) *grafanav1alpha1.GrafanaDashboard {
+	data := templateDataMutation(&struct {
 		Namespace string
 	}{
 		zync.Options.Namespace,
-	}
+	})
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync",

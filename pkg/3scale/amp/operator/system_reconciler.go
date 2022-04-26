@@ -187,7 +187,12 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(system.SystemGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
+	grafanaTemplateDataMutation, err := helper.SumRateTemplateDataMutation(r.Context(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.ReconcileGrafanaDashboard(system.SystemGrafanaDashboard(grafanaTemplateDataMutation), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

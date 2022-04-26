@@ -3,6 +3,7 @@ package operator
 import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -101,7 +102,12 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(backend.BackendGrafanaDashboard(), reconcilers.GenericGrafanaDashboardsMutator)
+	grafanaTemplateMutation, err := helper.SumRateTemplateDataMutation(r.Context(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.ReconcileGrafanaDashboard(backend.BackendGrafanaDashboard(grafanaTemplateMutation), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

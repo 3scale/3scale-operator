@@ -2,6 +2,7 @@ package operator
 
 import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -18,19 +19,29 @@ func NewGenericMonitoringReconciler(baseAPIManagerLogicReconciler *BaseAPIManage
 }
 
 func (r *GenericMonitoringReconciler) Reconcile() (reconcile.Result, error) {
-	grafanaDashboard := component.KubernetesResourcesByNamespaceGrafanaDashboard(r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
-	err := r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
+	sumRate, err := helper.SumRateForOpenshiftVersion(r.Context(), r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	grafanaDashboard = component.KubernetesResourcesByPodGrafanaDashboard(r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	grafanaTemplateDataMutation := helper.AddSumRateField(sumRate)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	grafanaDashboard := component.KubernetesResourcesByNamespaceGrafanaDashboard(grafanaTemplateDataMutation, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
 	err = r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	prometheusRule := component.KubeStateMetricsPrometheusRules(r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	grafanaDashboard = component.KubernetesResourcesByPodGrafanaDashboard(grafanaTemplateDataMutation, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	err = r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	prometheusRule := component.KubeStateMetricsPrometheusRules(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
 	err = r.ReconcilePrometheusRules(prometheusRule, reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
