@@ -13,6 +13,7 @@ resources:
 - bases/capabilities.3scale.net_developeraccounts.yaml
 - bases/capabilities.3scale.net_developerusers.yaml
 - bases/capabilities.3scale.net_custompolicydefinitions.yaml
+- bases/capabilities.3scale.net_proxyconfigpromotes.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -29,6 +30,7 @@ patchesStrategicMerge:
 #- patches/webhook_in_developeraccounts.yaml
 #- patches/webhook_in_developerusers.yaml
 #- patches/webhook_in_custompolicydefinitions.yaml
+#- patches/webhook_in_proxyconfigpromotes.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
@@ -44,6 +46,7 @@ patchesStrategicMerge:
 #- patches/cainjection_in_developeraccounts.yaml
 #- patches/cainjection_in_developerusers.yaml
 #- patches/cainjection_in_custompolicydefinitions.yaml
+#- patches/cainjection_in_proxyconfigpromotes.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 patchesJson6902:

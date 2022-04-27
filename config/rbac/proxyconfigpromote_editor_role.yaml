@@ -1,0 +1,24 @@
+# permissions for end users to edit proxyconfigpromotes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: proxyconfigpromote-editor-role
+rules:
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - proxyconfigpromotes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - proxyconfigpromotes/status
+  verbs:
+  - get
