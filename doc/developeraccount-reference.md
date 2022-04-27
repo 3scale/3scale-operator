@@ -7,6 +7,7 @@
       * [Provider Account Reference](#provider-account-reference)
    * [DeveloperAccountStatus](#developeraccountstatus)
       * [ConditionSpec](#conditionspec)
+* [Supported Actions](#Supported Actions)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -108,3 +109,7 @@ Each element of the Condition array has the following fields:
 | Reason | `reason` | string | Condition state reason |
 | Message | `message` | string | Condition state description |
 | LastTransitionTime | `lastTransitionTime` | timestamp | Last transition timestap |
+
+## Supported Actions
+* Create - creating the CR will create the developer account in the associated tenant
+* Delete - deleting the CR will delete the developer account in the associated tenant
