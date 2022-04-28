@@ -2,7 +2,6 @@ package operator
 
 import (
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"strings"
 
@@ -110,26 +109,30 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Don't reconcile apicast production & staging service ports to allow RHOAM to handle service ports for RateLimiting
 	disableApicastPortReconcile := "false"
-
-	if metav1.HasAnnotation(r.apiManager.ObjectMeta, "marin3r.3scale.net/disable-apicast-service-port-reconcile") {
-		disableApicastPortReconcile = r.apiManager.Annotations["marin3r.3scale.net/disable-apicast-service-port-reconcile"]
+	apiManagerAnnotations := r.apiManager.GetAnnotations()
+	if apiManagerAnnotations == nil {
+		apiManagerAnnotations = make(map[string]string)
+	}
+	if val, ok := apiManagerAnnotations["apps.3scale.net/disable-apicast-service-reconciler"]; ok {
+		disableApicastPortReconcile = val
 	}
 
-	// Reconcile service ports as normal if the annotation is false - otherwise skip this reconcile to let RHOAM handle apicast service port configuration
+	apicastServiceMutator := reconcilers.CreateOnlyMutator
 	if disableApicastPortReconcile == "false" {
-		// Staging Service
-		err = r.ReconcileService(apicast.StagingService(), reconcilers.ServicePortMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+		apicastServiceMutator = reconcilers.ServicePortMutator
+	}
 
-		// Production Service
-		err = r.ReconcileService(apicast.ProductionService(), reconcilers.ServicePortMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+	// Staging Service
+	err = r.ReconcileService(apicast.StagingService(), apicastServiceMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Production Service
+	err = r.ReconcileService(apicast.ProductionService(), apicastServiceMutator)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	// Environment ConfigMap
