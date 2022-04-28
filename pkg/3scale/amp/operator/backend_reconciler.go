@@ -102,12 +102,12 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	grafanaTemplateMutation, err := helper.SumRateTemplateDataMutation(r.Context(), r.Client())
+	sumRate, err := helper.SumRateForOpenshiftVersion(r.Context(), r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(backend.BackendGrafanaDashboard(grafanaTemplateMutation), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboard(backend.BackendGrafanaDashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

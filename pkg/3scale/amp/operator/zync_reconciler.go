@@ -109,12 +109,12 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	templateDataMutation, err := helper.SumRateTemplateDataMutation(r.Context(), r.Client())
+	sumRate, err := helper.SumRateForOpenshiftVersion(r.Context(), r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(zync.ZyncGrafanaDashboard(templateDataMutation), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboard(zync.ZyncGrafanaDashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

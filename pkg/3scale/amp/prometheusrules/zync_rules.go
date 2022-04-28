@@ -22,7 +22,7 @@ func (s *ZyncPrometheusRuleFactory) Type() string {
 	return "zync"
 }
 
-func (s *ZyncPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+func (s *ZyncPrometheusRuleFactory) PrometheusRule(_ bool, ns string) *monitoringv1.PrometheusRule {
 	options, err := zyncOptions(ns)
 	if err != nil {
 		panic(err)

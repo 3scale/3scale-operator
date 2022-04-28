@@ -5,7 +5,6 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
@@ -51,12 +50,12 @@ func (backend *Backend) BackendWorkerPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (backend *Backend) BackendGrafanaDashboard(templateMutation helper.TemplateDataMutation) *grafanav1alpha1.GrafanaDashboard {
-	data := templateMutation(&struct {
-		Namespace string
+func (backend *Backend) BackendGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
 	}{
-		backend.Options.Namespace,
-	})
+		backend.Options.Namespace, sumRate,
+	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend",

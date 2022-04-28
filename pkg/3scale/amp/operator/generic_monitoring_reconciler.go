@@ -24,18 +24,13 @@ func (r *GenericMonitoringReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	grafanaTemplateDataMutation := helper.AddSumRateField(sumRate)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	grafanaDashboard := component.KubernetesResourcesByNamespaceGrafanaDashboard(grafanaTemplateDataMutation, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	grafanaDashboard := component.KubernetesResourcesByNamespaceGrafanaDashboard(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
 	err = r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	grafanaDashboard = component.KubernetesResourcesByPodGrafanaDashboard(grafanaTemplateDataMutation, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	grafanaDashboard = component.KubernetesResourcesByPodGrafanaDashboard(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
 	err = r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err

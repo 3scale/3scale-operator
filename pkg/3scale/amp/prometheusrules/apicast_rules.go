@@ -22,7 +22,7 @@ func (b *ApicastPrometheusRuleFactory) Type() string {
 	return "apicast"
 }
 
-func (b *ApicastPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+func (b *ApicastPrometheusRuleFactory) PrometheusRule(_ bool, ns string) *monitoringv1.PrometheusRule {
 	options, err := apicastOptions(ns)
 	if err != nil {
 		panic(err)

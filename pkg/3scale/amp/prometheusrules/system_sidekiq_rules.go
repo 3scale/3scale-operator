@@ -21,7 +21,7 @@ func (s *SystemSidekiqPrometheusRuleFactory) Type() string {
 	return "system-sidekiq"
 }
 
-func (s *SystemSidekiqPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+func (s *SystemSidekiqPrometheusRuleFactory) PrometheusRule(_ bool, ns string) *monitoringv1.PrometheusRule {
 	options, err := systemOptions(ns)
 	if err != nil {
 		panic(err)

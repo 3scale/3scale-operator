@@ -8,6 +8,7 @@
 * [System App](system-app.yaml)
 * [System Sidekiq](system-sidekiq.yaml)
 * [3scale Kube State Metrics](threescale-kube-state-metrics.yaml)
+* [3scale Kube State Metrics (Openshift <4.9)](threescale-kube-state-metrics-pre49.yaml)
 * [Zync](zync.yaml)
 * [Zync QUE](zync-que.yaml)
 

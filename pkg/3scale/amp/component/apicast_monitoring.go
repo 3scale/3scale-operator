@@ -11,7 +11,6 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 func (apicast *Apicast) ApicastProductionPodMonitor() *monitoringv1.PodMonitor {
@@ -52,12 +51,12 @@ func (apicast *Apicast) ApicastStagingPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (apicast *Apicast) ApicastMainAppGrafanaDashboard(mutateTemplateData helper.TemplateDataMutation) *grafanav1alpha1.GrafanaDashboard {
-	data := mutateTemplateData(&struct {
-		Namespace string
+func (apicast *Apicast) ApicastMainAppGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
 	}{
-		apicast.Options.Namespace,
-	})
+		apicast.Options.Namespace, sumRate,
+	}
 
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
@@ -71,12 +70,12 @@ func (apicast *Apicast) ApicastMainAppGrafanaDashboard(mutateTemplateData helper
 	}
 }
 
-func (apicast *Apicast) ApicastServicesGrafanaDashboard(mutateTemplateData helper.TemplateDataMutation) *grafanav1alpha1.GrafanaDashboard {
-	data := mutateTemplateData(&struct {
-		Namespace string
+func (apicast *Apicast) ApicastServicesGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
 	}{
-		apicast.Options.Namespace,
-	})
+		apicast.Options.Namespace, sumRate,
+	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "apicast-services",

@@ -11,7 +11,6 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 func (system *System) SystemSidekiqPodMonitor() *monitoringv1.PodMonitor {
@@ -79,12 +78,12 @@ func (system *System) SystemAppPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (system *System) SystemGrafanaDashboard(templateDataMutation helper.TemplateDataMutation) *grafanav1alpha1.GrafanaDashboard {
-	data := templateDataMutation(&struct {
-		Namespace string
+func (system *System) SystemGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
 	}{
-		system.Options.Namespace,
-	})
+		system.Options.Namespace, sumRate,
+	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system",

@@ -24,6 +24,9 @@ import (
 
 var prometheusRulesNamespace string
 
+// Compatibility with Openshift <4.9
+var compatPre49 bool
+
 // templateCmd represents the template command
 var prometheusRulesCmd = &cobra.Command{
 	Use:   getPrometheusRulesUsage(),
@@ -62,7 +65,7 @@ func runPrometheusRulesCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Factory %s not found", prName)
 	}
 
-	prometheusRulesObj := factory.PrometheusRule(prometheusRulesNamespace)
+	prometheusRulesObj := factory.PrometheusRule(compatPre49, prometheusRulesNamespace)
 
 	serializer := json.NewSerializerWithOptions(json.DefaultMetaFactory, nil, nil,
 		json.SerializerOptions{Yaml: true, Pretty: true, Strict: true})
@@ -71,6 +74,7 @@ func runPrometheusRulesCommand(cmd *cobra.Command, args []string) error {
 
 func init() {
 	prometheusRulesCmd.PersistentFlags().StringVar(&prometheusRulesNamespace, "namespace", "", "Namespace to be used when generating the prometheus rules")
+	prometheusRulesCmd.PersistentFlags().BoolVar(&compatPre49, "compat", false, "Generate rules compatible with Openshift releases prior to 4.9")
 	prometheusRulesCmd.MarkFlagRequired("namespace")
 	rootCmd.AddCommand(prometheusRulesCmd)
 }

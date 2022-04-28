@@ -5,19 +5,18 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func KubernetesResourcesByNamespaceGrafanaDashboard(templateDataMutation helper.TemplateDataMutation, ns string, appLabel string) *grafanav1alpha1.GrafanaDashboard {
-	data := templateDataMutation(&struct {
-		Namespace string
+func KubernetesResourcesByNamespaceGrafanaDashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
 	}{
-		ns,
-	})
+		ns, sumRate,
+	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "kubernetes-resources-by-namespace",
@@ -33,12 +32,12 @@ func KubernetesResourcesByNamespaceGrafanaDashboard(templateDataMutation helper.
 	}
 }
 
-func KubernetesResourcesByPodGrafanaDashboard(templateDataMutation helper.TemplateDataMutation, ns string, appLabel string) *grafanav1alpha1.GrafanaDashboard {
-	data := templateDataMutation(&struct {
-		Namespace string
+func KubernetesResourcesByPodGrafanaDashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
 	}{
-		ns,
-	})
+		ns, sumRate,
+	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "kubernetes-resources-by-pod",

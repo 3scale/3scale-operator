@@ -22,7 +22,7 @@ func (b *BackendWorkerPrometheusRuleFactory) Type() string {
 	return "backend-worker"
 }
 
-func (b *BackendWorkerPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+func (b *BackendWorkerPrometheusRuleFactory) PrometheusRule(_ bool, ns string) *monitoringv1.PrometheusRule {
 	options, err := backendOptions(ns)
 	if err != nil {
 		panic(err)
