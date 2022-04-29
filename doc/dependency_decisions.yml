@@ -336,3 +336,10 @@
     :why: Apache 2.0 License https://github.com/prometheus/client_golang/blob/master/LICENSE
     :versions: []
     :when: 2020-11-05 10:19:33.685918301 Z
+- - :license
+  - golang.org/x/mod
+  - 3-clause BSD License
+  - :who: 
+    :why: 3-clause BSD License https://cs.opensource.google/go/x/mod/+/master:LICENSE
+    :versions: []
+    :when: 2022-04-29 12:39:16.976400839 Z

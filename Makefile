@@ -228,6 +228,7 @@ download:
 	@$(GO) mod download
 
 ## licenses.xml: Generate licenses.xml file
+.PHONY: licenses.xml
 licenses.xml: $(DEPENDENCY_DECISION_FILE)
 ifndef LICENSEFINDERBINARY
 	$(error "license-finder is not available please install: gem install license_finder --version 5.7.1")
