@@ -29,13 +29,11 @@ type ProxyConfigPromoteSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// product id you wish to promote
-	ProductName string `json:"productName,omitempty"`
-	// promotion configuration version you wish to promote too
-	// +optional
-	PromoteVersion string `json:"promoteVersion,omitempty"`
+	// product system name you wish to promote
+	SystemName string `json:"systemName,omitempty"`
 
-	// Environment you wish to promote to false = 'staging' or  true = 'production'
+	// Environment you wish to promote to, if not present defaults to staging and if set to true promotes to production
+	// +optional
 	Production bool `json:"production,omitempty"`
 
 	// ProviderAccountRef references account provider credentials

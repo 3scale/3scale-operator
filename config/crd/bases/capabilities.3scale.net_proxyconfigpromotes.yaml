@@ -37,16 +37,10 @@ spec:
           spec:
             description: ProxyConfigPromoteSpec defines the desired state of ProxyConfigPromote
             properties:
-              productName:
-                description: product id you wish to promote
-                type: string
               production:
-                description: Environment you wish to promote to false = 'staging'
-                  or  true = 'production'
+                description: Environment you wish to promote to, if not present defaults
+                  to staging and if set to true promotes to production
                 type: boolean
-              promoteVersion:
-                description: promotion configuration version you wish to promote too
-                type: string
               providerAccountRef:
                 description: ProviderAccountRef references account provider credentials
                 properties:
@@ -55,6 +49,9 @@ spec:
                       TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+              systemName:
+                description: product system name you wish to promote
+                type: string
             type: object
           status:
             description: ProxyConfigPromoteStatus defines the observed state of ProxyConfigPromote

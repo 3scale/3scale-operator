@@ -316,10 +316,18 @@ func main() {
 
 	registerThreescaleMetricsIntoControllerRuntimeMetricsRegistry()
 
+	discoveryProxyConfigPromote, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
+
 	if err = (&capabilitiescontroller.ProxyConfigPromoteReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ProxyConfigPromote"),
-		Scheme: mgr.GetScheme(),
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			ctrl.Log.WithName("controllers").WithName("ProxyConfigPromote"),
+			discoveryProxyConfigPromote,
+			mgr.GetEventRecorderFor("ProxyConfigPromote")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ProxyConfigPromote")
 		os.Exit(1)
