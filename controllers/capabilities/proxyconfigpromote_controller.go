@@ -74,6 +74,11 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		reqLogger.WithValues("status", status)
 	}
 
+	//err = r.addAnnotations(proxyConfigPromote.Status.PromoteEnvironment, proxyConfigPromote.Name, req.NamespacedName, req.Namespace, reqLogger)
+	//if err != nil {
+	//	return ctrl.Result{}, err
+	//}
+
 	return ctrl.Result{}, nil
 }
 
@@ -183,6 +188,34 @@ func FindServiceBySystemName(list threescaleapi.ProductList, systemName string) 
 	}
 	return -1
 }
+
+//func (r *ProxyConfigPromoteReconciler) addAnnotations(env string, name string, namespace types.NamespacedName, strNamespace string, reqLogger logr.Logger) error {
+//
+//	product := &capabilitiesv1beta1.Product{
+//		ObjectMeta: metav1.ObjectMeta{
+//			Name:      name,
+//			Namespace: strNamespace,
+//		},
+//	}
+//
+//	reqLogger.Info("this is our product", product)
+//
+//	_, err := controllerutil.CreateOrUpdate(r.Context(), r.Client(), product, func() error {
+//		annotations := product.ObjectMeta.GetAnnotations()
+//		if annotations == nil {
+//			annotations = map[string]string{}
+//		}
+//		annotations["latest promotion"] = env
+//		product.ObjectMeta.SetAnnotations(annotations)
+//
+//		return nil
+//	})
+//	if err != nil {
+//		reqLogger.Info("Failed to update product annotations", err)
+//		return err
+//	}
+//	return nil
+//}
 
 func (r *ProxyConfigPromoteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
