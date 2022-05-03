@@ -39,6 +39,10 @@ type ProxyConfigPromoteSpec struct {
 	// ProviderAccountRef references account provider credentials
 	// +optional
 	ProviderAccountRef *corev1.LocalObjectReference `json:"providerAccountRef,omitempty"`
+
+	// deleteCR  deletes this CR when it has successfully completed the promotion
+	// +optional
+	DeleteCR bool `json:"deleteCR,omitempty"`
 }
 
 // ProxyConfigPromoteStatus defines the observed state of ProxyConfigPromote

@@ -37,6 +37,10 @@ spec:
           spec:
             description: ProxyConfigPromoteSpec defines the desired state of ProxyConfigPromote
             properties:
+              deleteCR:
+                description: deleteCR  deletes this CR when it has successfully completed
+                  the promotion
+                type: boolean
               productCRName:
                 description: product CR metadata.name
                 type: string

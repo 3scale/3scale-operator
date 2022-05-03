@@ -23,6 +23,7 @@ import (
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +31,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strconv"
-	"strings"
 )
 
 // ProxyConfigPromoteReconciler reconciles a ProxyConfigPromote object
@@ -81,6 +81,13 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
+	if proxyConfigPromote.Spec.DeleteCR && proxyConfigPromote.Status.State == "Completed" {
+		err := r.DeleteResource(proxyConfigPromote)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -101,12 +108,11 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 
 	//get product
 	product := &capabilitiesv1beta1.Product{}
-	projectMeta:= types.NamespacedName{
+	projectMeta := types.NamespacedName{
 		Name:      proxyConfigPromote.Spec.ProductCRName,
 		Namespace: req.Namespace,
 	}
 
-	//r.Client().Get(r.Context(),projectMeta, product )
 	err = r.Client().Get(r.Context(), projectMeta, product)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -119,19 +125,9 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 		return status, err
 	}
 
-	// Find product ID
-	//productList, err := threescaleAPIClient.ListProducts()
-	//productID := FindServiceBySystemName(*productList, proxyConfigPromote.Spec.SystemName)
-
 	productIDStr := strconv.Itoa(int(*product.Status.ID))
 
-	//if productID == -1 {
-	//	reqLogger.Info("name doesnt correspond to a valid product")
-	//	status := r.proxyConfigPromoteStatus("", proxyConfigPromote, err, reqLogger, "Failed")
-	//	return status, err
-	//}
-
-	// check if promotion is enabled in the CR
+	// Flag used for checking if latestproxyconfig in production is available
 	var flag bool
 
 	if proxyConfigPromote.Spec.Production == false {
@@ -143,7 +139,6 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 		err = r.Client().Update(r.Context(), proxyConfigPromote)
 	}
 	if proxyConfigPromote.Spec.Production == true {
-		//change this
 		_, err = threescaleAPIClient.DeployProductProxy(*product.Status.ID)
 		if err != nil {
 			reqLogger.Info("Config version already exists in stage, skipping promotion to stage ", err)
@@ -159,7 +154,7 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 		productionElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "production")
 		if err != nil {
 			reqLogger.Info("Error while finding production version")
-			if !strings.Contains(err.Error(), "Not found") {
+			if !threescaleapi.IsNotFound(err) {
 				status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
 				return status, err
 			}
@@ -199,15 +194,6 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteStatus(productID string
 
 	return promoteProxyConfig.Status
 }
-
-//func FindServiceBySystemName(list threescaleapi.ProductList, systemName string) int64 {
-//	for idx := range list.Products {
-//		if list.Products[idx].Element.SystemName == systemName {
-//			return list.Products[idx].Element.ID
-//		}
-//	}
-//	return -1
-//}
 
 func (r *ProxyConfigPromoteReconciler) addAnnotations(env string, name string, namespace string, reqLogger logr.Logger) error {
 
