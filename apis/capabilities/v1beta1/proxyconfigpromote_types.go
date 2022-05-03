@@ -29,8 +29,8 @@ type ProxyConfigPromoteSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// product system name you wish to promote
-	SystemName string `json:"systemName,omitempty"`
+	// product CR metadata.name
+	ProductCRName string `json:"productCRName,omitempty"`
 
 	// Environment you wish to promote to, if not present defaults to staging and if set to true promotes to production
 	// +optional

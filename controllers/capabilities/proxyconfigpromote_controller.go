@@ -23,10 +23,12 @@ import (
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
-	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strconv"
 	"strings"
 )
@@ -74,10 +76,10 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		reqLogger.WithValues("status", status)
 	}
 
-	//err = r.addAnnotations(proxyConfigPromote.Status.PromoteEnvironment, proxyConfigPromote.Name, req.NamespacedName, req.Namespace, reqLogger)
-	//if err != nil {
-	//	return ctrl.Result{}, err
-	//}
+	err = r.addAnnotations(proxyConfigPromote.Status.PromoteEnvironment, proxyConfigPromote.Spec.ProductCRName, proxyConfigPromote.Namespace, reqLogger)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -97,63 +99,81 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 		return status, err
 	}
 
-	// Find product ID
-	productList, err := threescaleAPIClient.ListProducts()
-	productID := FindServiceBySystemName(*productList, proxyConfigPromote.Spec.SystemName)
+	//get product
+	product := &capabilitiesv1beta1.Product{}
+	projectMeta:= types.NamespacedName{
+		Name:      proxyConfigPromote.Spec.ProductCRName,
+		Namespace: req.Namespace,
+	}
 
-	productIDStr := strconv.Itoa(int(productID))
-
-	if productID == -1 {
-		reqLogger.Info("name doesnt correspond to a valid product")
-		status := r.proxyConfigPromoteStatus("", proxyConfigPromote, err, reqLogger, "Failed")
+	//r.Client().Get(r.Context(),projectMeta, product )
+	err = r.Client().Get(r.Context(), projectMeta, product)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			status := r.proxyConfigPromoteStatus("null", proxyConfigPromote, err, reqLogger, "Failed")
+			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
+			return status, nil
+		}
+		// Error reading the object - requeue the request
+		status := r.proxyConfigPromoteStatus("null", proxyConfigPromote, err, reqLogger, "Failed")
 		return status, err
 	}
 
+	// Find product ID
+	//productList, err := threescaleAPIClient.ListProducts()
+	//productID := FindServiceBySystemName(*productList, proxyConfigPromote.Spec.SystemName)
+
+	productIDStr := strconv.Itoa(int(*product.Status.ID))
+
+	//if productID == -1 {
+	//	reqLogger.Info("name doesnt correspond to a valid product")
+	//	status := r.proxyConfigPromoteStatus("", proxyConfigPromote, err, reqLogger, "Failed")
+	//	return status, err
+	//}
+
 	// check if promotion is enabled in the CR
-	if productID != -1 {
-		var flag bool
+	var flag bool
 
-		if proxyConfigPromote.Spec.Production == false {
-			_, err = threescaleAPIClient.DeployProductProxy(productID)
+	if proxyConfigPromote.Spec.Production == false {
+		_, err = threescaleAPIClient.DeployProductProxy(*product.Status.ID)
+		if err != nil {
+			status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
+			return status, err
+		}
+		err = r.Client().Update(r.Context(), proxyConfigPromote)
+	}
+	if proxyConfigPromote.Spec.Production == true {
+		//change this
+		_, err = threescaleAPIClient.DeployProductProxy(*product.Status.ID)
+		if err != nil {
+			reqLogger.Info("Config version already exists in stage, skipping promotion to stage ", err)
+		}
+
+		stageElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "sandbox")
+		if err != nil {
+			reqLogger.Info("Error while finding sandbox version")
+			status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
+			return status, err
+		}
+
+		productionElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "production")
+		if err != nil {
+			reqLogger.Info("Error while finding production version")
+			if !strings.Contains(err.Error(), "Not found") {
+				status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
+				return status, err
+			}
+			flag = true
+		}
+
+		if stageElement.ProxyConfig.Version != productionElement.ProxyConfig.Version || flag {
+			_, err = threescaleAPIClient.PromoteProxyConfig(productIDStr, "sandbox", strconv.Itoa(stageElement.ProxyConfig.Version), "production")
 			if err != nil {
 				status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
 				return status, err
 			}
-			err = r.Client().Update(r.Context(), proxyConfigPromote)
 		}
-		if proxyConfigPromote.Spec.Production == true {
-			//change this
-			_, err = threescaleAPIClient.DeployProductProxy(productID)
-			if err != nil {
-				reqLogger.Info("Config version already exists in stage, skipping promotion to stage ", err)
-			}
-
-			stageElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "sandbox")
-			if err != nil {
-				reqLogger.Info("Error while finding sandbox version")
-				status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
-				return status, err
-			}
-
-			productionElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "production")
-			if err != nil {
-				reqLogger.Info("Error while finding production version")
-				status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
-				if !strings.Contains(err.Error(), "Not found") {
-					return status, err
-				}
-				flag = true
-			}
-
-			if stageElement.ProxyConfig.Version != productionElement.ProxyConfig.Version || flag {
-				_, err = threescaleAPIClient.PromoteProxyConfig(productIDStr, "sandbox", strconv.Itoa(stageElement.ProxyConfig.Version), "production")
-				if err != nil {
-					status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
-					return status, err
-				}
-			}
-			err = r.Client().Update(r.Context(), proxyConfigPromote)
-		}
+		err = r.Client().Update(r.Context(), proxyConfigPromote)
 	}
 	status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Completed")
 	return status, nil
@@ -180,42 +200,41 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteStatus(productID string
 	return promoteProxyConfig.Status
 }
 
-func FindServiceBySystemName(list threescaleapi.ProductList, systemName string) int64 {
-	for idx := range list.Products {
-		if list.Products[idx].Element.SystemName == systemName {
-			return list.Products[idx].Element.ID
-		}
-	}
-	return -1
-}
-
-//func (r *ProxyConfigPromoteReconciler) addAnnotations(env string, name string, namespace types.NamespacedName, strNamespace string, reqLogger logr.Logger) error {
-//
-//	product := &capabilitiesv1beta1.Product{
-//		ObjectMeta: metav1.ObjectMeta{
-//			Name:      name,
-//			Namespace: strNamespace,
-//		},
-//	}
-//
-//	reqLogger.Info("this is our product", product)
-//
-//	_, err := controllerutil.CreateOrUpdate(r.Context(), r.Client(), product, func() error {
-//		annotations := product.ObjectMeta.GetAnnotations()
-//		if annotations == nil {
-//			annotations = map[string]string{}
+//func FindServiceBySystemName(list threescaleapi.ProductList, systemName string) int64 {
+//	for idx := range list.Products {
+//		if list.Products[idx].Element.SystemName == systemName {
+//			return list.Products[idx].Element.ID
 //		}
-//		annotations["latest promotion"] = env
-//		product.ObjectMeta.SetAnnotations(annotations)
-//
-//		return nil
-//	})
-//	if err != nil {
-//		reqLogger.Info("Failed to update product annotations", err)
-//		return err
 //	}
-//	return nil
+//	return -1
 //}
+
+func (r *ProxyConfigPromoteReconciler) addAnnotations(env string, name string, namespace string, reqLogger logr.Logger) error {
+
+	product := &capabilitiesv1beta1.Product{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(r.Context(), r.Client(), product, func() error {
+		annotations := product.ObjectMeta.GetAnnotations()
+		if annotations == nil {
+			annotations = map[string]string{}
+		}
+		annotations["latest-promotion"] = env
+		product.ObjectMeta.SetAnnotations(annotations)
+
+		return nil
+	})
+	if err != nil {
+		reqLogger.Info("Error:", "Failed to update product annotations", err)
+		return err
+	}
+	return nil
+}
 
 func (r *ProxyConfigPromoteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
