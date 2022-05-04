@@ -6175,7 +6175,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{pod}}`}}",
@@ -6297,7 +6297,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -6419,7 +6419,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -6541,7 +6541,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -6769,7 +6769,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -6787,7 +6787,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -6805,7 +6805,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7034,7 +7034,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7052,7 +7052,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7070,7 +7070,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7299,7 +7299,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7317,7 +7317,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7335,7 +7335,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7564,7 +7564,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7582,7 +7582,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7600,7 +7600,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,

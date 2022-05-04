@@ -117,7 +117,7 @@ func KubeStateMetricsPrometheusRules(ns string, appLabel string) *monitoringv1.P
 							Annotations: map[string]string{
 								"message": `Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} has High CPU usage for longer than 15 minutes.`,
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}) by (namespace, container, pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}) by (namespace, container, pod) * 100 > 90`, ns, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}) by (namespace, container, pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}) by (namespace, container, pod) * 100 > 90`, ns, ns)),
 							For:  "15m",
 							Labels: map[string]string{
 								"severity": "warning",
