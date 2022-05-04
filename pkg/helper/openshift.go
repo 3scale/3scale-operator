@@ -44,7 +44,7 @@ func SumRateForOpenshiftVersion(ctx context.Context, client client.Client) (stri
 	if err != nil {
 		return "", err
 	}
-	// If the version could not be found, return the default mutation
+	// If the version could not be found, return the default value
 	if !ok {
 		return sumRate, nil
 	}
@@ -56,5 +56,3 @@ func SumRateForOpenshiftVersion(ctx context.Context, client client.Client) (stri
 
 	return sumRate, nil
 }
-
-type TemplateDataMutation func(interface{}) interface{}
