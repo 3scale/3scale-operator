@@ -38,7 +38,7 @@ func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 		// backend usage ID should exist in the backend list
 		backend, ok := t.backendRemoteIndex.FindByID(existing.Element.BackendAPIID)
 		if !ok {
-			panic(fmt.Sprintf("Backend ID %d not found in backend index", existing.Element.BackendAPIID))
+			return fmt.Errorf("Backend ID %d not found in 3scale backend index", existing.Element.BackendAPIID)
 		}
 		existingKeys = append(existingKeys, backend.SystemName())
 		existingMap[backend.SystemName()] = existing.Element
@@ -90,7 +90,7 @@ func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 		// Thus, existing Backend entities should contain desired systemName
 		backend, ok := t.backendRemoteIndex.FindBySystemName(backendSystemName)
 		if !ok {
-			panic(fmt.Sprintf("Backend SystemName %s not found in backend index", backendSystemName))
+			return fmt.Errorf("Backend SystemName %s not found in 3scale backend index", backendSystemName)
 		}
 		desiredNewList = append(desiredNewList, newBackendUsageData{
 			spec: t.resource.Spec.BackendUsages[backendSystemName],

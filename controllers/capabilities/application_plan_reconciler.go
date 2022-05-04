@@ -318,7 +318,7 @@ func (a *applicationPlanReconciler) findID(ref capabilitiesv1beta1.MetricMethodR
 	} else {
 		backendEntity, ok := a.backendRemoteIndex.FindBySystemName(*ref.BackendSystemName)
 		if !ok {
-			panic(fmt.Sprintf("Backend SystemName %s not found in backend index", *ref.BackendSystemName))
+			return 0, fmt.Errorf("Backend SystemName %s not found in 3scale backend index", *ref.BackendSystemName)
 		}
 		metricID, err = backendEntity.FindMethodMetricIDBySystemName(ref.SystemName)
 		if err != nil {
