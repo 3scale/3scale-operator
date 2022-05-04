@@ -50,11 +50,11 @@ func (backend *Backend) BackendWorkerPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (backend *Backend) BackendGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
+func (backend *Backend) BackendGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
-		Namespace string
+		Namespace, SumRate string
 	}{
-		backend.Options.Namespace,
+		backend.Options.Namespace, sumRate,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{

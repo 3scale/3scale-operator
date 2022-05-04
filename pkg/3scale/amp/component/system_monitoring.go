@@ -78,11 +78,11 @@ func (system *System) SystemAppPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (system *System) SystemGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
+func (system *System) SystemGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
-		Namespace string
+		Namespace, SumRate string
 	}{
-		system.Options.Namespace,
+		system.Options.Namespace, sumRate,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{

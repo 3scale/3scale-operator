@@ -51,11 +51,11 @@ func (apicast *Apicast) ApicastStagingPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (apicast *Apicast) ApicastMainAppGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
+func (apicast *Apicast) ApicastMainAppGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
-		Namespace string
+		Namespace, SumRate string
 	}{
-		apicast.Options.Namespace,
+		apicast.Options.Namespace, sumRate,
 	}
 
 	return &grafanav1alpha1.GrafanaDashboard{
@@ -70,11 +70,11 @@ func (apicast *Apicast) ApicastMainAppGrafanaDashboard() *grafanav1alpha1.Grafan
 	}
 }
 
-func (apicast *Apicast) ApicastServicesGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
+func (apicast *Apicast) ApicastServicesGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
-		Namespace string
+		Namespace, SumRate string
 	}{
-		apicast.Options.Namespace,
+		apicast.Options.Namespace, sumRate,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{

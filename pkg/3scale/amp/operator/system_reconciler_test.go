@@ -11,6 +11,7 @@ import (
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
+	configv1 "github.com/openshift/api/config/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
@@ -52,6 +53,9 @@ func TestSystemReconcilerCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := grafanav1alpha1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+	if err := configv1.AddToScheme(s); err != nil {
 		t.Fatal(err)
 	}
 

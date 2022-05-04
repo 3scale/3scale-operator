@@ -22,7 +22,12 @@ func (s *KubeStateMetricsPrometheusRuleFactory) Type() string {
 	return "threescale-kube-state-metrics"
 }
 
-func (s *KubeStateMetricsPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+func (s *KubeStateMetricsPrometheusRuleFactory) PrometheusRule(compatPre49 bool, ns string) *monitoringv1.PrometheusRule {
+	sumRate := "sum_irate"
+	if compatPre49 {
+		sumRate = "sum_rate"
+	}
+
 	appLabel := appsv1alpha1.Default3scaleAppLabel
-	return component.KubeStateMetricsPrometheusRules(ns, appLabel)
+	return component.KubeStateMetricsPrometheusRules(sumRate, ns, appLabel)
 }

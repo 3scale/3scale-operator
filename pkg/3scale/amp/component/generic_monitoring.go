@@ -11,11 +11,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func KubernetesResourcesByNamespaceGrafanaDashboard(ns string, appLabel string) *grafanav1alpha1.GrafanaDashboard {
+func KubernetesResourcesByNamespaceGrafanaDashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
-		Namespace string
+		Namespace, SumRate string
 	}{
-		ns,
+		ns, sumRate,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
@@ -32,11 +32,11 @@ func KubernetesResourcesByNamespaceGrafanaDashboard(ns string, appLabel string) 
 	}
 }
 
-func KubernetesResourcesByPodGrafanaDashboard(ns string, appLabel string) *grafanav1alpha1.GrafanaDashboard {
+func KubernetesResourcesByPodGrafanaDashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
-		Namespace string
+		Namespace, SumRate string
 	}{
-		ns,
+		ns, sumRate,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{
@@ -53,7 +53,7 @@ func KubernetesResourcesByPodGrafanaDashboard(ns string, appLabel string) *grafa
 	}
 }
 
-func KubeStateMetricsPrometheusRules(ns string, appLabel string) *monitoringv1.PrometheusRule {
+func KubeStateMetricsPrometheusRules(sumRate, ns, appLabel string) *monitoringv1.PrometheusRule {
 	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "threescale-kube-state-metrics",
@@ -117,7 +117,7 @@ func KubeStateMetricsPrometheusRules(ns string, appLabel string) *monitoringv1.P
 							Annotations: map[string]string{
 								"message": `Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} has High CPU usage for longer than 15 minutes.`,
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}) by (namespace, container, pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}) by (namespace, container, pod) * 100 > 90`, ns, ns)),
+							Expr: intstr.FromString(fmt.Sprintf(`sum(node_namespace_pod_container:container_cpu_usage_seconds_total:%s{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}) by (namespace, container, pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace="%s",pod=~"(apicast-.*|backend-.*|system-.*|zync-.*)"}) by (namespace, container, pod) * 100 > 90`, sumRate, ns, ns)),
 							For:  "15m",
 							Labels: map[string]string{
 								"severity": "warning",

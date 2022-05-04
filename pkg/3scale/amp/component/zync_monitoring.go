@@ -51,11 +51,11 @@ func (zync *Zync) ZyncQuePodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (zync *Zync) ZyncGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
+func (zync *Zync) ZyncGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
-		Namespace string
+		Namespace, SumRate string
 	}{
-		zync.Options.Namespace,
+		zync.Options.Namespace, sumRate,
 	}
 	return &grafanav1alpha1.GrafanaDashboard{
 		ObjectMeta: metav1.ObjectMeta{

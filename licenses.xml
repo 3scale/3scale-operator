@@ -1,9 +1,10 @@
+LicenseFinder::GoModules: [32mis active[0m
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <licenseSummary>
   <dependencies>
           <dependency>
         <packageName>github.com/3scale/3scale-porta-go-client</packageName>
-        <version>v0.0.4</version>
+        <version>v0.6.0</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>
@@ -33,7 +34,7 @@
       </dependency>
           <dependency>
         <packageName>github.com/getkin/kin-openapi</packageName>
-        <version>v0.22.1</version>
+        <version>v0.94.0</version>
         <licenses>
                       <license>
               <name>MIT</name>
@@ -156,8 +157,8 @@
         <version>v1.5.1</version>
         <licenses>
                       <license>
-              <name>unknown</name>
-              <url></url>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
             </license>
                   </licenses>
       </dependency>
@@ -188,6 +189,16 @@
                       <license>
               <name>MIT</name>
               <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>golang.org/x/mod</packageName>
+        <version>v0.5.1</version>
+        <licenses>
+                      <license>
+              <name>3-clause BSD License</name>
+              <url></url>
             </license>
                   </licenses>
       </dependency>
@@ -233,7 +244,7 @@
       </dependency>
           <dependency>
         <packageName>sigs.k8s.io/controller-runtime</packageName>
-        <version>v0.6.2</version>
+        <version>v0.6.3</version>
         <licenses>
                       <license>
               <name>Apache 2.0</name>

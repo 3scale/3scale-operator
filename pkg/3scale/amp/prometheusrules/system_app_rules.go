@@ -23,7 +23,7 @@ func (s *SystemAppPrometheusRuleFactory) Type() string {
 	return "system-app"
 }
 
-func (s *SystemAppPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
+func (s *SystemAppPrometheusRuleFactory) PrometheusRule(_ bool, ns string) *monitoringv1.PrometheusRule {
 	options, err := systemOptions(ns)
 	if err != nil {
 		panic(err)

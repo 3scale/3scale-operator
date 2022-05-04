@@ -73,7 +73,7 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{namespace=\"$namespace\", pod=\"$pod\", container!=\"POD\", cluster=\"$cluster\"}) by (container)",
+            "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=\"$namespace\", pod=\"$pod\", container!=\"POD\", cluster=\"$cluster\"}) by (container)",
             "format": "time_series",
             "intervalFactor": 2,
             "legendFormat": "{{`{{container}}`}}",
@@ -287,7 +287,7 @@
         ],
         "targets": [
           {
-            "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", container!=\"POD\"}) by (container)",
+            "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", container!=\"POD\"}) by (container)",
             "format": "table",
             "instant": true,
             "intervalFactor": 2,
@@ -305,7 +305,7 @@
             "step": 10
           },
           {
-            "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (container) / sum(kube_pod_container_resource_requests_cpu_cores{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (container)",
+            "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (container) / sum(kube_pod_container_resource_requests_cpu_cores{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (container)",
             "format": "table",
             "instant": true,
             "intervalFactor": 2,
@@ -323,7 +323,7 @@
             "step": 10
           },
           {
-            "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (container) / sum(kube_pod_container_resource_limits_cpu_cores{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (container)",
+            "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (container) / sum(kube_pod_container_resource_limits_cpu_cores{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (container)",
             "format": "table",
             "instant": true,
             "intervalFactor": 2,

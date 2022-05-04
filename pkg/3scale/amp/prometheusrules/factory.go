@@ -5,7 +5,7 @@ import (
 )
 
 type PrometheusRuleFactory interface {
-	PrometheusRule(ns string) *monitoringv1.PrometheusRule
+	PrometheusRule(compatPre49 bool, ns string) *monitoringv1.PrometheusRule
 	Type() string
 }
 
