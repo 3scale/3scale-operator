@@ -769,6 +769,13 @@ spec:
           - patch
           - update
         - apiGroups:
+          - config.openshift.io
+          resources:
+          - clusterversions
+          verbs:
+          - get
+          - list
+        - apiGroups:
           - ""
           resources:
           - configmaps
