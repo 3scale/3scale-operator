@@ -109,28 +109,14 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	disableApicastPortReconcile := "false"
-	apiManagerAnnotations := r.apiManager.GetAnnotations()
-	if apiManagerAnnotations == nil {
-		apiManagerAnnotations = make(map[string]string)
-	}
-	if val, ok := apiManagerAnnotations["apps.3scale.net/disable-apicast-service-reconciler"]; ok {
-		disableApicastPortReconcile = val
-	}
-
-	apicastServiceMutator := reconcilers.CreateOnlyMutator
-	if disableApicastPortReconcile == "false" {
-		apicastServiceMutator = reconcilers.ServicePortMutator
-	}
-
 	// Staging Service
-	err = r.ReconcileService(apicast.StagingService(), apicastServiceMutator)
+	err = r.ReconcileService(apicast.StagingService(), getApiCastServiceMutator(r.apiManager))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Production Service
-	err = r.ReconcileService(apicast.ProductionService(), apicastServiceMutator)
+	err = r.ReconcileService(apicast.ProductionService(), getApiCastServiceMutator(r.apiManager))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -184,6 +170,24 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func getApiCastServiceMutator(apiManager *appsv1alpha1.APIManager) reconcilers.MutateFn {
+	disableApicastPortReconcile := "false"
+	apiManagerAnnotations := apiManager.GetAnnotations()
+	if apiManagerAnnotations == nil {
+		apiManagerAnnotations = make(map[string]string)
+	}
+	if val, ok := apiManagerAnnotations["apps.3scale.net/disable-apicast-service-reconciler"]; ok {
+		disableApicastPortReconcile = val
+	}
+
+	apicastServiceMutator := reconcilers.CreateOnlyMutator
+	if disableApicastPortReconcile == "false" {
+		apicastServiceMutator = reconcilers.ServicePortMutator
+	}
+
+	return apicastServiceMutator
 }
 
 func apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
