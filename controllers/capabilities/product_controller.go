@@ -24,8 +24,10 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -82,7 +84,7 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if product.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(product, productFinalizer) {
 		if product.Status.ID != nil {
-			err = r.removeProduct(product)
+			err = r.removeProductFrom3scale(product)
 			if err != nil {
 				r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "Failed to delete product", "%v", err)
 				return ctrl.Result{}, err
@@ -386,8 +388,15 @@ func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap
 	return result
 }
 
-func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.Product) error {
+func (r *ProductReconciler) removeProductFrom3scale(productResource *capabilitiesv1beta1.Product) error {
+	logger := r.Logger().WithValues("product", client.ObjectKey{Name: productResource.Name, Namespace: productResource.Namespace})
+
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
+	if apierrors.IsNotFound(err) {
+		logger.Info("product not deleted from 3scale, provider account not found")
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
