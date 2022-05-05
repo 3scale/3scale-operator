@@ -185,12 +185,6 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, reconcileErr
 }
 
-func (r *ProductReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&capabilitiesv1beta1.Product{}).
-		Complete(r)
-}
-
 func (r *ProductReconciler) reconcile(productResource *capabilitiesv1beta1.Product) (*ProductStatusReconciler, error) {
 	logger := r.Logger().WithValues("product", productResource.Name)
 
@@ -391,7 +385,7 @@ func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap
 func (r *ProductReconciler) removeProductFrom3scale(productResource *capabilitiesv1beta1.Product) error {
 	logger := r.Logger().WithValues("product", client.ObjectKey{Name: productResource.Name, Namespace: productResource.Namespace})
 
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, logger)
 	if apierrors.IsNotFound(err) {
 		logger.Info("product not deleted from 3scale, provider account not found")
 		return nil
@@ -412,4 +406,10 @@ func (r *ProductReconciler) removeProductFrom3scale(productResource *capabilitie
 	}
 
 	return nil
+}
+
+func (r *ProductReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&capabilitiesv1beta1.Product{}).
+		Complete(r)
 }
