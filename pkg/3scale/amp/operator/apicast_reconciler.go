@@ -174,7 +174,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 
 func getApiCastServiceMutator(apiManager *appsv1alpha1.APIManager) reconcilers.MutateFn {
 	disableApicastPortReconcile := "false"
-	apiManagerAnnotations := apiManager.GetAnnotations()
+	apiManagerAnnotations := apiManager.ObjectMeta.GetAnnotations()
 	if apiManagerAnnotations == nil {
 		apiManagerAnnotations = make(map[string]string)
 	}
@@ -182,12 +182,10 @@ func getApiCastServiceMutator(apiManager *appsv1alpha1.APIManager) reconcilers.M
 		disableApicastPortReconcile = val
 	}
 
-	apicastServiceMutator := reconcilers.CreateOnlyMutator
-	if disableApicastPortReconcile == "false" {
-		apicastServiceMutator = reconcilers.ServicePortMutator
+	if disableApicastPortReconcile == "true" {
+		return reconcilers.CreateOnlyMutator
 	}
-
-	return apicastServiceMutator
+	return reconcilers.ServicePortMutator
 }
 
 func apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {

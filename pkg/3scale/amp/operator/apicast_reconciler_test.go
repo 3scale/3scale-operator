@@ -2,6 +2,8 @@ package operator
 
 import (
 	"context"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"testing"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -559,5 +561,206 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 
 	if !desiredTracingConfig1Found {
 		t.Fatal("desiredTracingConfig1 tracing config annotation not found. Should have been created")
+	}
+}
+
+func TestApicastServicePortMutator(t *testing.T) {
+	var (
+		name                       = "example-apimanager"
+		namespace                  = "operator-unittest"
+		port                 int32 = 1111
+		targetPort                 = intstr.FromInt(1111)
+		wildcardDomain             = "test.3scale.net"
+		log                        = logf.Log.WithName("operator_test")
+		appLabel                   = "someLabel"
+		tenantName                 = "someTenant"
+		apicastManagementAPI       = "disabled"
+		trueValue                  = true
+		oneValue             int64 = 1
+	)
+
+	ctx := context.TODO()
+	existingStagingService := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "apicast-staging",
+			Namespace: namespace,
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				{Port: port, TargetPort: targetPort},
+			},
+		},
+	}
+	existingProductionService := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "apicast-production",
+			Namespace: namespace,
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				{Port: port, TargetPort: targetPort},
+			},
+		},
+	}
+
+	productionServiceKey := common.ObjectKey(existingProductionService)
+	stagingServiceKey := common.ObjectKey(existingStagingService)
+	prodSvc := &v1.Service{}
+	stageSvc := &v1.Service{}
+
+	cases := []struct {
+		testName           string
+		apim               appsv1alpha1.APIManager
+		expectedPort       int32
+		expectedTargetPort intstr.IntOrString
+	}{
+		{
+			"annotationTrue",
+			appsv1alpha1.APIManager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        name,
+					Namespace:   namespace,
+					Annotations: map[string]string{"apps.3scale.net/disable-apicast-service-reconciler": "true"},
+				},
+				Spec: appsv1alpha1.APIManagerSpec{
+					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+						AppLabel:                     &appLabel,
+						ImageStreamTagImportInsecure: &trueValue,
+						WildcardDomain:               wildcardDomain,
+						TenantName:                   &tenantName,
+						ResourceRequirementsEnabled:  &trueValue,
+					},
+					Apicast: &appsv1alpha1.ApicastSpec{
+						ApicastManagementAPI: &apicastManagementAPI,
+						OpenSSLVerify:        &trueValue,
+						IncludeResponseCodes: &trueValue,
+						StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+							Replicas: &oneValue,
+						},
+						ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+							Replicas: &oneValue,
+						},
+					},
+				},
+			},
+			port,
+			targetPort,
+		},
+		{
+			"annotationFalse",
+			appsv1alpha1.APIManager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        name,
+					Namespace:   namespace,
+					Annotations: map[string]string{"apps.3scale.net/disable-apicast-service-reconciler": "false"},
+				},
+				Spec: appsv1alpha1.APIManagerSpec{
+					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+						AppLabel:                     &appLabel,
+						ImageStreamTagImportInsecure: &trueValue,
+						WildcardDomain:               wildcardDomain,
+						TenantName:                   &tenantName,
+						ResourceRequirementsEnabled:  &trueValue,
+					},
+					Apicast: &appsv1alpha1.ApicastSpec{
+						ApicastManagementAPI: &apicastManagementAPI,
+						OpenSSLVerify:        &trueValue,
+						IncludeResponseCodes: &trueValue,
+						StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+							Replicas: &oneValue,
+						},
+						ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+							Replicas: &oneValue,
+						},
+					},
+				},
+			},
+			8080,
+			intstr.FromInt(8080),
+		},
+		{
+			"annotationAbsent",
+			appsv1alpha1.APIManager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: namespace,
+				},
+				Spec: appsv1alpha1.APIManagerSpec{
+					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+						AppLabel:                     &appLabel,
+						ImageStreamTagImportInsecure: &trueValue,
+						WildcardDomain:               wildcardDomain,
+						TenantName:                   &tenantName,
+						ResourceRequirementsEnabled:  &trueValue,
+					},
+					Apicast: &appsv1alpha1.ApicastSpec{
+						ApicastManagementAPI: &apicastManagementAPI,
+						OpenSSLVerify:        &trueValue,
+						IncludeResponseCodes: &trueValue,
+						StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+							Replicas: &oneValue,
+						},
+						ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+							Replicas: &oneValue,
+						},
+					},
+				},
+			},
+			8080,
+			intstr.FromInt(8080),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			// Objects to track in the fake client.
+			objs := []runtime.Object{&tc.apim, existingStagingService, existingProductionService}
+			s := scheme.Scheme
+			s.AddKnownTypes(appsv1alpha1.GroupVersion, &tc.apim)
+			if err := appsv1.AddToScheme(s); err != nil {
+				t.Fatal(err)
+			}
+			if err := imagev1.AddToScheme(s); err != nil {
+				t.Fatal(err)
+			}
+			if err := routev1.AddToScheme(s); err != nil {
+				t.Fatal(err)
+			}
+			if err := monitoringv1.AddToScheme(s); err != nil {
+				t.Fatal(err)
+			}
+			if err := grafanav1alpha1.AddToScheme(s); err != nil {
+				t.Fatal(err)
+			}
+
+			// Create a fake client to mock API calls.
+			cl := fake.NewFakeClient(objs...)
+			clientAPIReader := fake.NewFakeClient(objs...)
+			clientset := fakeclientset.NewSimpleClientset()
+			recorder := record.NewFakeRecorder(10000)
+
+			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, &tc.apim)
+
+			apicastReconciler := NewApicastReconciler(baseAPIManagerLogicReconciler)
+			if _, err := apicastReconciler.Reconcile(); err != nil {
+				t.Fatal(err)
+			}
+
+			// Fetch both services with fake client
+			if err := cl.Get(context.TODO(), productionServiceKey, prodSvc); err != nil {
+				t.Fatal(err)
+			}
+			if err := cl.Get(context.TODO(), stagingServiceKey, stageSvc); err != nil {
+				t.Fatal(err)
+			}
+
+			if stageSvc.Spec.Ports[0].Port != tc.expectedPort || stageSvc.Spec.Ports[0].TargetPort != tc.expectedTargetPort {
+				t.Fatal("Apicast service Ports do not match the expected service port based on the annotation")
+			}
+			if prodSvc.Spec.Ports[0].Port != tc.expectedPort || prodSvc.Spec.Ports[0].TargetPort != tc.expectedTargetPort {
+				t.Fatal("Apicast service Target Ports do not match the expected service targetPort based on the annotation")
+			}
+		})
 	}
 }
