@@ -20,9 +20,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -87,7 +89,7 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if backend.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(backend, backendFinalizer) {
 		// Attempt to remove backend only if backend.Status.ID is present
 		if backend.Status.ID != nil {
-			requeue, err := r.removeBackend(backend.Spec.ProviderAccountRef, *backend.Status.ID, backend.Namespace, backend.Spec.SystemName)
+			requeue, err := r.removeBackend(backend.Spec.ProviderAccountRef, *backend.Status.ID, backend.Namespace, backend.Spec.SystemName, reqLogger)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
@@ -240,9 +242,14 @@ func (r *BackendReconciler) validateSpec(backendResource *capabilitiesv1beta1.Ba
 	}
 }
 
-func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObjectReference, backendID int64, backendNamespace string, systemName string) (requeue bool, err error) {
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendNamespace, providerAccountRef, r.Logger())
+func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObjectReference, backendID int64, backendNamespace string, systemName string, logger logr.Logger) (requeue bool, err error) {
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendNamespace, providerAccountRef, logger)
 	if err != nil {
+		if strings.Contains(err.Error(), fmt.Sprintf("Secret \"%s\" not found", providerAccountRef.Name)) {
+			logger.Info("Provider account for backend not found, tenant is deleted already, removing backend", "backend", systemName)
+			return false, nil
+		}
+
 		return false, err
 	}
 

@@ -20,8 +20,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -82,7 +84,7 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if product.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(product, productFinalizer) {
 		if product.Status.ID != nil {
-			err = r.removeProduct(product)
+			err = r.removeProduct(product, reqLogger)
 			if err != nil {
 				r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "Failed to delete product", "%v", err)
 				return ctrl.Result{}, err
@@ -386,9 +388,14 @@ func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap
 	return result
 }
 
-func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.Product) error {
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
+func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.Product, logger logr.Logger) error {
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, logger)
 	if err != nil {
+		if strings.Contains(err.Error(), fmt.Sprintf("Secret \"%s\" not found", productResource.Spec.ProviderAccountRef.Name)) {
+			logger.Info("Provider account for product not found, tenant is deleted already, removing product", "product", productResource.Spec.SystemName)
+			return nil
+		}
+
 		return err
 	}
 
