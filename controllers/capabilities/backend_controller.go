@@ -25,8 +25,10 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -85,17 +87,19 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Ignore deleted Backends, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if backend.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(backend, backendFinalizer) {
-		// Attempt to remove backend only if backend.Status.ID is present
-		if backend.Status.ID != nil {
-			requeue, err := r.removeBackend(backend.Spec.ProviderAccountRef, *backend.Status.ID, backend.Namespace, backend.Spec.SystemName)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-			if requeue {
-				return ctrl.Result{RequeueAfter: requeueTime}, nil
-			}
-		} else {
-			reqLogger.Info("ERROR", "could not remove backend because backend ID is missing for backend name", backend.Name)
+		res, err := r.removeBackendReferencesFromProducts(backend)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		if res.Requeue {
+			reqLogger.Info("Removed backend references from product CRs. Requeueing.")
+			return res, nil
+		}
+
+		err = r.removeBackendFrom3scale(backend)
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 
 		controllerutil.RemoveFinalizer(backend, backendFinalizer)
@@ -186,12 +190,6 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
-func (r *BackendReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&capabilitiesv1beta1.Backend{}).
-		Complete(r)
-}
-
 func (r *BackendReconciler) reconcile(backendResource *capabilitiesv1beta1.Backend) (*BackendStatusReconciler, error) {
 	logger := r.Logger().WithValues("backend", backendResource.Name)
 
@@ -240,71 +238,95 @@ func (r *BackendReconciler) validateSpec(backendResource *capabilitiesv1beta1.Ba
 	}
 }
 
-func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObjectReference, backendID int64, backendNamespace string, systemName string) (requeue bool, err error) {
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendNamespace, providerAccountRef, r.Logger())
-	if err != nil {
-		return false, err
-	}
-
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
-	if err != nil {
-		return false, err
-	}
-
+func (r *BackendReconciler) removeBackendReferencesFromProducts(backend *capabilitiesv1beta1.Backend) (ctrl.Result, error) {
 	// Retrieve all product CRs that are under the same ns as the backend CR
 	opts := k8sclient.ListOptions{
-		Namespace: backendNamespace,
+		Namespace: backend.Namespace,
 	}
 	productCRsList := &capabilitiesv1beta1.ProductList{}
-	err = r.Client().List(context.TODO(), productCRsList, &opts)
+	err := r.Client().List(context.TODO(), productCRsList, &opts)
 	if err != nil {
-		return false, err
+		return ctrl.Result{}, err
 	}
 
 	// fetch CRs that belong to a tenant and require removal of the backend mentions in
 	// Application Plan pricing rules
 	// Application Plan limits
 	// Backend usages
-	tenantProductCRs, err := r.fetchTenantProductCRs(productCRsList, providerAccountRef, backendNamespace, systemName)
+	tenantProductCRs, err := r.fetchTenantProductCRs(productCRsList, backend)
 	if err != nil {
-		return false, err
+		return ctrl.Result{}, err
 	}
 
-	var productCrUpdated = false
+	productCRUpdated := false
 
 	// update backendUsages for each product retrieved
 	for _, productCR := range tenantProductCRs {
-		if productCR.RemoveBackendReferences(systemName) {
+		if productCR.RemoveBackendReferences(backend.Spec.SystemName) {
 			err = r.UpdateResource(&productCR)
 			if err != nil {
-				return false, err
+				return ctrl.Result{}, err
 			}
-			productCrUpdated = true
+			productCRUpdated = true
 		}
 	}
 
-	if productCrUpdated {
-		return true, nil
+	if productCRUpdated {
+		return ctrl.Result{Requeue: productCRUpdated, RequeueAfter: requeueTime}, nil
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *BackendReconciler) removeBackendFrom3scale(backend *capabilitiesv1beta1.Backend) error {
+	logger := r.Logger().WithValues("backend", client.ObjectKey{Name: backend.Name, Namespace: backend.Namespace})
+
+	// Attempt to remove backend only if backend.Status.ID is present
+	if backend.Status.ID == nil {
+		logger.Info("could not remove backend because ID is missing in status")
+		return nil
+	}
+
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backend.Namespace, backend.Spec.ProviderAccountRef, logger)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("backend not deleted from 3scale, provider account not found")
+			return nil
+		}
+		return err
+	}
+
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	if err != nil {
+		return err
 	}
 
 	// Attempt to remove backendAPI - expect error on first attempt as the backendUsage has not been removed yet from 3scale
-	err = threescaleAPIClient.DeleteBackendApi(backendID)
+	err = threescaleAPIClient.DeleteBackendApi(*backend.Status.ID)
 	if err != nil && !threescaleapi.IsNotFound(err) {
-		return false, err
+		return err
 	}
 
-	return false, nil
+	return nil
 }
 
-func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv1beta1.ProductList, providerAccountRef *corev1.LocalObjectReference, backendNs string, systemName string) ([]capabilitiesv1beta1.Product, error) {
+func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv1beta1.ProductList, backendResource *capabilitiesv1beta1.Backend) ([]capabilitiesv1beta1.Product, error) {
+	logger := r.Logger().WithValues("backend", client.ObjectKey{Name: backendResource.Name, Namespace: backendResource.Namespace})
+
 	var productsList []capabilitiesv1beta1.Product
-	backendProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendNs, providerAccountRef, r.Logger())
+	backendProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, logger)
+
+	if apierrors.IsNotFound(err) {
+		logger.Info("could not look up for products of the same tenant. Tenant not found")
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	for _, productCR := range productsCRsList.Items {
-		productProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productCR.Namespace, productCR.Spec.ProviderAccountRef, r.Logger())
+		productProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productCR.Namespace, productCR.Spec.ProviderAccountRef, logger)
 		if err != nil {
 			// skip product CR if productProviderAccount is not found
 			continue
@@ -316,4 +338,10 @@ func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv
 	}
 
 	return productsList, nil
+}
+
+func (r *BackendReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&capabilitiesv1beta1.Backend{}).
+		Complete(r)
 }

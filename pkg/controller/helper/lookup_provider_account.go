@@ -44,7 +44,7 @@ func LookupProviderAccount(cl client.Client, ns string, providerAccountRef *core
 	for _, source := range orderedSources {
 		providerAccount, err := source(cl, ns, providerAccountRef, logger)
 		if err != nil {
-			return nil, fmt.Errorf("LookupProviderAccount: %w", err)
+			return nil, err
 		}
 
 		if providerAccount != nil {
@@ -63,11 +63,11 @@ func providerAccountFromSecretReferenceSource(cl client.Client, ns string, provi
 		secretSource := helper.NewSecretSource(cl, ns)
 		adminURLStr, err := secretSource.RequiredFieldValueFromRequiredSecret(providerAccountRef.Name, providerAccountSecretURLFieldName)
 		if err != nil {
-			return nil, fmt.Errorf("providerAccountFromSecretReferenceSource: %w", err)
+			return nil, err
 		}
 		token, err := secretSource.RequiredFieldValueFromRequiredSecret(providerAccountRef.Name, providerAccountSecretTokenFieldName)
 		if err != nil {
-			return nil, fmt.Errorf("providerAccountFromSecretReferenceSource: %w", err)
+			return nil, err
 		}
 
 		return &ProviderAccount{AdminURLStr: adminURLStr, Token: token}, nil

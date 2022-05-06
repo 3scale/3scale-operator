@@ -24,8 +24,10 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -81,14 +83,10 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Ignore deleted Products, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
 	if product.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(product, productFinalizer) {
-		if product.Status.ID != nil {
-			err = r.removeProduct(product)
-			if err != nil {
-				r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "Failed to delete product", "%v", err)
-				return ctrl.Result{}, err
-			}
-		} else {
-			reqLogger.Info("ERROR", "could not remove product from 3scale because product ID is missing for product name", product.Name)
+		err = r.removeProductFrom3scale(product)
+		if err != nil {
+			r.EventRecorder().Eventf(product, corev1.EventTypeWarning, "Failed to delete product", "%v", err)
+			return ctrl.Result{}, err
 		}
 
 		controllerutil.RemoveFinalizer(product, productFinalizer)
@@ -181,12 +179,6 @@ func (r *ProductReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	reqLogger.Info("END", "error", reconcileErr)
 	return ctrl.Result{}, reconcileErr
-}
-
-func (r *ProductReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&capabilitiesv1beta1.Product{}).
-		Complete(r)
 }
 
 func (r *ProductReconciler) reconcile(productResource *capabilitiesv1beta1.Product) (*ProductStatusReconciler, error) {
@@ -386,9 +378,21 @@ func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap
 	return result
 }
 
-func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.Product) error {
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), productResource.Namespace, productResource.Spec.ProviderAccountRef, r.Logger())
+func (r *ProductReconciler) removeProductFrom3scale(product *capabilitiesv1beta1.Product) error {
+	logger := r.Logger().WithValues("product", client.ObjectKey{Name: product.Name, Namespace: product.Namespace})
+
+	// Attempt to remove product only if product.Status.ID is present
+	if product.Status.ID == nil {
+		logger.Info("could not remove product because ID is missing in status")
+		return nil
+	}
+
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), product.Namespace, product.Spec.ProviderAccountRef, logger)
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("product not deleted from 3scale, provider account not found")
+			return nil
+		}
 		return err
 	}
 
@@ -397,10 +401,16 @@ func (r *ProductReconciler) removeProduct(productResource *capabilitiesv1beta1.P
 		return err
 	}
 
-	err = threescaleAPIClient.DeleteProduct(*productResource.Status.ID)
+	err = threescaleAPIClient.DeleteProduct(*product.Status.ID)
 	if err != nil && !threescaleapi.IsNotFound(err) {
 		return err
 	}
 
 	return nil
+}
+
+func (r *ProductReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&capabilitiesv1beta1.Product{}).
+		Complete(r)
 }
