@@ -283,16 +283,16 @@ func (r *BackendReconciler) removeBackendFrom3scale(backend *capabilitiesv1beta1
 
 	// Attempt to remove backend only if backend.Status.ID is present
 	if backend.Status.ID == nil {
-		logger.Info("could not remove backend because backend ID is missing for backend name")
-	}
-
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backend.Namespace, backend.Spec.ProviderAccountRef, logger)
-	if apierrors.IsNotFound(err) {
-		logger.Info("backend not deleted from 3scale, provider account not found")
+		logger.Info("could not remove backend because ID is missing in status")
 		return nil
 	}
 
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backend.Namespace, backend.Spec.ProviderAccountRef, logger)
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.Info("backend not deleted from 3scale, provider account not found")
+			return nil
+		}
 		return err
 	}
 
