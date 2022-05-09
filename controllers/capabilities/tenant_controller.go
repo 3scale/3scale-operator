@@ -122,7 +122,7 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 					return ctrl.Result{}, err
 				}
 			} else {
-				reqLogger.Info("Removing tenant CR - tenant is already scheduled for deletion %v", existingTenant.Signup.Account.ID)
+				reqLogger.Info("Removing tenant CR - tenant is already scheduled for deletion", "tenantID", existingTenant.Signup.Account.ID)
 			}
 		}
 
