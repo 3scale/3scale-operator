@@ -605,18 +605,16 @@ func TestApicastServicePortMutator(t *testing.T) {
 
 	productionServiceKey := common.ObjectKey(existingProductionService)
 	stagingServiceKey := common.ObjectKey(existingStagingService)
-	prodSvc := &v1.Service{}
-	stageSvc := &v1.Service{}
 
 	cases := []struct {
 		testName           string
-		apim               appsv1alpha1.APIManager
+		apim               *appsv1alpha1.APIManager
 		expectedPort       int32
 		expectedTargetPort intstr.IntOrString
 	}{
 		{
 			"annotationTrue",
-			appsv1alpha1.APIManager{
+			&appsv1alpha1.APIManager{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        name,
 					Namespace:   namespace,
@@ -648,7 +646,7 @@ func TestApicastServicePortMutator(t *testing.T) {
 		},
 		{
 			"annotationFalse",
-			appsv1alpha1.APIManager{
+			&appsv1alpha1.APIManager{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        name,
 					Namespace:   namespace,
@@ -680,7 +678,7 @@ func TestApicastServicePortMutator(t *testing.T) {
 		},
 		{
 			"annotationAbsent",
-			appsv1alpha1.APIManager{
+			&appsv1alpha1.APIManager{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      name,
 					Namespace: namespace,
@@ -714,9 +712,9 @@ func TestApicastServicePortMutator(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			// Objects to track in the fake client.
-			objs := []runtime.Object{&tc.apim, existingStagingService, existingProductionService}
+			objs := []runtime.Object{tc.apim, existingStagingService, existingProductionService}
 			s := scheme.Scheme
-			s.AddKnownTypes(appsv1alpha1.GroupVersion, &tc.apim)
+			s.AddKnownTypes(appsv1alpha1.GroupVersion, tc.apim)
 			if err := appsv1.AddToScheme(s); err != nil {
 				t.Fatal(err)
 			}
@@ -740,12 +738,14 @@ func TestApicastServicePortMutator(t *testing.T) {
 			recorder := record.NewFakeRecorder(10000)
 
 			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
-			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, &tc.apim)
+			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, tc.apim)
 
 			apicastReconciler := NewApicastReconciler(baseAPIManagerLogicReconciler)
 			if _, err := apicastReconciler.Reconcile(); err != nil {
 				t.Fatal(err)
 			}
+			prodSvc := &v1.Service{}
+			stageSvc := &v1.Service{}
 
 			// Fetch both services with fake client
 			if err := cl.Get(context.TODO(), productionServiceKey, prodSvc); err != nil {

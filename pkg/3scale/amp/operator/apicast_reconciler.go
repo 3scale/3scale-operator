@@ -110,13 +110,13 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging Service
-	err = r.ReconcileService(apicast.StagingService(), getApiCastServiceMutator(r.apiManager))
+	err = r.ReconcileService(apicast.StagingService(), getApiCastServiceMutator(r.apiManager.ObjectMeta.GetAnnotations()))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Production Service
-	err = r.ReconcileService(apicast.ProductionService(), getApiCastServiceMutator(r.apiManager))
+	err = r.ReconcileService(apicast.ProductionService(), getApiCastServiceMutator(r.apiManager.ObjectMeta.GetAnnotations()))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -172,9 +172,8 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func getApiCastServiceMutator(apiManager *appsv1alpha1.APIManager) reconcilers.MutateFn {
+func getApiCastServiceMutator(apiManagerAnnotations map[string]string) reconcilers.MutateFn {
 	disableApicastPortReconcile := "false"
-	apiManagerAnnotations := apiManager.ObjectMeta.GetAnnotations()
 	if apiManagerAnnotations == nil {
 		apiManagerAnnotations = make(map[string]string)
 	}
