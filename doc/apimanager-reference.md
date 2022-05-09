@@ -62,10 +62,11 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 
 ## APIManager
 
-| **Field** | **json/yaml field**| **Type** | **Required** | **Description** |
-| --- | --- | --- | --- | --- |
+| **Field** | **json/yaml field**| **Type** | **Required** | **Description**                                 |
+| --- | --- | --- | --- |-------------------------------------------------|
 | Spec | `spec` | [APIManagerSpec](#APIManagerSpec) | Yes | The specfication for APIManager custom resource |
-| Status | `status` | [APIManagerStatus](#APIManagerStatus) | No | The status for the custom resource |
+| Status | `status` | [APIManagerStatus](#APIManagerStatus) | No | The status for the custom resource              |
+| MetaData | `metadata` | [APIManagerMetaData](#APIManagerMetaData) | No | The meta data for APIManager custom resource    |
 
 ### APIManagerSpec
 
@@ -85,6 +86,14 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | ExternalComponentsSpec | `externalComponents` | \*ExternalComponentsSpec | No | See [ExternalComponentsSpec](#ExternalComponentsSpec) reference | Spec of the ExternalComponentsSpec part |
 | PodDisruptionBudgetSpec | `podDisruptionBudget` | \*PodDisruptionBudgetSpec | No | See [PodDisruptionBudgetSpec](#PodDisruptionBudgetSpec) reference | Spec of the PodDisruptionBudgetSpec part |
 | MonitoringSpec | `monitoring` | \*MonitoringSpec | No | Disabled | [MonitoringSpec](#MonitoringSpec) reference |
+
+### APIManagerMetaData
+
+| **Annotations**  |  **json/yaml field**   |  **Type** | **Required** | **Default value** | **Description**      |
+| --- | --- | --- | --- | --- | --- |
+| disableApicastPortReconcile | `apps.3scale.net/disable-apicast-service-reconciler` | string   | No | `true`               | Can be `true` or `false` |
+
+
 
 ### ApicastSpec
 
