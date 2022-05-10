@@ -9,6 +9,7 @@ One APIManager custom resource per project is allowed.
 * [APIManager](#apimanager)
   * [APIManagerSpec](#apimanagerspec)
   * [ApicastSpec](#apicastspec)
+  * [APIManagerMetaData](#APIManagerMetaData)
   * [ApicastProductionSpec](#apicastproductionspec)
   * [ApicastStagingSpec](#apicaststagingspec)
   * [CustomPolicySpec](#custompolicyspec)
@@ -89,9 +90,9 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 
 ### APIManagerMetaData
 
-| **Annotations**  |  **json/yaml field**   |  **Type** | **Required** | **Default value** | **Description**      |
-| --- | --- | --- | --- | --- | --- |
-| disableApicastPortReconcile | `apps.3scale.net/disable-apicast-service-reconciler` | string   | No | `true`               | Can be `true` or `false` |
+| **Annotations**  | **Name** | **Default value** | **Description**                                                                  |
+| --- | --- |-------------------|----------------------------------------------------------------------------------|
+| `apps.3scale.net/disable-apicast-service-reconciler` | disableApicastPortReconcile | `false` | Can be `true` or `false` - will disable apicast service port reconcile when true |
 
 
 
