@@ -318,6 +318,7 @@ spec:
           verbs:
           - get
           - list
+          - watch
         - apiGroups:
           - console.openshift.io
           resources:
