@@ -17,8 +17,28 @@ limitations under the License.
 package v1beta1
 
 import (
-	corev1 "k8s.io/api/core/v1"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
+)
+
+const (
+	ProxyPromoteConfigKind = "ProxyPromoteConfig"
+
+	// ProxyPromoteConfigInvalidConditionType represents that the combination of configuration
+	// in the ProxyPromoteConfigSpec is not supported. This is not a transient error, but
+	// indicates a state that must be fixed before progress can be made.
+	ProxyPromoteConfigInvalidConditionType common.ConditionType = "Invalid"
+
+	// ProxyPromoteConfigReadyConditionType indicates the activedoc has been successfully synchronized.
+	// Steady state
+	ProxyPromoteConfigReadyConditionType common.ConditionType = "Ready"
+
+	// ProxyPromoteConfigFailedConditionType indicates that an error occurred during synchronization.
+	// The operator will retry.
+	ProxyPromoteConfigFailedConditionType common.ConditionType = "Failed"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -30,19 +50,15 @@ type ProxyConfigPromoteSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// product CR metadata.name
-	ProductCRName string `json:"productCRName,omitempty"`
+	ProductCRName string `json:"productCRName"`
 
 	// Environment you wish to promote to, if not present defaults to staging and if set to true promotes to production
 	// +optional
-	Production bool `json:"production,omitempty"`
-
-	// ProviderAccountRef references account provider credentials
-	// +optional
-	ProviderAccountRef *corev1.LocalObjectReference `json:"providerAccountRef,omitempty"`
+	Production *bool `json:"production,omitempty"`
 
 	// deleteCR  deletes this CR when it has successfully completed the promotion
 	// +optional
-	DeleteCR bool `json:"deleteCR,omitempty"`
+	DeleteCR *bool `json:"deleteCR,omitempty"`
 }
 
 // ProxyConfigPromoteStatus defines the observed state of ProxyConfigPromote
@@ -54,13 +70,23 @@ type ProxyConfigPromoteStatus struct {
 	//+optional
 	ProductId string `json:"productId,omitempty"`
 
-	// The most recent Environment you have promoted to i.e. staging or production
+	// The latest Version in production
 	//+optional
-	PromoteEnvironment string `json:"promoteEnvironment,omitempty"`
+	LatestProductionVersion int `json:"latestProductionVersion,omitempty"`
+	// The latest Version in staging
+	//+optional
+	LatestStagingVersion int `json:"latestStagingVersion,omitempty"`
 
 	// State of promotion i.e. failed or completed
 	//+optional
 	State string `json:"state,omitempty"`
+
+	// Current state of the activedoc resource.
+	// Conditions represent the latest available observations of an object's state
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
 // +kubebuilder:object:root=true
@@ -86,4 +112,41 @@ type ProxyConfigPromoteList struct {
 
 func init() {
 	SchemeBuilder.Register(&ProxyConfigPromote{}, &ProxyConfigPromoteList{})
+}
+
+func (o *ProxyConfigPromoteStatus) Equals(other *ProxyConfigPromoteStatus, logger logr.Logger) bool {
+	if !reflect.DeepEqual(o.ProductId, other.ProductId) {
+		diff := cmp.Diff(o.ProductId, other.ProductId)
+		logger.V(1).Info("ProductID not equal", "difference", diff)
+		return false
+	}
+
+	if o.LatestProductionVersion != other.LatestProductionVersion {
+		diff := cmp.Diff(o.LatestProductionVersion, other.LatestProductionVersion)
+		logger.V(1).Info("LatestProductionVersion not equal", "difference", diff)
+		return false
+	}
+
+	if o.LatestStagingVersion != other.LatestStagingVersion {
+		diff := cmp.Diff(o.LatestStagingVersion, other.LatestStagingVersion)
+		logger.V(1).Info("LatestStagingVersion not equal", "difference", diff)
+		return false
+	}
+
+	if o.State != other.State {
+		diff := cmp.Diff(o.State, other.State)
+		logger.V(1).Info("State not equal", "difference", diff)
+		return false
+	}
+
+	// Marshalling sorts by condition type
+	currentMarshaledJSON, _ := o.Conditions.MarshalJSON()
+	otherMarshaledJSON, _ := other.Conditions.MarshalJSON()
+	if string(currentMarshaledJSON) != string(otherMarshaledJSON) {
+		diff := cmp.Diff(string(currentMarshaledJSON), string(otherMarshaledJSON))
+		logger.V(1).Info("Conditions not equal", "difference", diff)
+		return false
+	}
+
+	return true
 }

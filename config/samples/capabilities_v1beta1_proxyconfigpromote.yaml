@@ -3,5 +3,7 @@ kind: ProxyConfigPromote
 metadata:
   name: proxyconfigpromote-sample
 spec:
-  # Add fields here
-  foo: bar
+  ProductCRName: product1-sample
+  Production: true
+
+

@@ -56,6 +56,50 @@ stringData:
 
 | **Field**           | **json field**       | **Type** | **Info**                                                                    |
 |---------------------|----------------------| --- |-----------------------------------------------------------------------------|
-| Product ID          | `productId`          | string | Internal ID of promted product                                              |
-| Promote Environment | `promoteEnvironment` | string | Environment to which product should be promoted to                          |
-| Status              | `status`             | string | Completed if promotion is successful , Failed if promotion is unsuccessful |
+| ProductId          | `productId`          | string | Internal ID of promted product                                              |
+| LatestProductionVersion | `latestProductionVersion` | string | int with the current version in the production environment      |
+| LatestStagingVersion | `latestStagingVersion` | string | int with the current version in the staging environment      |
+| State               | `state`             | string | Completed if promotion is successful , Failed if promotion is unsuccessful |
+| Conditions | `conditions` | array of [conditions](#ConditionSpec) | resource conditions |
+
+For example:
+
+```yaml
+status:
+  conditions:
+    - lastTransitionTime: '2022-05-11T13:41:00Z'
+      status: 'False'
+      type: Failed
+    - lastTransitionTime: '2022-05-11T13:37:37Z'
+      status: 'False'
+      type: Invalid
+    - lastTransitionTime: '2022-05-11T13:41:00Z'
+      status: 'True'
+      type: Ready
+  latestProductionVersion: 7
+  latestStagingVersion: 8
+  productId: '3'
+  state: Completed
+```
+
+#### ConditionSpec
+
+The status object has an array of Conditions through which the Product has or has not passed.
+Each element of the Condition array has the following fields:
+
+* The *lastTransitionTime* field provides a timestamp for when the entity last transitioned from one status to another.
+* The *message* field is a human-readable message indicating details about the transition.
+* The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
+* The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
+* The *type* field is a string with the following possible values:
+  * Invalid: Indicates that the combination of configuration in the ActiveDocSpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
+  * Ready: Indicates the ActiveDoc resource has been successfully reconciled;
+  * Failed: Indicates that an error occurred during reconcilliation;
+
+| **Field** | **json field**| **Type** | **Info** |
+| --- | --- | --- | --- |
+| Type | `type` | string | Condition Type |
+| Status | `status` | string | Status: True, False, Unknown |
+| Reason | `reason` | string | Condition state reason |
+| Message | `message` | string | Condition state description |
+| LastTransitionTime | `lastTransitionTime` | timestamp | Last transition timestap |
