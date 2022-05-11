@@ -312,6 +312,13 @@ spec:
       clusterPermissions:
       - rules:
         - apiGroups:
+          - config.openshift.io
+          resources:
+          - clusterversions
+          verbs:
+          - get
+          - list
+        - apiGroups:
           - console.openshift.io
           resources:
           - consolelinks
@@ -768,13 +775,6 @@ spec:
           - get
           - patch
           - update
-        - apiGroups:
-          - config.openshift.io
-          resources:
-          - clusterversions
-          verbs:
-          - get
-          - list
         - apiGroups:
           - ""
           resources:
