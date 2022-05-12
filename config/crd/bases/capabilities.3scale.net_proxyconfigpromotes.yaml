@@ -96,10 +96,10 @@ spec:
                   type: object
                 type: array
               latestProductionVersion:
-                description: The most recent Version you have promoted to production
+                description: The latest Version in production
                 type: integer
               latestStagingVersion:
-                description: The most recent Version you have promoted to staging
+                description: The latest Version in staging
                 type: integer
               productId:
                 description: The id of the product that has been promoted
