@@ -4,7 +4,7 @@
 
 1. Create additional-scrape-configs secret with 3scale scrape config
 
-Get basic auth password `basicAuthPassword` from `ns/openshift-monitoring/secrets/grafana-datasources/prometheus.yaml` and update `3scale-scrape-configs.yaml` basic auth field.
+Get basic auth password `basicAuthPassword` from `ns/openshift-monitoring/secrets/grafana-datasources-v2/prometheus.yaml` and update `3scale-scrape-configs.yaml` basic auth field.
 
 Then create secret:
 
