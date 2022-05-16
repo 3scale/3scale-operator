@@ -63,10 +63,10 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 
 ## APIManager
 
-| **Field** | **json/yaml field**| **Type** | **Required** | **Description**                                 |
-| --- | --- | --- | --- |-------------------------------------------------|
+| **Field** | **json/yaml field**| **Type** | **Required** | **Description** |
+| --- | --- | --- | --- | --- |
 | Spec | `spec` | [APIManagerSpec](#APIManagerSpec) | Yes | The specfication for APIManager custom resource |
-| Status | `status` | [APIManagerStatus](#APIManagerStatus) | No | The status for the custom resource              |
+| Status | `status` | [APIManagerStatus](#APIManagerStatus) | No | The status for the custom resource  |
 | MetaData | `metadata` | [APIManagerMetaData](#APIManagerMetaData) | No | The meta data for APIManager custom resource    |
 
 ### APIManagerSpec
@@ -90,8 +90,8 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 
 ### APIManagerMetaData
 
-| **Annotations**  | **Name** | **Default value** | **Description**                                                                  |
-| --- | --- |-------------------|----------------------------------------------------------------------------------|
+| **Annotations**  | **Name** | **Default value** | **Description** |
+| --- | --- | --- | --- |
 | `apps.3scale.net/disable-apicast-service-reconciler` | disableApicastPortReconcile | `false` | Can be `true` or `false` - will disable apicast service port reconcile when true |
 
 
