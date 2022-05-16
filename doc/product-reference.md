@@ -155,7 +155,6 @@ Specifies product mapping rules
 | Metric Method Reference | `metricMethodRef` | string | Existing method or metric **system name** | Yes |
 | Increment | `increment` | int | Increase the metric by this delta | Yes |
 | Last | `last` | \*bool | Last matched Mapping Rule to process | No |
-| Published | `published` | \*bool | Controls whether the application plan is published. If not specified it is hidden by default | No |
 
 #### MetricSpec
 
@@ -254,6 +253,7 @@ Once a limit has been passed in a given period, reject messages will be issued i
 | CostMonth | `costMonth` | string | Cost per Month (USD) | No |
 | PricingRules | `pricingRules` | array | Array of [PricingRuleSpec](#PricingRuleSpec) objects | No |
 | Limits | `limits` | array | Array of [LimitSpec](#LimitSpec) objects | No |
+| Published | `published` | \*bool | Controls whether the application plan is published. If not specified it is hidden by default | No |
 
 #### PricingRuleSpec
 
