@@ -18,6 +18,11 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
+const (
+	disableApicastProductionInstancesSyncing = "apps.3scale.net/apicast-production-replica-field"
+	disableApicastStagingInstancesSyncing = "apps.3scale.net/apicast-staging-replica-field"
+)
+
 func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*v1.ConfigMap)
 	if !ok {
@@ -61,37 +66,10 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Staging DC
-	stagingDCMutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigReplicasMutator,
+	opts := []reconcilers.DCMutateFn{
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
-		apicastLogLevelEnvVarMutator,
-		apicastTracingConfigEnvVarsMutator,
-		apicastEnvironmentEnvVarMutator,
-		apicastHTTPSEnvVarMutator,
-		apicastProxyConfigurationsEnvVarMutator,
-		apicastVolumeMountsMutator,
-		apicastVolumesMutator,
-		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
-		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
-		apicastCustomEnvAnnotationsMutator,     // Should be always after volume mutator
-		portsMutator,
-		apicastPodTemplateEnvConfigMapAnnotationsMutator,
-	)
-	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Production DC
-	productionDCMutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigReplicasMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		apicastProductionWorkersEnvVarMutator,
 		apicastLogLevelEnvVarMutator,
 		apicastTracingConfigEnvVarsMutator,
 		apicastEnvironmentEnvVarMutator,
@@ -104,34 +82,32 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
+	}
+
+	if !metav1.HasAnnotation(r.apiManager.ObjectMeta, disableApicastStagingInstancesSyncing) || r.apiManager.Annotations[disableApicastStagingInstancesSyncing] != "true" {
+		opts = append(opts, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
+	// Staging DC
+	stagingDCMutator := reconcilers.DeploymentConfigMutator(
+		opts...
 	)
+	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+   
+	// add apicast production env var mutator
+	apicastProductionOpts := append(opts, apicastProductionWorkersEnvVarMutator)
 
-	manualHPA := "false"
-
-	if metav1.HasAnnotation(r.apiManager.ObjectMeta, "manualHPA") {
-		manualHPA = r.apiManager.Annotations["manualHPA"]
+	if !metav1.HasAnnotation(r.apiManager.ObjectMeta, disableApicastProductionInstancesSyncing) || r.apiManager.Annotations[disableApicastProductionInstancesSyncing] != "true" {
+		apicastProductionOpts = append(opts, reconcilers.DeploymentConfigReplicasMutator)
 	}
 
-	if manualHPA == "true" {
-		productionDCMutator = reconcilers.DeploymentConfigMutator(
-			reconcilers.DeploymentConfigContainerResourcesMutator,
-			reconcilers.DeploymentConfigAffinityMutator,
-			reconcilers.DeploymentConfigTolerationsMutator,
-			apicastProductionWorkersEnvVarMutator,
-			apicastLogLevelEnvVarMutator,
-			apicastTracingConfigEnvVarsMutator,
-			apicastEnvironmentEnvVarMutator,
-			apicastHTTPSEnvVarMutator,
-			apicastProxyConfigurationsEnvVarMutator,
-			apicastVolumeMountsMutator,
-			apicastVolumesMutator,
-			apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
-			apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
-			apicastCustomEnvAnnotationsMutator,     // Should be always after volume
-			portsMutator,
-			apicastPodTemplateEnvConfigMapAnnotationsMutator,
-		)
-	}
+	// Production DC
+	productionDCMutator := reconcilers.DeploymentConfigMutator(
+		apicastProductionOpts...
+	)
 
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
