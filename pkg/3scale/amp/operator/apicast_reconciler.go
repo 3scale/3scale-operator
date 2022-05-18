@@ -66,47 +66,30 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	opts := []reconcilers.DCMutateFn{
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		apicastLogLevelEnvVarMutator,
-		apicastTracingConfigEnvVarsMutator,
-		apicastEnvironmentEnvVarMutator,
-		apicastHTTPSEnvVarMutator,
-		apicastProxyConfigurationsEnvVarMutator,
-		apicastVolumeMountsMutator,
-		apicastVolumesMutator,
-		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
-		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
-		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
-		portsMutator,
-		apicastPodTemplateEnvConfigMapAnnotationsMutator,
-	}
+	stagingOpts := getApicastsGenericMutators()
 
 	if !metav1.HasAnnotation(r.apiManager.ObjectMeta, disableApicastStagingInstancesSyncing) || r.apiManager.Annotations[disableApicastStagingInstancesSyncing] != "true" {
-		opts = append(opts, reconcilers.DeploymentConfigReplicasMutator)
+		stagingOpts = append(stagingOpts, reconcilers.DeploymentConfigReplicasMutator)
 	}
 
 	// Staging DC
-	stagingDCMutator := reconcilers.DeploymentConfigMutator(
-		opts...
-	)
-	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
+	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), reconcilers.DeploymentConfigMutator(stagingOpts...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
    
 	// add apicast production env var mutator
-	apicastProductionOpts := append(opts, apicastProductionWorkersEnvVarMutator)
+	productionOpts := getApicastsGenericMutators()
+
+	productionOpts = append(productionOpts, apicastProductionWorkersEnvVarMutator)
 
 	if !metav1.HasAnnotation(r.apiManager.ObjectMeta, disableApicastProductionInstancesSyncing) || r.apiManager.Annotations[disableApicastProductionInstancesSyncing] != "true" {
-		apicastProductionOpts = append(opts, reconcilers.DeploymentConfigReplicasMutator)
+		productionOpts = append(productionOpts, reconcilers.DeploymentConfigReplicasMutator)
 	}
 
 	// Production DC
 	productionDCMutator := reconcilers.DeploymentConfigMutator(
-		apicastProductionOpts...
+		productionOpts...
 	)
 
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
@@ -528,4 +511,24 @@ func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.
 		return nil, err
 	}
 	return component.NewApicast(opts), nil
+}
+
+func getApicastsGenericMutators() []reconcilers.DCMutateFn {
+	return []reconcilers.DCMutateFn{
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+		apicastLogLevelEnvVarMutator,
+		apicastTracingConfigEnvVarsMutator,
+		apicastEnvironmentEnvVarMutator,
+		apicastHTTPSEnvVarMutator,
+		apicastProxyConfigurationsEnvVarMutator,
+		apicastVolumeMountsMutator,
+		apicastVolumesMutator,
+		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
+		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
+		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
+		portsMutator,
+		apicastPodTemplateEnvConfigMapAnnotationsMutator,
+	}
 }

@@ -39,21 +39,13 @@ func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
 	}
 }
 
-func GenericDeploymentConfigMutator() MutateFn {
-	return DeploymentConfigMutator(
-		DeploymentConfigReplicasMutator,
+// GenericOpts returns the generic mutators
+func GenericOpts() []DCMutateFn {
+	return []DCMutateFn {
 		DeploymentConfigContainerResourcesMutator,
 		DeploymentConfigAffinityMutator,
-		DeploymentConfigTolerationsMutator,
-	)
-}
-
-func ManualHPADeploymentConfigMutator() MutateFn {
-	return DeploymentConfigMutator(
-		DeploymentConfigContainerResourcesMutator,
-		DeploymentConfigAffinityMutator,
-		DeploymentConfigTolerationsMutator,
-	)
+		DeploymentConfigTolerationsMutator,	
+	}
 }
 
 func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) bool {
@@ -149,4 +141,17 @@ func DeploymentConfigEnvVarReconciler(desired, existing *appsv1.DeploymentConfig
 		}
 	}
 	return update
+}
+
+// GetConfigMutators returns generic mutators.
+// If an annotation to disable syncing is present,
+// replicas mutator is not included.
+func GetConfigMutators(annotations map[string]string, annotation string) []DCMutateFn {
+	genericMutator := GenericOpts()
+
+	if value, found := annotations[annotation]; !found || value != "true" {
+		genericMutator = append(genericMutator, DeploymentConfigReplicasMutator)
+	}
+
+	return genericMutator
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -20,6 +21,11 @@ import (
 type SystemReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
+
+const (
+	disableSystemAppInstancesSyncing = "apps.3scale.net/system-app-replica-field"
+	disableSidekiqInstancesSyncing = "apps.3scale.net/side-kiq-replica-field"
+)
 
 func NewSystemReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemReconciler {
 	return &SystemReconciler{
@@ -81,32 +87,33 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// SystemApp DC
-	systemAppDCMutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigReplicasMutator,
+	// System app DC
+	systemAppMutator := []reconcilers.DCMutateFn {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.systemAppDCResourceMutator,
-	)
+	}
 
-	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), systemAppDCMutator)
+	if !metav1.HasAnnotation(r.apiManager.ObjectMeta, disableSystemAppInstancesSyncing) || r.apiManager.Annotations[disableSystemAppInstancesSyncing] != "true" {
+		systemAppMutator = append(systemAppMutator, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
+	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), reconcilers.DeploymentConfigMutator(systemAppMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Sidekiq DC
-	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
+	sidekiqConfigMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableSidekiqInstancesSyncing)
+	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.DeploymentConfigMutator(sidekiqConfigMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+
 	// Sphinx DC
-	sphinxDCmutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-	)
-	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), sphinxDCmutator)
+	sphinxDCmutator := reconcilers.GenericOpts()
+	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), reconcilers.DeploymentConfigMutator(sphinxDCmutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}

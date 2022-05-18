@@ -6,7 +6,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -14,6 +13,13 @@ import (
 type BackendReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
+
+const (
+	disableBackendListenerInstancesSyncing = "apps.3scale.net/backend-listener-replica-field"
+	disableBackendWorkerInstancesSyncing = "apps.3scale.net/backend-worker-replica-field"
+	disableCronInstancesSyncing = "apps.3scale.net/cron-replica-field"
+)
+
 
 func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *BackendReconciler {
 	return &BackendReconciler{
@@ -28,29 +34,17 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Cron DC
-	err = r.ReconcileDeploymentConfig(backend.CronDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
+	cronConfigMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableCronInstancesSyncing)
+	err = r.ReconcileDeploymentConfig(backend.CronDeploymentConfig(), reconcilers.DeploymentConfigMutator(cronConfigMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Listerner DC
-	// Do not reconcile backend listener replicas if running with manualHPA annotation
-	manualHPA := "false"
-
-	if metav1.HasAnnotation(r.apiManager.ObjectMeta, "manualHPA") {
-		manualHPA = r.apiManager.Annotations["manualHPA"]
-	}
-
-	if manualHPA == "true" {
-		err = r.ReconcileDeploymentConfig(backend.ListenerDeploymentConfig(), reconcilers.ManualHPADeploymentConfigMutator())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	} else {
-		err = r.ReconcileDeploymentConfig(backend.ListenerDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+	// Listener DC
+	listenerConfigMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableBackendListenerInstancesSyncing)
+	err = r.ReconcileDeploymentConfig(backend.ListenerDeploymentConfig(), reconcilers.DeploymentConfigMutator(listenerConfigMutator...))
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	// Listener Service
@@ -66,17 +60,10 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Worker DC
-	// Do not reconcile backend worker replicas if running with manualHPA annotation
-	if manualHPA == "true" {
-		err = r.ReconcileDeploymentConfig(backend.WorkerDeploymentConfig(), reconcilers.ManualHPADeploymentConfigMutator())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	} else {
-		err = r.ReconcileDeploymentConfig(backend.WorkerDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+	workerConfigMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableBackendWorkerInstancesSyncing)
+	err = r.ReconcileDeploymentConfig(backend.WorkerDeploymentConfig(), reconcilers.DeploymentConfigMutator(workerConfigMutator...))
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	// Environment ConfigMap
