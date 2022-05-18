@@ -7,55 +7,56 @@ One APIManager custom resource per project is allowed.
 ## Table of Contents
 
 * [APIManager](#apimanager)
-   * [APIManagerSpec](#apimanagerspec)
-   * [ApicastSpec](#apicastspec)
-   * [ApicastProductionSpec](#apicastproductionspec)
-   * [ApicastStagingSpec](#apicaststagingspec)
-   * [CustomPolicySpec](#custompolicyspec)
-   * [CustomPolicySecret](#custompolicysecret)
-   * [BackendSpec](#backendspec)
-   * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
-   * [BackendListenerSpec](#backendlistenerspec)
-   * [BackendWorkerSpec](#backendworkerspec)
-   * [BackendCronSpec](#backendcronspec)
-   * [SystemSpec](#systemspec)
-   * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
-   * [FileStorageSpec](#filestoragespec)
-   * [SystemPVCSpec](#systempvcspec)
-   * [SystemS3Spec](#systems3spec)
-   * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
-   * [DatabaseSpec](#databasespec)
-   * [MySQLSpec](#mysqlspec)
-   * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
-   * [PostgreSQLSpec](#postgresqlspec)
-   * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
-   * [SystemAppSpec](#systemappspec)
-   * [SystemSidekiqSpec](#systemsidekiqspec)
-   * [SystemSphinxSpec](#systemsphinxspec)
-   * [ZyncSpec](#zyncspec)
-   * [ZyncAppSpec](#zyncappspec)
-   * [ZyncQueSpec](#zyncquespec)
-   * [ExternalComponentsSpec](#externalcomponentsspec)
-   * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
-   * [MonitoringSpec](#monitoringspec)
-   * [APIManagerStatus](#apimanagerstatus)
-      * [ConditionSpec](#conditionspec)
+  * [APIManagerSpec](#apimanagerspec)
+  * [ApicastSpec](#apicastspec)
+  * [APIManagerMetaData](#APIManagerMetaData)
+  * [ApicastProductionSpec](#apicastproductionspec)
+  * [ApicastStagingSpec](#apicaststagingspec)
+  * [CustomPolicySpec](#custompolicyspec)
+  * [CustomPolicySecret](#custompolicysecret)
+  * [BackendSpec](#backendspec)
+  * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
+  * [BackendListenerSpec](#backendlistenerspec)
+  * [BackendWorkerSpec](#backendworkerspec)
+  * [BackendCronSpec](#backendcronspec)
+  * [SystemSpec](#systemspec)
+  * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
+  * [FileStorageSpec](#filestoragespec)
+  * [SystemPVCSpec](#systempvcspec)
+  * [SystemS3Spec](#systems3spec)
+  * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
+  * [DatabaseSpec](#databasespec)
+  * [MySQLSpec](#mysqlspec)
+  * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
+  * [PostgreSQLSpec](#postgresqlspec)
+  * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
+  * [SystemAppSpec](#systemappspec)
+  * [SystemSidekiqSpec](#systemsidekiqspec)
+  * [SystemSphinxSpec](#systemsphinxspec)
+  * [ZyncSpec](#zyncspec)
+  * [ZyncAppSpec](#zyncappspec)
+  * [ZyncQueSpec](#zyncquespec)
+  * [ExternalComponentsSpec](#externalcomponentsspec)
+  * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
+  * [MonitoringSpec](#monitoringspec)
+  * [APIManagerStatus](#apimanagerstatus)
+    * [ConditionSpec](#conditionspec)
 * [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
 * [APIManager Secrets](#apimanager-secrets)
-   * [backend-internal-api](#backend-internal-api)
-   * [backend-listener](#backend-listener)
-   * [backend-redis](#backend-redis)
-   * [system-app](#system-app)
-   * [system-database](#system-database)
-   * [system-events-hook](#system-events-hook)
-   * [system-master-apicast](#system-master-apicast)
-   * [system-memcache](#system-memcache)
-   * [system-recaptcha](#system-recaptcha)
-   * [system-redis](#system-redis)
-   * [system-seed](#system-seed)
-   * [zync](#zync)
-   * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
-   * [system-smtp](#system-smtp)
+  * [backend-internal-api](#backend-internal-api)
+  * [backend-listener](#backend-listener)
+  * [backend-redis](#backend-redis)
+  * [system-app](#system-app)
+  * [system-database](#system-database)
+  * [system-events-hook](#system-events-hook)
+  * [system-master-apicast](#system-master-apicast)
+  * [system-memcache](#system-memcache)
+  * [system-recaptcha](#system-recaptcha)
+  * [system-redis](#system-redis)
+  * [system-seed](#system-seed)
+  * [zync](#zync)
+  * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
+  * [system-smtp](#system-smtp)
 * [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
@@ -65,7 +66,8 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | **Field** | **json/yaml field**| **Type** | **Required** | **Description** |
 | --- | --- | --- | --- | --- |
 | Spec | `spec` | [APIManagerSpec](#APIManagerSpec) | Yes | The specfication for APIManager custom resource |
-| Status | `status` | [APIManagerStatus](#APIManagerStatus) | No | The status for the custom resource |
+| Status | `status` | [APIManagerStatus](#APIManagerStatus) | No | The status for the custom resource  |
+| MetaData | `metadata` | [APIManagerMetaData](#APIManagerMetaData) | No | The meta data for APIManager custom resource    |
 
 ### APIManagerSpec
 
@@ -85,6 +87,14 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | ExternalComponentsSpec | `externalComponents` | \*ExternalComponentsSpec | No | See [ExternalComponentsSpec](#ExternalComponentsSpec) reference | Spec of the ExternalComponentsSpec part |
 | PodDisruptionBudgetSpec | `podDisruptionBudget` | \*PodDisruptionBudgetSpec | No | See [PodDisruptionBudgetSpec](#PodDisruptionBudgetSpec) reference | Spec of the PodDisruptionBudgetSpec part |
 | MonitoringSpec | `monitoring` | \*MonitoringSpec | No | Disabled | [MonitoringSpec](#MonitoringSpec) reference |
+
+### APIManagerMetaData
+
+| **Annotations**  | **Name** | **Default value** | **Description** |
+| --- | --- | --- | --- |
+| `apps.3scale.net/disable-apicast-service-reconciler` | disableApicastPortReconcile | `false` | Can be `true` or `false` - will disable apicast service port reconcile when true |
+
+
 
 ### ApicastSpec
 
@@ -304,7 +314,7 @@ specification to see what fields the secret should have and the values
 that should be set on it.
 
 ### DeprecatedSystemS3Spec
-  **DEPRECATED** Setting fields here has no effect. Use [SystemS3Spec](#SystemS3Spec) instead
+**DEPRECATED** Setting fields here has no effect. Use [SystemS3Spec](#SystemS3Spec) instead
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |

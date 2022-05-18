@@ -110,13 +110,13 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging Service
-	err = r.ReconcileService(apicast.StagingService(), reconcilers.ServicePortMutator)
+	err = r.ReconcileService(apicast.StagingService(), getApiCastServiceMutator(r.apiManager.ObjectMeta.GetAnnotations()))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Production Service
-	err = r.ReconcileService(apicast.ProductionService(), reconcilers.ServicePortMutator)
+	err = r.ReconcileService(apicast.ProductionService(), getApiCastServiceMutator(r.apiManager.ObjectMeta.GetAnnotations()))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -170,6 +170,21 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func getApiCastServiceMutator(apiManagerAnnotations map[string]string) reconcilers.MutateFn {
+	disableApicastPortReconcile := "false"
+	if apiManagerAnnotations == nil {
+		apiManagerAnnotations = make(map[string]string)
+	}
+	if val, ok := apiManagerAnnotations["apps.3scale.net/disable-apicast-service-reconciler"]; ok {
+		disableApicastPortReconcile = val
+	}
+
+	if disableApicastPortReconcile == "true" {
+		return reconcilers.CreateOnlyMutator
+	}
+	return reconcilers.ServicePortMutator
 }
 
 func apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
