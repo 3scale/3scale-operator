@@ -2,9 +2,10 @@ package operator
 
 import (
 	"context"
+	"testing"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"testing"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
@@ -730,6 +731,9 @@ func TestApicastServicePortMutator(t *testing.T) {
 			if err := grafanav1alpha1.AddToScheme(s); err != nil {
 				t.Fatal(err)
 			}
+			if err := configv1.AddToScheme(s); err != nil {
+				t.Fatal(err)
+			}
 
 			// Create a fake client to mock API calls.
 			cl := fake.NewFakeClient(objs...)
@@ -767,9 +771,9 @@ func TestApicastServicePortMutator(t *testing.T) {
 
 func TestApicastReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 	var (
-		namespace                  = "operator-unittest"
-		log                        = logf.Log.WithName("operator_test")
-		twoValue             int32 = 2
+		namespace       = "operator-unittest"
+		log             = logf.Log.WithName("operator_test")
+		twoValue  int32 = 2
 	)
 	ctx := context.TODO()
 	s := scheme.Scheme
@@ -783,25 +787,29 @@ func TestApicastReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if err := configv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
 	cases := []struct {
-		testName string
-		objName  string
-		obj      runtime.Object
-		apimanager *appsv1alpha1.APIManager
-		annotation string
-		annotationValue string
+		testName                 string
+		objName                  string
+		obj                      runtime.Object
+		apimanager               *appsv1alpha1.APIManager
+		annotation               string
+		annotationValue          string
 		expectedAmountOfReplicas int32
-		validatingFunction func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
+		validatingFunction       func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
 	}{
 		{"apicast-staging-DC-annotation not present", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastStagingInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
 		{"apicast-staging-DC-annotation false", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingInstancesSyncing, "false"), disableApicastStagingInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
 		{"apicast-staging-DC-annotation true", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingInstancesSyncing, "true"), disableApicastStagingInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"apicast-staging-DC-annotation true of dummy value", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingInstancesSyncing, "true"), disableApicastStagingInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},		
+		{"apicast-staging-DC-annotation true of dummy value", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingInstancesSyncing, "true"), disableApicastStagingInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
 
 		{"apicast-production-DC-annotation not present", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastProductionInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
 		{"apicast-production-DC-annotation false", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionInstancesSyncing, "false"), disableApicastProductionInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
 		{"apicast-production-DC-annotation true", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionInstancesSyncing, "true"), disableApicastProductionInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"apicast-production-DC-annotation true of dummy value", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionInstancesSyncing, "true"), disableApicastProductionInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},	
+		{"apicast-production-DC-annotation true of dummy value", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionInstancesSyncing, "true"), disableApicastProductionInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
 	}
 
 	for _, tc := range cases {
@@ -872,8 +880,8 @@ func apiManagerCreator(disableSyncAnnotation string, disableSyncAnnotationValue 
 
 	return &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:        name,
+			Namespace:   namespace,
 			Annotations: map[string]string{disableSyncAnnotation: disableSyncAnnotationValue},
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
@@ -898,4 +906,4 @@ func apiManagerCreator(disableSyncAnnotation string, disableSyncAnnotationValue 
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
-} 
+}
