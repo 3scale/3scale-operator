@@ -66,9 +66,37 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		}
 		reqLogger.V(1).Info(string(jsonData))
 	}
+	// get product
+	product := &capabilitiesv1beta1.Product{}
+	projectMeta := types.NamespacedName{
+		Name:      proxyConfigPromote.Spec.ProductCRName,
+		Namespace: req.Namespace,
+	}
+
+	err = r.Client().Get(r.Context(), projectMeta, product)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, err
+	}
+
+	// get providerAccountRef from product
+	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), proxyConfigPromote.GetNamespace(), product.Spec.ProviderAccountRef, r.Logger())
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// connect to the 3scale porta client
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	//if proxyConfigPromote.Status.State != "Completed" {
 	if !proxyConfigPromote.Status.Conditions.IsTrueFor("Ready") {
-		statusReconciler, reconcileErr := r.proxyConfigPromoteReconciler(proxyConfigPromote, reqLogger, req)
+		statusReconciler, reconcileErr := r.proxyConfigPromoteReconciler(proxyConfigPromote, reqLogger, threescaleAPIClient, product)
 		statusResult, statusUpdateErr := statusReconciler.Reconcile()
 		if statusUpdateErr != nil {
 			if reconcileErr != nil {
@@ -92,41 +120,17 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	return ctrl.Result{}, nil
 }
 
-func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigPromote *capabilitiesv1beta1.ProxyConfigPromote, reqLogger logr.Logger, req ctrl.Request) (*ProxyConfigPromoteStatusReconciler, error) {
+func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigPromote *capabilitiesv1beta1.ProxyConfigPromote, reqLogger logr.Logger, threescaleAPIClient *threescaleapi.ThreeScaleClient, product *capabilitiesv1beta1.Product) (*ProxyConfigPromoteStatusReconciler, error) {
 
 	var latestStagingVersion int
 	var latestProductionVersion int
 	//get product
-	product := &capabilitiesv1beta1.Product{}
-	projectMeta := types.NamespacedName{
-		Name:      proxyConfigPromote.Spec.ProductCRName,
-		Namespace: req.Namespace,
-	}
 
-	err := r.Client().Get(r.Context(), projectMeta, product)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", "", 0, 0, err)
-			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
-			return statusReconciler, nil
-		}
-		statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", "", 0, 0, err)
-		return statusReconciler, err
-	}
-
-	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), proxyConfigPromote.GetNamespace(), product.Spec.ProviderAccountRef, r.Logger())
-	if err != nil {
-		statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", "", 0, 0, err)
-		return statusReconciler, err
-	}
-
-	// connect to the 3scale porta client
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
-	if err != nil {
-		statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", "", 0, 0, err)
-		return statusReconciler, err
-	}
 	productList, err := threescaleAPIClient.ListProducts()
+	if err != nil {
+		statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", "", 0, 0, err)
+		return statusReconciler, err
+	}
 	productID := FindServiceBySystemName(*productList, product.Spec.SystemName)
 
 	if productID > 0 {
@@ -210,7 +214,6 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 	return statusReconciler, err
 }
 
-
 func (r *ProxyConfigPromoteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&capabilitiesv1beta1.ProxyConfigPromote{}).
@@ -225,4 +228,3 @@ func FindServiceBySystemName(list threescaleapi.ProductList, systemName string) 
 	}
 	return -1
 }
-
