@@ -120,13 +120,13 @@ func TestSystemReconcilerCreate(t *testing.T) {
 
 func TestSystemReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 	var (
-		namespace                  = "someNS"
-		log                        = logf.Log.WithName("operator_test")
-		twoValue             int32 = 2
+		namespace       = "someNS"
+		log             = logf.Log.WithName("operator_test")
+		twoValue  int32 = 2
 	)
 	ctx := context.TODO()
 	s := scheme.Scheme
-	
+
 	err := appsv1alpha1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -135,21 +135,24 @@ func TestSystemReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := configv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
 
 	cases := []struct {
-		testName string
-		objName  string
-		obj      runtime.Object
-		apimanager *appsv1alpha1.APIManager
-		annotation string
-		annotationValue string
+		testName                 string
+		objName                  string
+		obj                      runtime.Object
+		apimanager               *appsv1alpha1.APIManager
+		annotation               string
+		annotationValue          string
 		expectedAmountOfReplicas int32
-		validatingFunction func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
+		validatingFunction       func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
 	}{
 		{"systemAppDC-annotation not present", "system-app", &appsv1.DeploymentConfig{}, apiManagerCreatorSystem("someAnnotation", "false"), disableSystemAppInstancesSyncing, "dummy", int32(3), confirmReplicasWhenAnnotationIsNotPresent},
 		{"systemAppDC-annotation false", "system-app", &appsv1.DeploymentConfig{}, apiManagerCreatorSystem(disableSystemAppInstancesSyncing, "false"), disableSystemAppInstancesSyncing, "false", int32(3), confirmReplicasWhenAnnotationPresent},
 		{"systemAppDC-annotation true", "system-app", &appsv1.DeploymentConfig{}, apiManagerCreatorSystem(disableSystemAppInstancesSyncing, "true"), disableSystemAppInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"systemAppDC-annotation true of dummy value", "system-app", &appsv1.DeploymentConfig{}, apiManagerCreatorSystem(disableSystemAppInstancesSyncing, "true"), disableSystemAppInstancesSyncing, "someDummyValue", int32(3), confirmReplicasWhenAnnotationPresent},		
+		{"systemAppDC-annotation true of dummy value", "system-app", &appsv1.DeploymentConfig{}, apiManagerCreatorSystem(disableSystemAppInstancesSyncing, "true"), disableSystemAppInstancesSyncing, "someDummyValue", int32(3), confirmReplicasWhenAnnotationPresent},
 
 		{"systemSideKiqDC-annotation not present", "system-sidekiq", &appsv1.DeploymentConfig{}, apiManagerCreatorSystem("someAnnotation", "false"), disableSidekiqInstancesSyncing, "dummy", int32(4), confirmReplicasWhenAnnotationIsNotPresent},
 		{"systemSideKiqDC-annotation false", "system-sidekiq", &appsv1.DeploymentConfig{}, apiManagerCreatorSystem(disableSidekiqInstancesSyncing, "false"), disableSidekiqInstancesSyncing, "false", int32(4), confirmReplicasWhenAnnotationPresent},
@@ -173,7 +176,7 @@ func TestSystemReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			
+
 			dc := &appsv1.DeploymentConfig{}
 			namespacedName := types.NamespacedName{
 				Name:      tc.objName,

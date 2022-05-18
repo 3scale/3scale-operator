@@ -16,7 +16,7 @@ type ZyncReconciler struct {
 
 const (
 	disableZyncQueInstancesSyncing = "apps.3scale.net/zync-que-replica-field"
-	disableZyncInstancesSyncing = "apps.3scale.net/zync-replica-field"
+	disableZyncInstancesSyncing    = "apps.3scale.net/zync-replica-field"
 )
 
 func NewZyncReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *ZyncReconciler {

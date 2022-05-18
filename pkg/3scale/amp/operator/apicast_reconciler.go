@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	appsv1 "github.com/openshift/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -20,7 +20,7 @@ import (
 
 const (
 	disableApicastProductionInstancesSyncing = "apps.3scale.net/apicast-production-replica-field"
-	disableApicastStagingInstancesSyncing = "apps.3scale.net/apicast-staging-replica-field"
+	disableApicastStagingInstancesSyncing    = "apps.3scale.net/apicast-staging-replica-field"
 )
 
 func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
@@ -77,7 +77,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-   
+
 	// add apicast production env var mutator
 	productionOpts := getApicastsGenericMutators()
 
@@ -89,7 +89,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Production DC
 	productionDCMutator := reconcilers.DeploymentConfigMutator(
-		productionOpts...
+		productionOpts...,
 	)
 
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)

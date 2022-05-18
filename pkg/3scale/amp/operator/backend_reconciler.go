@@ -16,8 +16,8 @@ type BackendReconciler struct {
 
 const (
 	disableBackendListenerInstancesSyncing = "apps.3scale.net/backend-listener-replica-field"
-	disableBackendWorkerInstancesSyncing = "apps.3scale.net/backend-worker-replica-field"
-	disableCronInstancesSyncing = "apps.3scale.net/cron-replica-field"
+	disableBackendWorkerInstancesSyncing   = "apps.3scale.net/backend-worker-replica-field"
+	disableCronInstancesSyncing            = "apps.3scale.net/cron-replica-field"
 )
 
 func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *BackendReconciler {

@@ -41,10 +41,10 @@ func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
 
 // GenericOpts returns the generic mutators
 func GenericOpts() []DCMutateFn {
-	return []DCMutateFn {
+	return []DCMutateFn{
 		DeploymentConfigContainerResourcesMutator,
 		DeploymentConfigAffinityMutator,
-		DeploymentConfigTolerationsMutator,	
+		DeploymentConfigTolerationsMutator,
 	}
 }
 

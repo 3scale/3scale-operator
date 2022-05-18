@@ -9,11 +9,11 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -24,7 +24,7 @@ type SystemReconciler struct {
 
 const (
 	disableSystemAppInstancesSyncing = "apps.3scale.net/system-app-replica-field"
-	disableSidekiqInstancesSyncing = "apps.3scale.net/side-kiq-replica-field"
+	disableSidekiqInstancesSyncing   = "apps.3scale.net/side-kiq-replica-field"
 )
 
 func NewSystemReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemReconciler {
@@ -88,7 +88,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// SystemApp DC
-	systemAppMutator := []reconcilers.DCMutateFn {
+	systemAppMutator := []reconcilers.DCMutateFn{
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		r.systemAppDCResourceMutator,
@@ -109,7 +109,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-
 
 	// Sphinx DC
 	sphinxDCmutator := reconcilers.GenericOpts()

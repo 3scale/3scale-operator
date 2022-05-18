@@ -10,6 +10,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	configv1 "github.com/openshift/api/config/v1"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -256,13 +257,13 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 
 func TestZyncReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 	var (
-		namespace                  = "operator-unittest"
-		log                        = logf.Log.WithName("operator_test")
-		twoValue             int32 = 2
+		namespace       = "operator-unittest"
+		log             = logf.Log.WithName("operator_test")
+		twoValue  int32 = 2
 	)
 	ctx := context.TODO()
 	s := scheme.Scheme
-	
+
 	err := appsv1alpha1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -271,27 +272,29 @@ func TestZyncReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := configv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
 
 	cases := []struct {
-		testName string
-		objName  string
-		obj      runtime.Object
-		apimanager *appsv1alpha1.APIManager
-		annotation string
-		annotationValue string
+		testName                 string
+		objName                  string
+		obj                      runtime.Object
+		apimanager               *appsv1alpha1.APIManager
+		annotation               string
+		annotationValue          string
 		expectedAmountOfReplicas int32
-		validatingFunction func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
+		validatingFunction       func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
 	}{
 		{"zyncQueDC-annotation not present", "zync-que", &appsv1.DeploymentConfig{}, zyncApiManagerCreator("someAnnotation", "false"), disableZyncQueInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
 		{"zyncQueDC-annotation false", "zync-que", &appsv1.DeploymentConfig{}, zyncApiManagerCreator(disableZyncQueInstancesSyncing, "false"), disableZyncQueInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
 		{"zyncQueDC-annotation true", "zync-que", &appsv1.DeploymentConfig{}, zyncApiManagerCreator(disableZyncQueInstancesSyncing, "true"), disableZyncQueInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"zyncQueDC-annotation true of dummy value", "zync-que", &appsv1.DeploymentConfig{}, zyncApiManagerCreator(disableZyncQueInstancesSyncing, "true"), disableZyncQueInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},		
-		
+		{"zyncQueDC-annotation true of dummy value", "zync-que", &appsv1.DeploymentConfig{}, zyncApiManagerCreator(disableZyncQueInstancesSyncing, "true"), disableZyncQueInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+
 		{"zyncDC-annotation not present", "zync", &appsv1.DeploymentConfig{}, zyncApiManagerCreator("someAnnotation", "false"), disableZyncInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
 		{"zyncDC-annotation false", "zync", &appsv1.DeploymentConfig{}, zyncApiManagerCreator(disableZyncInstancesSyncing, "false"), disableZyncInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
 		{"zyncDC-annotation true", "zync", &appsv1.DeploymentConfig{}, zyncApiManagerCreator(disableZyncInstancesSyncing, "true"), disableZyncInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
 		{"zyncDC-annotation true of dummy value", "zync", &appsv1.DeploymentConfig{}, zyncApiManagerCreator(disableZyncInstancesSyncing, "true"), disableZyncInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
-		
 	}
 
 	for _, tc := range cases {
@@ -312,7 +315,7 @@ func TestZyncReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			
+
 			dc := &appsv1.DeploymentConfig{}
 			namespacedName := types.NamespacedName{
 				Name:      tc.objName,
@@ -352,19 +355,19 @@ func TestZyncReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 
 func zyncApiManagerCreator(disableSyncAnnotation string, disableSyncAnnotationValue string) *appsv1alpha1.APIManager {
 	var (
-		name                       = "example-apimanager"
-		namespace                  = "operator-unittest"
-		wildcardDomain             = "test.3scale.net"
-		appLabel                   = "someLabel"
-		tenantName                 = "someTenant"
-		trueValue                  = true
-		oneValue             int64 = 1
+		name                 = "example-apimanager"
+		namespace            = "operator-unittest"
+		wildcardDomain       = "test.3scale.net"
+		appLabel             = "someLabel"
+		tenantName           = "someTenant"
+		trueValue            = true
+		oneValue       int64 = 1
 	)
 
 	return &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:        name,
+			Namespace:   namespace,
 			Annotations: map[string]string{disableSyncAnnotation: disableSyncAnnotationValue},
 		},
 		Spec: appsv1alpha1.APIManagerSpec{

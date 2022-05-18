@@ -386,25 +386,24 @@ func TestDeploymentConfigEnvVarReconciler(t *testing.T) {
 
 func TestGetConfigMutators(t *testing.T) {
 	annotationNotPresent := map[string]string{
-		"someAnnotation": "true",
+		"someAnnotation":  "true",
 		"someAnnotation2": "false",
 	}
 
 	falseAnnotation := map[string]string{
-		"someAnnotation": "false",
+		"someAnnotation":  "false",
 		"someAnnotation2": "true",
 	}
 
 	trueAnnotation := map[string]string{
-		"someAnnotation": "true",
+		"someAnnotation":  "true",
 		"someAnnotation2": "false",
 	}
 
-
 	cases := []struct {
-		testName           		 string
-		annotationsList    		 map[string]string
-		annotation  	   		 string
+		testName                 string
+		annotationsList          map[string]string
+		annotation               string
 		expectedAmountOfMutators int
 	}{
 		{"Annotation not present", annotationNotPresent, "someAnnotation3", 4},
@@ -415,7 +414,7 @@ func TestGetConfigMutators(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			configMutators := GetConfigMutators(tc.annotationsList, tc.annotation)
-			
+
 			if len(configMutators) != tc.expectedAmountOfMutators {
 				subT.Fatalf("unexpected result found for test case %s, expected mutators: %v, actual mutators %v", tc.testName, tc.expectedAmountOfMutators, len(configMutators))
 			}
