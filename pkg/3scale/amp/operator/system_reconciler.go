@@ -87,7 +87,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// System app DC
+	// SystemApp DC
 	systemAppMutator := []reconcilers.DCMutateFn {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,

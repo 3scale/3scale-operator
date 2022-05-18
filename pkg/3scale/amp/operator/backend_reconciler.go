@@ -20,7 +20,6 @@ const (
 	disableCronInstancesSyncing = "apps.3scale.net/cron-replica-field"
 )
 
-
 func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *BackendReconciler {
 	return &BackendReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
