@@ -2,7 +2,6 @@ package helper
 
 import (
 	"context"
-
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 
 	"github.com/go-logr/logr"
@@ -52,18 +51,29 @@ func RetrieveTenantCR(providerAccount *ProviderAccount, client k8sclient.Client,
 }
 
 /*
-SetOwnersReference sets ownersReference in given object
+SetOwnersReference sets ownersReference in given object for Tenant
 - object
 - k8client
 - tenantCR
 */
 func SetOwnersReference(object controllerutil.Object, client k8sclient.Client, tenantCR *capabilitiesv1alpha1.Tenant) (bool, error) {
+	return SetOwnersReferenceByObjectAndMeta(object, client, tenantCR.ObjectMeta, tenantCR.TypeMeta)
+}
+
+/*
+SetOwnersReferenceByObjectAndMeta sets ownersReference in given object using ObjectMeta and TypeMeta
+- object
+- k8client
+- objectMeta
+- typeMeta
+*/
+func SetOwnersReferenceByObjectAndMeta(object controllerutil.Object, client k8sclient.Client, objectMeta metav1.ObjectMeta, typeMeta metav1.TypeMeta) (bool, error) {
 	ownerReference := []metav1.OwnerReference{
 		{
-			APIVersion: tenantCR.APIVersion,
-			Kind:       tenantCR.Kind,
-			Name:       tenantCR.Name,
-			UID:        tenantCR.UID,
+			APIVersion: typeMeta.APIVersion,
+			Kind:       typeMeta.Kind,
+			Name:       objectMeta.Name,
+			UID:        objectMeta.UID,
 		},
 	}
 

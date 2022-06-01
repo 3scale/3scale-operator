@@ -8,6 +8,7 @@
       * [Provider Account Reference](#provider-account-reference)
    * [DeveloperUserStatus](#developeruserstatus)
       * [ConditionSpec](#conditionspec)
+* [Supported Actions](#Supported Actions)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -132,3 +133,10 @@ Each element of the Condition array has the following fields:
 | Reason | `reason` | string | Condition state reason |
 | Message | `message` | string | Condition state description |
 | LastTransitionTime | `lastTransitionTime` | timestamp | Last transition timestap |
+
+
+## Supported Actions
+* Create - creating the CR will create the developer user in the associated account and tenant
+* Delete - deleting the CR will delete the developer user in the associated account and tenant
+  * Note: Due to a 3scale limitation, if the user is the last admin of the account, the CR will be prevented from 
+deleting successfully
