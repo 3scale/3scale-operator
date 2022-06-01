@@ -2,9 +2,10 @@ package operator
 
 import (
 	"context"
+	"testing"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"testing"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
@@ -730,6 +731,9 @@ func TestApicastServicePortMutator(t *testing.T) {
 			if err := grafanav1alpha1.AddToScheme(s); err != nil {
 				t.Fatal(err)
 			}
+			if err := configv1.AddToScheme(s); err != nil {
+				t.Fatal(err)
+			}
 
 			// Create a fake client to mock API calls.
 			cl := fake.NewFakeClient(objs...)
@@ -762,5 +766,144 @@ func TestApicastServicePortMutator(t *testing.T) {
 				t.Fatal("Apicast service Target Ports do not match the expected service targetPort based on the annotation")
 			}
 		})
+	}
+}
+
+func TestApicastReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
+	var (
+		namespace       = "operator-unittest"
+		log             = logf.Log.WithName("operator_test")
+		twoValue  int32 = 2
+	)
+	ctx := context.TODO()
+	s := scheme.Scheme
+
+	err := appsv1alpha1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := configv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		testName                 string
+		objName                  string
+		obj                      runtime.Object
+		apimanager               *appsv1alpha1.APIManager
+		annotation               string
+		annotationValue          string
+		expectedAmountOfReplicas int32
+		validatingFunction       func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
+	}{
+		{"apicast-staging-DC-annotation not present", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastStagingReplicaReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		{"apicast-staging-DC-annotation false", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "false"), disableApicastStagingReplicaReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"apicast-staging-DC-annotation true", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "true"), disableApicastStagingReplicaReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
+		{"apicast-staging-DC-annotation true of dummy value", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "true"), disableApicastStagingReplicaReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+
+		{"apicast-production-DC-annotation not present", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastProductionReplicaReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		{"apicast-production-DC-annotation false", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "false"), disableApicastProductionReplicaReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"apicast-production-DC-annotation true", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "true"), disableApicastProductionReplicaReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
+		{"apicast-production-DC-annotation true of dummy value", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "true"), disableApicastProductionReplicaReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			objs := []runtime.Object{tc.apimanager}
+			// Create a fake client to mock API calls.
+			cl := fake.NewFakeClient(objs...)
+			clientAPIReader := fake.NewFakeClient(objs...)
+			clientset := fakeclientset.NewSimpleClientset()
+			recorder := record.NewFakeRecorder(10000)
+			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, tc.apimanager)
+
+			apicastReconciler := NewApicastReconciler(baseAPIManagerLogicReconciler)
+			_, err = apicastReconciler.Reconcile()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			dc := &appsv1.DeploymentConfig{}
+			namespacedName := types.NamespacedName{
+				Name:      tc.objName,
+				Namespace: namespace,
+			}
+
+			err = cl.Get(context.TODO(), namespacedName, dc)
+			if err != nil {
+				subT.Errorf("error fetching object %s: %v", tc.objName, err)
+			}
+
+			// bump the amount of replicas in the dc
+			dc.Spec.Replicas = twoValue
+			err = cl.Update(context.TODO(), dc)
+			if err != nil {
+				subT.Errorf("error updating dc of %s: %v", tc.objName, err)
+			}
+
+			// re-run the reconciler
+			_, err = apicastReconciler.Reconcile()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = cl.Get(context.TODO(), namespacedName, dc)
+			if err != nil {
+				subT.Errorf("error fetching object %s: %v", tc.objName, err)
+			}
+
+			correct := tc.validatingFunction(tc.apimanager, dc, tc.annotation, tc.annotationValue, tc.expectedAmountOfReplicas)
+			if !correct {
+				subT.Errorf("value of expteced replicas does not match for %s. expected: %v actual: %v", tc.objName, tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			}
+		})
+	}
+}
+
+func apiManagerCreator(disableSyncAnnotation string, disableSyncAnnotationValue string) *appsv1alpha1.APIManager {
+	var (
+		name                       = "example-apimanager"
+		namespace                  = "operator-unittest"
+		wildcardDomain             = "test.3scale.net"
+		appLabel                   = "someLabel"
+		tenantName                 = "someTenant"
+		trueValue                  = true
+		apicastManagementAPI       = "disabled"
+		oneValue             int64 = 1
+	)
+
+	return &appsv1alpha1.APIManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   namespace,
+			Annotations: map[string]string{disableSyncAnnotation: disableSyncAnnotationValue},
+		},
+		Spec: appsv1alpha1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				AppLabel:                     &appLabel,
+				ImageStreamTagImportInsecure: &trueValue,
+				WildcardDomain:               wildcardDomain,
+				TenantName:                   &tenantName,
+				ResourceRequirementsEnabled:  &trueValue,
+			},
+			Apicast: &appsv1alpha1.ApicastSpec{
+				ApicastManagementAPI: &apicastManagementAPI,
+				OpenSSLVerify:        &trueValue,
+				IncludeResponseCodes: &trueValue,
+				StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+					Replicas: &oneValue,
+				},
+				ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+					Replicas: &oneValue,
+				},
+			},
+			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+		},
 	}
 }

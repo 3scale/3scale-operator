@@ -48,6 +48,15 @@ func GenericDeploymentConfigMutator() MutateFn {
 	)
 }
 
+// GenericBackendMutators returns the generic mutators for backend
+func GenericBackendMutators() []DCMutateFn {
+	return []DCMutateFn{
+		DeploymentConfigContainerResourcesMutator,
+		DeploymentConfigAffinityMutator,
+		DeploymentConfigTolerationsMutator,
+	}
+}
+
 func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) bool {
 	update := false
 

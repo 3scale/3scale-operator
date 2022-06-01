@@ -17,6 +17,11 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
+const (
+	disableApicastProductionReplicaReconciler = "apps.3scale.net/disable-apicast-production-replica-reconciler"
+	disableApicastStagingReplicaReconciler    = "apps.3scale.net/disable-apicast-staging-replica-reconciler"
+)
+
 func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*v1.ConfigMap)
 	if !ok {
@@ -60,9 +65,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Staging DC
-	stagingDCMutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigReplicasMutator,
+	stagingMutators := []reconcilers.DCMutateFn{
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
@@ -78,15 +81,20 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume mutator
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
-	)
-	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), stagingDCMutator)
+	}
+
+	if value, found := r.apiManager.ObjectMeta.Annotations[disableApicastStagingReplicaReconciler]; !found || value != "true" {
+		stagingMutators = append(stagingMutators, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
+	// Staging DC
+	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), reconcilers.DeploymentConfigMutator(stagingMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Production DC
-	productionDCMutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigReplicasMutator,
+	// add apicast production env var mutator
+	productionMutators := []reconcilers.DCMutateFn{
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
@@ -103,7 +111,17 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
+	}
+
+	if value, found := r.apiManager.ObjectMeta.Annotations[disableApicastProductionReplicaReconciler]; !found || value != "true" {
+		productionMutators = append(productionMutators, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
+	// Production DC
+	productionDCMutator := reconcilers.DeploymentConfigMutator(
+		productionMutators...,
 	)
+
 	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err
