@@ -6711,6 +6711,7 @@ spec:
             required:
             - wildcardDomain
             type: object
+            x-kubernetes-preserve-unknown-fields: true
           status:
             description: APIManagerStatus defines the observed state of APIManager
             properties:
@@ -6759,6 +6760,7 @@ spec:
             required:
             - deployments
             type: object
+            x-kubernetes-preserve-unknown-fields: true
         type: object
     served: true
     storage: true
