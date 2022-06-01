@@ -15,9 +15,9 @@ type BackendReconciler struct {
 }
 
 const (
-	disableBackendListenerInstancesSyncing = "apps.3scale.net/backend-listener-replica-field"
-	disableBackendWorkerInstancesSyncing   = "apps.3scale.net/backend-worker-replica-field"
-	disableCronInstancesSyncing            = "apps.3scale.net/cron-replica-field"
+	disableBackendListenerReplicasReconciler = "apps.3scale.net/disable-backend-listener-replica-reconciler"
+	disableBackendWorkerReplicasReconciler   = "apps.3scale.net/disable-backend-worker-replica-reconciler"
+	disableCronReplicasReconciler            = "apps.3scale.net/disable-cron-replica-reconciler"
 )
 
 func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *BackendReconciler {
@@ -33,14 +33,24 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Cron DC
-	cronConfigMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableCronInstancesSyncing)
+	cronConfigMutator := reconcilers.GenericBackendMutators()
+
+	if value, found := r.apiManager.ObjectMeta.Annotations[disableCronReplicasReconciler]; !found || value != "true" {
+		cronConfigMutator = append(cronConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
 	err = r.ReconcileDeploymentConfig(backend.CronDeploymentConfig(), reconcilers.DeploymentConfigMutator(cronConfigMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Listener DC
-	listenerConfigMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableBackendListenerInstancesSyncing)
+	listenerConfigMutator := reconcilers.GenericBackendMutators()
+
+	if value, found := r.apiManager.ObjectMeta.Annotations[disableBackendListenerReplicasReconciler]; !found || value != "true" {
+		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
 	err = r.ReconcileDeploymentConfig(backend.ListenerDeploymentConfig(), reconcilers.DeploymentConfigMutator(listenerConfigMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
@@ -59,7 +69,12 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Worker DC
-	workerConfigMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableBackendWorkerInstancesSyncing)
+	workerConfigMutator := reconcilers.GenericBackendMutators()
+
+	if value, found := r.apiManager.ObjectMeta.Annotations[disableBackendWorkerReplicasReconciler]; !found || value != "true" {
+		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
 	err = r.ReconcileDeploymentConfig(backend.WorkerDeploymentConfig(), reconcilers.DeploymentConfigMutator(workerConfigMutator...))
 	if err != nil {
 		return reconcile.Result{}, err

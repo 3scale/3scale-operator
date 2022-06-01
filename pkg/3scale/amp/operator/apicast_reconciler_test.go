@@ -801,15 +801,15 @@ func TestApicastReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 		expectedAmountOfReplicas int32
 		validatingFunction       func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
 	}{
-		{"apicast-staging-DC-annotation not present", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastStagingInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"apicast-staging-DC-annotation false", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingInstancesSyncing, "false"), disableApicastStagingInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"apicast-staging-DC-annotation true", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingInstancesSyncing, "true"), disableApicastStagingInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"apicast-staging-DC-annotation true of dummy value", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingInstancesSyncing, "true"), disableApicastStagingInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"apicast-staging-DC-annotation not present", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastStagingReplicaReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		{"apicast-staging-DC-annotation false", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "false"), disableApicastStagingReplicaReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"apicast-staging-DC-annotation true", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "true"), disableApicastStagingReplicaReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
+		{"apicast-staging-DC-annotation true of dummy value", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "true"), disableApicastStagingReplicaReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
 
-		{"apicast-production-DC-annotation not present", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastProductionInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"apicast-production-DC-annotation false", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionInstancesSyncing, "false"), disableApicastProductionInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"apicast-production-DC-annotation true", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionInstancesSyncing, "true"), disableApicastProductionInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"apicast-production-DC-annotation true of dummy value", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionInstancesSyncing, "true"), disableApicastProductionInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"apicast-production-DC-annotation not present", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastProductionReplicaReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		{"apicast-production-DC-annotation false", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "false"), disableApicastProductionReplicaReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"apicast-production-DC-annotation true", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "true"), disableApicastProductionReplicaReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
+		{"apicast-production-DC-annotation true of dummy value", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "true"), disableApicastProductionReplicaReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
 	}
 
 	for _, tc := range cases {

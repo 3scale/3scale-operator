@@ -14,11 +14,6 @@ type ZyncReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
 
-const (
-	disableZyncQueInstancesSyncing = "apps.3scale.net/zync-que-replica-field"
-	disableZyncInstancesSyncing    = "apps.3scale.net/zync-replica-field"
-)
-
 func NewZyncReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *ZyncReconciler {
 	return &ZyncReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
@@ -50,15 +45,13 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Zync DC
-	zyncMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableZyncInstancesSyncing)
-	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.DeploymentConfigMutator(zyncMutator...))
+	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Zync Que DC
-	zyncQueMutator := reconcilers.GetConfigMutators(r.apiManager.Annotations, disableZyncQueInstancesSyncing)
-	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.DeploymentConfigMutator(zyncQueMutator...))
+	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -71,7 +64,12 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 
 	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
 		// Zync DB DC
-		err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), reconcilers.DeploymentConfigMutator(reconcilers.GenericOpts()...))
+		zyncDBDCMutator := reconcilers.DeploymentConfigMutator(
+			reconcilers.DeploymentConfigContainerResourcesMutator,
+			reconcilers.DeploymentConfigAffinityMutator,
+			reconcilers.DeploymentConfigTolerationsMutator,
+		)
+		err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), zyncDBDCMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}

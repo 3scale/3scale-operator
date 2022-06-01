@@ -93,8 +93,11 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | **Annotations**  | **Name** | **Default value** | **Description** |
 | --- | --- | --- | --- |
 | `apps.3scale.net/disable-apicast-service-reconciler` | disableApicastPortReconcile | `false` | Can be `true` or `false` - will disable apicast service port reconcile when true |
-
-
+| `apps.3scale.net/disable-apicast-production-replica-reconciler` | disableApicastProductionReplicaReconciler | `false` | Can be `true` or `false` - will disable apicast production replicas reconcile when true |
+| `apps.3scale.net/disable-apicast-staging-replica-reconciler` | disableApicastStagingReplicaReconciler | `false` | Can be `true` or `false` - will disable apicast staging replicas reconcile when true |
+| `apps.3scale.net/disable-backend-listener-replica-reconciler` | disableBackendListenerReplicasReconciler | `false` | Can be `true` or `false` - will disable backend listener replicas reconcile when true |
+| `apps.3scale.net/disable-backend-worker-replica-reconciler` | disableBackendWorkerReplicasReconciler | `false` | Can be `true` or `false` - will disable backend worker replicas reconcile when true |
+| `apps.3scale.net/disable-cron-replica-reconciler` | disableCronReplicasReconciler | `false` | Can be `true` or `false` - will disable backend cron replicas reconcile when true |
 
 ### ApicastSpec
 

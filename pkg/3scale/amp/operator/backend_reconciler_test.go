@@ -161,20 +161,20 @@ func TestAnnotationsBackendReconciler(t *testing.T) {
 		expectedAmountOfReplicas int32
 		validatingFunction       func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
 	}{
-		{"cronDC-annotation not present", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableCronInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"cronDC-annotation false", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronInstancesSyncing, "false"), disableCronInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"cronDC-annotation true", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronInstancesSyncing, "true"), disableCronInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"cronDC-annotation true of dummy value", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronInstancesSyncing, "true"), disableCronInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"cronDC-annotation not present", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableCronReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		{"cronDC-annotation false", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronReplicasReconciler, "false"), disableCronReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"cronDC-annotation true", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronReplicasReconciler, "true"), disableCronReplicasReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
+		{"cronDC-annotation true of dummy value", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronReplicasReconciler, "true"), disableCronReplicasReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
 
-		{"listenerDC-annotation not present", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendListenerInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"listenerDC-annotation false", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerInstancesSyncing, "false"), disableBackendListenerInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"listenerDC-annotation true", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerInstancesSyncing, "true"), disableBackendListenerInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"listenerDC-annotation true of dummy value", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerInstancesSyncing, "true"), disableBackendListenerInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"listenerDC-annotation not present", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendListenerReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		{"listenerDC-annotation false", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerReplicasReconciler, "false"), disableBackendListenerReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"listenerDC-annotation true", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerReplicasReconciler, "true"), disableBackendListenerReplicasReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
+		{"listenerDC-annotation true of dummy value", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerReplicasReconciler, "true"), disableBackendListenerReplicasReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
 
-		{"workerDC-annotation not present", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendWorkerInstancesSyncing, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"workerDC-annotation false", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerInstancesSyncing, "false"), disableBackendWorkerInstancesSyncing, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"workerDC-annotation true", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerInstancesSyncing, "true"), disableBackendWorkerInstancesSyncing, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"workerDC-annotation true of dummy value", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerInstancesSyncing, "true"), disableBackendWorkerInstancesSyncing, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"workerDC-annotation not present", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendWorkerReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		{"workerDC-annotation false", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerReplicasReconciler, "false"), disableBackendWorkerReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"workerDC-annotation true", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerReplicasReconciler, "true"), disableBackendWorkerReplicasReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
+		{"workerDC-annotation true of dummy value", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerReplicasReconciler, "true"), disableBackendWorkerReplicasReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
 	}
 
 	for _, tc := range cases {
