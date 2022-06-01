@@ -136,7 +136,12 @@ type APIManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   APIManagerSpec   `json:"spec,omitempty"`
+	// XPreserveUnknownFields Does not work at type level. Tested on OCP 4.8
+
+	// +kubebuilder:validation:XPreserveUnknownFields
+	Spec APIManagerSpec `json:"spec,omitempty"`
+
+	// +kubebuilder:validation:XPreserveUnknownFields
 	Status APIManagerStatus `json:"status,omitempty"`
 }
 
