@@ -19,38 +19,11 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 ### ProxyConfigPromoteSpec
 
 | **Field**                  | **json field**       | **Type** | **Info**                                                                                                                                                   | **Required** |
-|----------------------------|----------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------| --- |
-| ProductCRName              | `productCRName`      | string   | Name of product Cr                                                                                                                                         | Yes |
-| Production                 | `production`         | bool     | If true promotes to production, if false promotes to staging                                                                                               | Yes |
-| DeleteCR                   | `deleteCR`           | bool     | If true deletes the resource after a succesfull promotion                                                                                                  | No |
-| Provider Account Reference | `providerAccountRef` | object   | [Provider account credentials secret reference](#provider-account-reference)                                                                               | No |
+|----------------------------|----------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| ProductCRName              | `productCRName`      | string   | Name of product Cr                                                                                                                                         | Yes          |
+| Production                 | `production`         | bool     | If true promotes to production, if false promotes to staging                                                                                               | No           |
+| DeleteCR                   | `deleteCR`           | bool     | If true deletes the resource after a succesfull promotion                                                                                                  | No           |                                                                            | No |
 
-
-
-#### Provider Account Reference
-
-Provider account credentials secret referenced by a [v1.LocalObjectReference](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core) type object.
-
-The secret must have `adminURL` and `token` fields with tenant credentials.
-Tenant controller will fetch the secret and read the following fields:
-
-| **Field** | **Description** | **Required** |
-| --- | --- | --- |
-| *token* | Provider account access token with *Account Management API* scope and *Read & Write* permission | Yes |
-| *adminURL* | Provider account's domain URL | Yes |
-
-For example:
-
-```
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mytenant
-type: Opaque
-stringData:
-  adminURL: https://my3scale-admin.example.com:443
-  token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-```
 
 ### ProxyConfigPromoteStatus
 
@@ -59,7 +32,6 @@ stringData:
 | ProductId          | `productId`          | string | Internal ID of promted product                                              |
 | LatestProductionVersion | `latestProductionVersion` | string | int with the current version in the production environment      |
 | LatestStagingVersion | `latestStagingVersion` | string | int with the current version in the staging environment      |
-| State               | `state`             | string | Completed if promotion is successful , Failed if promotion is unsuccessful |
 | Conditions | `conditions` | array of [conditions](#ConditionSpec) | resource conditions |
 
 For example:
@@ -68,18 +40,11 @@ For example:
 status:
   conditions:
     - lastTransitionTime: '2022-05-11T13:41:00Z'
-      status: 'False'
-      type: Failed
-    - lastTransitionTime: '2022-05-11T13:37:37Z'
-      status: 'False'
-      type: Invalid
-    - lastTransitionTime: '2022-05-11T13:41:00Z'
       status: 'True'
       type: Ready
   latestProductionVersion: 7
   latestStagingVersion: 8
   productId: '3'
-  state: Completed
 ```
 
 #### ConditionSpec
@@ -92,9 +57,7 @@ Each element of the Condition array has the following fields:
 * The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
 * The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
 * The *type* field is a string with the following possible values:
-  * Invalid: Indicates that the combination of configuration in the ActiveDocSpec is not supported. This is not a transient error, but indicates a state that must be fixed before progress can be made;
   * Ready: Indicates the ActiveDoc resource has been successfully reconciled;
-  * Failed: Indicates that an error occurred during reconcilliation;
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |

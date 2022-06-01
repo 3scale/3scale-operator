@@ -95,9 +95,9 @@ func getProductList() (productList *capabilitiesv1beta1.ProductList) {
 					Namespace: "test",
 				},
 				Spec: capabilitiesv1beta1.ProductSpec{
-					Name:               "test",
-					SystemName:         "test",
-					Description:        "test",
+					Name:        "test",
+					SystemName:  "test",
+					Description: "test",
 				},
 				Status: capabilitiesv1beta1.ProductStatus{
 					ID:                  create(3),
@@ -120,9 +120,9 @@ func getProductCR() (CR *capabilitiesv1beta1.Product) {
 			Namespace: "test",
 		},
 		Spec: capabilitiesv1beta1.ProductSpec{
-			Name:               "test",
-			SystemName:         "test",
-			Description:        "test",
+			Name:        "test",
+			SystemName:  "test",
+			Description: "test",
 		},
 		Status: capabilitiesv1beta1.ProductStatus{
 			ID:                  create(3),

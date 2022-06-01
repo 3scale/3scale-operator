@@ -27,18 +27,9 @@ import (
 const (
 	ProxyPromoteConfigKind = "ProxyPromoteConfig"
 
-	// ProxyPromoteConfigInvalidConditionType represents that the combination of configuration
-	// in the ProxyPromoteConfigSpec is not supported. This is not a transient error, but
-	// indicates a state that must be fixed before progress can be made.
-	ProxyPromoteConfigInvalidConditionType common.ConditionType = "Invalid"
-
 	// ProxyPromoteConfigReadyConditionType indicates the activedoc has been successfully synchronized.
 	// Steady state
 	ProxyPromoteConfigReadyConditionType common.ConditionType = "Ready"
-
-	// ProxyPromoteConfigFailedConditionType indicates that an error occurred during synchronization.
-	// The operator will retry.
-	ProxyPromoteConfigFailedConditionType common.ConditionType = "Failed"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -76,10 +67,6 @@ type ProxyConfigPromoteStatus struct {
 	// The latest Version in staging
 	//+optional
 	LatestStagingVersion int `json:"latestStagingVersion,omitempty"`
-
-	// State of promotion i.e. failed or completed
-	//+optional
-	State string `json:"state,omitempty"`
 
 	// Current state of the activedoc resource.
 	// Conditions represent the latest available observations of an object's state
@@ -130,12 +117,6 @@ func (o *ProxyConfigPromoteStatus) Equals(other *ProxyConfigPromoteStatus, logge
 	if o.LatestStagingVersion != other.LatestStagingVersion {
 		diff := cmp.Diff(o.LatestStagingVersion, other.LatestStagingVersion)
 		logger.V(1).Info("LatestStagingVersion not equal", "difference", diff)
-		return false
-	}
-
-	if o.State != other.State {
-		diff := cmp.Diff(o.State, other.State)
-		logger.V(1).Info("State not equal", "difference", diff)
 		return false
 	}
 

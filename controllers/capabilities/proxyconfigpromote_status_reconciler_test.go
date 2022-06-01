@@ -124,7 +124,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				ProductId:               "3",
 				LatestProductionVersion: 1,
 				LatestStagingVersion:    1,
-				State:                   "Completed",
 				Conditions: common.Conditions{
 					common.Condition{
 						Type:               "Ready",
@@ -153,7 +152,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				ProductId:               "3",
 				LatestProductionVersion: 1,
 				LatestStagingVersion:    1,
-				State:                   "Failed",
 				Conditions: common.Conditions{
 					common.Condition{
 						Type:               "Failed",
@@ -182,7 +180,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				ProductId:               "3",
 				LatestProductionVersion: 1,
 				LatestStagingVersion:    1,
-				State:                   "Invalid",
 				Conditions: common.Conditions{
 					common.Condition{
 						Type:               "Invalid",
@@ -215,9 +212,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got.ProductId, tt.want.ProductId) {
 				t.Errorf("calculateStatus() got = %v, want %v", got.ProductId, tt.want.ProductId)
-			}
-			if !reflect.DeepEqual(got.State, tt.want.State) {
-				t.Errorf("calculateStatus() got = %v, want %v", got.State, tt.want.State)
 			}
 			if !reflect.DeepEqual(got.LatestProductionVersion, tt.want.LatestProductionVersion) {
 				t.Errorf("calculateStatus() got = %v, want %v", got.LatestProductionVersion, tt.want.LatestProductionVersion)

@@ -72,12 +72,9 @@ func (s *ProxyConfigPromoteStatusReconciler) calculateStatus() (*capabilitiesv1b
 	newStatus.ProductId = s.productID
 	newStatus.LatestProductionVersion = s.latestProductionVersion
 	newStatus.LatestStagingVersion = s.latestStagingVersion
-	newStatus.State = s.state
 
 	newStatus.Conditions = s.resource.Status.Conditions.Copy()
-	newStatus.Conditions.SetCondition(s.readyCondition(newStatus.State))
-	newStatus.Conditions.SetCondition(s.invalidCondition(newStatus.State))
-	newStatus.Conditions.SetCondition(s.failedCondition(newStatus.State))
+	newStatus.Conditions.SetCondition(s.readyCondition(s.state))
 
 	return newStatus, nil
 }
@@ -90,35 +87,6 @@ func (s *ProxyConfigPromoteStatusReconciler) readyCondition(state string) common
 
 	if state == "Completed" {
 		condition.Status = corev1.ConditionTrue
-	}
-
-	return condition
-}
-
-func (s *ProxyConfigPromoteStatusReconciler) invalidCondition(state string) common.Condition {
-	condition := common.Condition{
-		Type:   capabilitiesv1beta1.ProxyPromoteConfigInvalidConditionType,
-		Status: corev1.ConditionFalse,
-	}
-
-	if state == "Invalid" {
-		condition.Status = corev1.ConditionTrue
-		condition.Message = s.reconcileError.Error()
-	}
-
-	return condition
-}
-
-func (s *ProxyConfigPromoteStatusReconciler) failedCondition(state string) common.Condition {
-	condition := common.Condition{
-		Type:   capabilitiesv1beta1.ProxyPromoteConfigFailedConditionType,
-		Status: corev1.ConditionFalse,
-	}
-
-	// This condition could be activated together with other conditions
-	if state == "Failed" {
-		condition.Status = corev1.ConditionTrue
-		condition.Message = s.reconcileError.Error()
 	}
 
 	return condition

@@ -104,9 +104,6 @@ spec:
               productId:
                 description: The id of the product that has been promoted
                 type: string
-              state:
-                description: State of promotion i.e. failed or completed
-                type: string
             type: object
         type: object
     served: true
