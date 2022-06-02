@@ -15,6 +15,7 @@ spec:
     - alert: ThreescaleSystemSidekiqJobDown
       annotations:
         description: Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN
+        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/prometheus_job_down.adoc
         summary: Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN
       expr: up{job=~".*system-sidekiq.*",namespace="__NAMESPACE__"} == 0
       for: 1m

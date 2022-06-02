@@ -15,6 +15,7 @@ spec:
     - alert: ThreescaleBackendListener5XXRequestsHigh
       annotations:
         description: Job {{ $labels.job }} on {{ $labels.namespace }} has more than 5000 HTTP 5xx requests in the last 5 minutes
+        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/backend_listener_5xx_requests_high.adoc
         summary: Job {{ $labels.job }} on {{ $labels.namespace }} has more than 5000 HTTP 5xx requests in the last 5 minutes
       expr: sum(rate(apisonator_listener_response_codes{job=~"backend.*",namespace="__NAMESPACE__",resp_code="5xx"}[5m])) by (namespace,job,resp_code) > 5000
       for: 5m
@@ -23,6 +24,7 @@ spec:
     - alert: ThreescaleBackendListenerJobDown
       annotations:
         description: Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN
+        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/prometheus_job_down.adoc
         summary: Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN
       expr: up{job=~".*backend-listener.*",namespace="__NAMESPACE__"} == 0
       for: 1m
