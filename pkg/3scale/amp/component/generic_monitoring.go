@@ -31,6 +31,7 @@ const (
 	ThreescaleApicastHttp4xxErrorRateURL               = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_http_4xx_error_rate.adoc"
 	ThreescaleApicastLatencyHighURL                    = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_apicast_latency.adoc"
 	ThreescaleApicastWorkerRestartURL                  = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_worker_restart.adoc"
+	ThreescaleSystemApp5XXRequestsHighURL              = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/system_app_5xx_requests_high.adoc"
 )
 
 func KubernetesResourcesByNamespaceGrafanaDashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
