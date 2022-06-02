@@ -8,6 +8,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
@@ -126,18 +127,15 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				LatestStagingVersion:    1,
 				Conditions: common.Conditions{
 					common.Condition{
-						Type:               "Ready",
-						Status:             "true",
-						Reason:             "",
-						Message:            "",
-						LastTransitionTime: metav1.Time{},
+						Type:   capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType,
+						Status: v1.ConditionTrue,
 					},
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Test Failed status ProxyPromoteConfig",
+			name: "Test ready:false status ProxyPromoteConfig",
 			fields: fields{
 				BaseReconciler:          getBaseReconciler(),
 				resource:                getProxyConfigPromoteCR(),
@@ -154,39 +152,8 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				LatestStagingVersion:    1,
 				Conditions: common.Conditions{
 					common.Condition{
-						Type:               "Failed",
-						Status:             "true",
-						Reason:             "",
-						Message:            "",
-						LastTransitionTime: metav1.Time{},
-					},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "Test Invalid status ProxyPromoteConfig",
-			fields: fields{
-				BaseReconciler:          getBaseReconciler(),
-				resource:                getProxyConfigPromoteCR(),
-				state:                   "Invalid",
-				productID:               "3",
-				latestProductionVersion: 1,
-				latestStagingVersion:    1,
-				reconcileError:          fmt.Errorf("test"),
-				logger:                  nil,
-			},
-			want: &capabilitiesv1beta1.ProxyConfigPromoteStatus{
-				ProductId:               "3",
-				LatestProductionVersion: 1,
-				LatestStagingVersion:    1,
-				Conditions: common.Conditions{
-					common.Condition{
-						Type:               "Invalid",
-						Status:             "true",
-						Reason:             "",
-						Message:            "",
-						LastTransitionTime: metav1.Time{},
+						Type:   capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType,
+						Status: v1.ConditionFalse,
 					},
 				},
 			},
@@ -219,19 +186,12 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 			if !reflect.DeepEqual(got.LatestStagingVersion, tt.want.LatestStagingVersion) {
 				t.Errorf("calculateStatus() got = %v, want %v", got.LatestStagingVersion, tt.want.LatestStagingVersion)
 			}
-			if got.Conditions.GetCondition("Ready") == tt.want.Conditions.GetCondition("Ready") {
-				if !reflect.DeepEqual(got.Conditions.IsTrueFor("Ready"), tt.want.Conditions.IsTrueFor("Ready")) {
-					t.Errorf("calculateStatus() got = %v, want %v", got.Conditions.IsTrueFor("Ready"), tt.want.Conditions.IsTrueFor("Ready"))
+			if got.Conditions.GetCondition(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType) == tt.want.Conditions.GetCondition(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType) {
+				if !reflect.DeepEqual(got.Conditions.IsTrueFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType), tt.want.Conditions.IsTrueFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType)) {
+					t.Errorf("calculateStatus() got = %v, want %v", got.Conditions.IsTrueFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType), tt.want.Conditions.IsTrueFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType))
 				}
-			}
-			if got.Conditions.GetCondition("Failed") == tt.want.Conditions.GetCondition("Failed") {
-				if !reflect.DeepEqual(got.Conditions.IsTrueFor("Failed"), tt.want.Conditions.IsTrueFor("Failed")) {
-					t.Errorf("calculateStatus() got = %v, want %v", got.Conditions.IsTrueFor("Failed"), tt.want.Conditions.IsTrueFor("Failed"))
-				}
-			}
-			if got.Conditions.GetCondition("Invalid") == tt.want.Conditions.GetCondition("Invalid") {
-				if !reflect.DeepEqual(got.Conditions.IsTrueFor("Invalid"), tt.want.Conditions.IsTrueFor("Invalid")) {
-					t.Errorf("calculateStatus() got = %v, want %v", got.Conditions.IsTrueFor("Invalid"), tt.want.Conditions.IsTrueFor("Invalid"))
+				if !reflect.DeepEqual(got.Conditions.IsFalseFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType), tt.want.Conditions.IsFalseFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType)) {
+					t.Errorf("calculateStatus() got = %v, want %v", got.Conditions.IsFalseFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType), tt.want.Conditions.IsFalseFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType))
 				}
 			}
 		})

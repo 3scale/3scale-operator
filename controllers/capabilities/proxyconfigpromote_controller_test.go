@@ -3,9 +3,9 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
@@ -128,7 +128,10 @@ func getProductCR() (CR *capabilitiesv1beta1.Product) {
 			ID:                  create(3),
 			ProviderAccountHost: "some string",
 			ObservedGeneration:  1,
-			Conditions:          nil,
+			Conditions: common.Conditions{common.Condition{
+				Type:   capabilitiesv1beta1.ProductSyncedConditionType,
+				Status: v1.ConditionTrue,
+			}},
 		},
 	}
 	return CR
@@ -215,14 +218,6 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			Endpoint:        "productionEndpoint.example.com",
 			SandboxEndpoint: "staging.example.com",
 			UpdatedAt:       "2009-11-17 20:35:59.651387237 +0000",
-		},
-	}
-	// Failed proxyJson
-	failedProxyJson := &client.ProxyJSON{
-		Element: client.ProxyItem{
-			Endpoint:        "productionEndpoint.example.com",
-			SandboxEndpoint: "staging.example.com",
-			UpdatedAt:       "2009-11-17 20:34:59.651387237 +0000",
 		},
 	}
 	proxyConfigElementSandbox := &client.ProxyConfigElement{
@@ -334,29 +329,6 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			wantErr: false,
 		},
 		{
-			name: "Test promotion to staging Failed no changes to promote",
-			fields: fields{
-				BaseReconciler: getBaseReconciler(),
-			},
-			args: args{
-				proxyConfigPromote:  getProxyConfigPromoteCRStaging(),
-				reqLogger:           logf.Log.WithName("test reqlogger"),
-				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClient(failedProxyJson, productList, failedProxyConfigElementSandbox, failedProxyConfigElementProduction)),
-				product:             getProductCR(),
-			},
-			want: &ProxyConfigPromoteStatusReconciler{
-				BaseReconciler:          getBaseReconciler(),
-				resource:                getProxyConfigPromoteCRStaging(),
-				state:                   "Failed",
-				productID:               "3",
-				latestProductionVersion: 0,
-				latestStagingVersion:    0,
-				reconcileError:          fmt.Errorf("No update to product config,  returning failed status"),
-				logger:                  logf.Log.WithValues("Status Reconciler", "test"),
-			},
-			wantErr: false,
-		},
-		{
 			name: "Test promotion to Production Completed",
 			fields: fields{
 				BaseReconciler: getBaseReconciler(),
@@ -400,7 +372,7 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 				reconcileError: &url.Error{
 					Op:  "Post",
 					URL: "https://3scale-admin.test.3scale.net/admin/api/services/3/proxy/configs/sandbox/0/promote.json",
-					Err: errors.New("http: RoundTripper implementation (controllers.RoundTripFunc) returned a nil *Response with a nil error"),
+					Err: fmt.Errorf("http: RoundTripper implementation (controllers.RoundTripFunc) returned a nil *Response with a nil error"),
 				},
 				logger: nil,
 			},
