@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -125,12 +126,16 @@ func (r *DeveloperAccountReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 
 	// If tenant CR is found, set it's ownersReference as ownerReference in the DeveloperAccountCR
 	if tenantCR != nil {
-		updated, err := controllerhelper.SetOwnersReference(developerAccountCR, r.Client(), tenantCR)
+		updated, err := r.EnsureOwnerReference(tenantCR, developerAccountCR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
 
 		if updated {
+			err := r.Client().Update(r.Context(), developerAccountCR)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
 			return ctrl.Result{Requeue: true}, nil
 		}
 	}

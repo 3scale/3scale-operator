@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
@@ -131,12 +132,16 @@ func (r *DeveloperUserReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 
 	// If DeveloperAccount CR is found, set it's ownersReference as ownerReference in the DeveloperUser CR
 	if developerAccountCR != nil {
-		updated, err := controllerhelper.SetOwnersReferenceByObjectAndMeta(developerUserCR, r.Client(), developerAccountCR.ObjectMeta, developerAccountCR.TypeMeta)
+		updated, err := r.EnsureOwnerReference(developerAccountCR, developerUserCR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
 
 		if updated {
+			err := r.Client().Update(r.Context(), developerUserCR)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
 			return ctrl.Result{Requeue: true}, nil
 		}
 	}
