@@ -114,6 +114,7 @@ func (system *System) SystemAppPrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleSystemApp5XXRequestsHigh",
 							Annotations: map[string]string{
+								"sop_url":     ThreescaleSystemApp5XXRequestsHighURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50 HTTP 5xx requests in the last minute",
 							},
@@ -126,6 +127,7 @@ func (system *System) SystemAppPrometheusRules() *monitoringv1.PrometheusRule {
 						{
 							Alert: "ThreescaleSystemAppJobDown",
 							Annotations: map[string]string{
+								"sop_url":     ThreescalePrometheusJobDownURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
@@ -160,6 +162,7 @@ func (system *System) SystemSidekiqPrometheusRules() *monitoringv1.PrometheusRul
 						{
 							Alert: "ThreescaleSystemSidekiqJobDown",
 							Annotations: map[string]string{
+								"sop_url":     ThreescalePrometheusJobDownURL,
 								"summary":     "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 								"description": "Job {{ $labels.job }} on {{ $labels.namespace }} is DOWN",
 							},
