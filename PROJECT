@@ -7,6 +7,9 @@ resources:
 - group: apps
   kind: APIManager
   version: v1alpha1
+- group: apps.3scale.net
+  kind: APIManager
+  version: v1beta1
 - group: apps
   kind: APIManagerBackup
   version: v1alpha1

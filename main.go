@@ -41,9 +41,11 @@ import (
 	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
+	appsv1beta1controller "github.com/3scale/3scale-operator/controllers/apps/v1beta1"
 	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -66,6 +68,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(appsv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(appsv1beta1.AddToScheme(scheme))
 	utilruntime.Must(capabilitiesv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(capabilitiesv1beta1.AddToScheme(scheme))
 	utilruntime.Must(routev1.AddToScheme(scheme))
@@ -127,6 +130,22 @@ func main() {
 			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
 			ctrl.Log.WithName("controllers").WithName("APIManager"),
 			discoveryClientAPIManager,
+			mgr.GetEventRecorderFor("APIManager")),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "APIManager")
+		os.Exit(1)
+	}
+
+	discoveryClientAPIManagerV1beta1, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		os.Exit(1)
+	}
+	if err = (&appsv1beta1controller.APIManagerReconciler{
+		BaseReconciler: reconcilers.NewBaseReconciler(
+			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
+			ctrl.Log.WithName("controllers").WithName("APIManager").WithName("v1beta1"),
+			discoveryClientAPIManagerV1beta1,
 			mgr.GetEventRecorderFor("APIManager")),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "APIManager")

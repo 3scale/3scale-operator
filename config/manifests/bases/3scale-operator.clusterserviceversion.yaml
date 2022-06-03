@@ -53,34 +53,6 @@ spec:
       displayName: APIManager
       kind: APIManager
       name: apimanagers.apps.3scale.net
-      resources:
-      - kind: DeploymentConfig
-        name: ""
-        version: apps.openshift.io/v1
-      - kind: ImageStream
-        name: ""
-        version: image.openshift.io/v1
-      - kind: PersistentVolumeClaim
-        name: ""
-        version: v1
-      - kind: Route
-        name: ""
-        version: route.openshift.io/v1
-      - kind: Service
-        name: ""
-        version: v1
-      specDescriptors:
-      - description: Wildcard domain as configured in the API Manager object
-        displayName: Wildcard Domain
-        path: wildcardDomain
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:label
-      statusDescriptors:
-      - description: APIManager Deployment Configs
-        displayName: Deployments
-        path: deployments
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
     - description: APIManagerBackup represents an APIManager backup
       displayName: APIManagerBackup
@@ -106,6 +78,11 @@ spec:
       displayName: Developer User
       kind: DeveloperUser
       name: developerusers.capabilities.3scale.net
+      version: v1beta1
+    - description: APIManager is the Schema for the apimanagers API
+      displayName: APIManager
+      kind: APIManager
+      name: apimanagers.apps.3scale.net.3scale.net
       version: v1beta1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.

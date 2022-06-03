@@ -45,6 +45,16 @@ metadata:
           }
         },
         {
+          "apiVersion": "apps.3scale.net/v1beta1",
+          "kind": "APIManager",
+          "metadata": {
+            "name": "apimanager-sample"
+          },
+          "spec": {
+            "wildcardDomain": "example.com"
+          }
+        },
+        {
           "apiVersion": "capabilities.3scale.net/v1alpha1",
           "kind": "Tenant",
           "metadata": {
@@ -205,38 +215,13 @@ spec:
       kind: APIManagerRestore
       name: apimanagerrestores.apps.3scale.net
       version: v1alpha1
+    - kind: APIManager
+      name: apimanagers.apps.3scale.net
+      version: v1beta1
     - description: APIManager is the Schema for the apimanagers API
       displayName: APIManager
       kind: APIManager
       name: apimanagers.apps.3scale.net
-      resources:
-      - kind: DeploymentConfig
-        name: ""
-        version: apps.openshift.io/v1
-      - kind: ImageStream
-        name: ""
-        version: image.openshift.io/v1
-      - kind: PersistentVolumeClaim
-        name: ""
-        version: v1
-      - kind: Route
-        name: ""
-        version: route.openshift.io/v1
-      - kind: Service
-        name: ""
-        version: v1
-      specDescriptors:
-      - description: Wildcard domain as configured in the API Manager object
-        displayName: Wildcard Domain
-        path: wildcardDomain
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:label
-      statusDescriptors:
-      - description: APIManager Deployment Configs
-        displayName: Deployments
-        path: deployments
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
     - description: Backend is the Schema for the backends API
       displayName: 3scale Backend
