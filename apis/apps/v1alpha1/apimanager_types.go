@@ -642,7 +642,3 @@ type APIManagerList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []APIManager `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
-}

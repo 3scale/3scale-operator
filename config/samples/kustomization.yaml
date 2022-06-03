@@ -1,6 +1,5 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
-- apps_v1alpha1_apimanager_simple.yaml
 - apps_v1beta1_apimanager.yaml
 - apps_v1alpha1_apimanagerbackup.yaml
 - apps_v1alpha1_apimanagerrestore.yaml

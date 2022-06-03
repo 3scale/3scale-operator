@@ -100,7 +100,7 @@ oc create secret generic custom-policy-example-1 \
 `apimanager.yaml` content (only relevant content shown):
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-3scale

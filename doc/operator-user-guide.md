@@ -23,7 +23,7 @@
 * [3scale installation Backup and Restore using the operator (in *TechPreview*)](operator-backup-and-restore.md)
 * [Application Capabilities (in *TechPreview*)](operator-application-capabilities.md)
 * [APIManager CRD reference](apimanager-reference.md)
-    * CR samples [\[1\]](../config/samples/apps_v1alpha1_apimanager_simple.yaml) [\[2\]](cr_samples/apimanager/)
+    * CR samples [\[1\]](../config/samples/apps_v1beta1_apimanager.yaml) [\[2\]](cr_samples/apimanager/)
 
 ## Installing 3scale
 
@@ -64,7 +64,7 @@ To deploy the minimal APIManager object with all default values, follow the foll
 1. Create *APIManager* object with the following content.
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -120,7 +120,7 @@ Containers will not have [k8s resources limits and requests](https://kubernetes.
 * Suitable for presale/sales demos
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -155,7 +155,7 @@ allows to pick which databases will be externally managed and with databases wil
 3scale operator. The following example helps to illustrate:
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -299,7 +299,7 @@ Check [S3 secret reference](apimanager-reference.md#fileStorage-S3-credentials-s
 Finally, create *APIManager* custom resource to deploy 3scale
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -337,7 +337,7 @@ Volumes (see [Prerequisites](#Prerequisites))
 
 To configure System's FileStorage PVC Storage Class to be used:
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -359,7 +359,7 @@ By default, Mysql will be the internal relational database deployed.
 This deployment configuration can be overrided to use PostgreSQL instead.
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -400,7 +400,7 @@ replicas of each non-database component has to be set to a value greater than 1.
 
 Example:
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -445,7 +445,7 @@ and custom tolerations for system's memcached would be done in the
 following way:
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -492,7 +492,7 @@ system-provider container, for backend-listener and for zync-database can be
 done in the following way:
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -538,7 +538,7 @@ This is the list of 3scale PVC's resources that can be customized with examples.
 * *System Shared (RWX) Storage PVC*
 
 ```
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: apimanager1
@@ -553,7 +553,7 @@ spec:
 
 * *MySQL (RWO) PVC*
 ```
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: apimanager1
@@ -569,7 +569,7 @@ spec:
 
 * *PostgreSQL (RWO) PVC*
 ```
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: apimanager1
@@ -606,7 +606,7 @@ The following is a list of reconciliable parameters.
 Resource limits and requests for all 3scale components
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -618,7 +618,7 @@ spec:
 Backend components pod count
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -636,7 +636,7 @@ spec:
 Apicast staging and production components pod count
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -652,7 +652,7 @@ spec:
 System app and system sidekiq components pod count
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
@@ -668,7 +668,7 @@ spec:
 Whether Pod Disruption Budgets are enabled for non-database DeploymentConfigs
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager

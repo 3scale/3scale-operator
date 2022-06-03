@@ -24,7 +24,7 @@ kubectl create secret tls mycertsecret --cert=server.crt --key=server.key
 3.- Reference the certificate secret in APIManager CR
 
 ```
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: apimanager-apicast-custom-environment
@@ -44,7 +44,7 @@ spec:
 **NOTE 3**: The example above deploys *production* APIcast to serve TLS. The example for the *staging* APIcast would as follows:
 
 ```
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: apimanager-apicast-custom-environment

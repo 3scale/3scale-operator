@@ -43,7 +43,7 @@ oc create secret generic custom-env-1 --from-file=./env11.lua
 `apimanager.yaml` content (only relevant content shown):
 
 ```yaml
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: apimanager-apicast-custom-environment

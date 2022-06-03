@@ -16,7 +16,7 @@ The 3scale monitoring resources are (optionally) installed when 3scale is instal
 3scale monitoring is disabled by default. It can be enabled by setting monitoring to `true` in the [APIManager CR](apimanager-reference.md).
 
 ```
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: apimanager1
@@ -31,7 +31,7 @@ NOTE: All monitoring resources will be created by the operator using *Create onl
 Optionally, *PrometheusRules* deployment can be disabled. By default, *PrometheusRules* will be deployed.
 
 ```
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: apimanager1

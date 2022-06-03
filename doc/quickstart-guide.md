@@ -21,7 +21,7 @@ Procedure
 1. Create *APIManager* object with the following content.
 
 ```
-apiVersion: apps.3scale.net/v1alpha1
+apiVersion: apps.3scale.net/v1beta1
 kind: APIManager
 metadata:
   name: example-apimanager
