@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -115,7 +115,7 @@ func testApicastProductionCustomResourceRequirements() *v1.ResourceRequirements 
 	}
 }
 
-func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
+func basicApimanagerTestApicastOptions() *appsv1beta1.APIManager {
 	tmpApicastManagementAPI := apicastManagementAPI
 	tmpOpenSSLVerify := openSSLVerify
 	tmpResponseCodes := responseCodes
@@ -123,14 +123,14 @@ func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 	tmpStagingReplicaCount := stagingReplicaCount
 
 	apimanager := basicApimanager()
-	apimanager.Spec.Apicast = &appsv1alpha1.ApicastSpec{
+	apimanager.Spec.Apicast = &appsv1beta1.ApicastSpec{
 		ApicastManagementAPI: &tmpApicastManagementAPI,
 		OpenSSLVerify:        &tmpOpenSSLVerify,
 		IncludeResponseCodes: &tmpResponseCodes,
-		StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+		StagingSpec: &appsv1beta1.ApicastStagingSpec{
 			Replicas: &tmpStagingReplicaCount,
 		},
-		ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+		ProductionSpec: &appsv1beta1.ApicastProductionSpec{
 			Replicas: &tmpProductionReplicaCount,
 		},
 	}
@@ -165,12 +165,12 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 
 	cases := []struct {
 		name                   string
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func() *component.ApicastOptions
 	}{
 		{"Default", basicApimanagerTestApicastOptions, defaultApicastOptions},
 		{"WithGlobalResourceRequirementsDisabled",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				return apimanager
@@ -183,7 +183,7 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAffinity",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.Apicast.ProductionSpec.Affinity = testApicastProductionAffinity()
 				apimanager.Spec.Apicast.StagingSpec.Affinity = testApicastStagingAffinity()
@@ -197,7 +197,7 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithTolerations",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.Apicast.ProductionSpec.Tolerations = testApicastProductionTolerations()
 				apimanager.Spec.Apicast.StagingSpec.Tolerations = testApicastStagingTolerations()
@@ -211,7 +211,7 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAPIcastCustomResourceRequirements",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.Apicast.ProductionSpec.Resources = testApicastProductionCustomResourceRequirements()
 				apimanager.Spec.Apicast.StagingSpec.Resources = testApicastStagingCustomResourceRequirements()
@@ -225,7 +225,7 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAPIcastCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestApicastOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				apimanager.Spec.Apicast.ProductionSpec.Resources = testApicastProductionCustomResourceRequirements()

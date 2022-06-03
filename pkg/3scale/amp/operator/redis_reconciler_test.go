@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -33,13 +33,13 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				ResourceRequirementsEnabled:  &trueValue,
@@ -54,7 +54,7 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 	}
 
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err = imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)

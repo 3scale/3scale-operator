@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -31,7 +31,7 @@ func (r *SystemMySQLImageReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func SystemMySQLImage(apimanager *appsv1alpha1.APIManager) (*component.SystemMySQLImage, error) {
+func SystemMySQLImage(apimanager *appsv1beta1.APIManager) (*component.SystemMySQLImage, error) {
 	optsProvider := NewSystemMysqlImageOptionsProvider(apimanager)
 	opts, err := optsProvider.GetSystemMySQLImageOptions()
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -98,7 +98,7 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 	cases := []struct {
 		testName               string
 		systemDatabaseSecret   *v1.Secret
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func(*component.SystemMysqlOptions) *component.SystemMysqlOptions
 	}{
 		{"Default", nil, basicApimanager,
@@ -107,7 +107,7 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithoutResourceRequirements", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
 				return apimanager
@@ -130,12 +130,12 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			},
 		},
 		{"PVCSpecSet", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						MySQL: &appsv1alpha1.SystemMySQLSpec{
-							PersistentVolumeClaimSpec: &appsv1alpha1.SystemMySQLPVCSpec{},
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						MySQL: &appsv1beta1.SystemMySQLSpec{
+							PersistentVolumeClaimSpec: &appsv1beta1.SystemMySQLPVCSpec{},
 						},
 					},
 				}
@@ -147,15 +147,15 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			},
 		},
 		{"PVCSettingsSet", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				tmpVolumeName := "myvolume"
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						MySQL: &appsv1alpha1.SystemMySQLSpec{
-							PersistentVolumeClaimSpec: &appsv1alpha1.SystemMySQLPVCSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						MySQL: &appsv1beta1.SystemMySQLSpec{
+							PersistentVolumeClaimSpec: &appsv1beta1.SystemMySQLPVCSpec{
 								StorageClassName: &customStorageClass,
-								Resources: &appsv1alpha1.PersistentVolumeClaimResources{
+								Resources: &appsv1beta1.PersistentVolumeClaimResources{
 									Requests: resource.MustParse("456Mi"),
 								},
 								VolumeName: &tmpVolumeName,
@@ -175,10 +175,10 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAffinity", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System.DatabaseSpec = &appsv1alpha1.SystemDatabaseSpec{
-					MySQL: &appsv1alpha1.SystemMySQLSpec{
+				apimanager.Spec.System.DatabaseSpec = &appsv1beta1.SystemDatabaseSpec{
+					MySQL: &appsv1beta1.SystemMySQLSpec{
 						Affinity: testSystemMySQLAffinity(),
 					},
 				}
@@ -191,11 +191,11 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithTolerations", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						MySQL: &appsv1alpha1.SystemMySQLSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						MySQL: &appsv1beta1.SystemMySQLSpec{
 							Tolerations: testSystemMySQLTolerations(),
 						},
 					},
@@ -209,11 +209,11 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemMySQLCustomResourceRequirements", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						MySQL: &appsv1alpha1.SystemMySQLSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						MySQL: &appsv1beta1.SystemMySQLSpec{
 							Resources: testSystemMySQLCustomResourceRequirements(),
 						},
 					},
@@ -227,12 +227,12 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemMySQLCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						MySQL: &appsv1alpha1.SystemMySQLSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						MySQL: &appsv1beta1.SystemMySQLSpec{
 							Resources: testSystemMySQLCustomResourceRequirements(),
 						},
 					},

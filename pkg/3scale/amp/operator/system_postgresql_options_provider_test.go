@@ -6,10 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
@@ -95,12 +96,12 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 	cases := []struct {
 		testName               string
 		systemDatabaseSecret   *v1.Secret
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func(*component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions
 	}{
 		{"Default", nil, basicApimanager, defaultSystemPostgreSQLOptions},
 		{"WithoutResourceRequirements", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				return apimanager
@@ -122,12 +123,12 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 			},
 		},
 		{"PVCSpecSet", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
-							PersistentVolumeClaimSpec: &appsv1alpha1.SystemPostgreSQLPVCSpec{},
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1beta1.SystemPostgreSQLSpec{
+							PersistentVolumeClaimSpec: &appsv1beta1.SystemPostgreSQLPVCSpec{},
 						},
 					},
 				}
@@ -139,15 +140,15 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 			},
 		},
 		{"PVCSettingsSet", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				tmpVolumeName := "myvolume"
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
-							PersistentVolumeClaimSpec: &appsv1alpha1.SystemPostgreSQLPVCSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1beta1.SystemPostgreSQLSpec{
+							PersistentVolumeClaimSpec: &appsv1beta1.SystemPostgreSQLPVCSpec{
 								StorageClassName: &customStorageClass,
-								Resources: &appsv1alpha1.PersistentVolumeClaimResources{
+								Resources: &appsv1beta1.PersistentVolumeClaimResources{
 									Requests: resource.MustParse("456Mi"),
 								},
 								VolumeName: &tmpVolumeName,
@@ -167,11 +168,11 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAffinity", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1beta1.SystemPostgreSQLSpec{
 							Affinity: testSystemPostgreSQLAffinity(),
 						},
 					},
@@ -185,11 +186,11 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithTolerations", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1beta1.SystemPostgreSQLSpec{
 							Tolerations: testSystemPostgreSQLTolerations(),
 						},
 					},
@@ -203,11 +204,11 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemPostgreSQLCustomResourceRequirements", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1beta1.SystemPostgreSQLSpec{
 							Resources: testSystemPostgreSQLCustomResourceRequirements(),
 						},
 					},
@@ -221,12 +222,12 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithPostgreSQLCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						PostgreSQL: &appsv1beta1.SystemPostgreSQLSpec{
 							Resources: testSystemPostgreSQLCustomResourceRequirements(),
 						},
 					},

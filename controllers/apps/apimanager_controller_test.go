@@ -6,9 +6,10 @@ import (
 	"io"
 	"time"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
+
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -113,15 +114,15 @@ var _ = Describe("APIManager controller", func() {
 
 			enableResourceRequirements := false
 			wildcardDomain := "test1.127.0.0.1.nip.io"
-			apimanager := &appsv1alpha1.APIManager{
-				Spec: appsv1alpha1.APIManagerSpec{
-					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+			apimanager := &appsv1beta1.APIManager{
+				Spec: appsv1beta1.APIManagerSpec{
+					APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 						WildcardDomain:              wildcardDomain,
 						ResourceRequirementsEnabled: &enableResourceRequirements,
 					},
-					System: &appsv1alpha1.SystemSpec{
-						FileStorageSpec: &appsv1alpha1.SystemFileStorageSpec{
-							S3: &appsv1alpha1.SystemS3Spec{
+					System: &appsv1beta1.SystemSpec{
+						FileStorageSpec: &appsv1beta1.SystemFileStorageSpec{
+							S3: &appsv1beta1.SystemS3Spec{
 								ConfigurationSecretRef: v1.LocalObjectReference{
 									Name: dummyS3Secret.Name,
 								},
@@ -257,7 +258,7 @@ func waitForAllAPIManagerStandardRoutes(namespace string, retryInterval, timeout
 	return nil
 }
 
-func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeout time.Duration, apimanager *appsv1alpha1.APIManager, w io.Writer) error {
+func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeout time.Duration, apimanager *appsv1beta1.APIManager, w io.Writer) error {
 	Eventually(func() bool {
 		err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: apimanager.Name, Namespace: apimanager.Namespace}, apimanager)
 		if err != nil {
@@ -265,7 +266,7 @@ func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeou
 			return false
 		}
 
-		return apimanager.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerAvailableConditionType)
+		return apimanager.Status.Conditions.IsTrueFor(appsv1beta1.APIManagerAvailableConditionType)
 	}, timeout, retryInterval).Should(BeTrue())
 
 	return nil

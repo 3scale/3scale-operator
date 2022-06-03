@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 
 	"github.com/google/go-cmp/cmp"
@@ -67,9 +67,9 @@ func getBackendRedisSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
 }
 
-func basicApimanagerTestHA() *appsv1alpha1.APIManager {
+func basicApimanagerTestHA() *appsv1beta1.APIManager {
 	apimanager := basicApimanager()
-	apimanager.Spec.HighAvailability = &appsv1alpha1.HighAvailabilitySpec{
+	apimanager.Spec.HighAvailability = &appsv1beta1.HighAvailabilitySpec{
 		Enabled: true,
 	}
 	return apimanager

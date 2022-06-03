@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appscommon "github.com/3scale/3scale-operator/apis/apps"
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	appsv1 "github.com/openshift/api/apps/v1"
 )
@@ -25,13 +25,13 @@ import (
 func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 	apimanagerName := "apimanagerName"
 	apimanagerNamespace := "examplenamespace"
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: apimanagerNamespace,
 		},
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: appsv1alpha1.GroupVersion.String(),
+			APIVersion: appsv1beta1.GroupVersion.String(),
 			Kind:       appscommon.APIManagerKind,
 		},
 	}
@@ -46,7 +46,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 			Namespace: apimanagerNamespace,
 			OwnerReferences: []metav1.OwnerReference{
 				metav1.OwnerReference{
-					APIVersion: appsv1alpha1.GroupVersion.String(),
+					APIVersion: appsv1beta1.GroupVersion.String(),
 					Kind:       appscommon.APIManagerKind,
 					Name:       apimanager.Name,
 				},
@@ -57,7 +57,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 	objs := []runtime.Object{zyncQue}
 
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +100,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 								Name:       "asecret",
 							},
 							metav1.OwnerReference{
-								APIVersion: appsv1alpha1.GroupVersion.String(),
+								APIVersion: appsv1beta1.GroupVersion.String(),
 								Kind:       appscommon.APIManagerKind,
 								Name:       apimanager.Name,
 							},

@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -104,7 +104,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func Redis(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.Redis, error) {
+func Redis(apimanager *appsv1beta1.APIManager, client client.Client) (*component.Redis, error) {
 	optsProvider := NewRedisOptionsProvider(apimanager, apimanager.Namespace, client)
 	opts, err := optsProvider.GetRedisOptions()
 	if err != nil {

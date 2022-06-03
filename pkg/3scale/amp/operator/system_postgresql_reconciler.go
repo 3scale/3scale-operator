@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -57,7 +57,7 @@ func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func SystemPostgreSQL(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.SystemPostgreSQL, error) {
+func SystemPostgreSQL(apimanager *appsv1beta1.APIManager, client client.Client) (*component.SystemPostgreSQL, error) {
 	optsProvider := NewSystemPostgresqlOptionsProvider(apimanager, apimanager.Namespace, client)
 	opts, err := optsProvider.GetSystemPostgreSQLOptions()
 	if err != nil {

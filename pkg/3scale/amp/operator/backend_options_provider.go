@@ -3,7 +3,7 @@ package operator
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -13,14 +13,14 @@ import (
 )
 
 type OperatorBackendOptionsProvider struct {
-	apimanager     *appsv1alpha1.APIManager
+	apimanager     *appsv1beta1.APIManager
 	namespace      string
 	client         client.Client
 	backendOptions *component.BackendOptions
 	secretSource   *helper.SecretSource
 }
 
-func NewOperatorBackendOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace string, client client.Client) *OperatorBackendOptionsProvider {
+func NewOperatorBackendOptionsProvider(apimanager *appsv1beta1.APIManager, namespace string, client client.Client) *OperatorBackendOptionsProvider {
 	return &OperatorBackendOptionsProvider{
 		apimanager:     apimanager,
 		namespace:      namespace,

@@ -1,17 +1,17 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 )
 
 type AmpImagesOptionsProvider struct {
-	apimanager       *appsv1alpha1.APIManager
+	apimanager       *appsv1beta1.APIManager
 	ampImagesOptions *component.AmpImagesOptions
 }
 
-func NewAmpImagesOptionsProvider(apimanager *appsv1alpha1.APIManager) *AmpImagesOptionsProvider {
+func NewAmpImagesOptionsProvider(apimanager *appsv1beta1.APIManager) *AmpImagesOptionsProvider {
 	return &AmpImagesOptionsProvider{
 		apimanager:       apimanager,
 		ampImagesOptions: component.NewAmpImagesOptions(),

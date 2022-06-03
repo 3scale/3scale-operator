@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -37,31 +37,31 @@ func TestNewBackendReconciler(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				WildcardDomain:               wildcardDomain,
 				TenantName:                   &tenantName,
 				ResourceRequirementsEnabled:  &trueValue,
 			},
-			Backend: &appsv1alpha1.BackendSpec{
-				ListenerSpec: &appsv1alpha1.BackendListenerSpec{Replicas: &oneValue},
-				WorkerSpec:   &appsv1alpha1.BackendWorkerSpec{Replicas: &oneValue},
-				CronSpec:     &appsv1alpha1.BackendCronSpec{Replicas: &oneValue},
+			Backend: &appsv1beta1.BackendSpec{
+				ListenerSpec: &appsv1beta1.BackendListenerSpec{Replicas: &oneValue},
+				WorkerSpec:   &appsv1beta1.BackendWorkerSpec{Replicas: &oneValue},
+				CronSpec:     &appsv1beta1.BackendCronSpec{Replicas: &oneValue},
 			},
-			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+			PodDisruptionBudget: &appsv1beta1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)

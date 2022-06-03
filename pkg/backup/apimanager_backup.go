@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -50,7 +50,7 @@ func (b *APIManagerBackup) Validate() error {
 	return nil
 }
 
-func (b *APIManagerBackup) APIManager() *appsv1alpha1.APIManager {
+func (b *APIManagerBackup) APIManager() *appsv1beta1.APIManager {
 	return b.options.APIManager
 }
 

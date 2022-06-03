@@ -3,7 +3,7 @@ package prometheusrules
 import (
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 )
 
@@ -23,6 +23,6 @@ func (s *KubeStateMetricsPrometheusRuleFactory) Type() string {
 }
 
 func (s *KubeStateMetricsPrometheusRuleFactory) PrometheusRule(ns string) *monitoringv1.PrometheusRule {
-	appLabel := appsv1alpha1.Default3scaleAppLabel
+	appLabel := appsv1beta1.Default3scaleAppLabel
 	return component.KubeStateMetricsPrometheusRules(ns, appLabel)
 }

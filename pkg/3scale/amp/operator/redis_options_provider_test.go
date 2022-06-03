@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -176,12 +176,12 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 		testName               string
 		backendRedisSecret     *v1.Secret
 		systemRedisSecret      *v1.Secret
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func() *component.RedisOptions
 	}{
 		{"Default", nil, nil, basicApimanager, defaultRedisOptions},
 		{"WithoutResourceRequirements", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
 				return apimanager
@@ -194,9 +194,9 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"BackendRedisImageSet", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
+				apimanager.Spec.Backend = &appsv1beta1.BackendSpec{
 					RedisImage: &backendRedisImageURL,
 				}
 				return apimanager
@@ -208,9 +208,9 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"SystemRedisImageSet", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
 					RedisImage: &systemRedisImageURL,
 				}
 				return apimanager
@@ -222,28 +222,28 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"SystemRedisOnlyPVCSpecSet", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					RedisPersistentVolumeClaimSpec: &appsv1alpha1.SystemRedisPersistentVolumeClaimSpec{},
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					RedisPersistentVolumeClaimSpec: &appsv1beta1.SystemRedisPersistentVolumeClaimSpec{},
 				}
 				return apimanager
 			}, defaultRedisOptions,
 		},
 		{"BackendRedisOnlyPVCSpecSet", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
-					RedisPersistentVolumeClaimSpec: &appsv1alpha1.BackendRedisPersistentVolumeClaimSpec{},
+				apimanager.Spec.Backend = &appsv1beta1.BackendSpec{
+					RedisPersistentVolumeClaimSpec: &appsv1beta1.BackendRedisPersistentVolumeClaimSpec{},
 				}
 				return apimanager
 			}, defaultRedisOptions,
 		},
 		{"BackendRedisStoragePVCStorageClassSet", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
-					RedisPersistentVolumeClaimSpec: &appsv1alpha1.BackendRedisPersistentVolumeClaimSpec{
+				apimanager.Spec.Backend = &appsv1beta1.BackendSpec{
+					RedisPersistentVolumeClaimSpec: &appsv1beta1.BackendRedisPersistentVolumeClaimSpec{
 						StorageClassName: &backendRedisCustomStorageClass,
 					},
 				}
@@ -256,10 +256,10 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"SystemRedisStoragePVCStorageClassSet", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					RedisPersistentVolumeClaimSpec: &appsv1alpha1.SystemRedisPersistentVolumeClaimSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					RedisPersistentVolumeClaimSpec: &appsv1beta1.SystemRedisPersistentVolumeClaimSpec{
 						StorageClassName: &systemRedisCustomStorageClass,
 					},
 				}
@@ -272,7 +272,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAffinity", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.RedisAffinity = testSystemRedisAffinity()
 				apimanager.Spec.Backend.RedisAffinity = testBackendRedisAffinity()
@@ -286,7 +286,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithTolerations", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.RedisTolerations = testSystemRedisTolerations()
 				apimanager.Spec.Backend.RedisTolerations = testBackendRedisTolerations()
@@ -300,7 +300,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithBackendRedisCustomResourceRequirements", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.Backend.RedisResources = testBackendRedisCustomResourceRequirements()
 				return apimanager
@@ -312,7 +312,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithBackendRedisCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
 				apimanager.Spec.Backend.RedisResources = testBackendRedisCustomResourceRequirements()
@@ -326,7 +326,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemRedisCustomResourceRequirements", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.Backend.RedisResources = testSystemRedisCustomResourceRequirements()
 				return apimanager
@@ -338,7 +338,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemRedisCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &tmpFalseValue
 				apimanager.Spec.System.RedisResources = testSystemRedisCustomResourceRequirements()

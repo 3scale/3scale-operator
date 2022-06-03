@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -34,13 +34,13 @@ func TestAMPImagesReconciler(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				WildcardDomain:               wildcardDomain,
@@ -50,7 +50,7 @@ func TestAMPImagesReconciler(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -122,28 +122,28 @@ func TestAMPImagesReconcilerWithAllExternalDatabases(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				WildcardDomain:               wildcardDomain,
 			},
-			HighAvailability: &appsv1alpha1.HighAvailabilitySpec{
+			HighAvailability: &appsv1beta1.HighAvailabilitySpec{
 				Enabled:                     true,
 				ExternalZyncDatabaseEnabled: &trueValue,
 			},
-			ExternalComponents: appsv1alpha1.AllComponentsExternal(),
+			ExternalComponents: appsv1beta1.AllComponentsExternal(),
 		},
 	}
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)

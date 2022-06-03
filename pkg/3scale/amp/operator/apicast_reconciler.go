@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -496,7 +496,7 @@ func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *appsv1.
 	return updated
 }
 
-func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.Apicast, error) {
+func Apicast(apimanager *appsv1beta1.APIManager, cl client.Client) (*component.Apicast, error) {
 	optsProvider := NewApicastOptionsProvider(apimanager, cl)
 	opts, err := optsProvider.GetApicastOptions()
 	if err != nil {

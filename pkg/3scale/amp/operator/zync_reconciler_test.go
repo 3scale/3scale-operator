@@ -6,7 +6,7 @@ import (
 
 	"k8s.io/api/policy/v1beta1"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -42,30 +42,30 @@ func TestNewZyncReconciler(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				WildcardDomain:               wildcardDomain,
 				TenantName:                   &tenantName,
 				ResourceRequirementsEnabled:  &trueValue,
 			},
-			Zync: &appsv1alpha1.ZyncSpec{
-				AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &oneValue},
-				QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: &oneValue},
+			Zync: &appsv1beta1.ZyncSpec{
+				AppSpec: &appsv1beta1.ZyncAppSpec{Replicas: &oneValue},
+				QueSpec: &appsv1beta1.ZyncQueSpec{Replicas: &oneValue},
 			},
-			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+			PodDisruptionBudget: &appsv1beta1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -148,29 +148,29 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				WildcardDomain:               wildcardDomain,
 				TenantName:                   &tenantName,
 				ResourceRequirementsEnabled:  &trueValue,
 			},
-			Zync: &appsv1alpha1.ZyncSpec{
-				AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &oneValue},
-				QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: &oneValue},
+			Zync: &appsv1beta1.ZyncSpec{
+				AppSpec: &appsv1beta1.ZyncAppSpec{Replicas: &oneValue},
+				QueSpec: &appsv1beta1.ZyncQueSpec{Replicas: &oneValue},
 			},
-			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
-			HighAvailability: &appsv1alpha1.HighAvailabilitySpec{
+			PodDisruptionBudget: &appsv1beta1.PodDisruptionBudgetSpec{Enabled: true},
+			HighAvailability: &appsv1beta1.HighAvailabilitySpec{
 				Enabled:                     true,
 				ExternalZyncDatabaseEnabled: &trueValue,
 			},
-			ExternalComponents: appsv1alpha1.AllComponentsExternal(),
+			ExternalComponents: appsv1beta1.AllComponentsExternal(),
 		},
 	}
 
@@ -179,7 +179,7 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager, zyncExternalDatabaseSecret}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)

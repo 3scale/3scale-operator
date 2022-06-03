@@ -7,6 +7,7 @@ import (
 	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/backup"
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -245,7 +246,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileSystemStoragePVC() (reconcil
 	return reconcile.Result{}, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apimanager *appsv1alpha1.APIManager) (*restore.RuntimeAPIManagerRestoreInfo, error) {
+func (r *APIManagerRestoreLogicReconciler) runtimeRestoreInfoFromAPIManager(apimanager *appsv1beta1.APIManager) (*restore.RuntimeAPIManagerRestoreInfo, error) {
 	var storageClass *string
 	if apimanager.Spec.System != nil && apimanager.Spec.System.FileStorageSpec != nil && apimanager.Spec.System.FileStorageSpec.PVC != nil {
 		storageClass = apimanager.Spec.System.FileStorageSpec.PVC.StorageClassName
@@ -354,7 +355,7 @@ func (r *APIManagerRestoreLogicReconciler) sharedBackupSecret() (*v1.Secret, err
 	return secret, nil
 }
 
-func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*appsv1alpha1.APIManager, error) {
+func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*appsv1beta1.APIManager, error) {
 	secret, err := r.sharedBackupSecret()
 	if err != nil {
 		return nil, err
@@ -374,13 +375,13 @@ func (r *APIManagerRestoreLogicReconciler) apiManagerFromSharedBackupSecret() (*
 
 	serializedAPIManager := secret.Data[backup.APIManagerSerializedBackupFileName]
 
-	apimanagerRuntimeObj, _, err := deserializer.Decode(serializedAPIManager, nil, &appsv1alpha1.APIManager{})
+	apimanagerRuntimeObj, _, err := deserializer.Decode(serializedAPIManager, nil, &appsv1beta1.APIManager{})
 	if err != nil {
 		return nil, err
 	}
-	apimanager, ok := apimanagerRuntimeObj.(*appsv1alpha1.APIManager)
+	apimanager, ok := apimanagerRuntimeObj.(*appsv1beta1.APIManager)
 	if !ok {
-		return nil, fmt.Errorf("%T is not a *appsv1alpha1.APIManager", apimanagerRuntimeObj)
+		return nil, fmt.Errorf("%T is not a *appsv1beta1.APIManager", apimanagerRuntimeObj)
 	}
 
 	apimanager.Namespace = r.cr.Namespace
@@ -395,7 +396,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() (reconci
 	// are after the step that should set this status value
 	apiManagerToRestoreName := r.cr.Status.APIManagerToRestoreRef.Name
 
-	err := r.GetResource(types.NamespacedName{Name: apiManagerToRestoreName, Namespace: r.cr.Namespace}, &appsv1alpha1.APIManager{})
+	err := r.GetResource(types.NamespacedName{Name: apiManagerToRestoreName, Namespace: r.cr.Namespace}, &appsv1beta1.APIManager{})
 	if err != nil && !errors.IsNotFound(err) {
 		return reconcile.Result{}, err
 	}
@@ -409,7 +410,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreAPIManager() (reconci
 		return reconcile.Result{}, err
 	}
 
-	existing := &appsv1alpha1.APIManager{}
+	existing := &appsv1beta1.APIManager{}
 	err = r.ReconcileResource(existing, apimanager, reconcilers.CreateOnlyMutator)
 	return reconcile.Result{}, err
 }
@@ -442,7 +443,7 @@ func (r *APIManagerRestoreLogicReconciler) reconcileAPIManagerBackupSharedInSecr
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileWaitForAPIManagerReady() (reconcile.Result, error) {
-	existingAPIManager := &appsv1alpha1.APIManager{}
+	existingAPIManager := &appsv1beta1.APIManager{}
 	err := r.GetResource(types.NamespacedName{Name: r.cr.Status.APIManagerToRestoreRef.Name, Namespace: r.cr.Namespace}, existingAPIManager)
 	if err != nil {
 		if errors.IsNotFound(err) {

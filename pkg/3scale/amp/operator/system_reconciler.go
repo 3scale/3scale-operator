@@ -3,7 +3,7 @@ package operator
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -276,7 +276,7 @@ func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.
 	return update
 }
 
-func System(cr *appsv1alpha1.APIManager, client client.Client) (*component.System, error) {
+func System(cr *appsv1beta1.APIManager, client client.Client) (*component.System, error) {
 	optsProvider := NewSystemOptionsProvider(cr, cr.Namespace, client)
 	opts, err := optsProvider.GetSystemOptions()
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -40,26 +40,26 @@ func addExpectedMeteringLabels(src map[string]string, componentName string, comp
 	}
 }
 
-func basicApimanager() *appsv1alpha1.APIManager {
+func basicApimanager() *appsv1beta1.APIManager {
 	tmpAppLabel := appLabel
 	tmpTenantName := tenantName
 	tmpInsecureImportPolicy := insecureImportPolicy
 	tmpTrueValue := trueValue
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				WildcardDomain:               wildcardDomain,
 				AppLabel:                     &tmpAppLabel,
 				ImageStreamTagImportInsecure: &tmpInsecureImportPolicy,
 				TenantName:                   &tmpTenantName,
 				ResourceRequirementsEnabled:  &tmpTrueValue,
 			},
-			System: &appsv1alpha1.SystemSpec{},
+			System: &appsv1beta1.SystemSpec{},
 		},
 	}
 

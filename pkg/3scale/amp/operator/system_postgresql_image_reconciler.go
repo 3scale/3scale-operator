@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -32,7 +32,7 @@ func (r *SystemPostgreSQLImageReconciler) Reconcile() (reconcile.Result, error) 
 	return reconcile.Result{}, nil
 }
 
-func SystemPostgreSQLImage(apimanager *appsv1alpha1.APIManager) (*component.SystemPostgreSQLImage, error) {
+func SystemPostgreSQLImage(apimanager *appsv1beta1.APIManager) (*component.SystemPostgreSQLImage, error) {
 	optsProvider := NewSystemPostgreSQLImageOptionsProvider(apimanager)
 	opts, err := optsProvider.GetSystemPostgreSQLImageOptions()
 	if err != nil {

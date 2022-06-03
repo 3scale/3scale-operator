@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -69,12 +69,12 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 
 	cases := []struct {
 		testName               string
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func() *component.MemcachedOptions
 	}{
 		{"Default", basicApimanager, defaultMemcachedOptions},
 		{"WithoutResourceRequirements",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				return apimanager
@@ -86,7 +86,7 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAffinity",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.MemcachedAffinity = testMemcachedAffinity()
 				return apimanager
@@ -98,7 +98,7 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithTolerations",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.MemcachedTolerations = testMemcachedTolerations()
 				return apimanager
@@ -110,7 +110,7 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemMemcachedCustomResourceRequirements",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.System.MemcachedResources = testSystemMemcachedCustomResourceRequirements()
 				return apimanager
@@ -122,7 +122,7 @@ func TestMemcachedOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemMemcachedCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				apimanager.Spec.System.MemcachedResources = testSystemMemcachedCustomResourceRequirements()

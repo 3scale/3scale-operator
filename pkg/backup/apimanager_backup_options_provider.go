@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -71,18 +72,18 @@ func (a *APIManagerBackupOptionsProvider) pvcBackupOptions() (*APIManagerBackupP
 	return res, res.Validate()
 }
 
-func (a *APIManagerBackupOptionsProvider) apiManager() (*appsv1alpha1.APIManager, error) {
+func (a *APIManagerBackupOptionsProvider) apiManager() (*appsv1beta1.APIManager, error) {
 	return a.autodiscoveredAPIManager()
 }
 
-func (a *APIManagerBackupOptionsProvider) autodiscoveredAPIManager() (*appsv1alpha1.APIManager, error) {
-	resList := &appsv1alpha1.APIManagerList{}
+func (a *APIManagerBackupOptionsProvider) autodiscoveredAPIManager() (*appsv1beta1.APIManager, error) {
+	resList := &appsv1beta1.APIManagerList{}
 	err := a.Client.List(context.TODO(), resList, client.InNamespace(a.APIManagerBackupCR.Namespace))
 	if err != nil {
 		return nil, err
 	}
 
-	var res *appsv1alpha1.APIManager
+	var res *appsv1beta1.APIManager
 	if len(resList.Items) == 0 {
 		return nil, fmt.Errorf("No APIManagers found in namespace '%s'", a.APIManagerBackupCR.Namespace)
 	}

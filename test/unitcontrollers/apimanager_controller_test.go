@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
+	appscontrollers "github.com/3scale/3scale-operator/controllers/apps"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appscontrollers "github.com/3scale/3scale-operator/controllers/apps"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -33,13 +33,13 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				WildcardDomain: wildcardDomain,
 			},
 		},
@@ -50,7 +50,7 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatalf("Unable to add Apps scheme: (%v)", err)
@@ -104,7 +104,7 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		t.Fatal("reconcile did not finish end of reconciliation as expected. APIManager should have been reconciled at this point")
 	}
 
-	finalAPIManager := &appsv1alpha1.APIManager{}
+	finalAPIManager := &appsv1beta1.APIManager{}
 	err = r.Client().Get(context.TODO(), req.NamespacedName, finalAPIManager)
 	if err != nil {
 		t.Fatalf("get APIManager: (%v)", err)

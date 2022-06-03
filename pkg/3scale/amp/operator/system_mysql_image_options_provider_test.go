@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/google/go-cmp/cmp"
@@ -28,16 +28,16 @@ func TestGetSystemMySQLImageOptions(t *testing.T) {
 	tmpImageURL := mysqlImage
 	cases := []struct {
 		testName               string
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func() *component.SystemMySQLImageOptions
 	}{
 		{"Default", basicApimanager, defaultSystemMySQLImageOptions},
 		{"ImageSet",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-						MySQL: &appsv1alpha1.SystemMySQLSpec{
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{
+					DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+						MySQL: &appsv1beta1.SystemMySQLSpec{
 							Image: &tmpImageURL,
 						},
 					},

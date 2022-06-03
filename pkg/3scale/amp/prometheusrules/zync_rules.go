@@ -3,7 +3,7 @@ package prometheusrules
 import (
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 )
 
@@ -63,7 +63,7 @@ func zyncOptions(ns string) (*component.ZyncOptions, error) {
 
 func commonZyncLabels() map[string]string {
 	return map[string]string{
-		"app":                  appsv1alpha1.Default3scaleAppLabel,
+		"app":                  appsv1beta1.Default3scaleAppLabel,
 		"threescale_component": "zync",
 	}
 }

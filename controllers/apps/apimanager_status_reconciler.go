@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -23,11 +23,11 @@ import (
 
 type APIManagerStatusReconciler struct {
 	*reconcilers.BaseReconciler
-	apimanagerResource *appsv1alpha1.APIManager
+	apimanagerResource *appsv1beta1.APIManager
 	logger             logr.Logger
 }
 
-func NewAPIManagerStatusReconciler(b *reconcilers.BaseReconciler, apimanagerResource *appsv1alpha1.APIManager) *APIManagerStatusReconciler {
+func NewAPIManagerStatusReconciler(b *reconcilers.BaseReconciler, apimanagerResource *appsv1beta1.APIManager) *APIManagerStatusReconciler {
 	return &APIManagerStatusReconciler{
 		BaseReconciler:     b,
 		apimanagerResource: apimanagerResource,
@@ -65,8 +65,8 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManagerStatus, error) {
-	newStatus := &appsv1alpha1.APIManagerStatus{}
+func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1beta1.APIManagerStatus, error) {
+	newStatus := &appsv1beta1.APIManagerStatus{}
 
 	deployments, err := s.existingDeployments()
 	if err != nil {
@@ -87,12 +87,12 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 	return newStatus, nil
 }
 
-func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alpha1.APIManager) []string {
+func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1beta1.APIManager) []string {
 	var systemDatabaseType component.SystemDatabaseType
 	var externalRedisDatabases bool
 	var externalZyncDatabase bool
 
-	if instance.IsExternal(appsv1alpha1.SystemDatabase) {
+	if instance.IsExternal(appsv1beta1.SystemDatabase) {
 		systemDatabaseType = component.SystemDatabaseTypeExternal
 	} else {
 		if instance.IsSystemPostgreSQLEnabled() {
@@ -101,10 +101,10 @@ func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alp
 			systemDatabaseType = component.SystemDatabaseTypeInternalMySQL
 		}
 	}
-	if instance.IsExternal(appsv1alpha1.SystemRedis) {
+	if instance.IsExternal(appsv1beta1.SystemRedis) {
 		externalRedisDatabases = true
 	}
-	if instance.IsExternal(appsv1alpha1.ZyncDatabase) {
+	if instance.IsExternal(appsv1beta1.ZyncDatabase) {
 		externalZyncDatabase = true
 	}
 
@@ -170,7 +170,7 @@ func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeploy
 	}
 
 	newAvailableCondition := common.Condition{
-		Type:   appsv1alpha1.APIManagerAvailableConditionType,
+		Type:   appsv1beta1.APIManagerAvailableConditionType,
 		Status: v1.ConditionFalse,
 	}
 

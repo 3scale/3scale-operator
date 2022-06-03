@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -35,22 +35,22 @@ func TestSystemPostgreSQLReconcilerCreate(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				ResourceRequirementsEnabled:  &trueValue,
 				WildcardDomain:               wildcardDomain,
 				TenantName:                   &tenantName,
 			},
-			System: &appsv1alpha1.SystemSpec{
-				DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
-					PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
+			System: &appsv1beta1.SystemSpec{
+				DatabaseSpec: &appsv1beta1.SystemDatabaseSpec{
+					PostgreSQL: &appsv1beta1.SystemPostgreSQLSpec{
 						Image: &imageURL,
 					},
 				},
@@ -58,7 +58,7 @@ func TestSystemPostgreSQLReconcilerCreate(t *testing.T) {
 		},
 	}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := imagev1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)

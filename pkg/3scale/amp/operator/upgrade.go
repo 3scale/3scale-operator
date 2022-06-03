@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -21,11 +20,11 @@ import (
 
 type UpgradeApiManager struct {
 	*reconcilers.BaseReconciler
-	apiManager *appsv1alpha1.APIManager
+	apiManager *appsv1beta1.APIManager
 	logger     logr.Logger
 }
 
-func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *UpgradeApiManager {
+func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1beta1.APIManager) *UpgradeApiManager {
 	return &UpgradeApiManager{
 		BaseReconciler: b,
 		apiManager:     apiManager,
@@ -194,16 +193,16 @@ func (u *UpgradeApiManager) upgradeImages() (reconcile.Result, error) {
 
 	upgradeImages := sequentially(
 		when(
-			notExternal(v1alpha1.BackendRedis),
+			notExternal(appsv1beta1.BackendRedis),
 			(*UpgradeApiManager).upgradeBackendRedisImageStream,
 		),
 		when(
-			notExternal(v1alpha1.SystemRedis),
+			notExternal(appsv1beta1.SystemRedis),
 			(*UpgradeApiManager).upgradeSystemRedisImageStream,
 		),
 		when(
 
-			notExternal(v1alpha1.SystemDatabase),
+			notExternal(appsv1beta1.SystemDatabase),
 			(*UpgradeApiManager).upgradeSystemDatabaseImageStream,
 		),
 	)
@@ -249,15 +248,15 @@ func (u *UpgradeApiManager) upgradeDeploymentConfigs() (reconcile.Result, error)
 
 	upgradeDCs := sequentially(
 		when(
-			notExternal(v1alpha1.BackendRedis),
+			notExternal(appsv1beta1.BackendRedis),
 			(*UpgradeApiManager).upgradeBackendRedisDeploymentConfig,
 		),
 		when(
-			notExternal(v1alpha1.SystemRedis),
+			notExternal(appsv1beta1.SystemRedis),
 			(*UpgradeApiManager).upgradeSystemRedisDeploymentConfig,
 		),
 		when(
-			notExternal(v1alpha1.SystemDatabase),
+			notExternal(appsv1beta1.SystemDatabase),
 			(*UpgradeApiManager).upgradeSystemDatabaseDeploymentConfig,
 		),
 	)
@@ -329,7 +328,7 @@ func (u *UpgradeApiManager) upgradeZyncDeploymentConfigs() (reconcile.Result, er
 		return res, err
 	}
 
-	if !u.apiManager.IsExternal(v1alpha1.ZyncDatabase) {
+	if !u.apiManager.IsExternal(appsv1beta1.ZyncDatabase) {
 		res, err = u.upgradeDeploymentConfigImageChangeTrigger(zync.DatabaseDeploymentConfig())
 		if res.Requeue || err != nil {
 			return res, err
@@ -570,7 +569,7 @@ func (u *UpgradeApiManager) deleteMessageBusConfigurations() (reconcile.Result, 
 		return res, err
 	}
 
-	if !u.apiManager.IsExternal(appsv1alpha1.SystemRedis) {
+	if !u.apiManager.IsExternal(appsv1beta1.SystemRedis) {
 		res, err = u.deleteSystemRedisMessageBusSecretAttributes()
 		if res.Requeue || err != nil {
 			return res, err
@@ -818,15 +817,15 @@ func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error)
 		system.SphinxDeploymentConfig(),
 	}
 
-	if !u.apiManager.IsExternal(appsv1alpha1.SystemRedis) || !u.apiManager.IsExternal(appsv1alpha1.BackendRedis) {
+	if !u.apiManager.IsExternal(appsv1beta1.SystemRedis) || !u.apiManager.IsExternal(appsv1beta1.BackendRedis) {
 		redis, err := Redis(u.apiManager, u.Client())
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		if !u.apiManager.IsExternal(appsv1alpha1.SystemRedis) {
+		if !u.apiManager.IsExternal(appsv1beta1.SystemRedis) {
 			deploymentConfigs = append(deploymentConfigs, redis.SystemDeploymentConfig())
 		}
-		if !u.apiManager.IsExternal(appsv1alpha1.BackendRedis) {
+		if !u.apiManager.IsExternal(appsv1beta1.BackendRedis) {
 			deploymentConfigs = append(deploymentConfigs, redis.BackendDeploymentConfig())
 		}
 	}
@@ -847,7 +846,7 @@ func (u *UpgradeApiManager) upgradePodTemplateLabels() (reconcile.Result, error)
 		deploymentConfigs = append(deploymentConfigs, systemMySQL.DeploymentConfig())
 	}
 
-	if !u.apiManager.IsExternal(v1alpha1.ZyncDatabase) {
+	if !u.apiManager.IsExternal(appsv1beta1.ZyncDatabase) {
 		deploymentConfigs = append(deploymentConfigs, zync.DatabaseDeploymentConfig())
 	}
 
@@ -966,7 +965,7 @@ func when(condition func(*UpgradeApiManager) bool, fn upgradeDependencyFn) upgra
 	}
 }
 
-func notExternal(selector func(*v1alpha1.ExternalComponentsSpec) bool) func(*UpgradeApiManager) bool {
+func notExternal(selector func(*appsv1beta1.ExternalComponentsSpec) bool) func(*UpgradeApiManager) bool {
 	return func(u *UpgradeApiManager) bool {
 		return !u.apiManager.IsExternal(selector)
 	}

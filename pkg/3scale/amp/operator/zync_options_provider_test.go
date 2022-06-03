@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -184,22 +184,22 @@ func getZyncSecretExternalDatabase(namespace string) *v1.Secret {
 	return GetTestSecret(namespace, component.ZyncSecretName, data)
 }
 
-func basicApimanagerSpecTestZyncOptions() *appsv1alpha1.APIManager {
+func basicApimanagerSpecTestZyncOptions() *appsv1beta1.APIManager {
 	tmpZyncReplicas := zyncReplica
 	tmpZyncQueReplicas := zyncQueReplica
 
 	apimanager := basicApimanager()
-	apimanager.Spec.Zync = &appsv1alpha1.ZyncSpec{
-		AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &tmpZyncReplicas},
-		QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: &tmpZyncQueReplicas},
+	apimanager.Spec.Zync = &appsv1beta1.ZyncSpec{
+		AppSpec: &appsv1beta1.ZyncAppSpec{Replicas: &tmpZyncReplicas},
+		QueSpec: &appsv1beta1.ZyncQueSpec{Replicas: &tmpZyncQueReplicas},
 	}
 	return apimanager
 }
 
-func basicApimanagerWithExternalZyncDatabaseSpecTestZyncOptions() *appsv1alpha1.APIManager {
+func basicApimanagerWithExternalZyncDatabaseSpecTestZyncOptions() *appsv1beta1.APIManager {
 	trueVal := true
 	apimanager := basicApimanagerSpecTestZyncOptions()
-	apimanager.Spec.HighAvailability = &appsv1alpha1.HighAvailabilitySpec{
+	apimanager.Spec.HighAvailability = &appsv1beta1.HighAvailabilitySpec{
 		Enabled:                     true,
 		ExternalZyncDatabaseEnabled: &trueVal,
 	}
@@ -241,7 +241,7 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 	cases := []struct {
 		testName               string
 		zyncSecret             *v1.Secret
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func(*component.ZyncOptions) *component.ZyncOptions
 	}{
 		{"Default", nil, basicApimanagerSpecTestZyncOptions,
@@ -250,7 +250,7 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithoutResourceRequirements", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				return apimanager
@@ -284,7 +284,7 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAffinity", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.Zync.AppSpec.Affinity = testZyncAffinity()
 				apimanager.Spec.Zync.QueSpec.Affinity = testZyncQueAffinity()
@@ -300,7 +300,7 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithTolerations", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.Zync.AppSpec.Tolerations = testZyncTolerations()
 				apimanager.Spec.Zync.QueSpec.Tolerations = testZyncQueTolerations()
@@ -316,7 +316,7 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithZyncCustomResourceRequirements", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.Zync.AppSpec.Resources = testZyncCustomResourceRequirements()
 				apimanager.Spec.Zync.QueSpec.Resources = testQueZyncCustomResourceRequirements()
@@ -332,7 +332,7 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithZyncCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				apimanager.Spec.Zync.AppSpec.Resources = testZyncCustomResourceRequirements()
@@ -349,7 +349,7 @@ func TestGetZyncOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithoutResourceRequirements", nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestZyncOptions()
 				apimanager.Spec.ImagePullSecrets = testZyncQueSACustomImagePullSecrets()
 				return apimanager

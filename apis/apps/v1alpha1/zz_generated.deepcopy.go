@@ -426,11 +426,6 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 		*out = new(HighAvailabilitySpec)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ExternalComponents != nil {
-		in, out := &in.ExternalComponents, &out.ExternalComponents
-		*out = new(ExternalComponentsSpec)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.PodDisruptionBudget != nil {
 		in, out := &in.PodDisruptionBudget, &out.PodDisruptionBudget
 		*out = new(PodDisruptionBudgetSpec)

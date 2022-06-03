@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -37,7 +37,7 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func Memcached(apimanager *appsv1alpha1.APIManager) (*component.Memcached, error) {
+func Memcached(apimanager *appsv1beta1.APIManager) (*component.Memcached, error) {
 	optsProvider := NewMemcachedOptionsProvider(apimanager)
 	opts, err := optsProvider.GetMemcachedOptions()
 	if err != nil {

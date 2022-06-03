@@ -4,7 +4,7 @@ import (
 	"context"
 
 	appscommon "github.com/3scale/3scale-operator/apis/apps"
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/go-logr/logr"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -54,7 +54,7 @@ func (h *APIManagerRoutesEventMapper) getAPIManagerOwnerReconcileRequest(object 
 		// return a reconcile Request using the name from the OwnerReference and the
 		// Namespace from the object in the event
 		apimanagerKind := appscommon.APIManagerKind
-		apimanagerGroup := appsv1alpha1.GroupVersion.Group
+		apimanagerGroup := appsv1beta1.GroupVersion.Group
 		if ref.Kind == apimanagerKind && refGV.Group == apimanagerGroup {
 			h.Logger.V(2).Info("APIManager OwnerReference detected. Reenqueuing as APIManager event", "APIManager name", ref.Name, "APIManager namespace", object.GetNamespace())
 			// Match found - add a Request for the object referred to in the OwnerReference

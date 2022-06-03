@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -14,14 +14,14 @@ import (
 )
 
 type SystemPostgresqlOptionsProvider struct {
-	apimanager   *appsv1alpha1.APIManager
+	apimanager   *appsv1beta1.APIManager
 	namespace    string
 	client       client.Client
 	options      *component.SystemPostgreSQLOptions
 	secretSource *helper.SecretSource
 }
 
-func NewSystemPostgresqlOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace string, client client.Client) *SystemPostgresqlOptionsProvider {
+func NewSystemPostgresqlOptionsProvider(apimanager *appsv1beta1.APIManager, namespace string, client client.Client) *SystemPostgresqlOptionsProvider {
 	return &SystemPostgresqlOptionsProvider{
 		apimanager:   apimanager,
 		namespace:    namespace,

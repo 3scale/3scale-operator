@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -14,14 +14,14 @@ import (
 )
 
 type SystemOptionsProvider struct {
-	apimanager   *appsv1alpha1.APIManager
+	apimanager   *appsv1beta1.APIManager
 	namespace    string
 	client       client.Client
 	options      *component.SystemOptions
 	secretSource *helper.SecretSource
 }
 
-func NewSystemOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace string, client client.Client) *SystemOptionsProvider {
+func NewSystemOptionsProvider(apimanager *appsv1beta1.APIManager, namespace string, client client.Client) *SystemOptionsProvider {
 	return &SystemOptionsProvider{
 		apimanager:   apimanager,
 		namespace:    namespace,

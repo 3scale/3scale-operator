@@ -1,17 +1,17 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 )
 
 type SystemMysqlImageOptionsProvider struct {
-	apimanager        *appsv1alpha1.APIManager
+	apimanager        *appsv1beta1.APIManager
 	mysqlImageOptions *component.SystemMySQLImageOptions
 }
 
-func NewSystemMysqlImageOptionsProvider(apimanager *appsv1alpha1.APIManager) *SystemMysqlImageOptionsProvider {
+func NewSystemMysqlImageOptionsProvider(apimanager *appsv1beta1.APIManager) *SystemMysqlImageOptionsProvider {
 	return &SystemMysqlImageOptionsProvider{
 		apimanager:        apimanager,
 		mysqlImageOptions: component.NewSystemMySQLImageOptions(),

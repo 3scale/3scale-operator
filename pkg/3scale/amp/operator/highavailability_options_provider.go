@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -9,14 +9,14 @@ import (
 )
 
 type HighAvailabilityOptionsProvider struct {
-	apimanager   *appsv1alpha1.APIManager
+	apimanager   *appsv1beta1.APIManager
 	namespace    string
 	client       client.Client
 	options      *component.HighAvailabilityOptions
 	secretSource *helper.SecretSource
 }
 
-func NewHighAvailabilityOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace string, client client.Client) *HighAvailabilityOptionsProvider {
+func NewHighAvailabilityOptionsProvider(apimanager *appsv1beta1.APIManager, namespace string, client client.Client) *HighAvailabilityOptionsProvider {
 	return &HighAvailabilityOptionsProvider{
 		apimanager:   apimanager,
 		namespace:    namespace,

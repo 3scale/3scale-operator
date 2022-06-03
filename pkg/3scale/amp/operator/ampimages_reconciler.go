@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -48,7 +48,7 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
+	if !r.apiManager.IsExternal(appsv1beta1.ZyncDatabase) {
 		// zync db postresql IS
 		err = r.ReconcileImagestream(ampImages.ZyncDatabasePostgreSQLImageStream(), reconcilers.GenericImageStreamMutator)
 		if err != nil {
@@ -70,7 +70,7 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func AmpImages(apimanager *appsv1alpha1.APIManager) (*component.AmpImages, error) {
+func AmpImages(apimanager *appsv1beta1.APIManager) (*component.AmpImages, error) {
 	optsProvider := NewAmpImagesOptionsProvider(apimanager)
 	opts, err := optsProvider.GetAmpImagesOptions()
 	if err != nil {

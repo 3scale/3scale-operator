@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -68,7 +68,7 @@ func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func SystemMySQL(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.SystemMysql, error) {
+func SystemMySQL(apimanager *appsv1beta1.APIManager, client client.Client) (*component.SystemMysql, error) {
 	optsProvider := NewSystemMysqlOptionsProvider(apimanager, apimanager.Namespace, client)
 	opts, err := optsProvider.GetMysqlOptions()
 	if err != nil {

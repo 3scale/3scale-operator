@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -37,7 +37,7 @@ func TestHighAvailabilityReconciler(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager, backendRedisSecret, systemRedisSecret, systemDBSecret}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)

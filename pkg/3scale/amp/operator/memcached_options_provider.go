@@ -3,7 +3,7 @@ package operator
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -12,11 +12,11 @@ import (
 )
 
 type MemcachedOptionsProvider struct {
-	apimanager       *appsv1alpha1.APIManager
+	apimanager       *appsv1beta1.APIManager
 	memcachedOptions *component.MemcachedOptions
 }
 
-func NewMemcachedOptionsProvider(apimanager *appsv1alpha1.APIManager) *MemcachedOptionsProvider {
+func NewMemcachedOptionsProvider(apimanager *appsv1beta1.APIManager) *MemcachedOptionsProvider {
 	return &MemcachedOptionsProvider{
 		apimanager:       apimanager,
 		memcachedOptions: component.NewMemcachedOptions(),

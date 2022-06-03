@@ -1,17 +1,17 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 )
 
 type SystemPostgreSQLImageOptionsProvider struct {
-	apimanager *appsv1alpha1.APIManager
+	apimanager *appsv1beta1.APIManager
 	options    *component.SystemPostgreSQLImageOptions
 }
 
-func NewSystemPostgreSQLImageOptionsProvider(apimanager *appsv1alpha1.APIManager) *SystemPostgreSQLImageOptionsProvider {
+func NewSystemPostgreSQLImageOptionsProvider(apimanager *appsv1beta1.APIManager) *SystemPostgreSQLImageOptionsProvider {
 	return &SystemPostgreSQLImageOptionsProvider{
 		apimanager: apimanager,
 		options:    component.NewSystemPostgreSQLImageOptions(),

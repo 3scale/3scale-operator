@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/handlers"
@@ -47,6 +47,23 @@ type APIManagerReconciler struct {
 
 // blank assignment to verify that APIManagerReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &APIManagerReconciler{}
+
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagers/finalizers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,namespace=placeholder,resources=pods;services;services/finalizers;replicationcontrollers;endpoints;persistentvolumeclaims;events;configmaps;secrets;serviceaccounts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,namespace=placeholder,resources=deployments;daemonsets;replicasets;statefulsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,namespace=placeholder,resources=deployments/finalizers,verbs=update
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,namespace=placeholder,resources=roles;rolebindings,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=image.openshift.io,namespace=placeholder,resources=imagestreams;imagestreams/layers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=image.openshift.io,namespace=placeholder,resources=imagestreamtags,verbs=get;list;create;update;patch;delete
+// +kubebuilder:rbac:groups=route.openshift.io,namespace=placeholder,resources=routes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=route.openshift.io,namespace=placeholder,resources=routes/custom-host,verbs=create
+// +kubebuilder:rbac:groups=route.openshift.io,namespace=placeholder,resources=routes/status,verbs=get
+// +kubebuilder:rbac:groups=apps.openshift.io,namespace=placeholder,resources=deploymentconfigs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=policy,namespace=placeholder,resources=poddisruptionbudgets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=monitoring.coreos.com,namespace=placeholder,resources=podmonitors;servicemonitors;prometheusrules,verbs=get;list;watch;create;update;delete
+// +kubebuilder:rbac:groups=integreatly.org,namespace=placeholder,resources=grafanadashboards,verbs=get;list;watch;create;update;delete
 
 func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
@@ -80,8 +97,8 @@ func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return res, nil
 	}
 
-	if instance.Annotations[appsv1alpha1.OperatorVersionAnnotation] != version.Version {
-		logger.Info(fmt.Sprintf("Upgrade %s -> %s", instance.Annotations[appsv1alpha1.OperatorVersionAnnotation], version.Version))
+	if instance.Annotations[appsv1beta1.OperatorVersionAnnotation] != version.Version {
+		logger.Info(fmt.Sprintf("Upgrade %s -> %s", instance.Annotations[appsv1beta1.OperatorVersionAnnotation], version.Version))
 		// TODO add logic to check that only immediate consecutive installs
 		// are possible?
 		res, err := r.upgradeAPIManager(instance)
@@ -128,7 +145,7 @@ func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&appsv1alpha1.APIManager{}).
+		For(&appsv1beta1.APIManager{}).
 		Owns(&appsv1.DeploymentConfig{}).
 		Owns(&policyv1beta1.PodDisruptionBudget{}).
 		Watches(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestsFromMapFunc{
@@ -140,7 +157,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *APIManagerReconciler) validateCR(cr *appsv1alpha1.APIManager) error {
+func (r *APIManagerReconciler) validateCR(cr *appsv1beta1.APIManager) error {
 	fieldError := field.ErrorList{}
 	// internal validation
 	fieldError = append(fieldError, cr.Validate()...)
@@ -154,25 +171,25 @@ func (r *APIManagerReconciler) validateCR(cr *appsv1alpha1.APIManager) error {
 	return nil
 }
 
-func (r *APIManagerReconciler) updateVersionAnnotations(cr *appsv1alpha1.APIManager) error {
+func (r *APIManagerReconciler) updateVersionAnnotations(cr *appsv1beta1.APIManager) error {
 	if cr.Annotations == nil {
 		cr.Annotations = map[string]string{}
 	}
-	cr.Annotations[appsv1alpha1.ThreescaleVersionAnnotation] = product.ThreescaleRelease
-	cr.Annotations[appsv1alpha1.OperatorVersionAnnotation] = version.Version
+	cr.Annotations[appsv1beta1.ThreescaleVersionAnnotation] = product.ThreescaleRelease
+	cr.Annotations[appsv1beta1.OperatorVersionAnnotation] = version.Version
 	return r.Client().Update(context.TODO(), cr)
 }
 
-func (r *APIManagerReconciler) upgradeAPIManager(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+func (r *APIManagerReconciler) upgradeAPIManager(cr *appsv1beta1.APIManager) (reconcile.Result, error) {
 	// The object to instantiate would change in every release of the operator
 	// that upgrades the threescale version
 	upgradeAPIManager := operator.NewUpgradeApiManager(r.BaseReconciler, cr)
 	return upgradeAPIManager.Upgrade()
 }
 
-func (r *APIManagerReconciler) apiManagerInstance(namespacedName types.NamespacedName) (*appsv1alpha1.APIManager, error) {
+func (r *APIManagerReconciler) apiManagerInstance(namespacedName types.NamespacedName) (*appsv1beta1.APIManager, error) {
 	// Fetch the APIManager instance
-	instance := &appsv1alpha1.APIManager{}
+	instance := &appsv1beta1.APIManager{}
 
 	err := r.Client().Get(context.TODO(), namespacedName, instance)
 	if err != nil {
@@ -187,7 +204,7 @@ func (r *APIManagerReconciler) apiManagerInstance(namespacedName types.Namespace
 	return instance, nil
 }
 
-func (r *APIManagerReconciler) setAPIManagerDefaults(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+func (r *APIManagerReconciler) setAPIManagerDefaults(cr *appsv1beta1.APIManager) (reconcile.Result, error) {
 	updated := cr.UpdateExternalComponentsFromHighAvailability()
 
 	defaultsUpdated, err := cr.SetDefaults()
@@ -203,7 +220,7 @@ func (r *APIManagerReconciler) setAPIManagerDefaults(cr *appsv1alpha1.APIManager
 	return ctrl.Result{Requeue: updated}, err
 }
 
-func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1beta1.APIManager) (reconcile.Result, error) {
 	baseAPIManagerLogicReconciler := operator.NewBaseAPIManagerLogicReconciler(r.BaseReconciler, cr)
 	imageReconciler := operator.NewAMPImagesReconciler(baseAPIManagerLogicReconciler)
 	result, err := imageReconciler.Reconcile()
@@ -256,7 +273,7 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 	return ctrl.Result{}, nil
 }
 
-func (r *APIManagerReconciler) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+func (r *APIManagerReconciler) reconcileAPIManagerStatus(cr *appsv1beta1.APIManager) (reconcile.Result, error) {
 	statusReconciler := NewAPIManagerStatusReconciler(r.BaseReconciler, cr)
 	res, err := statusReconciler.Reconcile()
 	if err != nil {
@@ -266,7 +283,7 @@ func (r *APIManagerReconciler) reconcileAPIManagerStatus(cr *appsv1alpha1.APIMan
 	return res, nil
 }
 
-func (r *APIManagerReconciler) validateApicastTLSCertificates(cr *appsv1alpha1.APIManager) field.ErrorList {
+func (r *APIManagerReconciler) validateApicastTLSCertificates(cr *appsv1beta1.APIManager) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 
 	if cr.Spec.Apicast != nil && cr.Spec.Apicast.ProductionSpec != nil && cr.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil {
@@ -304,7 +321,7 @@ func (r *APIManagerReconciler) validateApicastTLSCertificates(cr *appsv1alpha1.A
 	return fieldErrors
 }
 
-func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) operator.DependencyReconciler {
+func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1beta1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) operator.DependencyReconciler {
 	// Helper type that contains the constructors for a dependency reconciler
 	// whether it's external or internal
 	type constructors struct {
@@ -314,7 +331,7 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 
 	// Helper function that instantiates a dependency reconciler depending
 	// on whether it's external or internal
-	selectReconciler := func(cs constructors, selectIsExternal func(*appsv1alpha1.ExternalComponentsSpec) bool) operator.DependencyReconciler {
+	selectReconciler := func(cs constructors, selectIsExternal func(*appsv1beta1.ExternalComponentsSpec) bool) operator.DependencyReconciler {
 		constructor := cs.Internal
 		if selectIsExternal(cr.Spec.ExternalComponents) {
 			constructor = cs.External
@@ -353,9 +370,9 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 	// Build the final reconciler composed by the chosen external/internal
 	// combination
 	result := []operator.DependencyReconciler{
-		selectReconciler(systemDatabaseConstructors, appsv1alpha1.SystemDatabase),
-		selectReconciler(systemRedisConstructors, appsv1alpha1.SystemRedis),
-		selectReconciler(backendRedisConstructors, appsv1alpha1.BackendRedis),
+		selectReconciler(systemDatabaseConstructors, appsv1beta1.SystemDatabase),
+		selectReconciler(systemRedisConstructors, appsv1beta1.SystemRedis),
+		selectReconciler(backendRedisConstructors, appsv1beta1.BackendRedis),
 	}
 
 	return &operator.CompositeDependencyReconciler{

@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	corev1 "k8s.io/api/core/v1"
@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func HighAvailability(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.HighAvailability, error) {
+func HighAvailability(apimanager *appsv1beta1.APIManager, client client.Client) (*component.HighAvailability, error) {
 	optsProvider := NewHighAvailabilityOptionsProvider(apimanager, apimanager.Namespace, client)
 	opts, err := optsProvider.GetHighAvailabilityOptions()
 	if err != nil {

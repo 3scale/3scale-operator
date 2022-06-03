@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -15,14 +15,14 @@ import (
 )
 
 type SystemMysqlOptionsProvider struct {
-	apimanager   *appsv1alpha1.APIManager
+	apimanager   *appsv1beta1.APIManager
 	namespace    string
 	client       client.Client
 	mysqlOptions *component.SystemMysqlOptions
 	secretSource *helper.SecretSource
 }
 
-func NewSystemMysqlOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace string, client client.Client) *SystemMysqlOptionsProvider {
+func NewSystemMysqlOptionsProvider(apimanager *appsv1beta1.APIManager, namespace string, client client.Client) *SystemMysqlOptionsProvider {
 	return &SystemMysqlOptionsProvider{
 		apimanager:   apimanager,
 		namespace:    namespace,

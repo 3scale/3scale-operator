@@ -3,7 +3,7 @@ package operator
 import (
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -23,7 +23,7 @@ import (
 
 type BaseAPIManagerLogicReconciler struct {
 	*reconcilers.BaseReconciler
-	apiManager           *appsv1alpha1.APIManager
+	apiManager           *appsv1beta1.APIManager
 	logger               logr.Logger
 	crdAvailabilityCache *baseAPIManagerLogicReconcilerCRDAvailabilityCache
 }
@@ -35,7 +35,7 @@ type baseAPIManagerLogicReconcilerCRDAvailabilityCache struct {
 	serviceMonitorCRDAvailable   *bool
 }
 
-func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *BaseAPIManagerLogicReconciler {
+func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager *appsv1beta1.APIManager) *BaseAPIManagerLogicReconciler {
 	return &BaseAPIManagerLogicReconciler{
 		BaseReconciler:       b,
 		apiManager:           apiManager,

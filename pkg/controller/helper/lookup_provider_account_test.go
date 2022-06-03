@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 
 	logrtesting "github.com/go-logr/logr/testing"
@@ -65,13 +65,13 @@ func TestLookupProviderAccountLocal3scale(t *testing.T) {
 	tenantName := "testaccount"
 
 	s := scheme.Scheme
-	err := appsv1alpha1.AddToScheme(s)
+	err := appsv1beta1.AddToScheme(s)
 	ok(t, err)
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{Name: "somename", Namespace: ns},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				WildcardDomain: "example.com",
 				TenantName:     &tenantName,
 			},

@@ -12,14 +12,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 type ApicastOptionsProvider struct {
-	apimanager     *appsv1alpha1.APIManager
+	apimanager     *appsv1beta1.APIManager
 	apicastOptions *component.ApicastOptions
 	client         client.Client
 	secretSource   *helper.SecretSource
@@ -29,7 +29,7 @@ const (
 	APIcastEnvironmentCMAnnotation = "apps.3scale.net/env-configmap-hash"
 )
 
-func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {
+func NewApicastOptionsProvider(apimanager *appsv1beta1.APIManager, client client.Client) *ApicastOptionsProvider {
 	return &ApicastOptionsProvider{
 		apimanager:     apimanager,
 		apicastOptions: component.NewApicastOptions(),
@@ -58,7 +58,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.ProductionHTTPSVerifyDepth = a.apimanager.Spec.Apicast.ProductionSpec.HTTPSVerifyDepth
 	// when HTTPS certificate is provided and HTTPS port is not provided, assing default https port
 	if a.apimanager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil && a.apimanager.Spec.Apicast.ProductionSpec.HTTPSPort == nil {
-		tmpDefaultPort := appsv1alpha1.DefaultHTTPSPort
+		tmpDefaultPort := appsv1beta1.DefaultHTTPSPort
 		a.apicastOptions.ProductionHTTPSPort = &tmpDefaultPort
 	}
 	// when HTTPS port is provided and HTTPS Certificate secret is not provided,
@@ -72,7 +72,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.StagingHTTPSVerifyDepth = a.apimanager.Spec.Apicast.StagingSpec.HTTPSVerifyDepth
 	// when HTTPS certificate is provided and HTTPS port is not provided, assing default https port
 	if a.apimanager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil && a.apimanager.Spec.Apicast.StagingSpec.HTTPSPort == nil {
-		tmpDefaultPort := appsv1alpha1.DefaultHTTPSPort
+		tmpDefaultPort := appsv1beta1.DefaultHTTPSPort
 		a.apicastOptions.StagingHTTPSPort = &tmpDefaultPort
 	}
 	if a.apimanager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil {

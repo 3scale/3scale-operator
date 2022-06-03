@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/google/go-cmp/cmp"
@@ -54,7 +54,7 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 
 	cases := []struct {
 		name                   string
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func() *component.AmpImagesOptions
 	}{
 		{
@@ -62,9 +62,9 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 		},
 		{
 			"apicastImage",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.Apicast = &appsv1alpha1.ApicastSpec{Image: &tmpApicastImage}
+				apimanager.Spec.Apicast = &appsv1beta1.ApicastSpec{Image: &tmpApicastImage}
 				return apimanager
 			},
 			func() *component.AmpImagesOptions {
@@ -75,9 +75,9 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 		},
 		{
 			"backendImage",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{Image: &tmpBackendImage}
+				apimanager.Spec.Backend = &appsv1beta1.BackendSpec{Image: &tmpBackendImage}
 				return apimanager
 			},
 			func() *component.AmpImagesOptions {
@@ -88,9 +88,9 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 		},
 		{
 			"systemImage",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{Image: &tmpSystemImage}
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{Image: &tmpSystemImage}
 				return apimanager
 			},
 			func() *component.AmpImagesOptions {
@@ -101,9 +101,9 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 		},
 		{
 			"zyncImage",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.Zync = &appsv1alpha1.ZyncSpec{Image: &tmpZyncImage}
+				apimanager.Spec.Zync = &appsv1beta1.ZyncSpec{Image: &tmpZyncImage}
 				return apimanager
 			},
 			func() *component.AmpImagesOptions {
@@ -114,9 +114,9 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 		},
 		{
 			"zyncPostgresqlImage",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.Zync = &appsv1alpha1.ZyncSpec{PostgreSQLImage: &tmpZyncPostgresqlImage}
+				apimanager.Spec.Zync = &appsv1beta1.ZyncSpec{PostgreSQLImage: &tmpZyncPostgresqlImage}
 				return apimanager
 			},
 			func() *component.AmpImagesOptions {
@@ -127,9 +127,9 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 		},
 		{
 			"systemMemcachedImage",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{MemcachedImage: &tmpSystemMemcachedImage}
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{MemcachedImage: &tmpSystemMemcachedImage}
 				return apimanager
 			},
 			func() *component.AmpImagesOptions {
@@ -140,9 +140,9 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 		},
 		{
 			"custom image pull secrets",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System = &appsv1alpha1.SystemSpec{MemcachedImage: &tmpSystemMemcachedImage}
+				apimanager.Spec.System = &appsv1beta1.SystemSpec{MemcachedImage: &tmpSystemMemcachedImage}
 				apimanager.Spec.ImagePullSecrets = testAmpImagesCustomImagePullSecrets()
 				return apimanager
 			},

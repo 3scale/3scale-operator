@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -101,7 +101,7 @@ func providerAccountFromDefaultSecretSource(cl client.Client, ns string, provide
 func providerAccountFromLocal3scaleSource(cl client.Client, ns string, providerAccountRef *corev1.LocalObjectReference, logger logr.Logger) (*ProviderAccount, error) {
 	// Read credentials and tenant url for default provider account of 3scale
 	listOps := []client.ListOption{client.InNamespace(ns)}
-	apimanagerList := &appsv1alpha1.APIManagerList{}
+	apimanagerList := &appsv1beta1.APIManagerList{}
 	err := cl.List(context.TODO(), apimanagerList, listOps...)
 	if err != nil {
 		return nil, fmt.Errorf("providerAccountFromLocal3scaleSource: %w", err)

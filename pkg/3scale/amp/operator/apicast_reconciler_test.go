@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
@@ -40,37 +40,37 @@ func TestApicastReconciler(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				WildcardDomain:               wildcardDomain,
 				TenantName:                   &tenantName,
 				ResourceRequirementsEnabled:  &trueValue,
 			},
-			Apicast: &appsv1alpha1.ApicastSpec{
+			Apicast: &appsv1beta1.ApicastSpec{
 				ApicastManagementAPI: &apicastManagementAPI,
 				OpenSSLVerify:        &trueValue,
 				IncludeResponseCodes: &trueValue,
-				StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+				StagingSpec: &appsv1beta1.ApicastStagingSpec{
 					Replicas: &oneValue,
 				},
-				ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+				ProductionSpec: &appsv1beta1.ApicastProductionSpec{
 					Replicas: &oneValue,
 				},
 			},
-			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+			PodDisruptionBudget: &appsv1beta1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -162,29 +162,29 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				WildcardDomain:               wildcardDomain,
 				TenantName:                   &tenantName,
 				ResourceRequirementsEnabled:  &trueValue,
 			},
-			Apicast: &appsv1alpha1.ApicastSpec{
+			Apicast: &appsv1beta1.ApicastSpec{
 				ApicastManagementAPI: &apicastManagementAPI,
 				OpenSSLVerify:        &trueValue,
 				IncludeResponseCodes: &trueValue,
-				StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+				StagingSpec: &appsv1beta1.ApicastStagingSpec{
 					Replicas: &oneValue,
 				},
-				ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+				ProductionSpec: &appsv1beta1.ApicastProductionSpec{
 					Replicas: &oneValue,
-					CustomPolicies: []appsv1alpha1.CustomPolicySpec{
+					CustomPolicies: []appsv1beta1.CustomPolicySpec{
 						{
 							Name:      p2CustomPolicy.Name,
 							Version:   p2CustomPolicy.Version,
@@ -234,7 +234,7 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager, existingProdDC, p2Secret}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -404,35 +404,35 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		Type: v1.SecretTypeOpaque,
 	}
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{
-			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+		Spec: appsv1beta1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1beta1.APIManagerCommonSpec{
 				AppLabel:                     &appLabel,
 				ImageStreamTagImportInsecure: &trueValue,
 				WildcardDomain:               wildcardDomain,
 				TenantName:                   &tenantName,
 				ResourceRequirementsEnabled:  &trueValue,
 			},
-			Apicast: &appsv1alpha1.ApicastSpec{
+			Apicast: &appsv1beta1.ApicastSpec{
 				ApicastManagementAPI: &apicastManagementAPI,
 				OpenSSLVerify:        &trueValue,
 				IncludeResponseCodes: &trueValue,
-				StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+				StagingSpec: &appsv1beta1.ApicastStagingSpec{
 					Replicas: &oneValue,
-					OpenTracing: &appsv1alpha1.APIcastOpenTracingSpec{
+					OpenTracing: &appsv1beta1.APIcastOpenTracingSpec{
 						Enabled: &falseValue,
 						TracingConfigSecretRef: &v1.LocalObjectReference{
 							Name: "anothersecret",
 						},
 					},
 				},
-				ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+				ProductionSpec: &appsv1beta1.ApicastProductionSpec{
 					Replicas: &oneValue,
-					OpenTracing: &appsv1alpha1.APIcastOpenTracingSpec{
+					OpenTracing: &appsv1beta1.APIcastOpenTracingSpec{
 						Enabled: &trueValue,
 						TracingConfigSecretRef: &v1.LocalObjectReference{
 							Name: desiredTracingConfig1SecretName,
@@ -446,7 +446,7 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager, existingProdDC, existingTc1Secret, desiredTc1Secret}
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)

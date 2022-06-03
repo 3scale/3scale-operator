@@ -5,16 +5,17 @@ import (
 	"reflect"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 const (
@@ -169,16 +170,16 @@ func getListenerSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.BackendSecretBackendListenerSecretName, data)
 }
 
-func basicApimanagerTestBackendOptions() *appsv1alpha1.APIManager {
+func basicApimanagerTestBackendOptions() *appsv1beta1.APIManager {
 	tmpListenerReplicaCount := listenerReplicaCount
 	tmpWorkerReplicaCount := workerReplicaCount
 	tmpCronReplicaCount := cronReplicaCount
 
 	apimanager := basicApimanager()
-	apimanager.Spec.Backend = &appsv1alpha1.BackendSpec{
-		ListenerSpec: &appsv1alpha1.BackendListenerSpec{Replicas: &tmpListenerReplicaCount},
-		WorkerSpec:   &appsv1alpha1.BackendWorkerSpec{Replicas: &tmpWorkerReplicaCount},
-		CronSpec:     &appsv1alpha1.BackendCronSpec{Replicas: &tmpCronReplicaCount},
+	apimanager.Spec.Backend = &appsv1beta1.BackendSpec{
+		ListenerSpec: &appsv1beta1.BackendListenerSpec{Replicas: &tmpListenerReplicaCount},
+		WorkerSpec:   &appsv1beta1.BackendWorkerSpec{Replicas: &tmpWorkerReplicaCount},
+		CronSpec:     &appsv1beta1.BackendCronSpec{Replicas: &tmpCronReplicaCount},
 	}
 	return apimanager
 }
@@ -218,7 +219,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 		testName               string
 		internalSecret         *v1.Secret
 		listenerSecret         *v1.Secret
-		apimanagerFactory      func() *appsv1alpha1.APIManager
+		apimanagerFactory      func() *appsv1beta1.APIManager
 		expectedOptionsFactory func(*component.BackendOptions) *component.BackendOptions
 	}{
 		{"Default", nil, nil, basicApimanagerTestBackendOptions,
@@ -227,7 +228,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithoutResourceRequirements", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				return apimanager
@@ -257,7 +258,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAffinity", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Affinity = testBackendListenerAffinity()
 				apimanager.Spec.Backend.WorkerSpec.Affinity = testBackendWorkerAffinity()
@@ -273,7 +274,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithTolerations", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Tolerations = testBackendListenerTolerations()
 				apimanager.Spec.Backend.WorkerSpec.Tolerations = testBackendWorkerTolerations()
@@ -290,7 +291,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithBackendCustomResourceRequirements", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.Backend.ListenerSpec.Resources = testBackendListenerCustomResourceRequirements()
 				apimanager.Spec.Backend.WorkerSpec.Resources = testBackendWorkerCustomResourceRequirements()
@@ -307,7 +308,7 @@ func TestGetBackendOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithBackendCustomResourceRequirementsAndGlobalResourceRequirementsDisabled", nil, nil,
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerTestBackendOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				apimanager.Spec.Backend.ListenerSpec.Resources = testBackendListenerCustomResourceRequirements()

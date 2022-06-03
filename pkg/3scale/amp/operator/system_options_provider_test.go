@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -220,20 +220,20 @@ func testSystemSphinxCustomResourceRequirements() *v1.ResourceRequirements {
 	}
 }
 
-func basicApimanagerSpecTestSystemOptions() *appsv1alpha1.APIManager {
+func basicApimanagerSpecTestSystemOptions() *appsv1beta1.APIManager {
 	tmpSystemAppReplicas := systemAppReplicas
 	tmpSystemSideKiqReplicas := systemSidekiqReplicas
 	tmpApicastRegistryURL := apicastRegistryURL
 
 	apimanager := basicApimanager()
-	apimanager.Spec.Apicast = &appsv1alpha1.ApicastSpec{RegistryURL: &tmpApicastRegistryURL}
-	apimanager.Spec.System = &appsv1alpha1.SystemSpec{
-		FileStorageSpec: &appsv1alpha1.SystemFileStorageSpec{},
-		AppSpec:         &appsv1alpha1.SystemAppSpec{Replicas: &tmpSystemAppReplicas},
-		SidekiqSpec:     &appsv1alpha1.SystemSidekiqSpec{Replicas: &tmpSystemSideKiqReplicas},
-		SphinxSpec:      &appsv1alpha1.SystemSphinxSpec{},
+	apimanager.Spec.Apicast = &appsv1beta1.ApicastSpec{RegistryURL: &tmpApicastRegistryURL}
+	apimanager.Spec.System = &appsv1beta1.SystemSpec{
+		FileStorageSpec: &appsv1beta1.SystemFileStorageSpec{},
+		AppSpec:         &appsv1beta1.SystemAppSpec{Replicas: &tmpSystemAppReplicas},
+		SidekiqSpec:     &appsv1beta1.SystemSidekiqSpec{Replicas: &tmpSystemSideKiqReplicas},
+		SphinxSpec:      &appsv1beta1.SystemSphinxSpec{},
 	}
-	apimanager.Spec.PodDisruptionBudget = &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true}
+	apimanager.Spec.PodDisruptionBudget = &appsv1beta1.PodDisruptionBudgetSpec{Enabled: true}
 	return apimanager
 }
 
@@ -382,7 +382,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 
 	cases := []struct {
 		testName                  string
-		apimanagerFactory         func() *appsv1alpha1.APIManager
+		apimanagerFactory         func() *appsv1beta1.APIManager
 		memcachedSecret           *v1.Secret
 		recaptchadSecret          *v1.Secret
 		eventHookSecret           *v1.Secret
@@ -399,7 +399,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithoutResourceRequirements",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				return apimanager
@@ -478,10 +478,10 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithS3",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.FileStorageSpec.PVC = nil
-				apimanager.Spec.System.FileStorageSpec.S3 = &appsv1alpha1.SystemS3Spec{
+				apimanager.Spec.System.FileStorageSpec.S3 = &appsv1beta1.SystemS3Spec{
 					ConfigurationSecretRef: v1.LocalObjectReference{Name: "myawsauth"},
 				}
 				return apimanager
@@ -497,13 +497,13 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithPVC",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				tmp := "mystorageclassname"
 				tmpVolumeName := "myvolume"
-				apimanager.Spec.System.FileStorageSpec.PVC = &appsv1alpha1.SystemPVCSpec{
+				apimanager.Spec.System.FileStorageSpec.PVC = &appsv1beta1.SystemPVCSpec{
 					StorageClassName: &tmp,
-					Resources: &appsv1alpha1.PersistentVolumeClaimResources{
+					Resources: &appsv1beta1.PersistentVolumeClaimResources{
 						Requests: resource.MustParse("456Mi"),
 					},
 					VolumeName: &tmpVolumeName,
@@ -522,7 +522,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithAffinity",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.AppSpec.Affinity = testSystemAppAffinity()
 				apimanager.Spec.System.SidekiqSpec.Affinity = testSystemSidekiqAffinity()
@@ -538,7 +538,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithTolerations",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.AppSpec.Tolerations = testSystemAppTolerations()
 				apimanager.Spec.System.SidekiqSpec.Tolerations = testSystemSidekiqTolerations()
@@ -554,7 +554,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemCustomResourceRequirements",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.AppSpec.MasterContainerResources = testSystemMasterContainerCustomResourceRequirements()
 				apimanager.Spec.System.AppSpec.ProviderContainerResources = testSystemProviderContainerCustomResourceRequirements()
@@ -574,7 +574,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithSystemCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.ResourceRequirementsEnabled = &falseValue
 				apimanager.Spec.System.AppSpec.MasterContainerResources = testSystemMasterContainerCustomResourceRequirements()
@@ -595,7 +595,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithCustomMailFromAddress",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				return apimanager
 			}, nil, nil, nil, nil, nil, nil, getSMTPSecretWithCustomSMTPAddress("customaddress@customdomain.com"),
@@ -607,7 +607,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			},
 		},
 		{"WithExplicitelyEmptyMailFromAddress",
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				return apimanager
 			}, nil, nil, nil, nil, nil, nil, getSMTPSecretWithCustomSMTPAddress(""),
@@ -623,7 +623,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 			// the corresponding SystemOption option is set as the empty string.
 			// Then in the component if the option is empty or nil the corresponding
 			// system environment variable will not be set
-			func() *appsv1alpha1.APIManager {
+			func() *appsv1beta1.APIManager {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 
 				return apimanager

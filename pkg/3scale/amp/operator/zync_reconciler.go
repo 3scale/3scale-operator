@@ -1,7 +1,7 @@
 package operator
 
 import (
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -61,7 +61,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
+	if !r.apiManager.IsExternal(appsv1beta1.ZyncDatabase) {
 		// Zync DB DC
 		zyncDBDCMutator := reconcilers.DeploymentConfigMutator(
 			reconcilers.DeploymentConfigContainerResourcesMutator,
@@ -126,7 +126,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func Zync(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.Zync, error) {
+func Zync(apimanager *appsv1beta1.APIManager, client client.Client) (*component.Zync, error) {
 	optsProvider := NewZyncOptionsProvider(apimanager, apimanager.Namespace, client)
 	opts, err := optsProvider.GetZyncOptions()
 	if err != nil {

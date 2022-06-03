@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	appsv1beta1 "github.com/3scale/3scale-operator/apis/apps/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -30,17 +30,17 @@ func TestBaseAPIManagerLogicReconcilerUpdateOwnerRef(t *testing.T) {
 
 	ctx := context.TODO()
 
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{},
+		Spec: appsv1beta1.APIManagerSpec{},
 	}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(appsv1beta1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
@@ -106,12 +106,12 @@ func TestBaseAPIManagerLogicReconcilerHasPrometheusRules(t *testing.T) {
 	)
 
 	ctx := context.TODO()
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{},
+		Spec: appsv1beta1.APIManagerSpec{},
 	}
 
 	// Register operator types with the runtime scheme.
@@ -208,12 +208,12 @@ func TestBaseAPIManagerLogicReconcilerHasGrafanaDashboards(t *testing.T) {
 	)
 
 	ctx := context.TODO()
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{},
+		Spec: appsv1beta1.APIManagerSpec{},
 	}
 
 	// Register operator types with the runtime scheme.
@@ -310,12 +310,12 @@ func TestBaseAPIManagerLogicReconcilerHasPodMonitors(t *testing.T) {
 	)
 
 	ctx := context.TODO()
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{},
+		Spec: appsv1beta1.APIManagerSpec{},
 	}
 
 	// Register operator types with the runtime scheme.
@@ -412,12 +412,12 @@ func TestBaseAPIManagerLogicReconcilerHasServiceMonitors(t *testing.T) {
 	)
 
 	ctx := context.TODO()
-	apimanager := &appsv1alpha1.APIManager{
+	apimanager := &appsv1beta1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
 			Namespace: namespace,
 		},
-		Spec: appsv1alpha1.APIManagerSpec{},
+		Spec: appsv1beta1.APIManagerSpec{},
 	}
 
 	// Register operator types with the runtime scheme.
