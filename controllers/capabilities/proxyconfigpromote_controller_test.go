@@ -13,7 +13,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
-	"net/url"
 	"reflect"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
@@ -175,6 +174,15 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 		if req.Method == "POST" && req.URL.Path == "/admin/api/services/3/proxy/configs/sandbox/1/promote.json" {
 			return &http.Response{
 				StatusCode: http.StatusCreated,
+				Header:     make(http.Header),
+				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
+			}
+		}
+
+		// PromoteProxyConfig production
+		if req.Method == "POST" && req.URL.Path == "/admin/api/services/3/proxy/configs/sandbox/0/promote.json" {
+			return &http.Response{
+				StatusCode: http.StatusNotFound,
 				Header:     make(http.Header),
 				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(proxyConfigElementProduction))),
 			}
@@ -362,21 +370,7 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClient(proxyJson, productList, failedProxyConfigElementSandbox, failedProxyConfigElementProduction)),
 				product:             getProductCR(),
 			},
-			want: &ProxyConfigPromoteStatusReconciler{
-				BaseReconciler:          getBaseReconciler(),
-				resource:                getProxyConfigPromoteCRProduction(),
-				state:                   "Failed",
-				productID:               "3",
-				latestProductionVersion: 0,
-				latestStagingVersion:    0,
-				reconcileError: &url.Error{
-					Op:  "Post",
-					URL: "https://3scale-admin.test.3scale.net/admin/api/services/3/proxy/configs/sandbox/0/promote.json",
-					Err: fmt.Errorf("http: RoundTripper implementation (controllers.RoundTripFunc) returned a nil *Response with a nil error"),
-				},
-				logger: nil,
-			},
-			wantErr: false,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -386,7 +380,7 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			}
 			got, err := r.proxyConfigPromoteReconciler(tt.args.proxyConfigPromote, tt.args.reqLogger, tt.args.threescaleAPIClient, tt.args.product)
 			if (err != nil) && tt.wantErr {
-				t.Errorf("proxyConfigPromoteReconciler() error = %v, wantErr %v", err, tt.wantErr)
+				t.Logf("proxyConfigPromoteReconciler() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got.state, tt.want.state) {
@@ -401,10 +395,6 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			if !reflect.DeepEqual(got.latestStagingVersion, tt.want.latestStagingVersion) {
 				t.Errorf("proxyConfigPromoteReconciler() got.latestStagingVersion = %v, want.latestStagingVersion %v", got.latestStagingVersion, tt.want.latestStagingVersion)
 			}
-			if !reflect.DeepEqual(got.reconcileError, tt.want.reconcileError) {
-				t.Errorf("proxyConfigPromoteReconciler() got.reconcileError = %v, want.reconcileError %v", got.reconcileError, tt.want.reconcileError)
-			}
-
 		})
 	}
 }
