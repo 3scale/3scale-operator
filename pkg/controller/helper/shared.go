@@ -2,13 +2,12 @@ package helper
 
 import (
 	"context"
+
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 /*
@@ -48,48 +47,6 @@ func RetrieveTenantCR(providerAccount *ProviderAccount, client k8sclient.Client,
 	}
 
 	return nil, nil
-}
-
-/*
-SetOwnersReference sets ownersReference in given object for Tenant
-- object
-- k8client
-- tenantCR
-*/
-func SetOwnersReference(object controllerutil.Object, client k8sclient.Client, tenantCR *capabilitiesv1alpha1.Tenant) (bool, error) {
-	return SetOwnersReferenceByObjectAndMeta(object, client, tenantCR.ObjectMeta, tenantCR.TypeMeta)
-}
-
-/*
-SetOwnersReferenceByObjectAndMeta sets ownersReference in given object using ObjectMeta and TypeMeta
-- object
-- k8client
-- objectMeta
-- typeMeta
-*/
-func SetOwnersReferenceByObjectAndMeta(object controllerutil.Object, client k8sclient.Client, objectMeta metav1.ObjectMeta, typeMeta metav1.TypeMeta) (bool, error) {
-	ownerReference := []metav1.OwnerReference{
-		{
-			APIVersion: typeMeta.APIVersion,
-			Kind:       typeMeta.Kind,
-			Name:       objectMeta.Name,
-			UID:        objectMeta.UID,
-		},
-	}
-
-	originalSize := len(object.GetOwnerReferences())
-	object.SetOwnerReferences(ownerReference)
-	newSize := len(object.GetOwnerReferences())
-
-	if originalSize != newSize {
-		err := client.Update(context.TODO(), object)
-		if err != nil {
-			return false, err
-		}
-		return true, nil
-	}
-
-	return false, nil
 }
 
 /*

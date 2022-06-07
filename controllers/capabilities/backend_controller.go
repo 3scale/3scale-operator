@@ -139,12 +139,16 @@ func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// If tenant CR is found, set it's ownersReference as ownerReference in the BackendCR CR
 	if tenantCR != nil {
-		updated, err := controllerhelper.SetOwnersReference(backend, r.Client(), tenantCR)
+		updated, err := r.EnsureOwnerReference(tenantCR, backend)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
 
 		if updated {
+			err := r.Client().Update(r.Context(), backend)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
 			return ctrl.Result{Requeue: true}, nil
 		}
 	}
