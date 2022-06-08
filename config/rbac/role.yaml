@@ -7,6 +7,26 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - proxyconfigpromotes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - proxyconfigpromotes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - config.openshift.io
   resources:
   - clusterversions
@@ -32,26 +52,6 @@ metadata:
   name: manager-role
   namespace: placeholder
 rules:
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - proxyconfigpromotes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - capabilities.3scale.net
-  resources:
-  - proxyconfigpromotes/status
-  verbs:
-  - get
-  - patch
-  - update
 - apiGroups:
   - apps
   resources:
