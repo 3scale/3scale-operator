@@ -380,7 +380,7 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			}
 			got, err := r.proxyConfigPromoteReconciler(tt.args.proxyConfigPromote, tt.args.reqLogger, tt.args.threescaleAPIClient, tt.args.product)
 			if (err != nil) && tt.wantErr {
-				t.Logf("proxyConfigPromoteReconciler() error = %v, wantErr %v", err, tt.wantErr)
+				t.Logf("proxyConfigPromoteReconciler(), wantErr %v", tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got.state, tt.want.state) {

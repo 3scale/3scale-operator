@@ -155,13 +155,6 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 			}
 			latestProductionVersion = productionElement.ProxyConfig.Version
 
-			//err = r.Client().Update(r.Context(), proxyConfigPromote)
-			//if err != nil {
-			//	statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", productIDStr, 0, 0, err)
-			//	reqLogger.WithValues("proxyConfigPromote CR has not been updated , CR name:", proxyConfigPromote.Name)
-			//	return statusReconciler, err
-			//}
-
 			statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Completed", productIDStr, latestProductionVersion, latestStagingVersion, err)
 			return statusReconciler, nil
 		}
@@ -198,12 +191,6 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 				return statusReconciler, err
 			}
 
-			//err = r.Client().Update(r.Context(), proxyConfigPromote)
-			//if err != nil {
-			//	statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", productIDStr, latestProductionVersion, latestStagingVersion, err)
-			//	reqLogger.WithValues("proxyConfigPromote CR has not been updated , CR name:", proxyConfigPromote.Name)
-			//	return statusReconciler, err
-			//}
 		}
 		statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Completed", productIDStr, latestProductionVersion, latestStagingVersion, nil)
 		return statusReconciler, nil
@@ -218,13 +205,4 @@ func (r *ProxyConfigPromoteReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&capabilitiesv1beta1.ProxyConfigPromote{}).
 		Complete(r)
-}
-
-func FindServiceBySystemName(list threescaleapi.ProductList, systemName string) int64 {
-	for idx := range list.Products {
-		if list.Products[idx].Element.SystemName == systemName {
-			return list.Products[idx].Element.ID
-		}
-	}
-	return -1
 }
