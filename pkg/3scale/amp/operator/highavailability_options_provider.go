@@ -27,24 +27,29 @@ func NewHighAvailabilityOptionsProvider(apimanager *appsv1alpha1.APIManager, nam
 }
 
 func (h *HighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*component.HighAvailabilityOptions, error) {
-	err := h.setBackendRedisOptions()
-	if err != nil {
-		return nil, err
+	setOptionsFns := []func() error{}
+
+	if h.apimanager.IsExternal(appsv1alpha1.BackendRedis) {
+		setOptionsFns = append(setOptionsFns, h.setBackendRedisOptions)
 	}
-	err = h.setSystemRedisOptions()
-	if err != nil {
-		return nil, err
+	if h.apimanager.IsExternal(appsv1alpha1.SystemRedis) {
+		setOptionsFns = append(setOptionsFns, h.setSystemRedisOptions)
 	}
-	err = h.setSystemDatabaseOptions()
-	if err != nil {
-		return nil, err
+	if h.apimanager.IsExternal(appsv1alpha1.SystemDatabase) {
+		setOptionsFns = append(setOptionsFns, h.setSystemDatabaseOptions)
+	}
+
+	for _, setOptions := range setOptionsFns {
+		if err := setOptions(); err != nil {
+			return nil, err
+		}
 	}
 
 	h.options.BackendRedisLabels = h.backendRedisLabels()
 	h.options.SystemRedisLabels = h.SystemDatabaseLabels()
 	h.options.SystemDatabaseLabels = h.SystemDatabaseLabels()
 
-	err = h.options.Validate()
+	err := h.options.Validate()
 	return h.options, err
 }
 
