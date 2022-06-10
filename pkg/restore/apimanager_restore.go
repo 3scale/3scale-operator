@@ -129,8 +129,7 @@ func (b *APIManagerRestore) RestoreSecretsAndConfigMapsFromPVCJob() *batchv1.Job
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
-					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					RestartPolicy: v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
 				},
 			},
 		},
@@ -185,8 +184,7 @@ func (b *APIManagerRestore) RestoreSystemFileStoragePVCFromPVCJob() *batchv1.Job
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
-					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					RestartPolicy: v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
 				},
 			},
 		},
@@ -239,8 +237,7 @@ func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
-					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					RestartPolicy: v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
 				},
 			},
 		},
@@ -287,8 +284,7 @@ func (b *APIManagerRestore) ZyncResyncDomainsJob() *batchv1.Job {
 							//Env: []v1.EnvVar{},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
-					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					RestartPolicy: v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
 				},
 			},
 		},
