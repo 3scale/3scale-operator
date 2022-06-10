@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"strings"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 const BackupPVCMountPath = "/backup"
 const SystemFileStoragePVCMountPath = "/system-filestorage-pvc"
 const APIManagerSerializedBackupFileName = "apimanager-backup.json"
+const ServiceAccountName = "apimanager-backup"
 
 var secretsToBackup map[string]string = map[string]string{
 	"SystemSMTP":          "system-smtp",
@@ -143,8 +146,8 @@ func (b *APIManagerBackup) BackupSecretsAndConfigMapsToPVCJob() *batchv1.Job {
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
 					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					ServiceAccountName: ServiceAccountName,
 				},
 			},
 		},
@@ -197,8 +200,8 @@ func (b *APIManagerBackup) BackupAPIManagerCustomResourceToPVCJob() *batchv1.Job
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
 					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					ServiceAccountName: ServiceAccountName,
 				},
 			},
 		},
@@ -253,8 +256,8 @@ func (b *APIManagerBackup) BackupSystemFileStoragePVCToPVCJob() *batchv1.Job {
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
 					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					ServiceAccountName: ServiceAccountName,
 				},
 			},
 		},
@@ -364,4 +367,83 @@ rsync -av ${SYSTEM_FILESTORAGE_PVC_DIR}/ ${PVC_BACKUP_FILESTORAGE_SUBDIR};
 		BackupPVCMountPath,
 		SystemFileStoragePVCMountPath,
 	)
+}
+
+func (b *APIManagerBackup) ServiceAccount() *v1.ServiceAccount {
+	return &v1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ServiceAccount",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ServiceAccountName,
+			Namespace: b.options.Namespace,
+		},
+		// TODO: instead of default one, read from the CR
+		ImagePullSecrets: []v1.LocalObjectReference{
+			v1.LocalObjectReference{
+				Name: "threescale-registry-auth",
+			},
+		},
+	}
+}
+
+func (b *APIManagerBackup) Role() *rbacv1.Role {
+	return &rbacv1.Role{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "Role",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "apimanager-backup",
+			Namespace: b.options.Namespace,
+		},
+		Rules: []rbacv1.PolicyRule{
+			rbacv1.PolicyRule{
+				APIGroups: []string{""},
+				Resources: []string{
+					"configmaps",
+					"secrets",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+				},
+			},
+			rbacv1.PolicyRule{
+				APIGroups: []string{appsv1alpha1.GroupVersion.Group},
+				Resources: []string{
+					"apimanagers",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+				},
+			},
+		},
+	}
+}
+
+func (b *APIManagerBackup) RoleBinding() *rbacv1.RoleBinding {
+	return &rbacv1.RoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "RoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "apimanager-backup",
+			Namespace: b.options.Namespace,
+		},
+		Subjects: []rbacv1.Subject{
+			rbacv1.Subject{
+				Kind: "ServiceAccount",
+				Name: ServiceAccountName,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     "apimanager-backup",
+		},
+	}
 }

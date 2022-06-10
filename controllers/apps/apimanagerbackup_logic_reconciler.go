@@ -3,19 +3,21 @@ package controllers
 import (
 	"time"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/backup"
-	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	kubeclock "k8s.io/apimachinery/pkg/util/clock"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/backup"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
 var apimanagerbackupClock kubeclock.Clock = &kubeclock.RealClock{}
@@ -148,6 +150,11 @@ func (r *APIManagerBackupLogicReconciler) reconcileBackupInPVCDestination() (rec
 	}
 
 	res, err = r.reconcileBackupDestinationPVCStatus()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = r.reconcileBackupJobsPermissions()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -348,5 +355,48 @@ func (r *APIManagerBackupLogicReconciler) reconcileJobsCleanup() (reconcile.Resu
 		return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
 	}
 
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsPermissions() (reconcile.Result, error) {
+	res, err := r.reconcileBackupJobsServiceAccount()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = r.reconcileBackupJobsRole()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = r.reconcileBackupJobsRoleBinding()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsServiceAccount() (reconcile.Result, error) {
+	err := r.ReconcileResource(&v1.ServiceAccount{}, r.apiManagerBackup.ServiceAccount(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsRole() (reconcile.Result, error) {
+	err := r.ReconcileResource(&rbacv1.Role{}, r.apiManagerBackup.Role(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerBackupLogicReconciler) reconcileBackupJobsRoleBinding() (reconcile.Result, error) {
+	err := r.ReconcileResource(&rbacv1.RoleBinding{}, r.apiManagerBackup.RoleBinding(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 	return reconcile.Result{}, nil
 }
