@@ -33,7 +33,7 @@ func NewSystemRedisDependencyReconciler(baseAPIManagerLogicReconciler *BaseAPIMa
 
 		DeploymentConfig:      (*component.Redis).SystemDeploymentConfig,
 		Service:               (*component.Redis).SystemService,
-		ConfigMap:             nil,
+		ConfigMap:             (*component.Redis).ConfigMap,
 		PersistentVolumeClaim: (*component.Redis).SystemPVC,
 		ImageStream:           (*component.Redis).SystemImageStream,
 		Secret:                (*component.Redis).SystemRedisSecret,
@@ -46,7 +46,7 @@ func NewBackendRedisDependencyReconciler(baseAPIManagerLogicReconciler *BaseAPIM
 
 		DeploymentConfig:      (*component.Redis).BackendDeploymentConfig,
 		Service:               (*component.Redis).BackendService,
-		ConfigMap:             (*component.Redis).BackendConfigMap,
+		ConfigMap:             (*component.Redis).ConfigMap,
 		PersistentVolumeClaim: (*component.Redis).BackendPVC,
 		ImageStream:           (*component.Redis).BackendImageStream,
 		Secret:                (*component.Redis).BackendRedisSecret,

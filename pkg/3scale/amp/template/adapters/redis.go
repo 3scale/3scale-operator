@@ -49,7 +49,7 @@ func (r *RedisAdapter) componentObjects(c *component.Redis) []common.KubernetesO
 func (r *RedisAdapter) backendRedisComponentObjects(c *component.Redis) []common.KubernetesObject {
 	dc := c.BackendDeploymentConfig()
 	bs := c.BackendService()
-	cm := c.BackendConfigMap()
+	cm := c.ConfigMap()
 	bpvc := c.BackendPVC()
 	bis := c.BackendImageStream()
 	backendRedisSecret := c.BackendRedisSecret()
