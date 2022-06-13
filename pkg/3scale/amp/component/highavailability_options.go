@@ -3,14 +3,14 @@ package component
 import "github.com/go-playground/validator/v10"
 
 type HighAvailabilityOptions struct {
-	BackendRedisQueuesEndpoint       string `validate:"required"`
+	BackendRedisQueuesEndpoint       string
 	BackendRedisQueuesSentinelHosts  string
 	BackendRedisQueuesSentinelRole   string
-	BackendRedisStorageEndpoint      string `validate:"required"`
+	BackendRedisStorageEndpoint      string
 	BackendRedisStorageSentinelHosts string
 	BackendRedisStorageSentinelRole  string
-	SystemDatabaseURL                string `validate:"required"`
-	SystemRedisURL                   string `validate:"required"`
+	SystemDatabaseURL                string
+	SystemRedisURL                   string
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
 	SystemRedisNamespace             string
