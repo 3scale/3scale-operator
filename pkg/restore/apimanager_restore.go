@@ -288,7 +288,6 @@ func (b *APIManagerRestore) ZyncResyncDomainsJob() *batchv1.Job {
 								"-e",
 								b.zyncResyncDomainsContainerArgs(),
 							},
-							//Env: []v1.EnvVar{},
 						},
 					},
 					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
