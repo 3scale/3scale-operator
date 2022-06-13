@@ -47,10 +47,11 @@ func (redis *Redis) buildDeploymentConfigObjectMeta() metav1.ObjectMeta {
 }
 
 const (
+	redisConfigVolumeName = "redis-config"
+
 	backendRedisObjectMetaName    = "backend-redis"
 	backendRedisDCSelectorName    = backendRedisObjectMetaName
 	backendRedisStorageVolumeName = "backend-redis-storage"
-	backendRedisConfigVolumeName  = "redis-config"
 	backendRedisConfigMapKey      = "redis.conf"
 	backendRedisContainerName     = "backend-redis"
 	backendRedisContainerCommand  = "/opt/rh/rh-redis5/root/usr/bin/redis-server"
@@ -130,11 +131,11 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 			},
 		},
 		v1.Volume{
-			Name: backendRedisConfigVolumeName,
+			Name: redisConfigVolumeName,
 			VolumeSource: v1.VolumeSource{
 				ConfigMap: &v1.ConfigMapVolumeSource{
 					LocalObjectReference: v1.LocalObjectReference{ //The name of the ConfigMap
-						Name: backendRedisConfigVolumeName,
+						Name: redisConfigVolumeName,
 					},
 					Items: []v1.KeyToPath{
 						v1.KeyToPath{
@@ -219,7 +220,7 @@ func (redis *Redis) buildPodContainerVolumeMounts() []v1.VolumeMount {
 			MountPath: "/var/lib/redis/data",
 		},
 		v1.VolumeMount{
-			Name:      backendRedisConfigVolumeName,
+			Name:      redisConfigVolumeName,
 			MountPath: "/etc/redis.d/",
 		},
 	}
@@ -270,7 +271,7 @@ func (redis *Redis) buildServiceSelector() map[string]string {
 	}
 }
 
-func (redis *Redis) BackendConfigMap() *v1.ConfigMap {
+func (redis *Redis) ConfigMap() *v1.ConfigMap {
 	return &v1.ConfigMap{
 		ObjectMeta: redis.buildConfigMapObjectMeta(),
 		TypeMeta:   redis.buildConfigMapTypeMeta(),
@@ -280,7 +281,7 @@ func (redis *Redis) BackendConfigMap() *v1.ConfigMap {
 
 func (redis *Redis) buildConfigMapObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name:   backendRedisConfigVolumeName,
+		Name:   redisConfigVolumeName,
 		Labels: redis.Options.SystemRedisLabels,
 	}
 }
