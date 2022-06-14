@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"reflect"
-	"sort"
 	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -18,6 +16,7 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sserializer "k8s.io/apimachinery/pkg/runtime/serializer"
@@ -130,6 +129,11 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromPVCSource() (reco
 	var res reconcile.Result
 	var err error
 
+	res, err = r.reconcileRestoreJobsPermissions()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
 	res, err = r.reconcileRestoreSecretsAndConfigMapsFromPVCJob()
 	if res.Requeue || err != nil {
 		return res, err
@@ -150,12 +154,12 @@ func (r *APIManagerRestoreLogicReconciler) reconcileRestoreFromPVCSource() (reco
 		return res, err
 	}
 
-	res, err = r.reconcileWaitForAPIManagerReady()
+	res, err = r.reconcileResynchronizeZyncDomains()
 	if res.Requeue || err != nil {
 		return res, err
 	}
 
-	res, err = r.reconcileResynchronizeZyncDomains()
+	res, err = r.reconcileWaitForAPIManagerReady()
 	if res.Requeue || err != nil {
 		return res, err
 	}
@@ -452,28 +456,8 @@ func (r *APIManagerRestoreLogicReconciler) reconcileWaitForAPIManagerReady() (re
 		return reconcile.Result{}, err
 	}
 
-	// External databases scenario assumed
-	expectedDeploymentNames := []string{
-		"apicast-production",
-		"apicast-staging",
-		"backend-listener",
-		"backend-worker",
-		"backend-cron",
-		"zync",
-		"zync-que",
-		"zync-database",
-		"system-app",
-		"system-sphinx",
-		"system-sidekiq",
-		"system-memcache",
-	}
-
-	existingReadyDeployments := existingAPIManager.Status.Deployments.Ready
-	sort.Slice(expectedDeploymentNames, func(i, j int) bool { return expectedDeploymentNames[i] < expectedDeploymentNames[j] })
-	sort.Slice(existingReadyDeployments, func(i, j int) bool { return existingReadyDeployments[i] < existingReadyDeployments[j] })
-
-	if !reflect.DeepEqual(existingReadyDeployments, expectedDeploymentNames) {
-		r.Logger().Info("all APIManager Deployments not ready. Waiting", "APIManager", existingAPIManager.Name, "expected-ready-deployments", expectedDeploymentNames, "ready-deployments", existingReadyDeployments)
+	if existingAPIManager.Status.Conditions.IsFalseFor(appsv1alpha1.APIManagerAvailableConditionType) {
+		r.Logger().Info("APIManager not ready. Waiting", "APIManager", existingAPIManager.Name)
 		return reconcile.Result{RequeueAfter: 5 * time.Second, Requeue: true}, nil
 	}
 
@@ -523,5 +507,48 @@ func (r *APIManagerRestoreLogicReconciler) reconcileJobsCleanup() (reconcile.Res
 		return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
 	}
 
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerRestoreLogicReconciler) reconcileRestoreJobsPermissions() (reconcile.Result, error) {
+	res, err := r.reconcileJobsServiceAccount()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = r.reconcileJobsRole()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	res, err = r.reconcileJobsRoleBinding()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+func (r *APIManagerRestoreLogicReconciler) reconcileJobsServiceAccount() (reconcile.Result, error) {
+	err := r.ReconcileResource(&v1.ServiceAccount{}, r.apiManagerRestore.ServiceAccount(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerRestoreLogicReconciler) reconcileJobsRole() (reconcile.Result, error) {
+	err := r.ReconcileResource(&rbacv1.Role{}, r.apiManagerRestore.Role(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerRestoreLogicReconciler) reconcileJobsRoleBinding() (reconcile.Result, error) {
+	err := r.ReconcileResource(&rbacv1.RoleBinding{}, r.apiManagerRestore.RoleBinding(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 	return reconcile.Result{}, nil
 }

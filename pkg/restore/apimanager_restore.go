@@ -4,14 +4,18 @@ import (
 	"fmt"
 	"strings"
 
+	batchv1 "k8s.io/api/batch/v1"
+	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/backup"
 	"github.com/3scale/3scale-operator/pkg/helper"
-	batchv1 "k8s.io/api/batch/v1"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const ServiceAccountName = "apimanager-restore"
 
 type APIManagerRestore struct {
 	options *APIManagerRestoreOptions
@@ -129,8 +133,8 @@ func (b *APIManagerRestore) RestoreSecretsAndConfigMapsFromPVCJob() *batchv1.Job
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
 					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					ServiceAccountName: ServiceAccountName,
 				},
 			},
 		},
@@ -185,8 +189,8 @@ func (b *APIManagerRestore) RestoreSystemFileStoragePVCFromPVCJob() *batchv1.Job
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
 					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					ServiceAccountName: ServiceAccountName,
 				},
 			},
 		},
@@ -239,8 +243,8 @@ func (b *APIManagerRestore) CreateAPIManagerSharedSecretJob() *batchv1.Job {
 							},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
 					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					ServiceAccountName: ServiceAccountName,
 				},
 			},
 		},
@@ -284,11 +288,10 @@ func (b *APIManagerRestore) ZyncResyncDomainsJob() *batchv1.Job {
 								"-e",
 								b.zyncResyncDomainsContainerArgs(),
 							},
-							//Env: []v1.EnvVar{},
 						},
 					},
-					ServiceAccountName: "3scale-operator",     // TODO create our own SA, Role and RoleBinding to do just what we need
 					RestartPolicy:      v1.RestartPolicyNever, // Only "Never" or "OnFailure" are accepted in Kubernetes Jobs
+					ServiceAccountName: ServiceAccountName,
 				},
 			},
 		},
@@ -401,4 +404,88 @@ func (b *APIManagerRestore) zyncResyncDomainsContainerArgs() string {
 	podname=$(echo -n $dcpods | awk '{print $1}')
 	oc exec ${podname} bash -- -c "bundle exec rake zync:resync:domains"
 `
+}
+
+func (b *APIManagerRestore) ServiceAccount() *v1.ServiceAccount {
+	return &v1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ServiceAccount",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ServiceAccountName,
+			Namespace: b.options.Namespace,
+		},
+		// TODO: instead of default one, read from the CR
+		ImagePullSecrets: []v1.LocalObjectReference{
+			v1.LocalObjectReference{
+				Name: "threescale-registry-auth",
+			},
+		},
+	}
+}
+
+func (b *APIManagerRestore) Role() *rbacv1.Role {
+	return &rbacv1.Role{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "Role",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "apimanager-restore",
+			Namespace: b.options.Namespace,
+		},
+		Rules: []rbacv1.PolicyRule{
+			rbacv1.PolicyRule{
+				APIGroups: []string{""},
+				Resources: []string{
+					"configmaps",
+					"secrets",
+					"pods",
+				},
+				Verbs: []string{
+					"create",
+					"delete",
+					"get",
+					"list",
+					"patch",
+					"update",
+					"watch",
+				},
+			},
+			rbacv1.PolicyRule{
+				APIGroups: []string{""},
+				Resources: []string{
+					"pods/exec",
+				},
+				Verbs: []string{
+					"create",
+				},
+			},
+		},
+	}
+}
+
+func (b *APIManagerRestore) RoleBinding() *rbacv1.RoleBinding {
+	return &rbacv1.RoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "RoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "apimanager-restore",
+			Namespace: b.options.Namespace,
+		},
+		Subjects: []rbacv1.Subject{
+			rbacv1.Subject{
+				Kind: "ServiceAccount",
+				Name: ServiceAccountName,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     "apimanager-restore",
+		},
+	}
 }
