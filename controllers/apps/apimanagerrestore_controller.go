@@ -20,10 +20,13 @@ import (
 	"context"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/restore"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 // APIManagerRestoreReconciler reconciles a APIManagerRestore object
@@ -39,11 +42,80 @@ type APIManagerRestoreReconciler struct {
 
 func (r *APIManagerRestoreReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Logger().WithValues("apimanagerrestore", req.NamespacedName)
+	logger := r.Logger().WithValues("apimanagerrestore", req.NamespacedName)
 
-	// your logic here
+	// Fetch the APIManagerRestore instance
+	instance, err := r.getAPIManagerRestoreCR(req)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("APIManagerRestore not found")
+			return reconcile.Result{}, nil
+		}
+		r.Logger().Error(err, "Error getting APIManagerRestore")
+		return reconcile.Result{}, err
+	}
+
+	res, err := r.setAPIManagerRestoreDefaults(instance)
+	if err != nil {
+		logger.Error(err, "Error")
+		return reconcile.Result{}, err
+	}
+	if res.Requeue {
+		logger.Info("Defaults set for APIManagerRestore resource")
+		return res, nil
+	}
+
+	// TODO prepare / implement something related to version annotations or upgrade?
+
+	apiManagerRestoreLogicReconciler, err := r.apiManagerRestoreLogicReconciler(instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	res, err = apiManagerRestoreLogicReconciler.Reconcile()
+	if err != nil {
+		logger.Error(err, "Error during reconciliation")
+		return res, err
+	}
+	if res.Requeue {
+		logger.Info("Reconciling not finished. Requeueing.")
+		return res, nil
+	}
+
+	logger.Info("Reconciliation finished")
 
 	return ctrl.Result{}, nil
+}
+
+func (r *APIManagerRestoreReconciler) getAPIManagerRestoreCR(request ctrl.Request) (*appsv1alpha1.APIManagerRestore, error) {
+	instance := appsv1alpha1.APIManagerRestore{}
+	err := r.Client().Get(context.TODO(), request.NamespacedName, &instance)
+	return &instance, err
+}
+
+func (r *APIManagerRestoreReconciler) setAPIManagerRestoreDefaults(cr *appsv1alpha1.APIManagerRestore) (ctrl.Result, error) {
+	changed, err := cr.SetDefaults() // TODO check where to put this
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if changed {
+		err = r.Client().Update(context.TODO(), cr)
+	}
+
+	return ctrl.Result{Requeue: changed}, err
+}
+
+func (r *APIManagerRestoreReconciler) apiManagerRestoreLogicReconciler(cr *appsv1alpha1.APIManagerRestore) (*APIManagerRestoreLogicReconciler, error) {
+	apiManagerRestoreOptionsProvider := restore.NewAPIManagerRestoreOptionsProvider(cr, r.BaseReconciler.Client())
+	options, err := apiManagerRestoreOptionsProvider.Options()
+	if err != nil {
+		return nil, err
+	}
+
+	apiManagerRestore := restore.NewAPIManagerRestore(options)
+	return NewAPIManagerRestoreLogicReconciler(r.BaseReconciler, cr, apiManagerRestore), nil
+
 }
 
 func (r *APIManagerRestoreReconciler) SetupWithManager(mgr ctrl.Manager) error {
