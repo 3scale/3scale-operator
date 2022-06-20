@@ -167,6 +167,17 @@ metadata:
           "spec": {
             "name": "OperatedProduct 1"
           }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "ProxyConfigPromote",
+          "metadata": {
+            "name": "proxyconfigpromote-sample"
+          },
+          "spec": {
+            "ProductCRName": "product1-sample",
+            "Production": true
+          }
         }
       ]
     capabilities: Deep Insights
@@ -268,6 +279,11 @@ spec:
       kind: Product
       name: products.capabilities.3scale.net
       version: v1beta1
+    - description: ProxyConfigPromote is the Schema for the proxyconfigpromotes API
+      displayName: Proxy Config Promote
+      kind: ProxyConfigPromote
+      name: proxyconfigpromotes.capabilities.3scale.net
+      version: v1beta1
     - description: Tenant is the Schema for the tenants API
       displayName: Tenant
       kind: Tenant
@@ -311,6 +327,26 @@ spec:
     spec:
       clusterPermissions:
       - rules:
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - proxyconfigpromotes
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - proxyconfigpromotes/status
+          verbs:
+          - get
+          - patch
+          - update
         - apiGroups:
           - config.openshift.io
           resources:

@@ -422,9 +422,12 @@ jobs:
   run-unit-tests:
     docker:
       - image: circleci/golang:1.13.7
+    resource_class: large
     steps:
       - unit-tests
-
+      - run:
+          command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes
+          when: always
   generator:
     docker:
       - image: circleci/golang:1.13.7

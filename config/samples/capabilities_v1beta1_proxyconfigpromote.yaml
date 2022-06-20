@@ -1,0 +1,9 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ProxyConfigPromote
+metadata:
+  name: proxyconfigpromote-sample
+spec:
+  ProductCRName: product1-sample
+  Production: true
+
+

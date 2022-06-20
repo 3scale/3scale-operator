@@ -107,6 +107,11 @@ spec:
       kind: DeveloperUser
       name: developerusers.capabilities.3scale.net
       version: v1beta1
+    - description: ProxyConfigPromote is the Schema for the proxyconfigpromotes API
+      displayName: Proxy Config Promote
+      kind: ProxyConfigPromote
+      name: proxyconfigpromotes.capabilities.3scale.net
+      version: v1beta1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 
