@@ -107,9 +107,6 @@ Default configuration option is suitable for PoC or evaluation by a customer.
 
 One, many or all of the default configuration options can be overridden with specific field values in
 the [*APIManager*](apimanager-reference.md) custom resource.
-The 3scale operator allows all available combinations whereas templates only fixed deployment profiles.
-For instance, the operator allows you to deploy 3scale in evaluation mode and external databases mode.
-Templates do not allow this specific deployment configuration. There are templates available only for the most common configuration options.
 
 #### Evaluation Installation
 Containers will not have [k8s resources limits and requests](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) specified.

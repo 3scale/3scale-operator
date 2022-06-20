@@ -8,10 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var (
@@ -47,35 +44,6 @@ func SetURLDefaultPort(rawurl string) string {
 
 	portNum := PortFromURL(urlObj)
 	return fmt.Sprintf("%s:%d", urlObj.String(), portNum)
-}
-
-// NOTE: remove when templates are gone
-func WrapRawExtensions(objects []common.KubernetesObject) []runtime.RawExtension {
-	var rawExtensions []runtime.RawExtension
-	for index := range objects {
-		rawExtensions = append(rawExtensions, WrapRawExtension(objects[index]))
-	}
-	return rawExtensions
-}
-
-// NOTE: remove when templates are gone
-func WrapRawExtension(object runtime.Object) runtime.RawExtension {
-	return runtime.RawExtension{Object: object}
-}
-
-// NOTE: remove when templates are gone
-func UnwrapRawExtensions(rawExts []runtime.RawExtension) []common.KubernetesObject {
-	var objects []common.KubernetesObject
-	for index := range rawExts {
-		rawObject := rawExts[index].Object
-		obj, ok := rawObject.(common.KubernetesObject)
-		if ok {
-			objects = append(objects, obj)
-		} else {
-			panic(fmt.Sprintf("Expected RawExtension to wrap a KubernetesObject, but instead found %v", rawObject))
-		}
-	}
-	return objects
 }
 
 // CmpResources returns true if the resource requirements a is equal to b,
