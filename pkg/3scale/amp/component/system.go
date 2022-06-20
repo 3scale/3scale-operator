@@ -166,8 +166,6 @@ func (system *System) buildSystemSphinxEnv() []v1.EnvVar {
 		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", "0.0.0.0"),
 		helper.EnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "db/sphinx/production.conf"),
 		helper.EnvVarFromValue("THINKING_SPHINX_PID_FILE", "db/sphinx/searchd.pid"),
-		helper.EnvVarFromValue("DELTA_INDEX_INTERVAL", "5"),
-		helper.EnvVarFromValue("FULL_REINDEX_INTERVAL", "60"),
 	)
 	result = append(result, system.SystemRedisEnvVars()...)
 	return result
