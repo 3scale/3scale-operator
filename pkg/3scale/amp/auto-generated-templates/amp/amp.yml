@@ -3090,6 +3090,8 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-database
+          - name: SECRET_KEY_BASE
+            value: rails/32947
           - name: THINKING_SPHINX_ADDRESS
             value: 0.0.0.0
           - name: THINKING_SPHINX_CONFIGURATION_FILE
