@@ -4,6 +4,81 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2022-06-14
+
+### Added
+
+- Cluster scope install mode [#713](https://github.com/3scale/3scale-operator/pull/713)
+- Tenant CRD: delete tenant [#715](https://github.com/3scale/3scale-operator/pull/715)
+- APIManager CRD: reconcile apicast environment vars [#720](https://github.com/3scale/3scale-operator/pull/720)
+- Tenant CRD: store access token instead of the provider key [#725](https://github.com/3scale/3scale-operator/pull/725)
+- APIManager CRD: upgrade mysql to 8 [#682](https://github.com/3scale/3scale-operator/pull/682)
+- Product CRD: delete product [#723](https://github.com/3scale/3scale-operator/pull/723)
+- Backend CRD: delete backend [#723](https://github.com/3scale/3scale-operator/pull/723)
+- Tenant ownership to products and backends [#727](https://github.com/3scale/3scale-operator/pull/727)
+- APIManager CRD: external components optional [#733](https://github.com/3scale/3scale-operator/pull/733) [#737](https://github.com/3scale/3scale-operator/pull/737)
+
+### Changed
+
+- APIManager CRD: remove AMP_RELEASE from system env var set [#654](https://github.com/3scale/3scale-operator/pull/654)
+- APIManager CRD: Cleanup Redis message bus references [#686](https://github.com/3scale/3scale-operator/pull/686)
+- APIManager CRD: New metering labels [#679](https://github.com/3scale/3scale-operator/pull/679)
+
+### Fixed
+
+- OpenAPI CRD: disable openapi schema format validation [#712](https://github.com/3scale/3scale-operator/pull/712)
+- APIManagerRestore CRD: fix controller [#761](https://github.com/3scale/3scale-operator/pull/761)
+
+## [0.8.1] - 2021-12-13
+
+### Added
+
+- Enable operator metric service and servicemonitor [#667](https://github.com/3scale/3scale-operator/pull/667)
+- APIManager CRD: Add proxy-related attributes to APIcast Staging and Production [#668](https://github.com/3scale/3scale-operator/pull/668)
+- HTTP client respects http prxy env vars [#683](https://github.com/3scale/3scale-operator/pull/683)
+- APIManager CRD: add x-kubernetes-preserve-unknown-fields to disable pruning [#683](https://github.com/3scale/3scale-operator/pull/683)
+
+### Changed
+
+- Delete kube-rbac-proxy container from controller-manager [#695](https://github.com/3scale/3scale-operator/pull/695)
+
+## [0.8.0] - 2021-09-22
+
+- APIManager CRD 3scale 2.11
+- OpenAPI CRD [#496](https://github.com/3scale/3scale-operator/pull/496)
+- Product CRD: policy chain [#523](https://github.com/3scale/3scale-operator/pull/523)
+- Product CRD: oidc auth type [#531](https://github.com/3scale/3scale-operator/pull/531)
+- ActiveDoc CRD [#539](https://github.com/3scale/3scale-operator/pull/539)
+- CustomPolicyDefinition CRD [#546](https://github.com/3scale/3scale-operator/pull/546)
+- APIManager CRD: Available condition [#549](https://github.com/3scale/3scale-operator/pull/549)
+- CRD upgraded to v1 [#535](https://github.com/3scale/3scale-operator/pull/535)
+- Account CRD [#551](https://github.com/3scale/3scale-operator/pull/551)
+- APIManager CRD: Add configurable noreply FROM mail address [#566](https://github.com/3scale/3scale-operator/pull/566)
+- APIManager CRD: Add System's USER_SESSION_TTL configurability [#621](https://github.com/3scale/3scale-operator/pull/621)
+- Digest pinning [#640](https://github.com/3scale/3scale-operator/pull/640)
+- APIManager CRD: Apicast custom policies [#645](https://github.com/3scale/3scale-operator/pull/645)
+- Enable builds/ testing on ppc64le architecture [#646](https://github.com/3scale/3scale-operator/pull/646)
+- Product CRD: Make application plans publication state configurable [#648](https://github.com/3scale/3scale-operator/pull/648)
+- APIManager CRD: Add OpenTracing support for APIcast environments [#651](https://github.com/3scale/3scale-operator/pull/651)
+- APIManager CRD: APIcast custom environments [#652](https://github.com/3scale/3scale-operator/pull/652)
+- APIManager CRD: APIcast TLS at pod level [#653](https://github.com/3scale/3scale-operator/pull/653)
+
+### Changed
+
+- Operator-sdk upgrade to 1.2 [#514](https://github.com/3scale/3scale-operator/pull/514) [#516](https://github.com/3scale/3scale-operator/pull/516)
+- APIManager CRD: remove secret ownership [#575](https://github.com/3scale/3scale-operator/pull/575)
+- APIManager CRD: Increase default backend-cron DeploymentConfig memory limits [#592](https://github.com/3scale/3scale-operator/pull/592)
+- APIManager CRD: Redis upgrade to ver 5 [#596](https://github.com/3scale/3scale-operator/pull/596)
+- APIManager CRD: prometheus rules as optin feature [#622](https://github.com/3scale/3scale-operator/pull/622)
+
+### Fixed
+
+- APIManager CRD: system-app BACKEND_ROUTE env var from service endpoint [#536](https://github.com/3scale/3scale-operator/pull/536)
+- CVE-2020-15257 [#559](https://github.com/3scale/3scale-operator/pull/559)
+- CVE-2020-8912 [#603](https://github.com/3scale/3scale-operator/pull/603)
+
+And many many small fixes. Check [PRs](https://github.com/3scale/3scale-operator/compare/3scale-2.10.0-GA...3scale-2.11.3-GA)
+
 ## [0.7.0] - 2021-05-12
 
 ### Added
@@ -95,7 +170,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-[Unreleased]: https://github.com/3scale/3scale-operator/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/3scale/3scale-operator/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.9.0
+[0.8.1]: https://github.com/3scale/3scale-operator/releases/tag/v0.8.1
+[0.8.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.8.0
 [0.7.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.7.0
 [0.6.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.6.0
 [0.5.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.5.0
