@@ -290,6 +290,7 @@ jobs:
   unit-tests-coverage:
     docker:
       - image: circleci/golang:1.13.7
+    resource_class: large
     steps:
       - unit-tests
       - run:
