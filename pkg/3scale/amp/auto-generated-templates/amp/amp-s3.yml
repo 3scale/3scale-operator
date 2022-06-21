@@ -3272,16 +3272,14 @@ objects:
               secretKeyRef:
                 key: URL
                 name: system-database
+          - name: SECRET_KEY_BASE
+            value: rails/32947
           - name: THINKING_SPHINX_ADDRESS
             value: 0.0.0.0
           - name: THINKING_SPHINX_CONFIGURATION_FILE
             value: db/sphinx/production.conf
           - name: THINKING_SPHINX_PID_FILE
             value: db/sphinx/searchd.pid
-          - name: DELTA_INDEX_INTERVAL
-            value: "5"
-          - name: FULL_REINDEX_INTERVAL
-            value: "60"
           - name: REDIS_URL
             valueFrom:
               secretKeyRef:
