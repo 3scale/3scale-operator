@@ -251,11 +251,6 @@ assets-update-test: generate fmt
 	git diff --exit-code ./pkg/assets
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./pkg/assets)" ]
 
-## templates: generate templates
-TEMPLATES_MAKEFILE_PATH = $(PROJECT_PATH)/pkg/3scale/amp
-templates:
-	$(MAKE) -C $(TEMPLATES_MAKEFILE_PATH) clean all
-
 ## coverage_analysis: Analyze coverage via a browse
 .PHONY: coverage_analysis
 coverage_analysis: $(PROJECT_PATH)/_output/unit.cov

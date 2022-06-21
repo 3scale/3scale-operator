@@ -29,7 +29,6 @@ Current *capabilities* state: **Full Lifecycle**
 ## User Guide
 
 * Check our [Operator user guide](doc/operator-user-guide.md) for interacting with the 3scale operator.
-* Check our [Template user guide](doc/template-user-guide.md) for deploying 3scale in various deployment profiles.
 
 ## Contributing
 You can contribute by:
