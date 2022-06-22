@@ -34,27 +34,9 @@ func NewUpgradeApiManager(b *reconcilers.BaseReconciler, apiManager *appsv1alpha
 }
 
 func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
-	res, err := u.upgradeSystemAMPRelease()
-	if err != nil {
-		return res, fmt.Errorf("Upgrade: remove system AMP_RELEASE error: %w", err)
-	}
-
-	res, err = u.upgradeMysqlConfigmap()
-	if err != nil {
-		return res, fmt.Errorf("Upgrade: update mysql configmap. error: %w", err)
-	}
-
-	res, err = u.upgradeImages()
+	res, err := u.upgradeImages()
 	if err != nil {
 		return res, fmt.Errorf("Upgrading images: %w", err)
-	}
-	if res.Requeue {
-		return res, nil
-	}
-
-	res, err = u.deleteMessageBusConfigurations()
-	if err != nil {
-		return res, fmt.Errorf("Upgrade: delete message bus configurations: %w", err)
 	}
 	if res.Requeue {
 		return res, nil
@@ -68,119 +50,6 @@ func (u *UpgradeApiManager) Upgrade() (reconcile.Result, error) {
 	}
 	if res.Requeue {
 		return res, nil
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (u *UpgradeApiManager) upgradeSystemAMPRelease() (reconcile.Result, error) {
-	system, err := System(u.apiManager, u.Client())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	res, err := u.deleteAMPReleaseSystemAppDC(system.AppDeploymentConfig())
-	if res.Requeue || err != nil {
-		return res, err
-	}
-
-	res, err = u.deleteAMPReleaseSystemSidekiqDC(system.SidekiqDeploymentConfig())
-	if res.Requeue || err != nil {
-		return res, err
-	}
-
-	return u.deleteAMPReleaseConfigMap(system.EnvironmentConfigMap())
-}
-
-func (u *UpgradeApiManager) deleteAMPReleaseSystemAppDC(desired *appsv1.DeploymentConfig) (reconcile.Result, error) {
-	existing := &appsv1.DeploymentConfig{}
-	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if len(existing.Spec.Template.Spec.Containers) != 3 {
-		return reconcile.Result{}, fmt.Errorf("DeploymentConfig %s spec.template.spec.containers length is %d, should be 3",
-			existing.Name, len(existing.Spec.Template.Spec.Containers))
-	}
-
-	update := false
-
-	// regular pod containers
-	for idx := 0; idx < 3; idx++ {
-		container := &existing.Spec.Template.Spec.Containers[idx]
-		if envVarIdx := helper.FindEnvVar(container.Env, "AMP_RELEASE"); envVarIdx >= 0 {
-			// remove index
-			container.Env = append(container.Env[:envVarIdx], container.Env[envVarIdx+1:]...)
-			update = true
-		}
-	}
-
-	// Pre hook pod
-	// the ExecNewPod property is already a pointer
-	preHookPod := existing.Spec.Strategy.RollingParams.Pre.ExecNewPod
-	if envVarIdx := helper.FindEnvVar(preHookPod.Env, "AMP_RELEASE"); envVarIdx >= 0 {
-		// remove index
-		preHookPod.Env = append(preHookPod.Env[:envVarIdx], preHookPod.Env[envVarIdx+1:]...)
-		update = true
-	}
-
-	if update {
-		err = u.UpdateResource(existing)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (u *UpgradeApiManager) deleteAMPReleaseSystemSidekiqDC(desired *appsv1.DeploymentConfig) (reconcile.Result, error) {
-	existing := &appsv1.DeploymentConfig{}
-	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	update := false
-
-	// regular pod containers
-	container := &existing.Spec.Template.Spec.Containers[0]
-	if envVarIdx := helper.FindEnvVar(container.Env, "AMP_RELEASE"); envVarIdx >= 0 {
-		// remove index
-		container.Env = append(container.Env[:envVarIdx], container.Env[envVarIdx+1:]...)
-		update = true
-	}
-
-	if update {
-		err = u.UpdateResource(existing)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (u *UpgradeApiManager) deleteAMPReleaseConfigMap(desired *v1.ConfigMap) (reconcile.Result, error) {
-	existing := &v1.ConfigMap{}
-	err := u.Client().Get(context.TODO(), types.NamespacedName{Name: desired.Name, Namespace: u.apiManager.Namespace}, existing)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	update := false
-
-	if _, ok := existing.Data["AMP_RELEASE"]; ok {
-		delete(existing.Data, "AMP_RELEASE")
-		update = true
-	}
-
-	if update {
-		err = u.UpdateResource(existing)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
 	}
 
 	return reconcile.Result{}, nil
