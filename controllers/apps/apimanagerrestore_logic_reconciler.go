@@ -4,16 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/backup"
-	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/restore"
 	"github.com/go-logr/logr"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -21,6 +12,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/backup"
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/restore"
 )
 
 type APIManagerRestoreLogicReconciler struct {
@@ -465,12 +466,42 @@ func (r *APIManagerRestoreLogicReconciler) reconcileWaitForAPIManagerReady() (re
 }
 
 func (r *APIManagerRestoreLogicReconciler) reconcileResynchronizeZyncDomains() (reconcile.Result, error) {
+	// system-sidekiq pod need to be up&running
+	res, err := r.waitForSystemSidekiq()
+	if res.Requeue || err != nil {
+		return res, err
+	}
+
 	desired := r.apiManagerRestore.ZyncResyncDomainsJob()
 	if desired == nil {
 		return reconcile.Result{}, nil
 	}
 
 	return r.reconcileJob(desired)
+}
+
+func (r *APIManagerRestoreLogicReconciler) waitForSystemSidekiq() (reconcile.Result, error) {
+	if r.cr.Status.APIManagerToRestoreRef == nil {
+		r.Logger().Info("APIManager not restored. Waiting until it exists")
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	existingAPIManager := &appsv1alpha1.APIManager{}
+	err := r.GetResource(types.NamespacedName{Name: r.cr.Status.APIManagerToRestoreRef.Name, Namespace: r.cr.Namespace}, existingAPIManager)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			r.Logger().Info("APIManager not found. Waiting until it exists", "APIManager", r.cr.Status.APIManagerToRestoreRef.Name)
+			return reconcile.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
+		}
+		return reconcile.Result{}, err
+	}
+
+	if !helper.ArrayContains(existingAPIManager.Status.Deployments.Ready, "system-sidekiq") {
+		r.Logger().Info("system-sidekiq deployments not ready. Waiting", "APIManager", existingAPIManager.Name)
+		return reconcile.Result{RequeueAfter: 5 * time.Second, Requeue: true}, nil
+	}
+
+	return reconcile.Result{}, nil
 }
 
 // Delete all K8s jobs created during the backup. The reason for this is that
