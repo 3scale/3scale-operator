@@ -402,7 +402,7 @@ func (b *APIManagerRestore) zyncResyncDomainsContainerArgs() string {
 		exit 1
 	fi
 	podname=$(echo -n $dcpods | awk '{print $1}')
-	oc exec ${podname} bash -- -c "bundle exec rake zync:resync:domains"
+	oc exec ${podname} -- bash -c "bundle exec rake zync:resync:domains"
 `
 }
 
