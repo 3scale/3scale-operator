@@ -70,5 +70,5 @@ spec:
         - name: RELATED_IMAGE_ZYNC_POSTGRESQL
           value: "centos/postgresql-10-centos7"
         - name: RELATED_IMAGE_OC_CLI
-          value: "quay.io/openshift/origin-cli:4.2"
+          value: "quay.io/openshift/origin-cli:4.7"
       terminationGracePeriodSeconds: 10
