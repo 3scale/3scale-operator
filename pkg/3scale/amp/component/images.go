@@ -41,5 +41,5 @@ func ZyncPostgreSQLImageURL() string {
 }
 
 func OCCLIImageURL() string {
-	return "quay.io/openshift/origin-cli:4.2"
+	return "quay.io/openshift/origin-cli:4.7"
 }
