@@ -77,7 +77,7 @@ of OpenShift router nodes. Be sure to remove the placeholder marks for your para
 
 When 3scale has been installed, a default *tenant* is created for you ready to be used,
 with a fixed URL: `3scale-admin.${wildcardDomain}`.
-For instance, when the *<wildCardDomain>* is `example.com`, then the Admin Portal URL would be:
+For instance, when the `<wildCardDomain>` is `example.com`, then the Admin Portal URL would be:
 
 ```
 https://3scale-admin.example.com
