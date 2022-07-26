@@ -235,14 +235,6 @@ jobs:
       - run:
           command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes
           when: always
-  generator:
-    docker:
-      - image: circleci/golang:1.13.7
-    steps:
-      - checkout
-      - install-dependencies
-      - run: make templates
-      - run: make test -j 2 --directory pkg/3scale/amp
 
   test-crds:
     docker:
