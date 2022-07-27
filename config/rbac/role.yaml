@@ -280,6 +280,18 @@ rules:
 - apiGroups:
   - capabilities.3scale.net
   resources:
+  - developeraccounts/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
   - developeraccounts/status
   verbs:
   - get
@@ -289,6 +301,18 @@ rules:
   - capabilities.3scale.net
   resources:
   - developerusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - developerusers/finalizers
   verbs:
   - create
   - delete
