@@ -2,30 +2,30 @@
 
 ## Table of Contents
 
-* [ProxyConfigPromote CRD Reference](#proxyconfigpromote-crd-reference)
-    * [ProxyConfigPromote](#proxyconfigpromote)
-        * [ProxyConfigPromoteSpec](#proxyconfigpromotespec)
-            * [Provider Account Reference](#provider-account-reference)
-        * [ProxyConfigPromoteStatus](#proxyconfigpromotestatus)
-            * [ConditionSpec](#conditionspec)
+* [ProxyConfigPromote](#proxyconfigpromote)
+    * [ProxyConfigPromoteSpec](#proxyconfigpromotespec)
+        * [Provider Account Reference](#provider-account-reference)
+    * [ProxyConfigPromoteStatus](#proxyconfigpromotestatus)
+        * [ConditionSpec](#conditionspec)
 
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
 ## ProxyConfigPromote
 
-| **Field** | **json field**| **Type**                                          | **Info** |
-| --- | --- |---------------------------------------------------| --- |
+| **Field** | **json field**| **Type** | **Info** |
+| --- | --- | --- | --- |
 | Spec | `spec` | [ProxyConfigPromoteSpec](#ProxyConfigPromoteSpec) | The specfication for the custom resource |
-| Status | `status` | [ProxyConfigPromoteStatus](#ProxyConfigPromoteStatus)        | The status for the custom resource |
+| Status | `status` | [ProxyConfigPromoteStatus](#ProxyConfigPromoteStatus) | The status for the custom resource |
 
 ### ProxyConfigPromoteSpec
 
-| **Field**                  | **json field**       | **Type** | **Info**                                                                                                                                                   | **Required** |
-|----------------------------|----------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| ProductCRName              | `productCRName`      | string   | Name of product Cr                                                                                                                                         | Yes          |
-| Production                 | `production`         | bool     | If true promotes to production, if false promotes to staging                                                                                               | No           |
-| DeleteCR                   | `deleteCR`           | bool     | If true deletes the resource after a succesfull promotion                                                                                                  | No           |                                                                            | No |
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| ProductCRName | `productCRName` | string | Name of product Cr| Yes |
+| Production | `production` | bool | If true promotes to production, if false promotes to staging | No |
+| DeleteCR | `deleteCR` | bool | If true deletes the resource after a succesfull promotion | No |
+| Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
 
 #### Provider Account Reference
 
@@ -54,11 +54,11 @@ stringData:
 
 ### ProxyConfigPromoteStatus
 
-| **Field**           | **json field**       | **Type** | **Info**                                                                    |
-|---------------------|----------------------| --- |-----------------------------------------------------------------------------|
-| ProductId          | `productId`          | string | Internal ID of promted product                                              |
-| LatestProductionVersion | `latestProductionVersion` | string | int with the current version in the production environment      |
-| LatestStagingVersion | `latestStagingVersion` | string | int with the current version in the staging environment      |
+| **Field** | **json field** | **Type** | **Info** |
+| --- | --- | --- | --- |
+| ProductId | `productId` | string | Internal ID of promted product |
+| LatestProductionVersion | `latestProductionVersion` | string | int with the current version in the production environment |
+| LatestStagingVersion | `latestStagingVersion` | string | int with the current version in the staging environment |
 | Conditions | `conditions` | array of [conditions](#ConditionSpec) | resource conditions |
 
 For example:
