@@ -189,6 +189,8 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 			if err != nil {
 				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", productIDStr, latestProductionVersion, latestStagingVersion, err)
 				return statusReconciler, err
+			} else {
+				latestProductionVersion = latestStagingVersion
 			}
 
 		}
