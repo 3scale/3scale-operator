@@ -46,8 +46,8 @@ func getProviderAccount() (Secret *v1.Secret) {
 		},
 		Immutable: nil,
 		Data: map[string][]byte{
-			"adminURL": {'h', 't', 't', 'p', 's', ':', '/', '/', '3', 's', 'c', 'a', 'l', 'e', '-', 'a', 'd', 'm', 'i', 'n', '.', 't', 'e', 's', 't', '.', '3', 's', 'c', 'a', 'l', 'e', '.', 'n', 'e', 't'},
-			"token":    {'t', 'o', 'k', 'e', 'n'},
+			"adminURL": []byte("https://3scale-admin.test.3scale.net"),
+			"token":    []byte("token"),
 		},
 		Type: "Opaque",
 	}

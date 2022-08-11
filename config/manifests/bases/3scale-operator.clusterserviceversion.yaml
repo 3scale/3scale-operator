@@ -112,6 +112,11 @@ spec:
       kind: ProxyConfigPromote
       name: proxyconfigpromotes.capabilities.3scale.net
       version: v1beta1
+    - description: Application is the Schema for the applications API
+      displayName: Application
+      kind: Application
+      name: applications.capabilities.3scale.net
+      version: v1beta1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
 

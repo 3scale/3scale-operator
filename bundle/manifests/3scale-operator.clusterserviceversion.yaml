@@ -82,6 +82,21 @@ metadata:
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "Application",
+          "metadata": {
+            "name": "application-sample"
+          },
+          "spec": {
+            "accountCRName": "developeraccount-sample",
+            "applicationPlanName": "plan01",
+            "description": "testing application ",
+            "name": "testApp",
+            "productCRName": "product-sample",
+            "suspend": false
+          }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
           "kind": "Backend",
           "metadata": {
             "name": "backend1-sample"
@@ -249,6 +264,11 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
+    - description: Application is the Schema for the applications API
+      displayName: Application
+      kind: Application
+      name: applications.capabilities.3scale.net
+      version: v1beta1
     - description: Backend is the Schema for the backends API
       displayName: 3scale Backend
       kind: Backend
@@ -327,6 +347,26 @@ spec:
     spec:
       clusterPermissions:
       - rules:
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - applications
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - applications/status
+          verbs:
+          - get
+          - patch
+          - update
         - apiGroups:
           - capabilities.3scale.net
           resources:
