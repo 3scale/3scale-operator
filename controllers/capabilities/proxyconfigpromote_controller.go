@@ -76,7 +76,9 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	err = r.Client().Get(r.Context(), projectMeta, product)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
+			statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", "product not found", 0, 0, err)
+			statusReconciler.Reconcile()
+			reqLogger.Info("product not found. Ignoring since object must have been deleted")
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, err
@@ -100,10 +102,10 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		statusResult, statusUpdateErr := statusReconciler.Reconcile()
 		if statusUpdateErr != nil {
 			if reconcileErr != nil {
-				return ctrl.Result{}, fmt.Errorf("Failed to reconcile activedoc: %v. Failed to update activedoc status: %w", reconcileErr, statusUpdateErr)
+				return ctrl.Result{}, fmt.Errorf("Failed to reconcile proxyConfigPromote: %v. Failed to update proxyConfigPromote status: %w", reconcileErr, statusUpdateErr)
 			}
 
-			return ctrl.Result{}, fmt.Errorf("Failed to update activedoc status: %w", statusUpdateErr)
+			return ctrl.Result{}, fmt.Errorf("Failed to update proxyConfigPromote status: %w", statusUpdateErr)
 		}
 
 		if statusResult.Requeue {
