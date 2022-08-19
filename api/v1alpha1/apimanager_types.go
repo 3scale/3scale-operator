@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"fmt"
 
-	"istio.io/pkg/version"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,6 +27,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/version"
 )
 
 const (
