@@ -5,7 +5,7 @@ metadata:
   name: apimanager-editor-role
 rules:
 - apiGroups:
-  - apps.3scale.net
+  - apps.3scale.net.3scale.net
   resources:
   - apimanagers
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - apps.3scale.net
+  - apps.3scale.net.3scale.net
   resources:
   - apimanagers/status
   verbs:

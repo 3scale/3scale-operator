@@ -8,5 +8,5 @@ roleRef:
   name: proxy-role
 subjects:
 - kind: ServiceAccount
-  name: 3scale-operator
+  name: controller-manager
   namespace: system

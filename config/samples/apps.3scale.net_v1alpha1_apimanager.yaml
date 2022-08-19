@@ -1,0 +1,6 @@
+apiVersion: apps.3scale.net.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: apimanager-sample
+spec:
+  # TODO(user): Add fields here

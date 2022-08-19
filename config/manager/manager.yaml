@@ -8,7 +8,7 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager-v2
+  name: controller-manager
   namespace: system
   labels:
     control-plane: controller-manager
@@ -19,56 +19,42 @@ spec:
   replicas: 1
   template:
     metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
       labels:
         control-plane: controller-manager
-        com.company: Red_Hat
-        rht.prod_name: Red_Hat_Integration
-        rht.prod_ver: master
-        rht.comp: 3scale
-        rht.comp_ver: master
-        rht.subcomp: 3scale_operator
-        rht.subcomp_t: infrastructure
     spec:
-      serviceAccountName: 3scale-operator
+      securityContext:
+        runAsNonRoot: true
       containers:
       - command:
         - /manager
         args:
-        - --enable-leader-election
+        - --leader-elect
         image: controller:latest
         name: manager
+        securityContext:
+          allowPrivilegeEscalation: false
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        # TODO(user): Configure the resources accordingly based on the project requirements.
+        # More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         resources:
           limits:
-            cpu: 100m
-            memory: 300Mi
+            cpu: 500m
+            memory: 128Mi
           requests:
-            cpu: 100m
-            memory: 300Mi
-        env:
-        - name: WATCH_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: RELATED_IMAGE_BACKEND
-          value: "quay.io/3scale/apisonator:latest"
-        - name: RELATED_IMAGE_APICAST
-          value: "quay.io/3scale/apicast:latest"
-        - name: RELATED_IMAGE_SYSTEM
-          value: "quay.io/3scale/porta:latest"
-        - name: RELATED_IMAGE_ZYNC
-          value: "quay.io/3scale/zync:latest"
-        - name: RELATED_IMAGE_SYSTEM_MEMCACHED
-          value: "memcached:1.5"
-        - name: RELATED_IMAGE_BACKEND_REDIS
-          value: "centos/redis-5-centos7"
-        - name: RELATED_IMAGE_SYSTEM_REDIS
-          value: "centos/redis-5-centos7"
-        - name: RELATED_IMAGE_SYSTEM_MYSQL
-          value: "centos/mysql-57-centos7"
-        - name: RELATED_IMAGE_SYSTEM_POSTGRESQL
-          value: "centos/postgresql-10-centos7"
-        - name: RELATED_IMAGE_ZYNC_POSTGRESQL
-          value: "centos/postgresql-10-centos7"
-        - name: RELATED_IMAGE_OC_CLI
-          value: "quay.io/openshift/origin-cli:4.7"
+            cpu: 10m
+            memory: 64Mi
+      serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

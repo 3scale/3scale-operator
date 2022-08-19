@@ -2,101 +2,19 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/apps.3scale.net_apimanagers.yaml
-- bases/apps.3scale.net_apimanagerbackups.yaml
-- bases/apps.3scale.net_apimanagerrestores.yaml
-- bases/capabilities.3scale.net_tenants.yaml
-- bases/capabilities.3scale.net_backends.yaml
-- bases/capabilities.3scale.net_products.yaml
-- bases/capabilities.3scale.net_openapis.yaml
-- bases/capabilities.3scale.net_activedocs.yaml
-- bases/capabilities.3scale.net_developeraccounts.yaml
-- bases/capabilities.3scale.net_developerusers.yaml
-- bases/capabilities.3scale.net_custompolicydefinitions.yaml
-- bases/capabilities.3scale.net_proxyconfigpromotes.yaml
-# +kubebuilder:scaffold:crdkustomizeresource
+- bases/apps.3scale.net.3scale.net_apimanagers.yaml
+#+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
 #- patches/webhook_in_apimanagers.yaml
-#- patches/webhook_in_apimanagerbackups.yaml
-#- patches/webhook_in_apimanagerrestores.yaml
-#- patches/webhook_in_tenants.yaml
-#- patches/webhook_in_backends.yaml
-#- patches/webhook_in_products.yaml
-#- patches/webhook_in_openapis.yaml
-#- patches/webhook_in_activedocs.yaml
-#- patches/webhook_in_developeraccounts.yaml
-#- patches/webhook_in_developerusers.yaml
-#- patches/webhook_in_custompolicydefinitions.yaml
-#- patches/webhook_in_proxyconfigpromotes.yaml
-# +kubebuilder:scaffold:crdkustomizewebhookpatch
+#+kubebuilder:scaffold:crdkustomizewebhookpatch
 
-# [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
+# [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
 #- patches/cainjection_in_apimanagers.yaml
-#- patches/cainjection_in_apimanagerbackups.yaml
-#- patches/cainjection_in_apimanagerrestores.yaml
-#- patches/cainjection_in_tenants.yaml
-#- patches/cainjection_in_backends.yaml
-#- patches/cainjection_in_products.yaml
-#- patches/cainjection_in_openapis.yaml
-#- patches/cainjection_in_activedocs.yaml
-#- patches/cainjection_in_developeraccounts.yaml
-#- patches/cainjection_in_developerusers.yaml
-#- patches/cainjection_in_custompolicydefinitions.yaml
-#- patches/cainjection_in_proxyconfigpromotes.yaml
-# +kubebuilder:scaffold:crdkustomizecainjectionpatch
-
-patchesJson6902:
-# OpenAPI CRD OpenAPIRef OpenAPI Validation]. This patch following patch adds `oneOf` OpenAPI
-# validation for the openapiRef attribute to the OpenAPI CRD due to at the moment
-# of writing this (2020-11-02) kubebuilder # does not support `oneOf` statement
-# OpenAPI validation
-- target:
-    group: apiextensions.k8s.io
-    version: v1
-    kind: CustomResourceDefinition
-    name: openapis.capabilities.3scale.net
-  path: patches/openapiref_openapi_validation_in_openapis.yaml
-# +kubebuilder:scaffold:crdkustomizeopenapiopenapirefopenapivalidationpatch
-
-# [Product CRD deloyment OpenAPI validation]. This patch adds `oneOf` OpenAPI
-# validation for the deployment attribute to the Product CRD due to at the moment
-# of writing this (2020-11-02) kubebuilder
-# does not support `oneOf` statement OpenAPI validation
-- target:
-    group: apiextensions.k8s.io
-    version: v1
-    kind: CustomResourceDefinition
-    name: products.capabilities.3scale.net
-  path: patches/product_deployment_openapi_validation_in_products.yaml
-# +kubebuilder:scaffold:crdkustomizeproductproductdeploymentopenapivalidationpatch
-
-# [Product CRD authentication OpenAPI validation]. This patch adds `oneOf` OpenAPI
-# validation for the authentication attribute to the Product CRD due to at the moment
-# of writing this (2020-11-02) kubebuilder
-# does not support `oneOf` statement OpenAPI validation
-- target:
-    group: apiextensions.k8s.io
-    version: v1
-    kind: CustomResourceDefinition
-    name: products.capabilities.3scale.net
-  path: patches/product_authentication_openapi_validation_in_products.yaml
-# +kubebuilder:scaffold:crdkustomizeproductproductauthenticationopenapivalidationpatch
-
-# [ActiveDoc CRD OpenAPIRef OpenAPI validation]. This patch adds `oneOf` OpenAPI
-# validation for the activeDocOpenAPIRef attribute to the ActiveDoc CRD due to at the moment
-# of writing this (2020-11-02) kubebuilder
-# does not support `oneOf` statement OpenAPI validation
-- target:
-    group: apiextensions.k8s.io
-    version: v1
-    kind: CustomResourceDefinition
-    name: activedocs.capabilities.3scale.net
-  path: patches/activedocopenapiref_openapi_validation_in_activedocs.yaml
-# +kubebuilder:scaffold:crdkustomizeactivedocactivedocopenapirefopenapivalidationpatch
+#+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
 configurations:

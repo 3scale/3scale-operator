@@ -5,7 +5,7 @@ metadata:
   name: apimanager-viewer-role
 rules:
 - apiGroups:
-  - apps.3scale.net
+  - apps.3scale.net.3scale.net
   resources:
   - apimanagers
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - apps.3scale.net
+  - apps.3scale.net.3scale.net
   resources:
   - apimanagers/status
   verbs:

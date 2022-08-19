@@ -1,50 +1,94 @@
 # 3scale-operator
+// TODO(user): Add simple overview of use/purpose
 
-[![CircleCI](https://circleci.com/gh/3scale/3scale-operator/tree/master.svg?style=svg)](https://circleci.com/gh/3scale/3scale-operator/tree/master)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![GitHub release](https://img.shields.io/github/v/release/3scale/3scale-operator.svg)](https://github.com/3scale/3scale-operator/releases/latest)
-[![codecov](https://codecov.io/gh/3scale/3scale-operator/branch/master/graph/badge.svg)](https://codecov.io/gh/3scale/3scale-operator)
+## Description
+// TODO(user): An in-depth paragraph about your project and overview of use
 
-## Overview
+## Getting Started
+You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
+**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.
-[3scale API Management](https://www.redhat.com/en/technologies/jboss-middleware/3scale) makes it easy to manage your APIs.
-Share, secure, distribute, control, and monetize your APIs on an infrastructure platform built for performance, customer control, and future growth.
+### Running on the cluster
+1. Install Instances of Custom Resources:
 
-## Quickstart
+```sh
+kubectl apply -f config/samples/
+```
 
-To get up and running quickly, check our [Quickstart guides](doc/quickstart-guide.md).
+2. Build and push your image to the location specified by `IMG`:
+	
+```sh
+make docker-build docker-push IMG=<some-registry>/3scale-operator:tag
+```
+	
+3. Deploy the controller to the cluster with the image specified by `IMG`:
 
-## Features
+```sh
+make deploy IMG=<some-registry>/3scale-operator:tag
+```
 
-Current *capabilities* state: **Full Lifecycle**
+### Uninstall CRDs
+To delete the CRDs from the cluster:
 
-* Stable
-  * **Installer**: A way to install a 3scale API Management solution, providing configurability options at the time of installation
-  * **Upgrade**: Upgrade from previously installed 3scale API Management solution
-  * **Reconciliation**: Tunable CRD parameters after 3scale API Management solution has been installed
-* Tech Preview
-  * **Application Capabilities via Operator**: Allow interacting with underlying 3scale API Management solution. Expose objects like *tenant*, *product*, *backend* as  _Custom Resource_ objects.
+```sh
+make uninstall
+```
 
-## User Guide
+### Undeploy controller
+UnDeploy the controller to the cluster:
 
-* Check our [Operator user guide](doc/operator-user-guide.md) for interacting with the 3scale operator.
+```sh
+make undeploy
+```
 
 ## Contributing
-You can contribute by:
+// TODO(user): Add detailed information on how you would like others to contribute to this project
 
-* Raising any issues you find using 3scale Operator
-* Fixing issues by opening [Pull Requests](https://github.com/3scale/3scale-operator/pulls)
-* Submitting a patch or opening a PR
-* Improving documentation
-* Talking about 3scale Operator
+### How it works
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
 
-All bugs, tasks or enhancements are tracked as [GitHub issues](https://github.com/3scale/3scale-operator/issues).
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
+which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
 
-The [Development guide](doc/development.md) describes how to build the 3scale Operator and how to test your changes before submitting a patch or opening a PR.
+### Test It Out
+1. Install the CRDs into the cluster:
 
-## Licensing
+```sh
+make install
+```
 
-This software is licensed under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
+2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
 
-See the LICENSE and NOTICE files that should have been provided along with this software for details.
+```sh
+make run
+```
+
+**NOTE:** You can also run this in one step by running: `make install run`
+
+### Modifying the API definitions
+If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
+
+```sh
+make manifests
+```
+
+**NOTE:** Run `make --help` for more information on all potential `make` targets
+
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+
+## License
+
+Copyright 2022.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+

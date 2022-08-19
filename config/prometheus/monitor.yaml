@@ -1,5 +1,5 @@
+
 # Prometheus Monitor Service (Metrics)
----
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -10,8 +10,11 @@ metadata:
 spec:
   endpoints:
     - path: /metrics
-      port: metrics
+      port: https
+      scheme: https
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        insecureSkipVerify: true
   selector:
     matchLabels:
       control-plane: controller-manager
-      app: 3scale-api-management
