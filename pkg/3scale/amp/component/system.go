@@ -592,7 +592,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppMasterContainerResourceRequirements,
 							VolumeMounts: system.appMasterContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.String),
 										StrVal: "master"}},
@@ -604,7 +604,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.String),
@@ -635,7 +635,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppProviderContainerResourceRequirements,
 							VolumeMounts: system.appProviderContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.String),
 										StrVal: "provider"}},
@@ -647,7 +647,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.String),
@@ -678,7 +678,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppDeveloperContainerResourceRequirements,
 							VolumeMounts: system.appDeveloperContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.String),
 										StrVal: "developer"}},
@@ -690,7 +690,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/check.txt",
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.String),
@@ -1223,7 +1223,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 							},
 							Env: system.buildSystemSphinxEnv(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.FromInt(9306),
 									},

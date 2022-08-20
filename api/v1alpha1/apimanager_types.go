@@ -31,6 +31,30 @@ import (
 )
 
 const (
+	ThreescaleVersionAnnotation = "apps.3scale.net/apimanager-threescale-version"
+	OperatorVersionAnnotation   = "apps.3scale.net/threescale-operator-version"
+	Default3scaleAppLabel       = "3scale-api-management"
+)
+
+const (
+	defaultTenantName                  = "3scale"
+	defaultImageStreamImportInsecure   = false
+	defaultResourceRequirementsEnabled = true
+)
+
+const (
+	defaultApicastManagementAPI = "status"
+	defaultApicastOpenSSLVerify = false
+	defaultApicastResponseCodes = true
+	defaultApicastRegistryURL   = "http://apicast-staging:8090/policies"
+)
+
+const (
+	DefaultHTTPPort  int32 = 8080
+	DefaultHTTPSPort int32 = 8443
+)
+
+const (
 	APIManagerAvailableConditionType common.ConditionType = "Available"
 )
 

@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 // Package v1alpha1 contains API Schema definitions for the apps.3scale.net v1alpha1 API group
-//+kubebuilder:object:generate=true
-//+groupName=apps.3scale.net.3scale.net
+// +kubebuilder:object:generate=true
+// +groupName=apps.3scale.net.3scale.net
 package v1alpha1
 
 import (

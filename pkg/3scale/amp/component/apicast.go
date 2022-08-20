@@ -152,7 +152,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:       apicast.Options.StagingResourceRequirements,
 							VolumeMounts:    apicast.stagingVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/live",
 									Port: intstr.FromInt(8090),
 								}},
@@ -161,7 +161,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 								PeriodSeconds:       10,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/ready",
 									Port: intstr.FromInt(8090),
 								}},
@@ -258,7 +258,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:       apicast.Options.ProductionResourceRequirements,
 							VolumeMounts:    apicast.productionVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/live",
 									Port: intstr.FromInt(8090),
 								}},
@@ -267,7 +267,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 								PeriodSeconds:       10,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/ready",
 									Port: intstr.FromInt(8090),
 								}},

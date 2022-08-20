@@ -3,7 +3,7 @@ package component
 import (
 	"fmt"
 
-	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
+	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -90,8 +90,8 @@ func (system *System) SystemGrafanaDashboard(sumRate string) *grafanav1alpha1.Gr
 			Labels: system.monitoringLabels(),
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
-			Json: assets.TemplateAsset("monitoring/system-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/system-grafana-dashboard-1.json", system.Options.Namespace),
+			Json:             assets.TemplateAsset("monitoring/system-grafana-dashboard-1.json.tpl", data),
+			CustomFolderName: system.Options.Namespace,
 		},
 	}
 }

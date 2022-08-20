@@ -15,7 +15,7 @@ const ConsoleLinkText = "APIManager - 3scale"
 // ConsoleLinkMasterNamePrefix is the prefix applied to Console link for system master
 const ConsoleLinkMasterNamePrefix = "system-master-link"
 
-//GenericConsoleLinkMutator performs the reconciliation for consolelink objects
+// GenericConsoleLinkMutator performs the reconciliation for consolelink objects
 func GenericConsoleLinkMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*consolev1.ConsoleLink)
 	if !ok {
@@ -41,7 +41,7 @@ func GenericConsoleLinkMutator(existingObj, desiredObj common.KubernetesObject) 
 	return update, nil
 }
 
-//GetMasterConsoleLink creates the consolelink obj for a target
+// GetMasterConsoleLink creates the consolelink obj for a target
 func GetMasterConsoleLink(route *routev1.Route) *consolev1.ConsoleLink {
 	return &consolev1.ConsoleLink{
 		ObjectMeta: metav1.ObjectMeta{
@@ -63,7 +63,7 @@ func GetMasterConsoleLink(route *routev1.Route) *consolev1.ConsoleLink {
 	}
 }
 
-//GetMasterConsoleLinkName returns the consolelink name
+// GetMasterConsoleLinkName returns the consolelink name
 func GetMasterConsoleLinkName(namespace string) string {
 	return fmt.Sprintf("%s-%s", ConsoleLinkMasterNamePrefix, namespace)
 }
