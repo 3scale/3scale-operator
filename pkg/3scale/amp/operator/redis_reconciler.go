@@ -60,9 +60,11 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	dcMutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigImageChangeTriggerMutator,
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(r.DeploymentConfig(redis), dcMutator)
 	if err != nil {

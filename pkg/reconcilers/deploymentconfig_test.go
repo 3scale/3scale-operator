@@ -50,7 +50,10 @@ func TestDeploymentConfigReplicasMutator(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory()
-			update := DeploymentConfigReplicasMutator(tc.desired(), existing)
+			update, err := DeploymentConfigReplicasMutator(tc.desired(), existing)
+			if err != nil {
+				subT.Fatal(err)
+			}
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
@@ -118,7 +121,10 @@ func TestDeploymentConfigContainerResourcesMutator(t *testing.T) {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory(tc.existingResources)
 			desired := dcFactory(tc.desiredResources)
-			update := DeploymentConfigContainerResourcesMutator(desired, existing)
+			update, err := DeploymentConfigContainerResourcesMutator(desired, existing)
+			if err != nil {
+				subT.Fatal(err)
+			}
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
@@ -199,7 +205,10 @@ func TestDeploymentConfigAffinityMutator(t *testing.T) {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory(tc.existingAffinity)
 			desired := dcFactory(tc.desiredAffinity)
-			update := DeploymentConfigAffinityMutator(desired, existing)
+			update, err := DeploymentConfigAffinityMutator(desired, existing)
+			if err != nil {
+				subT.Fatal(err)
+			}
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
@@ -274,7 +283,10 @@ func TestDeploymentConfigTolerationsMutator(t *testing.T) {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory(tc.existingTolerations)
 			desired := dcFactory(tc.desiredTolerations)
-			update := DeploymentConfigTolerationsMutator(desired, existing)
+			update, err := DeploymentConfigTolerationsMutator(desired, existing)
+			if err != nil {
+				subT.Fatal(err)
+			}
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
@@ -379,6 +391,146 @@ func TestDeploymentConfigEnvVarReconciler(t *testing.T) {
 			}
 			if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Env, tc.expectedNewEnvVar) {
 				subT.Fatal(cmp.Diff(existing.Spec.Template.Spec.Containers[0].Env, tc.expectedNewEnvVar))
+			}
+		})
+	}
+}
+
+func TestDeploymentConfigImageChangeTriggerMutator(t *testing.T) {
+	dcFactory := func(triggers []appsv1.DeploymentTriggerPolicy) *appsv1.DeploymentConfig {
+		return &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "myDC",
+				Namespace: "myNS",
+			},
+			Spec: appsv1.DeploymentConfigSpec{
+				Triggers: triggers,
+			},
+		}
+	}
+
+	sliceCopy := func(a []appsv1.DeploymentTriggerPolicy) []appsv1.DeploymentTriggerPolicy {
+		return append(a[:0:0], a...)
+	}
+
+	triggersA := []appsv1.DeploymentTriggerPolicy{
+		{
+			Type: appsv1.DeploymentTriggerOnImageChange,
+			ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+				From: corev1.ObjectReference{
+					Name: "imagestreamA",
+				},
+			},
+		},
+	}
+
+	triggersB := []appsv1.DeploymentTriggerPolicy{
+		{
+			Type: appsv1.DeploymentTriggerOnImageChange,
+			ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
+				From: corev1.ObjectReference{
+					Name: "imagestreamB",
+				},
+			},
+		},
+	}
+
+	cases := []struct {
+		testName         string
+		existingTriggers []appsv1.DeploymentTriggerPolicy
+		desiredTriggers  []appsv1.DeploymentTriggerPolicy
+		expectedResult   bool
+	}{
+		{"NothingToReconcile", sliceCopy(triggersA), sliceCopy(triggersA), false},
+		{"DifferentName", sliceCopy(triggersA), sliceCopy(triggersB), true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			existing := dcFactory(tc.existingTriggers)
+			desired := dcFactory(tc.desiredTriggers)
+			update, err := DeploymentConfigImageChangeTriggerMutator(desired, existing)
+			if err != nil {
+				subT.Fatal(err)
+			}
+			if update != tc.expectedResult {
+				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
+			}
+			// It should be tested changes in triggers on image change only, but good enough for now
+			if !reflect.DeepEqual(existing.Spec.Triggers, desired.Spec.Triggers) {
+				subT.Fatal(cmp.Diff(existing.Spec.Triggers, desired.Spec.Triggers))
+			}
+		})
+	}
+}
+
+func TestDeploymentConfigPodTemplateLabelsMutator(t *testing.T) {
+	dcFactory := func(labels map[string]string) *appsv1.DeploymentConfig {
+		return &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "myDC",
+				Namespace: "myNS",
+			},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: labels,
+					},
+				},
+			},
+		}
+	}
+
+	mapCopy := func(originalMap map[string]string) map[string]string {
+		// Create the target map
+		targetMap := make(map[string]string)
+
+		// Copy from the original map to the target map
+		for key, value := range originalMap {
+			targetMap[key] = value
+		}
+
+		return targetMap
+	}
+
+	labelsA := map[string]string{"a": "1", "a2": "2"}
+	labelsB := map[string]string{"a": "other", "b": "1"}
+
+	cases := []struct {
+		testName          string
+		existingLabels    map[string]string
+		desiredLabels     map[string]string
+		expectedResult    bool
+		expectedNewLabels map[string]string
+	}{
+		{"NothingToReconcile", mapCopy(labelsA), mapCopy(labelsA), false, mapCopy(labelsA)},
+		{"LabelsReconciled", mapCopy(labelsB), mapCopy(labelsA), true, map[string]string{
+			"a": "1", "a2": "2", "b": "1",
+		}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			existing := dcFactory(tc.existingLabels)
+			desired := dcFactory(tc.desiredLabels)
+			update, err := DeploymentConfigPodTemplateLabelsMutator(desired, existing)
+			if err != nil {
+				subT.Fatal(err)
+			}
+			if update != tc.expectedResult {
+				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
+			}
+			// It should be tested changes in triggers on image change only, but good enough for now
+			if !reflect.DeepEqual(existing.Spec.Template.Labels, tc.expectedNewLabels) {
+				subT.Fatal(cmp.Diff(existing.Spec.Template.Labels, tc.expectedNewLabels))
 			}
 		})
 	}

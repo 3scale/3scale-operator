@@ -83,9 +83,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	// SystemApp DC
 	systemAppDCMutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigImageChangeTriggerMutator,
 		reconcilers.DeploymentConfigReplicasMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		r.systemAppDCResourceMutator,
 	)
 
@@ -95,16 +97,27 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Sidekiq DC
-	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
+	sidekiqDCMutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigImageChangeTriggerMutator,
+		reconcilers.DeploymentConfigReplicasMutator,
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+	)
+
+	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), sidekiqDCMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Sphinx DC
 	sphinxDCmutator := reconcilers.DeploymentConfigMutator(
+		reconcilers.DeploymentConfigImageChangeTriggerMutator,
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), sphinxDCmutator)
 	if err != nil {
@@ -248,7 +261,7 @@ func (r *SystemReconciler) validateS3StorageProvidedConfiguration() error {
 	return nil
 }
 
-func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	desiredName := common.ObjectInfo(desired)
 	update := false
 
@@ -256,7 +269,7 @@ func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.
 	// Check containers
 	//
 	if len(desired.Spec.Template.Spec.Containers) != 3 {
-		panic(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
+		return false, fmt.Errorf(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
 	}
 
 	if len(existing.Spec.Template.Spec.Containers) != 3 {
@@ -278,7 +291,7 @@ func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.
 		}
 	}
 
-	return update
+	return update, nil
 }
 
 func System(cr *appsv1alpha1.APIManager, client client.Client) (*component.System, error) {

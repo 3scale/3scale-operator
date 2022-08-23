@@ -14,7 +14,7 @@ import (
 )
 
 // DCMutateFn is a function which mutates the existing DeploymentConfig into it's desired state.
-type DCMutateFn func(desired, existing *appsv1.DeploymentConfig) bool
+type DCMutateFn func(desired, existing *appsv1.DeploymentConfig) (bool, error)
 
 func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
 	return func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
@@ -31,7 +31,10 @@ func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
 
 		// Loop through each option
 		for _, opt := range opts {
-			tmpUpdate := opt(desired, existing)
+			tmpUpdate, err := opt(desired, existing)
+			if err != nil {
+				return false, err
+			}
 			update = update || tmpUpdate
 		}
 
@@ -39,25 +42,30 @@ func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
 	}
 }
 
-func GenericDeploymentConfigMutator() MutateFn {
+// GenericZyncMutators returns the generic mutators for zync components
+func GenericZyncMutators() MutateFn {
 	return DeploymentConfigMutator(
+		DeploymentConfigImageChangeTriggerMutator,
 		DeploymentConfigReplicasMutator,
 		DeploymentConfigContainerResourcesMutator,
 		DeploymentConfigAffinityMutator,
 		DeploymentConfigTolerationsMutator,
+		DeploymentConfigPodTemplateLabelsMutator,
 	)
 }
 
 // GenericBackendMutators returns the generic mutators for backend
 func GenericBackendMutators() []DCMutateFn {
 	return []DCMutateFn{
+		DeploymentConfigImageChangeTriggerMutator,
 		DeploymentConfigContainerResourcesMutator,
 		DeploymentConfigAffinityMutator,
 		DeploymentConfigTolerationsMutator,
+		DeploymentConfigPodTemplateLabelsMutator,
 	}
 }
 
-func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	update := false
 
 	if desired.Spec.Replicas != existing.Spec.Replicas {
@@ -65,10 +73,10 @@ func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig)
 		update = true
 	}
 
-	return update
+	return update, nil
 }
 
-func DeploymentConfigAffinityMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func DeploymentConfigAffinityMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	updated := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity) {
@@ -78,10 +86,10 @@ func DeploymentConfigAffinityMutator(desired, existing *appsv1.DeploymentConfig)
 		updated = true
 	}
 
-	return updated
+	return updated, nil
 }
 
-func DeploymentConfigTolerationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func DeploymentConfigTolerationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	updated := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations) {
@@ -91,15 +99,15 @@ func DeploymentConfigTolerationsMutator(desired, existing *appsv1.DeploymentConf
 		updated = true
 	}
 
-	return updated
+	return updated, nil
 }
 
-func DeploymentConfigContainerResourcesMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func DeploymentConfigContainerResourcesMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	desiredName := common.ObjectInfo(desired)
 	update := false
 
 	if len(desired.Spec.Template.Spec.Containers) != 1 {
-		panic(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 1", desiredName, len(desired.Spec.Template.Spec.Containers)))
+		return false, fmt.Errorf("%s desired spec.template.spec.containers length changed to '%d', should be 1", desiredName, len(desired.Spec.Template.Spec.Containers))
 	}
 
 	if len(existing.Spec.Template.Spec.Containers) != 1 {
@@ -115,7 +123,7 @@ func DeploymentConfigContainerResourcesMutator(desired, existing *appsv1.Deploym
 		update = true
 	}
 
-	return update
+	return update, nil
 }
 
 // DeploymentConfigEnvVarReconciler implements basic env var reconcilliation for single container deployment configs.
@@ -150,4 +158,54 @@ func DeploymentConfigEnvVarReconciler(desired, existing *appsv1.DeploymentConfig
 		}
 	}
 	return update
+}
+
+func findDeploymentTriggerOnImageChange(triggerPolicies []appsv1.DeploymentTriggerPolicy) (int, error) {
+	result := -1
+	for i := range triggerPolicies {
+		if triggerPolicies[i].Type == appsv1.DeploymentTriggerOnImageChange {
+			if result != -1 {
+				return -1, fmt.Errorf("found more than one imageChangeParams Deployment trigger policy")
+			}
+			result = i
+		}
+	}
+
+	if result == -1 {
+		return -1, fmt.Errorf("no imageChangeParams deployment trigger policy found")
+	}
+
+	return result, nil
+}
+
+// DeploymentConfigImageChangeTriggerMutator ensures image change triggers are reconciled
+func DeploymentConfigImageChangeTriggerMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	desiredDeploymentTriggerImageChangePos, err := findDeploymentTriggerOnImageChange(desired.Spec.Triggers)
+	if err != nil {
+		return false, fmt.Errorf("unexpected: '%s' in DeploymentConfig '%s'", err, desired.Name)
+
+	}
+	existingDeploymentTriggerImageChangePos, err := findDeploymentTriggerOnImageChange(existing.Spec.Triggers)
+	if err != nil {
+		return false, fmt.Errorf("unexpected: '%s' in DeploymentConfig '%s'", err, existing.Name)
+	}
+
+	desiredDeploymentTriggerImageChangeParams := desired.Spec.Triggers[desiredDeploymentTriggerImageChangePos].ImageChangeParams
+	existingDeploymentTriggerImageChangeParams := existing.Spec.Triggers[existingDeploymentTriggerImageChangePos].ImageChangeParams
+
+	if !reflect.DeepEqual(existingDeploymentTriggerImageChangeParams.From.Name, desiredDeploymentTriggerImageChangeParams.From.Name) {
+		existingDeploymentTriggerImageChangeParams.From.Name = desiredDeploymentTriggerImageChangeParams.From.Name
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// DeploymentConfigPodTemplateLabelsMutator ensures pod template labels are reconciled
+func DeploymentConfigPodTemplateLabelsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	updated := false
+
+	helper.MergeMapStringString(&updated, &existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+
+	return updated, nil
 }
