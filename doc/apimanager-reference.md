@@ -635,7 +635,7 @@ The available configurable secrets are:
 | **Field** | **Description** | **Default value** |
 | --- | --- | --- |
 | PUBLIC_KEY | reCAPTCHA site key (used in spam protection) for System| `""` |
-| SECRET_KEY | reCAPTCHA secret key (used in spam protection) for System| `""` |
+| PRIVATE_KEY | reCAPTCHA secret key (used in spam protection) for System| `""` |
 
 ### system-redis
 
