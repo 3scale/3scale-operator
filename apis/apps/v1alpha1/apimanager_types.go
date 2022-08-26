@@ -707,12 +707,12 @@ func (apimanager *APIManager) setAPIManagerAnnotationsDefaults() bool {
 		changed = true
 	}
 
-	if _, ok := apimanager.Annotations[OperatorVersionAnnotation]; !ok {
+	if v, ok := apimanager.Annotations[OperatorVersionAnnotation]; !ok || v != version.Version {
 		apimanager.Annotations[OperatorVersionAnnotation] = version.Version
 		changed = true
 	}
 
-	if _, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; !ok {
+	if v, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; !ok || v != product.ThreescaleRelease {
 		apimanager.Annotations[ThreescaleVersionAnnotation] = product.ThreescaleRelease
 		changed = true
 	}
