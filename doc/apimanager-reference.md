@@ -77,7 +77,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | AppLabel | `appLabel` | string | No | `3scale-api-management` | The value of the `app` label that will be applied to the API management solution
 | TenantName | `tenantName` | string | No | `3scale` | Tenant name under the root that Admin UI will be available with -admin suffix.
 | ImageStreamTagImportInsecure | `imageStreamTagImportInsecure` | bool | No | `false` | Set to true if the server may bypass certificate verification or connect directly over HTTP during image import |
-| ImagePullSecrets | `imagePullSecrets` | \[\][corev1.LocalObjectReference](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core) | No | `[ { name: "threescale-registry-auth" } ]` | List of image pull secrets to be used on the managed DeploymentConfigs ServiceAccounts. See [imagePullSecrets field in K8s ServiceAccount documentation](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#serviceaccount-v1-core) for details on Image pull secrets. If not specified, `threescale-registry-auth` is used. Secret names that contain `dockercfg-` or `token-` anywhere in part of its name cannot be specified. If an update to this attribute is performed the corresponding DeploymentConfig pods have to be redeployed by the user to make the changes effective |
+| ImagePullSecrets | `imagePullSecrets` | \[\][corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) | No | `[ { name: "threescale-registry-auth" } ]` | List of image pull secrets to be used on the managed DeploymentConfigs ServiceAccounts. See [imagePullSecrets field in K8s ServiceAccount documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#serviceaccount-v1-core) for details on Image pull secrets. If not specified, `threescale-registry-auth` is used. Secret names that contain `dockercfg-` or `token-` anywhere in part of its name cannot be specified. If an update to this attribute is performed the corresponding DeploymentConfig pods have to be redeployed by the user to make the changes effective |
 | ResourceRequirementsEnabled | `resourceRequirementsEnabled` | bool | No | `true` | When true, 3Scale API management solution is deployed with the optimal resource requirements and limits. Setting this to false removes those resource requirements. ***Warning*** Only set it to false for development and evaluation environments. When set to `true`, default compute resources are set for the APIManager components. See [Default APIManager components compute resources](#Default-APIManager-components-compute-resources) to see the default assigned values |
 | ApicastSpec | `apicast` | \*ApicastSpec | No | See [ApicastSpec](#ApicastSpec) | Spec of the Apicast part |
 | BackendSpec | `backend` | \*BackendSpec | No | See [BackendSpec](#BackendSpec) reference | Spec of the Backend part |
@@ -116,9 +116,9 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `apicast-production` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | Workers | `workers` | integer | No | Automatically computed. Check [apicast doc](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_workers) for further info. | Defines the number of worker processes |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
@@ -138,9 +138,9 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `apicast-staging` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
 | OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
@@ -218,9 +218,9 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Backend |
 | RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by backend. Only takes effect when redis is not managed externally |
-| RedisAffinity | `redisAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when redis is not managed externally |
-| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when redis is not managed externally |
-| RedisResources | `redisResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | RedisResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| RedisAffinity | `redisAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when redis is not managed externally |
+| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when redis is not managed externally |
+| RedisResources | `redisResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | RedisResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[BackendRedisPersistentVolumeClaimSpec](#BackendRedisPersistentVolumeClaimSpec) | No | nil | Backend's Redis PersistentVolumeClaim configuration options. Only takes effect when redis is not managed externally |
 | ListenerSpec | `listenerSpec` | \*BackendListenerSpec | No | See [BackendListenerSpec](#BackendListenerSpec) reference | Spec of Backend Listener part |
 | WorkerSpec | `workerSpec` | \*BackendWorkerSpec | No | See [BackendWorkerSpec](#BackendWorkerSpec) reference | Spec of Backend Worker part |
@@ -237,27 +237,27 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `backend-listener` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### BackendWorkerSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `backend-worker` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### BackendCronSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `backend-cron` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### SystemSpec
 
@@ -266,13 +266,13 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System |
 | RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by System. Only takes effect when redis is not managed externally |
 | RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[SystemRedisPersistentVolumeClaimSpec](#SystemRedisPersistentVolumeClaimSpec) | No | nil | System's Redis PersistentVolumeClaim configuration options. Only takes effect when redis is not managed externally |
-| RedisAffinity | `redisAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when redis is not managed externally |
-| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when redis is not managed externally |
-| RedisResources | `redisResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | RedisResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| RedisAffinity | `redisAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when redis is not managed externally |
+| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when redis is not managed externally |
+| RedisResources | `redisResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | RedisResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | MemcachedImage | `memcachedImage` | string | No | nil | Used to overwrite the desired Memcached image for the Memcached used by System |
-| MemcachedAffinity | `memcachedAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| MemcachedTolerations | `memcachedTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| MemcachedResources | `memcachedResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | MemcachedResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| MemcachedAffinity | `memcachedAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| MemcachedTolerations | `memcachedTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| MemcachedResources | `memcachedResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | MemcachedResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification | Spec of the System's File Storage part |
 | DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [DatabaseSpec](#DatabaseSpec) specification | Spec of the System's Database part |
 | AppSpec | `appSpec` | \*SystemAppSpec | No | See [SystemAppSpec](#SystemAppSpec) reference | Spec of System App part |
@@ -307,7 +307,7 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Configuration | `configurationSecretRef` | [corev1.LocalObjectReference](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS configuration is stored. See [LocalObjectReference](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
+| Configuration | `configurationSecretRef` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS configuration is stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
 
 The secret name specified in the `configurationSecretRef` field must be
 pre-created by the user before creating the APIManager custom resource.
@@ -340,9 +340,9 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's MySQL database |
 | PersistentVolumeClaimSpec | `persistentVolumeClaim` | \*[SystemMySQLPVCSpec](#SystemMySQLPVCSpec) | No | nil | System's MySQL PersistentVolumeClaim configuration options |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### SystemMySQLPVCSpec
 
@@ -358,9 +358,9 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's PostgreSQL database |
 | PersistentVolumeClaimSpec | `persistentVolumeClaim` | \*[SystemPostgreSQLPVCSpec](#SystemPostgreSQLPVCSpec) | No | nil | System's PostgreSQL PersistentVolumeClaim configuration options |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### SystemPostgreSQLPVCSpec
 
@@ -375,28 +375,28 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `system-app` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| MasterContainerResources | `masterContainerResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
-| ProviderContainerResources | `providerContainerResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
-| DeveloperContainerResources | `developerContainerResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| MasterContainerResources | `masterContainerResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| ProviderContainerResources | `providerContainerResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| DeveloperContainerResources | `developerContainerResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### SystemSidekiqSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `system-sidekiq` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### SystemSphinxSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### ZyncSpec
 
@@ -406,27 +406,27 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | PostgreSQLImage | `postgreSQLImage` | string | No | nil | Used to overwrite the desired PostgreSQL image for the PostgreSQL used by Zync. Does not take effect when the database is managed externally |
 | AppSpec | `appSpec` | \*ZyncAppSpec | No | See [ZyncAppSpec](#ZyncAppSpec) reference | Spec of Zync App part |
 | QueSpec | `queSpec` | \*ZyncQueSpec | No | See [ZyncQueSpec](#ZyncQueSpec) reference | Spec of Zync Que part |
-| DatabaseAffinity | `databaseAffinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Does not take effect when the database is managed externally |
-| DatabaseTolerations | `databaseTolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Does not take effect when the database is managed externally |
-| DatabaseResources | `databaseResources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | DatabaseResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior. Does not take effect when the database is managed externally |
+| DatabaseAffinity | `databaseAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Does not take effect when the database is managed externally |
+| DatabaseTolerations | `databaseTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Does not take effect when the database is managed externally |
+| DatabaseResources | `databaseResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | DatabaseResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior. Does not take effect when the database is managed externally |
 
 ### ZyncAppSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `zync` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### ZyncQueSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Replicas | `replicas` | integer | No | 1 | Number of Pod replicas of the `zync-que` deployment |
-| Affinity | `affinity` | [v1.Affinity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 
 ### HighAvailabilitySpec
 
@@ -558,7 +558,7 @@ Each element of the Condition array has the following fields:
 
 | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- |
-| `requests` | [v1 Quantity](https://v1-17.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#quantity-resource-core) | Yes | N/A | Requested size of the PersistentVolumeClaim. |
+| `requests` | [v1 Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#quantity-resource-core) | Yes | N/A | Requested size of the PersistentVolumeClaim. |
 
 ## APIManager Secrets
 
