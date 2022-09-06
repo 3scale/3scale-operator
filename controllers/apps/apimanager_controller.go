@@ -98,28 +98,6 @@ func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return res, nil
 	}
 
-	if instance.Annotations[appsv1alpha1.OperatorVersionAnnotation] != version.Version {
-		logger.Info(fmt.Sprintf("Upgrade %s -> %s", instance.Annotations[appsv1alpha1.OperatorVersionAnnotation], version.Version))
-		// TODO add logic to check that only immediate consecutive installs
-		// are possible?
-		res, err := r.upgradeAPIManager(instance)
-		if err != nil {
-			logger.Error(err, "Error upgrading APIManager")
-			return ctrl.Result{}, err
-		}
-		if res.Requeue {
-			logger.Info("Upgrading not finished. Requeueing.")
-			return res, nil
-		}
-
-		err = r.updateVersionAnnotations(instance)
-		if err != nil {
-			logger.Error(err, "Error updating annotations")
-			return ctrl.Result{}, err
-		}
-		return ctrl.Result{Requeue: true}, nil
-	}
-
 	specResult, specErr := r.reconcileAPIManagerLogic(instance)
 	if specErr != nil && specResult.Requeue {
 		logger.Info("Reconciling not finished. Requeueing.")
@@ -170,22 +148,6 @@ func (r *APIManagerReconciler) validateCR(cr *appsv1alpha1.APIManager) error {
 	}
 
 	return nil
-}
-
-func (r *APIManagerReconciler) updateVersionAnnotations(cr *appsv1alpha1.APIManager) error {
-	if cr.Annotations == nil {
-		cr.Annotations = map[string]string{}
-	}
-	cr.Annotations[appsv1alpha1.ThreescaleVersionAnnotation] = product.ThreescaleRelease
-	cr.Annotations[appsv1alpha1.OperatorVersionAnnotation] = version.Version
-	return r.Client().Update(context.TODO(), cr)
-}
-
-func (r *APIManagerReconciler) upgradeAPIManager(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	// The object to instantiate would change in every release of the operator
-	// that upgrades the threescale version
-	upgradeAPIManager := operator.NewUpgradeApiManager(r.BaseReconciler, cr)
-	return upgradeAPIManager.Upgrade()
 }
 
 func (r *APIManagerReconciler) apiManagerInstance(namespacedName types.NamespacedName) (*appsv1alpha1.APIManager, error) {

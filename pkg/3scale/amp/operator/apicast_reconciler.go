@@ -66,9 +66,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	stagingMutators := []reconcilers.DCMutateFn{
+		reconcilers.DeploymentConfigImageChangeTriggerMutator,
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		apicastLogLevelEnvVarMutator,
 		apicastTracingConfigEnvVarsMutator,
 		apicastEnvironmentEnvVarMutator,
@@ -95,9 +97,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 
 	// add apicast production env var mutator
 	productionMutators := []reconcilers.DCMutateFn{
+		reconcilers.DeploymentConfigImageChangeTriggerMutator,
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		apicastProductionWorkersEnvVarMutator,
 		apicastLogLevelEnvVarMutator,
 		apicastTracingConfigEnvVarsMutator,
@@ -205,17 +209,17 @@ func getApiCastServiceMutator(apiManagerAnnotations map[string]string) reconcile
 	return reconcilers.ServicePortMutator
 }
 
-func apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// Reconcile EnvVar only for "APICAST_WORKERS"
-	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_WORKERS")
+	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_WORKERS"), nil
 }
 
-func apicastLogLevelEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastLogLevelEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// Reconcile EnvVar only for "APICAST_LOG_LEVEL"
-	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL")
+	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL"), nil
 }
 
-func apicastTracingConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastTracingConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// Reconcile EnvVars related to opentracing
 	var changed bool
 	changed = reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTRACING_TRACER")
@@ -223,15 +227,15 @@ func apicastTracingConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConf
 	tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTRACING_CONFIG")
 	changed = changed || tmpChanged
 
-	return changed
+	return changed, nil
 }
 
-func apicastEnvironmentEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastEnvironmentEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// Reconcile EnvVar only for "APICAST_ENVIRONMENT"
-	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_ENVIRONMENT")
+	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_ENVIRONMENT"), nil
 }
 
-func apicastHTTPSEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastHTTPSEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// Reconcile EnvVars related to opentracing
 	var changed bool
 
@@ -245,10 +249,10 @@ func apicastHTTPSEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool 
 		changed = changed || tmpChanged
 	}
 
-	return changed
+	return changed, nil
 }
 
-func apicastProxyConfigurationsEnvVarMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastProxyConfigurationsEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// Reconcile EnvVars related to APIcast proxy-related configurations
 	var changed bool
 
@@ -262,10 +266,10 @@ func apicastProxyConfigurationsEnvVarMutator(desired, existing *appsv1.Deploymen
 		changed = changed || tmpChanged
 	}
 
-	return changed
+	return changed, nil
 }
 
-func portsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func portsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	changed := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Ports, desired.Spec.Template.Spec.Containers[0].Ports) {
@@ -273,14 +277,14 @@ func portsMutator(desired, existing *appsv1.DeploymentConfig) bool {
 		existing.Spec.Template.Spec.Containers[0].Ports = desired.Spec.Template.Spec.Containers[0].Ports
 	}
 
-	return changed
+	return changed, nil
 }
 
 // volumeMountsMutator implements basic VolumeMount reconcilliation
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
 // Existing not in desired will NOT be removed. Allows manually added volumemounts
-func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	changed := false
 	existingContainer := &existing.Spec.Template.Spec.Containers[0]
 	desiredContainer := &desired.Spec.Template.Spec.Containers[0]
@@ -356,14 +360,14 @@ func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) bool
 		changed = true
 	}
 
-	return changed
+	return changed, nil
 }
 
 // volumeMountsMutator implements basic VolumeMount reconcilliation
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
 // Existing not in desired will NOT be removed. Allows manually added volumemounts
-func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	changed := false
 	existingSpec := &existing.Spec.Template.Spec
 	desiredSpec := &desired.Spec.Template.Spec
@@ -439,10 +443,10 @@ func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) bool {
 		changed = true
 	}
 
-	return changed
+	return changed, nil
 }
 
-func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
 	// find existing custom policy annotations not in desired and delete them
 	updated := false
@@ -463,10 +467,10 @@ func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentC
 
 		updated = true
 	}
-	return updated
+	return updated, nil
 }
 
-func apicastTracingConfigAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastTracingConfigAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
 	// find existing tracing config volume annotations not in desired and delete them
 	updated := false
@@ -487,10 +491,10 @@ func apicastTracingConfigAnnotationsMutator(desired, existing *appsv1.Deployment
 
 		updated = true
 	}
-	return updated
+	return updated, nil
 }
 
-func apicastCustomEnvAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastCustomEnvAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
 	// find existing custom environments annotations not in desired and delete them
 	updated := false
@@ -511,14 +515,14 @@ func apicastCustomEnvAnnotationsMutator(desired, existing *appsv1.DeploymentConf
 
 		updated = true
 	}
-	return updated
+	return updated, nil
 }
 
-func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) bool {
+func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// Only reconcile the pod annotation regarding apicast-environment hash
 	desiredVal, ok := desired.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation]
 	if !ok {
-		return false
+		return false, nil
 	}
 
 	updated := false
@@ -531,7 +535,7 @@ func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *appsv1.
 		updated = true
 	}
 
-	return updated
+	return updated, nil
 }
 
 func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.Apicast, error) {

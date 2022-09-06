@@ -45,13 +45,13 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Zync DC
-	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
+	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.GenericZyncMutators())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Zync Que DC
-	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.GenericDeploymentConfigMutator())
+	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.GenericZyncMutators())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -65,9 +65,11 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
 		// Zync DB DC
 		zyncDBDCMutator := reconcilers.DeploymentConfigMutator(
+			reconcilers.DeploymentConfigImageChangeTriggerMutator,
 			reconcilers.DeploymentConfigContainerResourcesMutator,
 			reconcilers.DeploymentConfigAffinityMutator,
 			reconcilers.DeploymentConfigTolerationsMutator,
+			reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		)
 		err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), zyncDBDCMutator)
 		if err != nil {
