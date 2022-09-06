@@ -1,6 +1,7 @@
 package reconcilers
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -164,15 +165,13 @@ func findDeploymentTriggerOnImageChange(triggerPolicies []appsv1.DeploymentTrigg
 	result := -1
 	for i := range triggerPolicies {
 		if triggerPolicies[i].Type == appsv1.DeploymentTriggerOnImageChange {
-			if result != -1 {
-				return -1, fmt.Errorf("found more than one imageChangeParams Deployment trigger policy")
-			}
 			result = i
+			break
 		}
 	}
 
 	if result == -1 {
-		return -1, fmt.Errorf("no imageChangeParams deployment trigger policy found")
+		return -1, errors.New("no imageChangeParams deployment trigger policy found")
 	}
 
 	return result, nil
