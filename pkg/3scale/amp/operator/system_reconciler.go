@@ -5,6 +5,7 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/upgrade"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -118,6 +119,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+		upgrade.SphinxSecretKeyEnvVarMutator,
 	)
 	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), sphinxDCmutator)
 	if err != nil {
