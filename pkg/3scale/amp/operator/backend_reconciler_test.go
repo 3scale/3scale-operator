@@ -251,23 +251,3 @@ func backendApiManagerCreator(listenerReplicas, cronReplicas, workerReplicas *in
 		},
 	}
 }
-
-func confirmReplicasWhenAnnotationIsNotPresent(apiManager *appsv1alpha1.APIManager, dc *appsv1.DeploymentConfig, annotation string, annotationValue string, expectedValue int32) bool {
-	if !metav1.HasAnnotation(apiManager.ObjectMeta, annotation) {
-		if dc.Spec.Replicas != expectedValue {
-			return false
-		}
-	}
-
-	return true
-}
-
-func confirmReplicasWhenAnnotationPresent(apiManager *appsv1alpha1.APIManager, dc *appsv1.DeploymentConfig, annotation string, annotationValue string, expectedValue int32) bool {
-	if metav1.HasAnnotation(apiManager.ObjectMeta, annotation) && apiManager.Annotations[annotation] == annotationValue {
-		if dc.Spec.Replicas != expectedValue {
-			return false
-		}
-	}
-
-	return true
-}

@@ -866,16 +866,6 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 		changed = true
 	}
 
-	if spec.System.AppSpec.Replicas == nil {
-		spec.System.AppSpec.Replicas = apimanager.defaultReplicas()
-		changed = true
-	}
-
-	if spec.System.SidekiqSpec.Replicas == nil {
-		spec.System.SidekiqSpec.Replicas = apimanager.defaultReplicas()
-		changed = true
-	}
-
 	return changed, nil
 }
 

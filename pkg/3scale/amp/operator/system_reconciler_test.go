@@ -16,6 +16,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/policy/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
@@ -115,5 +116,131 @@ func TestSystemReconcilerCreate(t *testing.T) {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 		})
+	}
+}
+
+func TestReplicaSystemReconciler(t *testing.T) {
+	var (
+		namespace        = "operator-unittest"
+		log              = logf.Log.WithName("operator_test")
+		oneValue   int32 = 1
+		oneValue64 int64 = 1
+		twoValue   int32 = 2
+	)
+	ctx := context.TODO()
+	s := scheme.Scheme
+
+	err := appsv1alpha1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := configv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		testName                 string
+		objName                  string
+		apimanager               *appsv1alpha1.APIManager
+		expectedAmountOfReplicas int32
+	}{
+		{"system app replicas set", "system-app", testSystemAPIManagerCreator(&oneValue64, nil), oneValue},
+		{"system app replicas not set", "system-app", testSystemAPIManagerCreator(nil, nil), twoValue},
+
+		{"system sidekiq replicas set", "system-sidekiq", testSystemAPIManagerCreator(nil, &oneValue64), oneValue},
+		{"system sidekiq replicas not set", "system-sidekiq", testSystemAPIManagerCreator(nil, nil), twoValue},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			objs := []runtime.Object{tc.apimanager}
+			// Create a fake client to mock API calls.
+			cl := fake.NewFakeClient(objs...)
+			clientAPIReader := fake.NewFakeClient(objs...)
+			clientset := fakeclientset.NewSimpleClientset()
+			recorder := record.NewFakeRecorder(10000)
+			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, tc.apimanager)
+
+			reconciler := NewSystemReconciler(baseAPIManagerLogicReconciler)
+			_, err = reconciler.Reconcile()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			dc := &appsv1.DeploymentConfig{}
+			namespacedName := types.NamespacedName{
+				Name:      tc.objName,
+				Namespace: namespace,
+			}
+
+			err = cl.Get(context.TODO(), namespacedName, dc)
+			if err != nil {
+				subT.Errorf("error fetching object %s: %v", tc.objName, err)
+			}
+
+			// bump the amount of replicas in the dc
+			dc.Spec.Replicas = twoValue
+			err = cl.Update(context.TODO(), dc)
+			if err != nil {
+				subT.Errorf("error updating dc of %s: %v", tc.objName, err)
+			}
+
+			// re-run the reconciler
+			_, err = reconciler.Reconcile()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = cl.Get(context.TODO(), namespacedName, dc)
+			if err != nil {
+				subT.Errorf("error fetching object %s: %v", tc.objName, err)
+			}
+
+			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			}
+		})
+	}
+}
+
+func testSystemAPIManagerCreator(appReplicas, sidekiqReplicas *int64) *appsv1alpha1.APIManager {
+	var (
+		name                  = "example-apimanager"
+		namespace             = "operator-unittest"
+		wildcardDomain        = "test.3scale.net"
+		appLabel              = "someLabel"
+		tenantName            = "someTenant"
+		trueValue             = true
+		tmpApicastRegistryURL = apicastRegistryURL
+	)
+
+	return &appsv1alpha1.APIManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appsv1alpha1.APIManagerSpec{
+			Apicast: &appsv1alpha1.ApicastSpec{RegistryURL: &tmpApicastRegistryURL},
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				AppLabel:                     &appLabel,
+				ImageStreamTagImportInsecure: &trueValue,
+				WildcardDomain:               wildcardDomain,
+				TenantName:                   &tenantName,
+				ResourceRequirementsEnabled:  &trueValue,
+			},
+			System: &appsv1alpha1.SystemSpec{
+				AppSpec:         &appsv1alpha1.SystemAppSpec{Replicas: appReplicas},
+				SidekiqSpec:     &appsv1alpha1.SystemSidekiqSpec{Replicas: sidekiqReplicas},
+				SphinxSpec:      &appsv1alpha1.SystemSphinxSpec{},
+				FileStorageSpec: &appsv1alpha1.SystemFileStorageSpec{},
+			},
+			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+		},
 	}
 }

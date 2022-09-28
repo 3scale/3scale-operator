@@ -14,12 +14,6 @@ type BackendReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
 
-const (
-	disableBackendListenerReplicasReconciler = "apps.3scale.net/disable-backend-listener-replica-reconciler"
-	disableBackendWorkerReplicasReconciler   = "apps.3scale.net/disable-backend-worker-replica-reconciler"
-	disableCronReplicasReconciler            = "apps.3scale.net/disable-cron-replica-reconciler"
-)
-
 func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *BackendReconciler {
 	return &BackendReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,

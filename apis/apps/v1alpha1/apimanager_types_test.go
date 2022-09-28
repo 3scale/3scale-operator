@@ -54,13 +54,9 @@ func TestSetDefaults(t *testing.T) {
 				CronSpec:     &BackendCronSpec{},
 			},
 			System: &SystemSpec{
-				AppSpec: &SystemAppSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				SidekiqSpec: &SystemSidekiqSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				SphinxSpec: &SystemSphinxSpec{},
+				AppSpec:     &SystemAppSpec{},
+				SidekiqSpec: &SystemSidekiqSpec{},
+				SphinxSpec:  &SystemSphinxSpec{},
 			},
 			Zync: &ZyncSpec{
 				AppSpec: &ZyncAppSpec{

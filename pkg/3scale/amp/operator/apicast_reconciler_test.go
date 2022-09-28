@@ -799,11 +799,11 @@ func TestReplicaApicastReconciler(t *testing.T) {
 		apimanager               *appsv1alpha1.APIManager
 		expectedAmountOfReplicas int32
 	}{
-		{"apicast-staging replicas set", "apicast-staging", apiManagerCreator(&oneValue64, nil), oneValue},
-		{"apicast-staging replicas not set", "apicast-staging", apiManagerCreator(nil, nil), twoValue},
+		{"apicast-staging replicas set", "apicast-staging", testApicastAPIManagerCreator(&oneValue64, nil), oneValue},
+		{"apicast-staging replicas not set", "apicast-staging", testApicastAPIManagerCreator(nil, nil), twoValue},
 
-		{"apicast-production replicas set", "apicast-production", apiManagerCreator(nil, &oneValue64), oneValue},
-		{"apicast-production replicas not set", "apicast-production", apiManagerCreator(nil, nil), twoValue},
+		{"apicast-production replicas set", "apicast-production", testApicastAPIManagerCreator(nil, &oneValue64), oneValue},
+		{"apicast-production replicas not set", "apicast-production", testApicastAPIManagerCreator(nil, nil), twoValue},
 	}
 
 	for _, tc := range cases {
@@ -859,7 +859,7 @@ func TestReplicaApicastReconciler(t *testing.T) {
 	}
 }
 
-func apiManagerCreator(stagingReplicas, productionReplicas *int64) *appsv1alpha1.APIManager {
+func testApicastAPIManagerCreator(stagingReplicas, productionReplicas *int64) *appsv1alpha1.APIManager {
 	var (
 		name                 = "example-apimanager"
 		namespace            = "operator-unittest"

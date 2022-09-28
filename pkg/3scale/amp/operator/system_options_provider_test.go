@@ -19,9 +19,7 @@ import (
 )
 
 const (
-	systemAppReplicas     int64 = 3
-	systemSidekiqReplicas int64 = 4
-	apicastRegistryURL          = "http://otherapicast:8090/policies"
+	apicastRegistryURL = "http://otherapicast:8090/policies"
 )
 
 func testSystemCommonLabels() map[string]string {
@@ -221,16 +219,14 @@ func testSystemSphinxCustomResourceRequirements() *v1.ResourceRequirements {
 }
 
 func basicApimanagerSpecTestSystemOptions() *appsv1alpha1.APIManager {
-	tmpSystemAppReplicas := systemAppReplicas
-	tmpSystemSideKiqReplicas := systemSidekiqReplicas
 	tmpApicastRegistryURL := apicastRegistryURL
 
 	apimanager := basicApimanager()
 	apimanager.Spec.Apicast = &appsv1alpha1.ApicastSpec{RegistryURL: &tmpApicastRegistryURL}
 	apimanager.Spec.System = &appsv1alpha1.SystemSpec{
 		FileStorageSpec: &appsv1alpha1.SystemFileStorageSpec{},
-		AppSpec:         &appsv1alpha1.SystemAppSpec{Replicas: &tmpSystemAppReplicas},
-		SidekiqSpec:     &appsv1alpha1.SystemSidekiqSpec{Replicas: &tmpSystemSideKiqReplicas},
+		AppSpec:         &appsv1alpha1.SystemAppSpec{},
+		SidekiqSpec:     &appsv1alpha1.SystemSidekiqSpec{},
 		SphinxSpec:      &appsv1alpha1.SystemSphinxSpec{},
 	}
 	apimanager.Spec.PodDisruptionBudget = &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true}
@@ -299,8 +295,6 @@ func getSystemMasterApicastSecret() *v1.Secret {
 func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOptions {
 	recaptchaPublicKey := component.DefaultRecaptchaPublickey()
 	recaptchaPrivateKey := component.DefaultRecaptchaPrivatekey()
-	tmpSystemAppReplicas := int32(systemAppReplicas)
-	tmpSystemSideKiqReplicas := int32(systemSidekiqReplicas)
 	tmpSystemAdminEmail := component.DefaultSystemAdminEmail()
 	tmpSystemUserSessionTTL := component.DefaultUserSessionTTL()
 	tmpSMTPAddress := component.DefaultSystemSMTPAddress()
@@ -337,8 +331,8 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		AdminAccessToken:                          opts.AdminAccessToken,
 		MasterAccessToken:                         opts.MasterAccessToken,
 		ApicastAccessToken:                        opts.ApicastAccessToken,
-		AppReplicas:                               &tmpSystemAppReplicas,
-		SidekiqReplicas:                           &tmpSystemSideKiqReplicas,
+		AppReplicas:                               1,
+		SidekiqReplicas:                           1,
 		AdminEmail:                                &tmpSystemAdminEmail,
 		UserSessionTTL:                            &tmpSystemUserSessionTTL,
 		PvcFileStorageOptions: &component.PVCFileStorageOptions{

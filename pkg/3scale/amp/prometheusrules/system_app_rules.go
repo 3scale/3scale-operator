@@ -35,7 +35,6 @@ func systemOptions(ns string) (*component.SystemOptions, error) {
 	o := component.NewSystemOptions()
 
 	tmp := "_"
-	var tmpInt int32 = 1
 
 	// Required options for generating PrometheusRules
 	o.CommonLabels = commonSystemLabels()
@@ -69,8 +68,8 @@ func systemOptions(ns string) (*component.SystemOptions, error) {
 	o.AppSecretKeyBase = "_"
 	o.BackendSharedSecret = "_"
 	o.TenantName = "_"
-	o.AppReplicas = &tmpInt
-	o.SidekiqReplicas = &tmpInt
+	o.AppReplicas = 1
+	o.SidekiqReplicas = 1
 	o.S3FileStorageOptions = &component.S3FileStorageOptions{ConfigurationSecretName: "_"}
 	o.SmtpSecretOptions = component.SystemSMTPSecretOptions{
 		Address:           &tmp,
