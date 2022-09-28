@@ -802,21 +802,6 @@ func (apimanager *APIManager) setBackendSpecDefaults() bool {
 		changed = true
 	}
 
-	if spec.Backend.ListenerSpec.Replicas == nil {
-		spec.Backend.ListenerSpec.Replicas = apimanager.defaultReplicas()
-		changed = true
-	}
-
-	if spec.Backend.CronSpec.Replicas == nil {
-		spec.Backend.CronSpec.Replicas = apimanager.defaultReplicas()
-		changed = true
-	}
-
-	if spec.Backend.WorkerSpec.Replicas == nil {
-		spec.Backend.WorkerSpec.Replicas = apimanager.defaultReplicas()
-		changed = true
-	}
-
 	return changed
 }
 

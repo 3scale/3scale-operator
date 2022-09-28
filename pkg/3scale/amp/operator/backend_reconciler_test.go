@@ -125,12 +125,13 @@ func TestNewBackendReconciler(t *testing.T) {
 	}
 }
 
-func TestAnnotationsBackendReconciler(t *testing.T) {
+func TestReplicaBackendReconciler(t *testing.T) {
 	var (
-		namespace = "operator-unittest"
-		log       = logf.Log.WithName("operator_test")
-		// oneValue             int64 = 1
-		twoValue int32 = 2
+		namespace        = "operator-unittest"
+		log              = logf.Log.WithName("operator_test")
+		twoValue   int32 = 2
+		oneValue   int32 = 1
+		oneValue64 int64 = 1
 	)
 	ctx := context.TODO()
 	s := scheme.Scheme
@@ -154,27 +155,17 @@ func TestAnnotationsBackendReconciler(t *testing.T) {
 	cases := []struct {
 		testName                 string
 		objName                  string
-		obj                      runtime.Object
 		apimanager               *appsv1alpha1.APIManager
-		annotation               string
-		annotationValue          string
 		expectedAmountOfReplicas int32
-		validatingFunction       func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
 	}{
-		{"cronDC-annotation not present", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableCronReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"cronDC-annotation false", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronReplicasReconciler, "false"), disableCronReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"cronDC-annotation true", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronReplicasReconciler, "true"), disableCronReplicasReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"cronDC-annotation true of dummy value", "backend-cron", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableCronReplicasReconciler, "true"), disableCronReplicasReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"cron replicas set", "backend-cron", backendApiManagerCreator(nil, &oneValue64, nil), oneValue},
+		{"cron replicas not set", "backend-cron", backendApiManagerCreator(nil, nil, nil), twoValue},
 
-		{"listenerDC-annotation not present", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendListenerReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"listenerDC-annotation false", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerReplicasReconciler, "false"), disableBackendListenerReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"listenerDC-annotation true", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerReplicasReconciler, "true"), disableBackendListenerReplicasReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"listenerDC-annotation true of dummy value", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerReplicasReconciler, "true"), disableBackendListenerReplicasReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		//{"listener replicas set", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendListenerReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		//{"listener replicas not set", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerReplicasReconciler, "false"), disableBackendListenerReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
 
-		{"workerDC-annotation not present", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendWorkerReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"workerDC-annotation false", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerReplicasReconciler, "false"), disableBackendWorkerReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"workerDC-annotation true", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerReplicasReconciler, "true"), disableBackendWorkerReplicasReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"workerDC-annotation true of dummy value", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerReplicasReconciler, "true"), disableBackendWorkerReplicasReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		//{"worker replicas set", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendWorkerReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
+		//{"worker replicas not set", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerReplicasReconciler, "false"), disableBackendWorkerReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
 	}
 
 	for _, tc := range cases {
@@ -221,30 +212,27 @@ func TestAnnotationsBackendReconciler(t *testing.T) {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			correct := tc.validatingFunction(tc.apimanager, dc, tc.annotation, tc.annotationValue, tc.expectedAmountOfReplicas)
-			if !correct {
-				subT.Errorf("value of expteced replicas does not match for %s. expected: %v actual: %v", tc.objName, tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
 			}
 		})
 	}
 }
 
-func backendApiManagerCreator(disableSyncAnnotation string, disableSyncAnnotationValue string) *appsv1alpha1.APIManager {
+func backendApiManagerCreator(listenerReplicas, cronReplicas, workerReplicas *int64) *appsv1alpha1.APIManager {
 	var (
-		name                 = "example-apimanager"
-		namespace            = "operator-unittest"
-		wildcardDomain       = "test.3scale.net"
-		appLabel             = "someLabel"
-		tenantName           = "someTenant"
-		trueValue            = true
-		oneValue       int64 = 1
+		name           = "example-apimanager"
+		namespace      = "operator-unittest"
+		wildcardDomain = "test.3scale.net"
+		appLabel       = "someLabel"
+		tenantName     = "someTenant"
+		trueValue      = true
 	)
 
 	return &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   namespace,
-			Annotations: map[string]string{disableSyncAnnotation: disableSyncAnnotationValue},
+			Name:      name,
+			Namespace: namespace,
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
@@ -255,9 +243,9 @@ func backendApiManagerCreator(disableSyncAnnotation string, disableSyncAnnotatio
 				ResourceRequirementsEnabled:  &trueValue,
 			},
 			Backend: &appsv1alpha1.BackendSpec{
-				ListenerSpec: &appsv1alpha1.BackendListenerSpec{Replicas: &oneValue},
-				WorkerSpec:   &appsv1alpha1.BackendWorkerSpec{Replicas: &oneValue},
-				CronSpec:     &appsv1alpha1.BackendCronSpec{Replicas: &oneValue},
+				ListenerSpec: &appsv1alpha1.BackendListenerSpec{Replicas: listenerReplicas},
+				WorkerSpec:   &appsv1alpha1.BackendWorkerSpec{Replicas: workerReplicas},
+				CronSpec:     &appsv1alpha1.BackendCronSpec{Replicas: cronReplicas},
 			},
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},

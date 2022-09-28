@@ -53,15 +53,9 @@ func TestSetDefaults(t *testing.T) {
 				},
 			},
 			Backend: &BackendSpec{
-				ListenerSpec: &BackendListenerSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				WorkerSpec: &BackendWorkerSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				CronSpec: &BackendCronSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
+				ListenerSpec: &BackendListenerSpec{},
+				WorkerSpec:   &BackendWorkerSpec{},
+				CronSpec:     &BackendCronSpec{},
 			},
 			System: &SystemSpec{
 				AppSpec: &SystemAppSpec{
