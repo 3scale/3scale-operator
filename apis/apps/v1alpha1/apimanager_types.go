@@ -760,16 +760,6 @@ func (apimanager *APIManager) setApicastSpecDefaults() bool {
 		changed = true
 	}
 
-	if spec.Apicast.StagingSpec.Replicas == nil {
-		spec.Apicast.StagingSpec.Replicas = apimanager.defaultReplicas()
-		changed = true
-	}
-
-	if spec.Apicast.ProductionSpec.Replicas == nil {
-		spec.Apicast.ProductionSpec.Replicas = apimanager.defaultReplicas()
-		changed = true
-	}
-
 	return changed
 }
 

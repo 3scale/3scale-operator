@@ -17,11 +17,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
-const (
-	disableApicastProductionReplicaReconciler = "apps.3scale.net/disable-apicast-production-replica-reconciler"
-	disableApicastStagingReplicaReconciler    = "apps.3scale.net/disable-apicast-staging-replica-reconciler"
-)
-
 func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*v1.ConfigMap)
 	if !ok {
@@ -85,7 +80,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 	}
 
-	if value, found := r.apiManager.ObjectMeta.Annotations[disableApicastStagingReplicaReconciler]; !found || value != "true" {
+	if r.apiManager.Spec.Apicast.StagingSpec.Replicas != nil {
 		stagingMutators = append(stagingMutators, reconcilers.DeploymentConfigReplicasMutator)
 	}
 
@@ -117,7 +112,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 	}
 
-	if value, found := r.apiManager.ObjectMeta.Annotations[disableApicastProductionReplicaReconciler]; !found || value != "true" {
+	if r.apiManager.Spec.Apicast.ProductionSpec.Replicas != nil {
 		productionMutators = append(productionMutators, reconcilers.DeploymentConfigReplicasMutator)
 	}
 

@@ -140,8 +140,15 @@ func (a *ApicastOptionsProvider) setNodeAffinityAndTolerationsOptions() {
 }
 
 func (a *ApicastOptionsProvider) setReplicas() {
-	a.apicastOptions.ProductionReplicas = int32(*a.apimanager.Spec.Apicast.ProductionSpec.Replicas)
-	a.apicastOptions.StagingReplicas = int32(*a.apimanager.Spec.Apicast.StagingSpec.Replicas)
+	a.apicastOptions.ProductionReplicas = 1
+	if a.apimanager.Spec.Apicast.ProductionSpec.Replicas != nil {
+		a.apicastOptions.ProductionReplicas = int32(*a.apimanager.Spec.Apicast.ProductionSpec.Replicas)
+	}
+
+	a.apicastOptions.StagingReplicas = 1
+	if a.apimanager.Spec.Apicast.StagingSpec.Replicas != nil {
+		a.apicastOptions.StagingReplicas = int32(*a.apimanager.Spec.Apicast.StagingSpec.Replicas)
+	}
 }
 
 func (a *ApicastOptionsProvider) commonLabels() map[string]string {

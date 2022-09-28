@@ -161,11 +161,11 @@ func TestReplicaBackendReconciler(t *testing.T) {
 		{"cron replicas set", "backend-cron", backendApiManagerCreator(nil, &oneValue64, nil), oneValue},
 		{"cron replicas not set", "backend-cron", backendApiManagerCreator(nil, nil, nil), twoValue},
 
-		//{"listener replicas set", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendListenerReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		//{"listener replicas not set", "backend-listener", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendListenerReplicasReconciler, "false"), disableBackendListenerReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"listener replicas set", "backend-listener", backendApiManagerCreator(&oneValue64, nil, nil), oneValue},
+		{"listener replicas not set", "backend-listener", backendApiManagerCreator(nil, nil, nil), twoValue},
 
-		//{"worker replicas set", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator("someAnnotation", "false"), disableBackendWorkerReplicasReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		//{"worker replicas not set", "backend-worker", &appsv1.DeploymentConfig{}, backendApiManagerCreator(disableBackendWorkerReplicasReconciler, "false"), disableBackendWorkerReplicasReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"worker replicas set", "backend-worker", backendApiManagerCreator(nil, nil, &oneValue64), oneValue},
+		{"worker replicas not set", "backend-worker", backendApiManagerCreator(nil, nil, nil), twoValue},
 	}
 
 	for _, tc := range cases {

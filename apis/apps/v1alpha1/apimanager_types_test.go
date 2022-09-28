@@ -45,12 +45,8 @@ func TestSetDefaults(t *testing.T) {
 				ApicastManagementAPI: &tmpDefaultApicastManagementAPI,
 				OpenSSLVerify:        &tmpDefaultApicastOpenSSLVerify,
 				RegistryURL:          &tmpDefaultApicastRegistryURL,
-				ProductionSpec: &ApicastProductionSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				StagingSpec: &ApicastStagingSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
+				ProductionSpec:       &ApicastProductionSpec{},
+				StagingSpec:          &ApicastStagingSpec{},
 			},
 			Backend: &BackendSpec{
 				ListenerSpec: &BackendListenerSpec{},

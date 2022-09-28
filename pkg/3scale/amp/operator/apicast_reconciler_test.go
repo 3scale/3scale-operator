@@ -769,11 +769,13 @@ func TestApicastServicePortMutator(t *testing.T) {
 	}
 }
 
-func TestApicastReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
+func TestReplicaApicastReconciler(t *testing.T) {
 	var (
-		namespace       = "operator-unittest"
-		log             = logf.Log.WithName("operator_test")
-		twoValue  int32 = 2
+		namespace        = "operator-unittest"
+		log              = logf.Log.WithName("operator_test")
+		oneValue   int32 = 1
+		oneValue64 int64 = 1
+		twoValue   int32 = 2
 	)
 	ctx := context.TODO()
 	s := scheme.Scheme
@@ -794,22 +796,14 @@ func TestApicastReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 	cases := []struct {
 		testName                 string
 		objName                  string
-		obj                      runtime.Object
 		apimanager               *appsv1alpha1.APIManager
-		annotation               string
-		annotationValue          string
 		expectedAmountOfReplicas int32
-		validatingFunction       func(*appsv1alpha1.APIManager, *appsv1.DeploymentConfig, string, string, int32) bool
 	}{
-		{"apicast-staging-DC-annotation not present", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastStagingReplicaReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"apicast-staging-DC-annotation false", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "false"), disableApicastStagingReplicaReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"apicast-staging-DC-annotation true", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "true"), disableApicastStagingReplicaReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"apicast-staging-DC-annotation true of dummy value", "apicast-staging", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastStagingReplicaReconciler, "true"), disableApicastStagingReplicaReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"apicast-staging replicas set", "apicast-staging", apiManagerCreator(&oneValue64, nil), oneValue},
+		{"apicast-staging replicas not set", "apicast-staging", apiManagerCreator(nil, nil), twoValue},
 
-		{"apicast-production-DC-annotation not present", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator("someAnnotation", "false"), disableApicastProductionReplicaReconciler, "dummy", int32(1), confirmReplicasWhenAnnotationIsNotPresent},
-		{"apicast-production-DC-annotation false", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "false"), disableApicastProductionReplicaReconciler, "false", int32(1), confirmReplicasWhenAnnotationPresent},
-		{"apicast-production-DC-annotation true", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "true"), disableApicastProductionReplicaReconciler, "true", int32(2), confirmReplicasWhenAnnotationPresent},
-		{"apicast-production-DC-annotation true of dummy value", "apicast-production", &appsv1.DeploymentConfig{}, apiManagerCreator(disableApicastProductionReplicaReconciler, "true"), disableApicastProductionReplicaReconciler, "someDummyValue", int32(1), confirmReplicasWhenAnnotationPresent},
+		{"apicast-production replicas set", "apicast-production", apiManagerCreator(nil, &oneValue64), oneValue},
+		{"apicast-production replicas not set", "apicast-production", apiManagerCreator(nil, nil), twoValue},
 	}
 
 	for _, tc := range cases {
@@ -858,31 +852,28 @@ func TestApicastReconcilerDisableReplicaSyncingAnnotations(t *testing.T) {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			correct := tc.validatingFunction(tc.apimanager, dc, tc.annotation, tc.annotationValue, tc.expectedAmountOfReplicas)
-			if !correct {
-				subT.Errorf("value of expteced replicas does not match for %s. expected: %v actual: %v", tc.objName, tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
 			}
 		})
 	}
 }
 
-func apiManagerCreator(disableSyncAnnotation string, disableSyncAnnotationValue string) *appsv1alpha1.APIManager {
+func apiManagerCreator(stagingReplicas, productionReplicas *int64) *appsv1alpha1.APIManager {
 	var (
-		name                       = "example-apimanager"
-		namespace                  = "operator-unittest"
-		wildcardDomain             = "test.3scale.net"
-		appLabel                   = "someLabel"
-		tenantName                 = "someTenant"
-		trueValue                  = true
-		apicastManagementAPI       = "disabled"
-		oneValue             int64 = 1
+		name                 = "example-apimanager"
+		namespace            = "operator-unittest"
+		wildcardDomain       = "test.3scale.net"
+		appLabel             = "someLabel"
+		tenantName           = "someTenant"
+		trueValue            = true
+		apicastManagementAPI = "disabled"
 	)
 
 	return &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   namespace,
-			Annotations: map[string]string{disableSyncAnnotation: disableSyncAnnotationValue},
+			Name:      name,
+			Namespace: namespace,
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
@@ -896,12 +887,8 @@ func apiManagerCreator(disableSyncAnnotation string, disableSyncAnnotationValue 
 				ApicastManagementAPI: &apicastManagementAPI,
 				OpenSSLVerify:        &trueValue,
 				IncludeResponseCodes: &trueValue,
-				StagingSpec: &appsv1alpha1.ApicastStagingSpec{
-					Replicas: &oneValue,
-				},
-				ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
-					Replicas: &oneValue,
-				},
+				StagingSpec:          &appsv1alpha1.ApicastStagingSpec{Replicas: stagingReplicas},
+				ProductionSpec:       &appsv1alpha1.ApicastProductionSpec{Replicas: productionReplicas},
 			},
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
