@@ -763,11 +763,6 @@ func (apimanager *APIManager) setApicastSpecDefaults() bool {
 	return changed
 }
 
-func (apimanager *APIManager) defaultReplicas() *int64 {
-	var defaultReplicas int64 = 1
-	return &defaultReplicas
-}
-
 func (apimanager *APIManager) setBackendSpecDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
@@ -919,16 +914,6 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 
 	if spec.Zync.QueSpec == nil {
 		spec.Zync.QueSpec = &ZyncQueSpec{}
-		changed = true
-	}
-
-	if spec.Zync.AppSpec.Replicas == nil {
-		spec.Zync.AppSpec.Replicas = apimanager.defaultReplicas()
-		changed = true
-	}
-
-	if spec.Zync.QueSpec.Replicas == nil {
-		spec.Zync.QueSpec.Replicas = apimanager.defaultReplicas()
 		changed = true
 	}
 

@@ -13,6 +13,7 @@ import (
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
+	configv1 "github.com/openshift/api/config/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
@@ -251,5 +252,127 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestReplicaZyncReconciler(t *testing.T) {
+	var (
+		namespace        = "operator-unittest"
+		log              = logf.Log.WithName("operator_test")
+		oneValue   int32 = 1
+		oneValue64 int64 = 1
+		twoValue   int32 = 2
+	)
+	ctx := context.TODO()
+	s := scheme.Scheme
+
+	err := appsv1alpha1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := configv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		testName                 string
+		objName                  string
+		apimanager               *appsv1alpha1.APIManager
+		expectedAmountOfReplicas int32
+	}{
+		{"zync replicas set", "zync", testZyncAPIManagerCreator(&oneValue64, nil), oneValue},
+		{"zync replicas not set", "zync", testZyncAPIManagerCreator(nil, nil), twoValue},
+
+		{"zync-que replicas set", "zync-que", testZyncAPIManagerCreator(nil, &oneValue64), oneValue},
+		{"zync-que replicas not set", "zync-que", testZyncAPIManagerCreator(nil, nil), twoValue},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			objs := []runtime.Object{tc.apimanager}
+			// Create a fake client to mock API calls.
+			cl := fake.NewFakeClient(objs...)
+			clientAPIReader := fake.NewFakeClient(objs...)
+			clientset := fakeclientset.NewSimpleClientset()
+			recorder := record.NewFakeRecorder(10000)
+			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, tc.apimanager)
+
+			reconciler := NewZyncReconciler(baseAPIManagerLogicReconciler)
+			_, err = reconciler.Reconcile()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			dc := &appsv1.DeploymentConfig{}
+			namespacedName := types.NamespacedName{
+				Name:      tc.objName,
+				Namespace: namespace,
+			}
+
+			err = cl.Get(context.TODO(), namespacedName, dc)
+			if err != nil {
+				subT.Errorf("error fetching object %s: %v", tc.objName, err)
+			}
+
+			// bump the amount of replicas in the dc
+			dc.Spec.Replicas = twoValue
+			err = cl.Update(context.TODO(), dc)
+			if err != nil {
+				subT.Errorf("error updating dc of %s: %v", tc.objName, err)
+			}
+
+			// re-run the reconciler
+			_, err = reconciler.Reconcile()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = cl.Get(context.TODO(), namespacedName, dc)
+			if err != nil {
+				subT.Errorf("error fetching object %s: %v", tc.objName, err)
+			}
+
+			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			}
+		})
+	}
+}
+
+func testZyncAPIManagerCreator(zyncReplicas, zyncQueReplicas *int64) *appsv1alpha1.APIManager {
+	var (
+		name           = "example-apimanager"
+		namespace      = "operator-unittest"
+		wildcardDomain = "test.3scale.net"
+		appLabel       = "someLabel"
+		tenantName     = "someTenant"
+		trueValue      = true
+	)
+
+	return &appsv1alpha1.APIManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appsv1alpha1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				AppLabel:                     &appLabel,
+				ImageStreamTagImportInsecure: &trueValue,
+				WildcardDomain:               wildcardDomain,
+				TenantName:                   &tenantName,
+				ResourceRequirementsEnabled:  &trueValue,
+			},
+			Zync: &appsv1alpha1.ZyncSpec{
+				AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: zyncReplicas},
+				QueSpec: &appsv1alpha1.ZyncQueSpec{Replicas: zyncQueReplicas},
+			},
+			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+		},
 	}
 }

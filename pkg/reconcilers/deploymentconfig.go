@@ -43,18 +43,6 @@ func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
 	}
 }
 
-// GenericZyncMutators returns the generic mutators for zync components
-func GenericZyncMutators() MutateFn {
-	return DeploymentConfigMutator(
-		DeploymentConfigImageChangeTriggerMutator,
-		DeploymentConfigReplicasMutator,
-		DeploymentConfigContainerResourcesMutator,
-		DeploymentConfigAffinityMutator,
-		DeploymentConfigTolerationsMutator,
-		DeploymentConfigPodTemplateLabelsMutator,
-	)
-}
-
 // GenericBackendMutators returns the generic mutators for backend
 func GenericBackendMutators() []DCMutateFn {
 	return []DCMutateFn{

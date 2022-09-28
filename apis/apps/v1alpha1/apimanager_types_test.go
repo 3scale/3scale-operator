@@ -21,8 +21,6 @@ func TestSetDefaults(t *testing.T) {
 	tmpDefaultApicastResponseCodes := defaultApicastResponseCodes
 	tmpDefaultApicastRegistryURL := defaultApicastRegistryURL
 
-	var tmpDefaultReplicas int64 = 1
-
 	inputAPIManager := minimumAPIManagerTest()
 
 	expectedAPIManager := APIManager{
@@ -59,12 +57,8 @@ func TestSetDefaults(t *testing.T) {
 				SphinxSpec:  &SystemSphinxSpec{},
 			},
 			Zync: &ZyncSpec{
-				AppSpec: &ZyncAppSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				QueSpec: &ZyncQueSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
+				AppSpec: &ZyncAppSpec{},
+				QueSpec: &ZyncQueSpec{},
 			},
 			PodDisruptionBudget: nil,
 		},
