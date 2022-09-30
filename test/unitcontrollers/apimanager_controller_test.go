@@ -6,6 +6,7 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	appscontrollers "github.com/3scale/3scale-operator/controllers/apps"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -114,13 +115,12 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		t.Fatalf("get APIManager: (%v)", err)
 	}
 
-	backendListenerExistingReplicas := finalAPIManager.Spec.Backend.ListenerSpec.Replicas
-	if backendListenerExistingReplicas == nil {
-		t.Errorf("APIManager's backend listener replicas does not have a default value set")
+	if finalAPIManager.Annotations == nil {
+		t.Error("APIManager's does not have annotations")
 
 	}
 
-	if *backendListenerExistingReplicas != 1 {
-		t.Errorf("APIManager's backend listener replicas size (%d) is not the expected size (%d)", backendListenerExistingReplicas, 1)
+	if val, ok := finalAPIManager.Annotations[appsv1alpha1.OperatorVersionAnnotation]; !ok || val != version.Version {
+		t.Error("APIManager's version annotation does not match")
 	}
 }

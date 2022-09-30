@@ -83,31 +83,37 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// SystemApp DC
-	systemAppDCMutator := reconcilers.DeploymentConfigMutator(
+	systemAppDCMutators := []reconcilers.DCMutateFn{
 		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigReplicasMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		r.systemAppDCResourceMutator,
-	)
+	}
 
-	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), systemAppDCMutator)
+	if r.apiManager.Spec.System.AppSpec.Replicas != nil {
+		systemAppDCMutators = append(systemAppDCMutators, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
+	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), reconcilers.DeploymentConfigMutator(systemAppDCMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Sidekiq DC
-	sidekiqDCMutator := reconcilers.DeploymentConfigMutator(
+	sidekiqDCMutators := []reconcilers.DCMutateFn{
 		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigReplicasMutator,
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-	)
+	}
 
-	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), sidekiqDCMutator)
+	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
+		sidekiqDCMutators = append(sidekiqDCMutators, reconcilers.DeploymentConfigReplicasMutator)
+	}
+
+	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.DeploymentConfigMutator(sidekiqDCMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}

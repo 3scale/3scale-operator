@@ -21,8 +21,6 @@ func TestSetDefaults(t *testing.T) {
 	tmpDefaultApicastResponseCodes := defaultApicastResponseCodes
 	tmpDefaultApicastRegistryURL := defaultApicastRegistryURL
 
-	var tmpDefaultReplicas int64 = 1
-
 	inputAPIManager := minimumAPIManagerTest()
 
 	expectedAPIManager := APIManager{
@@ -45,40 +43,22 @@ func TestSetDefaults(t *testing.T) {
 				ApicastManagementAPI: &tmpDefaultApicastManagementAPI,
 				OpenSSLVerify:        &tmpDefaultApicastOpenSSLVerify,
 				RegistryURL:          &tmpDefaultApicastRegistryURL,
-				ProductionSpec: &ApicastProductionSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				StagingSpec: &ApicastStagingSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
+				ProductionSpec:       &ApicastProductionSpec{},
+				StagingSpec:          &ApicastStagingSpec{},
 			},
 			Backend: &BackendSpec{
-				ListenerSpec: &BackendListenerSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				WorkerSpec: &BackendWorkerSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				CronSpec: &BackendCronSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
+				ListenerSpec: &BackendListenerSpec{},
+				WorkerSpec:   &BackendWorkerSpec{},
+				CronSpec:     &BackendCronSpec{},
 			},
 			System: &SystemSpec{
-				AppSpec: &SystemAppSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				SidekiqSpec: &SystemSidekiqSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				SphinxSpec: &SystemSphinxSpec{},
+				AppSpec:     &SystemAppSpec{},
+				SidekiqSpec: &SystemSidekiqSpec{},
+				SphinxSpec:  &SystemSphinxSpec{},
 			},
 			Zync: &ZyncSpec{
-				AppSpec: &ZyncAppSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
-				QueSpec: &ZyncQueSpec{
-					Replicas: &tmpDefaultReplicas,
-				},
+				AppSpec: &ZyncAppSpec{},
+				QueSpec: &ZyncQueSpec{},
 			},
 			PodDisruptionBudget: nil,
 		},

@@ -458,10 +458,15 @@ func (s *SystemOptionsProvider) setFileStorageOptions() {
 }
 
 func (s *SystemOptionsProvider) setReplicas() {
-	appSecReplicas := int32(*s.apimanager.Spec.System.AppSpec.Replicas)
-	s.options.AppReplicas = &appSecReplicas
-	sidekiqReplicas := int32(*s.apimanager.Spec.System.SidekiqSpec.Replicas)
-	s.options.SidekiqReplicas = &sidekiqReplicas
+	s.options.AppReplicas = 1
+	if s.apimanager.Spec.System.AppSpec.Replicas != nil {
+		s.options.AppReplicas = int32(*s.apimanager.Spec.System.AppSpec.Replicas)
+	}
+
+	s.options.SidekiqReplicas = 1
+	if s.apimanager.Spec.System.SidekiqSpec.Replicas != nil {
+		s.options.SidekiqReplicas = int32(*s.apimanager.Spec.System.SidekiqSpec.Replicas)
+	}
 }
 
 func (s *SystemOptionsProvider) commonLabels() map[string]string {

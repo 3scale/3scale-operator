@@ -45,13 +45,33 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Zync DC
-	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.GenericZyncMutators())
+	zyncMutators := []reconcilers.DCMutateFn{
+		reconcilers.DeploymentConfigImageChangeTriggerMutator,
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+	}
+	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
+		zyncMutators = append(zyncMutators, reconcilers.DeploymentConfigReplicasMutator)
+	}
+	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.DeploymentConfigMutator(zyncMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Zync Que DC
-	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.GenericZyncMutators())
+	zyncQueMutators := []reconcilers.DCMutateFn{
+		reconcilers.DeploymentConfigImageChangeTriggerMutator,
+		reconcilers.DeploymentConfigContainerResourcesMutator,
+		reconcilers.DeploymentConfigAffinityMutator,
+		reconcilers.DeploymentConfigTolerationsMutator,
+		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+	}
+	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
+		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentConfigReplicasMutator)
+	}
+	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.DeploymentConfigMutator(zyncQueMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}

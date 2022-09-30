@@ -48,8 +48,8 @@ type SystemOptions struct {
 	S3FileStorageOptions  *S3FileStorageOptions  `validate:"required_without=PvcFileStorageOptions"`
 	PvcFileStorageOptions *PVCFileStorageOptions `validate:"required_without=S3FileStorageOptions"`
 
-	AppReplicas     *int32 `validate:"required"`
-	SidekiqReplicas *int32 `validate:"required"`
+	AppReplicas     int32
+	SidekiqReplicas int32
 
 	AdminAccessToken    string  `validate:"required"`
 	AdminPassword       string  `validate:"required"`

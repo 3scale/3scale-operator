@@ -572,7 +572,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag)}}},
 			},
-			Replicas: *system.Options.AppReplicas,
+			Replicas: system.Options.AppReplicas,
 			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -807,7 +807,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 							Kind: "ImageStreamTag",
 							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag)}}},
 			},
-			Replicas: *system.Options.SidekiqReplicas,
+			Replicas: system.Options.SidekiqReplicas,
 			Selector: map[string]string{"deploymentConfig": SystemSidekiqName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{

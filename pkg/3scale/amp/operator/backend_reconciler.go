@@ -14,12 +14,6 @@ type BackendReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
 
-const (
-	disableBackendListenerReplicasReconciler = "apps.3scale.net/disable-backend-listener-replica-reconciler"
-	disableBackendWorkerReplicasReconciler   = "apps.3scale.net/disable-backend-worker-replica-reconciler"
-	disableCronReplicasReconciler            = "apps.3scale.net/disable-cron-replica-reconciler"
-)
-
 func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *BackendReconciler {
 	return &BackendReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
@@ -34,8 +28,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Cron DC
 	cronConfigMutator := reconcilers.GenericBackendMutators()
-
-	if value, found := r.apiManager.ObjectMeta.Annotations[disableCronReplicasReconciler]; !found || value != "true" {
+	if r.apiManager.Spec.Backend.CronSpec.Replicas != nil {
 		cronConfigMutator = append(cronConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
 	}
 
@@ -46,8 +39,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Listener DC
 	listenerConfigMutator := reconcilers.GenericBackendMutators()
-
-	if value, found := r.apiManager.ObjectMeta.Annotations[disableBackendListenerReplicasReconciler]; !found || value != "true" {
+	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
 	}
 
@@ -70,8 +62,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker DC
 	workerConfigMutator := reconcilers.GenericBackendMutators()
-
-	if value, found := r.apiManager.ObjectMeta.Annotations[disableBackendWorkerReplicasReconciler]; !found || value != "true" {
+	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
 	}
 

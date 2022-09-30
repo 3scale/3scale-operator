@@ -142,9 +142,20 @@ func (o *OperatorBackendOptionsProvider) setNodeAffinityAndTolerationsOptions() 
 }
 
 func (o *OperatorBackendOptionsProvider) setReplicas() {
-	o.backendOptions.ListenerReplicas = int32(*o.apimanager.Spec.Backend.ListenerSpec.Replicas)
-	o.backendOptions.WorkerReplicas = int32(*o.apimanager.Spec.Backend.WorkerSpec.Replicas)
-	o.backendOptions.CronReplicas = int32(*o.apimanager.Spec.Backend.CronSpec.Replicas)
+	o.backendOptions.ListenerReplicas = 1
+	if o.apimanager.Spec.Backend.ListenerSpec.Replicas != nil {
+		o.backendOptions.ListenerReplicas = int32(*o.apimanager.Spec.Backend.ListenerSpec.Replicas)
+	}
+
+	o.backendOptions.WorkerReplicas = 1
+	if o.apimanager.Spec.Backend.WorkerSpec.Replicas != nil {
+		o.backendOptions.WorkerReplicas = int32(*o.apimanager.Spec.Backend.WorkerSpec.Replicas)
+	}
+
+	o.backendOptions.CronReplicas = 1
+	if o.apimanager.Spec.Backend.CronSpec.Replicas != nil {
+		o.backendOptions.CronReplicas = int32(*o.apimanager.Spec.Backend.CronSpec.Replicas)
+	}
 }
 
 func (o *OperatorBackendOptionsProvider) commonLabels() map[string]string {

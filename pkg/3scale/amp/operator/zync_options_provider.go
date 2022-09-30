@@ -197,8 +197,15 @@ func (z *ZyncOptionsProvider) setNodeAffinityAndTolerationsOptions() {
 }
 
 func (z *ZyncOptionsProvider) setReplicas() {
-	z.zyncOptions.ZyncReplicas = int32(*z.apimanager.Spec.Zync.AppSpec.Replicas)
-	z.zyncOptions.ZyncQueReplicas = int32(*z.apimanager.Spec.Zync.QueSpec.Replicas)
+	z.zyncOptions.ZyncReplicas = 1
+	if z.apimanager.Spec.Zync.AppSpec.Replicas != nil {
+		z.zyncOptions.ZyncReplicas = int32(*z.apimanager.Spec.Zync.AppSpec.Replicas)
+	}
+
+	z.zyncOptions.ZyncQueReplicas = 1
+	if z.apimanager.Spec.Zync.QueSpec.Replicas != nil {
+		z.zyncOptions.ZyncQueReplicas = int32(*z.apimanager.Spec.Zync.QueSpec.Replicas)
+	}
 }
 
 func (z *ZyncOptionsProvider) commonLabels() map[string]string {
