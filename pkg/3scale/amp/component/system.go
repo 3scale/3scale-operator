@@ -592,29 +592,31 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppMasterContainerResourceRequirements,
 							VolumeMounts: system.appMasterContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "master"}},
-								},
-								InitialDelaySeconds: 40,
-								TimeoutSeconds:      10,
-								PeriodSeconds:       10,
-								SuccessThreshold:    0,
-								FailureThreshold:    40,
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "master"}},
+									},
+									InitialDelaySeconds: 40,
+									TimeoutSeconds:      10,
+									PeriodSeconds:       10,
+									SuccessThreshold:    0,
+									FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/check.txt",
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "master",
-									},
-									Scheme: v1.URISchemeHTTP,
-									HTTPHeaders: []v1.HTTPHeader{
-										v1.HTTPHeader{
-											Name:  "X-Forwarded-Proto",
-											Value: "https"}}},
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Path: "/check.txt",
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "master",
+										},
+										Scheme: v1.URISchemeHTTP,
+										HTTPHeaders: []v1.HTTPHeader{
+											v1.HTTPHeader{
+												Name:  "X-Forwarded-Proto",
+												Value: "https"}}},
 								},
 								InitialDelaySeconds: 60,
 								TimeoutSeconds:      10,
@@ -635,36 +637,38 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppProviderContainerResourceRequirements,
 							VolumeMounts: system.appProviderContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "provider"}},
-								},
-								InitialDelaySeconds: 40,
-								TimeoutSeconds:      10,
-								PeriodSeconds:       10,
-								SuccessThreshold:    0,
-								FailureThreshold:    40,
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "provider"}},
+									},
+									InitialDelaySeconds: 40,
+									TimeoutSeconds:      10,
+									PeriodSeconds:       10,
+									SuccessThreshold:    0,
+									FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/check.txt",
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "provider",
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Path: "/check.txt",
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "provider",
+										},
+										Scheme: v1.URISchemeHTTP,
+										HTTPHeaders: []v1.HTTPHeader{
+											v1.HTTPHeader{
+												Name:  "X-Forwarded-Proto",
+												Value: "https"}}},
 									},
-									Scheme: v1.URISchemeHTTP,
-									HTTPHeaders: []v1.HTTPHeader{
-										v1.HTTPHeader{
-											Name:  "X-Forwarded-Proto",
-											Value: "https"}}},
+									InitialDelaySeconds: 60,
+									TimeoutSeconds:      10,
+									PeriodSeconds:       30,
+									SuccessThreshold:    0,
+									FailureThreshold:    10,
 								},
-								InitialDelaySeconds: 60,
-								TimeoutSeconds:      10,
-								PeriodSeconds:       30,
-								SuccessThreshold:    0,
-								FailureThreshold:    10,
-							},
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Stdin:           false,
 							StdinOnce:       false,
@@ -678,35 +682,37 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppDeveloperContainerResourceRequirements,
 							VolumeMounts: system.appDeveloperContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "developer"}},
-								},
-								InitialDelaySeconds: 40,
-								TimeoutSeconds:      10,
-								PeriodSeconds:       10,
-								SuccessThreshold:    0,
-								FailureThreshold:    40,
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "developer"}},
+									},
+									InitialDelaySeconds: 40,
+									TimeoutSeconds:      10,
+									PeriodSeconds:       10,
+									SuccessThreshold:    0,
+									FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/check.txt",
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "developer",
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Path: "/check.txt",
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "developer",
+										},
+										Scheme: v1.URISchemeHTTP,
+										HTTPHeaders: []v1.HTTPHeader{
+											v1.HTTPHeader{
+												Name:  "X-Forwarded-Proto",
+												Value: "https"}}},
 									},
-									Scheme: v1.URISchemeHTTP,
-									HTTPHeaders: []v1.HTTPHeader{
-										v1.HTTPHeader{
-											Name:  "X-Forwarded-Proto",
-											Value: "https"}}},
-								},
-								InitialDelaySeconds: 60,
-								TimeoutSeconds:      10,
-								PeriodSeconds:       30,
-								SuccessThreshold:    0,
-								FailureThreshold:    10,
+									InitialDelaySeconds: 60,
+									TimeoutSeconds:      10,
+									PeriodSeconds:       30,
+									SuccessThreshold:    0,
+									FailureThreshold:    10,
 							},
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
@@ -1223,7 +1229,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 							},
 							Env: system.buildSystemSphinxEnv(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.FromInt(9306),
 									},
