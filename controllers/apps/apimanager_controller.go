@@ -22,7 +22,7 @@ import (
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1beta1 "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -139,6 +139,7 @@ func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		logger.Info("Reconciling not finished. Requeueing.")
 		return statusResult, nil
 	}
+
 
 	return ctrl.Result{}, nil
 }
