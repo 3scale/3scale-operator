@@ -14,7 +14,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -122,8 +122,8 @@ func TestApicastReconciler(t *testing.T) {
 		{"stagingService", "apicast-staging", &v1.Service{}},
 		{"productionService", "apicast-production", &v1.Service{}},
 		{"envConfigMap", "apicast-environment", &v1.ConfigMap{}},
-		{"stagingPDB", "apicast-staging", &v1beta1.PodDisruptionBudget{}},
-		{"productionPDB", "apicast-production", &v1beta1.PodDisruptionBudget{}},
+		{"stagingPDB", "apicast-staging", &policyv1.PodDisruptionBudget{}},
+		{"productionPDB", "apicast-production", &policyv1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {

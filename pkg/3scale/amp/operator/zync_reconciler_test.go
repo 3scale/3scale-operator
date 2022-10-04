@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -115,8 +115,8 @@ func TestNewZyncReconciler(t *testing.T) {
 		{"zyncService", "zync", &v1.Service{}},
 		{"zyncDatabaseService", "zync-database", &v1.Service{}},
 		{"zyncSecret", component.ZyncSecretName, &v1.Secret{}},
-		{"zyncPDB", "zync", &v1beta1.PodDisruptionBudget{}},
-		{"quePDB", "zync-que", &v1beta1.PodDisruptionBudget{}},
+		{"zyncPDB", "zync", &policyv1.PodDisruptionBudget{}},
+		{"quePDB", "zync-que", &policyv1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {
@@ -230,8 +230,8 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 		{"zyncService", "zync", &v1.Service{}, true},
 		{"zyncDatabaseService", "zync-database", &v1.Service{}, false},
 		{"zyncSecret", component.ZyncSecretName, &v1.Secret{}, true},
-		{"zyncPDB", "zync", &v1beta1.PodDisruptionBudget{}, true},
-		{"quePDB", "zync-que", &v1beta1.PodDisruptionBudget{}, true},
+		{"zyncPDB", "zync", &policyv1.PodDisruptionBudget{}, true},
+		{"quePDB", "zync-que", &policyv1.PodDisruptionBudget{}, true},
 	}
 
 	for _, tc := range cases {

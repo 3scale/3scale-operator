@@ -12,7 +12,7 @@ import (
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -466,17 +466,17 @@ func (apicast *Apicast) EnvironmentConfigMap() *v1.ConfigMap {
 	}
 }
 
-func (apicast *Apicast) StagingPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (apicast *Apicast) StagingPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   ApicastStagingName,
 			Labels: apicast.Options.CommonStagingLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": ApicastStagingName},
 			},
@@ -485,17 +485,17 @@ func (apicast *Apicast) StagingPodDisruptionBudget() *v1beta1.PodDisruptionBudge
 	}
 }
 
-func (apicast *Apicast) ProductionPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (apicast *Apicast) ProductionPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   ApicastProductionName,
 			Labels: apicast.Options.CommonProductionLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": ApicastProductionName},
 			},

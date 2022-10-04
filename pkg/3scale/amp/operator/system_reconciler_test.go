@@ -15,7 +15,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -99,8 +99,8 @@ func TestSystemReconcilerCreate(t *testing.T) {
 		{"systemAppSecret", component.SystemSecretSystemAppSecretName, &v1.Secret{}},
 		{"systemMemcachedSecret", component.SystemSecretSystemMemcachedSecretName, &v1.Secret{}},
 		{"systemMemcachedSecret", component.SystemSecretSystemMemcachedSecretName, &v1.Secret{}},
-		{"systemAppPDB", "system-app", &v1beta1.PodDisruptionBudget{}},
-		{"systemSidekiqPDB", "system-sidekiq", &v1beta1.PodDisruptionBudget{}},
+		{"systemAppPDB", "system-app", &policyv1.PodDisruptionBudget{}},
+		{"systemSidekiqPDB", "system-sidekiq", &policyv1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {

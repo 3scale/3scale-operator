@@ -9,7 +9,7 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -460,17 +460,17 @@ func (backend *Backend) ListenerSecret() *v1.Secret {
 	}
 }
 
-func (backend *Backend) WorkerPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (backend *Backend) WorkerPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   BackendWorkerName,
 			Labels: backend.Options.CommonWorkerLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": BackendWorkerName},
 			},
@@ -479,17 +479,17 @@ func (backend *Backend) WorkerPodDisruptionBudget() *v1beta1.PodDisruptionBudget
 	}
 }
 
-func (backend *Backend) CronPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (backend *Backend) CronPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "backend-cron",
 			Labels: backend.Options.CommonCronLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": "backend-cron"},
 			},
@@ -498,17 +498,17 @@ func (backend *Backend) CronPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 	}
 }
 
-func (backend *Backend) ListenerPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (backend *Backend) ListenerPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   BackendListenerName,
 			Labels: backend.Options.CommonListenerLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": BackendListenerName},
 			},

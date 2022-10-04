@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strconv"
 
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -1246,17 +1246,17 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (system *System) AppPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (system *System) AppPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-app",
 			Labels: system.Options.CommonAppLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 			},
@@ -1265,17 +1265,17 @@ func (system *System) AppPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 	}
 }
 
-func (system *System) SidekiqPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (system *System) SidekiqPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-sidekiq",
 			Labels: system.Options.CommonSidekiqLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": "system-sidekiq"},
 			},
