@@ -46,8 +46,7 @@ var _ reconcile.Reconciler = &DeveloperAccountReconciler{}
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=developeraccounts,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=developeraccounts/status,verbs=get;update;patch
 
-func (r *DeveloperAccountReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *DeveloperAccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Logger().WithValues("developeraccount", req.NamespacedName)
 	reqLogger.Info("Reconcile DeveloperAccount", "Operator version", version.Version)
 

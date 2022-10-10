@@ -86,12 +86,11 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 							},
 							Resources: m.Options.ResourceRequirements,
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									TCPSocket: &v1.TCPSocketAction{
-										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.Int),
-											IntVal: 11211}},
-								},
+								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+									Port: intstr.IntOrString{
+										Type:   intstr.Type(intstr.Int),
+										IntVal: 11211}},
+									},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      0,
 								PeriodSeconds:       10,
@@ -99,12 +98,11 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    0,
 							},
 							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									TCPSocket: &v1.TCPSocketAction{
-										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.Int),
-											IntVal: 11211}},
-								},
+								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+									Port: intstr.IntOrString{
+										Type:   intstr.Type(intstr.Int),
+										IntVal: 11211}},
+									},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       30,

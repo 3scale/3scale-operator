@@ -91,7 +91,6 @@ func (system *System) SystemGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/system-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/system-grafana-dashboard-1.json", system.Options.Namespace),
 		},
 	}
 }

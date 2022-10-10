@@ -21,6 +21,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestNewBackendReconciler(t *testing.T) {
@@ -93,7 +94,7 @@ func TestNewBackendReconciler(t *testing.T) {
 	cases := []struct {
 		testName string
 		objName  string
-		obj      runtime.Object
+		obj      k8sclient.Object
 	}{
 		{"cronDC", "backend-cron", &appsv1.DeploymentConfig{}},
 		{"listenerDC", "backend-listener", &appsv1.DeploymentConfig{}},

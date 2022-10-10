@@ -23,6 +23,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestSystemReconcilerCreate(t *testing.T) {
@@ -74,7 +75,7 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	cases := []struct {
 		testName string
 		objName  string
-		obj      runtime.Object
+		obj      k8sclient.Object
 	}{
 		{"systemPVC", "system-storage", &v1.PersistentVolumeClaim{}},
 		{"systemProviderService", "system-provider", &v1.Service{}},

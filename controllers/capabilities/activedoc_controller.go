@@ -46,8 +46,7 @@ var _ reconcile.Reconciler = &ActiveDocReconciler{}
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=activedocs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=activedocs/status,verbs=get;update;patch
 
-func (r *ActiveDocReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *ActiveDocReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Logger().WithValues("activedoc", req.NamespacedName)
 	reqLogger.Info("Reconcile ActiveDoc", "Operator version", version.Version)
 

@@ -211,7 +211,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 									MountPath: "/etc/my-extra"},
 							},
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
+								Handler: v1.Handler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.IntOrString{
 											Type:   intstr.Type(intstr.Int),
@@ -224,7 +224,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    0,
 							},
 							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
+								Handler: v1.Handler{
 									Exec: &v1.ExecAction{
 										Command: []string{"/bin/sh", "-i", "-c", "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"}},
 								},

@@ -63,7 +63,7 @@ var _ reconcile.Reconciler = &TenantReconciler{}
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=tenants/finalizers,verbs=get;list;watch;create;update;patch;delete
 
-func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	reqLogger := r.Logger().WithValues("tenant", req.NamespacedName)
 	reqLogger.Info("Reconcile Tenant", "Operator version", version.Version)

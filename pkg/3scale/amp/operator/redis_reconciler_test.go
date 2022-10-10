@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestRedisBackendDCReconcilerCreate(t *testing.T) {
@@ -81,12 +82,12 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 		reconcilerConstructor DependencyReconcilerConstructor
 		expectedObjs          []struct {
 			objName string
-			obj     runtime.Object
+			obj     k8sclient.Object
 		}
 	}{
 		{"backendRedis", NewBackendRedisDependencyReconciler, []struct {
 			objName string
-			obj     runtime.Object
+			obj     k8sclient.Object
 		}{
 			{"backend-redis", &appsv1.DeploymentConfig{}},
 			{"backend-redis", &v1.Service{}},
@@ -96,7 +97,7 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 		}},
 		{"systemRedis", NewSystemRedisDependencyReconciler, []struct {
 			objName string
-			obj     runtime.Object
+			obj     k8sclient.Object
 		}{
 			{"system-redis", &appsv1.DeploymentConfig{}},
 			{"system-redis-storage", &v1.PersistentVolumeClaim{}},

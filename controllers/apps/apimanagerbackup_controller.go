@@ -41,8 +41,7 @@ var _ reconcile.Reconciler = &APIManagerBackupReconciler{}
 // +kubebuilder:rbac:groups=core,namespace=placeholder,resources=pods/exec,verbs=create
 // +kubebuilder:rbac:groups=batch,namespace=placeholder,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 
-func (r *APIManagerBackupReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *APIManagerBackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Logger().WithValues("apimanagerbackup", req.NamespacedName)
 	logger.Info("Reconciling APIManagerBackup")
 

@@ -64,7 +64,6 @@ func (zync *Zync) ZyncGrafanaDashboard() *grafanav1alpha1.GrafanaDashboard {
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/zync-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/zync-grafana-dashboard-1.json", zync.Options.Namespace),
 		},
 	}
 }

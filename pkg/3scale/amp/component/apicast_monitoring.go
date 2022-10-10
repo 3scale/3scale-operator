@@ -65,7 +65,6 @@ func (apicast *Apicast) ApicastMainAppGrafanaDashboard() *grafanav1alpha1.Grafan
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/apicast-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/apicast-grafana-dashboard-1.json", apicast.Options.Namespace),
 		},
 	}
 }
@@ -83,7 +82,6 @@ func (apicast *Apicast) ApicastServicesGrafanaDashboard() *grafanav1alpha1.Grafa
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/apicast-grafana-dashboard-2.json.tpl", data),
-			Name: fmt.Sprintf("%s/apicast-grafana-dashboard-2.json", apicast.Options.Namespace),
 		},
 	}
 }

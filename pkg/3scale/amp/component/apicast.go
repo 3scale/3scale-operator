@@ -152,23 +152,19 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:       apicast.Options.StagingResourceRequirements,
 							VolumeMounts:    apicast.stagingVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									HTTPGet: &v1.HTTPGetAction{
-										Path: "/status/live",
-										Port: intstr.FromInt(8090),
-									},
-								},
+								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+									Path: "/status/live",
+									Port: intstr.FromInt(8090),
+								}},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       10,
 							},
 							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									HTTPGet: &v1.HTTPGetAction{
-										Path: "/status/ready",
-										Port: intstr.FromInt(8090),
-									},
-								},
+								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+									Path: "/status/ready",
+									Port: intstr.FromInt(8090),
+								}},
 								InitialDelaySeconds: 15,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       30,
@@ -262,23 +258,19 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:       apicast.Options.ProductionResourceRequirements,
 							VolumeMounts:    apicast.productionVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									HTTPGet: &v1.HTTPGetAction{
-										Path: "/status/live",
-										Port: intstr.FromInt(8090),
-									},
-								},
+								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+									Path: "/status/live",
+									Port: intstr.FromInt(8090),
+								}},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       10,
 							},
 							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									HTTPGet: &v1.HTTPGetAction{
-										Path: "/status/ready",
-										Port: intstr.FromInt(8090),
-									},
-								},
+								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+									Path: "/status/ready",
+									Port: intstr.FromInt(8090),
+								}},
 								InitialDelaySeconds: 15,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       30,

@@ -71,7 +71,7 @@ func TestBaseReconcilerCreate(t *testing.T) {
 	}
 
 	reconciledConfigmap := &v1.ConfigMap{}
-	objectKey, err := client.ObjectKeyFromObject(desiredConfigmap)
+	objectKey := client.ObjectKeyFromObject(desiredConfigmap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,7 +154,7 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 	}
 
 	reconciled := &v1.ConfigMap{}
-	objectKey, err := client.ObjectKeyFromObject(desiredConfigmap)
+	objectKey := client.ObjectKeyFromObject(desiredConfigmap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,7 +232,7 @@ func TestBaseReconcilerDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	objectKey, err := client.ObjectKeyFromObject(desired)
+	objectKey := client.ObjectKeyFromObject(desired)
 	if err != nil {
 		t.Fatal(err)
 	}

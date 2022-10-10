@@ -63,7 +63,6 @@ func (backend *Backend) BackendGrafanaDashboard() *grafanav1alpha1.GrafanaDashbo
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/backend-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/backend-grafana-dashboard-1.json", backend.Options.Namespace),
 		},
 	}
 }

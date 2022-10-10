@@ -50,8 +50,7 @@ var _ reconcile.Reconciler = &OpenAPIReconciler{}
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=openapis/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=openapis/finalizers,verbs=get;list;watch;create;update;patch;delete
 
-func (r *OpenAPIReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *OpenAPIReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Logger().WithValues("openapi", req.NamespacedName)
 	reqLogger.Info("Reconcile OpenAPI", "Operator version", version.Version)
 

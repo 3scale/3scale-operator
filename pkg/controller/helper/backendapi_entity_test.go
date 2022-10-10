@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
-	logrtesting "github.com/go-logr/logr/testing"
+	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -50,7 +50,7 @@ func TestBackendAPIEntityBasics(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(nil, token, nil)
 
-	backendEntity := NewBackendAPIEntity(backendItem, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(backendItem, client, logr.Discard())
 	equals(t, backendEntity.ID(), backendItem.Element.ID)
 	equals(t, backendEntity.Name(), backendItem.Element.Name)
 	equals(t, backendEntity.SystemName(), backendItem.Element.SystemName)
@@ -85,7 +85,7 @@ func TestBackendAPIEntityUpdate(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.Update(threescaleapi.Params{})
 	ok(t, err)
 	equals(t, int64(4567), backendEntity.ID())
@@ -117,7 +117,7 @@ func TestBackendAPIEntityUpdateError(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.Update(threescaleapi.Params{})
 	assert(t, err != nil, "update did not return error")
 }
@@ -128,7 +128,7 @@ func TestBackendAPIEntityMethods(t *testing.T) {
 	httpClient := NewTestClient(GetMethodsMetricsRoundTripFunc)
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	methodList, err := backendEntity.Methods()
 	ok(t, err)
 	assert(t, methodList != nil, "method list returned nil")
@@ -156,7 +156,7 @@ func TestBackendAPIEntityMethodsError(t *testing.T) {
 		}
 	})
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	_, err := backendEntity.Methods()
 	assert(t, err != nil, "Methods did not return error")
 }
@@ -190,7 +190,7 @@ func TestBackendAPIEntityCreateMethod(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.CreateMethod(threescaleapi.Params{})
 	ok(t, err)
 }
@@ -212,7 +212,7 @@ func TestBackendAPIEntityDeleteMethod(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.DeleteMethod(int64(3))
 	ok(t, err)
 }
@@ -246,7 +246,7 @@ func TestBackendAPIEntityUpdateMethod(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.UpdateMethod(int64(3), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -275,7 +275,7 @@ func TestBackendAPIEntityCreateMetric(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.CreateMetric(threescaleapi.Params{})
 	ok(t, err)
 }
@@ -293,7 +293,7 @@ func TestBackendAPIEntityDeleteMetric(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.DeleteMetric(int64(5))
 	ok(t, err)
 }
@@ -322,7 +322,7 @@ func TestBackendAPIEntityUpdateMetric(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.UpdateMetric(int64(3), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -333,7 +333,7 @@ func TestBackendAPIEntityMetricsAndMethods(t *testing.T) {
 	httpClient := NewTestClient(GetMethodsMetricsRoundTripFunc)
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	metricList, err := backendEntity.MetricsAndMethods()
 	ok(t, err)
 	assert(t, metricList != nil, "metric list returned nil")
@@ -349,7 +349,7 @@ func TestBackendAPIEntityMetrics(t *testing.T) {
 	httpClient := NewTestClient(GetMethodsMetricsRoundTripFunc)
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	metricList, err := backendEntity.Metrics()
 	ok(t, err)
 	assert(t, metricList != nil, "metric list returned nil")
@@ -397,7 +397,7 @@ func TestBackendAPIEntityMappingRules(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	ruleList, err := backendEntity.MappingRules()
 	ok(t, err)
 	assert(t, ruleList != nil, "mapping rule list returned nil")
@@ -417,7 +417,7 @@ func TestBackendAPIEntityDeleteMappingRule(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.DeleteMappingRule(int64(3))
 	ok(t, err)
 }
@@ -448,7 +448,7 @@ func TestBackendAPIEntityCreateMappingRule(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.CreateMappingRule(threescaleapi.Params{})
 	ok(t, err)
 }
@@ -479,7 +479,7 @@ func TestBackendAPIEntityUpdateMappingRule(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 	err := backendEntity.UpdateMappingRule(int64(1), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -490,7 +490,7 @@ func TestBackendAPIEntityFindMethodMetricIDBySystemName(t *testing.T) {
 	httpClient := NewTestClient(GetMethodsMetricsRoundTripFunc)
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logrtesting.NullLogger{})
+	backendEntity := NewBackendAPIEntity(&threescaleapi.BackendApi{}, client, logr.Discard())
 
 	cases := []struct {
 		name       string

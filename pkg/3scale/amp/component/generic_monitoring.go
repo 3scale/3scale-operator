@@ -27,7 +27,6 @@ func KubernetesResourcesByNamespaceGrafanaDashboard(ns string, appLabel string) 
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/kubernetes-resources-by-namespace-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/kubernetes-resources-by-namespace-grafana-dashboard-1.json", ns),
 		},
 	}
 }
@@ -48,7 +47,6 @@ func KubernetesResourcesByPodGrafanaDashboard(ns string, appLabel string) *grafa
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
 			Json: assets.TemplateAsset("monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl", data),
-			Name: fmt.Sprintf("%s/kubernetes-resources-by-pod-grafana-dashboard-1.json", ns),
 		},
 	}
 }

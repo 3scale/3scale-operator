@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
-	logrtesting "github.com/go-logr/logr/testing"
+	"github.com/go-logr/logr"
 )
 
 func TestBackendAPIRemoteIndexFindByID(t *testing.T) {
@@ -40,7 +40,7 @@ func TestBackendAPIRemoteIndexFindByID(t *testing.T) {
 	})
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
-	remoteIndex, err := NewBackendAPIRemoteIndex(client, logrtesting.NullLogger{})
+	remoteIndex, err := NewBackendAPIRemoteIndex(client, logr.Discard())
 	ok(t, err)
 
 	backendEntity, ok := remoteIndex.FindByID(int64(1))
@@ -81,7 +81,7 @@ func TestBackendAPIRemoteIndexFindBySystemName(t *testing.T) {
 	})
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
-	remoteIndex, err := NewBackendAPIRemoteIndex(client, logrtesting.NullLogger{})
+	remoteIndex, err := NewBackendAPIRemoteIndex(client, logr.Discard())
 	ok(t, err)
 
 	backendEntity, ok := remoteIndex.FindBySystemName("backend_01")
@@ -152,7 +152,7 @@ func TestBackendAPIRemoteIndexCreateBackendAPI(t *testing.T) {
 	})
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
-	remoteIndex, err := NewBackendAPIRemoteIndex(client, logrtesting.NullLogger{})
+	remoteIndex, err := NewBackendAPIRemoteIndex(client, logr.Discard())
 	ok(t, err)
 
 	backendEntity, err := remoteIndex.CreateBackendAPI(threescaleapi.Params{})

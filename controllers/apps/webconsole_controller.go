@@ -45,8 +45,7 @@ var _ reconcile.Reconciler = &WebConsoleReconciler{}
 
 // +kubebuilder:rbac:groups=console.openshift.io,resources=consolelinks,verbs=get;create;update;delete
 
-func (r *WebConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *WebConsoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Logger().WithValues("webconsole", req.NamespacedName)
 
 	logger.Info("Reconciling ReconcileWebConsole", "Operator version", version.Version)
