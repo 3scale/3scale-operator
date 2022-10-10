@@ -7,7 +7,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	"github.com/google/go-cmp/cmp"
-	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
+	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 )
 
 func GenericGrafanaDashboardsMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
