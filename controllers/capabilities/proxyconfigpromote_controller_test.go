@@ -320,7 +320,7 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			},
 			args: args{
 				proxyConfigPromote:  getProxyConfigPromoteCRStaging(),
-				reqLogger:           logf.Log.WithName("test reqlogger"),
+				reqLogger: 			 logf.Log.WithName("test reqlogger"),
 				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, failedProxyConfigElementProduction)),
 				product:             getProductCR(),
 			},

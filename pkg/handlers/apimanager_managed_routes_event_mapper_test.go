@@ -4,16 +4,17 @@ import (
 	"reflect"
 	"testing"
 
-	logrtesting "github.com/go-logr/logr/testing"
+	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	// v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	routev1 "github.com/openshift/api/route/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
+	// "sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appscommon "github.com/3scale/3scale-operator/apis/apps"
@@ -74,18 +75,17 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 
 	apimanagerRoutesEventMapper := APIManagerRoutesEventMapper{
 		K8sClient: cl,
-		Logger:    logrtesting.NullLogger{},
+		Logger:    logr.Discard(),
 	}
 
 	cases := []struct {
 		testName string
-		input    func() *handler.MapObject
+		input    client.Object
 		expected []reconcile.Request
 	}{
 		{
 			testName: "Event with route directly owned by APIManager is converted to an APIManager event",
-			input: func() *handler.MapObject {
-				routeDirectlyManagedByAPIManager := &routev1.Route{
+			input: &routev1.Route{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "Route",
 						APIVersion: "route.openshift.io/v1",
@@ -106,9 +106,6 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 							},
 						},
 					},
-				}
-
-				return &handler.MapObject{Meta: routeDirectlyManagedByAPIManager, Object: routeDirectlyManagedByAPIManager}
 			},
 			expected: []reconcile.Request{
 				reconcile.Request{NamespacedName: types.NamespacedName{Namespace: apimanagerNamespace, Name: apimanagerName}},
@@ -116,8 +113,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 		},
 		{
 			testName: "Event with route owned by zync-que managed by APIManager is converted to an APIManager event",
-			input: func() *handler.MapObject {
-				zyncManagedRoute := &routev1.Route{
+			input: &routev1.Route{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "Route",
 						APIVersion: "route.openshift.io/v1",
@@ -126,7 +122,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 						Name:      "routeManagedByZyncQue",
 						Namespace: apimanagerNamespace,
 						OwnerReferences: []metav1.OwnerReference{
-							v1.OwnerReference{
+							metav1.OwnerReference{
 								APIVersion: "v1",
 								Kind:       "Secret",
 								Name:       "asecret",
@@ -138,8 +134,6 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 							},
 						},
 					},
-				}
-				return &handler.MapObject{Meta: zyncManagedRoute, Object: zyncManagedRoute}
 			},
 			expected: []reconcile.Request{
 				reconcile.Request{NamespacedName: types.NamespacedName{Namespace: apimanagerNamespace, Name: apimanagerName}},
@@ -147,8 +141,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 		},
 		{
 			testName: "Event with route without OwnerReferences is discarded",
-			input: func() *handler.MapObject {
-				nonAPIManagerRoute := &routev1.Route{
+			input: &routev1.Route{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "Route",
 						APIVersion: "route.openshift.io/v1",
@@ -157,15 +150,12 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 						Name:      "aroute",
 						Namespace: apimanagerNamespace,
 					},
-				}
-				return &handler.MapObject{Meta: nonAPIManagerRoute, Object: nonAPIManagerRoute}
 			},
 			expected: nil,
 		},
 		{
 			testName: "Event with route with non-APIManager OwnerReference (directly or indirectly) is discarded",
-			input: func() *handler.MapObject {
-				nonAPIManagerRoute := &routev1.Route{
+			input: &routev1.Route{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "Route",
 						APIVersion: "route.openshift.io/v1",
@@ -173,7 +163,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "aroute",
 						Namespace: apimanagerNamespace,
-						OwnerReferences: []v1.OwnerReference{
+						OwnerReferences: []metav1.OwnerReference{
 							metav1.OwnerReference{
 								APIVersion: "v1",
 								Kind:       "Secret",
@@ -181,9 +171,6 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 							},
 						},
 					},
-				}
-
-				return &handler.MapObject{Meta: nonAPIManagerRoute, Object: nonAPIManagerRoute}
 			},
 			expected: nil,
 		},
@@ -191,7 +178,7 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			res := apimanagerRoutesEventMapper.Map(*tc.input())
+			res := apimanagerRoutesEventMapper.Map(tc.input)
 			if !reflect.DeepEqual(res, tc.expected) {
 				subT.Errorf("Unexpected result: %v. Expected: %v", res, tc.expected)
 			}

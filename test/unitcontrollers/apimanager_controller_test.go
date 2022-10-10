@@ -97,7 +97,7 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 
 	endLoop := false
 	for i := 0; i < 100 && !endLoop; i++ {
-		res, err := r.Reconcile(req)
+		res, err := r.Reconcile(ctx, req)
 		if err != nil {
 			t.Fatal(err)
 		}

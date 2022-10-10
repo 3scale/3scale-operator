@@ -22,11 +22,13 @@ import (
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	policyv1beta1 "k8s.io/api/policy/v1"
+
+	// policyv1beta1 "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
+	// "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -35,6 +37,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/handlers"
+
+	// "github.com/3scale/3scale-operator/pkg/handlers"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
@@ -66,8 +70,7 @@ var _ reconcile.Reconciler = &APIManagerReconciler{}
 // +kubebuilder:rbac:groups=integreatly.org,namespace=placeholder,resources=grafanadashboards,verbs=get;list;watch;create;update;delete
 // +kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 
-func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.BaseReconciler.Logger().WithValues("apimanager", req.NamespacedName)
 	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
 
@@ -124,16 +127,15 @@ func (r *APIManagerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 }
 
 func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	handlers := &handlers.APIManagerRoutesEventMapper{
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("APIManagerRoutesHandler"),
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&appsv1alpha1.APIManager{}).
+	   	For(&appsv1alpha1.APIManager{}).
 		Owns(&appsv1.DeploymentConfig{}).
-		Owns(&policyv1beta1.PodDisruptionBudget{}).
-		Watches(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestsFromMapFunc{
-			ToRequests: &handlers.APIManagerRoutesEventMapper{
-				K8sClient: r.Client(),
-				Logger:    r.Logger().WithName("APIManagerRoutesHandler"),
-			},
-		}).
+		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
 		Complete(r)
 }
 

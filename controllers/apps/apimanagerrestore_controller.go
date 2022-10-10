@@ -40,8 +40,7 @@ type APIManagerRestoreReconciler struct {
 // +kubebuilder:rbac:groups=core,namespace=placeholder,resources=pods/exec,verbs=create
 // +kubebuilder:rbac:groups=batch,namespace=placeholder,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 
-func (r *APIManagerRestoreReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *APIManagerRestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Logger().WithValues("apimanagerrestore", req.NamespacedName)
 
 	// Fetch the APIManagerRestore instance

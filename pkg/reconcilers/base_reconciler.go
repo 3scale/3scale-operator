@@ -57,7 +57,7 @@ func NewBaseReconciler(ctx context.Context, client client.Client, scheme *runtim
 	}
 }
 
-func (b *BaseReconciler) Reconcile(reconcile.Request) (reconcile.Result, error) {
+func (b *BaseReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
@@ -104,12 +104,9 @@ func (b *BaseReconciler) EventRecorder() record.EventRecorder {
 //
 // It returns an error.
 func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutateFn MutateFn) error {
-	key, err := client.ObjectKeyFromObject(desired)
-	if err != nil {
-		return err
-	}
+	key := client.ObjectKeyFromObject(desired)
 
-	if err = b.Client().Get(b.ctx, key, obj); err != nil {
+	if err := b.Client().Get(b.ctx, key, obj); err != nil {
 		if !errors.IsNotFound(err) {
 			return err
 		}
@@ -178,8 +175,8 @@ func (b *BaseReconciler) HasConsoleLink() (bool, error) {
 //HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
 func (b *BaseReconciler) HasGrafanaDashboards() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
-		grafanav1alpha1.SchemeGroupVersion.String(),
-		grafanav1alpha1.GrafanaDashboardKind)
+		grafanav1alpha1.GroupVersion.Version,
+		"GrafanaDashboard")
 }
 
 //HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster

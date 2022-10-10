@@ -40,8 +40,7 @@ type ProxyConfigPromoteReconciler struct {
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=proxyconfigpromotes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=proxyconfigpromotes/status,verbs=get;update;patch
 
-func (r *ProxyConfigPromoteReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Logger().WithValues("proxyconfigpromote", req.NamespacedName)
 	reqLogger.Info("Reconcile Proxy Config", "Operator version", version.Version)
 

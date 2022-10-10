@@ -11,7 +11,7 @@ require (
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/google/go-cmp v0.5.8
 	github.com/google/uuid v1.3.0
-	github.com/grafana-operator/grafana-operator/v4 v4.5.1
+	github.com/grafana-operator/grafana-operator/v4 v4.5.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
@@ -23,10 +23,10 @@ require (
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.24.3
-	k8s.io/apimachinery v0.24.3
-	k8s.io/client-go v12.0.0+incompatible
-	sigs.k8s.io/controller-runtime v0.12.3
+	k8s.io/api v0.22.1
+	k8s.io/apimachinery v0.22.1
+	k8s.io/client-go v0.22.1
+	sigs.k8s.io/controller-runtime v0.10.0
 )
 
 require (
@@ -55,7 +55,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20191106031601-ce3c9ade29de // indirect
@@ -102,31 +101,20 @@ require (
 	gopkg.in/ini.v1 v1.57.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.24.3 // indirect
+	k8s.io/apiextensions-apiserver v0.22.1 // indirect
 	k8s.io/component-base v0.24.3 // indirect
 	k8s.io/klog/v2 v2.70.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220627174259-011e075b9cb8 // indirect
 	k8s.io/utils v0.0.0-20220713171938-56c0de1e6f5e // indirect
-	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/openshift/api => github.com/openshift/api v0.0.0-20200527184302-a843dc3262a0 // Required until https://github.com/operator-framework/operator-lifecycle-manager/pull/1241 is resolved
-
-// security release to address CVE-2020-15257
-replace github.com/containerd/containerd => github.com/containerd/containerd v1.3.9
-
-// security release to address CVE-2020-14040
-replace golang.org/x/text => golang.org/x/text v0.3.3
-
-// security release to address CVE-2020-8912
-replace github.com/aws/aws-sdk-go => github.com/aws/aws-sdk-go v1.34.0
-
-replace k8s.io/client-go => k8s.io/client-go v0.22.0
-
-// security release to address CVE-2020-9283. First version
-// that addresses the CVE is golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-// but we replace to the most recent version that appeared on go.sum before
-// this change
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
+replace (
+	github.com/aws/aws-sdk-go => github.com/aws/aws-sdk-go v1.34.0 // security release to address CVE-2020-8912
+	github.com/go-logr/logr => github.com/go-logr/logr v0.4.0 // required - can be updated once controller runtime is updated
+	github.com/openshift/api => github.com/openshift/api v0.0.0-20200527184302-a843dc3262a0 // Required until https://github.com/operator-framework/operator-lifecycle-manager/pull/1241 is resolved
+	k8s.io/component-base => k8s.io/component-base v0.22.1 // required until next client-go upgrade
+	k8s.io/klog/v2 => k8s.io/klog/v2 v2.0.0 // required - can be removed once controller runtime is updated
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7 // gnostic issue, not required on next golang bump
+)

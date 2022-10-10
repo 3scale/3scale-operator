@@ -7,7 +7,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 
-	logrtesting "github.com/go-logr/logr/testing"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -32,7 +32,7 @@ func TestLookupProviderAccountSecretReference(t *testing.T) {
 
 	cl := fake.NewFakeClient(providerSecret)
 
-	providerAccount, err := LookupProviderAccount(cl, ns, providerAccountRef, logrtesting.NullLogger{})
+	providerAccount, err := LookupProviderAccount(cl, ns, providerAccountRef, logr.Discard())
 	ok(t, err)
 	assert(t, providerAccount != nil, "provider account returned nil")
 	equals(t, providerAccount.AdminURLStr, providerAccountURLStr)
@@ -52,7 +52,7 @@ func TestLookupProviderAccountDefaultSecret(t *testing.T) {
 
 	cl := fake.NewFakeClient(providerSecret)
 
-	providerAccount, err := LookupProviderAccount(cl, ns, nil, logrtesting.NullLogger{})
+	providerAccount, err := LookupProviderAccount(cl, ns, nil, logr.Discard())
 	ok(t, err)
 	assert(t, providerAccount != nil, "provider account returned nil")
 	equals(t, providerAccount.AdminURLStr, providerAccountURLStr)
@@ -85,7 +85,7 @@ func TestLookupProviderAccountLocal3scale(t *testing.T) {
 
 	cl := fake.NewFakeClient(apimanager, secret)
 
-	providerAccount, err := LookupProviderAccount(cl, ns, nil, logrtesting.NullLogger{})
+	providerAccount, err := LookupProviderAccount(cl, ns, nil, logr.Discard())
 	ok(t, err)
 	assert(t, providerAccount != nil, "provider account returned nil")
 	equals(t, providerAccount.AdminURLStr, "https://testaccount-admin.example.com")
@@ -95,6 +95,6 @@ func TestLookupProviderAccountLocal3scale(t *testing.T) {
 func TestLookupProviderAccountNotFoundError(t *testing.T) {
 	ns := "some_namespace"
 	cl := fake.NewFakeClient()
-	_, err := LookupProviderAccount(cl, ns, nil, logrtesting.NullLogger{})
+	_, err := LookupProviderAccount(cl, ns, nil, logr.Discard())
 	equals(t, errors.New("LookupProviderAccount: no provider account found"), err)
 }

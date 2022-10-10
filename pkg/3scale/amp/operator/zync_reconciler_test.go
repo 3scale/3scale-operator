@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestNewZyncReconciler(t *testing.T) {
@@ -104,7 +105,7 @@ func TestNewZyncReconciler(t *testing.T) {
 	cases := []struct {
 		testName string
 		objName  string
-		obj      runtime.Object
+		obj      k8sclient.Object
 	}{
 		{"queRole", "zync-que-role", &rbacv1.Role{}},
 		{"queServiceAccount", "zync-que-sa", &v1.ServiceAccount{}},
@@ -218,7 +219,7 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 	cases := []struct {
 		testName   string
 		objName    string
-		obj        runtime.Object
+		obj        k8sclient.Object
 		hasToExist bool
 	}{
 		{"queRole", "zync-que-role", &rbacv1.Role{}, true},

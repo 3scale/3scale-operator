@@ -9,7 +9,7 @@ import (
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 
-	logrtesting "github.com/go-logr/logr/testing"
+	"github.com/go-logr/logr"
 )
 
 func TestApplicationPlanEntityBasics(t *testing.T) {
@@ -27,7 +27,7 @@ func TestApplicationPlanEntityBasics(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(nil, token, nil)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, planItem, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, planItem, client, logr.Discard())
 	equals(t, appPlanEntity.ID(), planItem.ID)
 	equals(t, appPlanEntity.Name(), planItem.Name)
 	equals(t, appPlanEntity.ApprovalRequired(), planItem.ApprovalRequired)
@@ -66,7 +66,7 @@ func TestApplicationPlanEntityUpdate(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.Update(threescaleapi.Params{})
 	ok(t, err)
 	equals(t, appPlanEntity.ID(), int64(4567))
@@ -101,7 +101,7 @@ func TestApplicationPlanEntityUpdateError(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.Update(threescaleapi.Params{})
 	assert(t, err != nil, "update did not return error")
 }
@@ -144,7 +144,7 @@ func TestApplicationPlanEntityLimits(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	limits, err := appPlanEntity.Limits()
 	ok(t, err)
 	assert(t, limits != nil, "Limits returned nil")
@@ -174,7 +174,7 @@ func TestApplicationPlanEntityLimitsError(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	_, err := appPlanEntity.Limits()
 	assert(t, err != nil, "Limits did not return error")
 }
@@ -193,7 +193,7 @@ func TestApplicationPlanEntityDeleteLimit(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.DeleteLimit(int64(1234), int64(10))
 	ok(t, err)
 }
@@ -221,7 +221,7 @@ func TestApplicationPlanEntityDeleteLimitError(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.DeleteLimit(int64(1234), int64(10))
 	assert(t, err != nil, "DeleteLimit did not return error")
 }
@@ -252,7 +252,7 @@ func TestApplicationPlanEntityCreateLimit(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.CreateLimit(int64(1234), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -280,7 +280,7 @@ func TestApplicationPlanEntityCreateLimitError(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.CreateLimit(int64(1234), threescaleapi.Params{})
 	assert(t, err != nil, "CreateLimit did not return error")
 }
@@ -325,7 +325,7 @@ func TestApplicationPlanEntityPricingRules(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	rules, err := appPlanEntity.PricingRules()
 	ok(t, err)
 	assert(t, rules != nil, "PricingRules returned nil")
@@ -355,7 +355,7 @@ func TestApplicationPlanEntityPricingRulesError(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	_, err := appPlanEntity.PricingRules()
 	assert(t, err != nil, "PricingRules did not return error")
 }
@@ -374,7 +374,7 @@ func TestApplicationPlanEntityDeletePricingRule(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.DeletePricingRule(int64(1234), int64(10))
 	ok(t, err)
 }
@@ -402,7 +402,7 @@ func TestApplicationPlanEntityDeletePricingRuleError(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.DeletePricingRule(int64(1234), int64(10))
 	assert(t, err != nil, "DeletePricingRule did not return error")
 }
@@ -434,7 +434,7 @@ func TestApplicationPlanEntityCreatePricingRule(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.CreatePricingRule(int64(1234), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -462,7 +462,7 @@ func TestApplicationPlanEntityCreatePricingRuleError(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logrtesting.NullLogger{})
+	appPlanEntity := NewApplicationPlanEntity(productID, threescaleapi.ApplicationPlanItem{}, client, logr.Discard())
 	err := appPlanEntity.CreatePricingRule(int64(1234), threescaleapi.Params{})
 	assert(t, err != nil, "CreatePricingRule did not return error")
 }

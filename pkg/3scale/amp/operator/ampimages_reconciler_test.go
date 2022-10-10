@@ -20,6 +20,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestAMPImagesReconciler(t *testing.T) {
@@ -82,7 +83,7 @@ func TestAMPImagesReconciler(t *testing.T) {
 	cases := []struct {
 		testName string
 		objName  string
-		obj      runtime.Object
+		obj      k8sclient.Object
 	}{
 		{"backendCreated", "amp-backend", &imagev1.ImageStream{}},
 		{"zyncCreated", "amp-zync", &imagev1.ImageStream{}},
@@ -175,7 +176,7 @@ func TestAMPImagesReconcilerWithAllExternalDatabases(t *testing.T) {
 	cases := []struct {
 		testName   string
 		objName    string
-		obj        runtime.Object
+		obj        k8sclient.Object
 		hasToExist bool
 	}{
 		{"backendCreated", "amp-backend", &imagev1.ImageStream{}, true},

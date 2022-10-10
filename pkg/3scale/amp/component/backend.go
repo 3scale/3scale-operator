@@ -266,12 +266,11 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 							Env:       backend.buildBackendListenerEnv(),
 							Resources: backend.Options.ListenerResourceRequirements,
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									TCPSocket: &v1.TCPSocketAction{
-										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.Int),
-											IntVal: 3000}},
-								},
+								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+									Port: intstr.IntOrString{
+										Type:   intstr.Type(intstr.Int),
+										IntVal: 3000}},
+									},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      0,
 								PeriodSeconds:       10,
@@ -279,13 +278,12 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    0,
 							},
 							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									HTTPGet: &v1.HTTPGetAction{
-										Path: "/status",
-										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.Int),
-											IntVal: 3000}},
-								},
+								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
+									Path: "/status",
+									Port: intstr.IntOrString{
+										Type:   intstr.Type(intstr.Int),
+										IntVal: 3000}},
+									},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       0,

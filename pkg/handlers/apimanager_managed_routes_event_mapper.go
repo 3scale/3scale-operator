@@ -12,11 +12,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ handler.Mapper = &APIManagerRoutesEventMapper{}
 
 // APIManagerRoutesEventMapper is an EventHandler that maps an existing OpenShift
 // route to an APIManager. This handler should only be used on Route objects
@@ -26,9 +24,9 @@ type APIManagerRoutesEventMapper struct {
 	Logger    logr.Logger
 }
 
-func (h *APIManagerRoutesEventMapper) Map(mapObject handler.MapObject) []reconcile.Request {
+func (h *APIManagerRoutesEventMapper) Map(o client.Object) []reconcile.Request {
 	var res []reconcile.Request
-	apimanagerReconcileRequest := h.getAPIManagerOwnerReconcileRequest(mapObject.Meta)
+	apimanagerReconcileRequest := h.getAPIManagerOwnerReconcileRequest(o)
 	if apimanagerReconcileRequest != nil {
 		res = append(res, *apimanagerReconcileRequest)
 	}

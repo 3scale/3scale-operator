@@ -55,7 +55,7 @@ var _ reconcile.Reconciler = &DeveloperUserReconciler{}
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=developerusers/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=developerusers/finalizers,verbs=get;list;watch;create;update;patch;delete
 
-func (r *DeveloperUserReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *DeveloperUserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Logger().WithValues("developeruser", req.NamespacedName)
 	reqLogger.Info("Reconcile DeveloperUser", "Operator version", version.Version)
 

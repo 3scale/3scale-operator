@@ -19,6 +19,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestSystemPostgreSQLReconcilerCreate(t *testing.T) {
@@ -85,7 +86,7 @@ func TestSystemPostgreSQLReconcilerCreate(t *testing.T) {
 	cases := []struct {
 		testName string
 		objName  string
-		obj      runtime.Object
+		obj      k8sclient.Object
 	}{
 		{"systemPostgreSQL_DC", "system-postgresql", &appsv1.DeploymentConfig{}},
 		{"systemPostgreSQL_Service", "system-postgresql", &v1.Service{}},

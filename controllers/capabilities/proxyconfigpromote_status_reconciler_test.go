@@ -119,7 +119,7 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
 				reconcileError:          fmt.Errorf("test"),
-				logger:                  nil,
+				logger:                  logr.Discard(),
 			},
 			want: &capabilitiesv1beta1.ProxyConfigPromoteStatus{
 				ProductId:               "3",
@@ -144,7 +144,7 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
 				reconcileError:          fmt.Errorf("test"),
-				logger:                  nil,
+				logger:                  logr.Discard(),
 			},
 			want: &capabilitiesv1beta1.ProxyConfigPromoteStatus{
 				ProductId:               "3",

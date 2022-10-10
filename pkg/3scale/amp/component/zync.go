@@ -241,7 +241,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 							Ports: zync.zyncPorts(),
 							Env:   zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
+								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
 										Port:   intstr.FromInt(8080),
 										Path:   "/status/live",
@@ -255,7 +255,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    10,
 							},
 							ReadinessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
+								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
 										Path:   "/status/ready",
 										Port:   intstr.FromInt(8080),
@@ -378,7 +378,7 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 								PeriodSeconds:       10,
 								SuccessThreshold:    1,
 								TimeoutSeconds:      60,
-								ProbeHandler: v1.ProbeHandler{
+								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
 										Port:   intstr.FromInt(9394),
 										Path:   "/metrics",
@@ -478,7 +478,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 								},
 							},
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
+								Handler: v1.Handler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.FromInt(5432),
 									},
@@ -489,7 +489,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 							ReadinessProbe: &v1.Probe{
 								TimeoutSeconds:      1,
 								InitialDelaySeconds: 5,
-								ProbeHandler: v1.ProbeHandler{
+								Handler: v1.Handler{
 									Exec: &v1.ExecAction{
 										Command: []string{"/bin/sh", "-i", "-c", "psql -h 127.0.0.1 -U zync -q -d zync_production -c 'SELECT 1'"},
 									},

@@ -5,7 +5,7 @@ import (
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 
-	logrtesting "github.com/go-logr/logr/testing"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -60,9 +60,9 @@ func TestFindDeveloperUserList(t *testing.T) {
 		return developerUser.Spec.Role != nil && *developerUser.Spec.Role == "admin", nil
 	}
 
-	providerAccountFilter := DeveloperUserProviderAccountFilter(cl, ns, providerAccountURLStr, logrtesting.NullLogger{})
+	providerAccountFilter := DeveloperUserProviderAccountFilter(cl, ns, providerAccountURLStr, logr.Discard())
 
-	adminUserList, err := FindDeveloperUserList(logrtesting.NullLogger{}, cl, nil, adminRoleFilter, providerAccountFilter)
+	adminUserList, err := FindDeveloperUserList(logr.Discard(), cl, nil, adminRoleFilter, providerAccountFilter)
 	ok(t, err)
 	equals(t, 1, len(adminUserList))
 	equals(t, "devUser1", adminUserList[0].Spec.Username)

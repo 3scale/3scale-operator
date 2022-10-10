@@ -56,8 +56,7 @@ var _ reconcile.Reconciler = &BackendReconciler{}
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=backends/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=backends/finalizers,verbs=get;list;watch;create;update;patch;delete
 
-func (r *BackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *BackendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Logger().WithValues("backend", req.NamespacedName)
 	reqLogger.Info("Reconcile Backend", "Operator version", version.Version)
 
