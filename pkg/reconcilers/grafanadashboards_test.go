@@ -3,7 +3,7 @@ package reconcilers
 import (
 	"testing"
 
-	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
+	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 )
 
 func TestGenericGrafanaDashboardsMutatorWhenCopied(t *testing.T) {
