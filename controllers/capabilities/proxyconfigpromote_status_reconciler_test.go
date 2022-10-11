@@ -248,7 +248,7 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 				t.Errorf("Reconcile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			
+
 			// Requeue as there's a high chance of conflict in updating status.
 			got, err = s.Reconcile()
 			if (err != nil) != tt.wantErr {

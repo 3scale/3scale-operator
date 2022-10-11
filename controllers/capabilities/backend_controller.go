@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -243,7 +242,7 @@ func (r *BackendReconciler) validateSpec(backendResource *capabilitiesv1beta1.Ba
 
 func (r *BackendReconciler) removeBackendReferencesFromProducts(backend *capabilitiesv1beta1.Backend) (ctrl.Result, error) {
 	// Retrieve all product CRs that are under the same ns as the backend CR
-	opts := k8sclient.ListOptions{
+	opts := client.ListOptions{
 		Namespace: backend.Namespace,
 	}
 	productCRsList := &capabilitiesv1beta1.ProductList{}
