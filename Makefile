@@ -92,14 +92,14 @@ run: generate fmt vet manifests
 # download controller-gen if necessary
 CONTROLLER_GEN=$(PROJECT_PATH)/bin/controller-gen
 $(CONTROLLER_GEN):
-	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0)
+	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2)
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)
 
 KUSTOMIZE=$(PROJECT_PATH)/bin/kustomize
 $(KUSTOMIZE):
-	$(call go-bin-install,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.5.4)
+	$(call go-bin-install,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.7)
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE)
@@ -297,7 +297,7 @@ TMP_DIR=$$(mktemp -d) ;\
 cd $$TMP_DIR ;\
 go mod init tmp ;\
 echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_PATH)/bin go get $(2) ;\
+GOBIN=$(PROJECT_PATH)/bin go install $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef
