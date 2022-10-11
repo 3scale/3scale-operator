@@ -16,9 +16,9 @@ import (
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestRedisBackendDCReconcilerCreate(t *testing.T) {

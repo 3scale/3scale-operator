@@ -90,7 +90,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.Int),
 										IntVal: 11211}},
-									},
+								},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      0,
 								PeriodSeconds:       10,
@@ -102,7 +102,7 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.Int),
 										IntVal: 11211}},
-									},
+								},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       30,

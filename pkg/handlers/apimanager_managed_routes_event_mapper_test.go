@@ -10,9 +10,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	routev1 "github.com/openshift/api/route/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	// "sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -86,26 +86,26 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 		{
 			testName: "Event with route directly owned by APIManager is converted to an APIManager event",
 			input: &routev1.Route{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "Route",
-						APIVersion: "route.openshift.io/v1",
-					},
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "routeDirectlyManagedByAPIManager",
-						Namespace: apimanagerNamespace,
-						OwnerReferences: []metav1.OwnerReference{
-							metav1.OwnerReference{
-								APIVersion: "v1",
-								Kind:       "Secret",
-								Name:       "asecret",
-							},
-							metav1.OwnerReference{
-								APIVersion: appsv1alpha1.GroupVersion.String(),
-								Kind:       appscommon.APIManagerKind,
-								Name:       apimanager.Name,
-							},
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Route",
+					APIVersion: "route.openshift.io/v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "routeDirectlyManagedByAPIManager",
+					Namespace: apimanagerNamespace,
+					OwnerReferences: []metav1.OwnerReference{
+						metav1.OwnerReference{
+							APIVersion: "v1",
+							Kind:       "Secret",
+							Name:       "asecret",
+						},
+						metav1.OwnerReference{
+							APIVersion: appsv1alpha1.GroupVersion.String(),
+							Kind:       appscommon.APIManagerKind,
+							Name:       apimanager.Name,
 						},
 					},
+				},
 			},
 			expected: []reconcile.Request{
 				reconcile.Request{NamespacedName: types.NamespacedName{Namespace: apimanagerNamespace, Name: apimanagerName}},
@@ -114,26 +114,26 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 		{
 			testName: "Event with route owned by zync-que managed by APIManager is converted to an APIManager event",
 			input: &routev1.Route{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "Route",
-						APIVersion: "route.openshift.io/v1",
-					},
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "routeManagedByZyncQue",
-						Namespace: apimanagerNamespace,
-						OwnerReferences: []metav1.OwnerReference{
-							metav1.OwnerReference{
-								APIVersion: "v1",
-								Kind:       "Secret",
-								Name:       "asecret",
-							},
-							metav1.OwnerReference{
-								APIVersion: appsv1.GroupVersion.String(),
-								Kind:       "DeploymentConfig",
-								Name:       component.ZyncQueDeploymentName,
-							},
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Route",
+					APIVersion: "route.openshift.io/v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "routeManagedByZyncQue",
+					Namespace: apimanagerNamespace,
+					OwnerReferences: []metav1.OwnerReference{
+						metav1.OwnerReference{
+							APIVersion: "v1",
+							Kind:       "Secret",
+							Name:       "asecret",
+						},
+						metav1.OwnerReference{
+							APIVersion: appsv1.GroupVersion.String(),
+							Kind:       "DeploymentConfig",
+							Name:       component.ZyncQueDeploymentName,
 						},
 					},
+				},
 			},
 			expected: []reconcile.Request{
 				reconcile.Request{NamespacedName: types.NamespacedName{Namespace: apimanagerNamespace, Name: apimanagerName}},
@@ -142,35 +142,35 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 		{
 			testName: "Event with route without OwnerReferences is discarded",
 			input: &routev1.Route{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "Route",
-						APIVersion: "route.openshift.io/v1",
-					},
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "aroute",
-						Namespace: apimanagerNamespace,
-					},
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Route",
+					APIVersion: "route.openshift.io/v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "aroute",
+					Namespace: apimanagerNamespace,
+				},
 			},
 			expected: nil,
 		},
 		{
 			testName: "Event with route with non-APIManager OwnerReference (directly or indirectly) is discarded",
 			input: &routev1.Route{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "Route",
-						APIVersion: "route.openshift.io/v1",
-					},
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "aroute",
-						Namespace: apimanagerNamespace,
-						OwnerReferences: []metav1.OwnerReference{
-							metav1.OwnerReference{
-								APIVersion: "v1",
-								Kind:       "Secret",
-								Name:       "asecret",
-							},
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Route",
+					APIVersion: "route.openshift.io/v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "aroute",
+					Namespace: apimanagerNamespace,
+					OwnerReferences: []metav1.OwnerReference{
+						metav1.OwnerReference{
+							APIVersion: "v1",
+							Kind:       "Secret",
+							Name:       "asecret",
 						},
 					},
+				},
 			},
 			expected: nil,
 		},

@@ -122,7 +122,6 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return statusResult, nil
 	}
 
-
 	return ctrl.Result{}, nil
 }
 
@@ -133,7 +132,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-	   	For(&appsv1alpha1.APIManager{}).
+		For(&appsv1alpha1.APIManager{}).
 		Owns(&appsv1.DeploymentConfig{}).
 		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
 		Complete(r)

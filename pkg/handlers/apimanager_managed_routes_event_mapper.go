@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-
 // APIManagerRoutesEventMapper is an EventHandler that maps an existing OpenShift
 // route to an APIManager. This handler should only be used on Route objects
 // and when APIManager is used.
