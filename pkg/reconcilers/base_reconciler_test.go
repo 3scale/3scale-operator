@@ -72,7 +72,7 @@ func TestBaseReconcilerCreate(t *testing.T) {
 
 	reconciledConfigmap := &v1.ConfigMap{}
 	objectKey := client.ObjectKeyFromObject(desiredConfigmap)
-	
+
 	err = cl.Get(context.TODO(), objectKey, reconciledConfigmap)
 	// object must exist, that is all required to be tested
 	if err != nil {
