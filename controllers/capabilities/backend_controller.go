@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -251,8 +251,8 @@ func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObject
 	}
 
 	// Retrieve all product CRs that are under the same ns as the backend CR
-	opts := k8sclient.ListOptions{
-		Namespace: backendNamespace,
+	opts := client.ListOptions{
+		Namespace: backend.Namespace,
 	}
 	productCRsList := &capabilitiesv1beta1.ProductList{}
 	err = r.Client().List(context.TODO(), productCRsList, &opts)

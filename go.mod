@@ -111,7 +111,6 @@ require (
 )
 
 replace (
-	github.com/aws/aws-sdk-go => github.com/aws/aws-sdk-go v1.34.0 // security release to address CVE-2020-8912
 	github.com/go-logr/logr => github.com/go-logr/logr v0.4.0 // required - can be updated once controller runtime is updated
 	github.com/go-logr/zapr => github.com/go-logr/zapr v0.4.0 // required - can be updated once controller runtime is updated
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20200527184302-a843dc3262a0 // Required until https://github.com/operator-framework/operator-lifecycle-manager/pull/1241 is resolved

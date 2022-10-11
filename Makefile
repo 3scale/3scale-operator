@@ -89,14 +89,14 @@ run: generate fmt vet manifests
 # download controller-gen if necessary
 CONTROLLER_GEN=$(PROJECT_PATH)/bin/controller-gen
 $(CONTROLLER_GEN):
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0)
+	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0)
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)
 
 KUSTOMIZE=$(PROJECT_PATH)/bin/kustomize
 $(KUSTOMIZE):
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.5.4)
+	$(call go-bin-install,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.5.4)
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE)
@@ -114,7 +114,7 @@ operator-sdk: $(OPERATOR_SDK)
 
 GO_BINDATA=$(PROJECT_PATH)/bin/go-bindata
 $(GO_BINDATA):
-	$(call go-get-tool,$(GO_BINDATA),github.com/go-bindata/go-bindata/v3/...@v3.1.3)
+	$(call go-bin-install,$(GO_BINDATA),github.com/go-bindata/go-bindata/v3/...@v3.1.3)
 
 .PHONY: go-bindata
 go-bindata: $(GO_BINDATA)
@@ -218,7 +218,7 @@ bundle-run: $(OPERATOR_SDK)
 # download yq if necessary
 YQ=$(PROJECT_PATH)/bin/yq
 $(YQ):
-	$(call go-get-tool,$(YQ),github.com/mikefarah/yq/v3)
+	$(call go-bin-install,$(YQ),github.com/mikefarah/yq/v3)
 
 .PHONY: yq
 yq: $(YQ)
@@ -290,8 +290,8 @@ prometheusrules-update-test: prometheus-rules
 	git diff --exit-code ./doc/prometheusrules
 	[ -z "$$(git ls-files --other --exclude-standard --directory --no-empty-directory ./doc/prometheusrules)" ]
 
-# go-get-tool will 'go get' any package $2 and install it to $1.
-define go-get-tool
+# go-bin-install will 'go get' any package $2 and install it to $1.
+define go-bin-install
 @[ -f $(1) ] || { \
 set -e ;\
 TMP_DIR=$$(mktemp -d) ;\
