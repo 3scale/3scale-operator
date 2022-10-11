@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.3.0
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   labels:
     app: 3scale-api-management
@@ -39,6 +39,7 @@ spec:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               email:
                 description: Email
                 type: string
@@ -52,6 +53,7 @@ spec:
                     description: Namespace defines the space within which the secret name must be unique.
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               providerAccountRef:
                 description: ProviderAccountRef references account provider credentials
                 properties:
@@ -59,6 +61,7 @@ spec:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               role:
                 description: Role defines the desired 3scale role. Defaults to "member"
                 enum:
@@ -128,5 +131,5 @@ status:
   acceptedNames:
     kind: ""
     plural: ""
-  conditions: []
-  storedVersions: []
+  conditions: null
+  storedVersions: null
