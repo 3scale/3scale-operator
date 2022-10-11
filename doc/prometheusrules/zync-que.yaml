@@ -22,25 +22,37 @@ spec:
         severity: critical
     - alert: ThreescaleZyncQueScheduledJobCountHigh
       annotations:
-        description: Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job count over 100
-        summary: Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job count over 100
-      expr: max(que_jobs_scheduled_total{pod=~'zync-que.*',type='scheduled',namespace="__NAMESPACE__"}) by (namespace,job,exported_job) > 250
+        description: Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled
+          job count over 100
+        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_que_scheduled_job_count_high.adoc
+        summary: Job {{ $labels.job }} on {{ $labels.namespace }} has scheduled job
+          count over 100
+      expr: max(que_jobs_scheduled_total{pod=~'zync-que.*',type='scheduled',namespace="__NAMESPACE__"})
+        by (namespace,job,exported_job) > 250
       for: 1m
       labels:
         severity: warning
     - alert: ThreescaleZyncQueFailedJobCountHigh
       annotations:
-        description: Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count over 100
-        summary: Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count over 100
-      expr: max(que_jobs_scheduled_total{pod=~'zync-que.*',type='failed',namespace="__NAMESPACE__"}) by (namespace,job,exported_job) > 250
+        description: Job {{ $labels.job }} on {{ $labels.namespace }} has failed job
+          count over 100
+        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_que_failed_job_count_high.adoc
+        summary: Job {{ $labels.job }} on {{ $labels.namespace }} has failed job count
+          over 100
+      expr: max(que_jobs_scheduled_total{pod=~'zync-que.*',type='failed',namespace="__NAMESPACE__"})
+        by (namespace,job,exported_job) > 250
       for: 1m
       labels:
         severity: warning
     - alert: ThreescaleZyncQueReadyJobCountHigh
       annotations:
-        description: Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count over 100
-        summary: Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count over 100
-      expr: max(que_jobs_scheduled_total{pod=~'zync-que.*',type='ready',namespace="__NAMESPACE__"}) by (namespace,job,exported_job) > 250
+        description: Job {{ $labels.job }} on {{ $labels.namespace }} has ready job
+          count over 100
+        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/zync_que_ready_job_count_high.adoc
+        summary: Job {{ $labels.job }} on {{ $labels.namespace }} has ready job count
+          over 100
+      expr: max(que_jobs_scheduled_total{pod=~'zync-que.*',type='ready',namespace="__NAMESPACE__"})
+        by (namespace,job,exported_job) > 250
       for: 1m
       labels:
         severity: warning
