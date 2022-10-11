@@ -520,7 +520,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.Int),
 										IntVal: 6379}},
-									},
+								},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      0,
 								PeriodSeconds:       5,

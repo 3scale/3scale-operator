@@ -270,7 +270,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.Int),
 										IntVal: 3000}},
-									},
+								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      0,
 								PeriodSeconds:       10,
@@ -283,7 +283,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.Int),
 										IntVal: 3000}},
-									},
+								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      5,
 								PeriodSeconds:       0,
