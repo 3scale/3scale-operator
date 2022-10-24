@@ -1759,6 +1759,6 @@
       ]
     },
     "timezone": "",
-    "title": "{{ .Namespace }} / 3scale / Kubernetes / Compute Resources / Namespace (Pods)",
+    "title": "3scale / Kubernetes / Compute Resources / Namespace (Pods)",
     "version": 1
 }
