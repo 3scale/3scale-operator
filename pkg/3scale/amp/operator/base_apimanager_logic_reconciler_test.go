@@ -138,7 +138,7 @@ func TestBaseAPIManagerLogicReconcilerHasPrometheusRules(t *testing.T) {
 		},
 	}
 	grafanaAPIResourceList := &metav1.APIResourceList{
-		GroupVersion: grafanav1alpha1.GroupVersion.Version,
+		GroupVersion: grafanav1alpha1.GroupVersion.String(),
 		APIResources: []metav1.APIResource{
 			{Name: "grafanadashboards", Namespaced: true, Kind: "GrafanaDashboard"},
 		},
@@ -240,7 +240,7 @@ func TestBaseAPIManagerLogicReconcilerHasGrafanaDashboards(t *testing.T) {
 		},
 	}
 	grafanaAPIResourceList := &metav1.APIResourceList{
-		GroupVersion: grafanav1alpha1.GroupVersion.Version,
+		GroupVersion: grafanav1alpha1.GroupVersion.String(),
 		APIResources: []metav1.APIResource{
 			{Name: "grafanadashboards", Namespaced: true, Kind: "GrafanaDashboard"},
 		},
@@ -342,7 +342,7 @@ func TestBaseAPIManagerLogicReconcilerHasPodMonitors(t *testing.T) {
 		},
 	}
 	grafanaAPIResourceList := &metav1.APIResourceList{
-		GroupVersion: grafanav1alpha1.GroupVersion.Version,
+		GroupVersion: grafanav1alpha1.GroupVersion.String(),
 		APIResources: []metav1.APIResource{
 			{Name: "grafanadashboards", Namespaced: true, Kind: "GrafanaDashboard"},
 		},
@@ -444,7 +444,7 @@ func TestBaseAPIManagerLogicReconcilerHasServiceMonitors(t *testing.T) {
 		},
 	}
 	grafanaAPIResourceList := &metav1.APIResourceList{
-		GroupVersion: grafanav1alpha1.GroupVersion.Version,
+		GroupVersion: grafanav1alpha1.GroupVersion.String(),
 		APIResources: []metav1.APIResource{
 			{Name: "grafanadashboards", Namespaced: true, Kind: "GrafanaDashboard"},
 		},

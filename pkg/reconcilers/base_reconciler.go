@@ -175,7 +175,7 @@ func (b *BaseReconciler) HasConsoleLink() (bool, error) {
 //HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
 func (b *BaseReconciler) HasGrafanaDashboards() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
-		grafanav1alpha1.GroupVersion.Version,
+		grafanav1alpha1.GroupVersion.String(),
 		"GrafanaDashboard")
 }
 
