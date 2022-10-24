@@ -3564,6 +3564,6 @@
     ]
   },
   "timezone": "",
-  "title": "{{ .Namespace }} / 3scale / System",
+  "title": "3scale / System",
   "version": 1
 }

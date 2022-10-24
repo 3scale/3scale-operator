@@ -549,5 +549,5 @@
         ]
     },
     "timezone": "",
-    "title": "{{ .Namespace }} / 3scale / Apicast Services"
+    "title": "3scale / Apicast Services"
 }
