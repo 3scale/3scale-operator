@@ -4,18 +4,18 @@ import (
 	"context"
 	"testing"
 
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
+	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -25,6 +25,7 @@ import (
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -104,7 +105,7 @@ func TestNewZyncReconciler(t *testing.T) {
 	cases := []struct {
 		testName string
 		objName  string
-		obj      runtime.Object
+		obj      client.Object
 	}{
 		{"queRole", "zync-que-role", &rbacv1.Role{}},
 		{"queServiceAccount", "zync-que-sa", &v1.ServiceAccount{}},
@@ -115,8 +116,8 @@ func TestNewZyncReconciler(t *testing.T) {
 		{"zyncService", "zync", &v1.Service{}},
 		{"zyncDatabaseService", "zync-database", &v1.Service{}},
 		{"zyncSecret", component.ZyncSecretName, &v1.Secret{}},
-		{"zyncPDB", "zync", &v1beta1.PodDisruptionBudget{}},
-		{"quePDB", "zync-que", &v1beta1.PodDisruptionBudget{}},
+		{"zyncPDB", "zync", &policyv1.PodDisruptionBudget{}},
+		{"quePDB", "zync-que", &policyv1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {
@@ -218,7 +219,7 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 	cases := []struct {
 		testName   string
 		objName    string
-		obj        runtime.Object
+		obj        client.Object
 		hasToExist bool
 	}{
 		{"queRole", "zync-que-role", &rbacv1.Role{}, true},
@@ -230,8 +231,8 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 		{"zyncService", "zync", &v1.Service{}, true},
 		{"zyncDatabaseService", "zync-database", &v1.Service{}, false},
 		{"zyncSecret", component.ZyncSecretName, &v1.Secret{}, true},
-		{"zyncPDB", "zync", &v1beta1.PodDisruptionBudget{}, true},
-		{"quePDB", "zync-que", &v1beta1.PodDisruptionBudget{}, true},
+		{"zyncPDB", "zync", &policyv1.PodDisruptionBudget{}, true},
+		{"quePDB", "zync-que", &policyv1.PodDisruptionBudget{}, true},
 	}
 
 	for _, tc := range cases {

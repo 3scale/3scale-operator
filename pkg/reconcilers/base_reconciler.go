@@ -7,10 +7,10 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-logr/logr"
-	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
+	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	consolev1 "github.com/openshift/api/console/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -57,7 +57,7 @@ func NewBaseReconciler(ctx context.Context, client client.Client, scheme *runtim
 	}
 }
 
-func (b *BaseReconciler) Reconcile(reconcile.Request) (reconcile.Result, error) {
+func (b *BaseReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
@@ -104,12 +104,9 @@ func (b *BaseReconciler) EventRecorder() record.EventRecorder {
 //
 // It returns an error.
 func (b *BaseReconciler) ReconcileResource(obj, desired common.KubernetesObject, mutateFn MutateFn) error {
-	key, err := client.ObjectKeyFromObject(desired)
-	if err != nil {
-		return err
-	}
+	key := client.ObjectKeyFromObject(desired)
 
-	if err = b.Client().Get(b.ctx, key, obj); err != nil {
+	if err := b.Client().Get(b.ctx, key, obj); err != nil {
 		if !errors.IsNotFound(err) {
 			return err
 		}
@@ -178,8 +175,8 @@ func (b *BaseReconciler) HasConsoleLink() (bool, error) {
 //HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
 func (b *BaseReconciler) HasGrafanaDashboards() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
-		grafanav1alpha1.SchemeGroupVersion.String(),
-		grafanav1alpha1.GrafanaDashboardKind)
+		grafanav1alpha1.GroupVersion.String(),
+		"GrafanaDashboard")
 }
 
 //HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster

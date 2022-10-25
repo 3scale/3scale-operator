@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strconv"
 
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -592,10 +592,11 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppMasterContainerResourceRequirements,
 							VolumeMounts: system.appMasterContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "master"}},
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "master"}},
 								},
 								InitialDelaySeconds: 40,
 								TimeoutSeconds:      10,
@@ -604,17 +605,18 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/check.txt",
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "master",
-									},
-									Scheme: v1.URISchemeHTTP,
-									HTTPHeaders: []v1.HTTPHeader{
-										v1.HTTPHeader{
-											Name:  "X-Forwarded-Proto",
-											Value: "https"}}},
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Path: "/check.txt",
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "master",
+										},
+										Scheme: v1.URISchemeHTTP,
+										HTTPHeaders: []v1.HTTPHeader{
+											v1.HTTPHeader{
+												Name:  "X-Forwarded-Proto",
+												Value: "https"}}},
 								},
 								InitialDelaySeconds: 60,
 								TimeoutSeconds:      10,
@@ -635,10 +637,11 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppProviderContainerResourceRequirements,
 							VolumeMounts: system.appProviderContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "provider"}},
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "provider"}},
 								},
 								InitialDelaySeconds: 40,
 								TimeoutSeconds:      10,
@@ -647,17 +650,18 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/check.txt",
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "provider",
-									},
-									Scheme: v1.URISchemeHTTP,
-									HTTPHeaders: []v1.HTTPHeader{
-										v1.HTTPHeader{
-											Name:  "X-Forwarded-Proto",
-											Value: "https"}}},
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Path: "/check.txt",
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "provider",
+										},
+										Scheme: v1.URISchemeHTTP,
+										HTTPHeaders: []v1.HTTPHeader{
+											v1.HTTPHeader{
+												Name:  "X-Forwarded-Proto",
+												Value: "https"}}},
 								},
 								InitialDelaySeconds: 60,
 								TimeoutSeconds:      10,
@@ -678,10 +682,11 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:    *system.Options.AppDeveloperContainerResourceRequirements,
 							VolumeMounts: system.appDeveloperContainerVolumeMounts(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "developer"}},
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "developer"}},
 								},
 								InitialDelaySeconds: 40,
 								TimeoutSeconds:      10,
@@ -690,17 +695,18 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    40,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{HTTPGet: &v1.HTTPGetAction{
-									Path: "/check.txt",
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.String),
-										StrVal: "developer",
-									},
-									Scheme: v1.URISchemeHTTP,
-									HTTPHeaders: []v1.HTTPHeader{
-										v1.HTTPHeader{
-											Name:  "X-Forwarded-Proto",
-											Value: "https"}}},
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Path: "/check.txt",
+										Port: intstr.IntOrString{
+											Type:   intstr.Type(intstr.String),
+											StrVal: "developer",
+										},
+										Scheme: v1.URISchemeHTTP,
+										HTTPHeaders: []v1.HTTPHeader{
+											v1.HTTPHeader{
+												Name:  "X-Forwarded-Proto",
+												Value: "https"}}},
 								},
 								InitialDelaySeconds: 60,
 								TimeoutSeconds:      10,
@@ -1223,7 +1229,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 							},
 							Env: system.buildSystemSphinxEnv(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.FromInt(9306),
 									},
@@ -1240,17 +1246,17 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (system *System) AppPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (system *System) AppPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-app",
 			Labels: system.Options.CommonAppLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 			},
@@ -1259,17 +1265,17 @@ func (system *System) AppPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 	}
 }
 
-func (system *System) SidekiqPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (system *System) SidekiqPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "system-sidekiq",
 			Labels: system.Options.CommonSidekiqLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": "system-sidekiq"},
 			},

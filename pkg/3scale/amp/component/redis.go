@@ -185,7 +185,7 @@ func (redis *Redis) buildPodContainerResourceLimits() v1.ResourceRequirements {
 
 func (redis *Redis) buildPodContainerReadinessProbe() *v1.Probe {
 	return &v1.Probe{
-		Handler: v1.Handler{
+		ProbeHandler: v1.ProbeHandler{
 			Exec: &v1.ExecAction{
 				Command: []string{
 					"container-entrypoint",
@@ -205,7 +205,7 @@ func (redis *Redis) buildPodContainerLivenessProbe() *v1.Probe {
 	return &v1.Probe{
 		InitialDelaySeconds: 10,
 		PeriodSeconds:       10,
-		Handler: v1.Handler{
+		ProbeHandler: v1.ProbeHandler{
 			TCPSocket: &v1.TCPSocketAction{
 				Port: intstr.FromInt(6379),
 			},
@@ -516,7 +516,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 									MountPath: "/etc/redis.d/"},
 							},
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{TCPSocket: &v1.TCPSocketAction{
+								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
 										Type:   intstr.Type(intstr.Int),
 										IntVal: 6379}},
@@ -528,7 +528,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    0,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
 										Command: []string{"container-entrypoint", "bash", "-c", "redis-cli set liveness-probe \"`date`\" | grep OK"}},
 								},

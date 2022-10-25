@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
-	logrtesting "github.com/go-logr/logr/testing"
+	"github.com/go-logr/logr"
 )
 
 func TestProductEntityBasics(t *testing.T) {
@@ -27,7 +27,7 @@ func TestProductEntityBasics(t *testing.T) {
 	}
 
 	client := threescaleapi.NewThreeScale(nil, token, nil)
-	productEntity := NewProductEntity(product, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(product, client, logr.Discard())
 	equals(t, product.Element.ID, productEntity.ID())
 	equals(t, product.Element.Name, productEntity.Name())
 	equals(t, product.Element.State, productEntity.State())
@@ -59,7 +59,7 @@ func TestProductEntityUpdate(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.Update(threescaleapi.Params{})
 	ok(t, err)
 	equals(t, int64(4567), productEntity.ID())
@@ -73,7 +73,7 @@ func TestProductEntityMethods(t *testing.T) {
 	httpClient := NewTestClient(GetMethodsMetricsRoundTripFunc)
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	methodList, err := productEntity.Methods()
 	ok(t, err)
 	assert(t, methodList != nil, "method list returned nil")
@@ -110,7 +110,7 @@ func TestProductEntityCreateMethod(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.CreateMethod(threescaleapi.Params{})
 	ok(t, err)
 }
@@ -132,7 +132,7 @@ func TestProductEntityDeleteMethod(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.DeleteMethod(int64(3))
 	ok(t, err)
 }
@@ -166,7 +166,7 @@ func TestProductEntityUpdateMethod(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.UpdateMethod(int64(3), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -195,7 +195,7 @@ func TestProductEntityCreateMetric(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.CreateMetric(threescaleapi.Params{})
 	ok(t, err)
 }
@@ -213,7 +213,7 @@ func TestProductEntityDeleteMetric(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.DeleteMetric(int64(5))
 	ok(t, err)
 }
@@ -242,7 +242,7 @@ func TestProductEntityUpdateMetric(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.UpdateMetric(int64(3), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -253,7 +253,7 @@ func TestProductEntityMetricsAndMethods(t *testing.T) {
 	httpClient := NewTestClient(GetMethodsMetricsRoundTripFunc)
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	metricList, err := productEntity.MetricsAndMethods()
 	ok(t, err)
 	assert(t, metricList != nil, "metric list returned nil")
@@ -269,7 +269,7 @@ func TestProductEntityMetrics(t *testing.T) {
 	httpClient := NewTestClient(GetMethodsMetricsRoundTripFunc)
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	metricList, err := productEntity.Metrics()
 	ok(t, err)
 	assert(t, metricList != nil, "metric list returned nil")
@@ -317,7 +317,7 @@ func TestProductEntityMappingRules(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	ruleList, err := productEntity.MappingRules()
 	ok(t, err)
 	assert(t, ruleList != nil, "mapping rule list returned nil")
@@ -337,7 +337,7 @@ func TestProductEntityDeleteMappingRule(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.DeleteMappingRule(int64(3))
 	ok(t, err)
 }
@@ -368,7 +368,7 @@ func TestProductEntityCreateMappingRule(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.CreateMappingRule(threescaleapi.Params{})
 	ok(t, err)
 }
@@ -399,7 +399,7 @@ func TestProductEntityUpdateMappingRule(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.UpdateMappingRule(int64(1), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -410,7 +410,7 @@ func TestProductEntityFindMethodMetricIDBySystemName(t *testing.T) {
 	httpClient := NewTestClient(GetMethodsMetricsRoundTripFunc)
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 
 	cases := []struct {
 		name       string
@@ -466,7 +466,7 @@ func TestProductEntityBackendUsages(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	backendUsageList, err := productEntity.BackendUsages()
 	ok(t, err)
 	equals(t, 3, len(backendUsageList))
@@ -488,7 +488,7 @@ func TestProductEntityDeleteBackendUsage(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.DeleteBackendUsage(int64(3))
 	ok(t, err)
 }
@@ -515,7 +515,7 @@ func TestProductEntityUpdateBackendUsage(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.UpdateBackendUsage(int64(1), threescaleapi.Params{})
 	ok(t, err)
 }
@@ -542,7 +542,7 @@ func TestProductEntityCreateBackendUsage(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.CreateBackendUsage(threescaleapi.Params{})
 	ok(t, err)
 }
@@ -567,7 +567,7 @@ func TestProductEntityProxy(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	proxy, err := productEntity.Proxy()
 	ok(t, err)
 	assert(t, proxy != nil, "proxy returned nil")
@@ -594,7 +594,7 @@ func TestProductEntityUpdateProxy(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.UpdateProxy(threescaleapi.Params{})
 	ok(t, err)
 }
@@ -629,7 +629,7 @@ func TestProductEntityApplicationPlans(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	plans, err := productEntity.ApplicationPlans()
 	ok(t, err)
 	assert(t, plans != nil, "plans returned nil")
@@ -652,7 +652,7 @@ func TestProductEntityDeleteApplicationPlan(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.DeleteApplicationPlan(int64(1))
 	ok(t, err)
 }
@@ -677,7 +677,7 @@ func TestProductEntityCreateApplicationPlan(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	plan, err := productEntity.CreateApplicationPlan(threescaleapi.Params{})
 	ok(t, err)
 	assert(t, plan != nil, "plan returned nil")
@@ -704,7 +704,7 @@ func TestProductEntityPromoteProxyToStaging(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.PromoteProxyToStaging()
 	ok(t, err)
 }
@@ -733,7 +733,7 @@ func TestProductEntityPolicies(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	policies, err := productEntity.Policies()
 	ok(t, err)
 	assert(t, policies != nil, "policies returned nil")
@@ -767,7 +767,7 @@ func TestProductEntityUpdatePolicies(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.UpdatePolicies(&threescaleapi.PoliciesConfigList{})
 	ok(t, err)
 }
@@ -792,7 +792,7 @@ func TestProductEntityOIDCConfiguration(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	oidcConf, err := productEntity.OIDCConfiguration()
 	ok(t, err)
 	assert(t, oidcConf != nil, "oidcConf returned nil")
@@ -819,7 +819,7 @@ func TestProductEntityUpdateOIDCConfiguration(t *testing.T) {
 
 	client := threescaleapi.NewThreeScale(NewTestAdminPortal(t), token, httpClient)
 
-	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logrtesting.NullLogger{})
+	productEntity := NewProductEntity(&threescaleapi.Product{}, client, logr.Discard())
 	err := productEntity.UpdateOIDCConfiguration(&threescaleapi.OIDCConfiguration{})
 	ok(t, err)
 }

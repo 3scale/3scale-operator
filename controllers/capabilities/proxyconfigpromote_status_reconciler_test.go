@@ -119,7 +119,7 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
 				reconcileError:          fmt.Errorf("test"),
-				logger:                  nil,
+				logger:                  logr.Discard(),
 			},
 			want: &capabilitiesv1beta1.ProxyConfigPromoteStatus{
 				ProductId:               "3",
@@ -144,7 +144,7 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
 				reconcileError:          fmt.Errorf("test"),
-				logger:                  nil,
+				logger:                  logr.Discard(),
 			},
 			want: &capabilitiesv1beta1.ProxyConfigPromoteStatus{
 				ProductId:               "3",
@@ -248,6 +248,14 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 				t.Errorf("Reconcile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			// Requeue as there's a high chance of conflict in updating status.
+			got, err = s.Reconcile()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Reconcile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Reconcile() got = %v, want %v", got, tt.want)
 			}

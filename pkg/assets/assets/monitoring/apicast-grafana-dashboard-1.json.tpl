@@ -2685,5 +2685,5 @@
         ]
     },
     "timezone": "",
-    "title": "{{ .Namespace }}/ 3scale / Apicast"
+    "title": "3scale / Apicast"
 }

@@ -79,7 +79,7 @@ commands:
       - run:
           name: Install Golang
           command: |
-            curl --fail -L https://dl.google.com/go/go1.13.7.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
+            curl --fail -L https://dl.google.com/go/go1.17.3.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
       - run:
           name: Setup GO env
           command: |
@@ -153,7 +153,7 @@ commands:
 jobs:
   install-operator:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     working_directory: ~/project/3scale-operator
     steps:
       - setup_remote_docker:
@@ -171,7 +171,7 @@ jobs:
 
   build-operator-image-only:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     working_directory: ~/project/3scale-operator
     steps:
       - setup_remote_docker:
@@ -228,7 +228,7 @@ jobs:
 
   run-unit-tests:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     resource_class: large
     steps:
       - unit-tests
@@ -238,7 +238,7 @@ jobs:
 
   test-crds:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     steps:
       - checkout
       - install-dependencies
@@ -246,14 +246,14 @@ jobs:
 
   test-manifests-version:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     steps:
       - checkout
       - install-dependencies
       - run: make test-manifests-version
   license-check:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     steps:
       - run:
           name: Installing ruby
@@ -281,7 +281,7 @@ jobs:
 
   unit-tests-coverage:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     resource_class: large
     steps:
       - unit-tests
@@ -293,7 +293,7 @@ jobs:
 
   bundle-validate:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - checkout
@@ -303,7 +303,7 @@ jobs:
 
   assets-validate:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     steps:
       - checkout
       - install-operator-sdk
@@ -311,7 +311,7 @@ jobs:
 
   prometheusrules-validate:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     steps:
       - checkout
       - run: make prometheusrules-update-test

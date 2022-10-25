@@ -45,8 +45,7 @@ var _ reconcile.Reconciler = &CustomPolicyDefinitionReconciler{}
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=custompolicydefinitions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=capabilities.3scale.net,namespace=placeholder,resources=custompolicydefinitions/status,verbs=get;update;patch
 
-func (r *CustomPolicyDefinitionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *CustomPolicyDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	reqLogger := r.Logger().WithValues("custompolicydefinition", req.NamespacedName)
 	reqLogger.Info("Reconcile CustomPolicyDefinition", "Operator version", version.Version)
 

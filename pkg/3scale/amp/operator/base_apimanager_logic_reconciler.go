@@ -8,14 +8,14 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-logr/logr"
-	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
+	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -48,11 +48,11 @@ func (r *BaseAPIManagerLogicReconciler) NamespacedNameWithAPIManagerNamespace(ob
 	return types.NamespacedName{Namespace: r.apiManager.GetNamespace(), Name: obj.GetName()}
 }
 
-func (r *BaseAPIManagerLogicReconciler) ReconcilePodDisruptionBudget(desired *v1beta1.PodDisruptionBudget, mutatefn reconcilers.MutateFn) error {
+func (r *BaseAPIManagerLogicReconciler) ReconcilePodDisruptionBudget(desired *policyv1.PodDisruptionBudget, mutatefn reconcilers.MutateFn) error {
 	if !r.apiManager.IsPDBEnabled() {
 		common.TagObjectToDelete(desired)
 	}
-	return r.ReconcileResource(&v1beta1.PodDisruptionBudget{}, desired, mutatefn)
+	return r.ReconcileResource(&policyv1.PodDisruptionBudget{}, desired, mutatefn)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileImagestream(desired *imagev1.ImageStream, mutatefn reconcilers.MutateFn) error {

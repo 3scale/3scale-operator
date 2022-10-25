@@ -5,17 +5,17 @@ import (
 	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/common"
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 )
 
 func GenericPDBMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-	existing, ok := existingObj.(*v1beta1.PodDisruptionBudget)
+	existing, ok := existingObj.(*policyv1.PodDisruptionBudget)
 	if !ok {
-		return false, fmt.Errorf("%T is not a *v1beta1.PodDisruptionBudget", existingObj)
+		return false, fmt.Errorf("%T is not a *v1.PodDisruptionBudget", existingObj)
 	}
-	desired, ok := desiredObj.(*v1beta1.PodDisruptionBudget)
+	desired, ok := desiredObj.(*policyv1.PodDisruptionBudget)
 	if !ok {
-		return false, fmt.Errorf("%T is not a *v1beta1.PodDisruptionBudget", desiredObj)
+		return false, fmt.Errorf("%T is not a *v1.PodDisruptionBudget", desiredObj)
 	}
 
 	updated := false

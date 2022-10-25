@@ -14,10 +14,13 @@ spec:
     rules:
     - alert: ThreescaleBackendWorkerJobsCountRunningHigh
       annotations:
-        description: '{{$labels.container_name}} replica controller on {{$labels.namespace}} project: Has more than 1000 jobs processed in the last 5 minutes'
+        description: '{{$labels.container_name}} replica controller on {{$labels.namespace}}
+          project: Has more than 1000 jobs processed in the last 5 minutes'
         sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/backend_worker_jobs_count_running_high.adoc
-        summary: '{{$labels.container_name}} replica controller on {{$labels.namespace}}: Has more than 10000 jobs processed in the last 5 minutes'
-      expr: sum(avg_over_time(apisonator_worker_job_count{job=~"backend.*",namespace="__NAMESPACE__"} [5m])) by (namespace,job) > 10000
+        summary: '{{$labels.container_name}} replica controller on {{$labels.namespace}}:
+          Has more than 10000 jobs processed in the last 5 minutes'
+      expr: sum(avg_over_time(apisonator_worker_job_count{job=~"backend.*",namespace="__NAMESPACE__"}
+        [5m])) by (namespace,job) > 10000
       for: 5m
       labels:
         severity: critical

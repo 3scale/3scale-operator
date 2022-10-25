@@ -6,7 +6,7 @@ import (
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/common"
 
-	logrtesting "github.com/go-logr/logr/testing"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -99,7 +99,7 @@ func TestProductList(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			cl := fake.NewFakeClient(anotherProviderSecret, providerSecret, tc.product)
-			productList, err := ProductList(ns, cl, providerAccountURLStr, logrtesting.NullLogger{})
+			productList, err := ProductList(ns, cl, providerAccountURLStr, logr.Discard())
 			if err != nil {
 				subT.Fatal(err)
 			}

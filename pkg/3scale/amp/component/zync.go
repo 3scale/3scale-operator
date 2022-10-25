@@ -3,7 +3,7 @@ package component
 import (
 	"fmt"
 
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -241,7 +241,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 							Ports: zync.zyncPorts(),
 							Env:   zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
 										Port:   intstr.FromInt(8080),
 										Path:   "/status/live",
@@ -255,7 +255,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 								FailureThreshold:    10,
 							},
 							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
 										Path:   "/status/ready",
 										Port:   intstr.FromInt(8080),
@@ -378,7 +378,7 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 								PeriodSeconds:       10,
 								SuccessThreshold:    1,
 								TimeoutSeconds:      60,
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
 										Port:   intstr.FromInt(9394),
 										Path:   "/metrics",
@@ -478,7 +478,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 								},
 							},
 							LivenessProbe: &v1.Probe{
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.FromInt(5432),
 									},
@@ -489,7 +489,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 							ReadinessProbe: &v1.Probe{
 								TimeoutSeconds:      1,
 								InitialDelaySeconds: 5,
-								Handler: v1.Handler{
+								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
 										Command: []string{"/bin/sh", "-i", "-c", "psql -h 127.0.0.1 -U zync -q -d zync_production -c 'SELECT 1'"},
 									},
@@ -562,17 +562,17 @@ func (zync *Zync) DatabaseService() *v1.Service {
 	}
 }
 
-func (zync *Zync) ZyncPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (zync *Zync) ZyncPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   ZyncName,
 			Labels: zync.Options.CommonZyncLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": ZyncName},
 			},
@@ -581,17 +581,17 @@ func (zync *Zync) ZyncPodDisruptionBudget() *v1beta1.PodDisruptionBudget {
 	}
 }
 
-func (zync *Zync) QuePodDisruptionBudget() *v1beta1.PodDisruptionBudget {
-	return &v1beta1.PodDisruptionBudget{
+func (zync *Zync) QuePodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
-			APIVersion: "policy/v1beta1",
+			APIVersion: "policy/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "zync-que",
 			Labels: zync.Options.CommonZyncQueLabels,
 		},
-		Spec: v1beta1.PodDisruptionBudgetSpec{
+		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": "zync-que"},
 			},

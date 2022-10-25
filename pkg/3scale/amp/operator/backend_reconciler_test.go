@@ -13,13 +13,14 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -94,7 +95,7 @@ func TestNewBackendReconciler(t *testing.T) {
 	cases := []struct {
 		testName string
 		objName  string
-		obj      runtime.Object
+		obj      k8sclient.Object
 	}{
 		{"cronDC", "backend-cron", &appsv1.DeploymentConfig{}},
 		{"listenerDC", "backend-listener", &appsv1.DeploymentConfig{}},
@@ -104,9 +105,9 @@ func TestNewBackendReconciler(t *testing.T) {
 		{"environmentCM", "backend-environment", &v1.ConfigMap{}},
 		{"internalAPISecret", component.BackendSecretInternalApiSecretName, &v1.Secret{}},
 		{"listenerSecret", component.BackendSecretBackendListenerSecretName, &v1.Secret{}},
-		{"workerPDB", "backend-worker", &v1beta1.PodDisruptionBudget{}},
-		{"cronPDB", "backend-cron", &v1beta1.PodDisruptionBudget{}},
-		{"listenerPDB", "backend-listener", &v1beta1.PodDisruptionBudget{}},
+		{"workerPDB", "backend-worker", &policyv1.PodDisruptionBudget{}},
+		{"cronPDB", "backend-cron", &policyv1.PodDisruptionBudget{}},
+		{"listenerPDB", "backend-listener", &policyv1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {

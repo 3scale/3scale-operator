@@ -71,10 +71,8 @@ func TestBaseReconcilerCreate(t *testing.T) {
 	}
 
 	reconciledConfigmap := &v1.ConfigMap{}
-	objectKey, err := client.ObjectKeyFromObject(desiredConfigmap)
-	if err != nil {
-		t.Fatal(err)
-	}
+	objectKey := client.ObjectKeyFromObject(desiredConfigmap)
+
 	err = cl.Get(context.TODO(), objectKey, reconciledConfigmap)
 	// object must exist, that is all required to be tested
 	if err != nil {
@@ -154,10 +152,8 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 	}
 
 	reconciled := &v1.ConfigMap{}
-	objectKey, err := client.ObjectKeyFromObject(desiredConfigmap)
-	if err != nil {
-		t.Fatal(err)
-	}
+	objectKey := client.ObjectKeyFromObject(desiredConfigmap)
+
 	err = cl.Get(context.TODO(), objectKey, reconciled)
 	if err != nil {
 		t.Fatalf("error fetching reconciled: %v", err)
@@ -232,10 +228,7 @@ func TestBaseReconcilerDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	objectKey, err := client.ObjectKeyFromObject(desired)
-	if err != nil {
-		t.Fatal(err)
-	}
+	objectKey := client.ObjectKeyFromObject(desired)
 	reconciled := &v1.ConfigMap{}
 	err = cl.Get(context.TODO(), objectKey, reconciled)
 	// object should not exist, that is all required to be tested

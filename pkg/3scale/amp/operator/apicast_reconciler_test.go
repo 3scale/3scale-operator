@@ -7,20 +7,21 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	grafanav1alpha1 "github.com/integr8ly/grafana-operator/v3/pkg/apis/integreatly/v1alpha1"
+	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -115,25 +116,24 @@ func TestApicastReconciler(t *testing.T) {
 	cases := []struct {
 		testName string
 		objName  string
-		obj      runtime.Object
+		obj      k8sclient.Object
 	}{
 		{"stagingDeployment", "apicast-staging", &appsv1.DeploymentConfig{}},
 		{"productionDeployment", "apicast-production", &appsv1.DeploymentConfig{}},
 		{"stagingService", "apicast-staging", &v1.Service{}},
 		{"productionService", "apicast-production", &v1.Service{}},
 		{"envConfigMap", "apicast-environment", &v1.ConfigMap{}},
-		{"stagingPDB", "apicast-staging", &v1beta1.PodDisruptionBudget{}},
-		{"productionPDB", "apicast-production", &v1beta1.PodDisruptionBudget{}},
+		{"stagingPDB", "apicast-staging", &policyv1.PodDisruptionBudget{}},
+		{"productionPDB", "apicast-production", &policyv1.PodDisruptionBudget{}},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			obj := tc.obj
 			namespacedName := types.NamespacedName{
 				Name:      tc.objName,
 				Namespace: namespace,
 			}
-			err = cl.Get(context.TODO(), namespacedName, obj)
+			err = cl.Get(context.TODO(), namespacedName, tc.obj)
 			// object must exist, that is all required to be tested
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
