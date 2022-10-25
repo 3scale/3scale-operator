@@ -28,10 +28,10 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 * [operator-sdk] version v1.2.0
 * [docker] version 17.03+
 * [git][git_tool]
-* [go] version 1.13+
+* [go] version 1.17+
 * [kubernetes] version v1.13.0+
 * [oc] version v4.1+
-* Access to a Openshift v4.1.0+ cluster.
+* Access to a Openshift v4.9.0+ cluster.
 * A user with administrative privileges in the OpenShift cluster.
 * Make sure that the `DOCKER_ORG` and `DOCKER_REGISTRY` environment variables are set to the same value as
   your username on the container registry, and the container registry you are using.
@@ -121,7 +121,7 @@ easily found by filtering the provider type to _Custom_.
 
 #### Run all tests
 
-Access to a Openshift v4.1.0+ cluster required
+Access to a Openshift v4.9.0+ cluster required
 
 ```sh
 make test
@@ -135,7 +135,7 @@ make test-unit
 
 #### Run end-to-end tests
 
-Access to a Openshift v4.1.0+ cluster required
+Access to a Openshift v4.9.0+ cluster required
 
 ```sh
 make test-e2e
