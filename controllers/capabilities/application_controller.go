@@ -46,7 +46,7 @@ const applicationFinalizer = "application.capabilities.3scale.net/finalizer"
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applications,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applications/status,verbs=get;update;patch
 
-func (r *ApplicationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	reqLogger := r.Logger().WithValues("application", req.NamespacedName)
 	reqLogger.Info("Reconcile Application", "Operator version", version.Version)
@@ -75,7 +75,7 @@ func (r *ApplicationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	// get Account
 	accountResource := &capabilitiesv1beta1.DeveloperAccount{}
 	projectMeta := types.NamespacedName{
-		Name:      application.Spec.AccountCRName.Name,
+		Name:      application.Spec.AccountCR.Name,
 		Namespace: req.Namespace,
 	}
 
@@ -182,7 +182,7 @@ func (r *ApplicationReconciler) applicationReconciler(applicationResource *capab
 	// get product
 	productResource := &capabilitiesv1beta1.Product{}
 	projectMeta := types.NamespacedName{
-		Name:      applicationResource.Spec.ProductCRName.Name,
+		Name:      applicationResource.Spec.ProductCR.Name,
 		Namespace: req.Namespace,
 	}
 
@@ -216,7 +216,7 @@ func (r *ApplicationReconciler) removeApplicationFrom3scale(application *capabil
 	// get Account
 	account := &capabilitiesv1beta1.DeveloperAccount{}
 	projectMeta := types.NamespacedName{
-		Name:      application.Spec.AccountCRName.Name,
+		Name:      application.Spec.AccountCR.Name,
 		Namespace: req.Namespace,
 	}
 
@@ -249,20 +249,20 @@ func (r *ApplicationReconciler) checkExternalResources(applicationResource *capa
 	productFldPath := specFldPath.Child("productCRName")
 
 	if accountResource.Status.ID == nil {
-		errors = append(errors, field.Invalid(accountFldPath, applicationResource.Spec.AccountCRName, "accountCRName doesnt have a valid account reference"))
+		errors = append(errors, field.Invalid(accountFldPath, applicationResource.Spec.AccountCR, "accountCRName doesnt have a valid account reference"))
 	}
 	if productResource.Status.ID == nil {
-		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCRName, "productCRName doesnt have a valid product reference"))
+		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCR, "productCRName doesnt have a valid product reference"))
 	}
 	if accountResource.Status.Conditions.IsTrueFor(capabilitiesv1beta1.DeveloperAccountInvalidConditionType) {
-		errors = append(errors, field.Invalid(accountFldPath, applicationResource.Spec.AccountCRName, "account CR is in an invalid state"))
+		errors = append(errors, field.Invalid(accountFldPath, applicationResource.Spec.AccountCR, "account CR is in an invalid state"))
 	}
 	if productResource.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductInvalidConditionType) {
-		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCRName, "product CR is in an invalid state"))
+		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCR, "product CR is in an invalid state"))
 	}
 
 	if len(errors) == 0 && productResource.Status.ProviderAccountHost != accountResource.Status.ProviderAccountHost {
-		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCRName, "product and account providerAccounts dont match"))
+		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCR, "product and account providerAccounts dont match"))
 	}
 
 	if len(errors) == 0 {

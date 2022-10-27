@@ -24,8 +24,8 @@ Created by [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc
 |---------------------|-----------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
 | Name                | `name`                | string   | Name                                                                                                                                                | Yes          |
 | Description         | `description`         | string   | human-readable text of the application                                                                                                              | Yes          |
-| AccountCRName       | `accountCRName`       | object   | name of account CR via [v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core) | Yes          |
-| ProductCRName       | `productCRName`       | object   | name of product CR via [v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core) | Yes          |
+| AccountCR           | `accountCR`           | object   | name of account CR via [v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core) | Yes          |
+| ProductCR           | `productCR`           | object   | name of product CR via [v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#localobjectreference-v1-core) | Yes          |
 | ApplicationPlanName | `applicationPlanName` | string   | name of application plan that the application will use                                                                                              | Yes          |
 | Suspend             | `suspend`             | bool     | suspend application if true suspends application, if false resumes application                                                                      | No           |
 

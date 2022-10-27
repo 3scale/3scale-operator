@@ -38,10 +38,10 @@ type ApplicationSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	//AccountCRName name of account custom resource under which the application will be created
-	AccountCRName *corev1.LocalObjectReference `json:"accountCRName"`
+	AccountCR *corev1.LocalObjectReference `json:"accountCRName"`
 
 	//ProductCRName of product custom resource from which the application plan will be used
-	ProductCRName *corev1.LocalObjectReference `json:"productCRName"`
+	ProductCR *corev1.LocalObjectReference `json:"productCRName"`
 
 	//ApplicationPlanName name of application plan that the application will use
 	ApplicationPlanName string `json:"applicationPlanName"`
@@ -88,6 +88,12 @@ func (b *ApplicationStatus) Equals(other *ApplicationStatus, logger logr.Logger)
 	if !reflect.DeepEqual(b.ID, other.ID) {
 		diff := cmp.Diff(b.ID, other.ID)
 		logger.V(1).Info("ID not equal", "difference", diff)
+		return false
+	}
+
+	if b.ProviderAccountHost != other.ProviderAccountHost {
+		diff := cmp.Diff(b.ProviderAccountHost, other.ProviderAccountHost)
+		logger.V(1).Info("ProviderAccountHost not equal", "difference", diff)
 		return false
 	}
 

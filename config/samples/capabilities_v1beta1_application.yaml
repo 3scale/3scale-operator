@@ -3,9 +3,11 @@ kind: Application
 metadata:
   name: application-sample
 spec:
-  accountCRName: "developeraccount-sample"
+  accountCR:
+    name: "developeraccount-sample"
   applicationPlanName: "plan01"
-  productCRName: "product-sample"
+  productCRName:
+    name: "product-sample"
   name: "testApp"
   description: "testing application "
   suspend: false

@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
@@ -63,13 +61,18 @@ func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*control
 	}
 
 	// Find application in the list by  name
-	data, err := json.Marshal(t.applicationResource)
-	if err != nil {
-		return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
-	}
+	//data, err := json.Marshal(t.applicationResource)
+	//if err != nil {
+	//	return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
+	//}
 
 	var validID bool
-	if bytes.Contains(data, []byte("applicationID")) {
+	//if bytes.Contains(data, []byte("applicationID")) {
+	//	validID = true
+	//} else {
+	//	validID = false
+	//}
+	if t.applicationResource.Status.ID != nil {
 		validID = true
 	} else {
 		validID = false
