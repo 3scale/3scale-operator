@@ -195,14 +195,14 @@ bundle-custom-updates: BUNDLE_PREFIX=dev$(CURRENT_DATE)
 bundle-custom-updates: $(YQ)
 	@echo "Update metadata to avoid collision with existing 3scale Operator official public operators catalog entries"
 	@echo "using BUNDLE_PREFIX $(BUNDLE_PREFIX)"
-	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml metadata.name $(BUNDLE_PREFIX)-3scale-operator.$(VERSION)
-	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml spec.displayName "$(BUNDLE_PREFIX) 3scale operator"
-	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml spec.provider.name $(BUNDLE_PREFIX)
-	$(YQ) w --inplace $(PROJECT_PATH)/bundle/metadata/annotations.yaml 'annotations."operators.operatorframework.io.bundle.package.v1"' $(BUNDLE_PREFIX)-3scale-operator
+	$(YQ) --inplace '.metadata.name = "$(BUNDLE_PREFIX)-3scale-operator.$(VERSION)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
+	$(YQ) --inplace '.spec.displayName = "$(BUNDLE_PREFIX) 3scale operator"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
+	$(YQ) --inplace '.spec.provider.name = "$(BUNDLE_PREFIX)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
+	$(YQ) --inplace '.annotations."operators.operatorframework.io.bundle.package.v1" = "$(BUNDLE_PREFIX)-3scale-operator"' $(PROJECT_PATH)/bundle/metadata/annotations.yaml
 	sed -E -i 's/(operators\.operatorframework\.io\.bundle\.package\.v1=).+/\1$(BUNDLE_PREFIX)-3scale-operator/' $(PROJECT_PATH)/bundle.Dockerfile
 	@echo "Update operator image reference URL"
-	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml metadata.annotations.containerImage $(IMG)
-	$(YQ) w --inplace $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml spec.install.spec.deployments[0].spec.template.spec.containers[0].image $(IMG)
+	$(YQ) --inplace '.metadata.annotations.containerImage = "$(IMG)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
+	$(YQ) --inplace '.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = "$(IMG)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
 
 .PHONY: bundle-restore
 bundle-restore:
@@ -221,7 +221,7 @@ bundle-run: $(OPERATOR_SDK)
 # download yq if necessary
 YQ=$(PROJECT_PATH)/bin/yq
 $(YQ):
-	$(call go-bin-install,$(YQ),github.com/mikefarah/yq/v3)
+	$(call go-bin-install,$(YQ),github.com/mikefarah/yq/v4@latest)
 
 .PHONY: yq
 yq: $(YQ)
