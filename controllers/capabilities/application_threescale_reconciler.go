@@ -60,18 +60,7 @@ func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*control
 		return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
 	}
 
-	// Find application in the list by  name
-	//data, err := json.Marshal(t.applicationResource)
-	//if err != nil {
-	//	return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
-	//}
-
 	var validID bool
-	//if bytes.Contains(data, []byte("applicationID")) {
-	//	validID = true
-	//} else {
-	//	validID = false
-	//}
 	if t.applicationResource.Status.ID != nil {
 		validID = true
 	} else {

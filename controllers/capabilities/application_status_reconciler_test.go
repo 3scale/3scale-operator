@@ -32,10 +32,10 @@ func getApplicationCR() (CR *capabilitiesv1beta1.Application) {
 			Namespace: "test",
 		},
 		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCRName: &corev1.LocalObjectReference{
+			AccountCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
-			ProductCRName: &corev1.LocalObjectReference{
+			ProductCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
 			ApplicationPlanName: "test",
@@ -58,10 +58,10 @@ func getApplicationCRSuspend() (CR *capabilitiesv1beta1.Application) {
 			Namespace: "test",
 		},
 		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCRName: &corev1.LocalObjectReference{
+			AccountCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
-			ProductCRName: &corev1.LocalObjectReference{
+			ProductCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
 			ApplicationPlanName: "test",
@@ -85,10 +85,10 @@ func getUnknownPlanApplicationCR() (CR *capabilitiesv1beta1.Application) {
 			Namespace: "test",
 		},
 		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCRName: &corev1.LocalObjectReference{
+			AccountCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
-			ProductCRName: &corev1.LocalObjectReference{
+			ProductCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
 			ApplicationPlanName: "unknown",
@@ -124,14 +124,13 @@ func getApplicationDeleteCR() (CR *capabilitiesv1beta1.Application) {
 			Annotations:                nil,
 			OwnerReferences:            nil,
 			Finalizers:                 nil,
-			ClusterName:                "",
 			ManagedFields:              nil,
 		},
 		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCRName: &corev1.LocalObjectReference{
+			AccountCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
-			ProductCRName: &corev1.LocalObjectReference{
+			ProductCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
 			ApplicationPlanName: "test",
@@ -154,10 +153,10 @@ func getFailedApplicationCR() (CR *capabilitiesv1beta1.Application) {
 			Namespace: "test",
 		},
 		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCRName: &corev1.LocalObjectReference{
+			AccountCR: &corev1.LocalObjectReference{
 				Name: "unknown",
 			},
-			ProductCRName: &corev1.LocalObjectReference{
+			ProductCR: &corev1.LocalObjectReference{
 				Name: "unknown",
 			},
 			ApplicationPlanName: "",
@@ -176,10 +175,10 @@ func unknowAccountApplicationCR() (CR *capabilitiesv1beta1.Application) {
 			Namespace: "test",
 		},
 		Spec: capabilitiesv1beta1.ApplicationSpec{
-			AccountCRName: &corev1.LocalObjectReference{
+			AccountCR: &corev1.LocalObjectReference{
 				Name: "unknown",
 			},
-			ProductCRName: &corev1.LocalObjectReference{
+			ProductCR: &corev1.LocalObjectReference{
 				Name: "test",
 			},
 			ApplicationPlanName: "",
@@ -372,7 +371,7 @@ func TestApplicationStatusReconciler_Reconcile(t *testing.T) {
 				syncError:           nil,
 				logger:              logf.Log.WithName("status reconciler"),
 			},
-			want:    reconcile.Result{},
+			want:    reconcile.Result{Requeue: true},
 			wantErr: false,
 		},
 		{

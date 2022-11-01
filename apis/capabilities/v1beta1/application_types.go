@@ -38,10 +38,10 @@ type ApplicationSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	//AccountCRName name of account custom resource under which the application will be created
-	AccountCR *corev1.LocalObjectReference `json:"accountCRName"`
+	AccountCR *corev1.LocalObjectReference `json:"accountCR"`
 
 	//ProductCRName of product custom resource from which the application plan will be used
-	ProductCR *corev1.LocalObjectReference `json:"productCRName"`
+	ProductCR *corev1.LocalObjectReference `json:"productCR"`
 
 	//ApplicationPlanName name of application plan that the application will use
 	ApplicationPlanName string `json:"applicationPlanName"`

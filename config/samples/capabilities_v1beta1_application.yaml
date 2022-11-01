@@ -6,8 +6,8 @@ spec:
   accountCR:
     name: "developeraccount-sample"
   applicationPlanName: "plan01"
-  productCRName:
-    name: "product-sample"
+  productCR:
+    name: "vproduct-sample"
   name: "testApp"
   description: "testing application "
   suspend: false

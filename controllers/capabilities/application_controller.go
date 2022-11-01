@@ -249,10 +249,10 @@ func (r *ApplicationReconciler) checkExternalResources(applicationResource *capa
 	productFldPath := specFldPath.Child("productCRName")
 
 	if accountResource.Status.ID == nil {
-		errors = append(errors, field.Invalid(accountFldPath, applicationResource.Spec.AccountCR, "accountCRName doesnt have a valid account reference"))
+		errors = append(errors, field.Invalid(accountFldPath, applicationResource.Spec.AccountCR, "accountCR name doesnt have a valid account reference"))
 	}
 	if productResource.Status.ID == nil {
-		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCR, "productCRName doesnt have a valid product reference"))
+		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCR, "productCR name doesnt have a valid product reference"))
 	}
 	if accountResource.Status.Conditions.IsTrueFor(capabilitiesv1beta1.DeveloperAccountInvalidConditionType) {
 		errors = append(errors, field.Invalid(accountFldPath, applicationResource.Spec.AccountCR, "account CR is in an invalid state"))
