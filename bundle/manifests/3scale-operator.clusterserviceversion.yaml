@@ -87,11 +87,15 @@ metadata:
             "name": "application-sample"
           },
           "spec": {
-            "accountCRName": "developeraccount-sample",
+            "accountCR": {
+              "name": "developeraccount-sample"
+            },
             "applicationPlanName": "plan01",
             "description": "testing application ",
             "name": "testApp",
-            "productCRName": "product-sample",
+            "productCR": {
+              "name": "product-sample"
+            },
             "suspend": false
           }
         },

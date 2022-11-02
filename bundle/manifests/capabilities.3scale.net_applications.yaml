@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.3.0
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   labels:
     app: 3scale-api-management
@@ -32,13 +32,14 @@ spec:
           spec:
             description: ApplicationSpec defines the desired state of Application
             properties:
-              accountCRName:
+              accountCR:
                 description: AccountCRName name of account custom resource under which the application will be created
                 properties:
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               applicationPlanName:
                 description: ApplicationPlanName name of application plan that the application will use
                 type: string
@@ -48,22 +49,23 @@ spec:
               name:
                 description: Name identifies the application uniquely within the account
                 type: string
-              productCRName:
+              productCR:
                 description: ProductCRName of product custom resource from which the application plan will be used
                 properties:
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               suspend:
                 description: Suspend application if true suspends application, if false resumes application.
                 type: boolean
             required:
-            - accountCRName
+            - accountCR
             - applicationPlanName
             - description
             - name
-            - productCRName
+            - productCR
             type: object
           status:
             description: ApplicationStatus defines the observed state of Application
@@ -113,5 +115,5 @@ status:
   acceptedNames:
     kind: ""
     plural: ""
-  conditions: []
-  storedVersions: []
+  conditions: null
+  storedVersions: null

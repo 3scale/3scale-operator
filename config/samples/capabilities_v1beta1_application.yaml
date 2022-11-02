@@ -7,7 +7,7 @@ spec:
     name: "developeraccount-sample"
   applicationPlanName: "plan01"
   productCR:
-    name: "vproduct-sample"
+    name: "product-sample"
   name: "testApp"
   description: "testing application "
   suspend: false
