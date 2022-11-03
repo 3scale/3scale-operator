@@ -9,8 +9,24 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+const (
+	AwsAccessKeyID          = "AWS_ACCESS_KEY_ID"
+	AwsSecretAccessKey      = "AWS_SECRET_ACCESS_KEY"
+	AwsBucket               = "AWS_BUCKET"
+	AwsRegion               = "AWS_REGION"
+	AwsProtocol             = "AWS_PROTOCOL"
+	AwsHostname             = "AWS_HOSTNAME"
+	AwsPathStyle            = "AWS_PATH_STYLE"
+	AwsRoleArn              = "AWS_ROLE_ARN"
+	AwsWebIdentityTokenFile = "AWS_WEB_IDENTITY_TOKEN_FILE"
+)
+
 type S3FileStorageOptions struct {
-	ConfigurationSecretName string `validate:"required"`
+	ConfigurationSecretName   string `validate:"required"`
+	STSEnabled                bool
+	STSTokenMountRelativePath string
+	STSTokenMountPath         string
+	STSAudience               string
 }
 
 type SystemSMTPSecretOptions struct {

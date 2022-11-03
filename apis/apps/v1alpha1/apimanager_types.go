@@ -505,6 +505,18 @@ type DeprecatedSystemS3Spec struct {
 
 type SystemS3Spec struct {
 	ConfigurationSecretRef v1.LocalObjectReference `json:"configurationSecretRef"`
+	// STS authentication spec
+	// +optional
+	STS *STSSpec `json:"sts,omitempty"`
+}
+
+type STSSpec struct {
+	// Enable Secure Token Service for  short-term, limited-privilege security credentials
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+	// The ID the token is intended for
+	// +optional
+	Audience *string `json:"audience,omitempty"`
 }
 
 type SystemDatabaseSpec struct {
@@ -1050,6 +1062,24 @@ func (apimanager *APIManager) IsAPIcastStagingOpenTracingEnabled() bool {
 		apimanager.Spec.Apicast.StagingSpec.OpenTracing != nil &&
 		apimanager.Spec.Apicast.StagingSpec.OpenTracing.Enabled != nil &&
 		*apimanager.Spec.Apicast.StagingSpec.OpenTracing.Enabled
+}
+
+func (apimanager *APIManager) IsS3Enabled() bool {
+	return apimanager.Spec.System.FileStorageSpec != nil &&
+		apimanager.Spec.System.FileStorageSpec.S3 != nil
+}
+
+func (apimanager *APIManager) IsS3STSEnabled() bool {
+	return apimanager.IsS3Enabled() &&
+		apimanager.Spec.System.FileStorageSpec.S3.STS != nil &&
+		// Defined here the default value when Enabled is not specified.
+		// when Enabled is not set in the CR, IsS3STSEnabled() returns false
+		apimanager.Spec.System.FileStorageSpec.S3.STS.Enabled != nil &&
+		*apimanager.Spec.System.FileStorageSpec.S3.STS.Enabled
+}
+
+func (apimanager *APIManager) IsS3IAMEnabled() bool {
+	return apimanager.IsS3Enabled() && !apimanager.IsS3STSEnabled()
 }
 
 func (apimanager *APIManager) Validate() field.ErrorList {

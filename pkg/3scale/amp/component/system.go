@@ -5,13 +5,13 @@ import (
 	"sort"
 	"strconv"
 
-	policyv1 "k8s.io/api/policy/v1"
-
-	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 const (
@@ -109,6 +109,10 @@ const (
 	SystemAppMasterContainerMetricsPortName       = "master-metrics"
 	SystemAppProviderContainerMetricsPortName     = "prov-metrics"
 	SystemAppDeveloperContainerMetricsPortName    = "dev-metrics"
+)
+
+const (
+	S3StsCredentialsSecretName = "s3-credentials"
 )
 
 type System struct {
@@ -240,14 +244,24 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	if system.Options.S3FileStorageOptions != nil {
 		result = append(result,
 			helper.EnvVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
-			helper.EnvVarFromSecret(AwsAccessKeyID, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
-			helper.EnvVarFromSecret(AwsSecretAccessKey, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
 			helper.EnvVarFromSecret(AwsBucket, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsBucket),
 			helper.EnvVarFromSecret(AwsRegion, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsRegion),
 			helper.EnvVarFromSecretOptional(AwsProtocol, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsProtocol),
 			helper.EnvVarFromSecretOptional(AwsHostname, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsHostname),
 			helper.EnvVarFromSecretOptional(AwsPathStyle, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsPathStyle),
 		)
+
+		if system.Options.S3FileStorageOptions.STSEnabled {
+			result = append(result,
+				helper.EnvVarFromSecret(AwsRoleArn, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsRoleArn),
+				helper.EnvVarFromSecret(AwsWebIdentityTokenFile, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsWebIdentityTokenFile),
+			)
+		} else {
+			result = append(result,
+				helper.EnvVarFromSecret(AwsAccessKeyID, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
+				helper.EnvVarFromSecret(AwsSecretAccessKey, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
+			)
+		}
 	}
 
 	return result
@@ -506,6 +520,27 @@ func (system *System) appPodVolumes() []v1.Volume {
 	}
 
 	res = append(res, systemConfigVolume)
+
+	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
+		s3CredsProjectedVolume := v1.Volume{
+			Name: S3StsCredentialsSecretName,
+			VolumeSource: v1.VolumeSource{
+				Projected: &v1.ProjectedVolumeSource{
+					Sources: []v1.VolumeProjection{
+						v1.VolumeProjection{
+							ServiceAccountToken: &v1.ServiceAccountTokenProjection{
+								Audience:          system.Options.S3FileStorageOptions.STSAudience,
+								ExpirationSeconds: &[]int64{3600}[0],
+								Path:              system.Options.S3FileStorageOptions.STSTokenMountRelativePath,
+							},
+						},
+					},
+				},
+			},
+		}
+		res = append(res, s3CredsProjectedVolume)
+	}
+
 	return res
 }
 
@@ -513,6 +548,9 @@ func (system *System) volumeNamesForSystemAppPreHookPod() []string {
 	res := []string{}
 	if system.Options.PvcFileStorageOptions != nil {
 		res = append(res, SystemFileStoragePVCName)
+	}
+	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
+		res = append(res, S3StsCredentialsSecretName)
 	}
 	return res
 }
@@ -772,6 +810,26 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 	}
 
 	res = append(res, systemConfigVolume)
+
+	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
+		s3CredsProjectedVolume := v1.Volume{
+			Name: S3StsCredentialsSecretName,
+			VolumeSource: v1.VolumeSource{
+				Projected: &v1.ProjectedVolumeSource{
+					Sources: []v1.VolumeProjection{
+						v1.VolumeProjection{
+							ServiceAccountToken: &v1.ServiceAccountTokenProjection{
+								Audience:          system.Options.S3FileStorageOptions.STSAudience,
+								ExpirationSeconds: &[]int64{3600}[0],
+								Path:              system.Options.S3FileStorageOptions.STSTokenMountRelativePath,
+							},
+						},
+					},
+				},
+			},
+		}
+		res = append(res, s3CredsProjectedVolume)
+	}
 	return res
 }
 
@@ -869,11 +927,24 @@ func (system *System) systemConfigVolumeMount() v1.VolumeMount {
 	}
 }
 
+func (system *System) s3CredsProjectedVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      S3StsCredentialsSecretName,
+		ReadOnly:  true,
+		MountPath: system.Options.S3FileStorageOptions.STSTokenMountPath,
+	}
+}
+
 func (system *System) appCommonContainerVolumeMounts(systemStorageReadonly bool) []v1.VolumeMount {
 	res := []v1.VolumeMount{}
 	if system.Options.PvcFileStorageOptions != nil {
 		res = append(res, system.systemStorageVolumeMount(systemStorageReadonly))
 	}
+
+	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
+		res = append(res, system.s3CredsProjectedVolumeMount())
+	}
+
 	res = append(res, system.systemConfigVolumeMount())
 
 	return res
@@ -905,6 +976,11 @@ func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
 	}
 	res = append(res, systemTmpVolumeMount)
 	res = append(res, system.systemConfigVolumeMount())
+
+	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
+		res = append(res, system.s3CredsProjectedVolumeMount())
+	}
+
 	return res
 }
 

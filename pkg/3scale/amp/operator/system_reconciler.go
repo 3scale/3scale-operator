@@ -29,13 +29,13 @@ func NewSystemReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicRecon
 }
 
 func (r *SystemReconciler) reconcileFileStorage(system *component.System) error {
-	if r.apiManager.Spec.System.FileStorageSpec != nil {
-		if r.apiManager.Spec.System.FileStorageSpec.S3 != nil {
-			return r.validateS3StorageProvidedConfiguration()
-		}
-		if r.apiManager.Spec.System.FileStorageSpec.DeprecatedS3 != nil {
-			r.Logger().Info("Warning: deprecated amazonSimpleStorageService field in CR being used. Ignoring it... Please use simpleStorageService")
-		}
+	if r.apiManager.IsS3Enabled() {
+		return nil
+	}
+
+	if r.apiManager.Spec.System.FileStorageSpec != nil &&
+		r.apiManager.Spec.System.FileStorageSpec.DeprecatedS3 != nil {
+		r.Logger().Info("Warning: deprecated amazonSimpleStorageService field in CR being used. Ignoring it... Please use simpleStorageService")
 	}
 	// System RWX PVC, i.e. shared storage
 	return r.ReconcilePersistentVolumeClaim(system.SharedStorage(), reconcilers.CreateOnlyMutator)
@@ -229,44 +229,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
-}
-
-func (r *SystemReconciler) validateS3StorageProvidedConfiguration() error {
-	// Nothing for reconcile.
-	// Check all required fields exist
-	awsCredentialsSecretName := r.apiManager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name
-	if awsCredentialsSecretName == "" {
-		return fmt.Errorf("no aws credentials provided")
-	}
-
-	awsSecret, err := helper.GetSecret(awsCredentialsSecretName, r.apiManager.Namespace, r.Client())
-	if err != nil {
-		return err
-	}
-
-	secretData := awsSecret.Data
-	var result *string
-	result = helper.GetSecretDataValue(secretData, component.AwsAccessKeyID)
-	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsAccessKeyID, awsCredentialsSecretName)
-	}
-
-	result = helper.GetSecretDataValue(secretData, component.AwsSecretAccessKey)
-	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsSecretAccessKey, awsCredentialsSecretName)
-	}
-
-	result = helper.GetSecretDataValue(secretData, component.AwsBucket)
-	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsBucket, awsCredentialsSecretName)
-	}
-
-	result = helper.GetSecretDataValue(secretData, component.AwsRegion)
-	if result == nil {
-		return fmt.Errorf("Secret field '%s' is required in secret '%s'", component.AwsRegion, awsCredentialsSecretName)
-	}
-
-	return nil
 }
 
 func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {

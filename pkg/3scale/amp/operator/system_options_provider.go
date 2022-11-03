@@ -3,14 +3,15 @@ package operator
 import (
 	"fmt"
 	"net/url"
+	"path/filepath"
+
+	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
-
-	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type SystemOptionsProvider struct {
@@ -57,7 +58,10 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 
 	s.setResourceRequirementsOptions()
 	s.setNodeAffinityAndTolerationsOptions()
-	s.setFileStorageOptions()
+	err = s.setFileStorageOptions()
+	if err != nil {
+		return nil, err
+	}
 	s.setReplicas()
 
 	s.options.SideKiqMetrics = true
@@ -427,34 +431,117 @@ func (s *SystemOptionsProvider) setNodeAffinityAndTolerationsOptions() {
 	s.options.SphinxTolerations = s.apimanager.Spec.System.SphinxSpec.Tolerations
 }
 
-func (s *SystemOptionsProvider) setFileStorageOptions() {
-	if s.apimanager.Spec.System != nil &&
-		s.apimanager.Spec.System.FileStorageSpec != nil &&
-		s.apimanager.Spec.System.FileStorageSpec.S3 != nil {
+func (s *SystemOptionsProvider) setFileStorageOptions() error {
+	if s.apimanager.IsS3STSEnabled() {
 		s.options.S3FileStorageOptions = &component.S3FileStorageOptions{
 			ConfigurationSecretName: s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-		}
-	} else {
-		// default to PVC
-		var storageClassName *string
-		var volumeName *string
-		storageRequests := component.DefaultSharedStorageResources()
-		if s.apimanager.Spec.System != nil &&
-			s.apimanager.Spec.System.FileStorageSpec != nil &&
-			s.apimanager.Spec.System.FileStorageSpec.PVC != nil {
-			storageClassName = s.apimanager.Spec.System.FileStorageSpec.PVC.StorageClassName
-			volumeName = s.apimanager.Spec.System.FileStorageSpec.PVC.VolumeName
-			if s.apimanager.Spec.System.FileStorageSpec.PVC.Resources != nil {
-				storageRequests = s.apimanager.Spec.System.FileStorageSpec.PVC.Resources.Requests
-			}
+			STSEnabled:              true,
+			STSAudience:             "openshift", // default value when "audience" is not specified
 		}
 
-		s.options.PvcFileStorageOptions = &component.PVCFileStorageOptions{
-			StorageClass:    storageClassName,
-			VolumeName:      volumeName,
-			StorageRequests: storageRequests,
+		if s.apimanager.Spec.System.FileStorageSpec.S3.STS.Audience != nil {
+			s.options.S3FileStorageOptions.STSAudience = *s.apimanager.Spec.System.FileStorageSpec.S3.STS.Audience
+		}
+
+		// Validate it exists
+		_, err := s.secretSource.RequiredFieldValueFromRequiredSecret(
+			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			component.AwsRoleArn)
+		if err != nil {
+			return err
+		}
+
+		tokenPath, err := s.secretSource.RequiredFieldValueFromRequiredSecret(
+			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			component.AwsWebIdentityTokenFile)
+		if err != nil {
+			return err
+		}
+
+		s.options.S3FileStorageOptions.STSTokenMountRelativePath = filepath.Base(tokenPath)
+		s.options.S3FileStorageOptions.STSTokenMountPath = filepath.Dir(tokenPath)
+
+		// Validate it exists
+		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
+			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			component.AwsBucket)
+		if err != nil {
+			return err
+		}
+
+		// Validate it exists
+		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
+			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			component.AwsRegion)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if s.apimanager.IsS3IAMEnabled() {
+		s.options.S3FileStorageOptions = &component.S3FileStorageOptions{
+			ConfigurationSecretName: s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			STSEnabled:              false,
+		}
+
+		// Validate it exists
+		_, err := s.secretSource.RequiredFieldValueFromRequiredSecret(
+			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			component.AwsAccessKeyID)
+		if err != nil {
+			return err
+		}
+
+		// Validate it exists
+		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
+			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			component.AwsSecretAccessKey)
+		if err != nil {
+			return err
+		}
+
+		// Validate it exists
+		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
+			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			component.AwsBucket)
+		if err != nil {
+			return err
+		}
+
+		// Validate it exists
+		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
+			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
+			component.AwsRegion)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// defaults to PVC
+	var storageClassName *string
+	var volumeName *string
+	storageRequests := component.DefaultSharedStorageResources()
+	if s.apimanager.Spec.System != nil &&
+		s.apimanager.Spec.System.FileStorageSpec != nil &&
+		s.apimanager.Spec.System.FileStorageSpec.PVC != nil {
+		storageClassName = s.apimanager.Spec.System.FileStorageSpec.PVC.StorageClassName
+		volumeName = s.apimanager.Spec.System.FileStorageSpec.PVC.VolumeName
+		if s.apimanager.Spec.System.FileStorageSpec.PVC.Resources != nil {
+			storageRequests = s.apimanager.Spec.System.FileStorageSpec.PVC.Resources.Requests
 		}
 	}
+
+	s.options.PvcFileStorageOptions = &component.PVCFileStorageOptions{
+		StorageClass:    storageClassName,
+		VolumeName:      volumeName,
+		StorageRequests: storageRequests,
+	}
+
+	return nil
 }
 
 func (s *SystemOptionsProvider) setReplicas() {
