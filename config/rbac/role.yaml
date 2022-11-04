@@ -8,6 +8,26 @@ rules:
 - apiGroups:
   - capabilities.3scale.net
   resources:
+  - applications
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - applications/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
   - proxyconfigpromotes
   verbs:
   - create

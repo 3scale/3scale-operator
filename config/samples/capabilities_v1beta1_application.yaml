@@ -1,0 +1,13 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Application
+metadata:
+  name: application-sample
+spec:
+  accountCR:
+    name: "developeraccount-sample"
+  applicationPlanName: "plan01"
+  productCR:
+    name: "product-sample"
+  name: "testApp"
+  description: "testing application "
+  suspend: false
