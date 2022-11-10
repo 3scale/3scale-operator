@@ -79,6 +79,9 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 		a.apicastOptions.StagingHTTPSCertificateSecretName = &a.apimanager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef.Name
 	}
 
+	a.apicastOptions.ProductionServiceCacheSize = a.apimanager.Spec.Apicast.ProductionSpec.ServiceCacheSize
+	a.apicastOptions.StagingServiceCacheSize = a.apimanager.Spec.Apicast.StagingSpec.ServiceCacheSize
+
 	a.setResourceRequirementsOptions()
 	a.setNodeAffinityAndTolerationsOptions()
 	a.setReplicas()

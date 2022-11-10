@@ -365,6 +365,10 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 		result = append(result, helper.EnvVarFromValue("NO_PROXY", *apicast.Options.StagingNoProxy))
 	}
 
+	if apicast.Options.StagingServiceCacheSize != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_SERVICE_CACHE_SIZE", fmt.Sprintf("%d", *apicast.Options.StagingServiceCacheSize)))
+	}
+
 	return result
 }
 
@@ -435,6 +439,10 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 
 	if apicast.Options.ProductionNoProxy != nil {
 		result = append(result, helper.EnvVarFromValue("NO_PROXY", *apicast.Options.ProductionNoProxy))
+	}
+
+	if apicast.Options.ProductionServiceCacheSize != nil {
+		result = append(result, helper.EnvVarFromValue("APICAST_SERVICE_CACHE_SIZE", fmt.Sprintf("%d", *apicast.Options.ProductionServiceCacheSize)))
 	}
 
 	return result

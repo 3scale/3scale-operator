@@ -113,6 +113,9 @@ type ApicastOptions struct {
 	StagingHTTPSProxy    *string
 	StagingNoProxy       *string
 
+	ProductionServiceCacheSize *int32
+	StagingServiceCacheSize    *int32
+
 	AdditionalPodAnnotations map[string]string `validate:"required"`
 }
 

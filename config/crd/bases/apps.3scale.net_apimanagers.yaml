@@ -1118,6 +1118,11 @@ spec:
                               More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
+                      serviceCacheSize:
+                        description: ServiceCacheSize specifies the number of services
+                          that APICast can store in the internal cache
+                        format: int32
+                        type: integer
                       tolerations:
                         items:
                           description: The pod this Toleration is attached to tolerates
@@ -2243,6 +2248,11 @@ spec:
                               More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
+                      serviceCacheSize:
+                        description: ServiceCacheSize specifies the number of services
+                          that APICast can store in the internal cache
+                        format: int32
+                        type: integer
                       tolerations:
                         items:
                           description: The pod this Toleration is attached to tolerates
