@@ -239,6 +239,29 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
+		{"WithServiceCacheSize",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestApicastOptions()
+				var stagingCacheSize int32 = 10
+				var productionCacheSize int32 = 20
+
+				apimanager.Spec.Apicast.ProductionSpec.ServiceCacheSize = &productionCacheSize
+				apimanager.Spec.Apicast.StagingSpec.ServiceCacheSize = &stagingCacheSize
+
+				return apimanager
+			},
+			func() *component.ApicastOptions {
+				opts := defaultApicastOptions()
+
+				var stagingCacheSize int32 = 10
+				var productionCacheSize int32 = 20
+
+				opts.ProductionServiceCacheSize = &productionCacheSize
+				opts.StagingServiceCacheSize = &stagingCacheSize
+
+				return opts
+			},
+		},
 	}
 
 	for _, tc := range cases {
