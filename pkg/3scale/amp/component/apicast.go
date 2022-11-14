@@ -773,6 +773,7 @@ func (apicast *Apicast) productionServicePorts() []v1.ServicePort {
 	ports := []v1.ServicePort{
 		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt(8080)},
 		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt(8090)},
+		v1.ServicePort{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt(9421)},
 	}
 
 	if apicast.Options.ProductionHTTPSPort != nil {
@@ -803,6 +804,7 @@ func (apicast *Apicast) stagingServicePorts() []v1.ServicePort {
 	ports := []v1.ServicePort{
 		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt(8080)},
 		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt(8090)},
+		v1.ServicePort{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt(9421)},
 	}
 
 	if apicast.Options.StagingHTTPSPort != nil {
