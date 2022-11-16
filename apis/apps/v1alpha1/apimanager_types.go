@@ -262,7 +262,7 @@ type ApicastProductionSpec struct {
 	NoProxy *string `json:"noProxy,omitempty"` // NO_PROXY
 	// ServiceCacheSize specifies the number of services that APICast can store in the internal cache
 	// +optional
-	ServiceCacheSize *int32 `json:"serviceCacheSize,omitempty"`
+	ServiceCacheSize *int32 `json:"serviceCacheSize,omitempty"` // APICAST_SERVICE_CACHE_SIZE
 }
 
 type ApicastStagingSpec struct {
@@ -320,7 +320,7 @@ type ApicastStagingSpec struct {
 	NoProxy *string `json:"noProxy,omitempty"` // NO_PROXY
 	// ServiceCacheSize specifies the number of services that APICast can store in the internal cache
 	// +optional
-	ServiceCacheSize *int32 `json:"serviceCacheSize,omitempty"`
+	ServiceCacheSize *int32 `json:"serviceCacheSize,omitempty"` // APICAST_SERVICE_CACHE_SIZE
 }
 
 type BackendSpec struct {
