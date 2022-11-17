@@ -126,6 +126,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | HTTPProxy | `httpProxy` | string | No | N/A | Specifies a HTTP(S) Proxy to be used for connecting to HTTP services. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#http_proxy-http_proxy)) |
 | HTTPSProxy | `httpsProxy` | string | No | N/A | Specifies a HTTP(S) Proxy to be used for connecting to HTTPS services. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#https_proxy-https_proxy)) |
 | NoProxy | `noProxy` | string | No | N/A | Specifies a comma-separated list of hostnames and domain names for which the requests should not be proxied. Setting to a single `*` character, which matches all hosts, effectively disables the proxy (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#no_proxy-no_proxy)) |
+| ServiceCacheSize | `serviceCacheSize` | int | No | N/A | Specifies the number of services that APICast can store in the internal cache (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_service_cache_size)) |
 
 
 ### ApicastStagingSpec
@@ -147,6 +148,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | HTTPProxy | `httpProxy` | string | No | N/A | Specifies a HTTP(S) Proxy to be used for connecting to HTTP services. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#http_proxy-http_proxy)) |
 | HTTPSProxy | `httpsProxy` | string | No | N/A | Specifies a HTTP(S) Proxy to be used for connecting to HTTPS services. Authentication is not supported. Format is: `<scheme>://<host>:<port>` (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#https_proxy-https_proxy)) |
 | NoProxy | `noProxy` | string | No | N/A | Specifies a comma-separated list of hostnames and domain names for which the requests should not be proxied. Setting to a single `*` character, which matches all hosts, effectively disables the proxy (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#no_proxy-no_proxy)) |
+| ServiceCacheSize | `serviceCacheSize` | int | No | N/A | Specifies the number of services that APICast can store in the internal cache (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_service_cache_size)) |
 
 ### CustomPolicySpec
 
