@@ -4,6 +4,47 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Bumped Go to 1.17 [#785](https://github.com/3scale/3scale-operator/pull/785)
+- Bumped k8s deps to 0.24.3 [#785](https://github.com/3scale/3scale-operator/pull/785)
+- Bumped controller-runtime v0.12.2 [#785](https://github.com/3scale/3scale-operator/pull/785)
+- OCP 4.12 support  [#785](https://github.com/3scale/3scale-operator/pull/785)
+- Application CRD [#778](https://github.com/3scale/3scale-operator/pull/778)
+- Ability to set APICAST_SERVICE_CACHE_SIZE  [#793](https://github.com/3scale/3scale-operator/pull/793)
+- Expose apicast metric ports in service [#791](https://github.com/3scale/3scale-operator/pull/791)
+
+### Fixed
+
+- Fixed replica reconciliation [#784](https://github.com/3scale/3scale-operator/pull/784)
+
+## [0.10.0] - 2022-11-18
+
+### Added
+
+- Support removal of a developer account CR [#741](https://github.com/3scale/3scale-operator/pull/741)
+- Support removal of a developer user CR [#751](https://github.com/3scale/3scale-operator/pull/741)
+- Skipping apicast service port reconcile based on annotation [#739](https://github.com/3scale/3scale-operator/pull/739)
+- Disable replicas reconciliation when annotation is present [#736](https://github.com/3scale/3scale-operator/pull/736)
+- Add sop_url as annotation to alerts [#526](https://github.com/3scale/3scale-operator/pull/526)
+- ProxyConfigPromote CRD [#742](https://github.com/3scale/3scale-operator/pull/742)
+- `secret_key_base` to system sphinx [#762](https://github.com/3scale/3scale-operator/pull/762) [#783](https://github.com/3scale/3scale-operator/pull/783)
+
+### Changed
+
+- Use `sum_irate` instead of `sum_rate` [#740](https://github.com/3scale/3scale-operator/pull/740)
+- APImanager CRD: preserve unknown fields to support multiple version in the same cluster [#754](https://github.com/3scale/3scale-operator/pull/754)
+- :warning: Templates dropped [#764](https://github.com/3scale/3scale-operator/pull/764)
+- Upgrade moved to regular reconciliation logic. It no longer depends on the operator version. Support for multiple release streams. [#781](https://github.com/3scale/3scale-operator/pull/781)
+
+### Fixed
+
+- Product reconciler panic when backend was deleted from the UI [#743](https://github.com/3scale/3scale-operator/pull/743)
+- Tenant cascade deletion [#747](https://github.com/3scale/3scale-operator/pull/747)
+- Reqlogger panic that caused operator to crash [#748](https://github.com/3scale/3scale-operator/pull/748)
+- Grant clusterversions.config.openshift.io resource add and list verbs [#745](https://github.com/3scale/3scale-operator/pull/748)
+- Issues with database granular options management [#756](https://github.com/3scale/3scale-operator/pull/756) [#757](https://github.com/3scale/3scale-operator/pull/757)
+
 ## [0.9.0] - 2022-06-14
 
 ### Added
