@@ -9467,6 +9467,17 @@ spec:
                                 type: string
                             type: object
                             x-kubernetes-map-type: atomic
+                          sts:
+                            description: STS authentication spec
+                            properties:
+                              audience:
+                                description: The ID the token is intended for
+                                type: string
+                              enabled:
+                                description: Enable Secure Token Service for  short-term,
+                                  limited-privilege security credentials
+                                type: boolean
+                            type: object
                         required:
                         - configurationSecretRef
                         type: object

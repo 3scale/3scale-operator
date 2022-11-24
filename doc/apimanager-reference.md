@@ -302,9 +302,10 @@ Only one of the fields can be chosen. If no field is specified then PVC is used.
 
 ### SystemS3Spec
 
-| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
-| --- | --- | --- | --- | --- | --- |
-| Configuration | `configurationSecretRef` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) | Yes | N/A | Local object reference to the secret to be used where the AWS configuration is stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
+| **Field**     | **json/yaml field**      | **Type**                                                                                                                         | **Required** | **Default value** | **Description**                                                                                                                                                                                                                                                                 |
+|---------------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------|--------------|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Configuration | `configurationSecretRef` | [corev1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) | Yes          | N/A               | Local object reference to the secret to be used where the AWS configuration is stored. See [LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#localobjectreference-v1-core) on how to specify the local object reference to the secret |
+| STS           | `sts`                    | [STSSpec](#STSSpec) | No | IAM S3 authentication | STS spec object |
 
 The secret name specified in the `configurationSecretRef` field must be
 pre-created by the user before creating the APIManager custom resource.
@@ -312,6 +313,14 @@ Otherwise the operator will complain about it. See the
 [fileStorage S3 credentials secret](#fileStorage-S3-credentials-secret)
 specification to see what fields the secret should have and the values
 that should be set on it.
+
+### STSSpec
+
+| *yaml Field* | **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- |
+| `enabled` | bool | No | `false` | Enable Secure Token Service for  short-term, limited-privilege security credentials |
+| `audience` | string | No | `openshift` | The ID the token is intended for. This field does not have any effect when STS is not enabled. |
+
 
 ### DeprecatedSystemS3Spec
 **DEPRECATED** Setting fields here has no effect. Use [SystemS3Spec](#SystemS3Spec) instead
@@ -670,15 +679,17 @@ The available configurable secrets are:
 The name of this secret can be any name as long as does not collide with other
 existing secret names.
 
-| **Field** | **Description** | **Required** |
-| --- | --- | --- |
-| AWS_ACCESS_KEY_ID | AWS Access Key ID to use in S3 Storage for System's file storage | Y |
-| AWS_SECRET_ACCESS_KEY | AWS Access Key Secret to use in S3 Storage for System's file storage | Y |
-| AWS_BUCKET | S3 bucket to be used as System's FileStorage for assets | Y |
-| AWS_REGION | Region of the S3 bucket to be used as System's FileStorage for assets | Y |
-| AWS_HOSTNAME | Default: Amazon endpoints - AWS S3 compatible provider endpoint hostname | N |
-| AWS_PROTOCOL | Default: HTTPS - AWS S3 compatible provider endpoint protocol | N |
-| AWS_PATH_STYLE | Default: false - When set to true, the bucket name is always left in the request URI and never moved to the host as a sub-domain | N |
+| **Field** | **Description** | **Required for IAM** | **Required for STS** |
+| --- | --- | --- |----------------------|
+| AWS_ACCESS_KEY_ID | AWS Access Key ID to use in S3 Storage for System's file storage | Y | N                    |
+| AWS_SECRET_ACCESS_KEY | AWS Access Key Secret to use in S3 Storage for System's file storage | Y | N                    |
+| AWS_BUCKET | S3 bucket to be used as System's FileStorage for assets | Y | Y                    |
+| AWS_REGION | Region of the S3 bucket to be used as System's FileStorage for assets | Y | Y                    |
+| AWS_HOSTNAME | Default: Amazon endpoints - AWS S3 compatible provider endpoint hostname | N | N                    |
+| AWS_PROTOCOL | Default: HTTPS - AWS S3 compatible provider endpoint protocol | N | N                    |
+| AWS_PATH_STYLE | Default: false - When set to true, the bucket name is always left in the request URI and never moved to the host as a sub-domain | N | N                    |
+| AWS_ROLE_ARN | ARN of the Role which has a policy attached to authenticate using AWS STS | N | Y                    |
+| AWS_WEB_IDENTITY_TOKEN_FILE | Path to mounted token file location e.g. /var/run/secrets/openshift/serviceaccount/token | N | Y                    |
 
 ### system-smtp
 
