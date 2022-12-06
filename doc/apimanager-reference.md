@@ -317,7 +317,7 @@ that should be set on it.
 ### STSSpec
 
 | *yaml Field* | **Type** | **Required** | **Default value** | **Description** |
-| --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | `enabled` | bool | No | `false` | Enable Secure Token Service for  short-term, limited-privilege security credentials |
 | `audience` | string | No | `openshift` | The ID the token is intended for. This field does not have any effect when STS is not enabled. |
 
