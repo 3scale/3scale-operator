@@ -71,6 +71,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastEnvironmentEnvVarMutator,
 		apicastHTTPSEnvVarMutator,
 		apicastProxyConfigurationsEnvVarMutator,
+		apicastServiceCacheSizeEnvVarMutator,
 		apicastVolumeMountsMutator,
 		apicastVolumesMutator,
 		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
@@ -103,6 +104,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastEnvironmentEnvVarMutator,
 		apicastHTTPSEnvVarMutator,
 		apicastProxyConfigurationsEnvVarMutator,
+		apicastServiceCacheSizeEnvVarMutator,
 		apicastVolumeMountsMutator,
 		apicastVolumesMutator,
 		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
@@ -262,6 +264,10 @@ func apicastProxyConfigurationsEnvVarMutator(desired, existing *appsv1.Deploymen
 	}
 
 	return changed, nil
+}
+
+func apicastServiceCacheSizeEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_SERVICE_CACHE_SIZE"), nil
 }
 
 func portsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
