@@ -29,7 +29,7 @@ func SystemMySQLImageURL() string {
 }
 
 func SystemPostgreSQLImageURL() string {
-	return "centos/postgresql-10-centos7"
+	return "centos/postgresql-13-centos7"
 }
 
 func SystemMemcachedImageURL() string {
@@ -37,7 +37,7 @@ func SystemMemcachedImageURL() string {
 }
 
 func ZyncPostgreSQLImageURL() string {
-	return "centos/postgresql-10-centos7"
+	return "centos/postgresql-13-centos7"
 }
 
 func OCCLIImageURL() string {

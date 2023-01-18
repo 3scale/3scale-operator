@@ -18,7 +18,7 @@ const (
 	backendImage         = "quay.io/3scale/backend:mytag"
 	systemImage          = "quay.io/3scale/backend:mytag"
 	zyncImage            = "quay.io/3scale/zync:mytag"
-	zyncPostgresqlImage  = "postgresql-10:mytag"
+	zyncPostgresqlImage  = "postgresql-13:mytag"
 	systemMemcachedImage = "memcached:mytag"
 )
 
