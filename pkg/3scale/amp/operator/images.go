@@ -41,6 +41,10 @@ func SystemPostgreSQLImageURL() string {
 	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_POSTGRESQL", component.SystemPostgreSQLImageURL())
 }
 
+func SystemSearchdImageURL() string {
+	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_SEARCHD", component.SystemSearchdImageURL())
+}
+
 func ZyncPostgreSQLImageURL() string {
 	return helper.GetEnvVar("RELATED_IMAGE_ZYNC_POSTGRESQL", component.ZyncPostgreSQLImageURL())
 }

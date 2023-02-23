@@ -56,7 +56,6 @@ func systemOptions(ns string) (*component.SystemOptions, error) {
 	o.AdminAccessToken = "_"
 	o.AdminPassword = "_"
 	o.AdminUsername = "_"
-	o.ImageTag = "_"
 	o.ApicastAccessToken = "_"
 	o.ApicastRegistryURL = "_"
 	o.MasterAccessToken = "_"

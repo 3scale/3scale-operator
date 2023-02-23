@@ -459,6 +459,8 @@ type SystemSidekiqSpec struct {
 
 type SystemSphinxSpec struct {
 	// +optional
+	Image *string `json:"image,omitempty"`
+	// +optional
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
