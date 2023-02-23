@@ -62,6 +62,12 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// system searchd IS
+	err = r.ReconcileImagestream(ampImages.SystemSearchdImageStream(), reconcilers.GenericImageStreamMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	err = r.ReconcileServiceAccount(ampImages.DeploymentsServiceAccount(), reconcilers.ServiceAccountImagePullPolicyMutator)
 	if err != nil {
 		return reconcile.Result{}, err

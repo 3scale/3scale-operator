@@ -216,6 +216,39 @@ func (ampImages *AmpImages) SystemMemcachedImageStream() *imagev1.ImageStream {
 	}
 }
 
+func (ampImages *AmpImages) SystemSearchdImageStream() *imagev1.ImageStream {
+	return &imagev1.ImageStream{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system-searchd",
+			Labels: map[string]string{
+				"app":                  ampImages.Options.AppLabel,
+				"threescale_component": "system",
+			},
+			Annotations: map[string]string{
+				"openshift.io/display-name": "System Searchd",
+			},
+		},
+		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
+		Spec: imagev1.ImageStreamSpec{
+			Tags: []imagev1.TagReference{
+				imagev1.TagReference{
+					Name: ampImages.Options.AmpRelease,
+					Annotations: map[string]string{
+						"openshift.io/display-name": "System " + ampImages.Options.AmpRelease + " Searchd",
+					},
+					From: &v1.ObjectReference{
+						Kind: "DockerImage",
+						Name: ampImages.Options.SystemSearchdImage,
+					},
+					ImportPolicy: imagev1.TagImportPolicy{
+						Insecure: ampImages.Options.InsecureImportPolicy,
+					},
+				},
+			},
+		},
+	}
+}
+
 func (ampImages *AmpImages) DeploymentsServiceAccount() *v1.ServiceAccount {
 	return &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{

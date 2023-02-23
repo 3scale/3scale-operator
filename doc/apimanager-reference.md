@@ -400,6 +400,7 @@ Note: Deploying databases internally with this section is meant for evaluation p
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
+| Image | `image` | string | No | nil | Used to overwrite the desired Sphinx image for the Sphinx server used by System |
 | Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
 | Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
 | Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |

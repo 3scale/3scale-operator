@@ -160,21 +160,6 @@ func (system *System) getSystemSMTPEnvsFromSMTPSecret() []v1.EnvVar {
 	return result
 }
 
-func (system *System) buildSystemSphinxEnv() []v1.EnvVar {
-	result := []v1.EnvVar{}
-
-	result = append(result,
-		helper.EnvVarFromConfigMap("RAILS_ENV", "system-environment", "RAILS_ENV"),
-		helper.EnvVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
-		helper.EnvVarFromValue("SECRET_KEY_BASE", "rails/32947"),
-		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", "0.0.0.0"),
-		helper.EnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "db/sphinx/production.conf"),
-		helper.EnvVarFromValue("THINKING_SPHINX_PID_FILE", "db/sphinx/searchd.pid"),
-	)
-	result = append(result, system.SystemRedisEnvVars()...)
-	return result
-}
-
 func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 	result := []v1.EnvVar{}
 
@@ -1234,12 +1219,11 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
-							"system-master-svc",
 							"system-sphinx",
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag),
+							Name: fmt.Sprintf("system-searchd:%s", system.Options.ImageTag),
 						},
 					},
 				},
@@ -1270,16 +1254,6 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 					Affinity:           system.Options.SphinxAffinity,
 					Tolerations:        system.Options.SphinxTolerations,
 					ServiceAccountName: "amp",
-					InitContainers: []v1.Container{
-						v1.Container{
-							Name:    "system-master-svc",
-							Image:   "amp-system:latest",
-							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
-							Env: []v1.EnvVar{
-								helper.EnvVarFromValue("SLEEP_SECONDS", "1"),
-							},
-						},
-					},
 					Volumes: []v1.Volume{
 						v1.Volume{
 							Name: "system-sphinx-database",
@@ -1293,16 +1267,14 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 					Containers: []v1.Container{
 						v1.Container{
 							Name:            "system-sphinx",
-							Image:           "amp-system:latest",
+							Image:           "system-searchd:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
-							Args:            []string{"rake", "openshift:thinking_sphinx:start"},
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									Name:      "system-sphinx-database",
-									MountPath: "/opt/system/db/sphinx",
+									MountPath: "/var/lib/sphinx",
 								},
 							},
-							Env: system.buildSystemSphinxEnv(),
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
