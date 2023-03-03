@@ -1,7 +1,6 @@
 package reconcilers
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
@@ -148,30 +147,14 @@ func DeploymentConfigEnvVarReconciler(desired, existing *appsv1.DeploymentConfig
 	return update
 }
 
-func findDeploymentTriggerOnImageChange(triggerPolicies []appsv1.DeploymentTriggerPolicy) (int, error) {
-	result := -1
-	for i := range triggerPolicies {
-		if triggerPolicies[i].Type == appsv1.DeploymentTriggerOnImageChange {
-			result = i
-			break
-		}
-	}
-
-	if result == -1 {
-		return -1, errors.New("no imageChangeParams deployment trigger policy found")
-	}
-
-	return result, nil
-}
-
 // DeploymentConfigImageChangeTriggerMutator ensures image change triggers are reconciled
 func DeploymentConfigImageChangeTriggerMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
-	desiredDeploymentTriggerImageChangePos, err := findDeploymentTriggerOnImageChange(desired.Spec.Triggers)
+	desiredDeploymentTriggerImageChangePos, err := helper.FindDeploymentTriggerOnImageChange(desired.Spec.Triggers)
 	if err != nil {
 		return false, fmt.Errorf("unexpected: '%s' in DeploymentConfig '%s'", err, desired.Name)
 
 	}
-	existingDeploymentTriggerImageChangePos, err := findDeploymentTriggerOnImageChange(existing.Spec.Triggers)
+	existingDeploymentTriggerImageChangePos, err := helper.FindDeploymentTriggerOnImageChange(existing.Spec.Triggers)
 	if err != nil {
 		return false, fmt.Errorf("unexpected: '%s' in DeploymentConfig '%s'", err, existing.Name)
 	}
