@@ -6,13 +6,18 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Application CRD [#778](https://github.com/3scale/3scale-operator/pull/778)
+- Ability to set `APICAST_SERVICE_CACHE_SIZE` [#793](https://github.com/3scale/3scale-operator/pull/793)
+- Expose apicast metric ports in service [#791](https://github.com/3scale/3scale-operator/pull/791)
+
+## [0.10.1] - 2023-02-01
+
+### Added
+
 - Bumped Go to 1.17 [#785](https://github.com/3scale/3scale-operator/pull/785)
 - Bumped k8s deps to 0.24.3 [#785](https://github.com/3scale/3scale-operator/pull/785)
 - Bumped controller-runtime v0.12.2 [#785](https://github.com/3scale/3scale-operator/pull/785)
 - OCP 4.12 support  [#785](https://github.com/3scale/3scale-operator/pull/785)
-- Application CRD [#778](https://github.com/3scale/3scale-operator/pull/778)
-- Ability to set APICAST_SERVICE_CACHE_SIZE  [#793](https://github.com/3scale/3scale-operator/pull/793)
-- Expose apicast metric ports in service [#791](https://github.com/3scale/3scale-operator/pull/791)
 
 ### Fixed
 
@@ -211,7 +216,8 @@ And many many small fixes. Check [PRs](https://github.com/3scale/3scale-operator
 
 ### Added
 
-[Unreleased]: https://github.com/3scale/3scale-operator/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/3scale/3scale-operator/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/3scale/3scale-operator/releases/tag/v0.10.1
 [0.10.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.10.0
 [0.9.0]: https://github.com/3scale/3scale-operator/releases/tag/v0.9.0
 [0.8.1]: https://github.com/3scale/3scale-operator/releases/tag/v0.8.1
