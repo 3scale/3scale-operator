@@ -13,4 +13,5 @@ resources:
 - capabilities_v1beta1_custompolicydefinition.yaml
 - capabilities_v1beta1_proxyconfigpromote.yaml
 - capabilities_v1beta1_application.yaml
+- capabilities_v1beta2_product.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

@@ -44,6 +44,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
 	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
@@ -77,6 +78,7 @@ func init() {
 	utilruntime.Must(grafanav1alpha1.AddToScheme(scheme))
 	utilruntime.Must(configv1.AddToScheme(scheme))
 
+	utilruntime.Must(capabilitiesv1beta2.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
