@@ -1124,6 +1124,7 @@ func (p *ProductStatus) Equals(other *ProductStatus, logger logr.Logger) bool {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:storageversion
 
 // Product is the Schema for the products API
 // +kubebuilder:resource:path=products,scope=Namespaced
