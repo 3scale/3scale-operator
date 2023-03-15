@@ -66,8 +66,11 @@ var (
 	apicastPolicy = PolicyConfig{
 		Name:    "apicast",
 		Version: "builtin",
-		Configuration: runtime.RawExtension{
-			Raw: []byte(`{}`),
+		Configuration: Configuration{
+			Value: runtime.RawExtension{
+				Raw: []byte(`{}`),
+			},
+			ValueFrom: corev1.SecretReference{},
 		},
 		Enabled: true,
 	}
@@ -843,11 +846,18 @@ type PolicyConfig struct {
 	Version string `json:"version"`
 
 	// Configuration defines the policy configuration
-	// +kubebuilder:pruning:PreserveUnknownFields
-	Configuration runtime.RawExtension `json:"configuration"`
+	Configuration Configuration `json:"configuration"`
 
 	// Enabled defines activation state
 	Enabled bool `json:"enabled"`
+}
+
+type Configuration struct {
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Value runtime.RawExtension `json:"value,omitempty"`
+
+	// ValueFrom defines the secret where the configuration can be retrieved
+	ValueFrom corev1.SecretReference `json:"valueFrom,omitempty"`
 }
 
 func (d *ProductDeploymentSpec) OIDCSpec() *OIDCSpec {

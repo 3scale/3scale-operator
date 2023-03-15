@@ -1976,8 +1976,25 @@ spec:
                   properties:
                     configuration:
                       description: Configuration defines the policy configuration
+                      properties:
+                        value:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        valueFrom:
+                          description: ValueFrom defines the secret where the configuration
+                            can be retrieved
+                          properties:
+                            name:
+                              description: name is unique within a namespace to reference
+                                a secret resource.
+                              type: string
+                            namespace:
+                              description: namespace defines the space within which
+                                the secret name must be unique.
+                              type: string
+                          type: object
+                          x-kubernetes-map-type: atomic
                       type: object
-                      x-kubernetes-preserve-unknown-fields: true
                     enabled:
                       description: Enabled defines activation state
                       type: boolean
