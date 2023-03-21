@@ -8,7 +8,9 @@ metadata:
     certified: "false"
     containerImage: quay.io/3scale/3scale-operator:master
     createdAt: "2019-05-30T22:40:00Z"
+    description: 3scale Operator to provision 3scale and publish/manage API
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
+    operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale API Management"]'
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/3scale/3scale-operator
@@ -173,10 +175,12 @@ spec:
   - name: Documentation
     url: https://github.com/3scale/3scale-operator/blob/master/doc/operator-user-guide.md
   maintainers:
-  - email: msoriano+3scaleoperator@redhat.com
-    name: Miguel Soriano
   - email: eastizle+3scaleoperator@redhat.com
-    name: Eguzki Astiz
+    name: Eguzki Astiz Lezaun
+  - email: mstoklus@redhat.com
+    name: Michal Stokluska
+  - email: aucunnin@redhat.com
+    name: Austin Cunningham
   maturity: stable
   provider:
     name: Red Hat
