@@ -31,6 +31,13 @@ else
 GOBIN=$(shell $(GO) env GOBIN)
 endif
 
+# Set sed -i as it's different for mac vs gnu
+ifeq ($(shell uname -s | tr A-Z a-z), darwin)
+	SED_INLINE ?= sed -i ''
+else
+ 	SED_INLINE ?= sed -i
+endif
+
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
@@ -85,6 +92,7 @@ manager: generate fmt vet
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
 run: export THREESCALE_DEBUG=1
+run: export ENABLE_WEBHOOKS=false
 run: generate fmt vet manifests
 	$(GO) run ./main.go --zap-devel
 
@@ -199,7 +207,7 @@ bundle-custom-updates: $(YQ)
 	$(YQ) --inplace '.spec.displayName = "$(BUNDLE_PREFIX) 3scale operator"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
 	$(YQ) --inplace '.spec.provider.name = "$(BUNDLE_PREFIX)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
 	$(YQ) --inplace '.annotations."operators.operatorframework.io.bundle.package.v1" = "$(BUNDLE_PREFIX)-3scale-operator"' $(PROJECT_PATH)/bundle/metadata/annotations.yaml
-	sed -E -i 's/(operators\.operatorframework\.io\.bundle\.package\.v1=).+/\1$(BUNDLE_PREFIX)-3scale-operator/' $(PROJECT_PATH)/bundle.Dockerfile
+	$(SED_INLINE) -E 's/(operators\.operatorframework\.io\.bundle\.package\.v1=).+/\1$(BUNDLE_PREFIX)-3scale-operator/' $(PROJECT_PATH)/bundle.Dockerfile
 	@echo "Update operator image reference URL"
 	$(YQ) --inplace '.metadata.annotations.containerImage = "$(IMG)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
 	$(YQ) --inplace '.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = "$(IMG)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml

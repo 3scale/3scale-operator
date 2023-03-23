@@ -25,7 +25,7 @@ patchesStrategicMerge:
 #- patches/webhook_in_apimanagerrestores.yaml
 #- patches/webhook_in_tenants.yaml
 #- patches/webhook_in_backends.yaml
-#- patches/webhook_in_products.yaml
+- patches/webhook_in_products.yaml
 #- patches/webhook_in_openapis.yaml
 #- patches/webhook_in_activedocs.yaml
 #- patches/webhook_in_developeraccounts.yaml
@@ -42,7 +42,7 @@ patchesStrategicMerge:
 #- patches/cainjection_in_apimanagerrestores.yaml
 #- patches/cainjection_in_tenants.yaml
 #- patches/cainjection_in_backends.yaml
-#- patches/cainjection_in_products.yaml
+- patches/cainjection_in_products.yaml
 #- patches/cainjection_in_openapis.yaml
 #- patches/cainjection_in_activedocs.yaml
 #- patches/cainjection_in_developeraccounts.yaml
