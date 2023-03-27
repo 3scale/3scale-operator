@@ -63,6 +63,7 @@ type ApicastOptions struct {
 	OpenSSLVerify                  string `validate:"required"`
 	ResponseCodes                  string `validate:"required"`
 	ImageTag                       string `validate:"required"`
+	PriorityClassName              string `validate:"required"`
 	ExtendedMetrics                bool
 	ProductionResourceRequirements v1.ResourceRequirements `validate:"-"`
 	StagingResourceRequirements    v1.ResourceRequirements `validate:"-"`

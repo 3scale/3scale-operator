@@ -53,6 +53,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.ProductionWorkers = a.apimanager.Spec.Apicast.ProductionSpec.Workers
 	a.apicastOptions.ProductionLogLevel = a.apimanager.Spec.Apicast.ProductionSpec.LogLevel
 	a.apicastOptions.StagingLogLevel = a.apimanager.Spec.Apicast.StagingSpec.LogLevel
+	a.apicastOptions.PriorityClassName = *a.apimanager.Spec.PriorityClassNameSystemPod
 
 	a.apicastOptions.ProductionHTTPSPort = a.apimanager.Spec.Apicast.ProductionSpec.HTTPSPort
 	a.apicastOptions.ProductionHTTPSVerifyDepth = a.apimanager.Spec.Apicast.ProductionSpec.HTTPSVerifyDepth

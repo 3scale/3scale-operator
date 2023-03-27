@@ -130,7 +130,8 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 							Ports:           backend.workerPorts(),
 						},
 					},
-					ServiceAccountName: "amp"}},
+					ServiceAccountName: "amp",
+					PriorityClassName:  backend.Options.PriorityClassName}},
 		},
 	}
 }
@@ -205,6 +206,7 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
+					PriorityClassName:  backend.Options.PriorityClassName,
 				}},
 		},
 	}
@@ -294,6 +296,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
+					PriorityClassName:  backend.Options.PriorityClassName,
 				}},
 		},
 	}
