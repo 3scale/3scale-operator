@@ -81,6 +81,7 @@ type SystemOptions struct {
 	BackendSharedSecret string  `validate:"required"`
 	TenantName          string  `validate:"required"`
 	WildcardDomain      string  `validate:"required"`
+	PriorityClassName   string  `validate:"required"`
 	SmtpSecretOptions   SystemSMTPSecretOptions
 
 	AppAffinity        *v1.Affinity    `validate:"-"`

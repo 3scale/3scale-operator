@@ -84,6 +84,12 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+	// +optional
+	PriorityClassNameSystemPod *string `json:"priorityClassNameSystemPod,omitempty"`
+	// +optional
+	PriorityClassNameBackendPod *string `json:"priorityClassNameBackendPod,omitempty"`
+	// +optional
+	PriorityClassNameApicastPod *string `json:"priorityClassNameApicastPod,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager

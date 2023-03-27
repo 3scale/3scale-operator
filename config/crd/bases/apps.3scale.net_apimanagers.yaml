@@ -6239,6 +6239,8 @@ spec:
                   enabled:
                     type: boolean
                 type: object
+              priorityClassName:
+                type: string
               resourceRequirementsEnabled:
                 type: boolean
               system:

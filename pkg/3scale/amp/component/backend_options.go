@@ -21,6 +21,7 @@ type BackendOptions struct {
 	SystemBackendPassword        string            `validate:"required"`
 	TenantName                   string            `validate:"required"`
 	WildcardDomain               string            `validate:"required"`
+	PriorityClassName            string            `validate:"required"`
 	ListenerAffinity             *v1.Affinity      `validate:"-"`
 	ListenerTolerations          []v1.Toleration   `validate:"-"`
 	WorkerAffinity               *v1.Affinity      `validate:"-"`
