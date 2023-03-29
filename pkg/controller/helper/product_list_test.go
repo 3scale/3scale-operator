@@ -3,7 +3,7 @@ package helper
 import (
 	"testing"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/common"
 
 	"github.com/go-logr/logr"
@@ -32,25 +32,25 @@ func TestProductList(t *testing.T) {
 	anotherProviderSecret := GetTestSecret(ns, anotherProviderSecretName, data)
 
 	s := scheme.Scheme
-	err := capabilitiesv1beta1.AddToScheme(s)
+	err := capabilitiesv1beta2.AddToScheme(s)
 	if err != nil {
 		t.Fatalf("Unable to add Apps scheme: (%v)", err)
 	}
 
 	cases := []struct {
 		testName string
-		product  *capabilitiesv1beta1.Product
+		product  *capabilitiesv1beta2.Product
 		expected bool
 	}{
 		{
 			"sync'ed product and same providerAccount",
-			&capabilitiesv1beta1.Product{
+			&capabilitiesv1beta2.Product{
 				ObjectMeta: metav1.ObjectMeta{Name: "somename", Namespace: ns},
-				Spec:       capabilitiesv1beta1.ProductSpec{},
-				Status: capabilitiesv1beta1.ProductStatus{
+				Spec:       capabilitiesv1beta2.ProductSpec{},
+				Status: capabilitiesv1beta2.ProductStatus{
 					Conditions: common.Conditions{
 						common.Condition{
-							Type:   capabilitiesv1beta1.ProductSyncedConditionType,
+							Type:   capabilitiesv1beta2.ProductSyncedConditionType,
 							Status: corev1.ConditionTrue,
 						},
 					},
@@ -60,13 +60,13 @@ func TestProductList(t *testing.T) {
 		},
 		{
 			"Not sync'ed product",
-			&capabilitiesv1beta1.Product{
+			&capabilitiesv1beta2.Product{
 				ObjectMeta: metav1.ObjectMeta{Name: "somename", Namespace: ns},
-				Spec:       capabilitiesv1beta1.ProductSpec{},
-				Status: capabilitiesv1beta1.ProductStatus{
+				Spec:       capabilitiesv1beta2.ProductSpec{},
+				Status: capabilitiesv1beta2.ProductStatus{
 					Conditions: common.Conditions{
 						common.Condition{
-							Type:   capabilitiesv1beta1.ProductSyncedConditionType,
+							Type:   capabilitiesv1beta2.ProductSyncedConditionType,
 							Status: corev1.ConditionFalse,
 						},
 					},
@@ -76,17 +76,17 @@ func TestProductList(t *testing.T) {
 		},
 		{
 			"provider not matching product",
-			&capabilitiesv1beta1.Product{
+			&capabilitiesv1beta2.Product{
 				ObjectMeta: metav1.ObjectMeta{Name: "somename", Namespace: ns},
-				Spec: capabilitiesv1beta1.ProductSpec{
+				Spec: capabilitiesv1beta2.ProductSpec{
 					ProviderAccountRef: &corev1.LocalObjectReference{
 						Name: anotherProviderSecretName,
 					},
 				},
-				Status: capabilitiesv1beta1.ProductStatus{
+				Status: capabilitiesv1beta2.ProductStatus{
 					Conditions: common.Conditions{
 						common.Condition{
-							Type:   capabilitiesv1beta1.ProductSyncedConditionType,
+							Type:   capabilitiesv1beta2.ProductSyncedConditionType,
 							Status: corev1.ConditionTrue,
 						},
 					},
@@ -113,18 +113,18 @@ func TestProductList(t *testing.T) {
 
 func TestFindProductBySystemName(t *testing.T) {
 	ns := "somenamespace"
-	productList := []capabilitiesv1beta1.Product{
-		capabilitiesv1beta1.Product{
+	productList := []capabilitiesv1beta2.Product{
+		capabilitiesv1beta2.Product{
 			ObjectMeta: metav1.ObjectMeta{Name: "A", Namespace: ns},
-			Spec:       capabilitiesv1beta1.ProductSpec{SystemName: "A"},
+			Spec:       capabilitiesv1beta2.ProductSpec{SystemName: "A"},
 		},
-		capabilitiesv1beta1.Product{
+		capabilitiesv1beta2.Product{
 			ObjectMeta: metav1.ObjectMeta{Name: "B", Namespace: ns},
-			Spec:       capabilitiesv1beta1.ProductSpec{SystemName: "B"},
+			Spec:       capabilitiesv1beta2.ProductSpec{SystemName: "B"},
 		},
-		capabilitiesv1beta1.Product{
+		capabilitiesv1beta2.Product{
 			ObjectMeta: metav1.ObjectMeta{Name: "C", Namespace: ns},
-			Spec:       capabilitiesv1beta1.ProductSpec{SystemName: "C"},
+			Spec:       capabilitiesv1beta2.ProductSpec{SystemName: "C"},
 		},
 	}
 

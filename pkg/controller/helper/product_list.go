@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -14,8 +14,8 @@ import (
 // ProductList returns a list of product custom resources where all elements:
 // - Sync state (ensure remote product exist and in sync)
 // - Same 3scale provider Account
-func ProductList(ns string, cl client.Client, providerAccountURLStr string, logger logr.Logger) ([]capabilitiesv1beta1.Product, error) {
-	productList := &capabilitiesv1beta1.ProductList{}
+func ProductList(ns string, cl client.Client, providerAccountURLStr string, logger logr.Logger) ([]capabilitiesv1beta2.Product, error) {
+	productList := &capabilitiesv1beta2.ProductList{}
 	opts := []controllerclient.ListOption{
 		controllerclient.InNamespace(ns),
 	}
@@ -26,7 +26,7 @@ func ProductList(ns string, cl client.Client, providerAccountURLStr string, logg
 	}
 	logger.V(1).Info("Product resources", "total", len(productList.Items))
 
-	validProducts := make([]capabilitiesv1beta1.Product, 0)
+	validProducts := make([]capabilitiesv1beta2.Product, 0)
 	for idx := range productList.Items {
 		// Filter by synchronized
 		if !productList.Items[idx].IsSynced() {
@@ -49,7 +49,7 @@ func ProductList(ns string, cl client.Client, providerAccountURLStr string, logg
 	return validProducts, nil
 }
 
-func FindProductBySystemName(list []capabilitiesv1beta1.Product, systemName string) int {
+func FindProductBySystemName(list []capabilitiesv1beta2.Product, systemName string) int {
 	for idx := range list {
 		if list[idx].Spec.SystemName == systemName {
 			return idx

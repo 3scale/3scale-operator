@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
@@ -11,7 +11,7 @@ import (
 
 type methodData struct {
 	item threescaleapi.MethodItem
-	spec capabilitiesv1beta1.MethodSpec
+	spec capabilitiesv1beta2.MethodSpec
 }
 
 func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
@@ -72,7 +72,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	//
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
 	t.logger.V(1).Info("syncMethods", "desiredNewKeys", desiredNewKeys)
-	desiredNewMap := map[string]capabilitiesv1beta1.MethodSpec{}
+	desiredNewMap := map[string]capabilitiesv1beta2.MethodSpec{}
 	for _, systemName := range desiredNewKeys {
 		// key is expected to exist
 		// desiredNewKeys is a subset of the Spec.Method map key set
@@ -86,7 +86,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	return nil
 }
 
-func (t *ProductThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {
+func (t *ProductThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta2.MethodSpec) error {
 	for systemName, method := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": method.Name,

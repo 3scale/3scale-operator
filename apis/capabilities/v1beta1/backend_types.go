@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
@@ -90,14 +91,14 @@ type BackendSpec struct {
 	// system_name attr is unique for all metrics AND methods
 	// In other words, if metric's system_name is A, there is no metric or method with system_name A.
 	// +optional
-	Metrics map[string]MetricSpec `json:"metrics,omitempty"`
+	Metrics map[string]v1beta2.MetricSpec `json:"metrics,omitempty"`
 
 	// Methods
 	// Map: system_name -> MethodSpec
 	// system_name attr is unique for all metrics AND methods
 	// In other words, if metric's system_name is A, there is no metric or method with system_name A.
 	// +optional
-	Methods map[string]MethodSpec `json:"methods,omitempty"`
+	Methods map[string]v1beta2.MethodSpec `json:"methods,omitempty"`
 
 	// ProviderAccountRef references account provider credentials
 	// +optional
@@ -177,7 +178,7 @@ func (backend *Backend) SetDefaults(logger logr.Logger) bool {
 	}
 
 	if backend.Spec.Metrics == nil {
-		backend.Spec.Metrics = map[string]MetricSpec{}
+		backend.Spec.Metrics = map[string]v1beta2.MetricSpec{}
 		updated = true
 	}
 
@@ -190,7 +191,7 @@ func (backend *Backend) SetDefaults(logger logr.Logger) bool {
 	}
 	if !hitsFound {
 		logger.V(1).Info("Hits metric added")
-		backend.Spec.Metrics["hits"] = MetricSpec{
+		backend.Spec.Metrics["hits"] = v1beta2.MetricSpec{
 			Name:        "Hits",
 			Unit:        "hit",
 			Description: "Number of API hits",

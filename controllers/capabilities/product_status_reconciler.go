@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -17,14 +17,14 @@ import (
 
 type ProductStatusReconciler struct {
 	*reconcilers.BaseReconciler
-	resource            *capabilitiesv1beta1.Product
+	resource            *capabilitiesv1beta2.Product
 	entity              *controllerhelper.ProductEntity
 	providerAccountHost string
 	syncError           error
 	logger              logr.Logger
 }
 
-func NewProductStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, entity *controllerhelper.ProductEntity, providerAccountHost string, syncError error) *ProductStatusReconciler {
+func NewProductStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta2.Product, entity *controllerhelper.ProductEntity, providerAccountHost string, syncError error) *ProductStatusReconciler {
 	return &ProductStatusReconciler{
 		BaseReconciler:      b,
 		resource:            resource,
@@ -71,8 +71,8 @@ func (s *ProductStatusReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (s *ProductStatusReconciler) calculateStatus() *capabilitiesv1beta1.ProductStatus {
-	newStatus := &capabilitiesv1beta1.ProductStatus{}
+func (s *ProductStatusReconciler) calculateStatus() *capabilitiesv1beta2.ProductStatus {
+	newStatus := &capabilitiesv1beta2.ProductStatus{}
 	if s.entity != nil {
 		tmpID := s.entity.ID()
 		newStatus.ID = &tmpID
@@ -93,7 +93,7 @@ func (s *ProductStatusReconciler) calculateStatus() *capabilitiesv1beta1.Product
 
 func (s *ProductStatusReconciler) syncCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.ProductSyncedConditionType,
+		Type:   capabilitiesv1beta2.ProductSyncedConditionType,
 		Status: corev1.ConditionFalse,
 	}
 
@@ -106,7 +106,7 @@ func (s *ProductStatusReconciler) syncCondition() common.Condition {
 
 func (s *ProductStatusReconciler) orphanCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.ProductOrphanConditionType,
+		Type:   capabilitiesv1beta2.ProductOrphanConditionType,
 		Status: corev1.ConditionFalse,
 	}
 
@@ -120,7 +120,7 @@ func (s *ProductStatusReconciler) orphanCondition() common.Condition {
 
 func (s *ProductStatusReconciler) invalidCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.ProductInvalidConditionType,
+		Type:   capabilitiesv1beta2.ProductInvalidConditionType,
 		Status: corev1.ConditionFalse,
 	}
 
@@ -134,7 +134,7 @@ func (s *ProductStatusReconciler) invalidCondition() common.Condition {
 
 func (s *ProductStatusReconciler) failedCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.ProductFailedConditionType,
+		Type:   capabilitiesv1beta2.ProductFailedConditionType,
 		Status: corev1.ConditionFalse,
 	}
 

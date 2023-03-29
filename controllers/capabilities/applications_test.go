@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"testing"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
-	"testing"
 )
 
 func getApplicationEntity() *controllerhelper.ApplicationEntity {
@@ -94,7 +96,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 		applicationResource *capabilitiesv1beta1.Application
 		applicationEntity   *controllerhelper.ApplicationEntity
 		accountResource     *capabilitiesv1beta1.DeveloperAccount
-		productResource     *capabilitiesv1beta1.Product
+		productResource     *capabilitiesv1beta2.Product
 		threescaleAPIClient *threescaleapi.ThreeScaleClient
 		logger              logr.Logger
 	}

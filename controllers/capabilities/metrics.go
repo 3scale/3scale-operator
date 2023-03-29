@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
@@ -11,7 +11,7 @@ import (
 
 type metricData struct {
 	item threescaleapi.MetricItem
-	spec capabilitiesv1beta1.MetricSpec
+	spec capabilitiesv1beta2.MetricSpec
 }
 
 func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
@@ -75,7 +75,7 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
 	t.logger.V(1).Info("syncMetrics", "desiredNewKeys", desiredNewKeys)
-	desiredNewMap := map[string]capabilitiesv1beta1.MetricSpec{}
+	desiredNewMap := map[string]capabilitiesv1beta2.MetricSpec{}
 	for _, systemName := range desiredNewKeys {
 		// key is expected to exist
 		// desiredNewKeys is a subset of the Spec.Metrics map key set
@@ -125,7 +125,7 @@ func (t *ProductThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[str
 	return nil
 }
 
-func (t *ProductThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta1.MetricSpec) error {
+func (t *ProductThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta2.MetricSpec) error {
 	for systemName, metric := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": metric.Name,

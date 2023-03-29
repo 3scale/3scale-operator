@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -58,7 +59,7 @@ func (r *ProductReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	reqLogger.Info("Reconcile Product", "Operator version", version.Version)
 
 	// Fetch the Product instance
-	product := &capabilitiesv1beta1.Product{}
+	product := &capabilitiesv1beta2.Product{}
 	err := r.Client().Get(r.Context(), req.NamespacedName, product)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -185,7 +186,7 @@ func (r *ProductReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return ctrl.Result{}, reconcileErr
 }
 
-func (r *ProductReconciler) reconcile(productResource *capabilitiesv1beta1.Product) (*ProductStatusReconciler, error) {
+func (r *ProductReconciler) reconcile(productResource *capabilitiesv1beta2.Product) (*ProductStatusReconciler, error) {
 	logger := r.Logger().WithValues("product", productResource.Name)
 
 	err := r.validateSpec(productResource)
@@ -225,7 +226,7 @@ func (r *ProductReconciler) reconcile(productResource *capabilitiesv1beta1.Produ
 	return statusReconciler, err
 }
 
-func (r *ProductReconciler) validateSpec(resource *capabilitiesv1beta1.Product) error {
+func (r *ProductReconciler) validateSpec(resource *capabilitiesv1beta2.Product) error {
 	errors := field.ErrorList{}
 	errors = append(errors, resource.Validate()...)
 
@@ -239,7 +240,7 @@ func (r *ProductReconciler) validateSpec(resource *capabilitiesv1beta1.Product) 
 	}
 }
 
-func (r *ProductReconciler) checkExternalRefs(resource *capabilitiesv1beta1.Product, providerAccount *controllerhelper.ProviderAccount) error {
+func (r *ProductReconciler) checkExternalRefs(resource *capabilitiesv1beta2.Product, providerAccount *controllerhelper.ProviderAccount) error {
 	logger := r.Logger().WithValues("product", resource.Name)
 	errors := field.ErrorList{}
 
@@ -269,7 +270,7 @@ func (r *ProductReconciler) checkExternalRefs(resource *capabilitiesv1beta1.Prod
 	}
 }
 
-func (r *ProductReconciler) checkBackendUsages(resource *capabilitiesv1beta1.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
+func (r *ProductReconciler) checkBackendUsages(resource *capabilitiesv1beta2.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
 	errors := field.ErrorList{}
 
 	specFldPath := field.NewPath("spec")
@@ -285,7 +286,7 @@ func (r *ProductReconciler) checkBackendUsages(resource *capabilitiesv1beta1.Pro
 	return errors
 }
 
-func checkAppLimitsExternalRefs(resource *capabilitiesv1beta1.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
+func checkAppLimitsExternalRefs(resource *capabilitiesv1beta2.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
 	// backendList param is expected to be valid product's backendUsageList
 	errors := field.ErrorList{}
 
@@ -321,7 +322,7 @@ func checkAppLimitsExternalRefs(resource *capabilitiesv1beta1.Product, backendLi
 	return errors
 }
 
-func checkAppPricingRulesExternalRefs(resource *capabilitiesv1beta1.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
+func checkAppPricingRulesExternalRefs(resource *capabilitiesv1beta2.Product, backendList []capabilitiesv1beta1.Backend) field.ErrorList {
 	// backendList param is expected to be valid product's backendUsageList
 	errors := field.ErrorList{}
 
@@ -366,7 +367,7 @@ func findBackendBySystemName(list []capabilitiesv1beta1.Backend, systemName stri
 	return -1
 }
 
-func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap map[string]capabilitiesv1beta1.BackendUsageSpec) []capabilitiesv1beta1.Backend {
+func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap map[string]capabilitiesv1beta2.BackendUsageSpec) []capabilitiesv1beta1.Backend {
 	target := map[string]bool{}
 	for systemName := range backendUsageMap {
 		target[systemName] = true
@@ -382,7 +383,7 @@ func computeBackendUsageList(list []capabilitiesv1beta1.Backend, backendUsageMap
 	return result
 }
 
-func (r *ProductReconciler) removeProductFrom3scale(product *capabilitiesv1beta1.Product) error {
+func (r *ProductReconciler) removeProductFrom3scale(product *capabilitiesv1beta2.Product) error {
 	logger := r.Logger().WithValues("product", client.ObjectKey{Name: product.Name, Namespace: product.Namespace})
 
 	// Attempt to remove product only if product.Status.ID is present
@@ -415,6 +416,6 @@ func (r *ProductReconciler) removeProductFrom3scale(product *capabilitiesv1beta1
 
 func (r *ProductReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&capabilitiesv1beta1.Product{}).
+		For(&capabilitiesv1beta2.Product{}).
 		Complete(r)
 }

@@ -2,13 +2,15 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
-	"strconv"
 )
 
 type ApplicationThreescaleReconciler struct {
@@ -16,12 +18,12 @@ type ApplicationThreescaleReconciler struct {
 	applicationResource *capabilitiesv1beta1.Application
 	applicationEntity   *controllerhelper.ApplicationEntity
 	accountResource     *capabilitiesv1beta1.DeveloperAccount
-	productResource     *capabilitiesv1beta1.Product
+	productResource     *capabilitiesv1beta2.Product
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
 
-func NewApplicationReconciler(b *reconcilers.BaseReconciler, applicationResource *capabilitiesv1beta1.Application, accountResource *capabilitiesv1beta1.DeveloperAccount, productResource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient) *ApplicationThreescaleReconciler {
+func NewApplicationReconciler(b *reconcilers.BaseReconciler, applicationResource *capabilitiesv1beta1.Application, accountResource *capabilitiesv1beta1.DeveloperAccount, productResource *capabilitiesv1beta2.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient) *ApplicationThreescaleReconciler {
 	return &ApplicationThreescaleReconciler{
 		BaseReconciler:      b,
 		applicationResource: applicationResource,

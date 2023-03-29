@@ -4,19 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"reflect"
+	"testing"
+	"time"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
-	"io/ioutil"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"reflect"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
-	"time"
 )
 
 func create(x int64) *int64 {
@@ -83,22 +85,22 @@ func getProxyConfigPromoteCRProduction() (CR *capabilitiesv1beta1.ProxyConfigPro
 	return CR
 }
 
-func getProductList() (productList *capabilitiesv1beta1.ProductList) {
-	productList = &capabilitiesv1beta1.ProductList{
+func getProductList() (productList *capabilitiesv1beta2.ProductList) {
+	productList = &capabilitiesv1beta2.ProductList{
 		TypeMeta: metav1.TypeMeta{},
 		ListMeta: metav1.ListMeta{},
-		Items: []capabilitiesv1beta1.Product{
+		Items: []capabilitiesv1beta2.Product{
 			{TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "test",
 				},
-				Spec: capabilitiesv1beta1.ProductSpec{
+				Spec: capabilitiesv1beta2.ProductSpec{
 					Name:        "test",
 					SystemName:  "test",
 					Description: "test",
 				},
-				Status: capabilitiesv1beta1.ProductStatus{
+				Status: capabilitiesv1beta2.ProductStatus{
 					ID:                  create(3),
 					ProviderAccountHost: "some string",
 					ObservedGeneration:  1,
@@ -110,25 +112,25 @@ func getProductList() (productList *capabilitiesv1beta1.ProductList) {
 	return productList
 }
 
-func getProductCR() (CR *capabilitiesv1beta1.Product) {
+func getProductCR() (CR *capabilitiesv1beta2.Product) {
 
-	CR = &capabilitiesv1beta1.Product{
+	CR = &capabilitiesv1beta2.Product{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test",
 		},
-		Spec: capabilitiesv1beta1.ProductSpec{
+		Spec: capabilitiesv1beta2.ProductSpec{
 			Name:        "test",
 			SystemName:  "test",
 			Description: "test",
 		},
-		Status: capabilitiesv1beta1.ProductStatus{
+		Status: capabilitiesv1beta2.ProductStatus{
 			ID:                  create(3),
 			ProviderAccountHost: "some string",
 			ObservedGeneration:  1,
 			Conditions: common.Conditions{common.Condition{
-				Type:   capabilitiesv1beta1.ProductSyncedConditionType,
+				Type:   capabilitiesv1beta2.ProductSyncedConditionType,
 				Status: v1.ConditionTrue,
 			}},
 		},
@@ -304,7 +306,7 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 		proxyConfigPromote  *capabilitiesv1beta1.ProxyConfigPromote
 		reqLogger           logr.Logger
 		threescaleAPIClient *client.ThreeScaleClient
-		product             *capabilitiesv1beta1.Product
+		product             *capabilitiesv1beta2.Product
 	}
 	tests := []struct {
 		name    string

@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -180,7 +182,7 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *ApplicationReconciler) applicationReconciler(applicationResource *capabilitiesv1beta1.Application, req ctrl.Request, threescaleAPIClient *threescaleapi.ThreeScaleClient, providerAccountAdminURLStr string, accountResource *capabilitiesv1beta1.DeveloperAccount) (*ApplicationStatusReconciler, error) {
 
 	// get product
-	productResource := &capabilitiesv1beta1.Product{}
+	productResource := &capabilitiesv1beta2.Product{}
 	projectMeta := types.NamespacedName{
 		Name:      applicationResource.Spec.ProductCR.Name,
 		Namespace: req.Namespace,
@@ -241,7 +243,7 @@ func (r *ApplicationReconciler) removeApplicationFrom3scale(application *capabil
 	return nil
 }
 
-func (r *ApplicationReconciler) checkExternalResources(applicationResource *capabilitiesv1beta1.Application, accountResource *capabilitiesv1beta1.DeveloperAccount, productResource *capabilitiesv1beta1.Product) error {
+func (r *ApplicationReconciler) checkExternalResources(applicationResource *capabilitiesv1beta1.Application, accountResource *capabilitiesv1beta1.DeveloperAccount, productResource *capabilitiesv1beta2.Product) error {
 	errors := field.ErrorList{}
 
 	specFldPath := field.NewPath("spec")
@@ -257,7 +259,7 @@ func (r *ApplicationReconciler) checkExternalResources(applicationResource *capa
 	if accountResource.Status.Conditions.IsTrueFor(capabilitiesv1beta1.DeveloperAccountInvalidConditionType) {
 		errors = append(errors, field.Invalid(accountFldPath, applicationResource.Spec.AccountCR, "account CR is in an invalid state"))
 	}
-	if productResource.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductInvalidConditionType) {
+	if productResource.Status.Conditions.IsTrueFor(capabilitiesv1beta2.ProductInvalidConditionType) {
 		errors = append(errors, field.Invalid(productFldPath, applicationResource.Spec.ProductCR, "product CR is in an invalid state"))
 	}
 

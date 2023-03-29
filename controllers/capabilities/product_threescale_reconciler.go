@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -14,14 +14,14 @@ import (
 
 type ProductThreescaleReconciler struct {
 	*reconcilers.BaseReconciler
-	resource            *capabilitiesv1beta1.Product
+	resource            *capabilitiesv1beta2.Product
 	productEntity       *controllerhelper.ProductEntity
 	backendRemoteIndex  *controllerhelper.BackendAPIRemoteIndex
 	threescaleAPIClient *threescaleapi.ThreeScaleClient
 	logger              logr.Logger
 }
 
-func NewProductThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient, backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex) *ProductThreescaleReconciler {
+func NewProductThreescaleReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta2.Product, threescaleAPIClient *threescaleapi.ThreeScaleClient, backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex) *ProductThreescaleReconciler {
 	return &ProductThreescaleReconciler{
 		BaseReconciler:      b,
 		resource:            resource,

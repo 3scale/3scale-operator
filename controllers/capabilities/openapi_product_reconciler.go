@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -54,7 +55,7 @@ func (p *OpenAPIProductReconciler) Logger() logr.Logger {
 	return p.logger
 }
 
-func (p *OpenAPIProductReconciler) Reconcile() (*capabilitiesv1beta1.Product, error) {
+func (p *OpenAPIProductReconciler) Reconcile() (*capabilitiesv1beta2.Product, error) {
 	desired, err := p.desired()
 	if err != nil {
 		return nil, err
@@ -68,10 +69,10 @@ func (p *OpenAPIProductReconciler) Reconcile() (*capabilitiesv1beta1.Product, er
 		p.Logger().V(1).Info(string(jsonData))
 	}
 
-	return nil, p.ReconcileResource(&capabilitiesv1beta1.Product{}, desired, p.productMutator)
+	return nil, p.ReconcileResource(&capabilitiesv1beta2.Product{}, desired, p.productMutator)
 }
 
-func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, error) {
+func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta2.Product, error) {
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
@@ -100,16 +101,16 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	// product description
 	description := fmt.Sprintf(p.openapiObj.Info.Description)
 
-	product := &capabilitiesv1beta1.Product{
+	product := &capabilitiesv1beta2.Product{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       capabilitiesv1beta1.ProductKind,
-			APIVersion: capabilitiesv1beta1.GroupVersion.String(),
+			Kind:       capabilitiesv1beta2.ProductKind,
+			APIVersion: capabilitiesv1beta2.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objName,
 			Namespace: p.openapiCR.Namespace,
 		},
-		Spec: capabilitiesv1beta1.ProductSpec{
+		Spec: capabilitiesv1beta2.ProductSpec{
 			Name:               name,
 			SystemName:         systemName,
 			Description:        description,
@@ -133,8 +134,8 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	// backend usages
 	// current implementation assumes same system name for backend and product
 	backendSystemName := p.desiredSystemName()
-	product.Spec.BackendUsages = map[string]capabilitiesv1beta1.BackendUsageSpec{
-		backendSystemName: capabilitiesv1beta1.BackendUsageSpec{
+	product.Spec.BackendUsages = map[string]capabilitiesv1beta2.BackendUsageSpec{
+		backendSystemName: capabilitiesv1beta2.BackendUsageSpec{
 			Path: "/",
 		},
 	}
@@ -156,13 +157,13 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 }
 
 func (p *OpenAPIProductReconciler) productMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-	existing, ok := existingObj.(*capabilitiesv1beta1.Product)
+	existing, ok := existingObj.(*capabilitiesv1beta2.Product)
 	if !ok {
-		return false, fmt.Errorf("%T is not a *capabilitiesv1beta1.Product", existingObj)
+		return false, fmt.Errorf("%T is not a *capabilitiesv1beta2.Product", existingObj)
 	}
-	desired, ok := desiredObj.(*capabilitiesv1beta1.Product)
+	desired, ok := desiredObj.(*capabilitiesv1beta2.Product)
 	if !ok {
-		return false, fmt.Errorf("%T is not a *capabilitiesv1beta1.Product", desiredObj)
+		return false, fmt.Errorf("%T is not a *capabilitiesv1beta2.Product", desiredObj)
 	}
 
 	// Metadata labels and annotations
@@ -208,19 +209,19 @@ func (p *OpenAPIProductReconciler) desiredObjName() string {
 	return fmt.Sprintf("%s-%s", helper.K8sNameFromOpenAPITitle(p.openapiObj), string(p.openapiCR.UID))
 }
 
-func (p *OpenAPIProductReconciler) desiredDeployment() *capabilitiesv1beta1.ProductDeploymentSpec {
-	deployment := &capabilitiesv1beta1.ProductDeploymentSpec{}
+func (p *OpenAPIProductReconciler) desiredDeployment() *capabilitiesv1beta2.ProductDeploymentSpec {
+	deployment := &capabilitiesv1beta2.ProductDeploymentSpec{}
 
 	if p.openapiCR.Spec.ProductionPublicBaseURL != nil || p.openapiCR.Spec.StagingPublicBaseURL != nil {
 		// Self managed deployment
-		deployment.ApicastSelfManaged = &capabilitiesv1beta1.ApicastSelfManagedSpec{
+		deployment.ApicastSelfManaged = &capabilitiesv1beta2.ApicastSelfManagedSpec{
 			StagingPublicBaseURL:    p.openapiCR.Spec.StagingPublicBaseURL,
 			ProductionPublicBaseURL: p.openapiCR.Spec.ProductionPublicBaseURL,
 			Authentication:          p.desiredAuthentication(),
 		}
 	} else {
 		// Hosted deployment
-		deployment.ApicastHosted = &capabilitiesv1beta1.ApicastHostedSpec{
+		deployment.ApicastHosted = &capabilitiesv1beta2.ApicastHostedSpec{
 			Authentication: p.desiredAuthentication(),
 		}
 	}
@@ -228,7 +229,7 @@ func (p *OpenAPIProductReconciler) desiredDeployment() *capabilitiesv1beta1.Prod
 	return deployment
 }
 
-func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.AuthenticationSpec {
+func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta2.AuthenticationSpec {
 	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(p.openapiObj)
 	if len(globalSecRequirements) == 0 {
 		// if no security requirements are found, default to UserKey auth
@@ -238,7 +239,7 @@ func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.
 	// Only the first one is used
 	secRequirementExtended := globalSecRequirements[0]
 
-	var authenticationSpec *capabilitiesv1beta1.AuthenticationSpec
+	var authenticationSpec *capabilitiesv1beta2.AuthenticationSpec
 
 	switch secRequirementExtended.Value.Type {
 	// TODO types "oauth2", "openIdConnect"
@@ -249,9 +250,9 @@ func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.
 	return authenticationSpec
 }
 
-func (p *OpenAPIProductReconciler) desiredUserKeyAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
-	authSpec := &capabilitiesv1beta1.AuthenticationSpec{
-		UserKeyAuthentication: &capabilitiesv1beta1.UserKeyAuthenticationSpec{
+func (p *OpenAPIProductReconciler) desiredUserKeyAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta2.AuthenticationSpec {
+	authSpec := &capabilitiesv1beta2.AuthenticationSpec{
+		UserKeyAuthentication: &capabilitiesv1beta2.UserKeyAuthenticationSpec{
 			Security: p.desiredPrivateAPISecurity(),
 		},
 	}
@@ -277,12 +278,12 @@ func (p *OpenAPIProductReconciler) parseUserKeyCredentialsLoc(inField string) *s
 	}
 }
 
-func (p *OpenAPIProductReconciler) desiredMethods() map[string]capabilitiesv1beta1.MethodSpec {
-	methods := make(map[string]capabilitiesv1beta1.MethodSpec)
+func (p *OpenAPIProductReconciler) desiredMethods() map[string]capabilitiesv1beta2.MethodSpec {
+	methods := make(map[string]capabilitiesv1beta2.MethodSpec)
 	for path, pathItem := range p.openapiObj.Paths {
 		for opVerb, operation := range pathItem.Operations() {
 			methodSystemName := helper.MethodSystemNameFromOpenAPIOperation(path, opVerb, operation)
-			methods[methodSystemName] = capabilitiesv1beta1.MethodSpec{
+			methods[methodSystemName] = capabilitiesv1beta2.MethodSpec{
 				Name:        helper.MethodNameFromOpenAPIOperation(path, opVerb, operation),
 				Description: operation.Description,
 			}
@@ -291,8 +292,8 @@ func (p *OpenAPIProductReconciler) desiredMethods() map[string]capabilitiesv1bet
 	return methods
 }
 
-func (p *OpenAPIProductReconciler) desiredMappingRules() ([]capabilitiesv1beta1.MappingRuleSpec, error) {
-	mappingRules := make([]capabilitiesv1beta1.MappingRuleSpec, 0)
+func (p *OpenAPIProductReconciler) desiredMappingRules() ([]capabilitiesv1beta2.MappingRuleSpec, error) {
+	mappingRules := make([]capabilitiesv1beta2.MappingRuleSpec, 0)
 	for path, pathItem := range p.openapiObj.Paths {
 		desiredPattern, err := p.desiredMappingRulesPattern(path)
 		if err != nil {
@@ -300,7 +301,7 @@ func (p *OpenAPIProductReconciler) desiredMappingRules() ([]capabilitiesv1beta1.
 		}
 
 		for opVerb, operation := range pathItem.Operations() {
-			mappingRules = append(mappingRules, capabilitiesv1beta1.MappingRuleSpec{
+			mappingRules = append(mappingRules, capabilitiesv1beta2.MappingRuleSpec{
 				HTTPMethod:      strings.ToUpper(opVerb),
 				Pattern:         desiredPattern,
 				MetricMethodRef: helper.MethodSystemNameFromOpenAPIOperation(path, opVerb, operation),
@@ -352,12 +353,12 @@ func (p *OpenAPIProductReconciler) desiredPublicBasePath() (string, error) {
 	return basePath, nil
 }
 
-func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1beta1.SecuritySpec {
+func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1beta2.SecuritySpec {
 	if p.openapiCR.Spec.PrivateAPIHostHeader == nil && p.openapiCR.Spec.PrivateAPISecretToken == nil {
 		return nil
 	}
 
-	privateAPISec := &capabilitiesv1beta1.SecuritySpec{}
+	privateAPISec := &capabilitiesv1beta2.SecuritySpec{}
 
 	if p.openapiCR.Spec.PrivateAPIHostHeader != nil {
 		privateAPISec.HostHeader = p.openapiCR.Spec.PrivateAPIHostHeader

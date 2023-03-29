@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
@@ -13,7 +13,7 @@ import (
 
 func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.resource.Spec.MappingRules))
-	desiredMap := map[string]capabilitiesv1beta1.MappingRuleSpec{}
+	desiredMap := map[string]capabilitiesv1beta2.MappingRuleSpec{}
 	for _, spec := range t.resource.Spec.MappingRules {
 		key := fmt.Sprintf("%s:%s", spec.HTTPMethod, spec.Pattern)
 		desiredKeys = append(desiredKeys, key)
@@ -127,7 +127,7 @@ func (t *ProductThreescaleReconciler) getExistingMappingRules() (map[string]thre
 	return existingMap, nil
 }
 
-func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int, existing threescaleapi.MappingRuleItem) error {
+func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabilitiesv1beta2.MappingRuleSpec, desiredPosition int, existing threescaleapi.MappingRuleItem) error {
 	params := threescaleapi.Params{}
 
 	//
@@ -182,7 +182,7 @@ func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired c
 	return nil
 }
 
-func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
+func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta2.MappingRuleSpec, desiredPosition int) error {
 	metricID, err := t.productEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
 	if err != nil {
 		return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)

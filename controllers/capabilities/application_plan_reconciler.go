@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -29,7 +29,7 @@ type pricingRuleKey struct {
 type applicationPlanReconciler struct {
 	*reconcilers.BaseReconciler
 	systemName          string
-	resource            capabilitiesv1beta1.ApplicationPlanSpec
+	resource            capabilitiesv1beta2.ApplicationPlanSpec
 	productEntity       *controllerhelper.ProductEntity
 	backendRemoteIndex  *controllerhelper.BackendAPIRemoteIndex
 	planEntity          *controllerhelper.ApplicationPlanEntity
@@ -39,7 +39,7 @@ type applicationPlanReconciler struct {
 
 func newApplicationPlanReconciler(b *reconcilers.BaseReconciler,
 	systemName string,
-	resource capabilitiesv1beta1.ApplicationPlanSpec,
+	resource capabilitiesv1beta2.ApplicationPlanSpec,
 	threescaleAPIClient *threescaleapi.ThreeScaleClient,
 	productEntity *controllerhelper.ProductEntity,
 	backendRemoteIndex *controllerhelper.BackendAPIRemoteIndex,
@@ -236,7 +236,7 @@ func (a *applicationPlanReconciler) syncPricingRules(_ interface{}) error {
 
 func (a *applicationPlanReconciler) computeUnDesiredLimits(
 	existingList []threescaleapi.ApplicationPlanLimit,
-	desiredList []capabilitiesv1beta1.LimitSpec) ([]threescaleapi.ApplicationPlanLimit, error) {
+	desiredList []capabilitiesv1beta2.LimitSpec) ([]threescaleapi.ApplicationPlanLimit, error) {
 
 	target := map[limitKey]bool{}
 	for _, desired := range desiredList {
@@ -271,8 +271,8 @@ func (a *applicationPlanReconciler) computeUnDesiredLimits(
 }
 
 func (a *applicationPlanReconciler) computeDesiredLimits(
-	desiredList []capabilitiesv1beta1.LimitSpec,
-	existingList []threescaleapi.ApplicationPlanLimit) ([]capabilitiesv1beta1.LimitSpec, error) {
+	desiredList []capabilitiesv1beta2.LimitSpec,
+	existingList []threescaleapi.ApplicationPlanLimit) ([]capabilitiesv1beta2.LimitSpec, error) {
 
 	target := map[limitKey]bool{}
 	for _, existing := range existingList {
@@ -285,7 +285,7 @@ func (a *applicationPlanReconciler) computeDesiredLimits(
 		target[existingKey] = true
 	}
 
-	result := make([]capabilitiesv1beta1.LimitSpec, 0)
+	result := make([]capabilitiesv1beta2.LimitSpec, 0)
 	for _, desired := range desiredList {
 		metricID, err := a.findID(desired.MetricMethodRef)
 		if err != nil {
@@ -305,7 +305,7 @@ func (a *applicationPlanReconciler) computeDesiredLimits(
 	return result, nil
 }
 
-func (a *applicationPlanReconciler) findID(ref capabilitiesv1beta1.MetricMethodRefSpec) (int64, error) {
+func (a *applicationPlanReconciler) findID(ref capabilitiesv1beta2.MetricMethodRefSpec) (int64, error) {
 	var (
 		metricID int64
 		err      error
@@ -330,7 +330,7 @@ func (a *applicationPlanReconciler) findID(ref capabilitiesv1beta1.MetricMethodR
 
 func (a *applicationPlanReconciler) computeUnDesiredPricingRules(
 	existingList []threescaleapi.ApplicationPlanPricingRule,
-	desiredList []capabilitiesv1beta1.PricingRuleSpec) ([]threescaleapi.ApplicationPlanPricingRule, error) {
+	desiredList []capabilitiesv1beta2.PricingRuleSpec) ([]threescaleapi.ApplicationPlanPricingRule, error) {
 
 	target := map[pricingRuleKey]bool{}
 	for _, desired := range desiredList {
@@ -367,8 +367,8 @@ func (a *applicationPlanReconciler) computeUnDesiredPricingRules(
 }
 
 func (a *applicationPlanReconciler) computeDesiredPricingRules(
-	desiredList []capabilitiesv1beta1.PricingRuleSpec,
-	existingList []threescaleapi.ApplicationPlanPricingRule) ([]capabilitiesv1beta1.PricingRuleSpec, error) {
+	desiredList []capabilitiesv1beta2.PricingRuleSpec,
+	existingList []threescaleapi.ApplicationPlanPricingRule) ([]capabilitiesv1beta2.PricingRuleSpec, error) {
 
 	target := map[pricingRuleKey]bool{}
 	for _, existing := range existingList {
@@ -382,7 +382,7 @@ func (a *applicationPlanReconciler) computeDesiredPricingRules(
 		target[existingKey] = true
 	}
 
-	result := make([]capabilitiesv1beta1.PricingRuleSpec, 0)
+	result := make([]capabilitiesv1beta2.PricingRuleSpec, 0)
 	for _, desired := range desiredList {
 		metricID, err := a.findID(desired.MetricMethodRef)
 		if err != nil {

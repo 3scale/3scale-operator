@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -169,7 +170,7 @@ func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 	// Create not existing and desired
 	//
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
-	desiredNewMap := map[string]capabilitiesv1beta1.MethodSpec{}
+	desiredNewMap := map[string]capabilitiesv1beta2.MethodSpec{}
 	for _, systemName := range desiredNewKeys {
 		// key is expected to exist
 		// desiredNewKeys is a subset of the Spec.Method map key set
@@ -183,7 +184,7 @@ func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 	return nil
 }
 
-func (t *BackendThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {
+func (t *BackendThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta2.MethodSpec) error {
 	for systemName, method := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": method.Name,
@@ -218,7 +219,7 @@ func (t *BackendThreescaleReconciler) deleteExternalMetricReferences(notDesiredM
 	}
 
 	// filter products referencing current backend resource
-	linkedProductList := make([]capabilitiesv1beta1.Product, 0)
+	linkedProductList := make([]capabilitiesv1beta2.Product, 0)
 	for _, product := range productList {
 		if _, ok := product.Spec.BackendUsages[t.backendResource.Spec.SystemName]; ok {
 			linkedProductList = append(linkedProductList, product)
@@ -238,7 +239,7 @@ func (t *BackendThreescaleReconciler) deleteExternalMetricReferences(notDesiredM
 }
 
 // valid for metrics and methods as long as 3scale ensures system_names are unique among methods and metrics
-func (t *BackendThreescaleReconciler) deleteExternalMetricReferencesOnProduct(notDesiredMetrics []string, productRef capabilitiesv1beta1.Product) error {
+func (t *BackendThreescaleReconciler) deleteExternalMetricReferencesOnProduct(notDesiredMetrics []string, productRef capabilitiesv1beta2.Product) error {
 	productUpdated := false
 	product := productRef.DeepCopy()
 
@@ -246,7 +247,7 @@ func (t *BackendThreescaleReconciler) deleteExternalMetricReferencesOnProduct(no
 		planSpecUpdated := false
 
 		// Check limits with external references to the current backend
-		newLimits := make([]capabilitiesv1beta1.LimitSpec, 0)
+		newLimits := make([]capabilitiesv1beta2.LimitSpec, 0)
 		for limitIdx, limitSpec := range planSpec.Limits {
 			// Check if the limit belongs to the current backend
 			// Check if the limit is marked for deletion in notDesiredMap
@@ -263,7 +264,7 @@ func (t *BackendThreescaleReconciler) deleteExternalMetricReferencesOnProduct(no
 		}
 
 		// Check pricingRules with external references to the current backend
-		newRules := make([]capabilitiesv1beta1.PricingRuleSpec, 0)
+		newRules := make([]capabilitiesv1beta2.PricingRuleSpec, 0)
 		for ruleIdx, ruleSpec := range planSpec.PricingRules {
 			// Check if the current rule belongs to the current backend
 			if ruleSpec.MetricMethodRef.BackendSystemName == nil ||
@@ -379,7 +380,7 @@ func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 	//
 
 	desiredNewKeys := helper.ArrayStringDifference(desiredKeys, existingKeys)
-	desiredNewMap := map[string]capabilitiesv1beta1.MetricSpec{}
+	desiredNewMap := map[string]capabilitiesv1beta2.MetricSpec{}
 	for _, systemName := range desiredNewKeys {
 		// key is expected to exist
 		// desiredNewKeys is a subset of the Spec.Metrics map key set
@@ -393,7 +394,7 @@ func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 	return nil
 }
 
-func (t *BackendThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta1.MetricSpec) error {
+func (t *BackendThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta2.MetricSpec) error {
 	for systemName, metric := range desiredNewMap {
 		params := threescaleapi.Params{
 			"friendly_name": metric.Name,

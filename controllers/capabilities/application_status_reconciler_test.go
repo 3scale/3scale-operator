@@ -2,8 +2,13 @@ package controllers
 
 import (
 	"context"
+	"reflect"
+	"testing"
+	"time"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -15,12 +20,9 @@ import (
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
-	"time"
 )
 
 func getApplicationCR() (CR *capabilitiesv1beta1.Application) {
@@ -189,27 +191,27 @@ func unknowAccountApplicationCR() (CR *capabilitiesv1beta1.Application) {
 	}
 	return CR
 }
-func getApplicationProductCR() (CR *capabilitiesv1beta1.Product) {
+func getApplicationProductCR() (CR *capabilitiesv1beta2.Product) {
 	// used for string pointer
 	test := "test"
 
-	CR = &capabilitiesv1beta1.Product{
+	CR = &capabilitiesv1beta2.Product{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "test",
 		},
-		Spec: capabilitiesv1beta1.ProductSpec{
+		Spec: capabilitiesv1beta2.ProductSpec{
 			Name:        "test",
 			SystemName:  "test",
 			Description: "test",
-			ApplicationPlans: map[string]capabilitiesv1beta1.ApplicationPlanSpec{
+			ApplicationPlans: map[string]capabilitiesv1beta2.ApplicationPlanSpec{
 				"test": {
 					Name: &test,
-					Limits: []capabilitiesv1beta1.LimitSpec{
+					Limits: []capabilitiesv1beta2.LimitSpec{
 						{
 							Period: "month",
 							Value:  300,
-							MetricMethodRef: capabilitiesv1beta1.MetricMethodRefSpec{
+							MetricMethodRef: capabilitiesv1beta2.MetricMethodRefSpec{
 								SystemName:        "test",
 								BackendSystemName: &test,
 							},
@@ -219,7 +221,7 @@ func getApplicationProductCR() (CR *capabilitiesv1beta1.Product) {
 				},
 			},
 		},
-		Status: capabilitiesv1beta1.ProductStatus{
+		Status: capabilitiesv1beta2.ProductStatus{
 			ID:                  create(3),
 			ProviderAccountHost: "some string",
 			ObservedGeneration:  1,

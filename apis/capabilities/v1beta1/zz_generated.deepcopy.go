@@ -22,6 +22,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -550,14 +551,14 @@ func (in *BackendSpec) DeepCopyInto(out *BackendSpec) {
 	}
 	if in.Metrics != nil {
 		in, out := &in.Metrics, &out.Metrics
-		*out = make(map[string]MetricSpec, len(*in))
+		*out = make(map[string]v1beta2.MetricSpec, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}
 	}
 	if in.Methods != nil {
 		in, out := &in.Methods, &out.Methods
-		*out = make(map[string]MethodSpec, len(*in))
+		*out = make(map[string]v1beta2.MethodSpec, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}

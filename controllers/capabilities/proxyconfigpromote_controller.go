@@ -20,7 +20,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
@@ -29,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"strconv"
 )
 
 // ProxyConfigPromoteReconciler reconciles a ProxyConfigPromote object
@@ -66,7 +68,7 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.R
 		reqLogger.V(1).Info(string(jsonData))
 	}
 	// get product
-	product := &capabilitiesv1beta1.Product{}
+	product := &capabilitiesv1beta2.Product{}
 	projectMeta := types.NamespacedName{
 		Name:      proxyConfigPromote.Spec.ProductCRName,
 		Namespace: req.Namespace,
@@ -121,13 +123,13 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.R
 	return ctrl.Result{}, nil
 }
 
-func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigPromote *capabilitiesv1beta1.ProxyConfigPromote, reqLogger logr.Logger, threescaleAPIClient *threescaleapi.ThreeScaleClient, product *capabilitiesv1beta1.Product) (*ProxyConfigPromoteStatusReconciler, error) {
+func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigPromote *capabilitiesv1beta1.ProxyConfigPromote, reqLogger logr.Logger, threescaleAPIClient *threescaleapi.ThreeScaleClient, product *capabilitiesv1beta2.Product) (*ProxyConfigPromoteStatusReconciler, error) {
 
 	var latestStagingVersion int
 	var latestProductionVersion int
 	//get product
 
-	if product.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductSyncedConditionType) {
+	if product.Status.Conditions.IsTrueFor(capabilitiesv1beta2.ProductSyncedConditionType) {
 		productID := product.Status.ID
 		productIDInt64 := *productID
 		productIDStr := strconv.Itoa(int(productIDInt64))

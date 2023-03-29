@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -147,7 +148,7 @@ func (s *OpenAPIStatusReconciler) getManagedProduct() (*corev1.LocalObjectRefere
 	listOps := []client.ListOption{
 		client.InNamespace(s.resource.Namespace),
 	}
-	productList := &capabilitiesv1beta1.ProductList{}
+	productList := &capabilitiesv1beta2.ProductList{}
 	err := s.Client().List(s.Context(), productList, listOps...)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to list product: %w", err)

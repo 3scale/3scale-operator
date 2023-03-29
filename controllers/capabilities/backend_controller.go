@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"time"
 
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -245,7 +246,7 @@ func (r *BackendReconciler) removeBackendReferencesFromProducts(backend *capabil
 	opts := client.ListOptions{
 		Namespace: backend.Namespace,
 	}
-	productCRsList := &capabilitiesv1beta1.ProductList{}
+	productCRsList := &capabilitiesv1beta2.ProductList{}
 	err := r.Client().List(context.TODO(), productCRsList, &opts)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -312,10 +313,10 @@ func (r *BackendReconciler) removeBackendFrom3scale(backend *capabilitiesv1beta1
 	return nil
 }
 
-func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv1beta1.ProductList, backendResource *capabilitiesv1beta1.Backend) ([]capabilitiesv1beta1.Product, error) {
+func (r *BackendReconciler) fetchTenantProductCRs(productsCRsList *capabilitiesv1beta2.ProductList, backendResource *capabilitiesv1beta1.Backend) ([]capabilitiesv1beta2.Product, error) {
 	logger := r.Logger().WithValues("backend", client.ObjectKey{Name: backendResource.Name, Namespace: backendResource.Namespace})
 
-	var productsList []capabilitiesv1beta1.Product
+	var productsList []capabilitiesv1beta2.Product
 	backendProviderAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, logger)
 
 	if apierrors.IsNotFound(err) {

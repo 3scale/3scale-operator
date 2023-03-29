@@ -197,6 +197,16 @@ metadata:
             "ProductCRName": "product1-sample",
             "Production": true
           }
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta2",
+          "kind": "Product",
+          "metadata": {
+            "name": "product-sample"
+          },
+          "spec": {
+            "foo": "bar"
+          }
         }
       ]
     capabilities: Deep Insights
@@ -300,6 +310,11 @@ spec:
       kind: OpenAPI
       name: openapis.capabilities.3scale.net
       version: v1beta1
+    - description: Product is the Schema for the products API
+      displayName: 3scale Product
+      kind: Product
+      name: products.capabilities.3scale.net
+      version: v1beta2
     - description: Product is the Schema for the products API
       displayName: 3scale Product
       kind: Product
@@ -471,6 +486,9 @@ spec:
                 ports:
                 - containerPort: 8080
                   name: metrics
+                - containerPort: 9443
+                  name: webhook-server
+                  protocol: TCP
                 resources:
                   limits:
                     cpu: 100m
@@ -478,8 +496,17 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 300Mi
+                volumeMounts:
+                - mountPath: /tmp/k8s-webhook-server/serving-certs
+                  name: cert
+                  readOnly: true
               serviceAccountName: 3scale-operator
               terminationGracePeriodSeconds: 10
+              volumes:
+              - name: cert
+                secret:
+                  defaultMode: 420
+                  secretName: webhook-server-cert
       permissions:
       - rules:
         - apiGroups:

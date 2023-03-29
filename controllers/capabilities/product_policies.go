@@ -39,22 +39,27 @@ func (t *ProductThreescaleReconciler) convertResourcePolicies() *threescaleapi.P
 	}
 
 	for _, crdPolicy := range t.resource.Spec.Policies {
-		var configuration map[string]interface{}
-		// CRD validation ensures no error happens
-		// "configuration` type is object
-		//properties:
-		//  configuration:
-		//    description: Configuration defines the policy configuration
-		//    type: object
-		//    x-kubernetes-preserve-unknown-fields: true
-		_ = json.Unmarshal(crdPolicy.Configuration.Raw, &configuration)
+		if crdPolicy.Configuration.Value.String() != "" {
+			var configuration map[string]interface{}
+			// CRD validation ensures no error happens
+			// "configuration` type is object
+			//properties:
+			//  configuration:
+			//    description: Configuration defines the policy configuration
+			//    type: object
+			//    x-kubernetes-preserve-unknown-fields: true
+			_ = json.Unmarshal(crdPolicy.Configuration.Value.Raw, &configuration)
 
-		policies.Policies = append(policies.Policies, threescaleapi.PolicyConfig{
-			Name:          crdPolicy.Name,
-			Version:       crdPolicy.Version,
-			Enabled:       crdPolicy.Enabled,
-			Configuration: configuration,
-		})
+			policies.Policies = append(policies.Policies, threescaleapi.PolicyConfig{
+				Name:          crdPolicy.Name,
+				Version:       crdPolicy.Version,
+				Enabled:       crdPolicy.Enabled,
+				Configuration: configuration,
+			})
+		}
+
+		// TODO: If fetching from secret
+
 	}
 
 	return policies

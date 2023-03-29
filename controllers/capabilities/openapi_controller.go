@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/url"
 
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -205,7 +206,7 @@ func (r *OpenAPIReconciler) checkProductSynced(resource *capabilitiesv1beta1.Ope
 	}
 
 	// Fetch the Product instance
-	product := &capabilitiesv1beta1.Product{}
+	product := &capabilitiesv1beta2.Product{}
 	objectKey := client.ObjectKey{Name: resource.Status.ProductResourceName.Name, Namespace: resource.Namespace}
 	err := r.Client().Get(r.Context(), objectKey, product)
 	if err != nil {
@@ -216,7 +217,7 @@ func (r *OpenAPIReconciler) checkProductSynced(resource *capabilitiesv1beta1.Ope
 		return false, err
 	}
 
-	return product.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductSyncedConditionType), nil
+	return product.Status.Conditions.IsTrueFor(capabilitiesv1beta2.ProductSyncedConditionType), nil
 }
 
 func (r *OpenAPIReconciler) readOpenAPI(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.T, error) {

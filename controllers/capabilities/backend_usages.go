@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	capabilitiesv1beta2 "github.com/3scale/3scale-operator/apis/capabilities/v1beta2"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
@@ -13,12 +13,12 @@ import (
 
 type backendUsageData struct {
 	item threescaleapi.BackendAPIUsageItem
-	spec capabilitiesv1beta1.BackendUsageSpec
+	spec capabilitiesv1beta2.BackendUsageSpec
 }
 
 type newBackendUsageData struct {
 	item *controllerhelper.BackendAPIEntity
-	spec capabilitiesv1beta1.BackendUsageSpec
+	spec capabilitiesv1beta2.BackendUsageSpec
 }
 
 func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
