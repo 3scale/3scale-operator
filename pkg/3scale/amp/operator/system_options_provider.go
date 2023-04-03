@@ -37,7 +37,9 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.options.ApicastRegistryURL = *s.apimanager.Spec.Apicast.RegistryURL
 	s.options.TenantName = *s.apimanager.Spec.TenantName
 	s.options.WildcardDomain = s.apimanager.Spec.WildcardDomain
-	s.options.PriorityClassName = *s.apimanager.Spec.PriorityClassNameSystemPod
+	s.options.PriorityClassNameApp = *s.apimanager.Spec.PriorityClassNameSystemAppPod
+	s.options.PriorityClassNameSidekiq = *s.apimanager.Spec.PriorityClassNameSystemSidekiqPod
+	s.options.PriorityClassNameSphinx = *s.apimanager.Spec.PriorityClassNameSystemSphinxPod
 
 	s.options.CommonLabels = s.commonLabels()
 	s.options.CommonAppLabels = s.commonAppLabels()

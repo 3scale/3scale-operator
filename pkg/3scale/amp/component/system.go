@@ -2,7 +2,6 @@ package component
 
 import (
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"sort"
 	"strconv"
 
@@ -11,6 +10,8 @@ import (
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 const (
@@ -737,7 +738,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
-					PriorityClassName:  system.Options.PriorityClassName,
+					PriorityClassName:  system.Options.PriorityClassNameApp,
 				}},
 		},
 	}
@@ -888,6 +889,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
+					PriorityClassName:  system.Options.PriorityClassNameSidekiq,
 				}},
 		},
 	}
