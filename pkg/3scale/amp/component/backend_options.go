@@ -21,7 +21,6 @@ type BackendOptions struct {
 	SystemBackendPassword        string            `validate:"required"`
 	TenantName                   string            `validate:"required"`
 	WildcardDomain               string            `validate:"required"`
-	PriorityClassName            string            `validate:"required"`
 	ListenerAffinity             *v1.Affinity      `validate:"-"`
 	ListenerTolerations          []v1.Toleration   `validate:"-"`
 	WorkerAffinity               *v1.Affinity      `validate:"-"`
@@ -37,6 +36,10 @@ type BackendOptions struct {
 	CronPodTemplateLabels        map[string]string `validate:"required"`
 	WorkerMetrics                bool
 	ListenerMetrics              bool
+
+	PriorityClassNameListener string `validate:"required"`
+	PriorityClassNameWorker   string `validate:"required"`
+	PriorityClassNameCron     string `validate:"required"`
 
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions

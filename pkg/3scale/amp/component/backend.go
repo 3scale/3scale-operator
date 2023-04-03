@@ -131,7 +131,7 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
-					PriorityClassName:  backend.Options.PriorityClassName}},
+					PriorityClassName:  backend.Options.PriorityClassNameWorker}},
 		},
 	}
 }
@@ -206,7 +206,7 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
-					PriorityClassName:  backend.Options.PriorityClassName,
+					PriorityClassName:  backend.Options.PriorityClassNameCron,
 				}},
 		},
 	}
@@ -296,7 +296,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
-					PriorityClassName:  backend.Options.PriorityClassName,
+					PriorityClassName:  backend.Options.PriorityClassNameListener,
 				}},
 		},
 	}
