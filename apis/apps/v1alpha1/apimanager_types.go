@@ -84,8 +84,15 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+
 	// +optional
-	PriorityClassNameSystemPod *string `json:"priorityClassNameSystemPod,omitempty"`
+	PriorityClassNameSystemAppPod *string `json:"priorityClassNameSystemAppPod,omitempty"`
+	// +optional
+	PriorityClassNameSystemSidekiqPod *string `json:"priorityClassNameSystemSidekiqPod,omitempty"`
+	// +optional
+	PriorityClassNameSystemSphinxPod *string `json:"PriorityClassNameSystemSphinxPod,omitempty"`
+
+	//TODO per POD:
 	// +optional
 	PriorityClassNameBackendPod *string `json:"priorityClassNameBackendPod,omitempty"`
 	// +optional

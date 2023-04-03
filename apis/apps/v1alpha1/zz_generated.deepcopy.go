@@ -441,8 +441,18 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 		*out = new(MonitoringSpec)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.PriorityClassNameSystemPod != nil {
-		in, out := &in.PriorityClassNameSystemPod, &out.PriorityClassNameSystemPod
+	if in.PriorityClassNameSystemAppPod != nil {
+		in, out := &in.PriorityClassNameSystemAppPod, &out.PriorityClassNameSystemAppPod
+		*out = new(string)
+		**out = **in
+	}
+	if in.PriorityClassNameSystemSidekiqPod != nil {
+		in, out := &in.PriorityClassNameSystemSidekiqPod, &out.PriorityClassNameSystemSidekiqPod
+		*out = new(string)
+		**out = **in
+	}
+	if in.PriorityClassNameSystemSphinxPod != nil {
+		in, out := &in.PriorityClassNameSystemSphinxPod, &out.PriorityClassNameSystemSphinxPod
 		*out = new(string)
 		**out = **in
 	}

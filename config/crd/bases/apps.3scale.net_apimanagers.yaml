@@ -6239,7 +6239,11 @@ spec:
                   enabled:
                     type: boolean
                 type: object
-              priorityClassName:
+              priorityClassNameApicastPod:
+                type: string
+              priorityClassNameBackendPod:
+                type: string
+              priorityClassNameSystemPod:
                 type: string
               resourceRequirementsEnabled:
                 type: boolean
