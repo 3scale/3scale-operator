@@ -66,25 +66,22 @@ type SystemOptions struct {
 	AppReplicas     int32
 	SidekiqReplicas int32
 
-	AdminAccessToken         string  `validate:"required"`
-	AdminPassword            string  `validate:"required"`
-	AdminUsername            string  `validate:"required"`
-	ApicastAccessToken       string  `validate:"required"`
-	ApicastRegistryURL       string  `validate:"required"`
-	MasterAccessToken        string  `validate:"required"`
-	MasterName               string  `validate:"required"`
-	MasterUsername           string  `validate:"required"`
-	MasterPassword           string  `validate:"required"`
-	RecaptchaPublicKey       *string `validate:"required"`
-	RecaptchaPrivateKey      *string `validate:"required"`
-	AppSecretKeyBase         string  `validate:"required"`
-	BackendSharedSecret      string  `validate:"required"`
-	TenantName               string  `validate:"required"`
-	WildcardDomain           string  `validate:"required"`
-	PriorityClassNameApp     string  `validate:"required"`
-	PriorityClassNameSidekiq string  `validate:"required"`
-	PriorityClassNameSphinx  string  `validate:"required"`
-	SmtpSecretOptions        SystemSMTPSecretOptions
+	AdminAccessToken    string  `validate:"required"`
+	AdminPassword       string  `validate:"required"`
+	AdminUsername       string  `validate:"required"`
+	ApicastAccessToken  string  `validate:"required"`
+	ApicastRegistryURL  string  `validate:"required"`
+	MasterAccessToken   string  `validate:"required"`
+	MasterName          string  `validate:"required"`
+	MasterUsername      string  `validate:"required"`
+	MasterPassword      string  `validate:"required"`
+	RecaptchaPublicKey  *string `validate:"required"`
+	RecaptchaPrivateKey *string `validate:"required"`
+	AppSecretKeyBase    string  `validate:"required"`
+	BackendSharedSecret string  `validate:"required"`
+	TenantName          string  `validate:"required"`
+	WildcardDomain      string  `validate:"required"`
+	SmtpSecretOptions   SystemSMTPSecretOptions
 
 	AppAffinity        *v1.Affinity    `validate:"-"`
 	AppTolerations     []v1.Toleration `validate:"-"`

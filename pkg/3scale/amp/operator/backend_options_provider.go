@@ -34,7 +34,10 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.backendOptions.TenantName = *o.apimanager.Spec.TenantName
 	o.backendOptions.WildcardDomain = o.apimanager.Spec.WildcardDomain
 	o.backendOptions.ImageTag = product.ThreescaleRelease
-	o.backendOptions.PriorityClassName = *o.apimanager.Spec.PriorityClassNameBackendPod
+
+	o.backendOptions.PriorityClassNameListener = o.apimanager.Spec.PriorityClassesNames.BackendListener
+	o.backendOptions.PriorityClassNameWorker = o.apimanager.Spec.PriorityClassesNames.BackendWorker
+	o.backendOptions.PriorityClassNameCron = o.apimanager.Spec.PriorityClassesNames.BackendCron
 
 	err := o.setSecretBasedOptions()
 	if err != nil {
