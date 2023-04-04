@@ -57,6 +57,7 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.setNodeAffinityAndTolerationsOptions()
 
 	r.setPersistentVolumeClaimOptions()
+	r.setPriorityClassNames()
 
 	// Should the operator be reading redis secrets?
 	// When HA is disabled, do we support external redis?
@@ -241,4 +242,10 @@ func (r *RedisOptionsProvider) backendRedisPodTemplateLabels() map[string]string
 	labels["deploymentConfig"] = "backend-redis"
 
 	return labels
+}
+
+func (r *RedisOptionsProvider) setPriorityClassNames() {
+	if r.apimanager.Spec.System != nil && r.apimanager.Spec.System.RedisPriotiryClassName != nil {
+		r.options.PriorityClassName = *r.apimanager.Spec.System.RedisPriotiryClassName
+	}
 }

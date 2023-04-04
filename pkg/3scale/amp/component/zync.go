@@ -271,6 +271,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 							Resources: zync.Options.ContainerResourceRequirements,
 						},
 					},
+					PriorityClassName: zync.Options.ZyncPriorityClassName,
 				},
 			},
 		},
@@ -393,6 +394,7 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 							Env:       zync.commonZyncEnvVars(),
 						},
 					},
+					PriorityClassName: zync.Options.ZyncQuePriorityClassName,
 				},
 			},
 		},
@@ -498,6 +500,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources: zync.Options.DatabaseContainerResourceRequirements,
 						},
 					},
+					PriorityClassName: zync.Options.ZyncDatabasePriorityClassName,
 					Volumes: []v1.Volume{
 						v1.Volume{
 							Name: "zync-database-data",

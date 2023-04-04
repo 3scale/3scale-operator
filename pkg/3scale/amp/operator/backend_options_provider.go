@@ -35,10 +35,6 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.backendOptions.WildcardDomain = o.apimanager.Spec.WildcardDomain
 	o.backendOptions.ImageTag = product.ThreescaleRelease
 
-	o.backendOptions.PriorityClassNameListener = o.apimanager.Spec.PriorityClassesNames.BackendListener
-	o.backendOptions.PriorityClassNameWorker = o.apimanager.Spec.PriorityClassesNames.BackendWorker
-	o.backendOptions.PriorityClassNameCron = o.apimanager.Spec.PriorityClassesNames.BackendCron
-
 	err := o.setSecretBasedOptions()
 	if err != nil {
 		return nil, fmt.Errorf("GetBackendOptions reading secret options: %w", err)
@@ -47,6 +43,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.setResourceRequirementsOptions()
 	o.setNodeAffinityAndTolerationsOptions()
 	o.setReplicas()
+	o.setPriorityClassNames()
 
 	o.backendOptions.CommonLabels = o.commonLabels()
 	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
@@ -221,4 +218,22 @@ func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels() map[string]stri
 	labels["deploymentConfig"] = "backend-cron"
 
 	return labels
+}
+
+func (o *OperatorBackendOptionsProvider) setPriorityClassNames() {
+
+	//o.backendOptions.PriorityClassNameListener = PodPrioritySystemNodeCritical
+	if o.apimanager.Spec.Backend.ListenerSpec.PriotiryClassName != nil {
+		o.backendOptions.PriorityClassNameListener = *o.apimanager.Spec.Backend.ListenerSpec.PriotiryClassName
+	}
+
+	//o.backendOptions.PriorityClassNameWorker = PodPrioritySystemNodeCritical
+	if o.apimanager.Spec.Backend.WorkerSpec.PriotiryClassName != nil {
+		o.backendOptions.PriorityClassNameWorker = *o.apimanager.Spec.Backend.WorkerSpec.PriotiryClassName
+	}
+
+	//o.backendOptions.PriorityClassNameCron = PodPrioritySystemNodeCritical
+	if o.apimanager.Spec.Backend.CronSpec.PriotiryClassName != nil {
+		o.backendOptions.PriorityClassNameCron = *o.apimanager.Spec.Backend.CronSpec.PriotiryClassName
+	}
 }

@@ -30,6 +30,7 @@ func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOp
 
 	m.setResourceRequirementsOptions()
 	m.setNodeAffinityAndTolerationsOptions()
+	m.setPriorityClassNames()
 
 	err := m.memcachedOptions.Validate()
 	if err != nil {
@@ -76,4 +77,10 @@ func (m *MemcachedOptionsProvider) podTemplateLabels() map[string]string {
 	labels["deploymentConfig"] = "system-memcache"
 
 	return labels
+}
+
+func (m *MemcachedOptionsProvider) setPriorityClassNames() {
+	if m.apimanager.Spec.System.MemcachedPriotiryClassName != nil {
+		m.memcachedOptions.PriorityClassName = *m.apimanager.Spec.System.MemcachedPriotiryClassName
+	}
 }

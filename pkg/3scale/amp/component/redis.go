@@ -542,6 +542,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy:        v1.PullIfNotPresent,
 						},
 					},
+					PriorityClassName: redis.Options.PriorityClassName,
 				}},
 		},
 	}

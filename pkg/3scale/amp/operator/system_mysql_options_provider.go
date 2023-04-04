@@ -46,6 +46,7 @@ func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOp
 	s.setResourceRequirementsOptions()
 	s.setPersistentVolumeClaimOptions()
 	s.setNodeAffinityAndTolerationsOptions()
+	s.setPriorityClassNames()
 
 	err = s.mysqlOptions.Validate()
 	if err != nil {
@@ -201,4 +202,12 @@ func (s *SystemMysqlOptionsProvider) podTemplateLabels() map[string]string {
 	labels["deploymentConfig"] = "system-mysql"
 
 	return labels
+}
+
+func (s *SystemMysqlOptionsProvider) setPriorityClassNames() {
+	if s.apimanager.Spec.System.DatabaseSpec != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL.PriotiryClassName != nil {
+		s.mysqlOptions.PriorityClassName = *s.apimanager.Spec.System.DatabaseSpec.MySQL.PriotiryClassName
+	}
 }

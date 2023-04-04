@@ -738,7 +738,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
-					PriorityClassName:  system.Options.PriorityClassNameApp,
+					PriorityClassName:  system.Options.AppPriorityClassName,
 				}},
 		},
 	}
@@ -889,7 +889,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					ServiceAccountName: "amp",
-					PriorityClassName:  system.Options.PriorityClassNameSidekiq,
+					PriorityClassName:  system.Options.SideKiqPriorityClassName,
 				}},
 		},
 	}

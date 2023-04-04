@@ -78,8 +78,8 @@ type ApicastOptions struct {
 	StagingAffinity                *v1.Affinity      `validate:"-"`
 	StagingTolerations             []v1.Toleration   `validate:"-"`
 	ProductionWorkers              *int32            `validate:"-"`
-	PriorityClassNameStaging       string            `validate:"required"`
-	PriorityClassNameProduction    string            `validate:"required"`
+	PriorityClassNameStaging       string            `validate:"-"`
+	PriorityClassNameProduction    string            `validate:"-"`
 
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions

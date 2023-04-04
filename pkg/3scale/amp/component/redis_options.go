@@ -41,6 +41,8 @@ type RedisOptions struct {
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
 	SystemRedisNamespace             string
+
+	PriorityClassName string `validate:"-"`
 }
 
 func NewRedisOptions() *RedisOptions {

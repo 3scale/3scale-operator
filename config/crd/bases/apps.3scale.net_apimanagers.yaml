@@ -1087,6 +1087,8 @@ spec:
                               tracer is `jaeger`. If not set, `jaeger` will be used.
                             type: string
                         type: object
+                      priotiryClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -2217,6 +2219,8 @@ spec:
                               tracer is `jaeger`. If not set, `jaeger` will be used.
                             type: string
                         type: object
+                      priotiryClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -3204,6 +3208,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priotiryClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -4183,6 +4189,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priotiryClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -6102,6 +6110,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priotiryClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -6229,12 +6239,6 @@ spec:
                   enabled:
                     type: boolean
                 type: object
-              priorityClassNameApicastPod:
-                type: string
-              priorityClassNameBackendPod:
-                type: string
-              priorityClassNameSystemPod:
-                type: string
               resourceRequirementsEnabled:
                 type: boolean
               system:
@@ -7199,6 +7203,8 @@ spec:
                               More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
+                      priotiryClassName:
+                        type: string
                       providerContainerResources:
                         description: ResourceRequirements describes the compute resource
                           requirements.
@@ -8268,6 +8274,8 @@ spec:
                                   the PersistentVolume backing this claim.
                                 type: string
                             type: object
+                          priotiryClassName:
+                            type: string
                           resources:
                             description: ResourceRequirements describes the compute
                               resource requirements.
@@ -10360,6 +10368,8 @@ spec:
                     type: object
                   memcachedImage:
                     type: string
+                  memcachedPriotiryClassName:
+                    type: string
                   memcachedResources:
                     description: ResourceRequirements describes the compute resource
                       requirements.
@@ -11302,6 +11312,8 @@ spec:
                       storageClassName:
                         type: string
                     type: object
+                  redisPriotiryClassName:
+                    type: string
                   redisResources:
                     description: ResourceRequirements describes the compute resource
                       requirements.
@@ -13275,6 +13287,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priotiryClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -14253,6 +14267,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priotiryClassName:
+                        type: string
                       resources:
                         description: ResourceRequirements describes the compute resource
                           requirements.
@@ -15235,6 +15251,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priotiryClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -16176,6 +16194,8 @@ spec:
                             type: array
                         type: object
                     type: object
+                  databasePriotiryClassName:
+                    type: string
                   databaseResources:
                     description: ResourceRequirements describes the compute resource
                       requirements.
@@ -17151,6 +17171,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priotiryClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer

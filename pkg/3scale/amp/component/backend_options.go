@@ -37,9 +37,9 @@ type BackendOptions struct {
 	WorkerMetrics                bool
 	ListenerMetrics              bool
 
-	PriorityClassNameListener string `validate:"required"`
-	PriorityClassNameWorker   string `validate:"required"`
-	PriorityClassNameCron     string `validate:"required"`
+	PriorityClassNameListener string `validate:"-"`
+	PriorityClassNameWorker   string `validate:"-"`
+	PriorityClassNameCron     string `validate:"-"`
 
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions
