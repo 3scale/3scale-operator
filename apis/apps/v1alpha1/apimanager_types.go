@@ -84,8 +84,6 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
-	// +optional
-	PriorityClassesNames *PriorityClassesNamesSpec `json:"priorityClassesNames,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -342,6 +340,8 @@ type BackendSpec struct {
 	RedisTolerations []v1.Toleration `json:"redisTolerations,omitempty"`
 	// +optional
 	RedisResources *v1.ResourceRequirements `json:"redisResources,omitempty"`
+	// +optional
+	RedisPriorityClassName *string `json:"redisPriorityClassName,omitempty"`
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
@@ -711,27 +711,6 @@ type APIcastOpenTracingSpec struct {
 	// that is used if TracingConfig is not specified.
 	// +optional
 	TracingConfigSecretRef *v1.LocalObjectReference `json:"tracingConfigSecretRef,omitempty"`
-}
-
-type PriorityClassesNamesSpec struct {
-	// +optional
-	SystemApp string `json:"systemApp,omitempty"`
-	// +optional
-	SystemSidekiq string `json:"systemSidekiq,omitempty"`
-	// +optional
-	SystemSphinx string `json:"systemSphinx,omitempty"`
-
-	// +optional
-	BackendListener string `json:"backendListener,omitempty"`
-	// +optional
-	BackendWorker string `json:"backendWorker,omitempty"`
-	// +optional
-	BackendCron string `json:"backendCron,omitempty"`
-
-	// +optional
-	ApicastStaging string `json:"apicastStaging,omitempty"`
-	// +optional
-	ApicastProduction string `json:"apicastProduction,omitempty"`
 }
 
 // SetDefaults sets the default values for the APIManager spec and returns true if the spec was changed

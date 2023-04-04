@@ -2838,6 +2838,8 @@ spec:
                       storageClassName:
                         type: string
                     type: object
+                  redisPriorityClassName:
+                    type: string
                   redisResources:
                     description: ResourceRequirements describes the compute resource requirements.
                     properties:
@@ -6734,6 +6736,11 @@ spec:
                             description: VolumeName is the binding reference to the PersistentVolume backing this claim.
                             type: string
                         type: object
+                      priorityClassName:
+                        type: string
+                      replicas:
+                        format: int64
+                        type: integer
                       resources:
                         description: ResourceRequirements describes the compute resource requirements.
                         properties:
@@ -7780,6 +7787,9 @@ spec:
                         type: object
                       priorityClassName:
                         type: string
+                      replicas:
+                        format: int64
+                        type: integer
                       resources:
                         description: ResourceRequirements describes the compute resource requirements.
                         properties:
