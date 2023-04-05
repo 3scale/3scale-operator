@@ -205,7 +205,7 @@ metadata:
             "name": "product-sample"
           },
           "spec": {
-            "foo": "bar"
+            "name": "OperatedProduct 1"
           }
         }
       ]
@@ -1038,9 +1038,9 @@ spec:
         serviceAccountName: 3scale-operator
     strategy: deployment
   installModes:
-  - supported: true
+  - supported: false
     type: OwnNamespace
-  - supported: true
+  - supported: false
     type: SingleNamespace
   - supported: false
     type: MultiNamespace
@@ -1065,3 +1065,16 @@ spec:
   provider:
     name: Red Hat
   version: 0.0.1
+  webhookdefinitions:
+    - admissionReviewVersions:
+        - v1beta1
+        - v1beta2
+      containerPort: 443
+      conversionCRDs:
+        - products.capabilities.3scale.net
+      deploymentName: threescale-operator-controller-manager-v2
+      generateName: cproducts.capabilities.3scale.net
+      sideEffects: None
+      targetPort: 9443
+      type: ConversionWebhook
+      webhookPath: /convert

@@ -3,5 +3,4 @@ kind: Product
 metadata:
   name: product-sample
 spec:
-  # Add fields here
-  foo: bar
+  name: "OperatedProduct 1"
