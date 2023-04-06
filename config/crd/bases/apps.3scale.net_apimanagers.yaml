@@ -13246,6 +13246,32 @@ spec:
                         type: object
                       image:
                         type: string
+                      persistentVolumeClaim:
+                        properties:
+                          resources:
+                            description: Resources represents the minimum resources
+                              the volume should have. Ignored when VolumeName field
+                              is set
+                            properties:
+                              requests:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                description: 'Storage Resource requests to be used
+                                  on the PersistentVolumeClaim. To learn more about
+                                  resource requests see: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            required:
+                            - requests
+                            type: object
+                          storageClassName:
+                            type: string
+                          volumeName:
+                            description: VolumeName is the binding reference to the
+                              PersistentVolume backing this claim.
+                            type: string
+                        type: object
                       resources:
                         description: ResourceRequirements describes the compute resource
                           requirements.

@@ -46,8 +46,6 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.options.ProviderUILabels = s.providerUILabels()
 	s.options.MasterUILabels = s.masterUILabels()
 	s.options.DeveloperUILabels = s.developerUILabels()
-	s.options.SphinxLabels = s.sphinxLabels()
-	s.options.SphinxPodTemplateLabels = s.sphinxPodTemplateLabels()
 	s.options.MemcachedLabels = s.memcachedLabels()
 	s.options.SMTPLabels = s.smtpLabels()
 
@@ -393,13 +391,11 @@ func (s *SystemOptionsProvider) setResourceRequirementsOptions() {
 		s.options.AppProviderContainerResourceRequirements = component.DefaultAppProviderContainerResourceRequirements()
 		s.options.AppDeveloperContainerResourceRequirements = component.DefaultAppDeveloperContainerResourceRequirements()
 		s.options.SidekiqContainerResourceRequirements = component.DefaultSidekiqContainerResourceRequirements()
-		s.options.SphinxContainerResourceRequirements = component.DefaultSphinxContainerResourceRequirements()
 	} else {
 		s.options.AppMasterContainerResourceRequirements = &v1.ResourceRequirements{}
 		s.options.AppProviderContainerResourceRequirements = &v1.ResourceRequirements{}
 		s.options.AppDeveloperContainerResourceRequirements = &v1.ResourceRequirements{}
 		s.options.SidekiqContainerResourceRequirements = &v1.ResourceRequirements{}
-		s.options.SphinxContainerResourceRequirements = &v1.ResourceRequirements{}
 	}
 
 	// DeploymentConfig-level ResourceRequirements CR fields have priority over
@@ -417,9 +413,6 @@ func (s *SystemOptionsProvider) setResourceRequirementsOptions() {
 	if s.apimanager.Spec.System.SidekiqSpec.Resources != nil {
 		s.options.SidekiqContainerResourceRequirements = s.apimanager.Spec.System.SidekiqSpec.Resources
 	}
-	if s.apimanager.Spec.System.SphinxSpec.Resources != nil {
-		s.options.SphinxContainerResourceRequirements = s.apimanager.Spec.System.SphinxSpec.Resources
-	}
 }
 
 func (s *SystemOptionsProvider) setNodeAffinityAndTolerationsOptions() {
@@ -427,8 +420,6 @@ func (s *SystemOptionsProvider) setNodeAffinityAndTolerationsOptions() {
 	s.options.AppTolerations = s.apimanager.Spec.System.AppSpec.Tolerations
 	s.options.SidekiqAffinity = s.apimanager.Spec.System.SidekiqSpec.Affinity
 	s.options.SidekiqTolerations = s.apimanager.Spec.System.SidekiqSpec.Tolerations
-	s.options.SphinxAffinity = s.apimanager.Spec.System.SphinxSpec.Affinity
-	s.options.SphinxTolerations = s.apimanager.Spec.System.SphinxSpec.Tolerations
 }
 
 func (s *SystemOptionsProvider) setFileStorageOptions() error {
@@ -617,12 +608,6 @@ func (s *SystemOptionsProvider) developerUILabels() map[string]string {
 	return labels
 }
 
-func (s *SystemOptionsProvider) sphinxLabels() map[string]string {
-	labels := s.commonLabels()
-	labels["threescale_component_element"] = "sphinx"
-	return labels
-}
-
 func (s *SystemOptionsProvider) memcachedLabels() map[string]string {
 	labels := s.commonLabels()
 	labels["threescale_component_element"] = "memcache"
@@ -632,17 +617,5 @@ func (s *SystemOptionsProvider) memcachedLabels() map[string]string {
 func (s *SystemOptionsProvider) smtpLabels() map[string]string {
 	labels := s.commonLabels()
 	labels["threescale_component_element"] = "smtp"
-	return labels
-}
-
-func (s *SystemOptionsProvider) sphinxPodTemplateLabels() map[string]string {
-	labels := helper.MeteringLabels("system-sphinx", helper.ApplicationType)
-
-	for k, v := range s.sphinxLabels() {
-		labels[k] = v
-	}
-
-	labels["deploymentConfig"] = "system-sphinx"
-
 	return labels
 }

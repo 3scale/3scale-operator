@@ -59,7 +59,6 @@ type SystemOptions struct {
 	AppProviderContainerResourceRequirements  *v1.ResourceRequirements `validate:"required"`
 	AppDeveloperContainerResourceRequirements *v1.ResourceRequirements `validate:"required"`
 	SidekiqContainerResourceRequirements      *v1.ResourceRequirements `validate:"required"`
-	SphinxContainerResourceRequirements       *v1.ResourceRequirements `validate:"required"`
 
 	S3FileStorageOptions  *S3FileStorageOptions  `validate:"required_without=PvcFileStorageOptions"`
 	PvcFileStorageOptions *PVCFileStorageOptions `validate:"required_without=S3FileStorageOptions"`
@@ -88,8 +87,6 @@ type SystemOptions struct {
 	AppTolerations     []v1.Toleration `validate:"-"`
 	SidekiqAffinity    *v1.Affinity    `validate:"-"`
 	SidekiqTolerations []v1.Toleration `validate:"-"`
-	SphinxAffinity     *v1.Affinity    `validate:"-"`
-	SphinxTolerations  []v1.Toleration `validate:"-"`
 
 	CommonLabels             map[string]string `validate:"required"`
 	CommonAppLabels          map[string]string `validate:"required"`
@@ -99,8 +96,6 @@ type SystemOptions struct {
 	ProviderUILabels         map[string]string `validate:"required"`
 	MasterUILabels           map[string]string `validate:"required"`
 	DeveloperUILabels        map[string]string `validate:"required"`
-	SphinxLabels             map[string]string `validate:"required"`
-	SphinxPodTemplateLabels  map[string]string `validate:"required"`
 	MemcachedLabels          map[string]string `validate:"required"`
 	SMTPLabels               map[string]string `validate:"required"`
 	SideKiqMetrics           bool
@@ -280,19 +275,6 @@ func DefaultSidekiqContainerResourceRequirements() *v1.ResourceRequirements {
 		Requests: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("100m"),
 			v1.ResourceMemory: resource.MustParse("500Mi"),
-		},
-	}
-}
-
-func DefaultSphinxContainerResourceRequirements() *v1.ResourceRequirements {
-	return &v1.ResourceRequirements{
-		Limits: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("1000m"),
-			v1.ResourceMemory: resource.MustParse("512Mi"),
-		},
-		Requests: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("80m"),
-			v1.ResourceMemory: resource.MustParse("250Mi"),
 		},
 	}
 }

@@ -457,6 +457,18 @@ type SystemSidekiqSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+type SystemSphinxPVCSpec struct {
+	// +optional
+	StorageClassName *string `json:"storageClassName,omitempty"`
+	// Resources represents the minimum resources the volume should have.
+	// Ignored when VolumeName field is set
+	// +optional
+	Resources *PersistentVolumeClaimResources `json:"resources,omitempty"`
+	// VolumeName is the binding reference to the PersistentVolume backing this claim.
+	// +optional
+	VolumeName *string `json:"volumeName,omitempty"`
+}
+
 type SystemSphinxSpec struct {
 	// +optional
 	Image *string `json:"image,omitempty"`
@@ -466,6 +478,8 @@ type SystemSphinxSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PVC *SystemSphinxPVCSpec `json:"persistentVolumeClaim,omitempty"`
 }
 
 type SystemFileStorageSpec struct {
