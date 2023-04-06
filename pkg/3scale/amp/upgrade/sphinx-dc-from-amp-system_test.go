@@ -6,7 +6,6 @@ import (
 	"time"
 
 	appsv1 "github.com/openshift/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,12 +42,10 @@ func TestSphinxFromAMPSystemImage(t *testing.T) {
 	})
 
 	t.Run("Searchd DC found", func(subT *testing.T) {
-		opts := &component.SystemOptions{
-			SphinxContainerResourceRequirements: &corev1.ResourceRequirements{},
-		}
-		system := component.NewSystem(opts)
+		opts := &component.SystemSphinxOptions{}
+		sphinx := component.NewSystemSphinx(opts)
 
-		newSphinxDC := system.SphinxDeploymentConfig()
+		newSphinxDC := sphinx.DeploymentConfig()
 		newSphinxDC.Namespace = namespace
 		sphinxDCKey := client.ObjectKeyFromObject(newSphinxDC)
 
@@ -72,10 +69,10 @@ func TestSphinxFromAMPSystemImage(t *testing.T) {
 	})
 
 	t.Run("Old Sphinx DC found", func(subT *testing.T) {
-		opts := &component.SystemOptions{
-			SphinxContainerResourceRequirements: &corev1.ResourceRequirements{},
-		}
-		newSphinxDC := component.NewSystem(opts).SphinxDeploymentConfig()
+		opts := &component.SystemSphinxOptions{}
+		sphinx := component.NewSystemSphinx(opts)
+
+		newSphinxDC := sphinx.DeploymentConfig()
 		newSphinxDC.Namespace = namespace
 		sphinxDCKey := client.ObjectKeyFromObject(newSphinxDC)
 
@@ -105,10 +102,10 @@ func TestSphinxFromAMPSystemImage(t *testing.T) {
 	})
 
 	t.Run("Old Sphinx DC in deleting state found", func(subT *testing.T) {
-		opts := &component.SystemOptions{
-			SphinxContainerResourceRequirements: &corev1.ResourceRequirements{},
-		}
-		newSphinxDC := component.NewSystem(opts).SphinxDeploymentConfig()
+		opts := &component.SystemSphinxOptions{}
+		sphinx := component.NewSystemSphinx(opts)
+
+		newSphinxDC := sphinx.DeploymentConfig()
 		newSphinxDC.Namespace = namespace
 		sphinxDCKey := client.ObjectKeyFromObject(newSphinxDC)
 
