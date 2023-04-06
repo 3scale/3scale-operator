@@ -404,6 +404,15 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
 | Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
 | Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| PVC | `persistentVolumeClaim` | [SystemSphinxPVCSpec](#SystemSphinxPVCSpec) | No | nil | PersistentVolumeClaim spec for the System Sphinx |
+
+### SystemSphinxPVCSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. This parameter is not updateable when the underlying PV is not resizable. |
+| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
 
 ### ZyncSpec
 
