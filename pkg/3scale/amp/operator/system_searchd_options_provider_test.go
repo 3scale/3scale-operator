@@ -18,7 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func testSphinxBasicApimanager() *appsv1alpha1.APIManager {
+func testSearchdBasicApimanager() *appsv1alpha1.APIManager {
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      apimanagerName,
@@ -39,42 +39,42 @@ func testSphinxBasicApimanager() *appsv1alpha1.APIManager {
 	return apimanager
 }
 
-func testSystemSphinxLabels() map[string]string {
+func testSystemSearchdLabels() map[string]string {
 	return map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "system",
-		"threescale_component_element": "sphinx",
+		"threescale_component_element": "searchd",
 	}
 }
 
-func testSystemSphinxPodTemplateLabels() map[string]string {
+func testSystemSearchdPodTemplateLabels() map[string]string {
 	labels := map[string]string{
 		"app":                          appLabel,
 		"threescale_component":         "system",
-		"threescale_component_element": "sphinx",
-		"deploymentConfig":             "system-sphinx",
+		"threescale_component_element": "searchd",
+		"deploymentConfig":             "system-searchd",
 	}
-	addExpectedMeteringLabels(labels, "system-sphinx", helper.ApplicationType)
+	addExpectedMeteringLabels(labels, "system-searchd", helper.ApplicationType)
 
 	return labels
 }
-func testSystemSphinxPVCOptions() component.SphinxPVCOptions {
-	return component.SphinxPVCOptions{
+func testSystemSearchdPVCOptions() component.SearchdPVCOptions {
+	return component.SearchdPVCOptions{
 		StorageClass:    nil,
 		VolumeName:      "",
 		StorageRequests: resource.MustParse("1Gi"),
 	}
 }
 
-func testSystemSphinxAffinity() *v1.Affinity {
-	return getTestAffinity("system-sphinx")
+func testSystemSearchdAffinity() *v1.Affinity {
+	return getTestAffinity("system-searchd")
 }
 
-func testSystemSphinxTolerations() []v1.Toleration {
-	return getTestTolerations("system-sphinx")
+func testSystemSearchdTolerations() []v1.Toleration {
+	return getTestTolerations("system-searchd")
 }
 
-func testSystemSphinxCustomResourceRequirements() *v1.ResourceRequirements {
+func testSystemSearchdCustomResourceRequirements() *v1.ResourceRequirements {
 	return &v1.ResourceRequirements{
 		Limits: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("123m"),
@@ -87,61 +87,61 @@ func testSystemSphinxCustomResourceRequirements() *v1.ResourceRequirements {
 	}
 }
 
-func testDefaultExpectedSystemSphinxOptions() *component.SystemSphinxOptions {
-	return &component.SystemSphinxOptions{
+func testDefaultExpectedSystemSearchdOptions() *component.SystemSearchdOptions {
+	return &component.SystemSearchdOptions{
 		ImageTag:                      product.ThreescaleRelease,
-		ContainerResourceRequirements: component.DefaultSphinxContainerResourceRequirements(),
+		ContainerResourceRequirements: component.DefaultSearchdContainerResourceRequirements(),
 		Affinity:                      nil,
 		Tolerations:                   nil,
-		Labels:                        testSystemSphinxLabels(),
-		PodTemplateLabels:             testSystemSphinxPodTemplateLabels(),
-		PVCOptions:                    testSystemSphinxPVCOptions(),
+		Labels:                        testSystemSearchdLabels(),
+		PodTemplateLabels:             testSystemSearchdPodTemplateLabels(),
+		PVCOptions:                    testSystemSearchdPVCOptions(),
 	}
 }
 
-func TestGetSystemSphinxOptionsProvider(t *testing.T) {
+func TestGetSystemSearchdOptionsProvider(t *testing.T) {
 	cases := []struct {
 		testName               string
 		apimanagerFactory      func() *appsv1alpha1.APIManager
-		expectedOptionsFactory func() *component.SystemSphinxOptions
+		expectedOptionsFactory func() *component.SystemSearchdOptions
 	}{
-		{"Default", testSphinxBasicApimanager, testDefaultExpectedSystemSphinxOptions},
+		{"Default", testSearchdBasicApimanager, testDefaultExpectedSystemSearchdOptions},
 		{"ResourceRequirementsToTrue",
 			func() *appsv1alpha1.APIManager {
-				apimanager := testSphinxBasicApimanager()
+				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &[]bool{true}[0]
 				return apimanager
-			}, testDefaultExpectedSystemSphinxOptions,
+			}, testDefaultExpectedSystemSearchdOptions,
 		},
 		{"ResourceRequirementsToFalse",
 			func() *appsv1alpha1.APIManager {
-				apimanager := testSphinxBasicApimanager()
+				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &[]bool{false}[0]
 				return apimanager
 			},
-			func() *component.SystemSphinxOptions {
-				expectedOpts := testDefaultExpectedSystemSphinxOptions()
+			func() *component.SystemSearchdOptions {
+				expectedOpts := testDefaultExpectedSystemSearchdOptions()
 				expectedOpts.ContainerResourceRequirements = corev1.ResourceRequirements{}
 				return expectedOpts
 			},
 		},
 		{"WithCustomResourceRequirementsAndGlobalResourceRequirementsDisabled",
 			func() *appsv1alpha1.APIManager {
-				apimanager := testSphinxBasicApimanager()
+				apimanager := testSearchdBasicApimanager()
 				apimanager.Spec.ResourceRequirementsEnabled = &[]bool{false}[0]
-				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
+				apimanager.Spec.System.SearchdSpec.Resources = testSystemSearchdCustomResourceRequirements()
 				return apimanager
 			},
-			func() *component.SystemSphinxOptions {
-				expectedOpts := testDefaultExpectedSystemSphinxOptions()
-				expectedOpts.ContainerResourceRequirements = *testSystemSphinxCustomResourceRequirements()
+			func() *component.SystemSearchdOptions {
+				expectedOpts := testDefaultExpectedSystemSearchdOptions()
+				expectedOpts.ContainerResourceRequirements = *testSystemSearchdCustomResourceRequirements()
 				return expectedOpts
 			},
 		},
 		{"WithPVC",
 			func() *appsv1alpha1.APIManager {
-				apimanager := testSphinxBasicApimanager()
-				apimanager.Spec.System.SphinxSpec.PVC = &appsv1alpha1.SystemSphinxPVCSpec{
+				apimanager := testSearchdBasicApimanager()
+				apimanager.Spec.System.SearchdSpec.PVC = &appsv1alpha1.PVCGenericSpec{
 					StorageClassName: &[]string{"mystorageclassname"}[0],
 					Resources: &appsv1alpha1.PersistentVolumeClaimResources{
 						Requests: resource.MustParse("666Mi"),
@@ -150,9 +150,9 @@ func TestGetSystemSphinxOptionsProvider(t *testing.T) {
 				}
 				return apimanager
 			},
-			func() *component.SystemSphinxOptions {
-				expectedOpts := testDefaultExpectedSystemSphinxOptions()
-				expectedOpts.PVCOptions = component.SphinxPVCOptions{
+			func() *component.SystemSearchdOptions {
+				expectedOpts := testDefaultExpectedSystemSearchdOptions()
+				expectedOpts.PVCOptions = component.SearchdPVCOptions{
 					StorageClass:    &[]string{"mystorageclassname"}[0],
 					StorageRequests: resource.MustParse("666Mi"),
 					VolumeName:      "myvolume",
@@ -162,25 +162,25 @@ func TestGetSystemSphinxOptionsProvider(t *testing.T) {
 		},
 		{"WithAffinity",
 			func() *appsv1alpha1.APIManager {
-				apimanager := testSphinxBasicApimanager()
-				apimanager.Spec.System.SphinxSpec.Affinity = testSystemSphinxAffinity()
+				apimanager := testSearchdBasicApimanager()
+				apimanager.Spec.System.SearchdSpec.Affinity = testSystemSearchdAffinity()
 				return apimanager
 			},
-			func() *component.SystemSphinxOptions {
-				expectedOpts := testDefaultExpectedSystemSphinxOptions()
-				expectedOpts.Affinity = testSystemSphinxAffinity()
+			func() *component.SystemSearchdOptions {
+				expectedOpts := testDefaultExpectedSystemSearchdOptions()
+				expectedOpts.Affinity = testSystemSearchdAffinity()
 				return expectedOpts
 			},
 		},
 		{"WithTolerations",
 			func() *appsv1alpha1.APIManager {
-				apimanager := testSphinxBasicApimanager()
-				apimanager.Spec.System.SphinxSpec.Tolerations = testSystemSphinxTolerations()
+				apimanager := testSearchdBasicApimanager()
+				apimanager.Spec.System.SearchdSpec.Tolerations = testSystemSearchdTolerations()
 				return apimanager
 			},
-			func() *component.SystemSphinxOptions {
-				expectedOpts := testDefaultExpectedSystemSphinxOptions()
-				expectedOpts.Tolerations = testSystemSphinxTolerations()
+			func() *component.SystemSearchdOptions {
+				expectedOpts := testDefaultExpectedSystemSearchdOptions()
+				expectedOpts.Tolerations = testSystemSearchdTolerations()
 				return expectedOpts
 			},
 		},
@@ -188,7 +188,7 @@ func TestGetSystemSphinxOptionsProvider(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			optsProvider := NewSystemSphinxOptionsProvider(tc.apimanagerFactory())
+			optsProvider := NewSystemSearchdOptionsProvider(tc.apimanagerFactory())
 			opts, err := optsProvider.GetOptions()
 			if err != nil {
 				subT.Fatal(err)

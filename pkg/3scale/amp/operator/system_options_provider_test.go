@@ -498,7 +498,7 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				tmp := "mystorageclassname"
 				tmpVolumeName := "myvolume"
-				apimanager.Spec.System.FileStorageSpec.PVC = &appsv1alpha1.SystemPVCSpec{
+				apimanager.Spec.System.FileStorageSpec.PVC = &appsv1alpha1.PVCGenericSpec{
 					StorageClassName: &tmp,
 					Resources: &appsv1alpha1.PersistentVolumeClaimResources{
 						Requests: resource.MustParse("456Mi"),

@@ -135,7 +135,7 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
 					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 						MySQL: &appsv1alpha1.SystemMySQLSpec{
-							PersistentVolumeClaimSpec: &appsv1alpha1.SystemMySQLPVCSpec{},
+							PersistentVolumeClaimSpec: &appsv1alpha1.PVCGenericSpec{},
 						},
 					},
 				}
@@ -153,7 +153,7 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
 					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 						MySQL: &appsv1alpha1.SystemMySQLSpec{
-							PersistentVolumeClaimSpec: &appsv1alpha1.SystemMySQLPVCSpec{
+							PersistentVolumeClaimSpec: &appsv1alpha1.PVCGenericSpec{
 								StorageClassName: &customStorageClass,
 								Resources: &appsv1alpha1.PersistentVolumeClaimResources{
 									Requests: resource.MustParse("456Mi"),

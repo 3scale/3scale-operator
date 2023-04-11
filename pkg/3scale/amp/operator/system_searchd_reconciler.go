@@ -1,63 +1,60 @@
 package operator
 
 import (
+	appsv1 "github.com/openshift/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/upgrade"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type SystemSphinxReconciler struct {
+type SystemSearchdReconciler struct {
 	*BaseAPIManagerLogicReconciler
 }
 
-func NewSystemSphinxReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemSphinxReconciler {
-	return &SystemSphinxReconciler{
+func NewSystemSearchdReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *SystemSearchdReconciler {
+	return &SystemSearchdReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 	}
 }
 
-func (r *SystemSphinxReconciler) Reconcile() (reconcile.Result, error) {
-	sphinx, err := SystemSphinx(r.apiManager)
+func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
+	searchd, err := SystemSearchd(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// 3scale 2.13 -> 2.14
+	err = r.upgradeFromSphinx()
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Service
-	err = r.ReconcileService(sphinx.Service(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(searchd.Service(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	sphinxDC := sphinx.DeploymentConfig()
-	dcKey := client.ObjectKey{Name: sphinxDC.Name, Namespace: r.apiManager.GetNamespace()}
-	res, err := upgrade.SphinxFromAMPSystemImage(r.Context(), r.Client(), dcKey, r.Logger())
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if res.Requeue {
-		r.Logger().Info("Upgrading Sphinx DC: requeue")
-		return res, nil
 	}
 
 	// PVC
-	err = r.ReconcilePersistentVolumeClaim(sphinx.PVC(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePersistentVolumeClaim(searchd.PVC(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// DC
-	sphinxDCmutator := reconcilers.DeploymentConfigMutator(
+	searchdDCmutator := reconcilers.DeploymentConfigMutator(
 		reconcilers.DeploymentConfigImageChangeTriggerMutator,
 		reconcilers.DeploymentConfigContainerResourcesMutator,
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 	)
-	err = r.ReconcileDeploymentConfig(sphinxDC, sphinxDCmutator)
+	err = r.ReconcileDeploymentConfig(searchd.DeploymentConfig(), searchdDCmutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -65,11 +62,37 @@ func (r *SystemSphinxReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func SystemSphinx(cr *appsv1alpha1.APIManager) (*component.SystemSphinx, error) {
-	optsProvider := NewSystemSphinxOptionsProvider(cr)
+func (r *SystemSearchdReconciler) upgradeFromSphinx() error {
+	// The upgrade procedure is simply based on:
+	// * Delete "old" DC called system-sphinx (if found)
+	// * The regular reconciling logic will create a new DC called system-searchd
+
+	oldService := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{Name: "system-sphinx", Namespace: r.apiManager.Namespace},
+	}
+	common.TagObjectToDelete(oldService)
+	err := r.ReconcileResource(&v1.Service{}, oldService, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	oldDC := &appsv1.DeploymentConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "system-sphinx", Namespace: r.apiManager.Namespace},
+	}
+	common.TagObjectToDelete(oldDC)
+	err = r.ReconcileResource(&appsv1.DeploymentConfig{}, oldDC, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SystemSearchd(cr *appsv1alpha1.APIManager) (*component.SystemSearchd, error) {
+	optsProvider := NewSystemSearchdOptionsProvider(cr)
 	opts, err := optsProvider.GetOptions()
 	if err != nil {
 		return nil, err
 	}
-	return component.NewSystemSphinx(opts), nil
+	return component.NewSystemSearchd(opts), nil
 }
