@@ -7,7 +7,6 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -193,6 +192,20 @@ func DeploymentConfigPodTemplateLabelsMutator(desired, existing *appsv1.Deployme
 	updated := false
 
 	helper.MergeMapStringString(&updated, &existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+
+	return updated, nil
+}
+
+// DeploymentConfigRemoveDuplicateEnvVarMutator ensures pod env vars not duplicated
+func DeploymentConfigRemoveDuplicateEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	updated := false
+	for idx := range existing.Spec.Template.Spec.Containers {
+		prunedEnvs := helper.RemoveDuplicateEnvVars(existing.Spec.Template.Spec.Containers[idx].Env)
+		if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[idx].Env, prunedEnvs) {
+			existing.Spec.Template.Spec.Containers[idx].Env = prunedEnvs
+			updated = true
+		}
+	}
 
 	return updated, nil
 }
