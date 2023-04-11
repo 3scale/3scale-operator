@@ -13,7 +13,7 @@ const (
 	SystemSphinxDeploymentName = "system-sphinx"
 	SystemSphinxPVCName        = "system-sphinx"
 	SystemSphinxServiceName    = "system-sphinx"
-	SystemSphinxDBVolumeName   = "system-sphinx-databasex"
+	SystemSphinxDBVolumeName   = "system-sphinx-database"
 )
 
 type SystemSphinx struct {
