@@ -236,8 +236,8 @@ func testSystemAPIManagerCreator(appReplicas, sidekiqReplicas *int64) *appsv1alp
 			System: &appsv1alpha1.SystemSpec{
 				AppSpec:         &appsv1alpha1.SystemAppSpec{Replicas: appReplicas},
 				SidekiqSpec:     &appsv1alpha1.SystemSidekiqSpec{Replicas: sidekiqReplicas},
-				SphinxSpec:      &appsv1alpha1.SystemSphinxSpec{},
 				FileStorageSpec: &appsv1alpha1.SystemFileStorageSpec{},
+				SearchdSpec:     &appsv1alpha1.SystemSearchdSpec{},
 			},
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
