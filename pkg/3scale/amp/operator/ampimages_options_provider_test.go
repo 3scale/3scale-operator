@@ -145,7 +145,7 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 			"systemSearchdImage",
 			func() *appsv1alpha1.APIManager {
 				apimanager := basicApimanager()
-				apimanager.Spec.System.SphinxSpec = &appsv1alpha1.SystemSphinxSpec{Image: &tmpSystemSearchdImage}
+				apimanager.Spec.System.SearchdSpec = &appsv1alpha1.SystemSearchdSpec{Image: &tmpSystemSearchdImage}
 				return apimanager
 			},
 			func() *component.AmpImagesOptions {

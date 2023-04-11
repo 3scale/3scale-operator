@@ -25,7 +25,7 @@ func (d *DeploymentsLister) DeploymentNames() []string {
 		SystemMemcachedDeploymentName,
 		SystemAppDeploymentName,
 		SystemSidekiqName,
-		SystemSphinxDeploymentName,
+		SystemSearchdDeploymentName,
 		ZyncName,
 		ZyncQueDeploymentName,
 	)

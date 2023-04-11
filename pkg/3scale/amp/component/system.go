@@ -191,7 +191,7 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("USER_EMAIL", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminEmailFieldName),
 		helper.EnvVarFromSecret("TENANT_NAME", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedTenantNameFieldName),
 
-		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", SystemSphinxServiceName),
+		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", SystemSearchdServiceName),
 		helper.EnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "/tmp/sphinx.conf"),
 
 		helper.EnvVarFromSecret("EVENTS_SHARED_SECRET", SystemSecretSystemEventsHookSecretName, SystemSecretSystemEventsHookPasswordFieldName),

@@ -127,7 +127,7 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
 					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
-							PersistentVolumeClaimSpec: &appsv1alpha1.SystemPostgreSQLPVCSpec{},
+							PersistentVolumeClaimSpec: &appsv1alpha1.PVCGenericSpec{},
 						},
 					},
 				}
@@ -145,7 +145,7 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 				apimanager.Spec.System = &appsv1alpha1.SystemSpec{
 					DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
 						PostgreSQL: &appsv1alpha1.SystemPostgreSQLSpec{
-							PersistentVolumeClaimSpec: &appsv1alpha1.SystemPostgreSQLPVCSpec{
+							PersistentVolumeClaimSpec: &appsv1alpha1.PVCGenericSpec{
 								StorageClassName: &customStorageClass,
 								Resources: &appsv1alpha1.PersistentVolumeClaimResources{
 									Requests: resource.MustParse("456Mi"),

@@ -12,19 +12,19 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
-type SystemSphinxOptionsProvider struct {
+type SystemSearchdOptionsProvider struct {
 	apimanager *appsv1alpha1.APIManager
-	options    *component.SystemSphinxOptions
+	options    *component.SystemSearchdOptions
 }
 
-func NewSystemSphinxOptionsProvider(apimanager *appsv1alpha1.APIManager) *SystemSphinxOptionsProvider {
-	return &SystemSphinxOptionsProvider{
+func NewSystemSearchdOptionsProvider(apimanager *appsv1alpha1.APIManager) *SystemSearchdOptionsProvider {
+	return &SystemSearchdOptionsProvider{
 		apimanager: apimanager,
-		options:    component.NewSystemSphinxOptions(),
+		options:    component.NewSystemSearchdOptions(),
 	}
 }
 
-func (s *SystemSphinxOptionsProvider) GetOptions() (*component.SystemSphinxOptions, error) {
+func (s *SystemSearchdOptionsProvider) GetOptions() (*component.SystemSearchdOptions, error) {
 	s.options.ImageTag = product.ThreescaleRelease
 	s.options.Labels = s.labels()
 	s.options.PodTemplateLabels = s.podTemplateLabels()
@@ -40,68 +40,68 @@ func (s *SystemSphinxOptionsProvider) GetOptions() (*component.SystemSphinxOptio
 	return s.options, nil
 }
 
-func (s *SystemSphinxOptionsProvider) setResourceRequirementsOptions() {
+func (s *SystemSearchdOptionsProvider) setResourceRequirementsOptions() {
 	s.options.ContainerResourceRequirements = v1.ResourceRequirements{}
 	if *s.apimanager.Spec.ResourceRequirementsEnabled {
-		s.options.ContainerResourceRequirements = component.DefaultSphinxContainerResourceRequirements()
+		s.options.ContainerResourceRequirements = component.DefaultSearchdContainerResourceRequirements()
 	}
 	// DeploymentConfig-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
-	if s.apimanager.Spec.System.SphinxSpec.Resources != nil {
-		s.options.ContainerResourceRequirements = *s.apimanager.Spec.System.SphinxSpec.Resources
+	if s.apimanager.Spec.System.SearchdSpec.Resources != nil {
+		s.options.ContainerResourceRequirements = *s.apimanager.Spec.System.SearchdSpec.Resources
 	}
 }
 
-func (s *SystemSphinxOptionsProvider) setNodeAffinityAndTolerationsOptions() {
-	s.options.Affinity = s.apimanager.Spec.System.SphinxSpec.Affinity
-	s.options.Tolerations = s.apimanager.Spec.System.SphinxSpec.Tolerations
+func (s *SystemSearchdOptionsProvider) setNodeAffinityAndTolerationsOptions() {
+	s.options.Affinity = s.apimanager.Spec.System.SearchdSpec.Affinity
+	s.options.Tolerations = s.apimanager.Spec.System.SearchdSpec.Tolerations
 }
 
-func (s *SystemSphinxOptionsProvider) commonLabels() map[string]string {
+func (s *SystemSearchdOptionsProvider) commonLabels() map[string]string {
 	return map[string]string{
 		"app":                  *s.apimanager.Spec.AppLabel,
 		"threescale_component": "system",
 	}
 }
 
-func (s *SystemSphinxOptionsProvider) labels() map[string]string {
+func (s *SystemSearchdOptionsProvider) labels() map[string]string {
 	labels := s.commonLabels()
-	labels["threescale_component_element"] = "sphinx"
+	labels["threescale_component_element"] = "searchd"
 	return labels
 }
 
-func (s *SystemSphinxOptionsProvider) podTemplateLabels() map[string]string {
-	labels := helper.MeteringLabels("system-sphinx", helper.ApplicationType)
+func (s *SystemSearchdOptionsProvider) podTemplateLabels() map[string]string {
+	labels := helper.MeteringLabels("system-searchd", helper.ApplicationType)
 
 	for k, v := range s.labels() {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-sphinx"
+	labels["deploymentConfig"] = "system-searchd"
 
 	return labels
 }
 
-func (s *SystemSphinxOptionsProvider) setPVCOptions() {
+func (s *SystemSearchdOptionsProvider) setPVCOptions() {
 	// Default values
-	s.options.PVCOptions = component.SphinxPVCOptions{
+	s.options.PVCOptions = component.SearchdPVCOptions{
 		StorageClass:    nil,
 		VolumeName:      "",
 		StorageRequests: resource.MustParse("1Gi"),
 	}
 
 	if s.apimanager.Spec.System != nil &&
-		s.apimanager.Spec.System.SphinxSpec != nil &&
-		s.apimanager.Spec.System.SphinxSpec.PVC != nil {
-		if s.apimanager.Spec.System.SphinxSpec.PVC.StorageClassName != nil {
-			s.options.PVCOptions.StorageClass = s.apimanager.Spec.System.SphinxSpec.PVC.StorageClassName
+		s.apimanager.Spec.System.SearchdSpec != nil &&
+		s.apimanager.Spec.System.SearchdSpec.PVC != nil {
+		if s.apimanager.Spec.System.SearchdSpec.PVC.StorageClassName != nil {
+			s.options.PVCOptions.StorageClass = s.apimanager.Spec.System.SearchdSpec.PVC.StorageClassName
 		}
-		if s.apimanager.Spec.System.SphinxSpec.PVC.Resources != nil {
-			s.options.PVCOptions.StorageRequests = s.apimanager.Spec.System.SphinxSpec.PVC.Resources.Requests
+		if s.apimanager.Spec.System.SearchdSpec.PVC.Resources != nil {
+			s.options.PVCOptions.StorageRequests = s.apimanager.Spec.System.SearchdSpec.PVC.Resources.Requests
 		}
-		if s.apimanager.Spec.System.SphinxSpec.PVC.VolumeName != nil {
-			s.options.PVCOptions.VolumeName = *s.apimanager.Spec.System.SphinxSpec.PVC.VolumeName
+		if s.apimanager.Spec.System.SearchdSpec.PVC.VolumeName != nil {
+			s.options.PVCOptions.VolumeName = *s.apimanager.Spec.System.SearchdSpec.PVC.VolumeName
 		}
 	}
 }
