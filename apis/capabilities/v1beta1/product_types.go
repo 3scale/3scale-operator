@@ -58,6 +58,9 @@ const (
 	// ProductFailedConditionType indicates that an error occurred during synchronization.
 	// The operator will retry.
 	ProductFailedConditionType common.ConditionType = "Failed"
+
+	// ProductPolicyConfigurationPasswordSecretField indicates the secret field name with product policy configuration
+	ProductPolicyConfigurationPasswordSecretField = "configuration"
 )
 
 var (
@@ -844,7 +847,12 @@ type PolicyConfig struct {
 
 	// Configuration defines the policy configuration
 	// +kubebuilder:pruning:PreserveUnknownFields
-	Configuration runtime.RawExtension `json:"configuration"`
+	// +optional
+	Configuration runtime.RawExtension `json:"configuration,omitempty"`
+
+	// ConfigurationRef Secret reference containing policy configuration
+	// +optional
+	ConfigurationRef corev1.SecretReference `json:"configurationRef,omitempty"`
 
 	// Enabled defines activation state
 	Enabled bool `json:"enabled"`

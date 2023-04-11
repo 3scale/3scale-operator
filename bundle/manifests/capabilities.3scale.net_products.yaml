@@ -746,6 +746,17 @@ spec:
                       description: Configuration defines the policy configuration
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
+                    configurationRef:
+                      description: ConfigurationRef Secret reference containing policy configuration
+                      properties:
+                        name:
+                          description: name is unique within a namespace to reference a secret resource.
+                          type: string
+                        namespace:
+                          description: namespace defines the space within which the secret name must be unique.
+                          type: string
+                      type: object
+                      x-kubernetes-map-type: atomic
                     enabled:
                       description: Enabled defines activation state
                       type: boolean
@@ -756,7 +767,6 @@ spec:
                       description: Version defines the policy version
                       type: string
                   required:
-                  - configuration
                   - enabled
                   - name
                   - version
