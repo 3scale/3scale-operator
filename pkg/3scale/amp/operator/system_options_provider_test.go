@@ -186,7 +186,7 @@ func basicApimanagerSpecTestSystemOptions() *appsv1alpha1.APIManager {
 		FileStorageSpec: &appsv1alpha1.SystemFileStorageSpec{},
 		AppSpec:         &appsv1alpha1.SystemAppSpec{},
 		SidekiqSpec:     &appsv1alpha1.SystemSidekiqSpec{},
-		SphinxSpec:      &appsv1alpha1.SystemSphinxSpec{},
+		SearchdSpec:     &appsv1alpha1.SystemSearchdSpec{},
 	}
 	apimanager.Spec.PodDisruptionBudget = &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true}
 	return apimanager
