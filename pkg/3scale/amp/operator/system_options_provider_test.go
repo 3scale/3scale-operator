@@ -93,26 +93,6 @@ func testSystemDeveloperUILabels() map[string]string {
 	}
 }
 
-func testSystemSphinxLabels() map[string]string {
-	return map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "sphinx",
-	}
-}
-
-func testSystemSphinxPodTemplateLabels() map[string]string {
-	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "sphinx",
-		"deploymentConfig":             "system-sphinx",
-	}
-	addExpectedMeteringLabels(labels, "system-sphinx", helper.ApplicationType)
-
-	return labels
-}
-
 func testSystemMemcachedLabels() map[string]string {
 	return map[string]string{
 		"app":                          appLabel,
@@ -137,20 +117,12 @@ func testSystemSidekiqAffinity() *v1.Affinity {
 	return getTestAffinity("system-sidekiq")
 }
 
-func testSystemSphinxAffinity() *v1.Affinity {
-	return getTestAffinity("system-sphinx")
-}
-
 func testSystemAppTolerations() []v1.Toleration {
 	return getTestTolerations("system-app")
 }
 
 func testSystemSidekiqTolerations() []v1.Toleration {
 	return getTestTolerations("system-sidekiq")
-}
-
-func testSystemSphinxTolerations() []v1.Toleration {
-	return getTestTolerations("system-sphinx")
 }
 
 func testSystemMasterContainerCustomResourceRequirements() *v1.ResourceRequirements {
@@ -201,19 +173,6 @@ func testSystemSidekiqCustomResourceRequirements() *v1.ResourceRequirements {
 		Requests: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("294m"),
 			v1.ResourceMemory: resource.MustParse("195Mi"),
-		},
-	}
-}
-
-func testSystemSphinxCustomResourceRequirements() *v1.ResourceRequirements {
-	return &v1.ResourceRequirements{
-		Limits: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("123m"),
-			v1.ResourceMemory: resource.MustParse("456Mi"),
-		},
-		Requests: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("789m"),
-			v1.ResourceMemory: resource.MustParse("346Mi"),
 		},
 	}
 }
@@ -336,7 +295,6 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		AppProviderContainerResourceRequirements:  component.DefaultAppProviderContainerResourceRequirements(),
 		AppDeveloperContainerResourceRequirements: component.DefaultAppDeveloperContainerResourceRequirements(),
 		SidekiqContainerResourceRequirements:      component.DefaultSidekiqContainerResourceRequirements(),
-		SphinxContainerResourceRequirements:       component.DefaultSphinxContainerResourceRequirements(),
 		MemcachedServers:                          component.DefaultMemcachedServers(),
 		RecaptchaPublicKey:                        &recaptchaPublicKey,
 		RecaptchaPrivateKey:                       &recaptchaPrivateKey,
@@ -376,8 +334,6 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		ProviderUILabels:              testSystemProviderUILabels(),
 		MasterUILabels:                testSystemMasterUILabels(),
 		DeveloperUILabels:             testSystemDeveloperUILabels(),
-		SphinxLabels:                  testSystemSphinxLabels(),
-		SphinxPodTemplateLabels:       testSystemSphinxPodTemplateLabels(),
 		MemcachedLabels:               testSystemMemcachedLabels(),
 		SMTPLabels:                    testSystemSMTPLabels(),
 		SideKiqMetrics:                true,
@@ -425,7 +381,6 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				expectedOpts.AppProviderContainerResourceRequirements = &v1.ResourceRequirements{}
 				expectedOpts.AppDeveloperContainerResourceRequirements = &v1.ResourceRequirements{}
 				expectedOpts.SidekiqContainerResourceRequirements = &v1.ResourceRequirements{}
-				expectedOpts.SphinxContainerResourceRequirements = &v1.ResourceRequirements{}
 				return expectedOpts
 			},
 		},
@@ -568,14 +523,12 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.AppSpec.Affinity = testSystemAppAffinity()
 				apimanager.Spec.System.SidekiqSpec.Affinity = testSystemSidekiqAffinity()
-				apimanager.Spec.System.SphinxSpec.Affinity = testSystemSphinxAffinity()
 				return apimanager
 			}, nil, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppAffinity = testSystemAppAffinity()
 				expectedOpts.SidekiqAffinity = testSystemSidekiqAffinity()
-				expectedOpts.SphinxAffinity = testSystemSphinxAffinity()
 				return expectedOpts
 			},
 		},
@@ -584,14 +537,12 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager := basicApimanagerSpecTestSystemOptions()
 				apimanager.Spec.System.AppSpec.Tolerations = testSystemAppTolerations()
 				apimanager.Spec.System.SidekiqSpec.Tolerations = testSystemSidekiqTolerations()
-				apimanager.Spec.System.SphinxSpec.Tolerations = testSystemSphinxTolerations()
 				return apimanager
 			}, nil, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
 				expectedOpts := defaultSystemOptions(opts)
 				expectedOpts.AppTolerations = testSystemAppTolerations()
 				expectedOpts.SidekiqTolerations = testSystemSidekiqTolerations()
-				expectedOpts.SphinxTolerations = testSystemSphinxTolerations()
 				return expectedOpts
 			},
 		},
@@ -602,7 +553,6 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.AppSpec.ProviderContainerResources = testSystemProviderContainerCustomResourceRequirements()
 				apimanager.Spec.System.AppSpec.DeveloperContainerResources = testSystemDeveloperContainerCustomResourceRequirements()
 				apimanager.Spec.System.SidekiqSpec.Resources = testSystemSidekiqCustomResourceRequirements()
-				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
 				return apimanager
 			}, nil, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
@@ -611,7 +561,6 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				expectedOpts.AppProviderContainerResourceRequirements = testSystemProviderContainerCustomResourceRequirements()
 				expectedOpts.AppDeveloperContainerResourceRequirements = testSystemDeveloperContainerCustomResourceRequirements()
 				expectedOpts.SidekiqContainerResourceRequirements = testSystemSidekiqCustomResourceRequirements()
-				expectedOpts.SphinxContainerResourceRequirements = testSystemSphinxCustomResourceRequirements()
 				return expectedOpts
 			},
 		},
@@ -623,7 +572,6 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				apimanager.Spec.System.AppSpec.ProviderContainerResources = testSystemProviderContainerCustomResourceRequirements()
 				apimanager.Spec.System.AppSpec.DeveloperContainerResources = testSystemDeveloperContainerCustomResourceRequirements()
 				apimanager.Spec.System.SidekiqSpec.Resources = testSystemSidekiqCustomResourceRequirements()
-				apimanager.Spec.System.SphinxSpec.Resources = testSystemSphinxCustomResourceRequirements()
 				return apimanager
 			}, nil, nil, nil, nil, nil, nil, nil, nil,
 			func(opts *component.SystemOptions) *component.SystemOptions {
@@ -632,7 +580,6 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				expectedOpts.AppProviderContainerResourceRequirements = testSystemProviderContainerCustomResourceRequirements()
 				expectedOpts.AppDeveloperContainerResourceRequirements = testSystemDeveloperContainerCustomResourceRequirements()
 				expectedOpts.SidekiqContainerResourceRequirements = testSystemSidekiqCustomResourceRequirements()
-				expectedOpts.SphinxContainerResourceRequirements = testSystemSphinxCustomResourceRequirements()
 				return expectedOpts
 			},
 		},
