@@ -207,7 +207,7 @@ func (s *SystemMysqlOptionsProvider) podTemplateLabels() map[string]string {
 func (s *SystemMysqlOptionsProvider) setPriorityClassNames() {
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
-		s.apimanager.Spec.System.DatabaseSpec.MySQL.PriotiryClassName != nil {
-		s.mysqlOptions.PriorityClassName = *s.apimanager.Spec.System.DatabaseSpec.MySQL.PriotiryClassName
+		s.apimanager.Spec.System.DatabaseSpec.MySQL.PriorityClassName != nil {
+		s.mysqlOptions.PriorityClassName = *s.apimanager.Spec.System.DatabaseSpec.MySQL.PriorityClassName
 	}
 }

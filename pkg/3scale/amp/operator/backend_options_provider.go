@@ -223,17 +223,17 @@ func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels() map[string]stri
 func (o *OperatorBackendOptionsProvider) setPriorityClassNames() {
 
 	//o.backendOptions.PriorityClassNameListener = PodPrioritySystemNodeCritical
-	if o.apimanager.Spec.Backend.ListenerSpec.PriotiryClassName != nil {
-		o.backendOptions.PriorityClassNameListener = *o.apimanager.Spec.Backend.ListenerSpec.PriotiryClassName
+	if o.apimanager.Spec.Backend.ListenerSpec.PriorityClassName != nil {
+		o.backendOptions.PriorityClassNameListener = *o.apimanager.Spec.Backend.ListenerSpec.PriorityClassName
 	}
 
 	//o.backendOptions.PriorityClassNameWorker = PodPrioritySystemNodeCritical
-	if o.apimanager.Spec.Backend.WorkerSpec.PriotiryClassName != nil {
-		o.backendOptions.PriorityClassNameWorker = *o.apimanager.Spec.Backend.WorkerSpec.PriotiryClassName
+	if o.apimanager.Spec.Backend.WorkerSpec.PriorityClassName != nil {
+		o.backendOptions.PriorityClassNameWorker = *o.apimanager.Spec.Backend.WorkerSpec.PriorityClassName
 	}
 
 	//o.backendOptions.PriorityClassNameCron = PodPrioritySystemNodeCritical
-	if o.apimanager.Spec.Backend.CronSpec.PriotiryClassName != nil {
-		o.backendOptions.PriorityClassNameCron = *o.apimanager.Spec.Backend.CronSpec.PriotiryClassName
+	if o.apimanager.Spec.Backend.CronSpec.PriorityClassName != nil {
+		o.backendOptions.PriorityClassNameCron = *o.apimanager.Spec.Backend.CronSpec.PriorityClassName
 	}
 }

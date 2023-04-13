@@ -80,7 +80,7 @@ func (m *MemcachedOptionsProvider) podTemplateLabels() map[string]string {
 }
 
 func (m *MemcachedOptionsProvider) setPriorityClassNames() {
-	if m.apimanager.Spec.System.MemcachedPriotiryClassName != nil {
-		m.memcachedOptions.PriorityClassName = *m.apimanager.Spec.System.MemcachedPriotiryClassName
+	if m.apimanager.Spec.System.MemcachedPriorityClassName != nil {
+		m.memcachedOptions.PriorityClassName = *m.apimanager.Spec.System.MemcachedPriorityClassName
 	}
 }

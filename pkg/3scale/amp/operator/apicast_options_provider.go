@@ -457,12 +457,12 @@ func (a *ApicastOptionsProvider) envConfigMapHash() string {
 
 func (a *ApicastOptionsProvider) setPriorityClassNames() {
 	//a.apicastOptions.PriorityClassNameStaging = PodPrioritySystemNodeCritical
-	if a.apimanager.Spec.Apicast.StagingSpec.PriotiryClassName != nil {
-		a.apicastOptions.PriorityClassNameStaging = *a.apimanager.Spec.Apicast.StagingSpec.PriotiryClassName
+	if a.apimanager.Spec.Apicast.StagingSpec.PriorityClassName != nil {
+		a.apicastOptions.PriorityClassNameStaging = *a.apimanager.Spec.Apicast.StagingSpec.PriorityClassName
 	}
 
 	//a.apicastOptions.PriorityClassNameProduction = PodPrioritySystemNodeCritical
-	if a.apimanager.Spec.Apicast.ProductionSpec.PriotiryClassName != nil {
-		a.apicastOptions.PriorityClassNameProduction = *a.apimanager.Spec.Apicast.ProductionSpec.PriotiryClassName
+	if a.apimanager.Spec.Apicast.ProductionSpec.PriorityClassName != nil {
+		a.apicastOptions.PriorityClassNameProduction = *a.apimanager.Spec.Apicast.ProductionSpec.PriorityClassName
 	}
 }

@@ -279,13 +279,13 @@ func (z *ZyncOptionsProvider) zyncQueServiceAccountImagePullSecrets() []v1.Local
 }
 
 func (z *ZyncOptionsProvider) setPriorityClassNames() {
-	if z.apimanager.Spec.Zync.AppSpec.PriotiryClassName != nil {
-		z.zyncOptions.ZyncPriorityClassName = *z.apimanager.Spec.Zync.AppSpec.PriotiryClassName
+	if z.apimanager.Spec.Zync.AppSpec.PriorityClassName != nil {
+		z.zyncOptions.ZyncPriorityClassName = *z.apimanager.Spec.Zync.AppSpec.PriorityClassName
 	}
-	if z.apimanager.Spec.Zync.QueSpec.PriotiryClassName != nil {
-		z.zyncOptions.ZyncQuePriorityClassName = *z.apimanager.Spec.Zync.QueSpec.PriotiryClassName
+	if z.apimanager.Spec.Zync.QueSpec.PriorityClassName != nil {
+		z.zyncOptions.ZyncQuePriorityClassName = *z.apimanager.Spec.Zync.QueSpec.PriorityClassName
 	}
-	if z.apimanager.Spec.Zync.DatabasePriotiryClassName != nil {
-		z.zyncOptions.ZyncDatabasePriorityClassName = *z.apimanager.Spec.Zync.DatabasePriotiryClassName
+	if z.apimanager.Spec.Zync.DatabasePriorityClassName != nil {
+		z.zyncOptions.ZyncDatabasePriorityClassName = *z.apimanager.Spec.Zync.DatabasePriorityClassName
 	}
 }
