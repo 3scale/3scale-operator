@@ -536,7 +536,7 @@ func TestDeploymentConfigPodTemplateLabelsMutator(t *testing.T) {
 	}
 }
 
-func TestDeploymentConfigEnvVarSyncMutator(t *testing.T) {
+func TestDeploymentConfigRemoveDuplicateEnvVarMutator(t *testing.T) {
 	dcFactory := func(envs []corev1.EnvVar) *appsv1.DeploymentConfig {
 		return &appsv1.DeploymentConfig{
 			TypeMeta: metav1.TypeMeta{

@@ -196,8 +196,8 @@ func DeploymentConfigPodTemplateLabelsMutator(desired, existing *appsv1.Deployme
 	return updated, nil
 }
 
-// DeploymentConfigRemoveDuplicateEnvVarMutator ensures pod env vars not duplicated
-func DeploymentConfigRemoveDuplicateEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentConfigRemoveDuplicateEnvVarMutator ensures pod env vars are not duplicated
+func DeploymentConfigRemoveDuplicateEnvVarMutator(_, existing *appsv1.DeploymentConfig) (bool, error) {
 	updated := false
 	for idx := range existing.Spec.Template.Spec.Containers {
 		prunedEnvs := helper.RemoveDuplicateEnvVars(existing.Spec.Template.Spec.Containers[idx].Env)
