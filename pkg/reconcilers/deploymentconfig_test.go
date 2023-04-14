@@ -572,19 +572,17 @@ func TestDeploymentConfigRemoveDuplicateEnvVarMutator(t *testing.T) {
 	cases := []struct {
 		testName        string
 		existingEnvs    []corev1.EnvVar
-		desiredEnvs     []corev1.EnvVar
 		expectedResult  bool
 		expectedNewEnvs []corev1.EnvVar
 	}{
-		{"NothingToReconcile", envsA, envsA, false, envsA},
-		{"EnvsReconciled", envsB, envsA, true, envsA},
+		{"NothingToReconcile", envsA, false, envsA},
+		{"EnvsReconciled", envsB, true, envsA},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			existing := dcFactory(tc.existingEnvs)
-			desired := dcFactory(tc.desiredEnvs)
-			update, err := DeploymentConfigRemoveDuplicateEnvVarMutator(desired, existing)
+			update, err := DeploymentConfigRemoveDuplicateEnvVarMutator(nil, existing)
 			if err != nil {
 				subT.Fatal(err)
 			}
