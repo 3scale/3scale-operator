@@ -62,15 +62,15 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - threescale-operator-go-mod-v1-{{ arch }}-{{ checksum "go.sum" }}
+            - threescale-operator-go-mod-v2-{{ arch }}-{{ checksum "go.sum" }}
             # Find the most recently generated cache used from any branch
-            - threescale-operator-go-mod-v1-{{ arch }}
+            - threescale-operator-go-mod-v2-{{ arch }}
       - run:
           name: Install go dependencies
           command: |
             make download
       - save_cache:
-          key: threescale-operator-go-mod-v1-{{ arch }}-{{ checksum "go.sum" }}
+          key: threescale-operator-go-mod-v2-{{ arch }}-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
 
