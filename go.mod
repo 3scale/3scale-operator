@@ -1,6 +1,6 @@
 module github.com/3scale/3scale-operator
 
-go 1.17
+go 1.18
 
 require (
 	github.com/3scale/3scale-porta-go-client v0.9.0
