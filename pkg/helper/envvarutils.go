@@ -107,3 +107,18 @@ func EnsureEnvVar(desired v1.EnvVar, existingEnvVars *[]v1.EnvVar) bool {
 
 	return update
 }
+
+// RemoveDuplicateEnvVars removes duplicate env vars by name from a slice
+func RemoveDuplicateEnvVars(envVars []v1.EnvVar) []v1.EnvVar {
+	set := map[string]v1.EnvVar{}
+	var result []v1.EnvVar
+
+	for idx := range envVars {
+		if _, ok := set[envVars[idx].Name]; !ok {
+			set[envVars[idx].Name] = envVars[idx]
+			result = append(result, envVars[idx])
+		}
+	}
+
+	return result
+}
