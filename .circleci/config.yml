@@ -236,7 +236,6 @@ jobs:
   bundle-validate:
     docker:
       - image: cimg/go:1.18
-    working_directory: /go/src/github.com/3scale/3scale-operator
     steps:
       - checkout
       - install-operator-sdk
