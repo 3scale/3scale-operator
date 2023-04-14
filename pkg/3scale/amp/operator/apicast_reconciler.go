@@ -79,6 +79,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume mutator
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
+		reconcilers.DeploymentConfigPriorityClassMutator,
 	}
 
 	if r.apiManager.Spec.Apicast.StagingSpec.Replicas != nil {
