@@ -30,6 +30,7 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+		reconcilers.DeploymentConfigPriorityClassMutator,
 	)
 	err = r.ReconcileDeploymentConfig(memcached.DeploymentConfig(), mutator)
 	if err != nil {

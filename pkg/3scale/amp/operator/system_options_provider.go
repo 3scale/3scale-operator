@@ -623,31 +623,12 @@ func (s *SystemOptionsProvider) smtpLabels() map[string]string {
 
 func (s *SystemOptionsProvider) setPriorityClassNames() {
 
-	//s.options.AppPriorityClassName = PodPrioritySystemNodeCritical
 	if s.apimanager.Spec.System.AppSpec.PriorityClassName != nil {
 		s.options.AppPriorityClassName = *s.apimanager.Spec.System.AppSpec.PriorityClassName
 	}
-	//s.options.SideKiqPriorityClassName = PodPrioritySystemNodeCritical
 	if s.apimanager.Spec.System.SidekiqSpec.PriorityClassName != nil {
 		s.options.SideKiqPriorityClassName = *s.apimanager.Spec.System.SidekiqSpec.PriorityClassName
 	}
-	//s.options.SphinxPriorityClassName = PodPrioritySystemNodeCritical
-	if s.apimanager.Spec.System.SphinxSpec.PriorityClassName != nil {
-		s.options.SphinxPriorityClassName = *s.apimanager.Spec.System.SphinxSpec.PriorityClassName
-	}
-}
-
-func (s *SystemOptionsProvider) setPriorityClassNames() {
-
-	//s.options.AppPriorityClassName = PodPrioritySystemNodeCritical
-	if s.apimanager.Spec.System.AppSpec.PriorityClassName != nil {
-		s.options.AppPriorityClassName = *s.apimanager.Spec.System.AppSpec.PriorityClassName
-	}
-	//s.options.SideKiqPriorityClassName = PodPrioritySystemNodeCritical
-	if s.apimanager.Spec.System.SidekiqSpec.PriorityClassName != nil {
-		s.options.SideKiqPriorityClassName = *s.apimanager.Spec.System.SidekiqSpec.PriorityClassName
-	}
-	//s.options.SphinxPriorityClassName = PodPrioritySystemNodeCritical
 	if s.apimanager.Spec.System.SphinxSpec.PriorityClassName != nil {
 		s.options.SphinxPriorityClassName = *s.apimanager.Spec.System.SphinxSpec.PriorityClassName
 	}

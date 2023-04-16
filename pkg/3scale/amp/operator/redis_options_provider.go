@@ -246,6 +246,9 @@ func (r *RedisOptionsProvider) backendRedisPodTemplateLabels() map[string]string
 
 func (r *RedisOptionsProvider) setPriorityClassNames() {
 	if r.apimanager.Spec.System != nil && r.apimanager.Spec.System.RedisPriorityClassName != nil {
-		r.options.PriorityClassName = *r.apimanager.Spec.System.RedisPriorityClassName
+		r.options.SystemRedisPriorityClassName = *r.apimanager.Spec.System.RedisPriorityClassName
+	}
+	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisPriorityClassName != nil {
+		r.options.BackendRedisPriorityClassName = *r.apimanager.Spec.Backend.RedisPriorityClassName
 	}
 }

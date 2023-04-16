@@ -51,6 +51,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+		reconcilers.DeploymentConfigPriorityClassMutator,
 	}
 	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
 		zyncMutators = append(zyncMutators, reconcilers.DeploymentConfigReplicasMutator)
@@ -67,6 +68,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+		reconcilers.DeploymentConfigPriorityClassMutator,
 	}
 	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
 		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentConfigReplicasMutator)
@@ -90,6 +92,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 			reconcilers.DeploymentConfigAffinityMutator,
 			reconcilers.DeploymentConfigTolerationsMutator,
 			reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+			reconcilers.DeploymentConfigPriorityClassMutator,
 		)
 		err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), zyncDBDCMutator)
 		if err != nil {

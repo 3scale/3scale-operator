@@ -32,6 +32,7 @@ func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+		reconcilers.DeploymentConfigPriorityClassMutator,
 	)
 	err = r.ReconcileDeploymentConfig(systemPostgreSQL.DeploymentConfig(), dcMutator)
 	if err != nil {

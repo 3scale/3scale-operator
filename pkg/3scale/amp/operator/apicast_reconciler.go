@@ -113,6 +113,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
+		reconcilers.DeploymentConfigPriorityClassMutator,
 	}
 
 	if r.apiManager.Spec.Apicast.ProductionSpec.Replicas != nil {
