@@ -31,7 +31,7 @@ func NewAPIManagerStatusReconciler(b *reconcilers.BaseReconciler, apimanagerReso
 	return &APIManagerStatusReconciler{
 		BaseReconciler:     b,
 		apimanagerResource: apimanagerResource,
-		logger:             b.Logger().WithValues("Status Reconciler", apimanagerResource.Name),
+		logger:             b.Logger().WithValues("Status Reconciler", client.ObjectKeyFromObject(apimanagerResource)),
 	}
 }
 
@@ -174,6 +174,7 @@ func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeploy
 		Status: v1.ConditionFalse,
 	}
 
+	s.logger.V(1).Info("Status apimanagerAvailableCondition", "deploymentsAvailable", deploymentsAvailable, "defaultRoutesReady", defaultRoutesReady)
 	if deploymentsAvailable && defaultRoutesReady {
 		newAvailableCondition.Status = v1.ConditionTrue
 	}
@@ -209,11 +210,13 @@ func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
 	for _, expectedRouteHost := range expectedRouteHosts {
 		routeIdx := helper.RouteFindByHost(routes, expectedRouteHost)
 		if routeIdx == -1 {
+			s.logger.V(1).Info("Status defaultRoutesReady: route not found", "expectedRouteHost", expectedRouteHost)
 			allDefaultRoutesReady = false
 		} else {
 			matchedRoute := &routes[routeIdx]
 			routeReady := helper.IsRouteReady(matchedRoute)
 			if !routeReady {
+				s.logger.V(1).Info("Status defaultRoutesReady: route not ready", "expectedRouteHost", expectedRouteHost)
 				allDefaultRoutesReady = false
 			}
 		}
