@@ -239,7 +239,6 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 
 	if system.Options.S3FileStorageOptions != nil {
 		result = append(result,
-			helper.EnvVarFromConfigMap("FILE_UPLOAD_STORAGE", "system-environment", "FILE_UPLOAD_STORAGE"),
 			helper.EnvVarFromSecret(AwsAccessKeyID, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
 			helper.EnvVarFromSecret(AwsSecretAccessKey, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
 			helper.EnvVarFromSecret(AwsBucket, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsBucket),

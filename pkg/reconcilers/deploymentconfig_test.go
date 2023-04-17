@@ -535,3 +535,65 @@ func TestDeploymentConfigPodTemplateLabelsMutator(t *testing.T) {
 		})
 	}
 }
+
+func TestDeploymentConfigRemoveDuplicateEnvVarMutator(t *testing.T) {
+	dcFactory := func(envs []corev1.EnvVar) *appsv1.DeploymentConfig {
+		return &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "myDC",
+				Namespace: "myNS",
+			},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name: "container1",
+								Env:  envs,
+							},
+							{
+								Name: "container2",
+								Env:  envs,
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	envsA := []corev1.EnvVar{{Name: "a", Value: "1"}, {Name: "b", Value: "2"}}
+	envsB := []corev1.EnvVar{{Name: "a", Value: "1"}, {Name: "a", Value: "1"}, {Name: "b", Value: "2"}}
+
+	cases := []struct {
+		testName        string
+		existingEnvs    []corev1.EnvVar
+		expectedResult  bool
+		expectedNewEnvs []corev1.EnvVar
+	}{
+		{"NothingToReconcile", envsA, false, envsA},
+		{"EnvsReconciled", envsB, true, envsA},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			existing := dcFactory(tc.existingEnvs)
+			update, err := DeploymentConfigRemoveDuplicateEnvVarMutator(nil, existing)
+			if err != nil {
+				subT.Fatal(err)
+			}
+			if update != tc.expectedResult {
+				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
+			}
+			for idx := range existing.Spec.Template.Spec.Containers {
+				if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[idx].Env, tc.expectedNewEnvs) {
+					subT.Fatal(cmp.Diff(existing.Spec.Template.Spec.Containers[idx].Env, tc.expectedNewEnvs))
+				}
+			}
+		})
+	}
+}

@@ -89,6 +89,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		r.systemAppDCResourceMutator,
+		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
 	}
 
 	if r.apiManager.Spec.System.AppSpec.Replicas != nil {
@@ -107,6 +108,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
 	}
 
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
