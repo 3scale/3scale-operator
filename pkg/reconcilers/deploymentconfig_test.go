@@ -299,101 +299,350 @@ func TestDeploymentConfigTolerationsMutator(t *testing.T) {
 }
 
 func TestDeploymentConfigEnvVarReconciler(t *testing.T) {
-	dcFactory := func(envs []corev1.EnvVar) *appsv1.DeploymentConfig {
-		return &appsv1.DeploymentConfig{
+	t.Run("DifferentNumberOfContainers", func(subT *testing.T) {
+		desired := &appsv1.DeploymentConfig{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "DeploymentConfig",
 				APIVersion: "apps.openshift.io/v1",
 			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "myDC",
-				Namespace: "myNS",
-			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
 			Spec: appsv1.DeploymentConfigSpec{
 				Template: &corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{
 							corev1.Container{
 								Name: "container1",
-								Env:  envs,
 							},
 						},
 					},
 				},
 			},
 		}
-	}
+		existing := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							corev1.Container{
+								Name: "container1",
+							},
+							corev1.Container{
+								Name: "container2",
+							},
+						},
+					},
+				},
+			},
+		}
 
-	sliceCopy := func(a []corev1.EnvVar) []corev1.EnvVar {
-		return append(a[:0:0], a...)
-	}
+		update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
+		if update {
+			subT.Fatal("expected not to be updated")
+		}
+	})
 
-	envVarAB := []corev1.EnvVar{
-		{
-			Name:  "A",
-			Value: "valueA",
-		},
-		{
-			Name:  "B",
-			Value: "valueB",
-		},
-	}
+	t.Run("DifferentNumberOfInitContainers", func(subT *testing.T) {
+		desired := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							corev1.Container{
+								Name: "container1",
+							},
+						},
+						InitContainers: []corev1.Container{
+							corev1.Container{
+								Name: "initcontainer1",
+							},
+						},
+					},
+				},
+			},
+		}
+		existing := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							corev1.Container{
+								Name: "container1",
+							},
+						},
+						InitContainers: []corev1.Container{
+							corev1.Container{
+								Name: "initcontainer1",
+							},
+							corev1.Container{
+								Name: "initcontainer2",
+							},
+						},
+					},
+				},
+			},
+		}
 
-	envVarB := []corev1.EnvVar{
-		{
-			Name:  "B",
-			Value: "valueB",
-		},
-	}
+		update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
+		if update {
+			subT.Fatal("expected not to be updated")
+		}
+	})
 
-	envVarBA := []corev1.EnvVar{
-		{
-			Name:  "B",
-			Value: "valueB",
-		},
-		{
-			Name:  "A",
-			Value: "valueA",
-		},
-	}
+	t.Run("ContainersEnvVarReconciled", func(subT *testing.T) {
+		desired := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							corev1.Container{
+								Name: "container1",
+								Env: []corev1.EnvVar{
+									{Name: "A", Value: "valueA"},
+								},
+							},
+							corev1.Container{
+								Name: "container2",
+								Env:  []corev1.EnvVar{},
+							},
+						},
+					},
+				},
+			},
+		}
+		existing := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							corev1.Container{
+								Name: "container1",
+								Env:  []corev1.EnvVar{},
+							},
+							corev1.Container{
+								Name: "container2",
+								Env: []corev1.EnvVar{
+									{Name: "A", Value: "valueA"},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
 
-	envVarAB2 := []corev1.EnvVar{
-		{
-			Name:  "A",
-			Value: "valueOther",
-		},
-		{
-			Name:  "B",
-			Value: "valueB",
-		},
-	}
+		update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
+		if !update {
+			subT.Fatal("expected not be updated")
+		}
 
-	cases := []struct {
-		testName          string
-		existingEnvVar    []corev1.EnvVar
-		desiredEnvVar     []corev1.EnvVar
-		expectedResult    bool
-		expectedNewEnvVar []corev1.EnvVar
-	}{
-		{"NothingToReconcile", sliceCopy(envVarAB), sliceCopy(envVarAB), false, sliceCopy(envVarAB)},
-		{"MissingEnvVar", sliceCopy(envVarB), sliceCopy(envVarAB), true, sliceCopy(envVarBA)},
-		{"UpdatedEnvVar", sliceCopy(envVarAB), sliceCopy(envVarAB2), true, sliceCopy(envVarAB2)},
-		{"RemovedEnvVar", sliceCopy(envVarAB), sliceCopy(envVarB), true, sliceCopy(envVarB)},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.testName, func(subT *testing.T) {
-			existing := dcFactory(tc.existingEnvVar)
-			desired := dcFactory(tc.desiredEnvVar)
-			update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
-			if update != tc.expectedResult {
-				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
+		for i := range []int{0, 1} {
+			if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[i].Env, desired.Spec.Template.Spec.Containers[i].Env) {
+				subT.Fatal(cmp.Diff(existing.Spec.Template.Spec.Containers[i].Env, desired.Spec.Template.Spec.Containers[i].Env))
 			}
-			if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Env, tc.expectedNewEnvVar) {
-				subT.Fatal(cmp.Diff(existing.Spec.Template.Spec.Containers[0].Env, tc.expectedNewEnvVar))
+		}
+
+	})
+
+	t.Run("InitContainersEnvVarReconciled", func(subT *testing.T) {
+		desired := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						InitContainers: []corev1.Container{
+							corev1.Container{
+								Name: "intcontainer1",
+								Env: []corev1.EnvVar{
+									{Name: "A", Value: "valueA"},
+								},
+							},
+							corev1.Container{
+								Name: "intcontainer2",
+								Env:  []corev1.EnvVar{},
+							},
+						},
+					},
+				},
+			},
+		}
+		existing := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						InitContainers: []corev1.Container{
+							corev1.Container{
+								Name: "initcontainer1",
+								Env:  []corev1.EnvVar{},
+							},
+							corev1.Container{
+								Name: "initcontainer2",
+								Env: []corev1.EnvVar{
+									{Name: "A", Value: "valueA"},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
+		if !update {
+			subT.Fatal("expected not be updated")
+		}
+
+		for i := range []int{0, 1} {
+			if !reflect.DeepEqual(existing.Spec.Template.Spec.InitContainers[i].Env, desired.Spec.Template.Spec.InitContainers[i].Env) {
+				subT.Fatal(cmp.Diff(existing.Spec.Template.Spec.InitContainers[i].Env, desired.Spec.Template.Spec.InitContainers[i].Env))
 			}
-		})
-	}
+		}
+	})
+
+	t.Run("PreHookEnvVarReconciled", func(subT *testing.T) {
+		desired := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{},
+				},
+				Strategy: appsv1.DeploymentStrategy{
+					RollingParams: &appsv1.RollingDeploymentStrategyParams{
+						Pre: &appsv1.LifecycleHook{
+							ExecNewPod: &appsv1.ExecNewPodHook{
+								Env: []corev1.EnvVar{
+									{Name: "A", Value: "valueA"},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		existing := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{},
+				},
+				Strategy: appsv1.DeploymentStrategy{
+					RollingParams: &appsv1.RollingDeploymentStrategyParams{
+						Pre: &appsv1.LifecycleHook{
+							ExecNewPod: &appsv1.ExecNewPodHook{
+								Env: []corev1.EnvVar{},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
+		if !update {
+			subT.Fatal("expected not be updated")
+		}
+
+		if !reflect.DeepEqual(existing.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env, desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env) {
+			subT.Fatal(cmp.Diff(existing.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env, desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env))
+		}
+	})
+
+	t.Run("PostHookEnvVarReconciled", func(subT *testing.T) {
+		desired := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{},
+				},
+				Strategy: appsv1.DeploymentStrategy{
+					RollingParams: &appsv1.RollingDeploymentStrategyParams{
+						Post: &appsv1.LifecycleHook{
+							ExecNewPod: &appsv1.ExecNewPodHook{
+								Env: []corev1.EnvVar{
+									{Name: "A", Value: "valueA"},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		existing := &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{Name: "myDC", Namespace: "myNS"},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{},
+				},
+				Strategy: appsv1.DeploymentStrategy{
+					RollingParams: &appsv1.RollingDeploymentStrategyParams{
+						Post: &appsv1.LifecycleHook{
+							ExecNewPod: &appsv1.ExecNewPodHook{
+								Env: []corev1.EnvVar{},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		update := DeploymentConfigEnvVarReconciler(desired, existing, "A")
+		if !update {
+			subT.Fatal("expected not be updated")
+		}
+
+		if !reflect.DeepEqual(existing.Spec.Strategy.RollingParams.Post.ExecNewPod.Env, desired.Spec.Strategy.RollingParams.Post.ExecNewPod.Env) {
+			subT.Fatal(cmp.Diff(existing.Spec.Strategy.RollingParams.Post.ExecNewPod.Env, desired.Spec.Strategy.RollingParams.Post.ExecNewPod.Env))
+		}
+	})
 }
 
 func TestDeploymentConfigImageChangeTriggerMutator(t *testing.T) {
