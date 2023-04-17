@@ -62,15 +62,15 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - threescale-operator-go-mod-v1-{{ arch }}-{{ checksum "go.sum" }}
+            - threescale-operator-go-mod-v2-{{ arch }}-{{ checksum "go.sum" }}
             # Find the most recently generated cache used from any branch
-            - threescale-operator-go-mod-v1-{{ arch }}
+            - threescale-operator-go-mod-v2-{{ arch }}
       - run:
           name: Install go dependencies
           command: |
             make download
       - save_cache:
-          key: threescale-operator-go-mod-v1-{{ arch }}-{{ checksum "go.sum" }}
+          key: threescale-operator-go-mod-v2-{{ arch }}-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
 
@@ -95,7 +95,7 @@ commands:
 jobs:
   install-operator:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     working_directory: ~/project/3scale-operator
     steps:
       - setup_remote_docker:
@@ -113,7 +113,7 @@ jobs:
 
   build-operator-image-only:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     working_directory: ~/project/3scale-operator
     steps:
       - setup_remote_docker:
@@ -170,7 +170,7 @@ jobs:
 
   run-unit-tests:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     resource_class: large
     steps:
       - unit-tests
@@ -180,7 +180,7 @@ jobs:
 
   test-crds:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     steps:
       - checkout
       - install-dependencies
@@ -188,14 +188,14 @@ jobs:
 
   test-manifests-version:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     steps:
       - checkout
       - install-dependencies
       - run: make test-manifests-version
   license-check:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     steps:
       - run:
           name: Installing ruby
@@ -223,7 +223,7 @@ jobs:
 
   unit-tests-coverage:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     resource_class: large
     steps:
       - unit-tests
@@ -235,8 +235,7 @@ jobs:
 
   bundle-validate:
     docker:
-      - image: circleci/golang:1.17.3
-    working_directory: /go/src/github.com/3scale/3scale-operator
+      - image: cimg/go:1.18
     steps:
       - checkout
       - install-operator-sdk
@@ -245,7 +244,7 @@ jobs:
 
   assets-validate:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     steps:
       - checkout
       - install-operator-sdk
@@ -253,7 +252,7 @@ jobs:
 
   prometheusrules-validate:
     docker:
-      - image: circleci/golang:1.17.3
+      - image: cimg/go:1.18
     steps:
       - checkout
       - run: make prometheusrules-update-test
