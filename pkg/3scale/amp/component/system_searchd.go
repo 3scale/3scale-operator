@@ -10,52 +10,52 @@ import (
 )
 
 const (
-	SystemSphinxDeploymentName = "system-sphinx"
-	SystemSphinxPVCName        = "system-sphinx"
-	SystemSphinxServiceName    = "system-sphinx"
-	SystemSphinxDBVolumeName   = "system-sphinx-database"
+	SystemSearchdDeploymentName = "system-searchd"
+	SystemSearchdPVCName        = "system-searchd"
+	SystemSearchdServiceName    = "system-searchd"
+	SystemSearchdDBVolumeName   = "system-searchd-database"
 )
 
-type SystemSphinx struct {
-	Options *SystemSphinxOptions
+type SystemSearchd struct {
+	Options *SystemSearchdOptions
 }
 
-func NewSystemSphinx(options *SystemSphinxOptions) *SystemSphinx {
-	return &SystemSphinx{Options: options}
+func NewSystemSearchd(options *SystemSearchdOptions) *SystemSearchd {
+	return &SystemSearchd{Options: options}
 }
 
-func (s *SystemSphinx) Service() *v1.Service {
+func (s *SystemSearchd) Service() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSphinxServiceName,
+			Name:   SystemSearchdServiceName,
 			Labels: s.Options.Labels,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
-					Name:       "sphinx",
+					Name:       "searchd",
 					Protocol:   v1.ProtocolTCP,
 					Port:       9306,
 					TargetPort: intstr.FromInt(9306),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-sphinx"},
+			Selector: map[string]string{"deploymentConfig": "system-searchd"},
 		},
 	}
 }
 
-func (s *SystemSphinx) DeploymentConfig() *appsv1.DeploymentConfig {
+func (s *SystemSearchd) DeploymentConfig() *appsv1.DeploymentConfig {
 	return &appsv1.DeploymentConfig{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DeploymentConfig",
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSphinxDeploymentName,
+			Name:   SystemSearchdDeploymentName,
 			Labels: s.Options.Labels,
 		},
 		Spec: appsv1.DeploymentConfigSpec{
@@ -68,7 +68,7 @@ func (s *SystemSphinx) DeploymentConfig() *appsv1.DeploymentConfig {
 					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
 						Automatic: true,
 						ContainerNames: []string{
-							"system-sphinx",
+							"system-searchd",
 						},
 						From: v1.ObjectReference{
 							Kind: "ImageStreamTag",
@@ -78,7 +78,7 @@ func (s *SystemSphinx) DeploymentConfig() *appsv1.DeploymentConfig {
 				},
 			},
 			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": SystemSphinxDeploymentName},
+			Selector: map[string]string{"deploymentConfig": SystemSearchdDeploymentName},
 			Strategy: appsv1.DeploymentStrategy{
 				RollingParams: &appsv1.RollingDeploymentStrategyParams{
 					IntervalSeconds: &[]int64{1}[0],
@@ -105,10 +105,10 @@ func (s *SystemSphinx) DeploymentConfig() *appsv1.DeploymentConfig {
 					ServiceAccountName: "amp",
 					Volumes: []v1.Volume{
 						v1.Volume{
-							Name: SystemSphinxDBVolumeName,
+							Name: SystemSearchdDBVolumeName,
 							VolumeSource: v1.VolumeSource{
 								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-									ClaimName: SystemSphinxPVCName,
+									ClaimName: SystemSearchdPVCName,
 									ReadOnly:  false,
 								},
 							},
@@ -116,14 +116,14 @@ func (s *SystemSphinx) DeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					Containers: []v1.Container{
 						v1.Container{
-							Name:            "system-sphinx",
+							Name:            "system-searchd",
 							Image:           "system-searchd:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
 									ReadOnly:  false,
-									Name:      SystemSphinxDBVolumeName,
-									MountPath: "/var/lib/sphinx",
+									Name:      SystemSearchdDBVolumeName,
+									MountPath: "/var/lib/searchd",
 								},
 							},
 							LivenessProbe: &v1.Probe{
@@ -144,14 +144,14 @@ func (s *SystemSphinx) DeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (s *SystemSphinx) PVC() *v1.PersistentVolumeClaim {
+func (s *SystemSearchd) PVC() *v1.PersistentVolumeClaim {
 	return &v1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PersistentVolumeClaim",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSphinxPVCName,
+			Name:   SystemSearchdPVCName,
 			Labels: s.Options.Labels,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{

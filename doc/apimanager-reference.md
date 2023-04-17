@@ -6,60 +6,76 @@ One APIManager custom resource per project is allowed.
 
 ## Table of Contents
 
-* [APIManager](#apimanager)
-  * [APIManagerSpec](#apimanagerspec)
-  * [ApicastSpec](#apicastspec)
-  * [APIManagerMetaData](#APIManagerMetaData)
-  * [ApicastProductionSpec](#apicastproductionspec)
-  * [ApicastStagingSpec](#apicaststagingspec)
-  * [CustomPolicySpec](#custompolicyspec)
-  * [CustomPolicySecret](#custompolicysecret)
-  * [BackendSpec](#backendspec)
-  * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
-  * [BackendListenerSpec](#backendlistenerspec)
-  * [BackendWorkerSpec](#backendworkerspec)
-  * [BackendCronSpec](#backendcronspec)
-  * [SystemSpec](#systemspec)
-  * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
-  * [FileStorageSpec](#filestoragespec)
-  * [SystemPVCSpec](#systempvcspec)
-  * [SystemS3Spec](#systems3spec)
-  * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
-  * [DatabaseSpec](#databasespec)
-  * [MySQLSpec](#mysqlspec)
-  * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
-  * [PostgreSQLSpec](#postgresqlspec)
-  * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
-  * [SystemAppSpec](#systemappspec)
-  * [SystemSidekiqSpec](#systemsidekiqspec)
-  * [SystemSphinxSpec](#systemsphinxspec)
-  * [ZyncSpec](#zyncspec)
-  * [ZyncAppSpec](#zyncappspec)
-  * [ZyncQueSpec](#zyncquespec)
-  * [ExternalComponentsSpec](#externalcomponentsspec)
-  * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
-  * [MonitoringSpec](#monitoringspec)
-  * [APIManagerStatus](#apimanagerstatus)
-    * [ConditionSpec](#conditionspec)
-* [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
-* [APIManager Secrets](#apimanager-secrets)
-  * [backend-internal-api](#backend-internal-api)
-  * [backend-listener](#backend-listener)
-  * [backend-redis](#backend-redis)
-  * [system-app](#system-app)
-  * [system-database](#system-database)
-  * [system-events-hook](#system-events-hook)
-  * [system-master-apicast](#system-master-apicast)
-  * [system-memcache](#system-memcache)
-  * [system-recaptcha](#system-recaptcha)
-  * [system-redis](#system-redis)
-  * [system-seed](#system-seed)
-  * [zync](#zync)
-  * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
-  * [system-smtp](#system-smtp)
-* [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
+<!--ts-->
+* [APIManager CRD reference](#apimanager-crd-reference)
+   * [Table of Contents](#table-of-contents)
+   * [APIManager](#apimanager)
+      * [APIManagerSpec](#apimanagerspec)
+      * [APIManagerMetaData](#apimanagermetadata)
+      * [ApicastSpec](#apicastspec)
+      * [ApicastProductionSpec](#apicastproductionspec)
+      * [ApicastStagingSpec](#apicaststagingspec)
+      * [CustomPolicySpec](#custompolicyspec)
+      * [CustomPolicySecret](#custompolicysecret)
+      * [APIcastOpenTracingSpec](#apicastopentracingspec)
+      * [APIcastTracingConfigSecret](#apicasttracingconfigsecret)
+         * [CustomEnvironmentSpec](#customenvironmentspec)
+         * [CustomEnvironmentSecret](#customenvironmentsecret)
+      * [BackendSpec](#backendspec)
+      * [BackendRedisPersistentVolumeClaimSpec](#backendredispersistentvolumeclaimspec)
+      * [BackendListenerSpec](#backendlistenerspec)
+      * [BackendWorkerSpec](#backendworkerspec)
+      * [BackendCronSpec](#backendcronspec)
+      * [SystemSpec](#systemspec)
+      * [SystemRedisPersistentVolumeClaimSpec](#systemredispersistentvolumeclaimspec)
+      * [FileStorageSpec](#filestoragespec)
+      * [SystemPVCSpec](#systempvcspec)
+      * [SystemS3Spec](#systems3spec)
+      * [STSSpec](#stsspec)
+      * [DeprecatedSystemS3Spec](#deprecatedsystems3spec)
+      * [DatabaseSpec](#databasespec)
+      * [MySQLSpec](#mysqlspec)
+      * [SystemMySQLPVCSpec](#systemmysqlpvcspec)
+      * [PostgreSQLSpec](#postgresqlspec)
+      * [SystemPostgreSQLPVCSpec](#systempostgresqlpvcspec)
+      * [SystemAppSpec](#systemappspec)
+      * [SystemSidekiqSpec](#systemsidekiqspec)
+      * [SystemSphinxSpec](#systemsphinxspec)
+      * [SystemSearchdSpec](#systemsearchdspec)
+      * [PVCGenericSpec](#pvcgenericspec)
+      * [ZyncSpec](#zyncspec)
+      * [ZyncAppSpec](#zyncappspec)
+      * [ZyncQueSpec](#zyncquespec)
+      * [HighAvailabilitySpec](#highavailabilityspec)
+      * [ExternalComponentsSpec](#externalcomponentsspec)
+      * [ExternalSystemComponents](#externalsystemcomponents)
+      * [ExternalBackendComponents](#externalbackendcomponents)
+      * [ExternalZyncComponents](#externalzynccomponents)
+      * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
+      * [MonitoringSpec](#monitoringspec)
+      * [APIManagerStatus](#apimanagerstatus)
+         * [ConditionSpec](#conditionspec)
+   * [PersistentVolumeClaimResourcesSpec](#persistentvolumeclaimresourcesspec)
+   * [APIManager Secrets](#apimanager-secrets)
+      * [backend-internal-api](#backend-internal-api)
+      * [backend-listener](#backend-listener)
+      * [backend-redis](#backend-redis)
+      * [system-app](#system-app)
+      * [system-database](#system-database)
+      * [system-events-hook](#system-events-hook)
+      * [system-master-apicast](#system-master-apicast)
+      * [system-memcache](#system-memcache)
+      * [system-recaptcha](#system-recaptcha)
+      * [system-redis](#system-redis)
+      * [system-seed](#system-seed)
+      * [zync](#zync)
+      * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
+      * [system-smtp](#system-smtp)
+   * [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
 
-Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
+<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+
+<!--te-->
 
 ## APIManager
 
@@ -274,7 +290,8 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [DatabaseSpec](#DatabaseSpec) specification | Spec of the System's Database part |
 | AppSpec | `appSpec` | \*SystemAppSpec | No | See [SystemAppSpec](#SystemAppSpec) reference | Spec of System App part |
 | SidekiqSpec | `sidekiqSpec` | \*SystemSidekiqSpec | No | See [SystemSidekiqSpec](#SystemSidekiqSpec) reference | Spec of System Sidekiq part |
-| SphinxSpec | `sphinxSpec` | \*SystemSphinxSpex | No | See [SystemSphinxSpec](#SystemSphinxSpec) reference | Spec of System's Sphinx part |
+| SphinxSpec | `sphinxSpec` | \*SystemSphinxSpex | No | **DEPRECATED** Use `SearchdSpec` instead. See [SystemSphinxSpec](#SystemSphinxSpec) reference | Spec of System's Sphinx part |
+| SearchdSpec | `searchdSpec` | [SystemSearchdSpec](#SystemSearchdSpec) | No | See [SystemSearchdSpec](#SystemSearchdSpec) reference | Spec of System's Searchd component |
 
 ### SystemRedisPersistentVolumeClaimSpec
 
@@ -286,7 +303,7 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| PVC | `persistentVolumeClaim` | \*SystemPVCSpec | No | nil | Used to use a PersistentVolumeClaim as the System's file storage. See [SystemPVCSpec](#SystemPVCSpec) |
+| PVC | `persistentVolumeClaim` | [PVCGenericSpec](#PVCGenericSpec) | No | nil | PersistentVolumeClaim spec for the System shared storage |
 | DeprecatedS3  | `amazonSimpleStorageService` | \*DeprecatedSystemS3Spec | No | nil | DEPRECATED [DeprecatedSystemS3Spec](#DeprecatedSystemS3Spec). Used to use S3 as the System's file storage. See [SystemS3Spec](#SystemS3Spec) |
 | S3  | `simpleStorageService` | \*SystemS3Spec | No | nil | Used to use S3 as the System's file storage. See [SystemS3Spec](#SystemS3Spec) |
 
@@ -345,7 +362,7 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's MySQL database |
-| PersistentVolumeClaimSpec | `persistentVolumeClaim` | \*[SystemMySQLPVCSpec](#SystemMySQLPVCSpec) | No | nil | System's MySQL PersistentVolumeClaim configuration options |
+| PersistentVolumeClaimSpec | `persistentVolumeClaim` | [PVCGenericSpec](#PVCGenericSpec) | No | nil | System's MySQL PersistentVolumeClaim configuration options |
 | Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
 | Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
 | Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
@@ -363,7 +380,7 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System's PostgreSQL database |
-| PersistentVolumeClaimSpec | `persistentVolumeClaim` | \*[SystemPostgreSQLPVCSpec](#SystemPostgreSQLPVCSpec) | No | nil | System's PostgreSQL PersistentVolumeClaim configuration options |
+| PersistentVolumeClaimSpec | `persistentVolumeClaim` | [PVCGenericSpec](#PVCGenericSpec) | No | nil | System's PostgreSQL PersistentVolumeClaim configuration options |
 | Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
 | Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
 | Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
@@ -400,13 +417,21 @@ Note: Deploying databases internally with this section is meant for evaluation p
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Image | `image` | string | No | nil | Used to overwrite the desired Sphinx image for the Sphinx server used by System |
 | Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
 | Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
 | Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
-| PVC | `persistentVolumeClaim` | [SystemSphinxPVCSpec](#SystemSphinxPVCSpec) | No | nil | PersistentVolumeClaim spec for the System Sphinx |
 
-### SystemSphinxPVCSpec
+### SystemSearchdSpec
+
+| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- | --- |
+| Image | `image` | string | No | nil | Used to overwrite the desired custom image for the Searchd server used by System |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| PVC | `persistentVolumeClaim` | [PVCGenericSpec](#PVCGenericSpec) | No | nil | PersistentVolumeClaim spec for the System Searchd component |
+
+### PVCGenericSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |

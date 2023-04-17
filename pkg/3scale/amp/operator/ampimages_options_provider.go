@@ -54,8 +54,8 @@ func (a *AmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOp
 	}
 
 	a.ampImagesOptions.SystemSearchdImage = SystemSearchdImageURL()
-	if a.apimanager.Spec.System != nil && a.apimanager.Spec.System.SphinxSpec != nil && a.apimanager.Spec.System.SphinxSpec.Image != nil {
-		a.ampImagesOptions.SystemSearchdImage = *a.apimanager.Spec.System.SphinxSpec.Image
+	if a.apimanager.Spec.System != nil && a.apimanager.Spec.System.SearchdSpec != nil && a.apimanager.Spec.System.SearchdSpec.Image != nil {
+		a.ampImagesOptions.SystemSearchdImage = *a.apimanager.Spec.System.SearchdSpec.Image
 	}
 
 	a.ampImagesOptions.ImagePullSecrets = component.AmpImagesDefaultImagePullSecrets()

@@ -107,3 +107,38 @@ func EnsureEnvVar(desired v1.EnvVar, existingEnvVars *[]v1.EnvVar) bool {
 
 	return update
 }
+
+// EnvVarReconciler implements basic env var reconcilliation.
+// Added when in desired and not in existing
+// Updated when in desired and in existing but not equal
+// Removed when not in desired and exists in existing DC
+func EnvVarReconciler(desired []v1.EnvVar, existing *[]v1.EnvVar, envVar string) bool {
+	update := false
+
+	if existing == nil {
+		*existing = make([]v1.EnvVar, 0)
+	}
+
+	desiredIdx := FindEnvVar(desired, envVar)
+	existingIdx := FindEnvVar(*existing, envVar)
+
+	if desiredIdx < 0 && existingIdx >= 0 {
+		// env var exists in existing and does not exist in desired => Remove from the list
+		// shift all of the elements at the right of the deleting index by one to the left
+		*existing = append((*existing)[:existingIdx], (*existing)[existingIdx+1:]...)
+		update = true
+	} else if desiredIdx < 0 && existingIdx < 0 {
+		// env var does not exist in existing and does not exist in desired => NOOP
+	} else if desiredIdx >= 0 && existingIdx < 0 {
+		// env var does not exist in existing and exists in desired => ADD it
+		*existing = append(*existing, desired[desiredIdx])
+		update = true
+	} else {
+		// env var exists in existing and exists in desired
+		if !reflect.DeepEqual((*existing)[existingIdx], desired[desiredIdx]) {
+			(*existing)[existingIdx] = desired[desiredIdx]
+			update = true
+		}
+	}
+	return update
+}
