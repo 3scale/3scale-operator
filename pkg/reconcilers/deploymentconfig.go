@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	appsv1 "github.com/openshift/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 // DCMutateFn is a function which mutates the existing DeploymentConfig into it's desired state.
@@ -113,38 +115,77 @@ func DeploymentConfigContainerResourcesMutator(desired, existing *appsv1.Deploym
 	return update, nil
 }
 
-// DeploymentConfigEnvVarReconciler implements basic env var reconcilliation for single container deployment configs.
+// DeploymentConfigEnvVarReconciler implements basic env var reconcilliation deployment configs.
+// Existing and desired DC must have same number of containers
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
 // Removed when not in desired and exists in existing DC
 func DeploymentConfigEnvVarReconciler(desired, existing *appsv1.DeploymentConfig, envVar string) bool {
-	update := false
+	updated := false
 
-	existingContainer := &existing.Spec.Template.Spec.Containers[0]
-	desiredContainer := desired.Spec.Template.Spec.Containers[0]
-
-	desiredIdx := helper.FindEnvVar(desiredContainer.Env, envVar)
-	existingIdx := helper.FindEnvVar(existingContainer.Env, envVar)
-
-	if desiredIdx < 0 && existingIdx >= 0 {
-		// env var exists in existing and does not exist in desired => Remove from the list
-		// shift all of the elements at the right of the deleting index by one to the left
-		existingContainer.Env = append(existingContainer.Env[:existingIdx], existingContainer.Env[existingIdx+1:]...)
-		update = true
-	} else if desiredIdx < 0 && existingIdx < 0 {
-		// env var does not exist in existing and does not exist in desired => NOOP
-	} else if desiredIdx >= 0 && existingIdx < 0 {
-		// env var does not exist in existing and exists in desired => ADD it
-		existingContainer.Env = append(existingContainer.Env, desiredContainer.Env[desiredIdx])
-		update = true
-	} else {
-		// env var exists in existing and exists in desired
-		if !reflect.DeepEqual(existingContainer.Env[existingIdx], desiredContainer.Env[desiredIdx]) {
-			existingContainer.Env[existingIdx] = desiredContainer.Env[desiredIdx]
-			update = true
-		}
+	if len(desired.Spec.Template.Spec.Containers) != len(existing.Spec.Template.Spec.Containers) {
+		log.Info("[WARNING] not reconciling deployment config",
+			"name", client.ObjectKeyFromObject(desired),
+			"reason", "existing and desired do not have same number of containers")
+		return false
 	}
-	return update
+
+	if len(desired.Spec.Template.Spec.InitContainers) != len(existing.Spec.Template.Spec.InitContainers) {
+		log.Info("[WARNING] not reconciling deployment config",
+			"name", client.ObjectKeyFromObject(desired),
+			"reason", "existing and desired do not have same number of init containers")
+		return false
+	}
+
+	// Init Containers
+	for idx := range existing.Spec.Template.Spec.InitContainers {
+		tmpChanged := helper.EnvVarReconciler(
+			desired.Spec.Template.Spec.InitContainers[idx].Env,
+			&existing.Spec.Template.Spec.InitContainers[idx].Env,
+			envVar)
+		updated = updated || tmpChanged
+	}
+
+	// Containers
+	for idx := range existing.Spec.Template.Spec.Containers {
+		tmpChanged := helper.EnvVarReconciler(
+			desired.Spec.Template.Spec.Containers[idx].Env,
+			&existing.Spec.Template.Spec.Containers[idx].Env,
+			envVar)
+		updated = updated || tmpChanged
+	}
+
+	// Pre Hook pod
+	if existing.Spec.Strategy.RollingParams != nil &&
+		existing.Spec.Strategy.RollingParams.Pre != nil &&
+		existing.Spec.Strategy.RollingParams.Pre.ExecNewPod != nil &&
+		desired.Spec.Strategy.RollingParams != nil &&
+		desired.Spec.Strategy.RollingParams.Pre != nil &&
+		desired.Spec.Strategy.RollingParams.Pre.ExecNewPod != nil {
+		// reconcile Pre Hook
+		tmpChanged := helper.EnvVarReconciler(
+			desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env,
+			&existing.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env,
+			envVar)
+		updated = updated || tmpChanged
+	}
+
+	// Post Hook pod
+	if existing.Spec.Strategy.RollingParams != nil &&
+		existing.Spec.Strategy.RollingParams.Post != nil &&
+		existing.Spec.Strategy.RollingParams.Post.ExecNewPod != nil &&
+		desired.Spec.Strategy.RollingParams != nil &&
+		desired.Spec.Strategy.RollingParams.Post != nil &&
+		desired.Spec.Strategy.RollingParams.Post.ExecNewPod != nil {
+		// reconcile Pre Hook
+		tmpChanged := helper.EnvVarReconciler(
+			desired.Spec.Strategy.RollingParams.Post.ExecNewPod.Env,
+			&existing.Spec.Strategy.RollingParams.Post.ExecNewPod.Env,
+			envVar)
+		updated = updated || tmpChanged
+	}
+
+	return updated
 }
 
 // DeploymentConfigImageChangeTriggerMutator ensures image change triggers are reconciled
