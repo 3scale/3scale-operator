@@ -8,6 +8,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -82,6 +83,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		r.systemAppDCResourceMutator,
+		// 3scale 2.13 -> 2.14
+		upgrade.SphinxAddressReference,
 	}
 
 	if r.apiManager.Spec.System.AppSpec.Replicas != nil {
@@ -100,6 +103,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigAffinityMutator,
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+		// 3scale 2.13 -> 2.14
+		upgrade.SphinxAddressReference,
 	}
 
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
