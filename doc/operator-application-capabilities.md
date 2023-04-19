@@ -115,7 +115,7 @@ oc create secret generic threescale-provider-account --from-literal=adminURL=htt
 
 Create yaml file with the following content:
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -136,7 +136,7 @@ oc create -f backend1.yaml
 
 **C)** Setup 3scale product with all default settings using previously created backend
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -171,7 +171,7 @@ It is assumed the reader is familiarized with [3scale backends](https://access.r
 
 The minimum configuration required to deploy and manage one 3scale backend is the *Private Base URL* and a name.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -185,7 +185,7 @@ spec:
 
 Define desired backend metrics in your backend custom resource.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -217,7 +217,7 @@ Check on the fields of **Backend** custom resource and possible values in the [B
 
 Define desired backend methods in your backend custom resource.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -240,7 +240,7 @@ Check on the fields of **Backend** custom resource and possible values in the [B
 
 ### Backend mapping rules
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -312,7 +312,7 @@ The process will check the following tenant credential sources. If none is found
 
 * Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -326,7 +326,7 @@ spec:
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -355,7 +355,7 @@ It is assumed the reader is familiarized with [3scale products](https://access.r
 
 The minimum configuration required to deploy and manage one 3scale product is the name.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -368,7 +368,7 @@ spec:
 
 Configure your product with *Apicast Hosted* deployment mode
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -383,7 +383,7 @@ spec:
 
 Configure your product with *Apicast Self Managed* deployment mode
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -402,7 +402,7 @@ spec:
 
 The application is identified & authenticated via a single string.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -422,7 +422,7 @@ Check [Product CRD Reference](product-reference.md) documentation for all the de
 
 The application is identified via the App_ID and authenticated via the App_Key.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -446,7 +446,7 @@ Check [Product CRD Reference](product-reference.md) documentation for all the de
 
 Use OpenID Connect for any OAuth 2.0 flow.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -481,7 +481,7 @@ Check [Product CRD Reference](product-reference.md) documentation for all the de
 
 Define desired product metrics using the *metrics* object.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -507,7 +507,7 @@ spec:
 
 Define desired product methods using the *methods* object.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -529,7 +529,7 @@ spec:
 
 Define desired product mapping rules declaratively using the `mappingRules` object.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -562,7 +562,7 @@ spec:
 
 Define desired product application plans declaratively using the `applicationPlans` object.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -585,7 +585,7 @@ spec:
 
 Define the desired product application plan limits declaratively using the `applicationPlans.limits` list.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -619,7 +619,7 @@ spec:
 
 Define desired product application plan pricing rules declaratively using the `applicationPlans.pricingRules` list.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -656,7 +656,7 @@ spec:
 
 Define desired product backend usages declaratively using the `backendUsages` object.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -677,7 +677,9 @@ spec:
 
 Define desired product policy chain declaratively using the `policies` object.
 
-```
+The policy configuration can be defined in plain text using the `configuration` field, for example:
+
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -698,6 +700,35 @@ spec:
 ```
 
 * **NOTE 1**: `apicast` policy item will be added by the operator if not included.
+
+Alternatively, the configuration for the policy can be referenced in a secret, for example: 
+```yaml
+apiVersion: v1                             
+kind: Secret            
+metadata:                   
+  name: config-policy 
+type: Opaque                
+stringData:                
+  configuration: "{\"http_proxy\":\"http://secret.com\"}"
+```
+* **NOTE 1**: `configuration` field must be used to contain the policy configuration.
+
+This secret can then be referenced using the `configurationRef` field in the policy.
+
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1
+spec:
+  name: "OperatedProduct 1"
+  policies:
+  - configurationRef:
+       name: config-policy
+    name: camel
+    version: builtin
+    enabled: true
+```
 
 Policy chain of a 3scale product can be exported using the 3scale Toolbox [export command](https://github.com/3scale/3scale_toolbox/blob/master/docs/export-import-policy-chain.md)
 
@@ -740,7 +771,7 @@ $ 3scale policies export <MY-3SCALE-PROVIDER-ACCOUNT> <MY-PRODUCT>
 
 Define desired product custom gateway reponse on errors declaratively using the `gatewayResponse` object.
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -821,7 +852,7 @@ The process will check the following tenant credential sources. If none is found
 
 * Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -834,7 +865,7 @@ spec:
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -953,7 +984,7 @@ The process will check the following tenant credential sources. If none is found
 
 * Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: ActiveDoc
 metadata:
@@ -970,7 +1001,7 @@ spec:
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -997,7 +1028,7 @@ The operator will gather required credentials automatically for the default 3sca
 
 Example:
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: CustomPolicyDefinition
 metadata:
@@ -1029,7 +1060,7 @@ The process will check the following tenant credential sources. If none is found
 
 * Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: CustomPolicyDefinition
 metadata:
@@ -1056,7 +1087,7 @@ spec:
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -1166,7 +1197,7 @@ The secret location can be specified using *tenantSecretRef* tenant spec key.
 
 Example of the created secret content:
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -1252,7 +1283,7 @@ The process will check the following tenant credential sources. If none is found
 
 * Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperAccount
 metadata:
@@ -1267,7 +1298,7 @@ spec:
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -1404,7 +1435,7 @@ The process will check the following tenant credential sources. If none is found
 
 * Read credentials from *providerAccountRef* resource attribute. This is a secret local reference, for instance `mytenant`
 
-```
+```yaml
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperUser
 metadata:
@@ -1424,7 +1455,7 @@ spec:
 
 The `mytenant` secret must have`adminURL` and `token` fields with tenant credentials. For example:
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:

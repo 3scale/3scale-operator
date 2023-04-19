@@ -61,6 +61,9 @@ const (
 
 	// ProductPolicyConfigurationPasswordSecretField indicates the secret field name with product policy configuration
 	ProductPolicyConfigurationPasswordSecretField = "configuration"
+
+	// ProductPolicyConfigurationDefault is the default for a product policy configuration
+	ProductPolicyConfigurationDefault = `{}`
 )
 
 var (
@@ -70,7 +73,7 @@ var (
 		Name:    "apicast",
 		Version: "builtin",
 		Configuration: runtime.RawExtension{
-			Raw: []byte(`{}`),
+			Raw: []byte(ProductPolicyConfigurationDefault),
 		},
 		Enabled: true,
 	}
@@ -1230,6 +1233,22 @@ func (product *Product) SetDefaults(logger logr.Logger) bool {
 	if !apicastPolicyFound {
 		// Add to the end of the slice as the one with the lowest priority
 		product.Spec.Policies = append(product.Spec.Policies, apicastPolicy)
+		updated = true
+	}
+
+	// Configuration must have default value to maintain backwards compatability if overwritten with older CRD
+	// where field is required
+	// Using required field and kubebuilder default was not possible due to not being able to have an empty object
+	// in CRD manifest
+	defaultConfigurationSet := false
+	for idx := range product.Spec.Policies {
+		if product.Spec.Policies[idx].Configuration.Raw == nil {
+			product.Spec.Policies[idx].Configuration.Raw = []byte(ProductPolicyConfigurationDefault)
+			defaultConfigurationSet = true
+		}
+	}
+
+	if defaultConfigurationSet {
 		updated = true
 	}
 

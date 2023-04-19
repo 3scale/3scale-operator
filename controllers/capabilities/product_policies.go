@@ -63,14 +63,20 @@ func (t *ProductThreescaleReconciler) convertResourcePolicies() (*threescaleapi.
 
 func (t *ProductThreescaleReconciler) convertPolicyConfiguration(crdPolicy capabilitiesv1beta1.PolicyConfig) (map[string]interface{}, error) {
 	configuration := map[string]interface{}{}
-	// CRD validation ensures no error happens
-	// "configuration` type is object
-	//properties:
-	//  configuration:
-	//    description: Configuration defines the policy configuration
-	//    type: object
-	//    x-kubernetes-preserve-unknown-fields: true
-	_ = json.Unmarshal(crdPolicy.Configuration.Raw, &configuration)
+
+	// If plain value is not the default - use plain value as precedence over secret
+	if string(crdPolicy.Configuration.Raw) != capabilitiesv1beta1.ProductPolicyConfigurationDefault {
+		// CRD validation ensures no error happens
+		// "configuration` type is object
+		//properties:
+		//  configuration:
+		//    description: Configuration defines the policy configuration
+		//    type: object
+		//    x-kubernetes-preserve-unknown-fields: true
+		_ = json.Unmarshal(crdPolicy.Configuration.Raw, &configuration)
+
+		return configuration, nil
+	}
 
 	// If policy is defined in secretRef
 	if crdPolicy.ConfigurationRef.Name != "" {
