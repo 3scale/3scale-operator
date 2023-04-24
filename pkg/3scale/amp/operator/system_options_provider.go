@@ -377,11 +377,7 @@ func (s *SystemOptionsProvider) setBackendOptions() error {
 		return fmt.Errorf("'%s' field of '%s' secret must have 'scheme://user:password@host/path' format", component.BackendSecretBackendListenerServiceEndpointFieldName, component.BackendSecretBackendListenerSecretName)
 	}
 
-	if urlObj.Path == "" {
-		urlObj.Path = "/internal/"
-	}
-
-	s.options.BackendServiceEndpoint = urlObj.String()
+	s.options.CoreInternalAPIEndpoint = urlObj.JoinPath("/internal/").String()
 
 	return nil
 }

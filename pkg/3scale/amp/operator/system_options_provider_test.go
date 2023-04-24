@@ -339,7 +339,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		SideKiqMetrics:                true,
 		AppMetrics:                    true,
 		IncludeOracleOptionalSettings: true,
-		BackendServiceEndpoint:        fmt.Sprintf("%s%s", component.DefaultBackendServiceEndpoint(), "/internal/"),
+		CoreInternalAPIEndpoint:       fmt.Sprintf("%s%s", component.DefaultBackendServiceEndpoint(), "/internal/"),
 		Namespace:                     opts.Namespace,
 	}
 

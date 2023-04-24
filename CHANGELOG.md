@@ -10,6 +10,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Ability to set `APICAST_SERVICE_CACHE_SIZE` [#793](https://github.com/3scale/3scale-operator/pull/793)
 - Expose apicast metric ports in service [#791](https://github.com/3scale/3scale-operator/pull/791)
 
+### Fixed
+- APIManager CRD: system-app env vars `BACKEND_PUBLIC_URL` and `THREESCALE_CORE_INTERNAL_API` from backend-listener secret [#821](https://github.com/3scale/3scale-operator/pull/821)
+
 ## [0.10.1] - 2023-02-01
 
 ### Added

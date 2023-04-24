@@ -206,8 +206,9 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	result = append(result, system.SystemRedisEnvVars()...)
 	result = append(result, system.BackendRedisEnvVars()...)
 	bckListenerApicastRouteEnv := helper.EnvVarFromSecret("APICAST_BACKEND_ROOT_ENDPOINT", BackendSecretBackendListenerSecretName, BackendSecretBackendListenerRouteEndpointFieldName)
-	bckListenerRouteEnv := helper.EnvVarFromValue("BACKEND_ROUTE", system.Options.BackendServiceEndpoint)
-	result = append(result, bckListenerApicastRouteEnv, bckListenerRouteEnv)
+	bckCoreInternalAPIEndpointEnv := helper.EnvVarFromValue("THREESCALE_CORE_INTERNAL_API", system.Options.CoreInternalAPIEndpoint)
+	bckPublicRouteEndpointEnv := helper.EnvVarFromSecret("BACKEND_PUBLIC_URL", BackendSecretBackendListenerSecretName, BackendSecretBackendListenerRouteEndpointFieldName)
+	result = append(result, bckListenerApicastRouteEnv, bckCoreInternalAPIEndpointEnv, bckPublicRouteEndpointEnv)
 
 	smtpEnvSecretEnvs := system.getSystemSMTPEnvsFromSMTPSecret()
 	result = append(result, smtpEnvSecretEnvs...)
