@@ -15,6 +15,7 @@ type AmpImagesOptions struct {
 	ZyncImage                   string `validate:"required"`
 	ZyncDatabasePostgreSQLImage string `validate:"required"`
 	SystemMemcachedImage        string `validate:"required"`
+	SystemSearchdImage          string `validate:"required"`
 	InsecureImportPolicy        bool
 	ImagePullSecrets            []v1.LocalObjectReference `validate:"required"`
 }

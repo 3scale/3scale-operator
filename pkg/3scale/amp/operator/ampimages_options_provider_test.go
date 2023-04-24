@@ -20,6 +20,7 @@ const (
 	zyncImage            = "quay.io/3scale/zync:mytag"
 	zyncPostgresqlImage  = "postgresql-10:mytag"
 	systemMemcachedImage = "memcached:mytag"
+	systemSearchdImage   = "quay.io/3scale/searchd:mytag"
 )
 
 func defaultAmpImageOptions() *component.AmpImagesOptions {
@@ -32,6 +33,7 @@ func defaultAmpImageOptions() *component.AmpImagesOptions {
 		ZyncImage:                   ZyncImageURL(),
 		ZyncDatabasePostgreSQLImage: component.ZyncPostgreSQLImageURL(),
 		SystemMemcachedImage:        SystemMemcachedImageURL(),
+		SystemSearchdImage:          SystemSearchdImageURL(),
 		InsecureImportPolicy:        insecureImportPolicy,
 		ImagePullSecrets:            component.AmpImagesDefaultImagePullSecrets(),
 	}
@@ -51,6 +53,7 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 	tmpZyncImage := zyncImage
 	tmpZyncPostgresqlImage := zyncPostgresqlImage
 	tmpSystemMemcachedImage := systemMemcachedImage
+	tmpSystemSearchdImage := systemSearchdImage
 
 	cases := []struct {
 		name                   string
@@ -135,6 +138,19 @@ func TestGetAmpImagesOptionsProvider(t *testing.T) {
 			func() *component.AmpImagesOptions {
 				opts := defaultAmpImageOptions()
 				opts.SystemMemcachedImage = tmpSystemMemcachedImage
+				return opts
+			},
+		},
+		{
+			"systemSearchdImage",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanager()
+				apimanager.Spec.System.SearchdSpec = &appsv1alpha1.SystemSearchdSpec{Image: &tmpSystemSearchdImage}
+				return apimanager
+			},
+			func() *component.AmpImagesOptions {
+				opts := defaultAmpImageOptions()
+				opts.SystemSearchdImage = tmpSystemSearchdImage
 				return opts
 			},
 		},

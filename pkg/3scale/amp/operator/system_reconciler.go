@@ -5,10 +5,10 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/upgrade"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -70,12 +70,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Sphinx Service
-	err = r.ReconcileService(system.SphinxService(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	// Memcached Service
 	err = r.ReconcileService(system.MemcachedService(), reconcilers.CreateOnlyMutator)
 	if err != nil {
@@ -90,6 +84,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		r.systemAppDCResourceMutator,
 		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
+		// 3scale 2.13 -> 2.14
+		upgrade.SphinxAddressReference,
 	}
 
 	if r.apiManager.Spec.System.AppSpec.Replicas != nil {
@@ -109,6 +105,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
+		// 3scale 2.13 -> 2.14
+		upgrade.SphinxAddressReference,
 	}
 
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
@@ -116,20 +114,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.DeploymentConfigMutator(sidekiqDCMutators...))
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Sphinx DC
-	sphinxDCmutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		upgrade.SphinxSecretKeyEnvVarMutator,
-	)
-	err = r.ReconcileDeploymentConfig(system.SphinxDeploymentConfig(), sphinxDCmutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

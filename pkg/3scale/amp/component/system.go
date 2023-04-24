@@ -90,9 +90,8 @@ const (
 )
 
 const (
-	SystemSidekiqName          = "system-sidekiq"
-	SystemAppDeploymentName    = "system-app"
-	SystemSphinxDeploymentName = "system-sphinx"
+	SystemSidekiqName       = "system-sidekiq"
+	SystemAppDeploymentName = "system-app"
 
 	SystemAppMasterContainerName    = "system-master"
 	SystemAppProviderContainerName  = "system-provider"
@@ -160,21 +159,6 @@ func (system *System) getSystemSMTPEnvsFromSMTPSecret() []v1.EnvVar {
 	return result
 }
 
-func (system *System) buildSystemSphinxEnv() []v1.EnvVar {
-	result := []v1.EnvVar{}
-
-	result = append(result,
-		helper.EnvVarFromConfigMap("RAILS_ENV", "system-environment", "RAILS_ENV"),
-		helper.EnvVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
-		helper.EnvVarFromValue("SECRET_KEY_BASE", "rails/32947"),
-		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", "0.0.0.0"),
-		helper.EnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "db/sphinx/production.conf"),
-		helper.EnvVarFromValue("THINKING_SPHINX_PID_FILE", "db/sphinx/searchd.pid"),
-	)
-	result = append(result, system.SystemRedisEnvVars()...)
-	return result
-}
-
 func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 	result := []v1.EnvVar{}
 
@@ -207,8 +191,7 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("USER_EMAIL", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedAdminEmailFieldName),
 		helper.EnvVarFromSecret("TENANT_NAME", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedTenantNameFieldName),
 
-		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", "system-sphinx"),
-		helper.EnvVarFromValue("THINKING_SPHINX_CONFIGURATION_FILE", "/tmp/sphinx.conf"),
+		helper.EnvVarFromValue("THINKING_SPHINX_ADDRESS", SystemSearchdServiceName),
 
 		helper.EnvVarFromSecret("EVENTS_SHARED_SECRET", SystemSecretSystemEventsHookSecretName, SystemSecretSystemEventsHookPasswordFieldName),
 
@@ -1085,30 +1068,6 @@ func (system *System) DeveloperService() *v1.Service {
 	}
 }
 
-func (system *System) SphinxService() *v1.Service {
-	return &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-sphinx",
-			Labels: system.Options.SphinxLabels,
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name:       "sphinx",
-					Protocol:   v1.ProtocolTCP,
-					Port:       9306,
-					TargetPort: intstr.FromInt(9306),
-				},
-			},
-			Selector: map[string]string{"deploymentConfig": "system-sphinx"},
-		},
-	}
-}
-
 func (system *System) MemcachedService() *v1.Service {
 	return &v1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -1212,113 +1171,6 @@ func (system *System) getSystemServiceDiscoveryData() string {
   max_retry: 5
   verify_ssl: <%= OpenSSL::SSL::VERIFY_NONE %> # 0
 `
-}
-
-func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSphinxDeploymentName,
-			Labels: system.Options.SphinxLabels,
-		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"system-master-svc",
-							"system-sphinx",
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag),
-						},
-					},
-				},
-			},
-			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": SystemSphinxDeploymentName},
-			Strategy: appsv1.DeploymentStrategy{
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					IntervalSeconds: &[]int64{1}[0],
-					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%",
-					},
-					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%",
-					},
-					TimeoutSeconds:      &[]int64{1200}[0],
-					UpdatePeriodSeconds: &[]int64{1}[0],
-				},
-				Type: appsv1.DeploymentStrategyTypeRolling,
-			},
-			Template: &v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: system.Options.SphinxPodTemplateLabels,
-				},
-				Spec: v1.PodSpec{
-					Affinity:           system.Options.SphinxAffinity,
-					Tolerations:        system.Options.SphinxTolerations,
-					ServiceAccountName: "amp",
-					InitContainers: []v1.Container{
-						v1.Container{
-							Name:    "system-master-svc",
-							Image:   "amp-system:latest",
-							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
-							Env: []v1.EnvVar{
-								helper.EnvVarFromValue("SLEEP_SECONDS", "1"),
-							},
-						},
-					},
-					Volumes: []v1.Volume{
-						v1.Volume{
-							Name: "system-sphinx-database",
-							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{
-									Medium: v1.StorageMediumDefault,
-								},
-							},
-						},
-					},
-					Containers: []v1.Container{
-						v1.Container{
-							Name:            "system-sphinx",
-							Image:           "amp-system:latest",
-							ImagePullPolicy: v1.PullIfNotPresent,
-							Args:            []string{"rake", "openshift:thinking_sphinx:start"},
-							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
-									Name:      "system-sphinx-database",
-									MountPath: "/opt/system/db/sphinx",
-								},
-							},
-							Env: system.buildSystemSphinxEnv(),
-							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{
-									TCPSocket: &v1.TCPSocketAction{
-										Port: intstr.FromInt(9306),
-									},
-								},
-								InitialDelaySeconds: 60,
-								PeriodSeconds:       10,
-							},
-							Resources: *system.Options.SphinxContainerResourceRequirements,
-						},
-					},
-				},
-			},
-		},
-	}
 }
 
 func (system *System) AppPodDisruptionBudget() *policyv1.PodDisruptionBudget {

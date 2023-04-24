@@ -12,6 +12,10 @@ func SystemImageURL() string {
 	return "quay.io/3scale/porta:latest"
 }
 
+func SystemSearchdImageURL() string {
+	return "quay.io/3scale/searchd:latest"
+}
+
 func ZyncImageURL() string {
 	return "quay.io/3scale/zync:latest"
 }

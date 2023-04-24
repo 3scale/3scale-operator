@@ -51,12 +51,10 @@ func systemOptions(ns string) (*component.SystemOptions, error) {
 	o.AppProviderContainerResourceRequirements = &corev1.ResourceRequirements{}
 	o.AppMasterContainerResourceRequirements = &corev1.ResourceRequirements{}
 	o.AppDeveloperContainerResourceRequirements = &corev1.ResourceRequirements{}
-	o.SphinxContainerResourceRequirements = &corev1.ResourceRequirements{}
 	o.SidekiqContainerResourceRequirements = &corev1.ResourceRequirements{}
 	o.AdminAccessToken = "_"
 	o.AdminPassword = "_"
 	o.AdminUsername = "_"
-	o.ImageTag = "_"
 	o.ApicastAccessToken = "_"
 	o.ApicastRegistryURL = "_"
 	o.MasterAccessToken = "_"
@@ -87,8 +85,6 @@ func systemOptions(ns string) (*component.SystemOptions, error) {
 	o.ProviderUILabels = map[string]string{}
 	o.MasterUILabels = map[string]string{}
 	o.DeveloperUILabels = map[string]string{}
-	o.SphinxLabels = map[string]string{}
-	o.SphinxPodTemplateLabels = map[string]string{}
 	o.MemcachedLabels = map[string]string{}
 	o.SMTPLabels = map[string]string{}
 	o.BackendServiceEndpoint = "_"

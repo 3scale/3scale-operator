@@ -54,7 +54,7 @@ func TestSetDefaults(t *testing.T) {
 			System: &SystemSpec{
 				AppSpec:     &SystemAppSpec{},
 				SidekiqSpec: &SystemSidekiqSpec{},
-				SphinxSpec:  &SystemSphinxSpec{},
+				SearchdSpec: &SystemSearchdSpec{},
 			},
 			Zync: &ZyncSpec{
 				AppSpec: &ZyncAppSpec{},

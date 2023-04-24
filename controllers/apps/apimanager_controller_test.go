@@ -177,7 +177,7 @@ func waitForAllAPIManagerStandardDeploymentConfigs(namespace string, retryInterv
 		"system-mysql",
 		"system-redis",
 		"system-sidekiq",
-		"system-sphinx",
+		"system-searchd",
 		"zync",
 		"zync-que",
 		"zync-database",

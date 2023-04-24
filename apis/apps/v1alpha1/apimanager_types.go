@@ -427,8 +427,13 @@ type SystemSpec struct {
 	AppSpec *SystemAppSpec `json:"appSpec,omitempty"`
 	// +optional
 	SidekiqSpec *SystemSidekiqSpec `json:"sidekiqSpec,omitempty"`
+
 	// +optional
+	// Deprecated
 	SphinxSpec *SystemSphinxSpec `json:"sphinxSpec,omitempty"`
+
+	// +optional
+	SearchdSpec *SystemSearchdSpec `json:"searchdSpec,omitempty"`
 }
 
 type SystemAppSpec struct {
@@ -457,6 +462,19 @@ type SystemSidekiqSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+type SystemSearchdSpec struct {
+	// +optional
+	Image *string `json:"image,omitempty"`
+	// +optional
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// +optional
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PVC *PVCGenericSpec `json:"persistentVolumeClaim,omitempty"`
+}
+
 type SystemSphinxSpec struct {
 	// +optional
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
@@ -469,7 +487,7 @@ type SystemSphinxSpec struct {
 type SystemFileStorageSpec struct {
 	// Union type. Only one of the fields can be set.
 	// +optional
-	PVC *SystemPVCSpec `json:"persistentVolumeClaim,omitempty"`
+	PVC *PVCGenericSpec `json:"persistentVolumeClaim,omitempty"`
 	// +optional
 	// Deprecated
 	DeprecatedS3 *DeprecatedSystemS3Spec `json:"amazonSimpleStorageService,omitempty"`
@@ -482,7 +500,7 @@ type SystemRedisPersistentVolumeClaimSpec struct {
 	StorageClassName *string `json:"storageClassName,omitempty"`
 }
 
-type SystemPVCSpec struct {
+type PVCGenericSpec struct {
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources represents the minimum resources the volume should have.
@@ -532,7 +550,7 @@ type SystemMySQLSpec struct {
 	Image *string `json:"image,omitempty"`
 
 	// +optional
-	PersistentVolumeClaimSpec *SystemMySQLPVCSpec `json:"persistentVolumeClaim,omitempty"`
+	PersistentVolumeClaimSpec *PVCGenericSpec `json:"persistentVolumeClaim,omitempty"`
 	// +optional
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
@@ -546,37 +564,13 @@ type SystemPostgreSQLSpec struct {
 	Image *string `json:"image,omitempty"`
 
 	// +optional
-	PersistentVolumeClaimSpec *SystemPostgreSQLPVCSpec `json:"persistentVolumeClaim,omitempty"`
+	PersistentVolumeClaimSpec *PVCGenericSpec `json:"persistentVolumeClaim,omitempty"`
 	// +optional
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
-}
-
-type SystemMySQLPVCSpec struct {
-	// +optional
-	StorageClassName *string `json:"storageClassName,omitempty"`
-	// Resources represents the minimum resources the volume should have.
-	// Ignored when VolumeName field is set
-	// +optional
-	Resources *PersistentVolumeClaimResources `json:"resources,omitempty"`
-	// VolumeName is the binding reference to the PersistentVolume backing this claim.
-	// +optional
-	VolumeName *string `json:"volumeName,omitempty"`
-}
-
-type SystemPostgreSQLPVCSpec struct {
-	// +optional
-	StorageClassName *string `json:"storageClassName,omitempty"`
-	// Resources represents the minimum resources the volume should have.
-	// Ignored when VolumeName field is set
-	// +optional
-	Resources *PersistentVolumeClaimResources `json:"resources,omitempty"`
-	// VolumeName is the binding reference to the PersistentVolume backing this claim.
-	// +optional
-	VolumeName *string `json:"volumeName,omitempty"`
 }
 
 type ZyncSpec struct {
@@ -874,8 +868,8 @@ func (apimanager *APIManager) setSystemSpecDefaults() (bool, error) {
 		changed = true
 	}
 
-	if spec.System.SphinxSpec == nil {
-		spec.System.SphinxSpec = &SystemSphinxSpec{}
+	if spec.System.SearchdSpec == nil {
+		spec.System.SearchdSpec = &SystemSearchdSpec{}
 		changed = true
 	}
 

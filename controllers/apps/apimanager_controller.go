@@ -208,6 +208,12 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 		return result, err
 	}
 
+	systemSearchdReconciler := operator.NewSystemSearchdReconciler(baseAPIManagerLogicReconciler)
+	result, err = systemSearchdReconciler.Reconcile()
+	if err != nil || result.Requeue {
+		return result, err
+	}
+
 	systemReconciler := operator.NewSystemReconciler(baseAPIManagerLogicReconciler)
 	result, err = systemReconciler.Reconcile()
 	if err != nil || result.Requeue {
