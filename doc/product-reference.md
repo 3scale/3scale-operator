@@ -199,12 +199,33 @@ Specifies custom gateway response on errors
 
 Specifies product policy config object
 
-| **Field** | **json field**| **Type** | **Info** | **Required** |
-| --- | --- | --- | --- | --- |
-| Name | `name` | string | Policy name | Yes |
-| Version | `version` | string | Policy version | Yes |
-| Enabled | `enabled` | boolean | Policy enabling switch | Yes |
-| Configuration | `configuration` | object | Policy configuration object | Yes. Minimum required is the empty object `{}` |
+| **Field**        | **json field**     | **Type**                                                                                                                                                                                | **Info**                                                                                                                                                                                            | **Required** |
+|------------------|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| Name             | `name`             | string                                                                                                                                                                                  | Policy name                                                                                                                                                                                         | Yes          |
+| Version          | `version`          | string                                                                                                                                                                                  | Policy version                                                                                                                                                                                      | Yes          |
+| Enabled          | `enabled`          | boolean                                                                                                                                                                                 | Policy enabling switch                                                                                                                                                                              | Yes          |
+| Configuration    | `configuration`    | object                                                                           <br/>                                                                                                  | Policy configuration object. Default `{}` will be added if it is not defined in the spec. If the value is not the default value, this will take precedence over `configurationRef` secret reference | No           |
+| ConfigurationRef | `configurationRef` | [v1.SecretReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#secretreference-v1-core) to [Configuration secret reference](#configuration-secret-reference) | The secret that contains policy configuration                                                                                                                                                       | No           |
+
+#### Configuration secret reference
+
+The secret that contains the password referenced by a [v1.SecretReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#secretreference-v1-core) type object.
+
+| **Field** | **Description** | **Required** |
+| --- | --- | --- |
+| `configuration` | The field containing the configuration value | Yes |
+
+For example:
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-policy-configuration
+type: Opaque
+stringData:
+  configuration: <configuration value>
+```
 
 #### Provider Account Reference
 
