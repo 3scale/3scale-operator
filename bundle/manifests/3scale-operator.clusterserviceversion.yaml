@@ -466,6 +466,8 @@ spec:
                   value: centos/postgresql-10-centos7
                 - name: RELATED_IMAGE_OC_CLI
                   value: quay.io/openshift/origin-cli:4.7
+                - name: RELATED_IMAGE_SYSTEM_SEARCHD
+                  value: quay.io/3scale/searchd:latest
                 image: quay.io/3scale/3scale-operator:master
                 name: manager
                 ports:
