@@ -595,6 +595,8 @@ type SystemPostgreSQLSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type ZyncSpec struct {

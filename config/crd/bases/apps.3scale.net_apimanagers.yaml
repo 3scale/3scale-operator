@@ -9343,6 +9343,8 @@ spec:
                                   the PersistentVolume backing this claim.
                                 type: string
                             type: object
+                          priorityClassName:
+                            type: string
                           resources:
                             description: ResourceRequirements describes the compute
                               resource requirements.
@@ -12315,11 +12317,6 @@ spec:
                               PersistentVolume backing this claim.
                             type: string
                         type: object
-                      priorityClassName:
-                        type: string
-                      replicas:
-                        format: int64
-                        type: integer
                       resources:
                         description: ResourceRequirements describes the compute resource
                           requirements.
@@ -14276,9 +14273,6 @@ spec:
                         type: object
                       priorityClassName:
                         type: string
-                      replicas:
-                        format: int64
-                        type: integer
                       resources:
                         description: ResourceRequirements describes the compute resource
                           requirements.

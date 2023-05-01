@@ -629,7 +629,7 @@ func (s *SystemOptionsProvider) setPriorityClassNames() {
 	if s.apimanager.Spec.System.SidekiqSpec.PriorityClassName != nil {
 		s.options.SideKiqPriorityClassName = *s.apimanager.Spec.System.SidekiqSpec.PriorityClassName
 	}
-	if s.apimanager.Spec.System.SphinxSpec.PriorityClassName != nil {
-		s.options.SphinxPriorityClassName = *s.apimanager.Spec.System.SphinxSpec.PriorityClassName
-	}
+	//if s.apimanager.Spec.System.SphinxSpec.PriorityClassName != nil {
+	//	s.options.SphinxPriorityClassName = *s.apimanager.Spec.System.SphinxSpec.PriorityClassName
+	//}
 }

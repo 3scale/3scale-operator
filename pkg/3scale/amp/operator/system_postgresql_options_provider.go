@@ -189,3 +189,10 @@ func (s *SystemPostgresqlOptionsProvider) podTemplateLabels() map[string]string 
 
 	return labels
 }
+
+func (s *SystemPostgresqlOptionsProvider) setPriorityClassNames() {
+	if s.apimanager.IsSystemPostgreSQLEnabled() &&
+		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PriorityClassName != nil {
+		s.options.PriorityClassName = *s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PriorityClassName
+	}
+}
