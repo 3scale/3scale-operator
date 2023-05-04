@@ -6738,6 +6738,8 @@ spec:
                             description: VolumeName is the binding reference to the PersistentVolume backing this claim.
                             type: string
                         type: object
+                      priorityClassName:
+                        type: string
                       resources:
                         description: ResourceRequirements describes the compute resource requirements.
                         properties:

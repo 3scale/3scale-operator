@@ -493,6 +493,8 @@ type SystemSearchdSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PVC *PVCGenericSpec `json:"persistentVolumeClaim,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type SystemSphinxSpec struct {

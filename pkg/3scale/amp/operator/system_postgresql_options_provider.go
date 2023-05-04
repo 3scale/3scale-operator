@@ -45,6 +45,7 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 	s.setResourceRequirementsOptions()
 	s.setPersistentVolumeClaimOptions()
 	s.setNodeAffinityAndTolerationsOptions()
+	s.setPriorityClassNames()
 
 	err = s.options.Validate()
 	if err != nil {

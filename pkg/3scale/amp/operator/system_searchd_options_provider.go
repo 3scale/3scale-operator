@@ -31,6 +31,7 @@ func (s *SystemSearchdOptionsProvider) GetOptions() (*component.SystemSearchdOpt
 	s.setResourceRequirementsOptions()
 	s.setNodeAffinityAndTolerationsOptions()
 	s.setPVCOptions()
+	s.setPriorityClassNames()
 
 	err := s.options.Validate()
 	if err != nil {
@@ -103,5 +104,13 @@ func (s *SystemSearchdOptionsProvider) setPVCOptions() {
 		if s.apimanager.Spec.System.SearchdSpec.PVC.VolumeName != nil {
 			s.options.PVCOptions.VolumeName = *s.apimanager.Spec.System.SearchdSpec.PVC.VolumeName
 		}
+	}
+}
+
+func (s *SystemSearchdOptionsProvider) setPriorityClassNames() {
+	if s.apimanager.Spec.System != nil &&
+		s.apimanager.Spec.System.SearchdSpec != nil &&
+		s.apimanager.Spec.System.SearchdSpec.PriorityClassName != nil {
+		s.options.PriorityClassName = *s.apimanager.Spec.System.SearchdSpec.PriorityClassName
 	}
 }
