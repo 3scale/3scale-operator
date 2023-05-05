@@ -131,6 +131,7 @@ go-bindata: $(GO_BINDATA)
 
 GH-MD-TOC=$(PROJECT_PATH)/bin/gh-md-toc
 $(GH-MD-TOC):
+	mkdir -p $(PROJECT_PATH)/bin
 	curl -sSL https://raw.githubusercontent.com/ekalinin/github-markdown-toc/0.8.0/gh-md-toc -o $(GH-MD-TOC)
 	chmod +x $(GH-MD-TOC)
 
