@@ -1640,8 +1640,4 @@ status:
 
 ## Limitations and unimplemented functionalities
 
-* Deletion of a [Backend CR](backend-reference.md) is not reconciled. Existing Backend in 3scale will not be deleted. [THREESCALE-5538](https://issues.redhat.com/browse/THREESCALE-5538)
-* Deletion of a [Product CR](product-reference.md) is not reconciled. Existing Product in 3scale will not be deleted. [THREESCALE-5539](https://issues.redhat.com/browse/THREESCALE-5539)
 * [Product CRD](product-reference.md) Single sign on (SSO) authentication for the admin and developers portal
-* ActiveDocs CRD [THREESCALE-5531](https://issues.redhat.com/browse/THREESCALE-5531)
-* Gateway Policy CRD [THREESCALE-6101](https://issues.redhat.com/browse/THREESCALE-6101)
