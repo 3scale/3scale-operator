@@ -1,4 +1,5 @@
-# Application Capabilities via 3scale Operator
+# Application Capabilities
+
 
 Featured capabilities:
 
@@ -15,61 +16,61 @@ The following diagram shows available custom resource definitions and their rela
 
 ## Table of contents
 
-* [Application Capabilities via 3scale Operator](#application-capabilities-via-3scale-operator)
-    * [Table of contents](#table-of-contents)
-    * [CRD Index](#crd-index)
-    * [Quickstart Guide](#quickstart-guide)
-    * [Backend custom resource](#backend-custom-resource)
-        * [Backend metrics](#backend-metrics)
-        * [Backend methods](#backend-methods)
-        * [Backend mapping rules](#backend-mapping-rules)
-        * [Backend custom resource status field](#backend-custom-resource-status-field)
-        * [Link your 3scale backend to your 3scale tenant or provider account](#link-your-3scale-backend-to-your-3scale-tenant-or-provider-account)
-    * [Product custom resource](#product-custom-resource)
-        * [Product Deployment Config: Apicast Hosted](#product-deployment-config-apicast-hosted)
-        * [Product Deployment Config:Apicast Self Managed](#product-deployment-configapicast-self-managed)
-        * [Product authentication types](#product-authentication-types)
-            * [User Key](#user-key)
-            * [AppID and AppKey pair](#appid-and-appkey-pair)
-            * [OIDC](#oidc)
-        * [Product metrics](#product-metrics)
-        * [Product methods](#product-methods)
-        * [Product mapping rules](#product-mapping-rules)
-        * [Product application plans](#product-application-plans)
-        * [Product application plan limits](#product-application-plan-limits)
-        * [Product application plan pricing rules](#product-application-plan-pricing-rules)
-        * [Product backend usages](#product-backend-usages)
-        * [Product policy chain](#product-policy-chain)
-        * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
-        * [Product custom resource status field](#product-custom-resource-status-field)
-        * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
-    * [<a href="openapi-user-guide.md">OpenAPI custom resource</a>](#openapi-custom-resource)
-    * [ActiveDoc custom resource](#activedoc-custom-resource)
-        * [Features](#features)
-        * [Reference your OpenAPI document using secret source](#reference-your-openapi-document-using-secret-source)
-        * [Reference your OpenAPI document using URL source](#reference-your-openapi-document-using-url-source)
-        * [ActiveDoc spec source linked with a 3scale product](#activedoc-spec-source-linked-with-a-3scale-product)
-        * [Link your ActiveDoc spec to your 3scale tenant or provider account](#link-your-activedoc-spec-to-your-3scale-tenant-or-provider-account)
-    * [CustomPolicyDefinition Custom Resource](#custompolicydefinition-custom-resource)
-        * [Link your CustomPolicyDefinition spec to your 3scale tenant or provider account](#link-your-custompolicydefinition-spec-to-your-3scale-tenant-or-provider-account)
-    * [Tenant custom resource](#tenant-custom-resource)
-        * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
-        * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
-        * [Tenant deletion](#tenant-deletion)
-    * [DeveloperAccount custom resource](#developeraccount-custom-resource)
-        * [DeveloperAccount custom resource status field](#developeraccount-custom-resource-status-field)
-        * [Link your DeveloperAccount to your 3scale tenant or provider account](#link-your-developeraccount-to-your-3scale-tenant-or-provider-account)
-    * [DeveloperUser custom resource](#developeruser-custom-resource)
-        * [Create developer user with member role](#create-developer-user-with-member-role)
-        * [Create developer user with admin role](#create-developer-user-with-admin-role)
-        * [DeveloperUser custom resource status field](#developeruser-custom-resource-status-field)
-        * [Link your DeveloperUser to your 3scale tenant or provider account](#link-your-developeruser-to-your-3scale-tenant-or-provider-account)
-    * [Application Custom Resource](#application-custom-resource)
-        * [Application Custom Resource Status Fields](#application-custom-resource-status-fields)
-        * [Application Misconfiguration Errors](#application-misconfiguration-errors)
-    * [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
-
-Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
+<!--ts-->
+* [Application Capabilities](#application-capabilities)
+   * [Table of contents](#table-of-contents)
+   * [CRD Index](#crd-index)
+   * [Quickstart Guide](#quickstart-guide)
+   * [Backend custom resource](#backend-custom-resource)
+      * [Backend metrics](#backend-metrics)
+      * [Backend methods](#backend-methods)
+      * [Backend mapping rules](#backend-mapping-rules)
+      * [Backend custom resource status field](#backend-custom-resource-status-field)
+      * [Link your 3scale backend to your 3scale tenant or provider account](#link-your-3scale-backend-to-your-3scale-tenant-or-provider-account)
+   * [Product custom resource](#product-custom-resource)
+      * [Product Deployment Config: Apicast Hosted](#product-deployment-config-apicast-hosted)
+      * [Product Deployment Config:Apicast Self Managed](#product-deployment-configapicast-self-managed)
+      * [Product authentication types](#product-authentication-types)
+         * [User Key](#user-key)
+         * [AppID and AppKey pair](#appid-and-appkey-pair)
+         * [OIDC](#oidc)
+      * [Product metrics](#product-metrics)
+      * [Product methods](#product-methods)
+      * [Product mapping rules](#product-mapping-rules)
+      * [Product application plans](#product-application-plans)
+      * [Product application plan limits](#product-application-plan-limits)
+      * [Product application plan pricing rules](#product-application-plan-pricing-rules)
+      * [Product backend usages](#product-backend-usages)
+      * [Product policy chain](#product-policy-chain)
+      * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
+      * [Product custom resource status field](#product-custom-resource-status-field)
+      * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
+   * [<a href="openapi-user-guide.md">OpenAPI custom resource</a>](#openapi-custom-resource)
+   * [ActiveDoc custom resource](#activedoc-custom-resource)
+      * [Features](#features)
+      * [Reference your OpenAPI document using secret source](#reference-your-openapi-document-using-secret-source)
+      * [Reference your OpenAPI document using URL source](#reference-your-openapi-document-using-url-source)
+      * [ActiveDoc spec source linked with a 3scale product](#activedoc-spec-source-linked-with-a-3scale-product)
+      * [Link your ActiveDoc spec to your 3scale tenant or provider account](#link-your-activedoc-spec-to-your-3scale-tenant-or-provider-account)
+   * [CustomPolicyDefinition Custom Resource](#custompolicydefinition-custom-resource)
+      * [Link your CustomPolicyDefinition spec to your 3scale tenant or provider account](#link-your-custompolicydefinition-spec-to-your-3scale-tenant-or-provider-account)
+   * [Tenant custom resource](#tenant-custom-resource)
+      * [Preparation before deploying the new tenant](#preparation-before-deploying-the-new-tenant)
+      * [Deploy the new tenant custom resource](#deploy-the-new-tenant-custom-resource)
+      * [Tenant deletion](#tenant-deletion)
+   * [DeveloperAccount custom resource](#developeraccount-custom-resource)
+      * [DeveloperAccount custom resource status field](#developeraccount-custom-resource-status-field)
+      * [Link your DeveloperAccount to your 3scale tenant or provider account](#link-your-developeraccount-to-your-3scale-tenant-or-provider-account)
+   * [DeveloperUser custom resource](#developeruser-custom-resource)
+      * [Create developer user with member role](#create-developer-user-with-member-role)
+      * [Create developer user with admin role](#create-developer-user-with-admin-role)
+      * [DeveloperUser custom resource status field](#developeruser-custom-resource-status-field)
+      * [Link your DeveloperUser to your 3scale tenant or provider account](#link-your-developeruser-to-your-3scale-tenant-or-provider-account)
+   * [Application Custom Resource](#application-custom-resource)
+      * [Application Custom Resource Status Fields](#application-custom-resource-status-fields)
+      * [Application Misconfiguration Errors](#application-misconfiguration-errors)
+   * [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
+<!--te-->
 
 ## CRD Index
 
@@ -701,14 +702,14 @@ spec:
 
 * **NOTE 1**: `apicast` policy item will be added by the operator if not included.
 
-Alternatively, the configuration for the policy can be referenced in a secret, for example: 
+Alternatively, the configuration for the policy can be referenced in a secret, for example:
 ```yaml
-apiVersion: v1                             
-kind: Secret            
-metadata:                   
-  name: config-policy 
-type: Opaque                
-stringData:                
+apiVersion: v1
+kind: Secret
+metadata:
+  name: config-policy
+type: Opaque
+stringData:
   configuration: "{\"http_proxy\":\"http://secret.com\"}"
 ```
 * **NOTE 1**: `configuration` field must be used to contain the policy configuration.
@@ -1212,7 +1213,7 @@ Refer to [Tenant CRD Reference](tenant-reference.md) documentation for more info
 
 ### Tenant deletion
 
-If a tenant has been created via CR it can be marked for deletion in 3scale API Management solution by deleting the tenant CR. 
+If a tenant has been created via CR it can be marked for deletion in 3scale API Management solution by deleting the tenant CR.
 
 ## DeveloperAccount custom resource
 
@@ -1482,7 +1483,7 @@ The operator will gather required credentials automatically for the default 3sca
 
 Notes:
 
-* 3scale applications belong to some DeveloperAccount account. 
+* 3scale applications belong to some DeveloperAccount account.
 * 3scale applications are linked directly to a product and applicationPlan
 
 Consider we have the following product which is connected to a backend
@@ -1515,7 +1516,7 @@ spec:
       path: /
 ```
 
-And the following developerAccount 
+And the following developerAccount
 
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
@@ -1535,10 +1536,10 @@ kind: Application
 metadata:
   name: example
 spec:
-  accountCR: 
+  accountCR:
     name: developeraccount01
   applicationPlanName: plan01
-  productCR: 
+  productCR:
     name: product1-cr
   name: application-name
   description: description of application
@@ -1551,12 +1552,12 @@ kind: Application
 metadata:
   name: example
 spec:
-  accountCR: 
+  accountCR:
     name: developeraccount01
   applicationPlanName: plan02
-  productCR: 
+  productCR:
     name: product1-cr
-  name: testApp12 
+  name: testApp12
   description: further testing12
   suspend: true
 ```
@@ -1603,7 +1604,7 @@ status:
 ### Application Misconfiguration Errors
 
 DeveloperAccount doesn't exist
-The `status.message` field will inform you if the spec.accountCR.name developerAccount is incorrect or not found 
+The `status.message` field will inform you if the spec.accountCR.name developerAccount is incorrect or not found
 ```yaml
 status:
   conditions:
@@ -1614,7 +1615,7 @@ status:
   observedGeneration: 7
 ```
 Product doesn't exist
-The `status.message` field will inform you if the product CR name is incorrect or not found 
+The `status.message` field will inform you if the product CR name is incorrect or not found
 ```yaml
 status:
   conditions:
@@ -1632,7 +1633,7 @@ status:
     - lastTransitionTime: '2022-11-01T15:17:58Z'
       message: >-
         reconcile3scaleApplication application [testApp]: Plan [plan03] doesnt
-        exist in product [product1] 
+        exist in product [product1]
       status: 'False'
       type: Ready
   observedGeneration: 9
