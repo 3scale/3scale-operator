@@ -279,6 +279,7 @@ workflows:
       - assets-validate
       - prometheusrules-validate
       - build-operator-image-only
+      - doc-toc-validate
       - unit-tests-coverage:
           requires:
             - run-unit-tests
