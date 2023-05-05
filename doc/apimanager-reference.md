@@ -72,9 +72,6 @@ One APIManager custom resource per project is allowed.
       * [fileStorage-S3-credentials-secret](#filestorage-s3-credentials-secret)
       * [system-smtp](#system-smtp)
    * [Default APIManager components compute resources](#default-apimanager-components-compute-resources)
-
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-
 <!--te-->
 
 ## APIManager
