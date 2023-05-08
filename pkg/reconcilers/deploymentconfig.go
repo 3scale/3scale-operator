@@ -51,6 +51,7 @@ func GenericBackendMutators() []DCMutateFn {
 		DeploymentConfigAffinityMutator,
 		DeploymentConfigTolerationsMutator,
 		DeploymentConfigPodTemplateLabelsMutator,
+		DeploymentConfigPriorityClassMutator,
 	}
 }
 
@@ -229,6 +230,18 @@ func DeploymentConfigRemoveDuplicateEnvVarMutator(_, existing *appsv1.Deployment
 			existing.Spec.Template.Spec.Containers[idx].Env = prunedEnvs
 			updated = true
 		}
+	}
+
+	return updated, nil
+}
+
+// DeploymentConfigPriorityClassMutator ensures priorityclass is reconciled
+func DeploymentConfigPriorityClassMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	updated := false
+
+	if existing.Spec.Template.Spec.PriorityClassName != desired.Spec.Template.Spec.PriorityClassName {
+		existing.Spec.Template.Spec.PriorityClassName = desired.Spec.Template.Spec.PriorityClassName
+		updated = true
 	}
 
 	return updated, nil

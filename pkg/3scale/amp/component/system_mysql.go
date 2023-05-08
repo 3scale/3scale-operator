@@ -237,6 +237,7 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
+					PriorityClassName: mysql.Options.PriorityClassName,
 				},
 			},
 		},

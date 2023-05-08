@@ -263,6 +263,8 @@ type ApicastProductionSpec struct {
 	// ServiceCacheSize specifies the number of services that APICast can store in the internal cache
 	// +optional
 	ServiceCacheSize *int32 `json:"serviceCacheSize,omitempty"` // APICAST_SERVICE_CACHE_SIZE
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -321,6 +323,8 @@ type ApicastStagingSpec struct {
 	// ServiceCacheSize specifies the number of services that APICast can store in the internal cache
 	// +optional
 	ServiceCacheSize *int32 `json:"serviceCacheSize,omitempty"` // APICAST_SERVICE_CACHE_SIZE
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type BackendSpec struct {
@@ -336,6 +340,8 @@ type BackendSpec struct {
 	RedisTolerations []v1.Toleration `json:"redisTolerations,omitempty"`
 	// +optional
 	RedisResources *v1.ResourceRequirements `json:"redisResources,omitempty"`
+	// +optional
+	RedisPriorityClassName *string `json:"redisPriorityClassName,omitempty"`
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
@@ -358,6 +364,8 @@ type BackendListenerSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type BackendWorkerSpec struct {
@@ -369,6 +377,8 @@ type BackendWorkerSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type BackendCronSpec struct {
@@ -380,6 +390,8 @@ type BackendCronSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type SystemSpec struct {
@@ -395,6 +407,8 @@ type SystemSpec struct {
 	MemcachedTolerations []v1.Toleration `json:"memcachedTolerations,omitempty"`
 	// +optional
 	MemcachedResources *v1.ResourceRequirements `json:"memcachedResources,omitempty"`
+	// +optional
+	MemcachedPriorityClassName *string `json:"memcachedPriorityClassName,omitempty"`
 
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
@@ -407,6 +421,8 @@ type SystemSpec struct {
 	RedisTolerations []v1.Toleration `json:"redisTolerations,omitempty"`
 	// +optional
 	RedisResources *v1.ResourceRequirements `json:"redisResources,omitempty"`
+	// +optional
+	RedisPriorityClassName *string `json:"redisPriorityClassName,omitempty"`
 
 	// TODO should this field be optional? We have different approaches in Kubernetes.
 	// For example, in v1.Volume it is optional and there's an implied behaviour
@@ -449,6 +465,8 @@ type SystemAppSpec struct {
 	ProviderContainerResources *v1.ResourceRequirements `json:"providerContainerResources,omitempty"`
 	// +optional
 	DeveloperContainerResources *v1.ResourceRequirements `json:"developerContainerResources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type SystemSidekiqSpec struct {
@@ -460,6 +478,8 @@ type SystemSidekiqSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type SystemSearchdSpec struct {
@@ -473,6 +493,8 @@ type SystemSearchdSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PVC *PVCGenericSpec `json:"persistentVolumeClaim,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type SystemSphinxSpec struct {
@@ -482,6 +504,8 @@ type SystemSphinxSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type SystemFileStorageSpec struct {
@@ -557,6 +581,8 @@ type SystemMySQLSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type SystemPostgreSQLSpec struct {
@@ -571,6 +597,8 @@ type SystemPostgreSQLSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type ZyncSpec struct {
@@ -591,6 +619,9 @@ type ZyncSpec struct {
 
 	// +optional
 	QueSpec *ZyncQueSpec `json:"queSpec,omitempty"`
+
+	// +optional
+	DatabasePriorityClassName *string `json:"databasePriorityClassName,omitempty"`
 }
 
 type ZyncAppSpec struct {
@@ -602,6 +633,8 @@ type ZyncAppSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type ZyncQueSpec struct {
@@ -613,6 +646,8 @@ type ZyncQueSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// +optional
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// +optional
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }
 
 type HighAvailabilitySpec struct {

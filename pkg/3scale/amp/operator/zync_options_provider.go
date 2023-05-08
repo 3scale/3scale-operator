@@ -43,6 +43,7 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.setResourceRequirementsOptions()
 	z.setNodeAffinityAndTolerationsOptions()
 	z.setReplicas()
+	z.setPriorityClassNames()
 
 	z.zyncOptions.CommonLabels = z.commonLabels()
 	z.zyncOptions.CommonZyncLabels = z.commonZyncLabels()
@@ -275,4 +276,16 @@ func (z *ZyncOptionsProvider) zyncQueServiceAccountImagePullSecrets() []v1.Local
 	}
 
 	return component.DefaultZyncQueServiceAccountImagePullSecrets()
+}
+
+func (z *ZyncOptionsProvider) setPriorityClassNames() {
+	if z.apimanager.Spec.Zync.AppSpec.PriorityClassName != nil {
+		z.zyncOptions.ZyncPriorityClassName = *z.apimanager.Spec.Zync.AppSpec.PriorityClassName
+	}
+	if z.apimanager.Spec.Zync.QueSpec.PriorityClassName != nil {
+		z.zyncOptions.ZyncQuePriorityClassName = *z.apimanager.Spec.Zync.QueSpec.PriorityClassName
+	}
+	if z.apimanager.Spec.Zync.DatabasePriorityClassName != nil {
+		z.zyncOptions.ZyncDatabasePriorityClassName = *z.apimanager.Spec.Zync.DatabasePriorityClassName
+	}
 }

@@ -27,6 +27,7 @@ type ApicastOptionsProvider struct {
 
 const (
 	APIcastEnvironmentCMAnnotation = "apps.3scale.net/env-configmap-hash"
+	PodPrioritySystemNodeCritical  = "system-node-critical"
 )
 
 func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {
@@ -85,6 +86,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.setResourceRequirementsOptions()
 	a.setNodeAffinityAndTolerationsOptions()
 	a.setReplicas()
+	a.setPriorityClassNames()
 
 	err := a.setCustomPolicies()
 	if err != nil {
@@ -451,4 +453,16 @@ func (a *ApicastOptionsProvider) envConfigMapHash() string {
 	h.Write([]byte(a.apicastOptions.ResponseCodes))
 	val := h.Sum32()
 	return fmt.Sprint(val)
+}
+
+func (a *ApicastOptionsProvider) setPriorityClassNames() {
+	//a.apicastOptions.PriorityClassNameStaging = PodPrioritySystemNodeCritical
+	if a.apimanager.Spec.Apicast.StagingSpec.PriorityClassName != nil {
+		a.apicastOptions.PriorityClassNameStaging = *a.apimanager.Spec.Apicast.StagingSpec.PriorityClassName
+	}
+
+	//a.apicastOptions.PriorityClassNameProduction = PodPrioritySystemNodeCritical
+	if a.apimanager.Spec.Apicast.ProductionSpec.PriorityClassName != nil {
+		a.apicastOptions.PriorityClassNameProduction = *a.apimanager.Spec.Apicast.ProductionSpec.PriorityClassName
+	}
 }

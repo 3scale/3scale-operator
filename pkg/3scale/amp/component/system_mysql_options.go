@@ -25,6 +25,7 @@ type SystemMysqlOptions struct {
 	CommonLabels                  map[string]string `validate:"required"`
 	DeploymentLabels              map[string]string `validate:"required"`
 	PodTemplateLabels             map[string]string `validate:"required"`
+	PriorityClassName             string            `validate:"-"`
 }
 
 func NewSystemMysqlOptions() *SystemMysqlOptions {

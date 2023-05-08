@@ -45,6 +45,7 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 	s.setResourceRequirementsOptions()
 	s.setPersistentVolumeClaimOptions()
 	s.setNodeAffinityAndTolerationsOptions()
+	s.setPriorityClassNames()
 
 	err = s.options.Validate()
 	if err != nil {
@@ -188,4 +189,11 @@ func (s *SystemPostgresqlOptionsProvider) podTemplateLabels() map[string]string 
 	labels["deploymentConfig"] = "system-postgresql"
 
 	return labels
+}
+
+func (s *SystemPostgresqlOptionsProvider) setPriorityClassNames() {
+	if s.apimanager.IsSystemPostgreSQLEnabled() &&
+		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PriorityClassName != nil {
+		s.options.PriorityClassName = *s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PriorityClassName
+	}
 }

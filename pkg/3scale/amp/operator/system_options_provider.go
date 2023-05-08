@@ -61,6 +61,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 		return nil, err
 	}
 	s.setReplicas()
+	s.setPriorityClassNames()
 
 	s.options.SideKiqMetrics = true
 	s.options.AppMetrics = true
@@ -618,4 +619,17 @@ func (s *SystemOptionsProvider) smtpLabels() map[string]string {
 	labels := s.commonLabels()
 	labels["threescale_component_element"] = "smtp"
 	return labels
+}
+
+func (s *SystemOptionsProvider) setPriorityClassNames() {
+
+	if s.apimanager.Spec.System.AppSpec.PriorityClassName != nil {
+		s.options.AppPriorityClassName = *s.apimanager.Spec.System.AppSpec.PriorityClassName
+	}
+	if s.apimanager.Spec.System.SidekiqSpec.PriorityClassName != nil {
+		s.options.SideKiqPriorityClassName = *s.apimanager.Spec.System.SidekiqSpec.PriorityClassName
+	}
+	//if s.apimanager.Spec.System.SphinxSpec.PriorityClassName != nil {
+	//	s.options.SphinxPriorityClassName = *s.apimanager.Spec.System.SphinxSpec.PriorityClassName
+	//}
 }

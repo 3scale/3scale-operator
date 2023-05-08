@@ -105,6 +105,10 @@ type SystemOptions struct {
 
 	BackendServiceEndpoint string `validate:"required"`
 
+	AppPriorityClassName     string `validate:"-"`
+	SideKiqPriorityClassName string `validate:"-"`
+	SphinxPriorityClassName  string `validate:"-"`
+
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions
 	// that need namespace filtering because they are "global" once imported

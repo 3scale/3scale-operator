@@ -113,6 +113,7 @@ func (redis *Redis) buildPodTemplateSpec() *v1.PodTemplateSpec {
 			ServiceAccountName: "amp", //TODO make this configurable via flag
 			Volumes:            redis.buildPodVolumes(),
 			Containers:         redis.buildPodContainers(),
+			PriorityClassName:  redis.Options.BackendRedisPriorityClassName,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: redis.Options.BackendRedisPodTemplateLabels,
@@ -542,6 +543,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy:        v1.PullIfNotPresent,
 						},
 					},
+					PriorityClassName: redis.Options.SystemRedisPriorityClassName,
 				}},
 		},
 	}

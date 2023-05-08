@@ -138,6 +138,7 @@ func (s *SystemSearchd) DeploymentConfig() *appsv1.DeploymentConfig {
 							Resources: s.Options.ContainerResourceRequirements,
 						},
 					},
+					PriorityClassName: s.Options.PriorityClassName,
 				},
 			},
 		},

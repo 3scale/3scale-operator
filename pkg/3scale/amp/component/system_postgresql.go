@@ -181,6 +181,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
+					PriorityClassName: p.Options.PriorityClassName,
 				},
 			},
 		},

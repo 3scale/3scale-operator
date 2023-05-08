@@ -1087,6 +1087,8 @@ spec:
                               tracer is `jaeger`. If not set, `jaeger` will be used.
                             type: string
                         type: object
+                      priorityClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -2217,6 +2219,8 @@ spec:
                               tracer is `jaeger`. If not set, `jaeger` will be used.
                             type: string
                         type: object
+                      priorityClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -3204,6 +3208,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priorityClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -4183,6 +4189,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priorityClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -5131,6 +5139,8 @@ spec:
                       storageClassName:
                         type: string
                     type: object
+                  redisPriorityClassName:
+                    type: string
                   redisResources:
                     description: ResourceRequirements describes the compute resource
                       requirements.
@@ -6102,6 +6112,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priorityClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -7193,6 +7205,8 @@ spec:
                               More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
+                      priorityClassName:
+                        type: string
                       providerContainerResources:
                         description: ResourceRequirements describes the compute resource
                           requirements.
@@ -8262,6 +8276,8 @@ spec:
                                   the PersistentVolume backing this claim.
                                 type: string
                             type: object
+                          priorityClassName:
+                            type: string
                           resources:
                             description: ResourceRequirements describes the compute
                               resource requirements.
@@ -9327,6 +9343,8 @@ spec:
                                   the PersistentVolume backing this claim.
                                 type: string
                             type: object
+                          priorityClassName:
+                            type: string
                           resources:
                             description: ResourceRequirements describes the compute
                               resource requirements.
@@ -10354,6 +10372,8 @@ spec:
                     type: object
                   memcachedImage:
                     type: string
+                  memcachedPriorityClassName:
+                    type: string
                   memcachedResources:
                     description: ResourceRequirements describes the compute resource
                       requirements.
@@ -11296,6 +11316,8 @@ spec:
                       storageClassName:
                         type: string
                     type: object
+                  redisPriorityClassName:
+                    type: string
                   redisResources:
                     description: ResourceRequirements describes the compute resource
                       requirements.
@@ -12295,6 +12317,8 @@ spec:
                               PersistentVolume backing this claim.
                             type: string
                         type: object
+                      priorityClassName:
+                        type: string
                       resources:
                         description: ResourceRequirements describes the compute resource
                           requirements.
@@ -13269,6 +13293,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priorityClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -14247,6 +14273,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priorityClassName:
+                        type: string
                       resources:
                         description: ResourceRequirements describes the compute resource
                           requirements.
@@ -15229,6 +15257,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priorityClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer
@@ -16170,6 +16200,8 @@ spec:
                             type: array
                         type: object
                     type: object
+                  databasePriorityClassName:
+                    type: string
                   databaseResources:
                     description: ResourceRequirements describes the compute resource
                       requirements.
@@ -17145,6 +17177,8 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      priorityClassName:
+                        type: string
                       replicas:
                         format: int64
                         type: integer

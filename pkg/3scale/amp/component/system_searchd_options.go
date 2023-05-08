@@ -22,7 +22,8 @@ type SystemSearchdOptions struct {
 	Labels            map[string]string `validate:"required"`
 	PodTemplateLabels map[string]string `validate:"required"`
 
-	PVCOptions SearchdPVCOptions `validate:"required"`
+	PVCOptions        SearchdPVCOptions `validate:"required"`
+	PriorityClassName string            `validate:"-"`
 }
 
 func NewSystemSearchdOptions() *SystemSearchdOptions {
