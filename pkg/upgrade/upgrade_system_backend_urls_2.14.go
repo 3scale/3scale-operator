@@ -6,7 +6,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
-// DeploymentConfigPodTemplateLabelsMutator ensures pod template labels are reconciled
+// SystemBackendUrls reconciles environment variables for Backend URLs on system DC
 func SystemBackendUrls(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	var changed bool
 
