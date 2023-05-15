@@ -1,7 +1,6 @@
 package operator
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -339,7 +338,6 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		SideKiqMetrics:                true,
 		AppMetrics:                    true,
 		IncludeOracleOptionalSettings: true,
-		CoreInternalAPIEndpoint:       fmt.Sprintf("%s%s", component.DefaultBackendServiceEndpoint(), "/internal/"),
 		Namespace:                     opts.Namespace,
 	}
 

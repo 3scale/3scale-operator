@@ -2,7 +2,6 @@ package operator
 
 import (
 	"fmt"
-	"net/url"
 	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
@@ -111,11 +110,6 @@ func (s *SystemOptionsProvider) setSecretBasedOptions() error {
 	err = s.setSystemSMTPOptions()
 	if err != nil {
 		return fmt.Errorf("unable to create System SMTP secret options - %s", err)
-	}
-
-	err = s.setBackendOptions()
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -360,26 +354,6 @@ func (s *SystemOptionsProvider) setSystemSMTPOptions() error {
 	}
 
 	s.options.SmtpSecretOptions = smtpSecretOptions
-	return nil
-}
-
-func (s *SystemOptionsProvider) setBackendOptions() error {
-	rawURL, err := s.secretSource.FieldValue(
-		component.BackendSecretBackendListenerSecretName,
-		component.BackendSecretBackendListenerServiceEndpointFieldName,
-		component.DefaultBackendServiceEndpoint())
-	if err != nil {
-		return err
-	}
-
-	urlObj, err := url.Parse(rawURL)
-	if err != nil {
-		return fmt.Errorf("'%s' field of '%s' secret must have 'scheme://user:password@host/path' format", component.BackendSecretBackendListenerServiceEndpointFieldName, component.BackendSecretBackendListenerSecretName)
-	}
-
-	urlObj.Path += "/internal/"
-	s.options.CoreInternalAPIEndpoint = urlObj.String()
-
 	return nil
 }
 
