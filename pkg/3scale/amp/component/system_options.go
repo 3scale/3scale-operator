@@ -105,7 +105,9 @@ type SystemOptions struct {
 
 	AppPriorityClassName     string `validate:"-"`
 	SideKiqPriorityClassName string `validate:"-"`
-	SphinxPriorityClassName  string `validate:"-"`
+
+	AppTopologySpreadConstraints     []v1.TopologySpreadConstraint `validate:"-"`
+	SideKiqTopologySpreadConstraints []v1.TopologySpreadConstraint `validate:"-"`
 
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions

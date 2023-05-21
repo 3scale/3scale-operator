@@ -80,6 +80,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 		reconcilers.DeploymentConfigPriorityClassMutator,
+		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
 	}
 
 	if r.apiManager.Spec.Apicast.StagingSpec.Replicas != nil {
@@ -114,6 +115,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 		reconcilers.DeploymentConfigPriorityClassMutator,
+		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
 	}
 
 	if r.apiManager.Spec.Apicast.ProductionSpec.Replicas != nil {

@@ -130,8 +130,9 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 							Ports:           backend.workerPorts(),
 						},
 					},
-					ServiceAccountName: "amp",
-					PriorityClassName:  backend.Options.PriorityClassNameWorker}},
+					ServiceAccountName:        "amp",
+					PriorityClassName:         backend.Options.PriorityClassNameWorker,
+					TopologySpreadConstraints: backend.Options.TopologySpreadConstraintsWorker}},
 		},
 	}
 }
@@ -205,8 +206,9 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
-					ServiceAccountName: "amp",
-					PriorityClassName:  backend.Options.PriorityClassNameCron,
+					ServiceAccountName:        "amp",
+					PriorityClassName:         backend.Options.PriorityClassNameCron,
+					TopologySpreadConstraints: backend.Options.TopologySpreadConstraintsCron,
 				}},
 		},
 	}
@@ -295,8 +297,9 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
-					ServiceAccountName: "amp",
-					PriorityClassName:  backend.Options.PriorityClassNameListener,
+					ServiceAccountName:        "amp",
+					PriorityClassName:         backend.Options.PriorityClassNameListener,
+					TopologySpreadConstraints: backend.Options.TopologySpreadConstraintsListener,
 				}},
 		},
 	}

@@ -32,6 +32,7 @@ func (s *SystemSearchdOptionsProvider) GetOptions() (*component.SystemSearchdOpt
 	s.setNodeAffinityAndTolerationsOptions()
 	s.setPVCOptions()
 	s.setPriorityClassNames()
+	s.setTopologySpreadConstraints()
 
 	err := s.options.Validate()
 	if err != nil {
@@ -112,5 +113,13 @@ func (s *SystemSearchdOptionsProvider) setPriorityClassNames() {
 		s.apimanager.Spec.System.SearchdSpec != nil &&
 		s.apimanager.Spec.System.SearchdSpec.PriorityClassName != nil {
 		s.options.PriorityClassName = *s.apimanager.Spec.System.SearchdSpec.PriorityClassName
+	}
+}
+
+func (s *SystemSearchdOptionsProvider) setTopologySpreadConstraints() {
+	if s.apimanager.Spec.System != nil &&
+		s.apimanager.Spec.System.SearchdSpec != nil &&
+		s.apimanager.Spec.System.SearchdSpec.TopologySpreadConstraints != nil {
+		s.options.TopologySpreadConstraints = s.apimanager.Spec.System.SearchdSpec.TopologySpreadConstraints
 	}
 }

@@ -112,7 +112,8 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
-					PriorityClassName: m.Options.PriorityClassName,
+					PriorityClassName:         m.Options.PriorityClassName,
+					TopologySpreadConstraints: m.Options.TopologySpreadConstraints,
 				}},
 		},
 	}

@@ -19,13 +19,14 @@ type SystemMysqlOptions struct {
 	ContainerResourceRequirements v1.ResourceRequirements `validate:"-"`
 	PVCStorageClass               *string
 	PVCVolumeName                 *string
-	PVCStorageRequests            resource.Quantity `validate:"required"`
-	Affinity                      *v1.Affinity      `validate:"-"`
-	Tolerations                   []v1.Toleration   `validate:"-"`
-	CommonLabels                  map[string]string `validate:"required"`
-	DeploymentLabels              map[string]string `validate:"required"`
-	PodTemplateLabels             map[string]string `validate:"required"`
-	PriorityClassName             string            `validate:"-"`
+	PVCStorageRequests            resource.Quantity             `validate:"required"`
+	Affinity                      *v1.Affinity                  `validate:"-"`
+	Tolerations                   []v1.Toleration               `validate:"-"`
+	CommonLabels                  map[string]string             `validate:"required"`
+	DeploymentLabels              map[string]string             `validate:"required"`
+	PodTemplateLabels             map[string]string             `validate:"required"`
+	PriorityClassName             string                        `validate:"-"`
+	TopologySpreadConstraints     []v1.TopologySpreadConstraint `validate:"-"`
 }
 
 func NewSystemMysqlOptions() *SystemMysqlOptions {

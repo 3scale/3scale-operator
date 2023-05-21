@@ -41,6 +41,10 @@ type BackendOptions struct {
 	PriorityClassNameWorker   string `validate:"-"`
 	PriorityClassNameCron     string `validate:"-"`
 
+	TopologySpreadConstraintsListener []v1.TopologySpreadConstraint `validate:"-"`
+	TopologySpreadConstraintsWorker   []v1.TopologySpreadConstraint `validate:"-"`
+	TopologySpreadConstraintsCron     []v1.TopologySpreadConstraint `validate:"-"`
+
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions
 	// that need namespace filtering because they are "global" once imported

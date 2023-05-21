@@ -30,8 +30,10 @@ type RedisOptions struct {
 	BackendRedisLabels            map[string]string `validate:"required"`
 	BackendRedisPodTemplateLabels map[string]string `validate:"required"`
 
-	SystemRedisPriorityClassName  string `validate:"-"`
-	BackendRedisPriorityClassName string `validate:"-"`
+	SystemRedisPriorityClassName          string                        `validate:"-"`
+	BackendRedisPriorityClassName         string                        `validate:"-"`
+	SystemRedisTopologySpreadConstraints  []v1.TopologySpreadConstraint `validate:"-"`
+	BackendRedisTopologySpreadConstraints []v1.TopologySpreadConstraint `validate:"-"`
 
 	// secrets
 	BackendStorageURL                string `validate:"required"`

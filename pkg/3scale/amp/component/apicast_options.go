@@ -59,27 +59,29 @@ func (c APIcastTracingConfig) AnnotationKey() string {
 }
 
 type ApicastOptions struct {
-	ManagementAPI                  string `validate:"required"`
-	OpenSSLVerify                  string `validate:"required"`
-	ResponseCodes                  string `validate:"required"`
-	ImageTag                       string `validate:"required"`
-	ExtendedMetrics                bool
-	ProductionResourceRequirements v1.ResourceRequirements `validate:"-"`
-	StagingResourceRequirements    v1.ResourceRequirements `validate:"-"`
-	ProductionReplicas             int32
-	StagingReplicas                int32
-	CommonLabels                   map[string]string `validate:"required"`
-	CommonStagingLabels            map[string]string `validate:"required"`
-	CommonProductionLabels         map[string]string `validate:"required"`
-	StagingPodTemplateLabels       map[string]string `validate:"required"`
-	ProductionPodTemplateLabels    map[string]string `validate:"required"`
-	ProductionAffinity             *v1.Affinity      `validate:"-"`
-	ProductionTolerations          []v1.Toleration   `validate:"-"`
-	StagingAffinity                *v1.Affinity      `validate:"-"`
-	StagingTolerations             []v1.Toleration   `validate:"-"`
-	ProductionWorkers              *int32            `validate:"-"`
-	PriorityClassNameStaging       string            `validate:"-"`
-	PriorityClassNameProduction    string            `validate:"-"`
+	ManagementAPI                       string `validate:"required"`
+	OpenSSLVerify                       string `validate:"required"`
+	ResponseCodes                       string `validate:"required"`
+	ImageTag                            string `validate:"required"`
+	ExtendedMetrics                     bool
+	ProductionResourceRequirements      v1.ResourceRequirements `validate:"-"`
+	StagingResourceRequirements         v1.ResourceRequirements `validate:"-"`
+	ProductionReplicas                  int32
+	StagingReplicas                     int32
+	CommonLabels                        map[string]string             `validate:"required"`
+	CommonStagingLabels                 map[string]string             `validate:"required"`
+	CommonProductionLabels              map[string]string             `validate:"required"`
+	StagingPodTemplateLabels            map[string]string             `validate:"required"`
+	ProductionPodTemplateLabels         map[string]string             `validate:"required"`
+	ProductionAffinity                  *v1.Affinity                  `validate:"-"`
+	ProductionTolerations               []v1.Toleration               `validate:"-"`
+	StagingAffinity                     *v1.Affinity                  `validate:"-"`
+	StagingTolerations                  []v1.Toleration               `validate:"-"`
+	ProductionWorkers                   *int32                        `validate:"-"`
+	PriorityClassNameStaging            string                        `validate:"-"`
+	PriorityClassNameProduction         string                        `validate:"-"`
+	TopologySpreadConstraintsStaging    []v1.TopologySpreadConstraint `validate:"-"`
+	TopologySpreadConstraintsProduction []v1.TopologySpreadConstraint `validate:"-"`
 
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions

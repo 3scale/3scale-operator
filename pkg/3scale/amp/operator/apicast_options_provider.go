@@ -87,6 +87,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.setNodeAffinityAndTolerationsOptions()
 	a.setReplicas()
 	a.setPriorityClassNames()
+	a.setTopologySpreadConstraints()
 
 	err := a.setCustomPolicies()
 	if err != nil {
@@ -456,13 +457,19 @@ func (a *ApicastOptionsProvider) envConfigMapHash() string {
 }
 
 func (a *ApicastOptionsProvider) setPriorityClassNames() {
-	//a.apicastOptions.PriorityClassNameStaging = PodPrioritySystemNodeCritical
 	if a.apimanager.Spec.Apicast.StagingSpec.PriorityClassName != nil {
 		a.apicastOptions.PriorityClassNameStaging = *a.apimanager.Spec.Apicast.StagingSpec.PriorityClassName
 	}
-
-	//a.apicastOptions.PriorityClassNameProduction = PodPrioritySystemNodeCritical
 	if a.apimanager.Spec.Apicast.ProductionSpec.PriorityClassName != nil {
 		a.apicastOptions.PriorityClassNameProduction = *a.apimanager.Spec.Apicast.ProductionSpec.PriorityClassName
+	}
+}
+
+func (a *ApicastOptionsProvider) setTopologySpreadConstraints() {
+	if a.apimanager.Spec.Apicast.StagingSpec.TopologySpreadConstraints != nil {
+		a.apicastOptions.TopologySpreadConstraintsStaging = a.apimanager.Spec.Apicast.StagingSpec.TopologySpreadConstraints
+	}
+	if a.apimanager.Spec.Apicast.ProductionSpec.TopologySpreadConstraints != nil {
+		a.apicastOptions.TopologySpreadConstraintsProduction = a.apimanager.Spec.Apicast.ProductionSpec.TopologySpreadConstraints
 	}
 }
