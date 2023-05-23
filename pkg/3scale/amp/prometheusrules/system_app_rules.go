@@ -87,8 +87,6 @@ func systemOptions(ns string) (*component.SystemOptions, error) {
 	o.DeveloperUILabels = map[string]string{}
 	o.MemcachedLabels = map[string]string{}
 	o.SMTPLabels = map[string]string{}
-	o.BackendServiceEndpoint = "_"
-	o.BackendServiceEndpoint = "_"
 	o.UserSessionTTL = &tmp
 
 	return o, o.Validate()

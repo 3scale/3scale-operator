@@ -103,8 +103,6 @@ type SystemOptions struct {
 
 	IncludeOracleOptionalSettings bool
 
-	BackendServiceEndpoint string `validate:"required"`
-
 	AppPriorityClassName     string `validate:"-"`
 	SideKiqPriorityClassName string `validate:"-"`
 	SphinxPriorityClassName  string `validate:"-"`
