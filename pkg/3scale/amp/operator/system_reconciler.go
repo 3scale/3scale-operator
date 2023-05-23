@@ -87,6 +87,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
 		// 3scale 2.13 -> 2.14
 		upgrade.SphinxAddressReference,
+		// 3scale 2.13 -> 2.14
+		upgrade.SystemBackendUrls,
 	}
 
 	if r.apiManager.Spec.System.AppSpec.Replicas != nil {

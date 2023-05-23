@@ -11,12 +11,20 @@ func SystemBackendUrls(desired, existing *appsv1.DeploymentConfig) (bool, error)
 	var changed bool
 
 	// Remove old env var
-	oldVarRemoved := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "BACKEND_ROUTE")
+	tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_BACKEND_ROOT_ENDPOINT")
+	changed = changed || tmpChanged
+
+	// Remove old env var
+	tmpChanged = reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "BACKEND_ROUTE")
+	changed = changed || tmpChanged
 
 	// Add new env vars
-	newVar1Added := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "BACKEND_URL")
-	newVar2Added := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "BACKEND_PUBLIC_URL")
-	changed = oldVarRemoved || newVar1Added || newVar2Added
+	tmpChanged = reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "BACKEND_URL")
+	changed = changed || tmpChanged
+
+	// Add new env vars
+	tmpChanged = reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "BACKEND_PUBLIC_URL")
+	changed = changed || tmpChanged
 
 	return changed, nil
 }
