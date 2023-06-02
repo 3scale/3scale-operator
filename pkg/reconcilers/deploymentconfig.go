@@ -247,7 +247,7 @@ func DeploymentConfigPriorityClassMutator(desired, existing *appsv1.DeploymentCo
 	return updated, nil
 }
 
-// DeploymentConfigPriorityClassMutator ensures priorityclass is reconciled
+// DeploymentConfigStrategyMutator ensures desired strategy
 func DeploymentConfigStrategyMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	updated := false
 
