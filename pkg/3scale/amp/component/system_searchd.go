@@ -80,20 +80,7 @@ func (s *SystemSearchd) DeploymentConfig() *appsv1.DeploymentConfig {
 			Replicas: 1,
 			Selector: map[string]string{"deploymentConfig": SystemSearchdDeploymentName},
 			Strategy: appsv1.DeploymentStrategy{
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					IntervalSeconds: &[]int64{1}[0],
-					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%",
-					},
-					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%",
-					},
-					TimeoutSeconds:      &[]int64{1200}[0],
-					UpdatePeriodSeconds: &[]int64{1}[0],
-				},
-				Type: appsv1.DeploymentStrategyTypeRolling,
+				Type: appsv1.DeploymentStrategyTypeRecreate,
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
