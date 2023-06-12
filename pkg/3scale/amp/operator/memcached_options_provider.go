@@ -31,6 +31,7 @@ func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOp
 	m.setResourceRequirementsOptions()
 	m.setNodeAffinityAndTolerationsOptions()
 	m.setPriorityClassNames()
+	m.setTopologySpreadConstraints()
 
 	err := m.memcachedOptions.Validate()
 	if err != nil {
@@ -82,5 +83,11 @@ func (m *MemcachedOptionsProvider) podTemplateLabels() map[string]string {
 func (m *MemcachedOptionsProvider) setPriorityClassNames() {
 	if m.apimanager.Spec.System.MemcachedPriorityClassName != nil {
 		m.memcachedOptions.PriorityClassName = *m.apimanager.Spec.System.MemcachedPriorityClassName
+	}
+}
+
+func (m *MemcachedOptionsProvider) setTopologySpreadConstraints() {
+	if m.apimanager.Spec.System.MemcachedTopologySpreadConstraints != nil {
+		m.memcachedOptions.TopologySpreadConstraints = m.apimanager.Spec.System.MemcachedTopologySpreadConstraints
 	}
 }

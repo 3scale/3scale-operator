@@ -44,6 +44,7 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.setNodeAffinityAndTolerationsOptions()
 	z.setReplicas()
 	z.setPriorityClassNames()
+	z.setTopologySpreadConstraints()
 
 	z.zyncOptions.CommonLabels = z.commonLabels()
 	z.zyncOptions.CommonZyncLabels = z.commonZyncLabels()
@@ -287,5 +288,17 @@ func (z *ZyncOptionsProvider) setPriorityClassNames() {
 	}
 	if z.apimanager.Spec.Zync.DatabasePriorityClassName != nil {
 		z.zyncOptions.ZyncDatabasePriorityClassName = *z.apimanager.Spec.Zync.DatabasePriorityClassName
+	}
+}
+
+func (z *ZyncOptionsProvider) setTopologySpreadConstraints() {
+	if z.apimanager.Spec.Zync.AppSpec.TopologySpreadConstraints != nil {
+		z.zyncOptions.ZyncTopologySpreadConstraints = z.apimanager.Spec.Zync.AppSpec.TopologySpreadConstraints
+	}
+	if z.apimanager.Spec.Zync.QueSpec.TopologySpreadConstraints != nil {
+		z.zyncOptions.ZyncQueTopologySpreadConstraints = z.apimanager.Spec.Zync.QueSpec.TopologySpreadConstraints
+	}
+	if z.apimanager.Spec.Zync.DatabaseTopologySpreadConstraints != nil {
+		z.zyncOptions.ZyncDatabaseTopologySpreadConstraints = z.apimanager.Spec.Zync.DatabaseTopologySpreadConstraints
 	}
 }

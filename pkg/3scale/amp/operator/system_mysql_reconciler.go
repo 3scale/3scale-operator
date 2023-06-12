@@ -32,6 +32,7 @@ func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		reconcilers.DeploymentConfigPriorityClassMutator,
+		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(systemMySQL.DeploymentConfig(), dcMutator)
 	if err != nil {

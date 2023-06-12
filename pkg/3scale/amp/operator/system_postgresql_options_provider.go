@@ -46,6 +46,7 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 	s.setPersistentVolumeClaimOptions()
 	s.setNodeAffinityAndTolerationsOptions()
 	s.setPriorityClassNames()
+	s.setTopologySpreadConstraints()
 
 	err = s.options.Validate()
 	if err != nil {
@@ -195,5 +196,12 @@ func (s *SystemPostgresqlOptionsProvider) setPriorityClassNames() {
 	if s.apimanager.IsSystemPostgreSQLEnabled() &&
 		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PriorityClassName != nil {
 		s.options.PriorityClassName = *s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.PriorityClassName
+	}
+}
+
+func (s *SystemPostgresqlOptionsProvider) setTopologySpreadConstraints() {
+	if s.apimanager.IsSystemPostgreSQLEnabled() &&
+		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.TopologySpreadConstraints != nil {
+		s.options.TopologySpreadConstraints = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.TopologySpreadConstraints
 	}
 }

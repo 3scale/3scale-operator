@@ -18,6 +18,8 @@
          * [Setting custom affinity and tolerations](#setting-custom-affinity-and-tolerations)
          * [Setting custom compute resource requirements at component level](#setting-custom-compute-resource-requirements-at-component-level)
          * [Setting custom storage resource requirements](#setting-custom-storage-resource-requirements)
+         * [Setting custom PriorityClassName](#setting-custom-priorityclassname)
+         * [Setting custom TopologySpreadConstraints](#setting-custom-topologyspreadconstraints)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
          * [Backend replicas](#backend-replicas)
@@ -710,6 +712,61 @@ spec:
 *IMPORTANT NOTE*: Storage resource requirements are **usually** install only attributes.
 Only when the underlying PersistentVolume's storageclass allows resizing, storage resource requirements can be modified after installation.
 Check [Expanding persistent volumes](https://docs.openshift.com/container-platform/4.5/storage/expanding-persistent-volumes.html) official doc for more information.
+
+#### Setting custom PriorityClassName
+PriorityClassName specifies the Pod priority.  See [here](https://docs.openshift.com/container-platform/4.13/nodes/pods/nodes-pods-priority.html) for more information.   
+It be can be customized through APIManager CR `priorityClassName` attribute for each DeploymentConfig.  
+Example for apicast-staging and backend-listener:
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+    name: example-apimanager
+spec:
+    wildcardDomain: example.com
+    resourceRequirementsEnabled: false
+    apicast:
+        stagingSpec:
+            priorityClassName: openshift-user-critical
+    backend:
+        listenerSpec:
+            priorityClassName: openshift-user-critical
+```
+
+#### Setting custom TopologySpreadConstraints
+TopologySpreadConstraints specifies how to spread matching pods among the given topology.  See [here](https://docs.openshift.com/container-platform/4.13/nodes/scheduling/nodes-scheduler-pod-topology-spread-constraints.html) for more information.  
+It be can be customized through APIManager CR `topologySpreadConstraints` attribute for each DeploymentConfig.  
+Example for apicast-staging and backend-listener:
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+    name: example-apimanager
+spec:
+    wildcardDomain: example.com
+    resourceRequirementsEnabled: false
+    apicast:
+        stagingSpec:
+            priorityClassName: openshift-user-critical
+            topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: topology.kubernetes.io/zone
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                matchLabels:
+                  app: 3scale-api-management
+    backend:
+        listenerSpec:
+            priorityClassName: openshift-user-critical
+            topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: topology.kubernetes.io/zone
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                matchLabels:
+                  app: 3scale-api-management
+```
+
 
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set

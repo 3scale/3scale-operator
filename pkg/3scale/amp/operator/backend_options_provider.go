@@ -44,6 +44,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.setNodeAffinityAndTolerationsOptions()
 	o.setReplicas()
 	o.setPriorityClassNames()
+	o.setTopologySpreadConstraints()
 
 	o.backendOptions.CommonLabels = o.commonLabels()
 	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
@@ -221,19 +222,25 @@ func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels() map[string]stri
 }
 
 func (o *OperatorBackendOptionsProvider) setPriorityClassNames() {
-
-	//o.backendOptions.PriorityClassNameListener = PodPrioritySystemNodeCritical
 	if o.apimanager.Spec.Backend.ListenerSpec.PriorityClassName != nil {
 		o.backendOptions.PriorityClassNameListener = *o.apimanager.Spec.Backend.ListenerSpec.PriorityClassName
 	}
-
-	//o.backendOptions.PriorityClassNameWorker = PodPrioritySystemNodeCritical
 	if o.apimanager.Spec.Backend.WorkerSpec.PriorityClassName != nil {
 		o.backendOptions.PriorityClassNameWorker = *o.apimanager.Spec.Backend.WorkerSpec.PriorityClassName
 	}
-
-	//o.backendOptions.PriorityClassNameCron = PodPrioritySystemNodeCritical
 	if o.apimanager.Spec.Backend.CronSpec.PriorityClassName != nil {
 		o.backendOptions.PriorityClassNameCron = *o.apimanager.Spec.Backend.CronSpec.PriorityClassName
+	}
+}
+
+func (o *OperatorBackendOptionsProvider) setTopologySpreadConstraints() {
+	if o.apimanager.Spec.Backend.ListenerSpec.TopologySpreadConstraints != nil {
+		o.backendOptions.TopologySpreadConstraintsListener = o.apimanager.Spec.Backend.ListenerSpec.TopologySpreadConstraints
+	}
+	if o.apimanager.Spec.Backend.WorkerSpec.TopologySpreadConstraints != nil {
+		o.backendOptions.TopologySpreadConstraintsWorker = o.apimanager.Spec.Backend.WorkerSpec.TopologySpreadConstraints
+	}
+	if o.apimanager.Spec.Backend.CronSpec.TopologySpreadConstraints != nil {
+		o.backendOptions.TopologySpreadConstraintsCron = o.apimanager.Spec.Backend.CronSpec.TopologySpreadConstraints
 	}
 }

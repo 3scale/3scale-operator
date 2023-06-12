@@ -58,6 +58,7 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 
 	r.setPersistentVolumeClaimOptions()
 	r.setPriorityClassNames()
+	r.setTopologySpreadConstraints()
 
 	// Should the operator be reading redis secrets?
 	// When HA is disabled, do we support external redis?
@@ -250,5 +251,14 @@ func (r *RedisOptionsProvider) setPriorityClassNames() {
 	}
 	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisPriorityClassName != nil {
 		r.options.BackendRedisPriorityClassName = *r.apimanager.Spec.Backend.RedisPriorityClassName
+	}
+}
+
+func (r *RedisOptionsProvider) setTopologySpreadConstraints() {
+	if r.apimanager.Spec.System != nil && r.apimanager.Spec.System.RedisTopologySpreadConstraints != nil {
+		r.options.SystemRedisTopologySpreadConstraints = r.apimanager.Spec.System.RedisTopologySpreadConstraints
+	}
+	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisTopologySpreadConstraints != nil {
+		r.options.BackendRedisTopologySpreadConstraints = r.apimanager.Spec.Backend.RedisTopologySpreadConstraints
 	}
 }

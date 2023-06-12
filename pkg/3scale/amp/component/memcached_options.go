@@ -16,7 +16,8 @@ type MemcachedOptions struct {
 	DeploymentLabels  map[string]string `validate:"required"`
 	PodTemplateLabels map[string]string `validate:"required"`
 
-	PriorityClassName string `validate:"-"`
+	PriorityClassName         string                        `validate:"-"`
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `validate:"-"`
 }
 
 func NewMemcachedOptions() *MemcachedOptions {

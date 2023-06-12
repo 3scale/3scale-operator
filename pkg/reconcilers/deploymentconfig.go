@@ -52,6 +52,7 @@ func GenericBackendMutators() []DCMutateFn {
 		DeploymentConfigTolerationsMutator,
 		DeploymentConfigPodTemplateLabelsMutator,
 		DeploymentConfigPriorityClassMutator,
+		DeploymentConfigTopologySpreadConstraintsMutator,
 	}
 }
 
@@ -253,6 +254,20 @@ func DeploymentConfigStrategyMutator(desired, existing *appsv1.DeploymentConfig)
 
 	if !reflect.DeepEqual(existing.Spec.Strategy, desired.Spec.Strategy) {
 		existing.Spec.Strategy = desired.Spec.Strategy
+		updated = true
+	}
+
+	return updated, nil
+}
+
+// DeploymentConfigTopologySpreadConstraintsMutator ensures TopologySpreadConstraints is reconciled
+func DeploymentConfigTopologySpreadConstraintsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	updated := false
+
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.TopologySpreadConstraints, desired.Spec.Template.Spec.TopologySpreadConstraints) {
+		diff := cmp.Diff(existing.Spec.Template.Spec.TopologySpreadConstraints, desired.Spec.Template.Spec.TopologySpreadConstraints)
+		log.Info(fmt.Sprintf("%s spec.template.spec.TopologySpreadConstraints has changed: %s", common.ObjectInfo(desired), diff))
+		existing.Spec.Template.Spec.TopologySpreadConstraints = desired.Spec.Template.Spec.TopologySpreadConstraints
 		updated = true
 	}
 

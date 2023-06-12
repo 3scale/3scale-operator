@@ -265,6 +265,8 @@ type ApicastProductionSpec struct {
 	ServiceCacheSize *int32 `json:"serviceCacheSize,omitempty"` // APICAST_SERVICE_CACHE_SIZE
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -325,6 +327,8 @@ type ApicastStagingSpec struct {
 	ServiceCacheSize *int32 `json:"serviceCacheSize,omitempty"` // APICAST_SERVICE_CACHE_SIZE
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type BackendSpec struct {
@@ -342,6 +346,9 @@ type BackendSpec struct {
 	RedisResources *v1.ResourceRequirements `json:"redisResources,omitempty"`
 	// +optional
 	RedisPriorityClassName *string `json:"redisPriorityClassName,omitempty"`
+	// +optional
+	RedisTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"redisTopologySpreadConstraints,omitempty"`
+
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
@@ -366,6 +373,8 @@ type BackendListenerSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type BackendWorkerSpec struct {
@@ -379,6 +388,8 @@ type BackendWorkerSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type BackendCronSpec struct {
@@ -392,6 +403,8 @@ type BackendCronSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type SystemSpec struct {
@@ -409,10 +422,11 @@ type SystemSpec struct {
 	MemcachedResources *v1.ResourceRequirements `json:"memcachedResources,omitempty"`
 	// +optional
 	MemcachedPriorityClassName *string `json:"memcachedPriorityClassName,omitempty"`
+	// +optional
+	MemcachedTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"memcachedTopologySpreadConstraints,omitempty"`
 
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
-
 	// +optional
 	RedisPersistentVolumeClaimSpec *SystemRedisPersistentVolumeClaimSpec `json:"redisPersistentVolumeClaim,omitempty"`
 	// +optional
@@ -423,6 +437,8 @@ type SystemSpec struct {
 	RedisResources *v1.ResourceRequirements `json:"redisResources,omitempty"`
 	// +optional
 	RedisPriorityClassName *string `json:"redisPriorityClassName,omitempty"`
+	// +optional
+	RedisTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"redisTopologySpreadConstraints,omitempty"`
 
 	// TODO should this field be optional? We have different approaches in Kubernetes.
 	// For example, in v1.Volume it is optional and there's an implied behaviour
@@ -467,6 +483,8 @@ type SystemAppSpec struct {
 	DeveloperContainerResources *v1.ResourceRequirements `json:"developerContainerResources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type SystemSidekiqSpec struct {
@@ -480,6 +498,8 @@ type SystemSidekiqSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type SystemSearchdSpec struct {
@@ -495,6 +515,8 @@ type SystemSearchdSpec struct {
 	PVC *PVCGenericSpec `json:"persistentVolumeClaim,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type SystemSphinxSpec struct {
@@ -506,6 +528,8 @@ type SystemSphinxSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type SystemFileStorageSpec struct {
@@ -583,6 +607,8 @@ type SystemMySQLSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type SystemPostgreSQLSpec struct {
@@ -599,6 +625,8 @@ type SystemPostgreSQLSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type ZyncSpec struct {
@@ -622,6 +650,8 @@ type ZyncSpec struct {
 
 	// +optional
 	DatabasePriorityClassName *string `json:"databasePriorityClassName,omitempty"`
+	// +optional
+	DatabaseTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"databaseTopologySpreadConstraints,omitempty"`
 }
 
 type ZyncAppSpec struct {
@@ -635,6 +665,8 @@ type ZyncAppSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type ZyncQueSpec struct {
@@ -648,6 +680,8 @@ type ZyncQueSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// +optional
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 }
 
 type HighAvailabilitySpec struct {

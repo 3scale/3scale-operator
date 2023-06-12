@@ -211,3 +211,11 @@ func (s *SystemMysqlOptionsProvider) setPriorityClassNames() {
 		s.mysqlOptions.PriorityClassName = *s.apimanager.Spec.System.DatabaseSpec.MySQL.PriorityClassName
 	}
 }
+
+func (s *SystemMysqlOptionsProvider) setTopologySpreadConstraints() {
+	if s.apimanager.Spec.System.DatabaseSpec != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL.TopologySpreadConstraints != nil {
+		s.mysqlOptions.TopologySpreadConstraints = s.apimanager.Spec.System.DatabaseSpec.MySQL.TopologySpreadConstraints
+	}
+}

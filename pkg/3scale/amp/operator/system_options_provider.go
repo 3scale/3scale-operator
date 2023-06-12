@@ -61,6 +61,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	}
 	s.setReplicas()
 	s.setPriorityClassNames()
+	s.setTopologySpreadConstraints()
 
 	s.options.SideKiqMetrics = true
 	s.options.AppMetrics = true
@@ -593,14 +594,19 @@ func (s *SystemOptionsProvider) smtpLabels() map[string]string {
 }
 
 func (s *SystemOptionsProvider) setPriorityClassNames() {
-
 	if s.apimanager.Spec.System.AppSpec.PriorityClassName != nil {
 		s.options.AppPriorityClassName = *s.apimanager.Spec.System.AppSpec.PriorityClassName
 	}
 	if s.apimanager.Spec.System.SidekiqSpec.PriorityClassName != nil {
 		s.options.SideKiqPriorityClassName = *s.apimanager.Spec.System.SidekiqSpec.PriorityClassName
 	}
-	//if s.apimanager.Spec.System.SphinxSpec.PriorityClassName != nil {
-	//	s.options.SphinxPriorityClassName = *s.apimanager.Spec.System.SphinxSpec.PriorityClassName
-	//}
+}
+
+func (s *SystemOptionsProvider) setTopologySpreadConstraints() {
+	if s.apimanager.Spec.System.AppSpec.TopologySpreadConstraints != nil {
+		s.options.AppTopologySpreadConstraints = s.apimanager.Spec.System.AppSpec.TopologySpreadConstraints
+	}
+	if s.apimanager.Spec.System.SidekiqSpec.TopologySpreadConstraints != nil {
+		s.options.SideKiqTopologySpreadConstraints = s.apimanager.Spec.System.SidekiqSpec.TopologySpreadConstraints
+	}
 }

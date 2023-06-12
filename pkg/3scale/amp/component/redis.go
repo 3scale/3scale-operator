@@ -108,12 +108,13 @@ func (redis *Redis) buildDeploymentConfigTriggers() appsv1.DeploymentTriggerPoli
 func (redis *Redis) buildPodTemplateSpec() *v1.PodTemplateSpec {
 	return &v1.PodTemplateSpec{
 		Spec: v1.PodSpec{
-			Affinity:           redis.Options.BackendRedisAffinity,
-			Tolerations:        redis.Options.BackendRedisTolerations,
-			ServiceAccountName: "amp", //TODO make this configurable via flag
-			Volumes:            redis.buildPodVolumes(),
-			Containers:         redis.buildPodContainers(),
-			PriorityClassName:  redis.Options.BackendRedisPriorityClassName,
+			Affinity:                  redis.Options.BackendRedisAffinity,
+			Tolerations:               redis.Options.BackendRedisTolerations,
+			ServiceAccountName:        "amp", //TODO make this configurable via flag
+			Volumes:                   redis.buildPodVolumes(),
+			Containers:                redis.buildPodContainers(),
+			PriorityClassName:         redis.Options.BackendRedisPriorityClassName,
+			TopologySpreadConstraints: redis.Options.BackendRedisTopologySpreadConstraints,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: redis.Options.BackendRedisPodTemplateLabels,
@@ -543,7 +544,8 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 							ImagePullPolicy:        v1.PullIfNotPresent,
 						},
 					},
-					PriorityClassName: redis.Options.SystemRedisPriorityClassName,
+					PriorityClassName:         redis.Options.SystemRedisPriorityClassName,
+					TopologySpreadConstraints: redis.Options.SystemRedisTopologySpreadConstraints,
 				}},
 		},
 	}
