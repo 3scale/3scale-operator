@@ -242,6 +242,12 @@ func (z *ZyncOptionsProvider) zyncPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
+	if z.apimanager.Spec.Zync.AppSpec.Labels != nil {
+		for k, v := range z.apimanager.Spec.Zync.AppSpec.Labels {
+			labels[k] = v
+		}
+	}
+
 	labels["deploymentConfig"] = "zync"
 
 	return labels
@@ -254,6 +260,12 @@ func (z *ZyncOptionsProvider) zyncQuePodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
+	if z.apimanager.Spec.Zync.QueSpec.Labels != nil {
+		for k, v := range z.apimanager.Spec.Zync.QueSpec.Labels {
+			labels[k] = v
+		}
+	}
+
 	labels["deploymentConfig"] = "zync-que"
 
 	return labels
@@ -264,6 +276,12 @@ func (z *ZyncOptionsProvider) zyncDatabasePodTemplateLabels() map[string]string 
 
 	for k, v := range z.commonZyncDatabaseLabels() {
 		labels[k] = v
+	}
+
+	if z.apimanager.Spec.Zync.DatabaseLabels != nil {
+		for k, v := range z.apimanager.Spec.Zync.DatabaseLabels {
+			labels[k] = v
+		}
 	}
 
 	labels["deploymentConfig"] = "zync-database"

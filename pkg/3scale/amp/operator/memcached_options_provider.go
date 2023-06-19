@@ -75,6 +75,12 @@ func (m *MemcachedOptionsProvider) podTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
+	if m.apimanager.Spec.System.MemcachedLabels != nil {
+		for k, v := range m.apimanager.Spec.System.MemcachedLabels {
+			labels[k] = v
+		}
+	}
+
 	labels["deploymentConfig"] = "system-memcache"
 
 	return labels

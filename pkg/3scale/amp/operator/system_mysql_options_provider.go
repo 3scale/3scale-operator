@@ -199,6 +199,14 @@ func (s *SystemMysqlOptionsProvider) podTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
+	if s.apimanager.Spec.System.DatabaseSpec != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL.Labels != nil {
+		for k, v := range s.apimanager.Spec.System.DatabaseSpec.MySQL.Labels {
+			labels[k] = v
+		}
+	}
+
 	labels["deploymentConfig"] = "system-mysql"
 
 	return labels

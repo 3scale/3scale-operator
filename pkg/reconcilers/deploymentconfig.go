@@ -217,7 +217,7 @@ func DeploymentConfigImageChangeTriggerMutator(desired, existing *appsv1.Deploym
 func DeploymentConfigPodTemplateLabelsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	updated := false
 
-	helper.MergeMapStringString(&updated, &existing.Spec.Template.Labels, desired.Spec.Template.Labels)
+	helper.MergeMapStringStringLabels(&updated, &existing.Spec.Template.Labels, desired.Spec.Template.Labels)
 
 	return updated, nil
 }

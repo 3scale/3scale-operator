@@ -80,6 +80,14 @@ func (s *SystemSearchdOptionsProvider) podTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
+	if s.apimanager.Spec.System != nil &&
+		s.apimanager.Spec.System.SearchdSpec != nil &&
+		s.apimanager.Spec.System.SearchdSpec.Labels != nil {
+		for k, v := range s.apimanager.Spec.System.SearchdSpec.Labels {
+			labels[k] = v
+		}
+	}
+
 	labels["deploymentConfig"] = "system-searchd"
 
 	return labels

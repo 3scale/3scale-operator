@@ -722,6 +722,11 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
+                        type: array
                       workers:
                         format: int32
                         minimum: 1
@@ -1413,6 +1418,11 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
+                        type: array
                     type: object
                 type: object
               appLabel:
@@ -1997,6 +2007,11 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
+                        type: array
                     type: object
                   image:
                     type: string
@@ -2577,6 +2592,11 @@ spec:
                           - topologyKey
                           - whenUnsatisfiable
                           type: object
+                        type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
                         type: array
                     type: object
                   redisAffinity:
@@ -3159,6 +3179,11 @@ spec:
                       - whenUnsatisfiable
                       type: object
                     type: array
+                  redisLabels:
+                    description: An array of string values. Contains component specific labels.
+                    items:
+                      type: string
+                    type: array
                   workerSpec:
                     properties:
                       affinity:
@@ -3736,6 +3761,11 @@ spec:
                           - topologyKey
                           - whenUnsatisfiable
                           type: object
+                        type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
                         type: array
                     type: object
                 type: object
@@ -4416,6 +4446,11 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
+                        type: array
                     type: object
                   database:
                     properties:
@@ -5018,6 +5053,11 @@ spec:
                               - whenUnsatisfiable
                               type: object
                             type: array
+                          labels:
+                            description: An array of string values. Contains component specific labels.
+                            items:
+                              type: string
+                            type: array
                         type: object
                       postgresql:
                         properties:
@@ -5616,6 +5656,11 @@ spec:
                               - topologyKey
                               - whenUnsatisfiable
                               type: object
+                            type: array
+                          labels:
+                            description: An array of string values. Contains component specific labels.
+                            items:
+                              type: string
                             type: array
                         type: object
                     type: object
@@ -6266,6 +6311,11 @@ spec:
                       - whenUnsatisfiable
                       type: object
                     type: array
+                  memcachedLabels:
+                    description: An array of string values. Contains component specific labels.
+                    items:
+                      type: string
+                    type: array
                   redisAffinity:
                     description: Affinity is a group of affinity scheduling rules.
                     properties:
@@ -6845,6 +6895,11 @@ spec:
                       - topologyKey
                       - whenUnsatisfiable
                       type: object
+                    type: array
+                  redisLabels:
+                    description: An array of string values. Contains component specific labels.
+                    items:
+                      type: string
                     type: array
                   searchdSpec:
                     properties:
@@ -7444,6 +7499,11 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
+                        type: array
                     type: object
                   sidekiqSpec:
                     properties:
@@ -8022,6 +8082,11 @@ spec:
                           - topologyKey
                           - whenUnsatisfiable
                           type: object
+                        type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
                         type: array
                     type: object
                   sphinxSpec:
@@ -9187,6 +9252,11 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
+                        type: array
                     type: object
                   databaseAffinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -9760,6 +9830,11 @@ spec:
                       - topologyKey
                       - whenUnsatisfiable
                       type: object
+                    type: array
+                  databaseLabels:
+                    description: An array of string values. Contains component specific labels.
+                    items:
+                      type: string
                     type: array
                   image:
                     type: string
@@ -10342,6 +10417,11 @@ spec:
                           - topologyKey
                           - whenUnsatisfiable
                           type: object
+                        type: array
+                      labels:
+                        description: An array of string values. Contains component specific labels.
+                        items:
+                          type: string
                         type: array
                     type: object
                 type: object
