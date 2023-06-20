@@ -726,7 +726,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                       workers:
                         format: int32
                         minimum: 1
@@ -1422,7 +1422,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                 type: object
               appLabel:
@@ -2011,7 +2011,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                   image:
                     type: string
@@ -2597,7 +2597,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                   redisAffinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -3183,7 +3183,7 @@ spec:
                     description: An array of string values. Contains component specific labels.
                     items:
                       type: string
-                    type: array
+                    type: object
                   workerSpec:
                     properties:
                       affinity:
@@ -3766,7 +3766,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                 type: object
               externalComponents:
@@ -4450,7 +4450,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                   database:
                     properties:
@@ -5057,7 +5057,7 @@ spec:
                             description: An array of string values. Contains component specific labels.
                             items:
                               type: string
-                            type: array
+                            type: object
                         type: object
                       postgresql:
                         properties:
@@ -5661,7 +5661,7 @@ spec:
                             description: An array of string values. Contains component specific labels.
                             items:
                               type: string
-                            type: array
+                            type: object
                         type: object
                     type: object
                   fileStorage:
@@ -6315,7 +6315,7 @@ spec:
                     description: An array of string values. Contains component specific labels.
                     items:
                       type: string
-                    type: array
+                    type: object
                   redisAffinity:
                     description: Affinity is a group of affinity scheduling rules.
                     properties:
@@ -6900,7 +6900,7 @@ spec:
                     description: An array of string values. Contains component specific labels.
                     items:
                       type: string
-                    type: array
+                    type: object
                   searchdSpec:
                     properties:
                       affinity:
@@ -7503,7 +7503,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                   sidekiqSpec:
                     properties:
@@ -8087,7 +8087,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                   sphinxSpec:
                     description: Deprecated
@@ -9256,7 +9256,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                   databaseAffinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -9835,7 +9835,7 @@ spec:
                     description: An array of string values. Contains component specific labels.
                     items:
                       type: string
-                    type: array
+                    type: object
                   image:
                     type: string
                   postgreSQLImage:
@@ -10422,7 +10422,7 @@ spec:
                         description: An array of string values. Contains component specific labels.
                         items:
                           type: string
-                        type: array
+                        type: object
                     type: object
                 type: object
             required:
