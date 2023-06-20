@@ -582,6 +582,10 @@ spec:
                         format: int64
                         minimum: 0
                         type: integer
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       logLevel:
                         enum:
                         - debug
@@ -722,11 +726,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                       workers:
                         format: int32
                         minimum: 1
@@ -1278,6 +1277,10 @@ spec:
                         format: int64
                         minimum: 0
                         type: integer
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       logLevel:
                         enum:
                         - debug
@@ -1418,11 +1421,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                 type: object
               appLabel:
@@ -1903,6 +1901,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -2007,11 +2009,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                   image:
                     type: string
@@ -2489,6 +2486,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -2593,11 +2594,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                   redisAffinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -3073,6 +3069,10 @@ spec:
                     type: object
                   redisImage:
                     type: string
+                  redisLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   redisPersistentVolumeClaim:
                     properties:
                       storageClassName:
@@ -3179,11 +3179,6 @@ spec:
                       - whenUnsatisfiable
                       type: object
                     type: array
-                  redisLabels:
-                    description: An array of string values. Contains component specific labels.
-                    items:
-                      type: string
-                    type: object
                   workerSpec:
                     properties:
                       affinity:
@@ -3658,6 +3653,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -3762,11 +3761,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                 type: object
               externalComponents:
@@ -4320,6 +4314,10 @@ spec:
                             description: 'Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       masterContainerResources:
                         description: ResourceRequirements describes the compute resource requirements.
                         properties:
@@ -4446,11 +4444,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                   database:
                     properties:
@@ -4931,6 +4924,10 @@ spec:
                             type: object
                           image:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
                           persistentVolumeClaim:
                             properties:
                               resources:
@@ -5053,11 +5050,6 @@ spec:
                               - whenUnsatisfiable
                               type: object
                             type: array
-                          labels:
-                            description: An array of string values. Contains component specific labels.
-                            items:
-                              type: string
-                            type: object
                         type: object
                       postgresql:
                         properties:
@@ -5535,6 +5527,10 @@ spec:
                             type: object
                           image:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
                           persistentVolumeClaim:
                             properties:
                               resources:
@@ -5657,11 +5653,6 @@ spec:
                               - whenUnsatisfiable
                               type: object
                             type: array
-                          labels:
-                            description: An array of string values. Contains component specific labels.
-                            items:
-                              type: string
-                            type: object
                         type: object
                     type: object
                   fileStorage:
@@ -6210,6 +6201,10 @@ spec:
                     type: object
                   memcachedImage:
                     type: string
+                  memcachedLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   memcachedPriorityClassName:
                     type: string
                   memcachedResources:
@@ -6311,11 +6306,6 @@ spec:
                       - whenUnsatisfiable
                       type: object
                     type: array
-                  memcachedLabels:
-                    description: An array of string values. Contains component specific labels.
-                    items:
-                      type: string
-                    type: object
                   redisAffinity:
                     description: Affinity is a group of affinity scheduling rules.
                     properties:
@@ -6790,6 +6780,10 @@ spec:
                     type: object
                   redisImage:
                     type: string
+                  redisLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   redisPersistentVolumeClaim:
                     properties:
                       storageClassName:
@@ -6896,11 +6890,6 @@ spec:
                       - whenUnsatisfiable
                       type: object
                     type: array
-                  redisLabels:
-                    description: An array of string values. Contains component specific labels.
-                    items:
-                      type: string
-                    type: object
                   searchdSpec:
                     properties:
                       affinity:
@@ -7377,6 +7366,10 @@ spec:
                         type: object
                       image:
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       persistentVolumeClaim:
                         properties:
                           resources:
@@ -7499,11 +7492,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                   sidekiqSpec:
                     properties:
@@ -7979,6 +7967,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -8083,11 +8075,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                   sphinxSpec:
                     description: Deprecated
@@ -9148,6 +9135,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -9252,11 +9243,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                   databaseAffinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -9730,6 +9716,10 @@ spec:
                             type: array
                         type: object
                     type: object
+                  databaseLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   databasePriorityClassName:
                     type: string
                   databaseResources:
@@ -9831,11 +9821,6 @@ spec:
                       - whenUnsatisfiable
                       type: object
                     type: array
-                  databaseLabels:
-                    description: An array of string values. Contains component specific labels.
-                    items:
-                      type: string
-                    type: object
                   image:
                     type: string
                   postgreSQLImage:
@@ -10314,6 +10299,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -10418,11 +10407,6 @@ spec:
                           - whenUnsatisfiable
                           type: object
                         type: array
-                      labels:
-                        description: An array of string values. Contains component specific labels.
-                        items:
-                          type: string
-                        type: object
                     type: object
                 type: object
             required:
