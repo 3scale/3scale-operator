@@ -62,6 +62,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.setReplicas()
 	s.setPriorityClassNames()
 	s.setTopologySpreadConstraints()
+	s.setPodTemplateAnnotations()
 
 	s.options.SideKiqMetrics = true
 	s.options.AppMetrics = true
@@ -617,4 +618,9 @@ func (s *SystemOptionsProvider) setTopologySpreadConstraints() {
 	if s.apimanager.Spec.System.SidekiqSpec.TopologySpreadConstraints != nil {
 		s.options.SideKiqTopologySpreadConstraints = s.apimanager.Spec.System.SidekiqSpec.TopologySpreadConstraints
 	}
+}
+
+func (s *SystemOptionsProvider) setPodTemplateAnnotations() {
+	s.options.AppPodTemplateAnnotations = s.apimanager.Spec.System.AppSpec.Annotations
+	s.options.SideKiqPodTemplateAnnotations = s.apimanager.Spec.System.SidekiqSpec.Annotations
 }

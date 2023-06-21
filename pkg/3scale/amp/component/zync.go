@@ -197,11 +197,8 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": ZyncName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: zync.Options.ZyncPodTemplateLabels,
-					Annotations: map[string]string{
-						"prometheus.io/port":   "9393",
-						"prometheus.io/scrape": "true",
-					},
+					Labels:      zync.Options.ZyncPodTemplateLabels,
+					Annotations: zync.Options.ZyncPodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:           zync.Options.ZyncAffinity,
@@ -355,11 +352,8 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"prometheus.io/port":   "9394",
-						"prometheus.io/scrape": "true",
-					},
-					Labels: zync.Options.ZyncQuePodTemplateLabels,
+					Labels:      zync.Options.ZyncQuePodTemplateLabels,
+					Annotations: zync.Options.ZyncQuePodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:                      zync.Options.ZyncQueAffinity,
@@ -439,7 +433,8 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: zync.Options.ZyncDatabasePodTemplateLabels,
+					Labels:      zync.Options.ZyncDatabasePodTemplateLabels,
+					Annotations: zync.Options.ZyncDatabasePodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:           zync.Options.ZyncDatabaseAffinity,

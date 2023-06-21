@@ -84,7 +84,8 @@ func (s *SystemSearchd) DeploymentConfig() *appsv1.DeploymentConfig {
 			},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: s.Options.PodTemplateLabels,
+					Labels:      s.Options.PodTemplateLabels,
+					Annotations: s.Options.PodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:           s.Options.Affinity,

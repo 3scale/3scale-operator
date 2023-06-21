@@ -95,6 +95,13 @@ func testZyncDatabasePodTemplateCommonLabels() map[string]string {
 	return labels
 }
 
+func testZyncPodTemplateAnnotations() map[string]string {
+	annotations := make(map[string]string)
+	annotations["prometheus.io/port"] = "9393"
+	annotations["prometheus.io/scrape"] = "true"
+	return annotations
+}
+
 func testZyncAffinity() *v1.Affinity {
 	return getTestAffinity("zync")
 }
@@ -225,6 +232,8 @@ func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 		ZyncPodTemplateLabels:                 testZyncPodTemplateLabels(),
 		ZyncQuePodTemplateLabels:              testZyncQuePodTemplateCommonLabels(),
 		ZyncDatabasePodTemplateLabels:         testZyncDatabasePodTemplateCommonLabels(),
+		ZyncPodTemplateAnnotations:            testZyncPodTemplateAnnotations(),
+		ZyncQuePodTemplateAnnotations:         testZyncPodTemplateAnnotations(),
 		ZyncMetrics:                           true,
 		ZyncQueServiceAccountImagePullSecrets: component.DefaultZyncQueServiceAccountImagePullSecrets(),
 		Namespace:                             opts.Namespace,

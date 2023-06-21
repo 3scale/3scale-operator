@@ -88,6 +88,7 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.setReplicas()
 	a.setPriorityClassNames()
 	a.setTopologySpreadConstraints()
+	a.setPodTemplateAnnotations()
 
 	err := a.setCustomPolicies()
 	if err != nil {
@@ -480,4 +481,9 @@ func (a *ApicastOptionsProvider) setTopologySpreadConstraints() {
 	if a.apimanager.Spec.Apicast.ProductionSpec.TopologySpreadConstraints != nil {
 		a.apicastOptions.TopologySpreadConstraintsProduction = a.apimanager.Spec.Apicast.ProductionSpec.TopologySpreadConstraints
 	}
+}
+
+func (a *ApicastOptionsProvider) setPodTemplateAnnotations() {
+	a.apicastOptions.StagingPodTemplateAnnotations = a.apimanager.Spec.Apicast.StagingSpec.Annotations
+	a.apicastOptions.ProductionPodTemplateAnnotations = a.apimanager.Spec.Apicast.ProductionSpec.Annotations
 }

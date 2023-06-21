@@ -84,6 +84,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		reconcilers.DeploymentConfigPriorityClassMutator,
 		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
 		r.systemAppDCResourceMutator,
 		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
 		// 3scale 2.13 -> 2.14
@@ -113,6 +114,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		upgrade.SphinxAddressReference,
 		reconcilers.DeploymentConfigPriorityClassMutator,
 		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
 	}
 
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {

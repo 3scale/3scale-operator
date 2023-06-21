@@ -596,7 +596,8 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: system.Options.AppPodTemplateLabels,
+					Labels:      system.Options.AppPodTemplateLabels,
+					Annotations: system.Options.AppPodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:    system.Options.AppAffinity,
@@ -859,7 +860,8 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": SystemSidekiqName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: system.Options.SidekiqPodTemplateLabels,
+					Labels:      system.Options.SidekiqPodTemplateLabels,
+					Annotations: system.Options.SideKiqPodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:    system.Options.SidekiqAffinity,

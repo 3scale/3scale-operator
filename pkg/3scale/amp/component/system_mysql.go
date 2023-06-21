@@ -152,7 +152,8 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": SystemMySQLDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: mysql.Options.PodTemplateLabels,
+					Labels:      mysql.Options.PodTemplateLabels,
+					Annotations: mysql.Options.PodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:           mysql.Options.Affinity,

@@ -135,7 +135,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      apicast.Options.StagingPodTemplateLabels,
-					Annotations: apicast.podAnnotations(),
+					Annotations: apicast.stagingPodAnnotations(),
 				},
 				Spec: v1.PodSpec{
 					Affinity:           apicast.Options.StagingAffinity,
@@ -230,7 +230,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      apicast.Options.ProductionPodTemplateLabels,
-					Annotations: apicast.podAnnotations(),
+					Annotations: apicast.productionPodAnnotations(),
 				},
 				Spec: v1.PodSpec{
 					Affinity:           apicast.Options.ProductionAffinity,
@@ -820,13 +820,34 @@ func (apicast *Apicast) stagingServicePorts() []v1.ServicePort {
 	return ports
 }
 
-func (apicast *Apicast) podAnnotations() map[string]string {
+func (apicast *Apicast) stagingPodAnnotations() map[string]string {
 	annotations := map[string]string{
 		"prometheus.io/scrape": "true",
 		"prometheus.io/port":   "9421",
 	}
 
 	for key, val := range apicast.Options.AdditionalPodAnnotations {
+		annotations[key] = val
+	}
+
+	for key, val := range apicast.Options.StagingPodTemplateAnnotations {
+		annotations[key] = val
+	}
+
+	return annotations
+}
+
+func (apicast *Apicast) productionPodAnnotations() map[string]string {
+	annotations := map[string]string{
+		"prometheus.io/scrape": "true",
+		"prometheus.io/port":   "9421",
+	}
+
+	for key, val := range apicast.Options.AdditionalPodAnnotations {
+		annotations[key] = val
+	}
+
+	for key, val := range apicast.Options.ProductionPodTemplateAnnotations {
 		annotations[key] = val
 	}
 

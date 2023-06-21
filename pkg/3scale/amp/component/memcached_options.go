@@ -18,6 +18,7 @@ type MemcachedOptions struct {
 
 	PriorityClassName         string                        `validate:"-"`
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `validate:"-"`
+	PodTemplateAnnotations    map[string]string             `validate:"-"`
 }
 
 func NewMemcachedOptions() *MemcachedOptions {

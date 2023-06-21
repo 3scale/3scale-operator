@@ -21,6 +21,7 @@
          * [Setting custom PriorityClassName](#setting-custom-priorityclassname)
          * [Setting custom TopologySpreadConstraints](#setting-custom-topologyspreadconstraints)
          * [Setting custom labels](#setting-custom-labels)
+         * [Setting custom Annotations](#setting-custom-annotations)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
          * [Backend replicas](#backend-replicas)
@@ -791,6 +792,28 @@ Example for apicast-staging and backend-listener:
          apicastStagingLabel2: sample-label2
 ```
 
+
+#### Setting custom Annotations
+
+3scale components pods can have Annotations - key/value pairs. See [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) 
+for more information. Annotations can be customized via APIManager CR for any 3scale component.    
+Example for apicast-staging and backend-listener:  
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  wildcardDomain: example.com
+  apicast:
+    stagingSpec:
+      annotations:
+        anno-sample1: anno1
+  backend:
+    listenerSpec:
+      annotations:
+        anno-sample2: anno2
+```
 
 
 ### Reconciliation

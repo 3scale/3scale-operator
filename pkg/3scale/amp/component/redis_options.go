@@ -34,6 +34,8 @@ type RedisOptions struct {
 	BackendRedisPriorityClassName         string                        `validate:"-"`
 	SystemRedisTopologySpreadConstraints  []v1.TopologySpreadConstraint `validate:"-"`
 	BackendRedisTopologySpreadConstraints []v1.TopologySpreadConstraint `validate:"-"`
+	SystemRedisPodTemplateAnnotations     map[string]string             `validate:"-"`
+	BackendRedisPodTemplateAnnotations    map[string]string             `validate:"-"`
 
 	// secrets
 	BackendStorageURL                string `validate:"required"`

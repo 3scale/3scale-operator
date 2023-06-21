@@ -47,6 +47,8 @@ func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOp
 	s.setPersistentVolumeClaimOptions()
 	s.setNodeAffinityAndTolerationsOptions()
 	s.setPriorityClassNames()
+	s.setTopologySpreadConstraints()
+	s.setPodTemplateAnnotations()
 
 	err = s.mysqlOptions.Validate()
 	if err != nil {
@@ -225,5 +227,12 @@ func (s *SystemMysqlOptionsProvider) setTopologySpreadConstraints() {
 		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.MySQL.TopologySpreadConstraints != nil {
 		s.mysqlOptions.TopologySpreadConstraints = s.apimanager.Spec.System.DatabaseSpec.MySQL.TopologySpreadConstraints
+	}
+}
+
+func (s *SystemMysqlOptionsProvider) setPodTemplateAnnotations() {
+	if s.apimanager.Spec.System.DatabaseSpec != nil &&
+		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil {
+		s.mysqlOptions.PodTemplateAnnotations = s.apimanager.Spec.System.DatabaseSpec.MySQL.Annotations
 	}
 }

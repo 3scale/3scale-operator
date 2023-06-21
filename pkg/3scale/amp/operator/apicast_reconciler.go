@@ -81,6 +81,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 		reconcilers.DeploymentConfigPriorityClassMutator,
 		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
 	}
 
 	if r.apiManager.Spec.Apicast.StagingSpec.Replicas != nil {
@@ -116,6 +117,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 		reconcilers.DeploymentConfigPriorityClassMutator,
 		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
 	}
 
 	if r.apiManager.Spec.Apicast.ProductionSpec.Replicas != nil {

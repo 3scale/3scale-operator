@@ -82,6 +82,8 @@ type ApicastOptions struct {
 	PriorityClassNameProduction         string                        `validate:"-"`
 	TopologySpreadConstraintsStaging    []v1.TopologySpreadConstraint `validate:"-"`
 	TopologySpreadConstraintsProduction []v1.TopologySpreadConstraint `validate:"-"`
+	StagingPodTemplateAnnotations       map[string]string             `validate:"-"`
+	ProductionPodTemplateAnnotations    map[string]string             `validate:"-"`
 
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions
