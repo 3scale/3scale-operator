@@ -769,8 +769,8 @@ spec:
 ```
 
 #### Setting custom labels
-Labels are key/value pairs that are attached to objects such as Pods. Labels are intended to be used to specify identifying attributes of objects that are meaningful and relevant. 
-Labels can be customized through the APIManager CR `labels` attribute for each DeploymentConfig.
+[Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+Labels can be customized through the APIManager CR `labels` attribute for each DeploymentConfig and are applied to  their pods.
 Example for apicast-staging and backend-listener:
 ```yaml
  apiVersion: apps.3scale.net/v1alpha1

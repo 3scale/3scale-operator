@@ -39,27 +39,4 @@ func MergeMapStringString(modified *bool, existing *map[string]string, desired m
 			*modified = true
 		}
 	}
-
-}
-
-func MergeMapStringStringLabels(modified *bool, existing *map[string]string, desired map[string]string) {
-	if *existing == nil {
-		*existing = map[string]string{}
-	}
-
-	for k, v := range desired {
-		if existingVal, ok := (*existing)[k]; !ok || v != existingVal {
-			(*existing)[k] = v
-			*modified = true
-		}
-	}
-
-	// Remove existing values that are not desired
-	for k := range *existing {
-		if _, ok := desired[k]; !ok {
-			delete(*existing, k)
-			*modified = true
-		}
-	}
-
 }

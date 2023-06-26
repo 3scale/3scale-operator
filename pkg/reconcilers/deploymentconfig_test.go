@@ -762,7 +762,7 @@ func TestDeploymentConfigPodTemplateLabelsMutator(t *testing.T) {
 	}{
 		{"NothingToReconcile", mapCopy(labelsA), mapCopy(labelsA), false, mapCopy(labelsA)},
 		{"LabelsReconciled", mapCopy(labelsB), mapCopy(labelsA), true, map[string]string{
-			"a": "1", "a2": "2",
+			"a": "1", "a2": "2", "b": "1",
 		}},
 	}
 
