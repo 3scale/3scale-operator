@@ -229,23 +229,31 @@ func (p *OpenAPIProductReconciler) desiredDeployment() *capabilitiesv1beta1.Prod
 }
 
 func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.AuthenticationSpec {
-	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(p.openapiObj)
-	if len(globalSecRequirements) == 0 {
-		// if no security requirements are found, default to UserKey auth
-		return p.desiredUserKeyAuthentication(nil)
-	}
-
-	// Only the first one is used
-	secRequirementExtended := globalSecRequirements[0]
-
 	var authenticationSpec *capabilitiesv1beta1.AuthenticationSpec
 
-	switch secRequirementExtended.Value.Type {
-	// TODO types "oauth2", "openIdConnect"
-	case "apiKey":
-		authenticationSpec = p.desiredUserKeyAuthentication(secRequirementExtended)
-	}
+	if p.openapiCR.Spec.SecurityScheme != nil &&
+		p.openapiCR.Spec.SecurityScheme.Type != nil &&
+		*p.openapiCR.Spec.SecurityScheme.Type == "openIdConnect" {
+		authenticationSpec = p.desiredOIDCAuthentication(nil)
+	} else {
 
+		globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(p.openapiObj)
+		if len(globalSecRequirements) == 0 {
+			// if no security requirements are found, default to UserKey auth
+			return p.desiredUserKeyAuthentication(nil)
+		}
+
+		// Only the first one is used
+		secRequirementExtended := globalSecRequirements[0]
+
+		switch secRequirementExtended.Value.Type {
+		// TODO types "oauth2", "openIdConnect"
+		case "apiKey":
+			authenticationSpec = p.desiredUserKeyAuthentication(secRequirementExtended)
+		case "openIdConnect":
+			authenticationSpec = p.desiredOIDCAuthentication(secRequirementExtended)
+		}
+	}
 	return authenticationSpec
 }
 
@@ -368,4 +376,71 @@ func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1be
 	}
 
 	return privateAPISec
+}
+
+func (p *OpenAPIProductReconciler) desiredOIDCSecurity() *capabilitiesv1beta1.SecuritySpec {
+	if p.openapiCR.Spec.SecurityScheme == nil && p.openapiCR.Spec.SecurityScheme.Type == nil {
+		return nil
+	}
+
+	privateAPISec := &capabilitiesv1beta1.SecuritySpec{}
+
+	if *p.openapiCR.Spec.SecurityScheme.Type == "openIdConnect" &&
+		p.openapiCR.Spec.SecurityScheme.OpenIdConnectUrl != nil {
+		privateAPISec.OpenApiSecuritySchemeType = p.openapiCR.Spec.SecurityScheme.Type
+		privateAPISec.OpenIdConnectUrl = p.openapiCR.Spec.SecurityScheme.OpenIdConnectUrl
+	}
+
+	return privateAPISec
+}
+
+func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
+	authSpec := &capabilitiesv1beta1.AuthenticationSpec{
+		OIDC: &capabilitiesv1beta1.OIDCSpec{
+			IssuerType: "keycloak",
+			Security:   p.desiredOIDCSecurity(),
+			AuthenticationFlow: &capabilitiesv1beta1.OIDCAuthenticationFlowSpec{
+				StandardFlowEnabled:       false,
+				ImplicitFlowEnabled:       false,
+				DirectAccessGrantsEnabled: false,
+				ServiceAccountsEnabled:    false,
+			},
+		},
+	}
+
+	p.setOIDCAuthenticationParams(authSpec, secReq)
+
+	return authSpec
+}
+
+func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
+	if secReq != nil {
+		authSpec.OIDC.CredentialsLoc = p.parseOIDCCredentialsLoc(secReq.Value.In)
+	}
+
+	if p.openapiCR.Spec.SecurityScheme != nil {
+		authSpec.OIDC.IssuerEndpoint = *p.openapiCR.Spec.SecurityScheme.OpenIdConnectUrl
+		if p.openapiCR.Spec.SecurityScheme.Flows != nil {
+			authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = p.openapiCR.Spec.SecurityScheme.Flows.StandardFlowEnabled
+			authSpec.OIDC.AuthenticationFlow.ImplicitFlowEnabled = p.openapiCR.Spec.SecurityScheme.Flows.ImplicitFlowEnabled
+			authSpec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled = p.openapiCR.Spec.SecurityScheme.Flows.DirectAccessGrantsEnabled
+			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = p.openapiCR.Spec.SecurityScheme.Flows.ServiceAccountsEnabled
+		}
+	}
+}
+
+func (p *OpenAPIProductReconciler) parseOIDCCredentialsLoc(inField string) *string {
+	tmpQuery := "query"
+	tmpHeaders := "headers"
+	tmpAuthorisation := "authorisation"
+	switch inField {
+	case "query":
+		return &tmpQuery
+	case "header":
+		return &tmpHeaders
+	case "authorisation":
+		return &tmpAuthorisation
+	default:
+		return nil
+	}
 }

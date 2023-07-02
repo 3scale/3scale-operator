@@ -266,6 +266,10 @@ spec:
                                       API backend only accepts traffic from a specific
                                       host.
                                     type: string
+                                  openIdConnectUrl:
+                                    description: Applies to openIdConnect type of
+                                      security scheme
+                                    type: string
                                   secretToken:
                                     description: SecretToken Enables you to block
                                       any direct developer requests to your API backend;
@@ -274,6 +278,10 @@ spec:
                                       The value of this header can be set by you here.
                                       It's up to you ensure your backend only allows
                                       calls with this secret header.
+                                    type: string
+                                  securitySchemeType:
+                                    description: 'The type of the security scheme.
+                                      For OIDC: "openIdConnect".'
                                     type: string
                                 type: object
                             type: object
@@ -401,6 +409,10 @@ spec:
                                       API backend only accepts traffic from a specific
                                       host.
                                     type: string
+                                  openIdConnectUrl:
+                                    description: Applies to openIdConnect type of
+                                      security scheme
+                                    type: string
                                   secretToken:
                                     description: SecretToken Enables you to block
                                       any direct developer requests to your API backend;
@@ -409,6 +421,10 @@ spec:
                                       The value of this header can be set by you here.
                                       It's up to you ensure your backend only allows
                                       calls with this secret header.
+                                    type: string
+                                  securitySchemeType:
+                                    description: 'The type of the security scheme.
+                                      For OIDC: "openIdConnect".'
                                     type: string
                                 type: object
                             required:
@@ -500,6 +516,10 @@ spec:
                                       API backend only accepts traffic from a specific
                                       host.
                                     type: string
+                                  openIdConnectUrl:
+                                    description: Applies to openIdConnect type of
+                                      security scheme
+                                    type: string
                                   secretToken:
                                     description: SecretToken Enables you to block
                                       any direct developer requests to your API backend;
@@ -508,6 +528,10 @@ spec:
                                       The value of this header can be set by you here.
                                       It's up to you ensure your backend only allows
                                       calls with this secret header.
+                                    type: string
+                                  securitySchemeType:
+                                    description: 'The type of the security scheme.
+                                      For OIDC: "openIdConnect".'
                                     type: string
                                 type: object
                             type: object
@@ -612,6 +636,10 @@ spec:
                                       API backend only accepts traffic from a specific
                                       host.
                                     type: string
+                                  openIdConnectUrl:
+                                    description: Applies to openIdConnect type of
+                                      security scheme
+                                    type: string
                                   secretToken:
                                     description: SecretToken Enables you to block
                                       any direct developer requests to your API backend;
@@ -620,6 +648,10 @@ spec:
                                       The value of this header can be set by you here.
                                       It's up to you ensure your backend only allows
                                       calls with this secret header.
+                                    type: string
+                                  securitySchemeType:
+                                    description: 'The type of the security scheme.
+                                      For OIDC: "openIdConnect".'
                                     type: string
                                 type: object
                             type: object
@@ -747,6 +779,10 @@ spec:
                                       API backend only accepts traffic from a specific
                                       host.
                                     type: string
+                                  openIdConnectUrl:
+                                    description: Applies to openIdConnect type of
+                                      security scheme
+                                    type: string
                                   secretToken:
                                     description: SecretToken Enables you to block
                                       any direct developer requests to your API backend;
@@ -755,6 +791,10 @@ spec:
                                       The value of this header can be set by you here.
                                       It's up to you ensure your backend only allows
                                       calls with this secret header.
+                                    type: string
+                                  securitySchemeType:
+                                    description: 'The type of the security scheme.
+                                      For OIDC: "openIdConnect".'
                                     type: string
                                 type: object
                             required:
@@ -846,6 +886,10 @@ spec:
                                       API backend only accepts traffic from a specific
                                       host.
                                     type: string
+                                  openIdConnectUrl:
+                                    description: Applies to openIdConnect type of
+                                      security scheme
+                                    type: string
                                   secretToken:
                                     description: SecretToken Enables you to block
                                       any direct developer requests to your API backend;
@@ -854,6 +898,10 @@ spec:
                                       The value of this header can be set by you here.
                                       It's up to you ensure your backend only allows
                                       calls with this secret header.
+                                    type: string
+                                  securitySchemeType:
+                                    description: 'The type of the security scheme.
+                                      For OIDC: "openIdConnect".'
                                     type: string
                                 type: object
                             type: object

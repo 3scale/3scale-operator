@@ -309,6 +309,8 @@ func (r *OpenAPIReconciler) validateOpenAPIAs3scaleProduct(openapiCR *capabiliti
 		switch globalSecRequirements[0].Value.Type {
 		case "apiKey":
 			break
+		case "openIdConnect":
+			break
 		default:
 			fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, fmt.Sprintf("Unexpected security schema type: %s", globalSecRequirements[0].Value.Type)))
 			return &helper.SpecFieldError{

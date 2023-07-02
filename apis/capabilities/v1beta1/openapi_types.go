@@ -60,6 +60,29 @@ type OpenAPIRefSpec struct {
 	URL *string `json:"url,omitempty"`
 }
 
+type SecuritySchemeSpec struct {
+	// The type of the security scheme
+	// +optional
+	Type *string `json:"type,omitempty"`
+
+	// Applies to openIdConnect type of security scheme
+	// +optional
+	OpenIdConnectUrl *string `json:"openIdConnectUrl,omitempty"`
+
+	// Applies to openIdConnect type of security scheme
+	// +optional
+	Flows *OAuthFlowSpec `json:"flows,omitempty"`
+}
+
+// OIDCAuthenticationFlowSpec defines the desired OAuth2.0 authorization grant type
+type OAuthFlowSpec struct {
+	// OIDCIssuer is the OIDC issuer
+	StandardFlowEnabled       bool `json:"standardFlowEnabled,omitempty"`
+	ImplicitFlowEnabled       bool `json:"implicitFlowEnabled,omitempty"`
+	ServiceAccountsEnabled    bool `json:"serviceAccountsEnabled,omitempty"`
+	DirectAccessGrantsEnabled bool `json:"directAccessGrantsEnabled,omitempty"`
+}
+
 // OpenAPISpec defines the desired state of OpenAPI
 type OpenAPISpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -101,6 +124,9 @@ type OpenAPISpec struct {
 	// PrivateAPISecretToken Custom secret token sent by the API gateway to the private API
 	// +optional
 	PrivateAPISecretToken *string `json:"privateAPISecretToken,omitempty"`
+
+	// +optional
+	SecurityScheme *SecuritySchemeSpec `json:"securityScheme,omitempty"`
 }
 
 // OpenAPIStatus defines the observed state of OpenAPI

@@ -112,6 +112,28 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
+              securityScheme:
+                properties:
+                  flows:
+                    description: Applies to openIdConnect type of security scheme
+                    properties:
+                      directAccessGrantsEnabled:
+                        type: boolean
+                      implicitFlowEnabled:
+                        type: boolean
+                      serviceAccountsEnabled:
+                        type: boolean
+                      standardFlowEnabled:
+                        description: OIDCIssuer is the OIDC issuer
+                        type: boolean
+                    type: object
+                  openIdConnectUrl:
+                    description: Applies to openIdConnect type of security scheme
+                    type: string
+                  type:
+                    description: The type of the security scheme
+                    type: string
+                type: object
               stagingPublicBaseURL:
                 description: StagingPublicBaseURL Custom public staging URL
                 pattern: ^https?:\/\/.*$

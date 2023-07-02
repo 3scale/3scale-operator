@@ -222,6 +222,14 @@ type SecuritySpec struct {
 	// The value of this header can be set by you here. It's up to you ensure your backend only allows calls with this secret header.
 	// +optional
 	SecretToken *string `json:"secretToken,omitempty"`
+
+	//  The type of the security scheme. For OIDC: "openIdConnect".
+	// +optional
+	OpenApiSecuritySchemeType *string `json:"securitySchemeType,omitempty"`
+
+	// Applies to openIdConnect type of security scheme
+	// +optional
+	OpenIdConnectUrl *string `json:"openIdConnectUrl,omitempty"`
 }
 
 func (s *SecuritySpec) SecuritySecretToken() *string {
