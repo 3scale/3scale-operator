@@ -769,8 +769,7 @@ spec:
 ```
 
 #### Setting custom labels
-[Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
-Labels can be customized through the APIManager CR `labels` attribute for each DeploymentConfig and are applied to  their pods.
+[Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) can be customized through the APIManager CR `labels` attribute for each DeploymentConfig and are applied to  their pods.
 Example for apicast-staging and backend-listener:
 ```yaml
  apiVersion: apps.3scale.net/v1alpha1

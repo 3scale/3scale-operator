@@ -540,10 +540,8 @@ func (s *SystemOptionsProvider) appPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	if s.apimanager.Spec.System.AppSpec.Labels != nil {
-		for k, v := range s.apimanager.Spec.System.AppSpec.Labels {
-			labels[k] = v
-		}
+	for k, v := range s.apimanager.Spec.System.AppSpec.Labels {
+		labels[k] = v
 	}
 
 	labels["deploymentConfig"] = "system-app"
@@ -563,10 +561,9 @@ func (s *SystemOptionsProvider) sidekiqPodTemplateLabels() map[string]string {
 	for k, v := range s.commonSidekiqLabels() {
 		labels[k] = v
 	}
-	if s.apimanager.Spec.System.SidekiqSpec.Labels != nil {
-		for k, v := range s.apimanager.Spec.System.SidekiqSpec.Labels {
-			labels[k] = v
-		}
+
+	for k, v := range s.apimanager.Spec.System.SidekiqSpec.Labels {
+		labels[k] = v
 	}
 
 	labels["deploymentConfig"] = "system-sidekiq"
