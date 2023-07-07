@@ -2,7 +2,9 @@ package component
 
 import (
 	"fmt"
+	"path"
 
+	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
@@ -54,8 +56,7 @@ const (
 	backendRedisStorageVolumeName = "backend-redis-storage"
 	backendRedisConfigMapKey      = "redis.conf"
 	backendRedisContainerName     = "backend-redis"
-	backendRedisContainerCommand  = "/opt/rh/rh-redis5/root/usr/bin/redis-server"
-	systemRedisContainerCommand   = "/opt/rh/rh-redis5/root/usr/bin/redis-server"
+	backendRedisConfigPath        = "/etc/redis.d/"
 )
 
 func (redis *Redis) buildDeploymentConfigSpec() appsv1.DeploymentConfigSpec {
@@ -158,27 +159,12 @@ func (redis *Redis) buildPodContainers() []v1.Container {
 			Image:           "backend-redis:latest",
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Name:            backendRedisContainerName,
-			Command:         redis.buildPodContainerCommand(),
-			Args:            redis.buildPodContainerCommandArgs(),
+			Env:             redis.buildEnv(),
 			Resources:       redis.buildPodContainerResourceLimits(),
 			ReadinessProbe:  redis.buildPodContainerReadinessProbe(),
 			LivenessProbe:   redis.buildPodContainerLivenessProbe(),
 			VolumeMounts:    redis.buildPodContainerVolumeMounts(),
 		},
-	}
-}
-
-func (redis *Redis) buildPodContainerCommand() []string {
-	return []string{
-		backendRedisContainerCommand,
-	}
-}
-
-func (redis *Redis) buildPodContainerCommandArgs() []string {
-	return []string{
-		"/etc/redis.d/redis.conf",
-		"--daemonize",
-		"no",
 	}
 }
 
@@ -219,12 +205,14 @@ func (redis *Redis) buildPodContainerLivenessProbe() *v1.Probe {
 func (redis *Redis) buildPodContainerVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
 		v1.VolumeMount{
-			Name:      backendRedisStorageVolumeName,
+			Name: backendRedisStorageVolumeName,
+			// https://github.com/sclorg/redis-container/ images have
+			// redis data directory hardcoded on /var/lib/redis/data
 			MountPath: "/var/lib/redis/data",
 		},
 		v1.VolumeMount{
 			Name:      redisConfigVolumeName,
-			MountPath: "/etc/redis.d/",
+			MountPath: backendRedisConfigPath,
 		},
 	}
 }
@@ -506,8 +494,7 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 						v1.Container{
 							Name:      "system-redis",
 							Image:     "system-redis:latest",
-							Command:   []string{systemRedisContainerCommand},
-							Args:      []string{"/etc/redis.d/redis.conf", "--daemonize", "no"},
+							Env:       redis.buildEnv(),
 							Resources: *redis.Options.SystemRedisContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								v1.VolumeMount{
@@ -646,6 +633,14 @@ func (redis *Redis) SystemRedisSecret() *v1.Secret {
 			SystemSecretSystemRedisNamespace:     redis.Options.SystemRedisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
+	}
+}
+
+func (redis *Redis) buildEnv() []v1.EnvVar {
+	// https://github.com/sclorg/redis-container/ images have
+	// redis data directory hardcoded on /var/lib/redis/data
+	return []v1.EnvVar{
+		helper.EnvVarFromValue("REDIS_CONF", path.Join(backendRedisConfigPath, backendRedisConfigMapKey)),
 	}
 }
 

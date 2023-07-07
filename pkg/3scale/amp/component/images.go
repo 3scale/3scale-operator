@@ -21,11 +21,11 @@ func ZyncImageURL() string {
 }
 
 func BackendRedisImageURL() string {
-	return "centos/redis-5-centos7"
+	return "quay.io/centos7/redis-6-centos7:latest"
 }
 
 func SystemRedisImageURL() string {
-	return "centos/redis-5-centos7"
+	return "quay.io/centos7/redis-6-centos7:latest"
 }
 
 func SystemMySQLImageURL() string {
