@@ -455,9 +455,9 @@ spec:
                 - name: RELATED_IMAGE_SYSTEM_MEMCACHED
                   value: memcached:1.5
                 - name: RELATED_IMAGE_BACKEND_REDIS
-                  value: centos/redis-5-centos7
+                  value: quay.io/centos7/redis-6-centos7:latest
                 - name: RELATED_IMAGE_SYSTEM_REDIS
-                  value: centos/redis-5-centos7
+                  value: quay.io/centos7/redis-6-centos7:latest
                 - name: RELATED_IMAGE_SYSTEM_MYSQL
                   value: centos/mysql-80-centos7
                 - name: RELATED_IMAGE_SYSTEM_POSTGRESQL
