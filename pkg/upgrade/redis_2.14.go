@@ -9,8 +9,8 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 )
 
-// SystemBackendUrls reconciles environment variables for Backend URLs on system DC
-func RedisCommandArgsEnv(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// Redis6CommandArgsEnv reconciles environment variables, command and args
+func Redis6CommandArgsEnv(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	var updated bool
 
 	desiredName := common.ObjectInfo(desired)

@@ -70,7 +70,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
 		// 3scale 2.13 -> 2.14
-		upgrade.RedisCommandArgsEnv,
+		upgrade.Redis6CommandArgsEnv,
 	)
 	err = r.ReconcileDeploymentConfig(r.DeploymentConfig(redis), dcMutator)
 	if err != nil {
