@@ -187,6 +187,12 @@ func (s *SystemPostgresqlOptionsProvider) podTemplateLabels() map[string]string 
 		labels[k] = v
 	}
 
+	if s.apimanager.IsSystemPostgreSQLEnabled() {
+		for k, v := range s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Labels {
+			labels[k] = v
+		}
+	}
+
 	labels["deploymentConfig"] = "system-postgresql"
 
 	return labels

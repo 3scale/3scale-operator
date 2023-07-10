@@ -192,6 +192,10 @@ func (o *OperatorBackendOptionsProvider) listenerPodTemplateLabels() map[string]
 		labels[k] = v
 	}
 
+	for k, v := range o.apimanager.Spec.Backend.ListenerSpec.Labels {
+		labels[k] = v
+	}
+
 	labels["deploymentConfig"] = "backend-listener"
 
 	return labels
@@ -204,6 +208,10 @@ func (o *OperatorBackendOptionsProvider) workerPodTemplateLabels() map[string]st
 		labels[k] = v
 	}
 
+	for k, v := range o.apimanager.Spec.Backend.WorkerSpec.Labels {
+		labels[k] = v
+	}
+
 	labels["deploymentConfig"] = "backend-worker"
 
 	return labels
@@ -213,6 +221,10 @@ func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels() map[string]stri
 	labels := helper.MeteringLabels("backend-cron", helper.ApplicationType)
 
 	for k, v := range o.commonCronLabels() {
+		labels[k] = v
+	}
+
+	for k, v := range o.apimanager.Spec.Backend.CronSpec.Labels {
 		labels[k] = v
 	}
 

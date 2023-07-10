@@ -582,6 +582,10 @@ spec:
                         format: int64
                         minimum: 0
                         type: integer
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       logLevel:
                         enum:
                         - debug
@@ -1273,6 +1277,10 @@ spec:
                         format: int64
                         minimum: 0
                         type: integer
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       logLevel:
                         enum:
                         - debug
@@ -1893,6 +1901,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -2474,6 +2486,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -3053,6 +3069,10 @@ spec:
                     type: object
                   redisImage:
                     type: string
+                  redisLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   redisPersistentVolumeClaim:
                     properties:
                       storageClassName:
@@ -3632,6 +3652,10 @@ spec:
                                   type: object
                                 type: array
                             type: object
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
                         type: object
                       priorityClassName:
                         type: string
@@ -4290,6 +4314,10 @@ spec:
                             description: 'Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       masterContainerResources:
                         description: ResourceRequirements describes the compute resource requirements.
                         properties:
@@ -4896,6 +4924,10 @@ spec:
                             type: object
                           image:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
                           persistentVolumeClaim:
                             properties:
                               resources:
@@ -5495,6 +5527,10 @@ spec:
                             type: object
                           image:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
                           persistentVolumeClaim:
                             properties:
                               resources:
@@ -6165,6 +6201,10 @@ spec:
                     type: object
                   memcachedImage:
                     type: string
+                  memcachedLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   memcachedPriorityClassName:
                     type: string
                   memcachedResources:
@@ -6740,6 +6780,10 @@ spec:
                     type: object
                   redisImage:
                     type: string
+                  redisLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   redisPersistentVolumeClaim:
                     properties:
                       storageClassName:
@@ -7322,6 +7366,10 @@ spec:
                         type: object
                       image:
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       persistentVolumeClaim:
                         properties:
                           resources:
@@ -7918,6 +7966,10 @@ spec:
                                   type: object
                                 type: array
                             type: object
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
                         type: object
                       priorityClassName:
                         type: string
@@ -9083,6 +9135,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
                       priorityClassName:
                         type: string
                       replicas:
@@ -9659,6 +9715,10 @@ spec:
                               type: object
                             type: array
                         type: object
+                    type: object
+                  databaseLabels:
+                    additionalProperties:
+                      type: string
                     type: object
                   databasePriorityClassName:
                     type: string
@@ -10238,6 +10298,10 @@ spec:
                                   type: object
                                 type: array
                             type: object
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
                         type: object
                       priorityClassName:
                         type: string

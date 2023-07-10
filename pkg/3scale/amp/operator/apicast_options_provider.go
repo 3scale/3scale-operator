@@ -183,6 +183,10 @@ func (a *ApicastOptionsProvider) stagingPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
+	for k, v := range a.apimanager.Spec.Apicast.StagingSpec.Labels {
+		labels[k] = v
+	}
+
 	labels["deploymentConfig"] = "apicast-staging"
 
 	return labels
@@ -192,6 +196,10 @@ func (a *ApicastOptionsProvider) productionPodTemplateLabels() map[string]string
 	labels := helper.MeteringLabels("apicast-production", helper.ApplicationType)
 
 	for k, v := range a.commonProductionLabels() {
+		labels[k] = v
+	}
+
+	for k, v := range a.apimanager.Spec.Apicast.ProductionSpec.Labels {
 		labels[k] = v
 	}
 

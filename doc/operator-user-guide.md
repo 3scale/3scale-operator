@@ -20,6 +20,7 @@
          * [Setting custom storage resource requirements](#setting-custom-storage-resource-requirements)
          * [Setting custom PriorityClassName](#setting-custom-priorityclassname)
          * [Setting custom TopologySpreadConstraints](#setting-custom-topologyspreadconstraints)
+         * [Setting custom labels](#setting-custom-labels)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
          * [Backend replicas](#backend-replicas)
@@ -766,6 +767,30 @@ spec:
                 matchLabels:
                   app: 3scale-api-management
 ```
+
+#### Setting custom labels
+[Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) can be customized through the APIManager CR `labels` attribute for each DeploymentConfig and are applied to  their pods.
+Example for apicast-staging and backend-listener:
+```yaml
+ apiVersion: apps.3scale.net/v1alpha1
+ kind: APIManager
+ metadata:
+   name: example-apimanager
+ spec:
+   wildcardDomain: example.com
+   resourceRequirementsEnabled: false
+   backend: 
+    listenerSpec:
+       labels:
+         backendLabel1: sample-label1
+         backendLabel2: sample-label2
+   apicast:
+     stagingSpec:
+       labels:
+         apicastStagingLabel1: sample-label1
+         apicastStagingLabel2: sample-label2
+```
+
 
 
 ### Reconciliation

@@ -228,6 +228,10 @@ func (r *RedisOptionsProvider) systemRedisPodTemplateLabels() map[string]string 
 		labels[k] = v
 	}
 
+	for k, v := range r.apimanager.Spec.System.RedisLabels {
+		labels[k] = v
+	}
+
 	labels["deploymentConfig"] = "system-redis"
 
 	return labels
@@ -237,6 +241,10 @@ func (r *RedisOptionsProvider) backendRedisPodTemplateLabels() map[string]string
 	labels := helper.MeteringLabels("backend-redis", helper.ApplicationType)
 
 	for k, v := range r.backendRedisLabels() {
+		labels[k] = v
+	}
+
+	for k, v := range r.apimanager.Spec.Backend.RedisLabels {
 		labels[k] = v
 	}
 

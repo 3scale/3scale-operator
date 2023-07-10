@@ -267,6 +267,8 @@ type ApicastProductionSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -329,6 +331,8 @@ type ApicastStagingSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type BackendSpec struct {
@@ -348,6 +352,8 @@ type BackendSpec struct {
 	RedisPriorityClassName *string `json:"redisPriorityClassName,omitempty"`
 	// +optional
 	RedisTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"redisTopologySpreadConstraints,omitempty"`
+	// +optional
+	RedisLabels map[string]string `json:"redisLabels,omitempty"`
 
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
@@ -375,6 +381,8 @@ type BackendListenerSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type BackendWorkerSpec struct {
@@ -390,6 +398,8 @@ type BackendWorkerSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type BackendCronSpec struct {
@@ -405,6 +415,8 @@ type BackendCronSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type SystemSpec struct {
@@ -424,6 +436,8 @@ type SystemSpec struct {
 	MemcachedPriorityClassName *string `json:"memcachedPriorityClassName,omitempty"`
 	// +optional
 	MemcachedTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"memcachedTopologySpreadConstraints,omitempty"`
+	// +optional
+	MemcachedLabels map[string]string `json:"memcachedLabels,omitempty"`
 
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
@@ -439,6 +453,8 @@ type SystemSpec struct {
 	RedisPriorityClassName *string `json:"redisPriorityClassName,omitempty"`
 	// +optional
 	RedisTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"redisTopologySpreadConstraints,omitempty"`
+	// +optional
+	RedisLabels map[string]string `json:"redisLabels,omitempty"`
 
 	// TODO should this field be optional? We have different approaches in Kubernetes.
 	// For example, in v1.Volume it is optional and there's an implied behaviour
@@ -485,6 +501,8 @@ type SystemAppSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type SystemSidekiqSpec struct {
@@ -500,6 +518,8 @@ type SystemSidekiqSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type SystemSearchdSpec struct {
@@ -517,6 +537,8 @@ type SystemSearchdSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type SystemSphinxSpec struct {
@@ -609,6 +631,8 @@ type SystemMySQLSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type SystemPostgreSQLSpec struct {
@@ -627,6 +651,8 @@ type SystemPostgreSQLSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type ZyncSpec struct {
@@ -652,6 +678,8 @@ type ZyncSpec struct {
 	DatabasePriorityClassName *string `json:"databasePriorityClassName,omitempty"`
 	// +optional
 	DatabaseTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"databaseTopologySpreadConstraints,omitempty"`
+	// +optional
+	DatabaseLabels map[string]string `json:"databaseLabels,omitempty"`
 }
 
 type ZyncAppSpec struct {
@@ -667,6 +695,8 @@ type ZyncAppSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type ZyncQueSpec struct {
@@ -682,6 +712,8 @@ type ZyncQueSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type HighAvailabilitySpec struct {
