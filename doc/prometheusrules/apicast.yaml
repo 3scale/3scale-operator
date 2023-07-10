@@ -53,7 +53,7 @@ spec:
             LABELS: {{ $labels }}
         sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_apicast_latency.adoc
         summary: APICast latency high (instance {{ $labels.instance }})
-      expr: histogram_quantile(0.99, sum(rate(total_response_time_seconds_bucket{namespace='__NAMESPACE__',}[30m]))
+      expr: histogram_quantile(0.99, sum(rate(total_response_time_seconds_bucket{namespace='__NAMESPACE__'}[30m]))
         by (le)) > 5
       for: 5m
       labels:

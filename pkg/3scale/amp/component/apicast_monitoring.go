@@ -147,7 +147,7 @@ func (apicast *Apicast) ApicastPrometheusRules() *monitoringv1.PrometheusRule {
 								"summary":     "APICast latency high (instance {{ $labels.instance }})",
 								"description": "APIcast p99 latency is higher than 5 seconds\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}",
 							},
-							Expr: intstr.FromString(fmt.Sprintf(`histogram_quantile(0.99, sum(rate(total_response_time_seconds_bucket{namespace='%s',}[30m])) by (le)) > 5`, apicast.Options.Namespace)),
+							Expr: intstr.FromString(fmt.Sprintf(`histogram_quantile(0.99, sum(rate(total_response_time_seconds_bucket{namespace='%s'}[30m])) by (le)) > 5`, apicast.Options.Namespace)),
 							For:  "5m",
 							Labels: map[string]string{
 								"severity": "warning",
