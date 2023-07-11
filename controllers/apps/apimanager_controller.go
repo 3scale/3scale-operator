@@ -19,22 +19,21 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/handlers"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-	"github.com/3scale/3scale-operator/pkg/handlers"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -131,7 +130,14 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1alpha1.APIManager{}).
 		Owns(&appsv1.DeploymentConfig{}).
-		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
+		Watches(
+			&routev1.Route{},
+			handler.EnqueueRequestsFromMapFunc(
+				func(ctx context.Context, obj client.Object) []reconcile.Request {
+					route := &routev1.Route{}
+					reqs := handlers.Map(route)
+					return reqs
+				})).
 		Complete(r)
 }
 

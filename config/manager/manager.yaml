@@ -39,11 +39,11 @@ spec:
         name: manager
         resources:
           limits:
-            cpu: 100m
-            memory: 300Mi
+            cpu: 200m
+            memory: 600Mi
           requests:
-            cpu: 100m
-            memory: 300Mi
+            cpu: 200m
+            memory: 600Mi
         env:
         - name: WATCH_NAMESPACE
           valueFrom:

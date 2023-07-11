@@ -475,11 +475,11 @@ spec:
                   name: metrics
                 resources:
                   limits:
-                    cpu: 100m
-                    memory: 300Mi
+                    cpu: 200m
+                    memory: 600Mi
                   requests:
-                    cpu: 100m
-                    memory: 300Mi
+                    cpu: 200m
+                    memory: 600Mi
               serviceAccountName: 3scale-operator
               terminationGracePeriodSeconds: 10
       permissions:
