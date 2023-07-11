@@ -52,6 +52,8 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.options.BackendCommonLabels = r.backendCommonLabels()
 	r.options.BackendRedisLabels = r.backendRedisLabels()
 	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels()
+	r.options.SystemRedisPodTemplateAnnotations = r.apimanager.Spec.System.RedisAnnotations
+	r.options.BackendRedisPodTemplateAnnotations = r.apimanager.Spec.Backend.RedisAnnotations
 
 	r.setResourceRequirementsOptions()
 	r.setNodeAffinityAndTolerationsOptions()
@@ -59,7 +61,6 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.setPersistentVolumeClaimOptions()
 	r.setPriorityClassNames()
 	r.setTopologySpreadConstraints()
-	r.setPodTemplateAnnotations()
 
 	// Should the operator be reading redis secrets?
 	// When HA is disabled, do we support external redis?
@@ -269,14 +270,5 @@ func (r *RedisOptionsProvider) setTopologySpreadConstraints() {
 	}
 	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisTopologySpreadConstraints != nil {
 		r.options.BackendRedisTopologySpreadConstraints = r.apimanager.Spec.Backend.RedisTopologySpreadConstraints
-	}
-}
-
-func (r *RedisOptionsProvider) setPodTemplateAnnotations() {
-	if r.apimanager.Spec.System != nil {
-		r.options.SystemRedisPodTemplateAnnotations = r.apimanager.Spec.System.RedisAnnotations
-	}
-	if r.apimanager.Spec.Backend != nil {
-		r.options.BackendRedisPodTemplateAnnotations = r.apimanager.Spec.Backend.RedisAnnotations
 	}
 }

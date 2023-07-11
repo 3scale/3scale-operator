@@ -28,12 +28,12 @@ func (s *SystemSearchdOptionsProvider) GetOptions() (*component.SystemSearchdOpt
 	s.options.ImageTag = product.ThreescaleRelease
 	s.options.Labels = s.labels()
 	s.options.PodTemplateLabels = s.podTemplateLabels()
+	s.options.PodTemplateAnnotations = s.apimanager.Spec.System.SearchdSpec.Annotations
 	s.setResourceRequirementsOptions()
 	s.setNodeAffinityAndTolerationsOptions()
 	s.setPVCOptions()
 	s.setPriorityClassNames()
 	s.setTopologySpreadConstraints()
-	s.setPodTemplateAnnotations()
 
 	err := s.options.Validate()
 	if err != nil {
@@ -126,12 +126,5 @@ func (s *SystemSearchdOptionsProvider) setTopologySpreadConstraints() {
 		s.apimanager.Spec.System.SearchdSpec != nil &&
 		s.apimanager.Spec.System.SearchdSpec.TopologySpreadConstraints != nil {
 		s.options.TopologySpreadConstraints = s.apimanager.Spec.System.SearchdSpec.TopologySpreadConstraints
-	}
-}
-
-func (s *SystemSearchdOptionsProvider) setPodTemplateAnnotations() {
-	if s.apimanager.Spec.System != nil &&
-		s.apimanager.Spec.System.SearchdSpec != nil {
-		s.options.PodTemplateAnnotations = s.apimanager.Spec.System.SearchdSpec.Annotations
 	}
 }
