@@ -215,7 +215,8 @@ bundle-custom-updates: $(YQ)
 	$(YQ) --inplace '.spec.displayName = "$(BUNDLE_PREFIX) 3scale operator"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
 	$(YQ) --inplace '.spec.provider.name = "$(BUNDLE_PREFIX)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
 	$(YQ) --inplace '.annotations."operators.operatorframework.io.bundle.package.v1" = "$(BUNDLE_PREFIX)-3scale-operator"' $(PROJECT_PATH)/bundle/metadata/annotations.yaml
-	$(SED_INLINE) -E 's/(operators\.operatorframework\.io\.bundle\.package\.v1=).+/\1$(BUNDLE_PREFIX)-3scale-operator/' $(PROJECT_PATH)/bundle.Dockerfile	@echo "Update operator image reference URL"
+	$(SED_INLINE) -E 's/(operators\.operatorframework\.io\.bundle\.package\.v1=).+/\1$(BUNDLE_PREFIX)-3scale-operator/' $(PROJECT_PATH)/bundle.Dockerfile
+	@echo "Update operator image reference URL"
 	$(YQ) --inplace '.metadata.annotations.containerImage = "$(IMG)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
 	$(YQ) --inplace '.spec.install.spec.deployments[0].spec.template.spec.containers[0].image = "$(IMG)"' $(PROJECT_PATH)/bundle/manifests/3scale-operator.clusterserviceversion.yaml
 
