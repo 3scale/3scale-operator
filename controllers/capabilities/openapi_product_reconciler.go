@@ -229,31 +229,27 @@ func (p *OpenAPIProductReconciler) desiredDeployment() *capabilitiesv1beta1.Prod
 }
 
 func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.AuthenticationSpec {
+	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(p.openapiObj)
+	if len(globalSecRequirements) == 0 {
+		// if no security requirements are found, default to UserKey auth
+		return p.desiredUserKeyAuthentication(nil)
+	}
+
+	// Only the first one is used
+	secRequirementExtended := globalSecRequirements[0]
+
 	var authenticationSpec *capabilitiesv1beta1.AuthenticationSpec
 
-	if p.openapiCR.Spec.SecurityScheme != nil &&
-		p.openapiCR.Spec.SecurityScheme.Type != nil &&
-		*p.openapiCR.Spec.SecurityScheme.Type == "openIdConnect" {
-		authenticationSpec = p.desiredOIDCAuthentication(nil)
-	} else {
-
-		globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(p.openapiObj)
-		if len(globalSecRequirements) == 0 {
-			// if no security requirements are found, default to UserKey auth
-			return p.desiredUserKeyAuthentication(nil)
-		}
-
-		// Only the first one is used
-		secRequirementExtended := globalSecRequirements[0]
-
-		switch secRequirementExtended.Value.Type {
-		// TODO types "oauth2", "openIdConnect"
-		case "apiKey":
-			authenticationSpec = p.desiredUserKeyAuthentication(secRequirementExtended)
-		case "openIdConnect":
-			authenticationSpec = p.desiredOIDCAuthentication(secRequirementExtended)
-		}
+	switch secRequirementExtended.Value.Type {
+	// TODO types "oauth2", "openIdConnect"
+	case "apiKey":
+		authenticationSpec = p.desiredUserKeyAuthentication(secRequirementExtended)
+	case "oauth2":
+		authenticationSpec = p.desiredOIDCAuthentication(secRequirementExtended)
+	case "openIdConnect":
+		authenticationSpec = p.desiredOIDCAuthentication(secRequirementExtended)
 	}
+
 	return authenticationSpec
 }
 
@@ -378,27 +374,11 @@ func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1be
 	return privateAPISec
 }
 
-func (p *OpenAPIProductReconciler) desiredOIDCSecurity() *capabilitiesv1beta1.SecuritySpec {
-	if p.openapiCR.Spec.SecurityScheme == nil && p.openapiCR.Spec.SecurityScheme.Type == nil {
-		return nil
-	}
-
-	privateAPISec := &capabilitiesv1beta1.SecuritySpec{}
-
-	if *p.openapiCR.Spec.SecurityScheme.Type == "openIdConnect" &&
-		p.openapiCR.Spec.SecurityScheme.OpenIdConnectUrl != nil {
-		privateAPISec.OpenApiSecuritySchemeType = p.openapiCR.Spec.SecurityScheme.Type
-		privateAPISec.OpenIdConnectUrl = p.openapiCR.Spec.SecurityScheme.OpenIdConnectUrl
-	}
-
-	return privateAPISec
-}
-
 func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
 	authSpec := &capabilitiesv1beta1.AuthenticationSpec{
 		OIDC: &capabilitiesv1beta1.OIDCSpec{
-			IssuerType: "keycloak",
-			Security:   p.desiredOIDCSecurity(),
+			IssuerType: p.openapiCR.Spec.OIDC.IssuerType,
+			Security:   p.desiredPrivateAPISecurity(),
 			AuthenticationFlow: &capabilitiesv1beta1.OIDCAuthenticationFlowSpec{
 				StandardFlowEnabled:       false,
 				ImplicitFlowEnabled:       false,
@@ -408,23 +388,30 @@ func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.Exte
 		},
 	}
 
-	p.setOIDCAuthenticationParams(authSpec, secReq)
+	if secReq.Value.Type == "openIdConnect" {
+		p.setOIDCAuthenticationParams(authSpec, secReq)
+	} else { // oauth2
+		p.setOauth2AuthenticationParams(authSpec, secReq)
+	}
 
 	return authSpec
 }
 
 func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
-	if secReq != nil {
-		authSpec.OIDC.CredentialsLoc = p.parseOIDCCredentialsLoc(secReq.Value.In)
-	}
+	tmpHeaders := "headers"
+	authSpec.OIDC.CredentialsLoc = &tmpHeaders
 
-	if p.openapiCR.Spec.SecurityScheme != nil {
-		authSpec.OIDC.IssuerEndpoint = *p.openapiCR.Spec.SecurityScheme.OpenIdConnectUrl
-		if p.openapiCR.Spec.SecurityScheme.Flows != nil {
-			authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = p.openapiCR.Spec.SecurityScheme.Flows.StandardFlowEnabled
-			authSpec.OIDC.AuthenticationFlow.ImplicitFlowEnabled = p.openapiCR.Spec.SecurityScheme.Flows.ImplicitFlowEnabled
-			authSpec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled = p.openapiCR.Spec.SecurityScheme.Flows.DirectAccessGrantsEnabled
-			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = p.openapiCR.Spec.SecurityScheme.Flows.ServiceAccountsEnabled
+	if p.openapiCR.Spec.OIDC != nil {
+		authSpec.OIDC.IssuerType = p.openapiCR.Spec.OIDC.IssuerType
+		authSpec.OIDC.IssuerEndpoint = p.openapiCR.Spec.OIDC.IssuerEndpoint
+		authSpec.OIDC.JwtClaimWithClientID = p.openapiCR.Spec.OIDC.JwtClaimWithClientID
+		authSpec.OIDC.JwtClaimWithClientIDType = p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType
+
+		if p.openapiCR.Spec.OIDC.AuthenticationFlow != nil {
+			authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.StandardFlowEnabled
+			authSpec.OIDC.AuthenticationFlow.ImplicitFlowEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ImplicitFlowEnabled
+			authSpec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled
+			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ServiceAccountsEnabled
 		}
 	}
 }
@@ -442,5 +429,29 @@ func (p *OpenAPIProductReconciler) parseOIDCCredentialsLoc(inField string) *stri
 		return &tmpAuthorisation
 	default:
 		return nil
+	}
+}
+
+func (p *OpenAPIProductReconciler) setOauth2AuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
+	*authSpec.OIDC.CredentialsLoc = "header"
+
+	if p.openapiCR.Spec.OIDC != nil {
+		authSpec.OIDC.IssuerType = p.openapiCR.Spec.OIDC.IssuerType
+		authSpec.OIDC.IssuerEndpoint = p.openapiCR.Spec.OIDC.IssuerEndpoint
+		authSpec.OIDC.JwtClaimWithClientID = p.openapiCR.Spec.OIDC.JwtClaimWithClientID
+		authSpec.OIDC.JwtClaimWithClientIDType = p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType
+
+		if secReq.Value.Flows.AuthorizationCode != nil {
+			authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = true
+		}
+		if secReq.Value.Flows.Implicit != nil {
+			authSpec.OIDC.AuthenticationFlow.ImplicitFlowEnabled = true
+		}
+		if secReq.Value.Flows.Password != nil {
+			authSpec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled = true
+		}
+		if secReq.Value.Flows.ClientCredentials != nil {
+			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = true
+		}
 	}
 }
