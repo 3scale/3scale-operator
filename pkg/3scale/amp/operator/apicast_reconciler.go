@@ -1,8 +1,10 @@
 package operator
 
 import (
+	"context"
 	"fmt"
 	"reflect"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"strings"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -192,6 +194,14 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcilePodMonitor(apicast.ApicastStagingPodMonitor(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	res, err := r.reconcileAPImanagerCR(context.TODO())
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	if res.Requeue {
+		return res, nil
 	}
 
 	return reconcile.Result{}, nil
@@ -543,6 +553,64 @@ func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *appsv1.
 	}
 
 	return updated, nil
+}
+
+func (r *ApicastReconciler) reconcileAPImanagerCR(ctx context.Context) (ctrl.Result, error) {
+	//logger, err := logr.FromContext(ctx)
+	//if err != nil {
+	//	return ctrl.Result{}, err
+	//
+	//}
+
+	changed := false
+	changed, err := r.reconcileApimanagerSecretLabels(ctx)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if changed {
+		err = r.Client().Update(ctx, r.apiManager)
+		//logger.Info("reconciling", "error", err)
+	}
+
+	return ctrl.Result{Requeue: changed}, err
+}
+
+func (r *ApicastReconciler) reconcileApimanagerSecretLabels(ctx context.Context) (bool, error) {
+	secretUIDs, err := r.getSecretUIDs(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return replaceAPIManagerSecretLabels(r.apiManager, secretUIDs), nil
+}
+
+func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) ([]string, error) {
+	// production custom policy
+
+	secretKeys := []client.ObjectKey{}
+	if r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
+		for _, customPolicy := range r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customPolicy.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	uids := []string{}
+	for idx := range secretKeys {
+		secret := &v1.Secret{}
+		secretKey := secretKeys[idx]
+		err := r.Client().Get(ctx, secretKey, secret)
+		r.Logger().V(1).Info("read secret", "objectKey", secretKey, "error", err)
+		if err != nil {
+			return nil, err
+		}
+		uids = append(uids, string(secret.GetUID()))
+	}
+
+	return uids, nil
 }
 
 func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.Apicast, error) {
