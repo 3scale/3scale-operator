@@ -108,6 +108,8 @@ type SystemOptions struct {
 
 	AppTopologySpreadConstraints     []v1.TopologySpreadConstraint `validate:"-"`
 	SideKiqTopologySpreadConstraints []v1.TopologySpreadConstraint `validate:"-"`
+	AppPodTemplateAnnotations        map[string]string             `validate:"-"`
+	SideKiqPodTemplateAnnotations    map[string]string             `validate:"-"`
 
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions

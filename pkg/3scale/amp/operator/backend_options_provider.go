@@ -45,6 +45,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.setReplicas()
 	o.setPriorityClassNames()
 	o.setTopologySpreadConstraints()
+	o.setPodTemplateAnnotations()
 
 	o.backendOptions.CommonLabels = o.commonLabels()
 	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
@@ -243,6 +244,12 @@ func (o *OperatorBackendOptionsProvider) setPriorityClassNames() {
 	if o.apimanager.Spec.Backend.CronSpec.PriorityClassName != nil {
 		o.backendOptions.PriorityClassNameCron = *o.apimanager.Spec.Backend.CronSpec.PriorityClassName
 	}
+}
+
+func (o *OperatorBackendOptionsProvider) setPodTemplateAnnotations() {
+	o.backendOptions.ListenerPodTemplateAnnotations = o.apimanager.Spec.Backend.ListenerSpec.Annotations
+	o.backendOptions.WorkerPodTemplateAnnotations = o.apimanager.Spec.Backend.WorkerSpec.Annotations
+	o.backendOptions.CronPodTemplateAnnotations = o.apimanager.Spec.Backend.CronSpec.Annotations
 }
 
 func (o *OperatorBackendOptionsProvider) setTopologySpreadConstraints() {

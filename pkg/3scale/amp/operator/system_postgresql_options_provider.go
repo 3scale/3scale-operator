@@ -47,6 +47,7 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 	s.setNodeAffinityAndTolerationsOptions()
 	s.setPriorityClassNames()
 	s.setTopologySpreadConstraints()
+	s.setPodTemplateAnnotations()
 
 	err = s.options.Validate()
 	if err != nil {
@@ -209,5 +210,11 @@ func (s *SystemPostgresqlOptionsProvider) setTopologySpreadConstraints() {
 	if s.apimanager.IsSystemPostgreSQLEnabled() &&
 		s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.TopologySpreadConstraints != nil {
 		s.options.TopologySpreadConstraints = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.TopologySpreadConstraints
+	}
+}
+
+func (s *SystemPostgresqlOptionsProvider) setPodTemplateAnnotations() {
+	if s.apimanager.IsSystemPostgreSQLEnabled() {
+		s.options.PodTemplateAnnotations = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Annotations
 	}
 }

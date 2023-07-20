@@ -27,6 +27,7 @@ type SystemMysqlOptions struct {
 	PodTemplateLabels             map[string]string             `validate:"required"`
 	PriorityClassName             string                        `validate:"-"`
 	TopologySpreadConstraints     []v1.TopologySpreadConstraint `validate:"-"`
+	PodTemplateAnnotations        map[string]string             `validate:"-"`
 }
 
 func NewSystemMysqlOptions() *SystemMysqlOptions {

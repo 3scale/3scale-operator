@@ -52,6 +52,8 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.options.BackendCommonLabels = r.backendCommonLabels()
 	r.options.BackendRedisLabels = r.backendRedisLabels()
 	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels()
+	r.options.SystemRedisPodTemplateAnnotations = r.apimanager.Spec.System.RedisAnnotations
+	r.options.BackendRedisPodTemplateAnnotations = r.apimanager.Spec.Backend.RedisAnnotations
 
 	r.setResourceRequirementsOptions()
 	r.setNodeAffinityAndTolerationsOptions()

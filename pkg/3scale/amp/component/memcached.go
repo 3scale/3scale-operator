@@ -68,7 +68,8 @@ func (m *Memcached) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": SystemMemcachedDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: m.Options.PodTemplateLabels,
+					Labels:      m.Options.PodTemplateLabels,
+					Annotations: m.Options.PodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:           m.Options.Affinity,

@@ -269,6 +269,8 @@ type ApicastProductionSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type ApicastStagingSpec struct {
@@ -333,6 +335,8 @@ type ApicastStagingSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type BackendSpec struct {
@@ -354,6 +358,8 @@ type BackendSpec struct {
 	RedisTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"redisTopologySpreadConstraints,omitempty"`
 	// +optional
 	RedisLabels map[string]string `json:"redisLabels,omitempty"`
+	// +optional
+	RedisAnnotations map[string]string `json:"redisAnnotations,omitempty"`
 
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
@@ -383,6 +389,8 @@ type BackendListenerSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type BackendWorkerSpec struct {
@@ -400,6 +408,8 @@ type BackendWorkerSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type BackendCronSpec struct {
@@ -417,6 +427,8 @@ type BackendCronSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type SystemSpec struct {
@@ -438,6 +450,8 @@ type SystemSpec struct {
 	MemcachedTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"memcachedTopologySpreadConstraints,omitempty"`
 	// +optional
 	MemcachedLabels map[string]string `json:"memcachedLabels,omitempty"`
+	// +optional
+	MemcachedAnnotations map[string]string `json:"memcachedAnnotations,omitempty"`
 
 	// +optional
 	RedisImage *string `json:"redisImage,omitempty"`
@@ -455,6 +469,8 @@ type SystemSpec struct {
 	RedisTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"redisTopologySpreadConstraints,omitempty"`
 	// +optional
 	RedisLabels map[string]string `json:"redisLabels,omitempty"`
+	// +optional
+	RedisAnnotations map[string]string `json:"redisAnnotations,omitempty"`
 
 	// TODO should this field be optional? We have different approaches in Kubernetes.
 	// For example, in v1.Volume it is optional and there's an implied behaviour
@@ -503,6 +519,8 @@ type SystemAppSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type SystemSidekiqSpec struct {
@@ -520,6 +538,8 @@ type SystemSidekiqSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type SystemSearchdSpec struct {
@@ -539,6 +559,8 @@ type SystemSearchdSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type SystemSphinxSpec struct {
@@ -633,6 +655,8 @@ type SystemMySQLSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type SystemPostgreSQLSpec struct {
@@ -653,6 +677,8 @@ type SystemPostgreSQLSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type ZyncSpec struct {
@@ -680,6 +706,8 @@ type ZyncSpec struct {
 	DatabaseTopologySpreadConstraints []v1.TopologySpreadConstraint `json:"databaseTopologySpreadConstraints,omitempty"`
 	// +optional
 	DatabaseLabels map[string]string `json:"databaseLabels,omitempty"`
+	// +optional
+	DatabaseAnnotations map[string]string `json:"databaseAnnotations,omitempty"`
 }
 
 type ZyncAppSpec struct {
@@ -697,6 +725,8 @@ type ZyncAppSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type ZyncQueSpec struct {
@@ -714,6 +744,8 @@ type ZyncQueSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type HighAvailabilitySpec struct {

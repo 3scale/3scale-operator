@@ -102,7 +102,8 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": BackendWorkerName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: backend.Options.WorkerPodTemplateLabels,
+					Labels:      backend.Options.WorkerPodTemplateLabels,
+					Annotations: backend.Options.WorkerPodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:    backend.Options.WorkerAffinity,
@@ -179,7 +180,8 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": BackendCronName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: backend.Options.CronPodTemplateLabels,
+					Labels:      backend.Options.CronPodTemplateLabels,
+					Annotations: backend.Options.CronPodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:    backend.Options.CronAffinity,
@@ -256,7 +258,8 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": BackendListenerName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: backend.Options.ListenerPodTemplateLabels,
+					Labels:      backend.Options.ListenerPodTemplateLabels,
+					Annotations: backend.Options.ListenerPodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:    backend.Options.ListenerAffinity,

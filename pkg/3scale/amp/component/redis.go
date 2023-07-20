@@ -117,7 +117,8 @@ func (redis *Redis) buildPodTemplateSpec() *v1.PodTemplateSpec {
 			TopologySpreadConstraints: redis.Options.BackendRedisTopologySpreadConstraints,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Labels: redis.Options.BackendRedisPodTemplateLabels,
+			Labels:      redis.Options.BackendRedisPodTemplateLabels,
+			Annotations: redis.Options.BackendRedisPodTemplateAnnotations,
 		},
 	}
 }
@@ -477,7 +478,8 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": SystemRedisDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: redis.Options.SystemRedisPodTemplateLabels,
+					Labels:      redis.Options.SystemRedisPodTemplateLabels,
+					Annotations: redis.Options.SystemRedisPodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:           redis.Options.SystemRedisAffinity,

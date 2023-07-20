@@ -27,6 +27,7 @@ func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOp
 	m.memcachedOptions.ImageTag = product.ThreescaleRelease
 	m.memcachedOptions.DeploymentLabels = m.deploymentLabels()
 	m.memcachedOptions.PodTemplateLabels = m.podTemplateLabels()
+	m.memcachedOptions.PodTemplateAnnotations = m.apimanager.Spec.System.MemcachedAnnotations
 
 	m.setResourceRequirementsOptions()
 	m.setNodeAffinityAndTolerationsOptions()

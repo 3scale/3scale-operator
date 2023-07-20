@@ -53,6 +53,9 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.zyncOptions.ZyncPodTemplateLabels = z.zyncPodTemplateLabels()
 	z.zyncOptions.ZyncQuePodTemplateLabels = z.zyncQuePodTemplateLabels()
 	z.zyncOptions.ZyncDatabasePodTemplateLabels = z.zyncDatabasePodTemplateLabels()
+	z.zyncOptions.ZyncPodTemplateAnnotations = z.zyncPodTemplateAnnotations()
+	z.zyncOptions.ZyncQuePodTemplateAnnotations = z.zyncQuePodTemplateAnnotations()
+	z.zyncOptions.ZyncDatabasePodTemplateAnnotations = z.apimanager.Spec.Zync.DatabaseAnnotations
 
 	z.zyncOptions.ZyncMetrics = true
 
@@ -313,4 +316,24 @@ func (z *ZyncOptionsProvider) setTopologySpreadConstraints() {
 	if z.apimanager.Spec.Zync.DatabaseTopologySpreadConstraints != nil {
 		z.zyncOptions.ZyncDatabaseTopologySpreadConstraints = z.apimanager.Spec.Zync.DatabaseTopologySpreadConstraints
 	}
+}
+
+func (z *ZyncOptionsProvider) zyncPodTemplateAnnotations() map[string]string {
+	annotations := make(map[string]string)
+	annotations["prometheus.io/port"] = "9393"
+	annotations["prometheus.io/scrape"] = "true"
+	for k, v := range z.apimanager.Spec.Zync.AppSpec.Annotations {
+		annotations[k] = v
+	}
+	return annotations
+}
+
+func (z *ZyncOptionsProvider) zyncQuePodTemplateAnnotations() map[string]string {
+	annotations := make(map[string]string)
+	annotations["prometheus.io/port"] = "9393"
+	annotations["prometheus.io/scrape"] = "true"
+	for k, v := range z.apimanager.Spec.Zync.QueSpec.Annotations {
+		annotations[k] = v
+	}
+	return annotations
 }

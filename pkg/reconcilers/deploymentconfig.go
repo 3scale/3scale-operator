@@ -53,6 +53,7 @@ func GenericBackendMutators() []DCMutateFn {
 		DeploymentConfigPodTemplateLabelsMutator,
 		DeploymentConfigPriorityClassMutator,
 		DeploymentConfigTopologySpreadConstraintsMutator,
+		DeploymentConfigPodTemplateAnnotationsMutator,
 	}
 }
 
@@ -270,6 +271,15 @@ func DeploymentConfigTopologySpreadConstraintsMutator(desired, existing *appsv1.
 		existing.Spec.Template.Spec.TopologySpreadConstraints = desired.Spec.Template.Spec.TopologySpreadConstraints
 		updated = true
 	}
+
+	return updated, nil
+}
+
+// DeploymentConfigPodTemplateAnnotationsMutator ensures Pod Template Annotations is reconciled
+func DeploymentConfigPodTemplateAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	updated := false
+
+	helper.MergeMapStringString(&updated, &existing.Spec.Template.Annotations, desired.Spec.Template.Annotations)
 
 	return updated, nil
 }

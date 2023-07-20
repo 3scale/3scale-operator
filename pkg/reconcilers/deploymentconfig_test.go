@@ -777,7 +777,6 @@ func TestDeploymentConfigPodTemplateLabelsMutator(t *testing.T) {
 			if update != tc.expectedResult {
 				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
 			}
-			// It should be tested changes in triggers on image change only, but good enough for now
 			if !reflect.DeepEqual(existing.Spec.Template.Labels, tc.expectedNewLabels) {
 				subT.Fatal(cmp.Diff(existing.Spec.Template.Labels, tc.expectedNewLabels))
 			}
@@ -915,4 +914,71 @@ func TestDeploymentConfigTopologySpreadConstraintsMutator(t *testing.T) {
 		})
 	}
 
+}
+
+func TestDeploymentConfigPodTemplateAnnotationsMutator(t *testing.T) {
+	dcFactory := func(annotations map[string]string) *appsv1.DeploymentConfig {
+		return &appsv1.DeploymentConfig{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DeploymentConfig",
+				APIVersion: "apps.openshift.io/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "myDC",
+				Namespace: "myNS",
+			},
+			Spec: appsv1.DeploymentConfigSpec{
+				Template: &corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: annotations,
+					},
+				},
+			},
+		}
+	}
+
+	mapCopy := func(originalMap map[string]string) map[string]string {
+		// Create the target map
+		targetMap := make(map[string]string)
+
+		// Copy from the original map to the target map
+		for key, value := range originalMap {
+			targetMap[key] = value
+		}
+
+		return targetMap
+	}
+
+	annotationsA := map[string]string{"a": "1", "a2": "2"}
+	annotationsB := map[string]string{"a": "other", "b": "1"}
+
+	cases := []struct {
+		testName               string
+		existingAnnotations    map[string]string
+		desiredAnnotations     map[string]string
+		expectedResult         bool
+		expectedNewAnnotations map[string]string
+	}{
+		{"NothingToReconcile", mapCopy(annotationsA), mapCopy(annotationsA), false, mapCopy(annotationsA)},
+		{"AnnotationsReconciled", mapCopy(annotationsB), mapCopy(annotationsA), true, map[string]string{
+			"a": "1", "a2": "2", "b": "1",
+		}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			existing := dcFactory(tc.existingAnnotations)
+			desired := dcFactory(tc.desiredAnnotations)
+			update, err := DeploymentConfigPodTemplateAnnotationsMutator(desired, existing)
+			if err != nil {
+				subT.Fatal(err)
+			}
+			if update != tc.expectedResult {
+				subT.Fatalf("result failed, expected: %t, got: %t", tc.expectedResult, update)
+			}
+			if !reflect.DeepEqual(existing.Spec.Template.Annotations, tc.expectedNewAnnotations) {
+				subT.Fatal(cmp.Diff(existing.Spec.Template.Annotations, tc.expectedNewAnnotations))
+			}
+		})
+	}
 }

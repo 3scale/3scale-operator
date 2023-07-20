@@ -28,6 +28,7 @@ func (s *SystemSearchdOptionsProvider) GetOptions() (*component.SystemSearchdOpt
 	s.options.ImageTag = product.ThreescaleRelease
 	s.options.Labels = s.labels()
 	s.options.PodTemplateLabels = s.podTemplateLabels()
+	s.options.PodTemplateAnnotations = s.apimanager.Spec.System.SearchdSpec.Annotations
 	s.setResourceRequirementsOptions()
 	s.setNodeAffinityAndTolerationsOptions()
 	s.setPVCOptions()

@@ -953,6 +953,10 @@ spec:
                           is not specified. Authentication is not supported. Format
                           is <scheme>://<host>:<port>
                         type: string
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       customEnvironments:
                         description: CustomEnvironments specifies an array of defined
                           custom environments to be loaded
@@ -2233,6 +2237,10 @@ spec:
                           is not specified. Authentication is not supported. Format
                           is <scheme>://<host>:<port>
                         type: string
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       customEnvironments:
                         description: CustomEnvironments specifies an array of defined
                           custom environments to be loaded
@@ -3504,6 +3512,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       labels:
                         additionalProperties:
                           type: string
@@ -4633,6 +4645,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       labels:
                         additionalProperties:
                           type: string
@@ -5723,6 +5739,10 @@ spec:
                               type: object
                             type: array
                         type: object
+                    type: object
+                  redisAnnotations:
+                    additionalProperties:
+                      type: string
                     type: object
                   redisImage:
                     type: string
@@ -6845,6 +6865,10 @@ spec:
                                   type: object
                                 type: array
                             type: object
+                        type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
                         type: object
                       labels:
                         additionalProperties:
@@ -8030,6 +8054,10 @@ spec:
                                   type: object
                                 type: array
                             type: object
+                        type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
                         type: object
                       developerContainerResources:
                         description: ResourceRequirements describes the compute resource
@@ -9278,6 +9306,10 @@ spec:
                                     type: array
                                 type: object
                             type: object
+                          annotations:
+                            additionalProperties:
+                              type: string
+                            type: object
                           image:
                             type: string
                           labels:
@@ -10503,6 +10535,10 @@ spec:
                                     type: array
                                 type: object
                             type: object
+                          annotations:
+                            additionalProperties:
+                              type: string
+                            type: object
                           image:
                             type: string
                           labels:
@@ -11716,6 +11752,10 @@ spec:
                             type: array
                         type: object
                     type: object
+                  memcachedAnnotations:
+                    additionalProperties:
+                      type: string
+                    type: object
                   memcachedImage:
                     type: string
                   memcachedLabels:
@@ -12796,6 +12836,10 @@ spec:
                               type: object
                             type: array
                         type: object
+                    type: object
+                  redisAnnotations:
+                    additionalProperties:
+                      type: string
                     type: object
                   redisImage:
                     type: string
@@ -13918,6 +13962,10 @@ spec:
                                   type: object
                                 type: array
                             type: object
+                        type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
                         type: object
                       image:
                         type: string
@@ -15070,6 +15118,10 @@ spec:
                                   type: object
                                 type: array
                             type: object
+                        type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
                         type: object
                       labels:
                         additionalProperties:
@@ -17327,6 +17379,10 @@ spec:
                                 type: array
                             type: object
                         type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
                       labels:
                         additionalProperties:
                           type: string
@@ -18417,6 +18473,10 @@ spec:
                               type: object
                             type: array
                         type: object
+                    type: object
+                  databaseAnnotations:
+                    additionalProperties:
+                      type: string
                     type: object
                   databaseLabels:
                     additionalProperties:
@@ -19536,6 +19596,10 @@ spec:
                                   type: object
                                 type: array
                             type: object
+                        type: object
+                      annotations:
+                        additionalProperties:
+                          type: string
                         type: object
                       labels:
                         additionalProperties:

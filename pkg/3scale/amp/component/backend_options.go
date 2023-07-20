@@ -45,6 +45,10 @@ type BackendOptions struct {
 	TopologySpreadConstraintsWorker   []v1.TopologySpreadConstraint `validate:"-"`
 	TopologySpreadConstraintsCron     []v1.TopologySpreadConstraint `validate:"-"`
 
+	ListenerPodTemplateAnnotations map[string]string `validate:"-"`
+	WorkerPodTemplateAnnotations   map[string]string `validate:"-"`
+	CronPodTemplateAnnotations     map[string]string `validate:"-"`
+
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions
 	// that need namespace filtering because they are "global" once imported

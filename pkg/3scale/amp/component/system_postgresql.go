@@ -111,7 +111,8 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 			Selector: map[string]string{"deploymentConfig": SystemPostgreSQLDeploymentName},
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: p.Options.PodTemplateLabels,
+					Labels:      p.Options.PodTemplateLabels,
+					Annotations: p.Options.PodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
 					Affinity:           p.Options.Affinity,

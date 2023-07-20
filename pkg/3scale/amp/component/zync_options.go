@@ -49,6 +49,10 @@ type ZyncOptions struct {
 	ZyncQueTopologySpreadConstraints      []v1.TopologySpreadConstraint `validate:"-"`
 	ZyncDatabaseTopologySpreadConstraints []v1.TopologySpreadConstraint `validate:"-"`
 
+	ZyncPodTemplateAnnotations         map[string]string `validate:"-"`
+	ZyncQuePodTemplateAnnotations      map[string]string `validate:"-"`
+	ZyncDatabasePodTemplateAnnotations map[string]string `validate:"-"`
+
 	// Used for monitoring objects
 	// Those objects are namespaced. However, objects includes labels, rules and expressions
 	// that need namespace filtering because they are "global" once imported
