@@ -605,7 +605,7 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 			Name: customPolicy.VolumeName(),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: customPolicy.SecretRef.Name,
+					SecretName: customPolicy.Secret.Name,
 				},
 			},
 		})
@@ -661,7 +661,7 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 			Name: customPolicy.VolumeName(),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: customPolicy.SecretRef.Name,
+					SecretName: customPolicy.Secret.Name,
 				},
 			},
 		})

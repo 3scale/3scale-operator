@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"runtime"
 
@@ -119,6 +120,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	secretLabelSelector, err := apimachinerymetav1.ParseToLabelSelector("apimanager.apps.3scale.net/watched-by=apimanager")
+	if err != nil {
+		setupLog.Error(err, "unable parse apimanager secrets label")
+		os.Exit(1)
+	}
+
+	if secretLabelSelector == nil {
+		setupLog.Info("secretLabelSelector is empty")
+		os.Exit(1)
+	}
+
 	discoveryClientAPIManager, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
 	if err != nil {
 		setupLog.Error(err, "unable to create discovery client")
@@ -130,6 +142,8 @@ func main() {
 			ctrl.Log.WithName("controllers").WithName("APIManager"),
 			discoveryClientAPIManager,
 			mgr.GetEventRecorderFor("APIManager")),
+		SecretLabelSelector: *secretLabelSelector,
+		WatchedNamespace:    namespace,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "APIManager")
 		os.Exit(1)

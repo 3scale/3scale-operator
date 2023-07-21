@@ -27,8 +27,9 @@ type ApicastOptionsProvider struct {
 }
 
 const (
-	APIcastEnvironmentCMAnnotation = "apps.3scale.net/env-configmap-hash"
-	PodPrioritySystemNodeCritical  = "system-node-critical"
+	APIcastEnvironmentCMAnnotation             = "apps.3scale.net/env-configmap-hash"
+	PodPrioritySystemNodeCritical              = "system-node-critical"
+	CustomPoliciesSecretResverAnnotationPrefix = "apimanager.apps.3scale.net/custompolicy-secret-resource-version-"
 )
 
 func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {
@@ -213,7 +214,13 @@ func (a *ApicastOptionsProvider) productionPodTemplateLabels() map[string]string
 func (a *ApicastOptionsProvider) setCustomPolicies() error {
 	for idx, customPolicySpec := range a.apimanager.Spec.Apicast.ProductionSpec.CustomPolicies {
 		// CR Validation ensures secret name is not nil
-		err := a.validateCustomPolicySecret(customPolicySpec.SecretRef.Name)
+
+		namespacedName := types.NamespacedName{
+			Name:      customPolicySpec.SecretRef.Name, // CR Validation ensures not nil
+			Namespace: a.apimanager.Namespace,
+		}
+
+		secret, err := a.validateCustomPolicySecret(context.TODO(), customPolicySpec.SecretRef.Name, namespacedName)
 		if err != nil {
 			errors := field.ErrorList{}
 			customPoliciesIdxFldPath := field.NewPath("spec").
@@ -225,16 +232,22 @@ func (a *ApicastOptionsProvider) setCustomPolicies() error {
 		}
 
 		a.apicastOptions.ProductionCustomPolicies = append(a.apicastOptions.ProductionCustomPolicies, component.CustomPolicy{
-			Name:      customPolicySpec.Name,
-			Version:   customPolicySpec.Version,
-			SecretRef: *customPolicySpec.SecretRef,
+			Name:    customPolicySpec.Name,
+			Version: customPolicySpec.Version,
+			Secret:  secret,
 		})
 	}
 
 	// TODO(eastizle): DRY!!
 	for idx, customPolicySpec := range a.apimanager.Spec.Apicast.StagingSpec.CustomPolicies {
 		// CR Validation ensures secret name is not nil
-		err := a.validateCustomPolicySecret(customPolicySpec.SecretRef.Name)
+
+		namespacedName := types.NamespacedName{
+			Name:      customPolicySpec.SecretRef.Name, // CR Validation ensures not nil
+			Namespace: a.apimanager.Namespace,
+		}
+
+		secret, err := a.validateCustomPolicySecret(context.TODO(), customPolicySpec.SecretRef.Name, namespacedName)
 		if err != nil {
 			errors := field.ErrorList{}
 			customPoliciesIdxFldPath := field.NewPath("spec").
@@ -246,27 +259,35 @@ func (a *ApicastOptionsProvider) setCustomPolicies() error {
 		}
 
 		a.apicastOptions.StagingCustomPolicies = append(a.apicastOptions.StagingCustomPolicies, component.CustomPolicy{
-			Name:      customPolicySpec.Name,
-			Version:   customPolicySpec.Version,
-			SecretRef: *customPolicySpec.SecretRef,
+			Name:    customPolicySpec.Name,
+			Version: customPolicySpec.Version,
+			Secret:  secret,
 		})
 	}
 
 	return nil
 }
 
-func (a *ApicastOptionsProvider) validateCustomPolicySecret(name string) error {
-	_, err := a.secretSource.RequiredFieldValueFromRequiredSecret(name, "init.lua")
+func (a *ApicastOptionsProvider) validateCustomPolicySecret(ctx context.Context, name string, nn types.NamespacedName) (*v1.Secret, error) {
+	secret := &v1.Secret{}
+	err := a.client.Get(ctx, nn, secret)
+
 	if err != nil {
-		return err
+		// NotFoundError is also an error, it is required to exist
+		return nil, err
+	}
+
+	_, err = a.secretSource.RequiredFieldValueFromRequiredSecret(name, "init.lua")
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = a.secretSource.RequiredFieldValueFromRequiredSecret(name, "apicast-policy.json")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return secret, nil
 }
 
 func (a *ApicastOptionsProvider) setTracingConfiguration() error {
@@ -449,6 +470,13 @@ func (a *ApicastOptionsProvider) setProductionProxyConfigurations() {
 func (a *ApicastOptionsProvider) additionalPodAnnotations() map[string]string {
 	annotations := map[string]string{
 		APIcastEnvironmentCMAnnotation: a.envConfigMapHash(),
+	}
+
+	for idx := range a.apicastOptions.ProductionCustomPolicies {
+		// Secrets must exist
+		// Annotation key includes the name of the secret
+		annotationKey := fmt.Sprintf("%s%s", CustomPoliciesSecretResverAnnotationPrefix, a.apicastOptions.ProductionCustomPolicies[idx].Secret.Name)
+		annotations[annotationKey] = a.apicastOptions.ProductionCustomPolicies[idx].Secret.ResourceVersion
 	}
 
 	return annotations

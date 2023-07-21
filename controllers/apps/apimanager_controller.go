@@ -19,6 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -39,11 +42,15 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+
+	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // APIManagerReconciler reconciles a APIManager object
 type APIManagerReconciler struct {
 	*reconcilers.BaseReconciler
+	SecretLabelSelector apimachinerymetav1.LabelSelector
+	WatchedNamespace    string
 }
 
 // blank assignment to verify that APIManagerReconciler implements reconcile.Reconciler
@@ -123,13 +130,29 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 }
 
 func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	secretToApimanagerEventMapper := &SecretToApimanagerEventMapper{
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("secretToApimanagerEventMapper"),
+		Namespace: r.WatchedNamespace,
+	}
+
 	handlers := &handlers.APIManagerRoutesEventMapper{
 		K8sClient: r.Client(),
 		Logger:    r.Logger().WithName("APIManagerRoutesHandler"),
 	}
 
+	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
+	if err != nil {
+		return nil
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1alpha1.APIManager{}).
+		Watches(
+			&source.Kind{Type: &v1.Secret{}},
+			handler.EnqueueRequestsFromMapFunc(secretToApimanagerEventMapper.Map),
+			builder.WithPredicates(labelSelectorPredicate),
+		).
 		Owns(&appsv1.DeploymentConfig{}).
 		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
 		Complete(r)
