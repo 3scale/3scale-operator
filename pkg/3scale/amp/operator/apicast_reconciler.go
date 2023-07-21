@@ -556,11 +556,6 @@ func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *appsv1.
 }
 
 func (r *ApicastReconciler) reconcileAPImanagerCR(ctx context.Context) (ctrl.Result, error) {
-	//logger, err := logr.FromContext(ctx)
-	//if err != nil {
-	//	return ctrl.Result{}, err
-	//
-	//}
 
 	changed := false
 	changed, err := r.reconcileApimanagerSecretLabels(ctx)
@@ -570,7 +565,7 @@ func (r *ApicastReconciler) reconcileAPImanagerCR(ctx context.Context) (ctrl.Res
 
 	if changed {
 		err = r.Client().Update(ctx, r.apiManager)
-		//logger.Info("reconciling", "error", err)
+		r.logger.Info("reconciling", "error", err)
 	}
 
 	return ctrl.Result{Requeue: changed}, err
@@ -587,10 +582,20 @@ func (r *ApicastReconciler) reconcileApimanagerSecretLabels(ctx context.Context)
 
 func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) ([]string, error) {
 	// production custom policy
+	// staging custom policy
 
 	secretKeys := []client.ObjectKey{}
 	if r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
 		for _, customPolicy := range r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customPolicy.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies != nil {
+		for _, customPolicy := range r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies {
 			secretKeys = append(secretKeys, client.ObjectKey{
 				Name:      customPolicy.SecretRef.Name,
 				Namespace: r.apiManager.Namespace,

@@ -12,9 +12,9 @@ import (
 )
 
 type CustomPolicy struct {
-	Name      string
-	Version   string
-	SecretRef v1.LocalObjectReference
+	Name    string
+	Version string
+	Secret  *v1.Secret
 }
 
 func (c CustomPolicy) VolumeName() string {
