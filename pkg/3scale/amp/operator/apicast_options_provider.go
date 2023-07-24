@@ -479,6 +479,13 @@ func (a *ApicastOptionsProvider) additionalPodAnnotations() map[string]string {
 		annotations[annotationKey] = a.apicastOptions.ProductionCustomPolicies[idx].Secret.ResourceVersion
 	}
 
+	for idx := range a.apicastOptions.StagingCustomPolicies {
+		// Secrets must exist
+		// Annotation key includes the name of the secret
+		annotationKey := fmt.Sprintf("%s%s", CustomPoliciesSecretResverAnnotationPrefix, a.apicastOptions.StagingCustomPolicies[idx].Secret.Name)
+		annotations[annotationKey] = a.apicastOptions.StagingCustomPolicies[idx].Secret.ResourceVersion
+	}
+
 	return annotations
 }
 
