@@ -160,6 +160,32 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	if len(r.apiManager.Status.Deployments.Starting) == 0 && len(r.apiManager.Status.Deployments.Stopped) == 0 && len(r.apiManager.Status.Deployments.Ready) > 0 {
+		exist, err := r.routesExist()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if exist {
+			return reconcile.Result{}, nil
+		} else {
+			// If the system-provider route does not exist at this point (i.e. when Deployments are ready)
+			// we can force a resync of routes. see below for more details on why this is required:
+			// https://access.redhat.com/documentation/en-us/red_hat_3scale_api_management/2.7/html/operating_3scale/backup-restore#creating_equivalent_zync_routes
+			// This scenario will manifest during a backup and restore and also if the product ns was accidentally deleted.
+			podName, err := r.findSystemSidekiqPod(r.apiManager)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			if podName != "" {
+				// Execute a resync of routes
+				_, _, err := r.executeCommandOnPod("system-sidekiq", r.apiManager.Namespace, podName, []string{"bundle", "exec", "rake", "zync:resync:domains"})
+				if err != nil {
+					return reconcile.Result{}, err
+				}
+			}
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 

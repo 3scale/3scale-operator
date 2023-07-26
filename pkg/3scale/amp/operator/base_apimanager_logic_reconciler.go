@@ -1,7 +1,13 @@
 package operator
 
 import (
+	"context"
+	"encoding/xml"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -19,6 +25,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type BaseAPIManagerLogicReconciler struct {
@@ -33,6 +40,16 @@ type baseAPIManagerLogicReconcilerCRDAvailabilityCache struct {
 	prometheusRuleCRDAvailable   *bool
 	podMonitorCRDAvailable       *bool
 	serviceMonitorCRDAvailable   *bool
+}
+
+type Accounts struct {
+    XMLName xml.Name `xml:"accounts"`
+    Account []Account `xml:"account"`
+}
+
+type Account struct {
+    AdminBaseURL string `xml:"admin_base_url"`
+    BaseURL      string `xml:"base_url"`
 }
 
 func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *BaseAPIManagerLogicReconciler {
@@ -114,6 +131,269 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafa
 		common.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&grafanav1alpha1.GrafanaDashboard{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) findSystemSidekiqPod(apimanager *appsv1alpha1.APIManager) (string, error) {
+	namespace := apimanager.GetNamespace()
+	podName := ""
+	podList := &v1.PodList{}
+
+    // system-sidekiq pod needs to be up & running
+    err := r.waitForSystemSidekiq(apimanager)
+    if err != nil {
+        return "", fmt.Errorf("failed to wait for system-sidekiq: %w", err)
+    }
+
+	listOps := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels(map[string]string{"deploymentConfig": "system-sidekiq"}),
+	}
+
+	err = r.Client().List(context.TODO(), podList, listOps...)
+	if err != nil {
+		return "", fmt.Errorf("failed to list pods: %w", err)
+	}
+
+	for _, pod := range podList.Items {
+		if pod.Status.Phase == "Running" {
+			podName = pod.ObjectMeta.Name
+			break
+		}
+	}
+	
+	if podName == "" {
+		return "",fmt.Errorf("no matching pod found")
+	}
+
+	return podName, nil
+}
+
+func (r *BaseAPIManagerLogicReconciler) getAccessToken() (string, error) {
+
+    namespace := r.apiManager.GetNamespace()
+
+	secretName := types.NamespacedName{
+        Namespace: namespace,
+        Name:      "system-seed",
+    }
+
+    secret := &v1.Secret{}
+    err := r.Client().Get(context.TODO(), secretName, secret)
+    if err != nil {
+        return "", fmt.Errorf("failed to get secret: %w", err)
+    }
+
+    // Retrieve the access token from the secret data
+    accessToken, ok := secret.Data["MASTER_ACCESS_TOKEN"]
+    if !ok {
+        return "", fmt.Errorf("access token not found in secret")
+    }
+
+    return string(accessToken), nil
+}
+
+func (r *BaseAPIManagerLogicReconciler) getMasterRoute() (string, error) {
+
+	masterPrefix := "master"
+
+	opts := []client.ListOption{
+        client.InNamespace(r.apiManager.GetNamespace()),
+    }
+	foundRoute := ""
+	routes := routev1.RouteList{}
+    err := r.Client().List(context.TODO(), &routes, opts ...)
+    if err != nil {
+        return "", err
+    }
+
+	for _, route := range routes.Items {
+		if strings.HasPrefix(route.Spec.Host, masterPrefix) {
+			foundRoute = "https://" + route.Spec.Host
+			return foundRoute, nil
+		}
+	}
+
+	return "", fmt.Errorf("route not found")
+}
+
+func (r *BaseAPIManagerLogicReconciler) baseRoutesExist() (bool, error) {
+	expectedRoutes := 2
+    serviceNames := []string{"system-master", "backend-listener"}
+    opts := []client.ListOption{
+        client.InNamespace(r.apiManager.GetNamespace()),
+    }
+
+    routes := routev1.RouteList{}
+    err := r.Client().List(context.TODO(), &routes, opts ...)
+    if err != nil {
+        return false, err
+    }
+
+    serviceCount := 0
+    for _, service := range serviceNames {
+        found := false
+        for _, route := range routes.Items {
+            if route.Spec.To.Name == service {
+                found = true
+                break
+            }
+        }
+        if found {
+            serviceCount++
+        }
+    }
+
+    if serviceCount >= expectedRoutes {
+        return true, nil
+    }
+
+    return false, fmt.Errorf("base routes not found")
+}
+
+func (r *BaseAPIManagerLogicReconciler) getAccountUrls() ([]string, []string, error){
+
+	state := "approved"
+
+	masterRoute, err := r.getMasterRoute()
+	if err != nil {
+		r.logger.Error(err, "Error getting Master Route")
+		return nil, nil, err
+	}
+
+	url := masterRoute + "/admin/api/accounts.xml"
+	
+    accessToken, err := r.getAccessToken()
+	if err != nil {
+		fmt.Println("Error getting Access Token:", err)
+		return nil, nil, err
+	}
+
+    // Create a new HTTP GET request
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        fmt.Println("Error Creating HTTP Request:", err)
+        return nil, nil, err
+    }
+
+    // Add query parameters to the request
+    q := req.URL.Query()
+    q.Add("access_token", accessToken)
+    q.Add("state", state)
+    req.URL.RawQuery = q.Encode()
+
+    // Send the HTTP request
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        fmt.Println("Error sending HTTP request:", err)
+        return nil, nil, err
+    }
+    defer resp.Body.Close()
+
+    // Read and parse the XML response
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        fmt.Println("Error reading HTTP response:", err)
+        return nil, nil, err
+    }
+
+    var accounts Accounts
+	err = xml.Unmarshal([]byte(body), &accounts)
+	if err != nil {
+		fmt.Println("Error unmarshalling HTTP response:", err)
+		return nil, nil, err
+	}
+
+    var adminBaseURLs []string
+    var baseURLs []string
+    for _, account := range accounts.Account {
+        adminBaseURLs = append(adminBaseURLs, account.AdminBaseURL)
+        baseURLs = append(baseURLs, account.BaseURL)
+    }
+
+    return adminBaseURLs, baseURLs, nil
+}
+
+func (r *BaseAPIManagerLogicReconciler) routesExist() (bool, error) {
+	_, err:= r.baseRoutesExist()
+	if err != nil {
+		return false, nil
+	}
+
+	adminBaseURLs, baseURLs, err := r.getAccountUrls()
+    if err != nil {
+        return false, err
+    }
+
+	opts := []client.ListOption{
+        client.InNamespace(r.apiManager.GetNamespace()),
+    }
+
+    routes := routev1.RouteList{}
+    err = r.Client().List(context.TODO(), &routes, opts ...)
+    if err != nil {
+        return false, err
+    }
+
+    // Create a map to track the presence of adminBaseURLs and baseURLs
+    urlMap := make(map[string]bool)
+    for _, url := range append(adminBaseURLs, baseURLs...) {
+        urlMap[url] = false
+    }
+
+    // Check if all adminBaseURLs and baseURLs are present in the route location URLs
+    for _, route := range routes.Items {
+		routeHost := "https://" + route.Spec.Host
+        for url := range urlMap {
+            if routeHost == url {
+                urlMap[url] = true
+            }
+        }
+    }
+
+    missingURLs := []string{}
+    for url, found := range urlMap {
+        if !found {
+            missingURLs = append(missingURLs, url)
+        }
+    }
+
+    if len(missingURLs) == 0 {
+		return true, nil
+    }
+
+	return false, nil
+}
+
+
+func (r *BaseAPIManagerLogicReconciler) executeCommandOnPod(containerName string, namespace string, podName string, command []string) (string, string, error) {
+	podExecutor := helper.NewPodExecutor(r.logger) 
+
+	stdout, stderr, err := podExecutor.ExecuteRemoteContainerCommand(namespace, podName, containerName, command)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to execute command on pod: %w, stderr: %s", err, stderr)
+	}
+
+	fmt.Println("Command output (stdout):", stdout)
+	fmt.Println("Command output (stderr):", stderr)
+    return stdout, stderr, err
+}
+
+func (r *BaseAPIManagerLogicReconciler) waitForSystemSidekiq(apimanager *appsv1alpha1.APIManager) error {
+
+    // Wait until system-sidekiq deployments are ready
+    for !helper.ArrayContains(apimanager.Status.Deployments.Ready, "system-sidekiq") {
+        r.Logger().Info("system-sidekiq deployments not ready. Waiting", "APIManager", apimanager.Name)
+        time.Sleep(5 * time.Second)
+
+        // Refresh APIManager status
+        err := r.GetResource(types.NamespacedName{Name: r.apiManager.Name, Namespace: r.apiManager.Namespace}, apimanager)
+        if err != nil {
+            return fmt.Errorf("failed to get APIManager: %w", err)
+        }
+    }
+
+    return nil
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monitoringv1.PrometheusRule, mutateFn reconcilers.MutateFn) error {

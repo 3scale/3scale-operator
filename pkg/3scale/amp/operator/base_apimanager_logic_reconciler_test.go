@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	routev1 "github.com/openshift/api/route/v1"
 )
 
 func TestBaseAPIManagerLogicReconcilerUpdateOwnerRef(t *testing.T) {
@@ -502,3 +503,124 @@ func TestBaseAPIManagerLogicReconcilerHasServiceMonitors(t *testing.T) {
 		t.Fatalf("Unexpected exists value received. Expected: %t, got: %t", false, exists)
 	}
 }
+
+func TestBaseAPIManagerLogicReconciler_FindSystemSidekiqPod(t *testing.T) {
+	apimanagerName := "example-apimanager"
+	namespace := "operator-unittest"
+	log := logf.Log.WithName("operator_test")
+
+	ctx := context.TODO()
+
+	apimanager := &appsv1alpha1.APIManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      apimanagerName,
+			Namespace: namespace,
+		},
+		Spec: appsv1alpha1.APIManagerSpec{},
+	}
+
+	// Register operator types with the runtime scheme.
+	s := scheme.Scheme
+	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
+	s.AddKnownTypes(routev1.SchemeGroupVersion, &routev1.RouteList{})
+	err := appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Objects to track in the fake client.
+	objs := []runtime.Object{apimanager}
+
+	// Create a fake client to mock API calls.
+	cl := fake.NewFakeClient(objs...)
+	clientAPIReader := fake.NewFakeClient(objs...)
+	clientset := fakeclientset.NewSimpleClientset()
+	recorder := record.NewFakeRecorder(10000)
+
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+	r := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
+
+	// Mock the APIManager status with the necessary deployment
+	apimanager.Status.Deployments.Ready = []string{"system-sidekiq"}
+
+	pod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "example-pod",
+			Namespace: namespace,
+			Labels: map[string]string{
+				"deploymentConfig": "system-sidekiq",
+			},
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "example-container",
+					Image: "example-image",
+				},
+			},
+		},
+		Status: v1.PodStatus{
+			Phase: v1.PodRunning,
+		},
+	}
+
+	err = cl.Create(ctx, &pod)
+	if err != nil {
+		t.Fatalf("Failed to create pod: %s", err)
+	}
+
+	// Mock the routes for the APIManager
+	routes := routev1.RouteList{
+		Items: []routev1.Route{
+			{
+				Spec: routev1.RouteSpec{
+					To: routev1.RouteTargetReference{
+						Name: "system-provider",
+					},
+				},
+			},
+			{
+				Spec: routev1.RouteSpec{
+					To: routev1.RouteTargetReference{
+						Name: "system-master",
+					},
+				},
+			},
+			{
+				Spec: routev1.RouteSpec{
+					To: routev1.RouteTargetReference{
+						Name: "system-developer",
+					},
+				},
+			},
+			{
+				Spec: routev1.RouteSpec{
+					To: routev1.RouteTargetReference{
+						Name: "backend-listener",
+					},
+				},
+			},
+		},
+	}
+
+	// Create a pointer to client.ListOptions
+	opts := &client.ListOptions{}
+	
+	// Call the real List method with the pointer to client.ListOptions
+	err = cl.List(ctx, &routes, opts)
+	
+	if err != nil {
+		t.Fatalf("Unexpected error while listing routes: %s", err)
+	}
+	
+	foundPodName, err := r.findSystemSidekiqPod(apimanager)
+
+	if err != nil {
+		t.Errorf("failed to execute command on pod: %s, stderr: %s", "<error>", "<stderr>")
+	}
+	if foundPodName != "example-pod" {
+		t.Errorf("expected: %s, got: %s", "example-pod", foundPodName)
+	}
+}
+
+

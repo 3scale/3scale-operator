@@ -30,6 +30,8 @@ require (
 	sigs.k8s.io/controller-runtime v0.12.2
 )
 
+require github.com/moby/spdystream v0.2.0 // indirect
+
 require (
 	cloud.google.com/go/compute v1.7.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
