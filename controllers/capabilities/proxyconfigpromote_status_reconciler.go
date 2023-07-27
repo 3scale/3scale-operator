@@ -82,11 +82,7 @@ func (s *ProxyConfigPromoteStatusReconciler) calculateStatus() (*capabilitiesv1b
 func (s *ProxyConfigPromoteStatusReconciler) readyCondition(state string) common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType,
-		Status: corev1.ConditionFalse,
-	}
-
-	if state == "Completed" {
-		condition.Status = corev1.ConditionTrue
+		Status: corev1.ConditionTrue,
 	}
 
 	return condition
