@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 	"reflect"
 	"regexp"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -404,6 +406,7 @@ func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabil
 	if p.openapiCR.Spec.OIDC != nil {
 		authSpec.OIDC.IssuerType = p.openapiCR.Spec.OIDC.IssuerType
 		authSpec.OIDC.IssuerEndpoint = p.openapiCR.Spec.OIDC.IssuerEndpoint
+		authSpec.OIDC.IssuerEndpoint = p.getIssuerEndpoint(p.Client())
 		authSpec.OIDC.JwtClaimWithClientID = p.openapiCR.Spec.OIDC.JwtClaimWithClientID
 		authSpec.OIDC.JwtClaimWithClientIDType = p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType
 
@@ -454,4 +457,30 @@ func (p *OpenAPIProductReconciler) setOauth2AuthenticationParams(authSpec *capab
 			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = true
 		}
 	}
+}
+
+func (p *OpenAPIProductReconciler) getIssuerEndpoint(cl k8sclient.Client) string {
+	// get IssuerEndpoint from Openapi CR and replace the stub value of "some-secret" with value
+	// of "secret" field of oidc-issuer-client-secret
+	var secret *string
+	crIssuerEndpoint := p.openapiCR.Spec.OIDC.IssuerEndpoint
+
+	oidcSecret, err := helper.GetSecret("oidc-issuer-client-secret", p.openapiCR.Namespace, cl)
+	if oidcSecret == nil || err != nil {
+		errToLog := fmt.Errorf("Can't get OIDC secret '%s'", oidcSecret.Name)
+		p.EventRecorder().Eventf(p.openapiCR, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+		p.logger.Error(errToLog, "ReconcileError")
+		return crIssuerEndpoint
+	}
+
+	secret = helper.GetSecretDataValue(oidcSecret.Data, "secret")
+	if secret == nil {
+		errToLog := fmt.Errorf("field '%s' is required in secret '%s'", "secret", oidcSecret.Name)
+		p.EventRecorder().Eventf(p.openapiCR, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+		p.logger.Error(errToLog, "ReconcileError")
+		return crIssuerEndpoint
+	}
+
+	updatedIssuerEndpointUrl := strings.Replace(crIssuerEndpoint, "some-secret", *secret, 1)
+	return updatedIssuerEndpointUrl
 }
