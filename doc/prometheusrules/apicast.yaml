@@ -24,7 +24,6 @@ spec:
     - alert: ThreescaleApicastRequestTime
       annotations:
         description: High number of request taking more than a second to be processed
-        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_request_time.adoc
         summary: Request on instance {{ $labels.instance }} is taking more than one
           second to process the requests
       expr: sum(rate(total_response_time_seconds_bucket{namespace='__NAMESPACE__',
@@ -37,7 +36,6 @@ spec:
       annotations:
         description: The number of request with 4XX is bigger than the 5% of total
           request.
-        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_http_4xx_error_rate.adoc
         summary: APICast high HTTP 4XX error rate (instance {{ $labels.instance }})
       expr: sum(rate(apicast_status{namespace='__NAMESPACE__', status=~"^4.."}[1m]))
         / sum(rate(apicast_status{namespace='__NAMESPACE__'}[1m])) * 100 > 5
@@ -61,7 +59,6 @@ spec:
         description: A new thread has been started. This could indicate that a worker
           process has died due to the memory limits being exceeded. Please investigate
           the memory pressure on pod (instance {{ $labels.instance }})
-        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_worker_restart.adoc
         summary: A new worker process in Nginx has been started
       expr: changes(worker_process{namespace='__NAMESPACE__', pod=~'apicast-production.*'}[5m])
         > 0

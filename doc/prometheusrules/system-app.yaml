@@ -16,7 +16,6 @@ spec:
       annotations:
         description: Job {{ $labels.job }} on {{ $labels.namespace }} has more than
           50 HTTP 5xx requests in the last minute
-        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/system_app_5xx_requests_high.adoc
         summary: Job {{ $labels.job }} on {{ $labels.namespace }} has more than 50
           HTTP 5xx requests in the last minute
       expr: sum(rate(rails_requests_total{namespace="__NAMESPACE__",pod=~"system-app-[a-z0-9]+-[a-z0-9]+",status=~"5[0-9]*"}[1m]))
