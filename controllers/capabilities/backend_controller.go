@@ -252,7 +252,7 @@ func (r *BackendReconciler) removeBackend(providerAccountRef *corev1.LocalObject
 
 	// Retrieve all product CRs that are under the same ns as the backend CR
 	opts := client.ListOptions{
-		Namespace: backend.Namespace,
+		Namespace: backendNamespace,
 	}
 	productCRsList := &capabilitiesv1beta1.ProductList{}
 	err = r.Client().List(context.TODO(), productCRsList, &opts)
