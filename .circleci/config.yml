@@ -428,7 +428,7 @@ jobs:
 
   generator:
     docker:
-      - image: circleci/golang:1.13.7
+      - image: circleci/golang:1.17.3
     steps:
       - checkout
       - install-dependencies
