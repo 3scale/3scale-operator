@@ -4,9 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/3scale/3scale-operator/pkg/common"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
