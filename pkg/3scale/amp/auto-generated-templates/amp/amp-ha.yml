@@ -295,7 +295,8 @@ objects:
           - /opt/app/entrypoint.sh
           - sh
           - -c
-          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done
+          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;
+            done
           env:
           - name: CONFIG_REDIS_PROXY
             valueFrom:
@@ -527,8 +528,7 @@ objects:
       kind: Service
       name: backend-listener
       weight: null
-  status:
-    ingress: null
+  status: {}
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
   metadata:
@@ -625,7 +625,8 @@ objects:
           - /opt/app/entrypoint.sh
           - sh
           - -c
-          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done
+          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;
+            done
           env:
           - name: CONFIG_REDIS_PROXY
             valueFrom:
@@ -721,7 +722,7 @@ objects:
     route_endpoint: https://backend-${TENANT_NAME}.${WILDCARD_DOMAIN}
     service_endpoint: http://backend-listener:3000
   type: Opaque
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -740,7 +741,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -759,7 +760,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -2456,7 +2457,9 @@ objects:
         - command:
           - bash
           - -c
-          - bundle exec sh -c "until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done"
+          - bundle exec sh -c "until rake boot:redis && curl --output /dev/null --silent
+            --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS;
+            done"
           env:
           - name: REDIS_URL
             valueFrom:
@@ -2618,7 +2621,8 @@ objects:
         - command:
           - sh
           - -c
-          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done
+          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
+            do sleep $SLEEP_SECONDS; done
           env:
           - name: SLEEP_SECONDS
             value: "1"
@@ -2726,7 +2730,7 @@ objects:
   stringData:
     SERVERS: system-memcache:11211
   type: Opaque
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -2745,7 +2749,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3203,7 +3207,7 @@ objects:
     ZYNC_AUTHENTICATION_TOKEN: ${ZYNC_AUTHENTICATION_TOKEN}
     ZYNC_DATABASE_PASSWORD: ${ZYNC_DATABASE_PASSWORD}
   type: Opaque
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3221,7 +3225,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3460,7 +3464,8 @@ objects:
         - command:
           - sh
           - -c
-          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done
+          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
+            do sleep $SLEEP_SECONDS; done
           env:
           - name: SLEEP_SECONDS
             value: "1"
@@ -3545,7 +3550,7 @@ objects:
       app: ${APP_LABEL}
       threescale_component: apicast
     name: apicast-environment
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3564,7 +3569,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1beta1
+- apiVersion: policy/v1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3603,7 +3608,8 @@ parameters:
   name: APP_LABEL
   required: true
   value: 3scale-api-management
-- description: Tenant name under the root that Admin UI will be available with -admin suffix.
+- description: Tenant name under the root that Admin UI will be available with -admin
+    suffix.
   name: TENANT_NAME
   required: true
   value: 3scale
@@ -3630,11 +3636,13 @@ parameters:
   name: MEMCACHED_IMAGE
   required: true
   value: memcached:1.5
-- description: Set to true if the server may bypass certificate verification or connect directly over HTTP during image import.
+- description: Set to true if the server may bypass certificate verification or connect
+    directly over HTTP during image import.
   name: IMAGESTREAM_TAG_IMPORT_INSECURE
   required: true
   value: "false"
-- description: Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com.
+- description: Root domain for the wildcard routes. Eg. example.com will generate
+    3scale-admin.example.com.
   name: WILDCARD_DOMAIN
   required: true
 - description: Internal 3scale API username for internal 3scale api auth.
@@ -3691,7 +3699,8 @@ parameters:
 - description: Define the external system-redis to connect to
   name: SYSTEM_REDIS_URL
   required: true
-- description: Define the namespace to be used by System's Redis Database. The empty value means not namespaced
+- description: Define the namespace to be used by System's Redis Database. The empty
+    value means not namespaced
   name: SYSTEM_REDIS_NAMESPACE
 - description: Password for the Zync Database PostgreSQL connection user.
   displayName: Zync Database PostgreSQL Connection Password
@@ -3707,15 +3716,18 @@ parameters:
   generate: expression
   name: ZYNC_AUTHENTICATION_TOKEN
   required: true
-- description: Read Only Access Token that is APIcast going to use to download its configuration.
+- description: Read Only Access Token that is APIcast going to use to download its
+    configuration.
   from: '[a-z0-9]{8}'
   generate: expression
   name: APICAST_ACCESS_TOKEN
   required: true
-- description: Scope of the APIcast Management API. Can be disabled, status or debug. At least status required for health checks.
+- description: Scope of the APIcast Management API. Can be disabled, status or debug.
+    At least status required for health checks.
   name: APICAST_MANAGEMENT_API
   value: status
-- description: Turn on/off the OpenSSL peer verification when downloading the configuration. Can be set to true/false.
+- description: Turn on/off the OpenSSL peer verification when downloading the configuration.
+    Can be set to true/false.
   name: APICAST_OPENSSL_VERIFY
   value: "false"
 - description: Enable logging response codes in APIcast.
