@@ -81,8 +81,8 @@ func (z *Zync) componentObjects(c *component.Zync) []common.KubernetesObject {
 }
 
 func (z *Zync) componentPDBObjects(c *component.Zync) []common.KubernetesObject {
-	zyncPDB := c.ZyncPodDisruptionBudget()
-	quePDB := c.QuePodDisruptionBudget()
+	zyncPDB := c.TemplateZyncPodDisruptionBudget()
+	quePDB := c.TemplateQuePodDisruptionBudget()
 
 	return []common.KubernetesObject{
 		zyncPDB,

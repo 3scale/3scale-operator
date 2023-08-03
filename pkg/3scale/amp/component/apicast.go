@@ -458,6 +458,44 @@ func (apicast *Apicast) EnvironmentConfigMap() *v1.ConfigMap {
 	}
 }
 
+func (apicast *Apicast) TemplateStagingPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   ApicastStagingName,
+			Labels: apicast.Options.CommonStagingLabels,
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": ApicastStagingName},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (apicast *Apicast) TemplateProductionPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   ApicastProductionName,
+			Labels: apicast.Options.CommonProductionLabels,
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": ApicastProductionName},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
 func (apicast *Apicast) StagingPodDisruptionBudget() *policyv1.PodDisruptionBudget {
 	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{

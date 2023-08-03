@@ -722,7 +722,7 @@ objects:
     route_endpoint: https://backend-${TENANT_NAME}.${WILDCARD_DOMAIN}
     service_endpoint: http://backend-listener:3000
   type: Opaque
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -741,7 +741,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -760,7 +760,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3207,7 +3207,7 @@ objects:
     ZYNC_AUTHENTICATION_TOKEN: ${ZYNC_AUTHENTICATION_TOKEN}
     ZYNC_DATABASE_PASSWORD: ${ZYNC_DATABASE_PASSWORD}
   type: Opaque
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3225,7 +3225,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3550,7 +3550,7 @@ objects:
       app: ${APP_LABEL}
       threescale_component: apicast
     name: apicast-environment
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -3569,7 +3569,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null

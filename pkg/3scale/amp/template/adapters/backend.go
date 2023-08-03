@@ -63,9 +63,9 @@ func (b *Backend) componentObjects(c *component.Backend) []common.KubernetesObje
 }
 
 func (b *Backend) componentPDBObjects(c *component.Backend) []common.KubernetesObject {
-	workerPDB := c.WorkerPodDisruptionBudget()
-	cronPDB := c.CronPodDisruptionBudget()
-	listenerPDB := c.ListenerPodDisruptionBudget()
+	workerPDB := c.TemplateWorkerPodDisruptionBudget()
+	cronPDB := c.TemplateCronPodDisruptionBudget()
+	listenerPDB := c.TemplateListenerPodDisruptionBudget()
 	return []common.KubernetesObject{
 		workerPDB,
 		cronPDB,

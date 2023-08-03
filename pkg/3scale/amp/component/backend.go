@@ -458,6 +458,25 @@ func (backend *Backend) ListenerSecret() *v1.Secret {
 	}
 }
 
+func (backend *Backend) TemplateWorkerPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   BackendWorkerName,
+			Labels: backend.Options.CommonWorkerLabels,
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": BackendWorkerName},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
 func (backend *Backend) WorkerPodDisruptionBudget() *policyv1.PodDisruptionBudget {
 	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
@@ -471,6 +490,44 @@ func (backend *Backend) WorkerPodDisruptionBudget() *policyv1.PodDisruptionBudge
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": BackendWorkerName},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (backend *Backend) TemplateCronPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "backend-cron",
+			Labels: backend.Options.CommonCronLabels,
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "backend-cron"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (backend *Backend) TemplateListenerPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   BackendListenerName,
+			Labels: backend.Options.CommonListenerLabels,
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": BackendListenerName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},

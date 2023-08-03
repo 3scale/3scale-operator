@@ -562,6 +562,44 @@ func (zync *Zync) DatabaseService() *v1.Service {
 	}
 }
 
+func (zync *Zync) TemplateZyncPodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   ZyncName,
+			Labels: zync.Options.CommonZyncLabels,
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": ZyncName},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
+func (zync *Zync) TemplateQuePodDisruptionBudget() *policyv1.PodDisruptionBudget {
+	return &policyv1.PodDisruptionBudget{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PodDisruptionBudget",
+			APIVersion: "policy/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "zync-que",
+			Labels: zync.Options.CommonZyncQueLabels,
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"deploymentConfig": "zync-que"},
+			},
+			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
+		},
+	}
+}
+
 func (zync *Zync) ZyncPodDisruptionBudget() *policyv1.PodDisruptionBudget {
 	return &policyv1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{

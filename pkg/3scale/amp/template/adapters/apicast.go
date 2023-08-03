@@ -84,8 +84,8 @@ func (a *Apicast) componentObjects(c *component.Apicast) []common.KubernetesObje
 }
 
 func (a *Apicast) componentPDBObjects(c *component.Apicast) []common.KubernetesObject {
-	stagingPDB := c.StagingPodDisruptionBudget()
-	prodPDB := c.ProductionPodDisruptionBudget()
+	stagingPDB := c.TemplateStagingPodDisruptionBudget()
+	prodPDB := c.TemplateProductionPodDisruptionBudget()
 	return []common.KubernetesObject{
 		stagingPDB,
 		prodPDB,
