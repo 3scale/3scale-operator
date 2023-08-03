@@ -2730,7 +2730,7 @@ objects:
   stringData:
     SERVERS: system-memcache:11211
   type: Opaque
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null
@@ -2749,7 +2749,7 @@ objects:
     desiredHealthy: 0
     disruptionsAllowed: 0
     expectedPods: 0
-- apiVersion: policy/v1
+- apiVersion: policy/v1beta1
   kind: PodDisruptionBudget
   metadata:
     creationTimestamp: null

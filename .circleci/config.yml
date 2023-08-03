@@ -112,7 +112,7 @@ commands:
       - run:
           name: Install Golang
           command: |
-            curl --fail -L https://dl.google.com/go/go1.13.7.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
+            curl --fail -L https://dl.google.com/go/go1.17.3.linux-amd64.tar.gz | sudo tar -C /opt -xzf-
       - run:
           name: Setup GO env
           command: |

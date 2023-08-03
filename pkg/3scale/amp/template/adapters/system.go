@@ -187,8 +187,8 @@ func (s *System) componentObjects(c *component.System) []common.KubernetesObject
 }
 
 func (s *System) componentPDBObjects(c *component.System) []common.KubernetesObject {
-	appPDB := c.AppPodDisruptionBudget()
-	sidekiqPDB := c.SidekiqPodDisruptionBudget()
+	appPDB := c.TemplateAppPodDisruptionBudget()
+	sidekiqPDB := c.TemplateSidekiqPodDisruptionBudget()
 
 	return []common.KubernetesObject{
 		appPDB,
