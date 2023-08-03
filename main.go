@@ -20,6 +20,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/apis/common/version"
 	"os"
 	"runtime"
 
@@ -46,9 +48,7 @@ import (
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
 	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/version"
 	// +kubebuilder:scaffold:imports
 )
 

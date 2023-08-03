@@ -2,11 +2,10 @@ package test
 
 import (
 	"bytes"
+	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
 	"io/ioutil"
 	"path"
 	"testing"
-
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 
 	appsv1 "k8s.io/api/apps/v1"
 	utilyaml "k8s.io/apimachinery/pkg/util/yaml"

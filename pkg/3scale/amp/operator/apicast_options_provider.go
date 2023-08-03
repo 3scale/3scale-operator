@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"hash/fnv"
 	"strconv"
 
@@ -12,9 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
@@ -286,7 +287,7 @@ func (a *ApicastOptionsProvider) setProductionTracingConfiguration() error {
 	tracingIsEnabled := a.apimanager.IsAPIcastProductionOpenTracingEnabled()
 	res := &component.APIcastTracingConfig{
 		Enabled:        tracingIsEnabled,
-		TracingLibrary: component.APIcastDefaultTracingLibrary,
+		TracingLibrary: apps.APIcastDefaultTracingLibrary,
 	}
 	if tracingIsEnabled {
 		openTracingConfigSpec := a.apimanager.Spec.Apicast.ProductionSpec.OpenTracing
@@ -318,7 +319,7 @@ func (a *ApicastOptionsProvider) setStagingTracingConfiguration() error {
 	tracingIsEnabled := a.apimanager.IsAPIcastStagingOpenTracingEnabled()
 	res := &component.APIcastTracingConfig{
 		Enabled:        tracingIsEnabled,
-		TracingLibrary: component.APIcastDefaultTracingLibrary,
+		TracingLibrary: apps.APIcastDefaultTracingLibrary,
 	}
 	if tracingIsEnabled {
 		openTracingConfigSpec := a.apimanager.Spec.Apicast.StagingSpec.OpenTracing

@@ -36,7 +36,6 @@ const (
 )
 
 const (
-	APIcastDefaultTracingLibrary                    = "jaeger"
 	APIcastTracingConfigSecretKey                   = "config"
 	APIcastTracingConfigMountBasePath               = "/opt/app-root/src/tracing-configs"
 	APIcastTracingConfigAnnotationNameSegmentPrefix = "apicast-tracing-config-volume"

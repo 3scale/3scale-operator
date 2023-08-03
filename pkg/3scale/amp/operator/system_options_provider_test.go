@@ -1,12 +1,13 @@
 package operator
 
 import (
+	"github.com/3scale/3scale-operator/apis/apps"
+	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
 	"reflect"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	"github.com/google/go-cmp/cmp"
@@ -252,20 +253,20 @@ func getSystemMasterApicastSecret() *v1.Secret {
 
 func getS3IAMSecret() *v1.Secret {
 	data := map[string]string{
-		component.AwsAccessKeyID:     "myKeyID",
-		component.AwsSecretAccessKey: "mySecretKey",
-		component.AwsBucket:          "myBucket",
-		component.AwsRegion:          "myRegion",
+		apps.AwsAccessKeyID:     "myKeyID",
+		apps.AwsSecretAccessKey: "mySecretKey",
+		apps.AwsBucket:          "myBucket",
+		apps.AwsRegion:          "myRegion",
 	}
 	return GetTestSecret(namespace, "myawsauth", data)
 }
 
 func getS3STSSecret() *v1.Secret {
 	data := map[string]string{
-		component.AwsRoleArn:              "myRoleArn",
-		component.AwsWebIdentityTokenFile: "/var/run/secrets/openshift/serviceaccount/token",
-		component.AwsBucket:               "myBucket",
-		component.AwsRegion:               "myRegion",
+		apps.AwsRoleArn:              "myRoleArn",
+		apps.AwsWebIdentityTokenFile: "/var/run/secrets/openshift/serviceaccount/token",
+		apps.AwsBucket:               "myBucket",
+		apps.AwsRegion:               "myRegion",
 	}
 	return GetTestSecret(namespace, "myawsauth", data)
 }

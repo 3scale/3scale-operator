@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"github.com/3scale/3scale-operator/apis/apps"
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -365,13 +366,13 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		desiredTracingConfig1SecretName        = "mysecretnametwo"
 
 		existingTracingConfig1 = component.APIcastTracingConfig{
-			TracingLibrary:          component.APIcastDefaultTracingLibrary,
+			TracingLibrary:          apps.APIcastDefaultTracingLibrary,
 			Enabled:                 true,
 			TracingConfigSecretName: &existingTracingConfig1SecretName,
 		}
 
 		desiredTracingConfig1 = component.APIcastTracingConfig{
-			TracingLibrary:          component.APIcastDefaultTracingLibrary,
+			TracingLibrary:          apps.APIcastDefaultTracingLibrary,
 			Enabled:                 true,
 			TracingConfigSecretName: &desiredTracingConfig1SecretName,
 		}

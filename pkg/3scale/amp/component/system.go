@@ -2,6 +2,7 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/apis/apps"
 	"sort"
 	"strconv"
 
@@ -226,22 +227,22 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 
 	if system.Options.S3FileStorageOptions != nil {
 		result = append(result,
-			helper.EnvVarFromSecret(AwsBucket, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsBucket),
-			helper.EnvVarFromSecret(AwsRegion, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsRegion),
-			helper.EnvVarFromSecretOptional(AwsProtocol, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsProtocol),
-			helper.EnvVarFromSecretOptional(AwsHostname, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsHostname),
-			helper.EnvVarFromSecretOptional(AwsPathStyle, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsPathStyle),
+			helper.EnvVarFromSecret(apps.AwsBucket, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsBucket),
+			helper.EnvVarFromSecret(apps.AwsRegion, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsRegion),
+			helper.EnvVarFromSecretOptional(apps.AwsProtocol, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsProtocol),
+			helper.EnvVarFromSecretOptional(apps.AwsHostname, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsHostname),
+			helper.EnvVarFromSecretOptional(apps.AwsPathStyle, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsPathStyle),
 		)
 
 		if system.Options.S3FileStorageOptions.STSEnabled {
 			result = append(result,
-				helper.EnvVarFromSecret(AwsRoleArn, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsRoleArn),
-				helper.EnvVarFromSecret(AwsWebIdentityTokenFile, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsWebIdentityTokenFile),
+				helper.EnvVarFromSecret(apps.AwsRoleArn, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsRoleArn),
+				helper.EnvVarFromSecret(apps.AwsWebIdentityTokenFile, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsWebIdentityTokenFile),
 			)
 		} else {
 			result = append(result,
-				helper.EnvVarFromSecret(AwsAccessKeyID, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsAccessKeyID),
-				helper.EnvVarFromSecret(AwsSecretAccessKey, system.Options.S3FileStorageOptions.ConfigurationSecretName, AwsSecretAccessKey),
+				helper.EnvVarFromSecret(apps.AwsAccessKeyID, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsAccessKeyID),
+				helper.EnvVarFromSecret(apps.AwsSecretAccessKey, system.Options.S3FileStorageOptions.ConfigurationSecretName, apps.AwsSecretAccessKey),
 			)
 		}
 	}

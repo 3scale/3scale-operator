@@ -32,13 +32,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/apis/common/version"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/handlers"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/version"
 )
 
 // APIManagerReconciler reconciles a APIManager object

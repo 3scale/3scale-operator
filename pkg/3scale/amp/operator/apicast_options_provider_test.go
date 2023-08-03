@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"github.com/3scale/3scale-operator/apis/apps"
+	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
 	"reflect"
 	"strconv"
 	"testing"
@@ -14,7 +16,6 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
@@ -154,8 +155,8 @@ func defaultApicastOptions() *component.ApicastOptions {
 		StagingPodTemplateLabels:       testApicastStagingPodLabels(),
 		ProductionPodTemplateLabels:    testApicastProductionPodLabels(),
 		Namespace:                      namespace,
-		ProductionTracingConfig:        &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary},
-		StagingTracingConfig:           &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary},
+		ProductionTracingConfig:        &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary},
+		StagingTracingConfig:           &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary},
 		AdditionalPodAnnotations:       map[string]string{APIcastEnvironmentCMAnnotation: "788712912"},
 	}
 }

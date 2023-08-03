@@ -2,12 +2,12 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
 	"net/url"
 	"strings"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	v1 "k8s.io/api/core/v1"

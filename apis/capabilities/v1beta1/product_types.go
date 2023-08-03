@@ -19,11 +19,11 @@ package v1beta1
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/3scale/3scale-operator/apis/common/pkg/common"
 	"reflect"
 	"regexp"
 	"strings"
 
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"

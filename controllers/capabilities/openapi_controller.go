@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/3scale/3scale-operator/apis/common/version"
 	"net/url"
 
 	corev1 "k8s.io/api/core/v1"
@@ -34,7 +35,6 @@ import (
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 

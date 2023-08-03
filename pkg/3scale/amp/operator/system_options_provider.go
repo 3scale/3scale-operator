@@ -2,14 +2,15 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
 	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	appscommon "github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
@@ -411,14 +412,14 @@ func (s *SystemOptionsProvider) setFileStorageOptions() error {
 		// Validate it exists
 		_, err := s.secretSource.RequiredFieldValueFromRequiredSecret(
 			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-			component.AwsRoleArn)
+			appscommon.AwsRoleArn)
 		if err != nil {
 			return err
 		}
 
 		tokenPath, err := s.secretSource.RequiredFieldValueFromRequiredSecret(
 			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-			component.AwsWebIdentityTokenFile)
+			appscommon.AwsWebIdentityTokenFile)
 		if err != nil {
 			return err
 		}
@@ -429,7 +430,7 @@ func (s *SystemOptionsProvider) setFileStorageOptions() error {
 		// Validate it exists
 		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
 			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-			component.AwsBucket)
+			appscommon.AwsBucket)
 		if err != nil {
 			return err
 		}
@@ -437,7 +438,7 @@ func (s *SystemOptionsProvider) setFileStorageOptions() error {
 		// Validate it exists
 		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
 			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-			component.AwsRegion)
+			appscommon.AwsRegion)
 		if err != nil {
 			return err
 		}
@@ -454,7 +455,7 @@ func (s *SystemOptionsProvider) setFileStorageOptions() error {
 		// Validate it exists
 		_, err := s.secretSource.RequiredFieldValueFromRequiredSecret(
 			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-			component.AwsAccessKeyID)
+			appscommon.AwsAccessKeyID)
 		if err != nil {
 			return err
 		}
@@ -462,7 +463,7 @@ func (s *SystemOptionsProvider) setFileStorageOptions() error {
 		// Validate it exists
 		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
 			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-			component.AwsSecretAccessKey)
+			appscommon.AwsSecretAccessKey)
 		if err != nil {
 			return err
 		}
@@ -470,7 +471,7 @@ func (s *SystemOptionsProvider) setFileStorageOptions() error {
 		// Validate it exists
 		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
 			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-			component.AwsBucket)
+			appscommon.AwsBucket)
 		if err != nil {
 			return err
 		}
@@ -478,7 +479,7 @@ func (s *SystemOptionsProvider) setFileStorageOptions() error {
 		// Validate it exists
 		_, err = s.secretSource.RequiredFieldValueFromRequiredSecret(
 			s.apimanager.Spec.System.FileStorageSpec.S3.ConfigurationSecretRef.Name,
-			component.AwsRegion)
+			appscommon.AwsRegion)
 		if err != nil {
 			return err
 		}

@@ -6,8 +6,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
@@ -97,10 +97,10 @@ var _ = Describe("APIManager controller", func() {
 					Namespace: testNamespace,
 				},
 				StringData: map[string]string{
-					component.AwsAccessKeyID:     "dummyaccesskey",
-					component.AwsSecretAccessKey: "dummysecretaccesskey",
-					component.AwsBucket:          "dummybucket",
-					component.AwsRegion:          "dummyregion",
+					apps.AwsAccessKeyID:     "dummyaccesskey",
+					apps.AwsSecretAccessKey: "dummysecretaccesskey",
+					apps.AwsBucket:          "dummybucket",
+					apps.AwsRegion:          "dummyregion",
 				},
 			}
 

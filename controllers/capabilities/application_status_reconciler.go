@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/apis/common/pkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"

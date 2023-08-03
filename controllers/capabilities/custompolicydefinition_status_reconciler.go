@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/apis/common/pkg/common"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 

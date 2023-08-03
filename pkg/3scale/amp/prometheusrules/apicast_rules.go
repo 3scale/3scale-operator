@@ -1,6 +1,7 @@
 package prometheusrules
 
 import (
+	"github.com/3scale/3scale-operator/apis/apps"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -49,8 +50,8 @@ func apicastOptions(ns string) (*component.ApicastOptions, error) {
 	o.StagingPodTemplateLabels = map[string]string{}
 	o.ProductionPodTemplateLabels = map[string]string{}
 
-	o.StagingTracingConfig = &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary}
-	o.ProductionTracingConfig = &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary}
+	o.StagingTracingConfig = &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary}
+	o.ProductionTracingConfig = &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary}
 
 	o.AdditionalPodAnnotations = map[string]string{}
 
