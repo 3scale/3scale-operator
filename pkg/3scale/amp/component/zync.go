@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	policyv1 "k8s.io/api/policy/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -562,8 +563,8 @@ func (zync *Zync) DatabaseService() *v1.Service {
 	}
 }
 
-func (zync *Zync) TemplateZyncPodDisruptionBudget() *policyv1.PodDisruptionBudget {
-	return &policyv1.PodDisruptionBudget{
+func (zync *Zync) TemplateZyncPodDisruptionBudget() *policyv1beta1.PodDisruptionBudget {
+	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
@@ -572,7 +573,7 @@ func (zync *Zync) TemplateZyncPodDisruptionBudget() *policyv1.PodDisruptionBudge
 			Name:   ZyncName,
 			Labels: zync.Options.CommonZyncLabels,
 		},
-		Spec: policyv1.PodDisruptionBudgetSpec{
+		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": ZyncName},
 			},
@@ -581,8 +582,8 @@ func (zync *Zync) TemplateZyncPodDisruptionBudget() *policyv1.PodDisruptionBudge
 	}
 }
 
-func (zync *Zync) TemplateQuePodDisruptionBudget() *policyv1.PodDisruptionBudget {
-	return &policyv1.PodDisruptionBudget{
+func (zync *Zync) TemplateQuePodDisruptionBudget() *policyv1beta1.PodDisruptionBudget {
+	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
@@ -591,7 +592,7 @@ func (zync *Zync) TemplateQuePodDisruptionBudget() *policyv1.PodDisruptionBudget
 			Name:   "zync-que",
 			Labels: zync.Options.CommonZyncQueLabels,
 		},
-		Spec: policyv1.PodDisruptionBudgetSpec{
+		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": "zync-que"},
 			},

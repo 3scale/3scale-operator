@@ -10,6 +10,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -458,8 +459,8 @@ func (backend *Backend) ListenerSecret() *v1.Secret {
 	}
 }
 
-func (backend *Backend) TemplateWorkerPodDisruptionBudget() *policyv1.PodDisruptionBudget {
-	return &policyv1.PodDisruptionBudget{
+func (backend *Backend) TemplateWorkerPodDisruptionBudget() *policyv1beta1.PodDisruptionBudget {
+	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
@@ -468,7 +469,7 @@ func (backend *Backend) TemplateWorkerPodDisruptionBudget() *policyv1.PodDisrupt
 			Name:   BackendWorkerName,
 			Labels: backend.Options.CommonWorkerLabels,
 		},
-		Spec: policyv1.PodDisruptionBudgetSpec{
+		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": BackendWorkerName},
 			},
@@ -496,8 +497,8 @@ func (backend *Backend) WorkerPodDisruptionBudget() *policyv1.PodDisruptionBudge
 	}
 }
 
-func (backend *Backend) TemplateCronPodDisruptionBudget() *policyv1.PodDisruptionBudget {
-	return &policyv1.PodDisruptionBudget{
+func (backend *Backend) TemplateCronPodDisruptionBudget() *policyv1beta1.PodDisruptionBudget {
+	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
@@ -506,7 +507,7 @@ func (backend *Backend) TemplateCronPodDisruptionBudget() *policyv1.PodDisruptio
 			Name:   "backend-cron",
 			Labels: backend.Options.CommonCronLabels,
 		},
-		Spec: policyv1.PodDisruptionBudgetSpec{
+		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": "backend-cron"},
 			},
@@ -515,8 +516,8 @@ func (backend *Backend) TemplateCronPodDisruptionBudget() *policyv1.PodDisruptio
 	}
 }
 
-func (backend *Backend) TemplateListenerPodDisruptionBudget() *policyv1.PodDisruptionBudget {
-	return &policyv1.PodDisruptionBudget{
+func (backend *Backend) TemplateListenerPodDisruptionBudget() *policyv1beta1.PodDisruptionBudget {
+	return &policyv1beta1.PodDisruptionBudget{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PodDisruptionBudget",
 			APIVersion: "policy/v1beta1",
@@ -525,7 +526,7 @@ func (backend *Backend) TemplateListenerPodDisruptionBudget() *policyv1.PodDisru
 			Name:   BackendListenerName,
 			Labels: backend.Options.CommonListenerLabels,
 		},
-		Spec: policyv1.PodDisruptionBudgetSpec{
+		Spec: policyv1beta1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"deploymentConfig": BackendListenerName},
 			},
