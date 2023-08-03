@@ -176,6 +176,9 @@ commands:
             for i in ${RESULT_DCS}; do
               DC_AVAILABLE=0
               echo "Waiting for DeploymentConfig '${i}' to be Available..."
+              oc get dc apicast-production -o yaml
+              sleep 150
+              oc get dc apicast-production -o yaml
               while [ ${DC_AVAILABLE} -eq 0 ]; do
                 DC_AVAILABLE_CONDITION_OUTPUT=$(oc get ${i} -o json | jq '.status.conditions[] | select(.type=="Available")')
                 if [ -z "${DC_AVAILABLE_CONDITION_OUTPUT}" ]; then
