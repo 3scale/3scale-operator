@@ -215,7 +215,7 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 							Command: []string{
 								"bash",
 								"-c",
-								"bundle exec sh -c \"until rake boot:db; do sleep $SLEEP_SECONDS; done\"",
+								"bundle exec sh -c \"until rake boot:db; do sleep $SLEEP_SECONDS;done\"",
 							}, Env: []v1.EnvVar{
 								v1.EnvVar{
 									Name:  "SLEEP_SECONDS",

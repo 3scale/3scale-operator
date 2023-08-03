@@ -666,8 +666,7 @@ objects:
           - /opt/app/entrypoint.sh
           - sh
           - -c
-          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;
-            done
+          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;done
           env:
           - name: CONFIG_REDIS_PROXY
             valueFrom:
@@ -984,8 +983,7 @@ objects:
           - /opt/app/entrypoint.sh
           - sh
           - -c
-          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;
-            done
+          - until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS;done
           env:
           - name: CONFIG_REDIS_PROXY
             valueFrom:
@@ -2918,8 +2916,7 @@ objects:
           - bash
           - -c
           - bundle exec sh -c "until rake boot:redis && curl --output /dev/null --silent
-            --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS;
-            done"
+            --fail --head http://system-master:3000/status;do sleep $SLEEP_SECONDS;done"
           env:
           - name: REDIS_URL
             valueFrom:
@@ -3075,8 +3072,8 @@ objects:
         - command:
           - sh
           - -c
-          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
-            do sleep $SLEEP_SECONDS; done
+          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);do
+            sleep $SLEEP_SECONDS;done
           env:
           - name: SLEEP_SECONDS
             value: "1"
@@ -3333,7 +3330,7 @@ objects:
         - command:
           - bash
           - -c
-          - bundle exec sh -c "until rake boot:db; do sleep $SLEEP_SECONDS; done"
+          - bundle exec sh -c "until rake boot:db; do sleep $SLEEP_SECONDS;done"
           env:
           - name: SLEEP_SECONDS
             value: "1"
@@ -3814,8 +3811,8 @@ objects:
         - command:
           - sh
           - -c
-          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);
-            do sleep $SLEEP_SECONDS; done
+          - until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);do
+            sleep $SLEEP_SECONDS;done
           env:
           - name: SLEEP_SECONDS
             value: "1"

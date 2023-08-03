@@ -832,7 +832,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 							Command: []string{
 								"bash",
 								"-c",
-								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status;do sleep $SLEEP_SECONDS;done\"",
 							},
 							Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 						},
@@ -1201,7 +1201,7 @@ func (system *System) SphinxDeploymentConfig() *appsv1.DeploymentConfig {
 						v1.Container{
 							Name:    "system-master-svc",
 							Image:   "amp-system:latest",
-							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
+							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status);do sleep $SLEEP_SECONDS;done"},
 							Env: []v1.EnvVar{
 								helper.EnvVarFromValue("SLEEP_SECONDS", "1"),
 							},
