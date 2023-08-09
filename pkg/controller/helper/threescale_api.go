@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	HTTP_VERBOSE_ENVVAR = "THREESCALE_DEBUG"
+	HTTP_VERBOSE_ENVVAR         = "THREESCALE_DEBUG"
+	INSECURE_SKIP_VERIFY_ENVVAR = "INSECURE_SKIP_VERIFY_CLIENT"
 )
 
 type ProviderAccount struct {
@@ -39,11 +40,15 @@ func PortaClientFromURL(url *url.URL, token string) (*threescaleapi.ThreeScaleCl
 		return nil, err
 	}
 
-	// TODO By default should not skip verification
+	insecureSkipVerify := false
+	if helper.GetEnvVar(INSECURE_SKIP_VERIFY_ENVVAR, "0") == "1" {
+		insecureSkipVerify = true
+	}
+
 	// Activated by some env var or Spec param
 	var transport http.RoundTripper = &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
 	}
 
 	if helper.GetEnvVar(HTTP_VERBOSE_ENVVAR, "0") == "1" {
