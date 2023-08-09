@@ -11,6 +11,7 @@ metadata:
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+    olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.11"}]'
     repository: https://github.com/3scale/3scale-operator
     support: Red Hat
     tectonic-visibility: ocs
