@@ -20,6 +20,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strings"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -38,6 +46,8 @@ import (
 // ActiveDocReconciler reconciles a ActiveDoc object
 type ActiveDocReconciler struct {
 	*reconcilers.BaseReconciler
+	SecretLabelSelector apimachinerymetav1.LabelSelector
+	WatchedNamespace    string
 }
 
 // blank assignment to verify that BackendReconciler implements reconcile.Reconciler
@@ -153,6 +163,19 @@ func (r *ActiveDocReconciler) reconcileSpec(activeDocCR *capabilitiesv1beta1.Act
 	reconciler := NewActiveDocThreescaleReconciler(r.BaseReconciler, activeDocCR, threescaleAPIClient, providerAccount.AdminURLStr, logger)
 	activeDocObj, err := reconciler.Reconcile()
 
+	changed, err := r.reconcileActiveDocOpenAPISecretLabels(activeDocCR, r.Context())
+	if err != nil {
+		statusReconciler := NewActiveDocStatusReconciler(r.BaseReconciler, activeDocCR, providerAccount.AdminURLStr, nil, err)
+		return statusReconciler, err
+	}
+	if changed {
+		err = r.Client().Update(r.Context(), activeDocCR)
+		if err != nil {
+			statusReconciler := NewActiveDocStatusReconciler(r.BaseReconciler, activeDocCR, providerAccount.AdminURLStr, nil, err)
+			return statusReconciler, err
+		}
+	}
+
 	statusReconciler := NewActiveDocStatusReconciler(r.BaseReconciler, activeDocCR, providerAccount.AdminURLStr, activeDocObj, err)
 	return statusReconciler, err
 }
@@ -200,7 +223,74 @@ func (r *ActiveDocReconciler) checkExternalRefs(resource *capabilitiesv1beta1.Ac
 }
 
 func (r *ActiveDocReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	secretToOpenApiEventMapper := &SecretToOpenApiEventMapper{
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("SecretToActiveDocEventMapper"),
+		Namespace: r.WatchedNamespace,
+	}
+
+	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
+	if err != nil {
+		return nil
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&capabilitiesv1beta1.ActiveDoc{}).
+		Watches(
+			&source.Kind{Type: &corev1.Secret{}},
+			handler.EnqueueRequestsFromMapFunc(secretToOpenApiEventMapper.Map),
+			builder.WithPredicates(labelSelectorPredicate),
+		).
 		Complete(r)
+}
+
+func (r *ActiveDocReconciler) reconcileActiveDocOpenAPISecretLabels(ActiveDocCR *capabilitiesv1beta1.ActiveDoc, ctx context.Context) (bool, error) {
+	openApiSecretUID, err := r.getActiveDocOpenApiSecretUID(ActiveDocCR, ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return replaceActiveDocOpenAPISecretLabels(ActiveDocCR, openApiSecretUID), nil
+}
+
+func (r *ActiveDocReconciler) getActiveDocOpenApiSecretUID(openapiCR *capabilitiesv1beta1.ActiveDoc, ctx context.Context) (string, error) {
+	secret := &corev1.Secret{}
+	objectKey := client.ObjectKey{
+		Name:      openapiCR.Spec.ActiveDocOpenAPIRef.SecretRef.Name,
+		Namespace: openapiCR.Spec.ActiveDocOpenAPIRef.SecretRef.Namespace,
+	}
+
+	err := r.Client().Get(ctx, objectKey, secret)
+	r.Logger().V(1).Info("read secret", "objectKey", objectKey, "error", err)
+	if err != nil {
+		return "", err
+	}
+
+	uid := string(secret.GetUID())
+	return uid, nil
+}
+
+func replaceActiveDocOpenAPISecretLabels(acriveDocCr *capabilitiesv1beta1.ActiveDoc, secretUID string) bool {
+	existingLabels := acriveDocCr.GetLabels()
+	if existingLabels == nil {
+		existingLabels = map[string]string{}
+	}
+
+	existingSecretLabels := map[string]string{}
+	// existing Secret UIDs not included in desiredAPIUIDs are deleted
+	for k := range existingLabels {
+		if strings.HasPrefix(k, OpenApiSecretLabelPrefix) {
+			existingSecretLabels[k] = OpenApiSecretLabelValue
+			// it is safe to remove keys while looping in range
+			delete(existingLabels, k)
+		}
+	}
+
+	desiredSecretLabels := map[string]string{}
+	desiredSecretLabels[openapiSecretLabelKey(secretUID)] = OpenApiSecretLabelValue
+	existingLabels[openapiSecretLabelKey(secretUID)] = OpenApiSecretLabelValue
+
+	acriveDocCr.SetLabels(existingLabels)
+
+	return !reflect.DeepEqual(existingSecretLabels, desiredSecretLabels)
 }

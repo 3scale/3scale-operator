@@ -229,6 +229,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	secretLabelSelectorOpenAPI, err := apimachinerymetav1.ParseToLabelSelector("openapis.capabilities.3scale.net/watched-by=openapi")
+	if err != nil {
+		setupLog.Error(err, "unable parse openapi secrets label")
+		os.Exit(1)
+	}
+
+	if secretLabelSelectorOpenAPI == nil {
+		setupLog.Info("secretLabelSelectorOpenAPI is empty")
+		os.Exit(1)
+	}
+
 	discoveryClientOpenAPI, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
 	if err != nil {
 		setupLog.Error(err, "unable to create discovery client")
@@ -240,6 +251,8 @@ func main() {
 			ctrl.Log.WithName("controllers").WithName("OpenAPI"),
 			discoveryClientOpenAPI,
 			mgr.GetEventRecorderFor("OpenAPI")),
+		SecretLabelSelector: *secretLabelSelectorOpenAPI,
+		WatchedNamespace:    namespace,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenAPI")
 		os.Exit(1)
@@ -272,6 +285,8 @@ func main() {
 			ctrl.Log.WithName("controllers").WithName("ActiveDoc"),
 			discoveryClientActiveDoc,
 			mgr.GetEventRecorderFor("ActiveDoc")),
+		SecretLabelSelector: *secretLabelSelectorOpenAPI, // ActiveDoc is using OpenApi Secret
+		WatchedNamespace:    namespace,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ActiveDoc")
 		os.Exit(1)
