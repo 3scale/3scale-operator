@@ -115,7 +115,8 @@ func (r *CustomPolicyDefinitionReconciler) reconcileSpec(customPolicyDefinitionC
 		return statusReconciler, err
 	}
 
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(customPolicyDefinitionCR.GetAnnotations())
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
 	if err != nil {
 		statusReconciler := NewCustomPolicyDefinitionStatusReconciler(r.BaseReconciler, customPolicyDefinitionCR, providerAccount.AdminURLStr, nil, err)
 		return statusReconciler, err

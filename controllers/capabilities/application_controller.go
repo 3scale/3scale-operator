@@ -103,7 +103,8 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(application.GetAnnotations())
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
 	if err != nil {
 		return ctrl.Result{}, err
 	}

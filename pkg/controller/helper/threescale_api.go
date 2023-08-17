@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	HTTP_VERBOSE_ENVVAR         = "THREESCALE_DEBUG"
-	INSECURE_SKIP_VERIFY_ENVVAR = "INSECURE_SKIP_VERIFY_CLIENT"
+	HTTP_VERBOSE_ENVVAR = "THREESCALE_DEBUG"
 )
 
 type ProviderAccount struct {
@@ -20,29 +19,25 @@ type ProviderAccount struct {
 	Token       string
 }
 
-// PortaClient instantiate porta_client.ThreeScaleClient from ProviderAccount object
-func PortaClient(providerAccount *ProviderAccount) (*threescaleapi.ThreeScaleClient, error) {
-	return PortaClientFromURLString(providerAccount.AdminURLStr, providerAccount.Token)
+// PortaClient instantiates porta_client.ThreeScaleClient from ProviderAccount object
+func PortaClient(providerAccount *ProviderAccount, insecureSkipVerify bool) (*threescaleapi.ThreeScaleClient, error) {
+	return PortaClientFromURLString(providerAccount.AdminURLStr, providerAccount.Token, insecureSkipVerify)
 }
 
-func PortaClientFromURLString(adminURLStr, token string) (*threescaleapi.ThreeScaleClient, error) {
+// PortaClientFromURLString instantiates porta_client.ThreeScaleClient from url string
+func PortaClientFromURLString(adminURLStr, token string, insecureSkipVerify bool) (*threescaleapi.ThreeScaleClient, error) {
 	adminURL, err := url.Parse(adminURLStr)
 	if err != nil {
 		return nil, err
 	}
-	return PortaClientFromURL(adminURL, token)
+	return PortaClientFromURL(adminURL, token, insecureSkipVerify)
 }
 
 // PortaClientFromURL instantiates porta_client.ThreeScaleClient from admin url object
-func PortaClientFromURL(url *url.URL, token string) (*threescaleapi.ThreeScaleClient, error) {
+func PortaClientFromURL(url *url.URL, token string, insecureSkipVerify bool) (*threescaleapi.ThreeScaleClient, error) {
 	adminPortal, err := threescaleapi.NewAdminPortal(url.Scheme, url.Hostname(), helper.PortFromURL(url))
 	if err != nil {
 		return nil, err
-	}
-
-	insecureSkipVerify := false
-	if helper.GetEnvVar(INSECURE_SKIP_VERIFY_ENVVAR, "0") == "1" {
-		insecureSkipVerify = true
 	}
 
 	// Activated by some env var or Spec param
@@ -56,4 +51,13 @@ func PortaClientFromURL(url *url.URL, token string) (*threescaleapi.ThreeScaleCl
 	}
 
 	return threescaleapi.NewThreeScale(adminPortal, token, &http.Client{Transport: transport}), nil
+}
+
+// GetInsecureSkipVerifyAnnotation extracts the insecure_skip_verify annotation from an object
+func GetInsecureSkipVerifyAnnotation(annotations map[string]string) bool {
+	insecureSkipVerify, ok := annotations["insecure_skip_verify"]
+	if ok && insecureSkipVerify == "true" {
+		return true
+	}
+	return false
 }

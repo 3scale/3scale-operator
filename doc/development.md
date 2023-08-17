@@ -118,13 +118,11 @@ the _OperatorHub_ section of the OpenShift console _Catalog_. It can be
 easily found by filtering the provider type to _Custom_.
 
 ### 3scale Operator Environment Variables
-There are a few environment variables that may be used to aid in development. Refer to the table below for details:
+There are environment variables that may be used to aid in development. Refer to the table below for details:
 
 | Variable                    | Options    |   Type   | Default | Details                                                                                                                                                    |
 |-----------------------------|------------|:--------:|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | THREESCALE_DEBUG            | `1` or `0` | Optional | `0`     | If `1`, sets the porta client logging to be more verbose.                                                                                                  |
-| INSECURE_SKIP_VERIFY_CLIENT | `1` or `0` | Optional | `0`     | If `1`, sets the porta client to _not_ verify the server's certificate chain and host name. **NOTE:** this should only be used during development/testing. |
-|
 
 ### Run tests
 
