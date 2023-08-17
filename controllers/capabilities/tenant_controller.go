@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -50,6 +51,9 @@ const TenantAccessTokenSecretField = "token"
 
 // Tenant's credentials secret field name for admin domain url
 const TenantAdminDomainKeySecretField = "adminURL"
+
+// Tenant ID annotation matches the tenant.status.ID
+const tenantIdAnnotation = "tenantID"
 
 // TenantReconciler reconciles a Tenant object
 type TenantReconciler struct {
@@ -141,8 +145,26 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, nil
 	}
 
+	// If the tenant.Status.TenantID is found and the annotation is not found - create
+	// If the tenant.Status.TenantID is found and the annotation is found but, the value of annotation is different to the status.TenantID - update
+	tenantIdAnnotationFound := true
+	tenantId := tenantR.Status.TenantId
+	if value, found := tenantR.ObjectMeta.Annotations[tenantIdAnnotation]; tenantId != 0 && !found || tenantId != 0 && found && value != strconv.FormatInt(tenantR.Status.TenantId, 10) {
+		if tenantR.ObjectMeta.Annotations == nil {
+			tenantR.ObjectMeta.Annotations = make(map[string]string)
+		}
+
+		tenantR.ObjectMeta.Annotations[tenantIdAnnotation] = strconv.FormatInt(tenantR.Status.TenantId, 10)
+		tenantIdAnnotationFound = false
+	}
+
+	tenantFinalizerFound := true
 	if !controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
 		controllerutil.AddFinalizer(tenantR, tenantFinalizer)
+		tenantFinalizerFound = false
+	}
+
+	if !tenantFinalizerFound || !tenantIdAnnotationFound {
 		err = r.UpdateResource(tenantR)
 		if err != nil {
 			return ctrl.Result{}, err
