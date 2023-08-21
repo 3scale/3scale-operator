@@ -20,18 +20,18 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 
 ### OpenAPISpec
 
-| **Field** | **json field**| **Type** | **Info** | **Required** |
-| --- | --- | --- | --- | --- |
-| OpenAPIRef | `openapiRef` | object | Reference to the OpenAPI Specification. See [OpenAPIRef](#openapiref) | Yes |
-| Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
-| ProductionPublicBaseURL | `productionPublicBaseURL` | string | Custom public production URL | No |
-| StagingPublicBaseURL | `stagingPublicBaseURL` | string | Custom public staging URL | No |
-| ProductSystemName | `productSystemName` | string | Custom 3scale product system name | No |
-| PrivateBaseURL | `privateBaseURL` | string | Custom private base URL | No |
-| PrefixMatching | `prefixMatching` | boolean | Use prefix matching instead of strict matching on mapping rules derived from openapi operations. Defaults to strict matching. | No |
-| PrivateAPIHostHeader | `privateAPIHostHeader` | string | Custom host header sent by the API gateway to the private API | No |
-| PrivateAPISecretToken | `privateAPISecretToken` | string | Custom secret token sent by the API gateway to the private API | No |
-| OIDC | `oidc` | *OIDCSpec | OIDCSpec defines the desired configuration of OpenID Connect Authentication | No |
+| **Field** | **json field**| **Type**                                                                                             | **Info** | **Required** |
+| --- | --- |------------------------------------------------------------------------------------------------------| --- | --- |
+| OpenAPIRef | `openapiRef` | object                                                                                               | Reference to the OpenAPI Specification. See [OpenAPIRef](#openapiref) | Yes |
+| Provider Account Reference | `providerAccountRef` | object                                                                                               | [Provider account credentials secret reference](#provider-account-reference) | No |
+| ProductionPublicBaseURL | `productionPublicBaseURL` | string                                                                                               | Custom public production URL | No |
+| StagingPublicBaseURL | `stagingPublicBaseURL` | string                                                                                               | Custom public staging URL | No |
+| ProductSystemName | `productSystemName` | string                                                                                               | Custom 3scale product system name | No |
+| PrivateBaseURL | `privateBaseURL` | string                                                                                               | Custom private base URL | No |
+| PrefixMatching | `prefixMatching` | boolean                                                                                              | Use prefix matching instead of strict matching on mapping rules derived from openapi operations. Defaults to strict matching. | No |
+| PrivateAPIHostHeader | `privateAPIHostHeader` | string                                                                                               | Custom host header sent by the API gateway to the private API | No |
+| PrivateAPISecretToken | `privateAPISecretToken` | string                                                                                               | Custom secret token sent by the API gateway to the private API | No |
+| OIDC | `oidc` | [*OIDCSpec](https://github.com/3scale/3scale-operator/blob/master/doc/product-reference.md#oidcspec) | OIDCSpec defines the desired configuration of OpenID Connect Authentication | No |
 
 #### OpenAPIRef
 

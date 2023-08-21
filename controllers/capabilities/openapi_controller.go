@@ -381,9 +381,7 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 	if len(globalSecRequirements) == 1 {
 		// when the referenced OpenAPI spec's sec scheme is openIdConnect or oauth2, the spec.oidc must not be nil or empty
 		if globalSecRequirements[0].Value.Type == "openIdConnect" || globalSecRequirements[0].Value.Type == "oauth2" {
-			if openapiCR.Spec.OIDC == nil ||
-				len(openapiCR.Spec.OIDC.IssuerType) == 0 ||
-				len(openapiCR.Spec.OIDC.IssuerEndpoint) == 0 {
+			if openapiCR.Spec.OIDC == nil {
 				fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, "Missing "+
 					"OIDC definitions in CR. The referenced OpenAPI spec's sec scheme is openIdConnect or oauth2, the spec.oidc must not be nil or empty"))
 				return &helper.SpecFieldError{

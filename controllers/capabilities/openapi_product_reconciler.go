@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	"regexp"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -16,6 +15,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/google/go-cmp/cmp"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
@@ -399,14 +399,19 @@ func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.Exte
 	return authSpec
 }
 
-func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
+func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) error {
 	tmpHeaders := "headers"
 	authSpec.OIDC.CredentialsLoc = &tmpHeaders
 
+	issuerEndpoint, err := p.getIssuerEndpoint()
+	if err != nil {
+		p.Logger().Info("can't get issuerEndpoint value from OpenAPI CR; not set\n")
+		issuerEndpoint = ""
+	}
+
 	if p.openapiCR.Spec.OIDC != nil {
 		authSpec.OIDC.IssuerType = p.openapiCR.Spec.OIDC.IssuerType
-		authSpec.OIDC.IssuerEndpoint = p.openapiCR.Spec.OIDC.IssuerEndpoint
-		authSpec.OIDC.IssuerEndpoint = p.getIssuerEndpoint(p.Client())
+		authSpec.OIDC.IssuerEndpoint = issuerEndpoint
 		authSpec.OIDC.JwtClaimWithClientID = p.openapiCR.Spec.OIDC.JwtClaimWithClientID
 		authSpec.OIDC.JwtClaimWithClientIDType = p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType
 
@@ -417,6 +422,7 @@ func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabil
 			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ServiceAccountsEnabled
 		}
 	}
+	return nil
 }
 
 func (p *OpenAPIProductReconciler) parseOIDCCredentialsLoc(inField string) *string {
@@ -459,28 +465,21 @@ func (p *OpenAPIProductReconciler) setOauth2AuthenticationParams(authSpec *capab
 	}
 }
 
-func (p *OpenAPIProductReconciler) getIssuerEndpoint(cl k8sclient.Client) string {
-	// get IssuerEndpoint from Openapi CR and replace the stub value of "some-secret" with value
-	// of "secret" field of oidc-issuer-client-secret
-	var secret *string
-	crIssuerEndpoint := p.openapiCR.Spec.OIDC.IssuerEndpoint
-
-	oidcSecret, err := helper.GetSecret("oidc-issuer-client-secret", p.openapiCR.Namespace, cl)
-	if oidcSecret == nil || err != nil {
-		errToLog := fmt.Errorf("Can't get OIDC secret '%s'", oidcSecret.Name)
-		p.EventRecorder().Eventf(p.openapiCR, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
-		p.logger.Error(errToLog, "ReconcileError")
-		return crIssuerEndpoint
+func (p *OpenAPIProductReconciler) getIssuerEndpoint() (string, error) {
+	secret := &corev1.Secret{}
+	err := p.Client().Get(p.Context(),
+		types.NamespacedName{
+			Name:      p.openapiCR.Spec.OIDC.IssuerEndpointRef.Name,
+			Namespace: p.openapiCR.Namespace,
+		},
+		secret)
+	if err != nil {
+		return "", err
 	}
 
-	secret = helper.GetSecretDataValue(oidcSecret.Data, "secret")
-	if secret == nil {
-		errToLog := fmt.Errorf("field '%s' is required in secret '%s'", "secret", oidcSecret.Name)
-		p.EventRecorder().Eventf(p.openapiCR, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
-		p.logger.Error(errToLog, "ReconcileError")
-		return crIssuerEndpoint
+	issuerEndpoint := helper.GetSecretDataValue(secret.Data, "issuerEndpoint")
+	if issuerEndpoint == nil {
+		return "", fmt.Errorf("can't get issuerEndpoint field value from secret '%s'", secret.Name)
 	}
-
-	updatedIssuerEndpointUrl := strings.Replace(crIssuerEndpoint, "some-secret", *secret, 1)
-	return updatedIssuerEndpointUrl
+	return *issuerEndpoint, nil
 }

@@ -97,34 +97,29 @@ spec:
 
 3scale requires some additional information that are not included 
 in the OpenAPI spec, therefore those data need to be provided in the OpenAPI CR. Specifically:
-- OpenID Connect Issuer Type which will default to rest but can be overridden from the OpenAPI CR
-- OpenID Connect Issuer. 3scale requires that the issuer URL must include a client secret.
+- OpenID Connect Issuer Type, which will default to rest but can be overridden from the OpenAPI CR
+- OpenID Connect Issuer Endpoint Referense (Secret). 3scale requires that the issuer URL must include a client secret.
 - Flows object. When the sec scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those.
 
 #### OIDC Issuer Secret
-Secret name:  **oidc-issuer-client-secret**  
-Example of the secret:
-```shell
-cat oidc-issuer-client-secret.yaml 
-```
+
 ```yaml
 kind: Secret
 apiVersion: v1
-metadata: 
-  name: oidc-issuer-client-secret
+metadata:
+  name: my-secret
   namespace: 3scale-test
 data:
-  secret: XXXXXXXXXXXXXXXXXXXXX
+  issuerEndpoint: https://3scale-zync:some-secret@keycloak-rhsso-test.apps.xxxxx.xxxx.s1.devshift.org/auth/realms/petstore
 type: Opaque
 ```
 To create secret:
 ```shell
-oc apply -f oidc-issuer-client-secret.yaml 
+oc apply -f my-secret.yaml 
 ```
 
-**NOTEs**
-- **oidc-issuer-client-secret** `name is Not configurable` Please use this secret name as noted.
-- The secret value will be taken from the Issuer Client secret. If you are using RHSSO - the secret could be found at `Realm/Clients/ClientID/Credentials/Secret`.
+**NOTE** 
+- The secret value (*some-secret* in this example) will be taken from the Issuer Client secret. If you are using RHSSO - the secret could be found at `Realm/Clients/ClientID/Credentials/Secret`.
 
 #### OpenAPI CR example for OIDC and oauth2
 ```yaml
@@ -138,7 +133,8 @@ spec:
     url: https://raw.githubusercontent.com/valerymo/OpenAPI-Specification/test/examples/v3.0/petstore.yaml
   oidc:
     issuerType: keycloak
-    issuerEndpoint: https://3scale-zync:some-secret@keycloak-rhsso-test.apps.xxxxx.xxxx.s1.devshift.org/auth/realms/petstore
+    issuerEndpointRef:
+      name: my-secret
     jwtClaimWithClientID: azp
     jwtClaimWithClientIDType: plain
     authenticationFlow:
@@ -148,22 +144,21 @@ spec:
       directAccessGrantsEnabled: true
 ```
 - **oidc** is optional field in OpenAPI CR, Only for OIDC.  
-- **issuerEndpoint** example is related to RHSSO issuer
-- **some-secret** field in `issuerEndpoint` url in CR is required. It's a stub for <client_secret>, and will be replaced by 3scale reconciler with real secret value from `oidc-issuer-client-secret`. 
-In case secret not found - the issuer Endpoint is not changed, and `some-secret` string remains in url.
+- **issuerEndpointRef** - Secret, that contains **issuerEndpoint**
 
 
-| **Field**  | **Required** | **Description**                                                                                                                                                                                                                 |
-|------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| issuerType | no           | Valid values: [keycloak, rest]. Defaults to `rest`                                                                                                                                                                              |
-| issuerEndpoint | yes          | the format of this endpoint is determined on your OpenID Provider setup. For RHSSO:  https://<client_id>:<client_secret>@<host>:<port>/auth/realms/<realm_name>                                                                 |
-| jwtClaimWithClientID      | no          | JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.                                                                                                                                         |
-| jwtClaimWithClientIDType      | no          | JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template. Valid values: plain, liquid. Defaults to 'plain'                                                                     |
-| authenticationFlow     | no           | flows object. When the sec scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those. |
-| standardFlowEnabled     | no           | for oidc only                                                                                                                                                                                                                   |
-| implicitFlowEnabled      | no           | for oidc only                                                                                                                                                                                                                   |
-| serviceAccountsEnabled      | no           | for oidc only                                                                                                                                                                                                                   |
-| directAccessGrantsEnabled      | no           | for oidc only                                                                                                                                                                                                                   |
+| **Field**                 | **Required** | **Description**                                                                                                                                                                                                                 |
+|---------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| issuerType                | no           | Valid values: [keycloak, rest]. Defaults to `rest`                                                                                                                                                                              |
+| issuerEndpoint            | no           | will be defined in `issuerEndpointRef`. The format of this endpoint is determined on your OpenID Provider setup. For RHSSO:  https://<client_id>:<client_secret>@<host>:<port>/auth/realms/<realm_name>                         |
+| issuerEndpointRef         | Yes          | The secret that contains  `issuerEndpoint`                                                                                                                                                                                      |
+| jwtClaimWithClientID      | no           | JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.                                                                                                                                         |
+| jwtClaimWithClientIDType  | no           | JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template. Valid values: plain, liquid. Defaults to 'plain'                                                                   |
+| authenticationFlow        | no           | flows object. When the sec scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those. |
+| standardFlowEnabled       | no           | for oidc only                                                                                                                                                                                                                   |
+| implicitFlowEnabled       | no           | for oidc only                                                                                                                                                                                                                   |
+| serviceAccountsEnabled    | no           | for oidc only                                                                                                                                                                                                                   |
+| directAccessGrantsEnabled | no           | for oidc only                                                                                                                                                                                                                   |
 
 
 - **issuerEndpoint** - The format of this endpoint is determined on your OpenID Provider setup.
