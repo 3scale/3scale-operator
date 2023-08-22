@@ -36,6 +36,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+	"k8s.io/apimachinery/pkg/types"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ProductReconciler reconciles a Product object
@@ -419,4 +421,23 @@ func (r *ProductReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&capabilitiesv1beta1.Product{}).
 		Complete(r)
+}
+
+func GetIssuerEndpointFromSecret(client k8sclient.Client, secretName string, ns string) (string, error) {
+	secret := &corev1.Secret{}
+	err := client.Get(context.TODO(),
+		types.NamespacedName{
+			Name:      secretName,
+			Namespace: ns,
+		},
+		secret)
+	if err != nil {
+		return "", err
+	}
+
+	issuerEndpoint := helper.GetSecretDataValue(secret.Data, "issuerEndpoint")
+	if issuerEndpoint == nil {
+		return "", fmt.Errorf("can't get issuerEndpoint field value from secret '%s'", secret.Name)
+	}
+	return *issuerEndpoint, nil
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	"regexp"
 	"strings"
@@ -14,11 +13,9 @@ import (
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/google/go-cmp/cmp"
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -252,6 +249,10 @@ func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.
 		authenticationSpec = p.desiredOIDCAuthentication(secRequirementExtended)
 	}
 
+	if authenticationSpec == nil {
+		return p.desiredUserKeyAuthentication(nil)
+	}
+
 	return authenticationSpec
 }
 
@@ -377,6 +378,11 @@ func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1be
 }
 
 func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
+
+	if p.openapiCR.Spec.OIDC == nil {
+		return nil
+	}
+
 	authSpec := &capabilitiesv1beta1.AuthenticationSpec{
 		OIDC: &capabilitiesv1beta1.OIDCSpec{
 			IssuerType: p.openapiCR.Spec.OIDC.IssuerType,
@@ -399,7 +405,7 @@ func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.Exte
 	return authSpec
 }
 
-func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) error {
+func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
 	tmpHeaders := "headers"
 	authSpec.OIDC.CredentialsLoc = &tmpHeaders
 
@@ -422,7 +428,6 @@ func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabil
 			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ServiceAccountsEnabled
 		}
 	}
-	return nil
 }
 
 func (p *OpenAPIProductReconciler) parseOIDCCredentialsLoc(inField string) *string {
@@ -444,9 +449,15 @@ func (p *OpenAPIProductReconciler) parseOIDCCredentialsLoc(inField string) *stri
 func (p *OpenAPIProductReconciler) setOauth2AuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
 	*authSpec.OIDC.CredentialsLoc = "header"
 
+	issuerEndpoint, err := p.getIssuerEndpoint()
+	if err != nil {
+		p.Logger().Info("can't get issuerEndpoint value from OpenAPI CR; not set\n")
+		issuerEndpoint = ""
+	}
+
 	if p.openapiCR.Spec.OIDC != nil {
 		authSpec.OIDC.IssuerType = p.openapiCR.Spec.OIDC.IssuerType
-		authSpec.OIDC.IssuerEndpoint = p.openapiCR.Spec.OIDC.IssuerEndpoint
+		authSpec.OIDC.IssuerEndpoint = issuerEndpoint
 		authSpec.OIDC.JwtClaimWithClientID = p.openapiCR.Spec.OIDC.JwtClaimWithClientID
 		authSpec.OIDC.JwtClaimWithClientIDType = p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType
 
@@ -466,20 +477,24 @@ func (p *OpenAPIProductReconciler) setOauth2AuthenticationParams(authSpec *capab
 }
 
 func (p *OpenAPIProductReconciler) getIssuerEndpoint() (string, error) {
-	secret := &corev1.Secret{}
-	err := p.Client().Get(p.Context(),
-		types.NamespacedName{
-			Name:      p.openapiCR.Spec.OIDC.IssuerEndpointRef.Name,
-			Namespace: p.openapiCR.Namespace,
-		},
-		secret)
+
+	if p.openapiCR.Spec.OIDC.IssuerEndpoint != "" {
+		return p.openapiCR.Spec.OIDC.IssuerEndpoint, nil
+	}
+
+	if &p.openapiCR.Spec.OIDC.IssuerEndpointRef == nil {
+		return "", nil
+	}
+
+	namespace := p.openapiCR.Namespace
+	if p.openapiCR.Spec.OIDC.IssuerEndpointRef.Namespace != "" {
+		namespace = p.openapiCR.Spec.OIDC.IssuerEndpointRef.Namespace
+	}
+
+	issuerEndpoint, err := GetIssuerEndpointFromSecret(p.Client(), p.openapiCR.Spec.OIDC.IssuerEndpointRef.Name, namespace)
 	if err != nil {
 		return "", err
 	}
 
-	issuerEndpoint := helper.GetSecretDataValue(secret.Data, "issuerEndpoint")
-	if issuerEndpoint == nil {
-		return "", fmt.Errorf("can't get issuerEndpoint field value from secret '%s'", secret.Name)
-	}
-	return *issuerEndpoint, nil
+	return issuerEndpoint, nil
 }
