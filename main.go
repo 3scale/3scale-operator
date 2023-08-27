@@ -20,7 +20,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"runtime"
 
@@ -33,6 +32,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
+	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apimachineryruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/discovery"

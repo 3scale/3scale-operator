@@ -825,7 +825,7 @@ func (apicast *Apicast) stagingPodAnnotations() map[string]string {
 		"prometheus.io/port":   "9421",
 	}
 
-	for key, val := range apicast.Options.AdditionalPodAnnotations {
+	for key, val := range apicast.Options.StagingAdditionalPodAnnotations {
 		annotations[key] = val
 	}
 
@@ -842,7 +842,7 @@ func (apicast *Apicast) productionPodAnnotations() map[string]string {
 		"prometheus.io/port":   "9421",
 	}
 
-	for key, val := range apicast.Options.AdditionalPodAnnotations {
+	for key, val := range apicast.Options.ProductionAdditionalPodAnnotations {
 		annotations[key] = val
 	}
 

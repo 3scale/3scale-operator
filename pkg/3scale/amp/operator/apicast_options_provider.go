@@ -110,7 +110,8 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.setProxyConfigurations()
 
 	// Pod Annotations. Used to rollout apicast deployment if any secrets/configmap changes
-	a.apicastOptions.AdditionalPodAnnotations = a.additionalPodAnnotations()
+	a.apicastOptions.StagingAdditionalPodAnnotations = a.stagingAdditionalPodAnnotations()
+	a.apicastOptions.ProductionAdditionalPodAnnotations = a.productionAdditionalPodAnnotations()
 
 	err = a.apicastOptions.Validate()
 	if err != nil {
@@ -467,7 +468,22 @@ func (a *ApicastOptionsProvider) setProductionProxyConfigurations() {
 	a.apicastOptions.ProductionNoProxy = a.apimanager.Spec.Apicast.ProductionSpec.NoProxy
 }
 
-func (a *ApicastOptionsProvider) additionalPodAnnotations() map[string]string {
+func (a *ApicastOptionsProvider) stagingAdditionalPodAnnotations() map[string]string {
+	annotations := map[string]string{
+		APIcastEnvironmentCMAnnotation: a.envConfigMapHash(),
+	}
+
+	for idx := range a.apicastOptions.StagingCustomPolicies {
+		// Secrets must exist
+		// Annotation key includes the name of the secret
+		annotationKey := fmt.Sprintf("%s%s", CustomPoliciesSecretResverAnnotationPrefix, a.apicastOptions.StagingCustomPolicies[idx].Secret.Name)
+		annotations[annotationKey] = a.apicastOptions.StagingCustomPolicies[idx].Secret.ResourceVersion
+	}
+
+	return annotations
+}
+
+func (a *ApicastOptionsProvider) productionAdditionalPodAnnotations() map[string]string {
 	annotations := map[string]string{
 		APIcastEnvironmentCMAnnotation: a.envConfigMapHash(),
 	}
@@ -477,13 +493,6 @@ func (a *ApicastOptionsProvider) additionalPodAnnotations() map[string]string {
 		// Annotation key includes the name of the secret
 		annotationKey := fmt.Sprintf("%s%s", CustomPoliciesSecretResverAnnotationPrefix, a.apicastOptions.ProductionCustomPolicies[idx].Secret.Name)
 		annotations[annotationKey] = a.apicastOptions.ProductionCustomPolicies[idx].Secret.ResourceVersion
-	}
-
-	for idx := range a.apicastOptions.StagingCustomPolicies {
-		// Secrets must exist
-		// Annotation key includes the name of the secret
-		annotationKey := fmt.Sprintf("%s%s", CustomPoliciesSecretResverAnnotationPrefix, a.apicastOptions.StagingCustomPolicies[idx].Secret.Name)
-		annotations[annotationKey] = a.apicastOptions.StagingCustomPolicies[idx].Secret.ResourceVersion
 	}
 
 	return annotations

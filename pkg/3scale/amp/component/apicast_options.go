@@ -122,7 +122,8 @@ type ApicastOptions struct {
 	ProductionServiceCacheSize *int32
 	StagingServiceCacheSize    *int32
 
-	AdditionalPodAnnotations map[string]string `validate:"required"`
+	StagingAdditionalPodAnnotations    map[string]string `validate:"required"`
+	ProductionAdditionalPodAnnotations map[string]string `validate:"required"`
 }
 
 func NewApicastOptions() *ApicastOptions {

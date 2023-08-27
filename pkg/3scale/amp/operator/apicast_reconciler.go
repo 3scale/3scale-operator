@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"strings"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -565,10 +565,12 @@ func (r *ApicastReconciler) reconcileAPImanagerCR(ctx context.Context) (ctrl.Res
 
 	if changed {
 		err = r.Client().Update(ctx, r.apiManager)
-		r.logger.Info("reconciling", "error", err)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
-	return ctrl.Result{Requeue: changed}, err
+	return ctrl.Result{Requeue: changed}, nil
 }
 
 func (r *ApicastReconciler) reconcileApimanagerSecretLabels(ctx context.Context) (bool, error) {
