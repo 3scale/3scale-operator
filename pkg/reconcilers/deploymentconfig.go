@@ -57,6 +57,33 @@ func GenericBackendMutators() []DCMutateFn {
 	}
 }
 
+func DeploymentConfigEnvMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	update := false
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Env, desired.Spec.Template.Spec.Containers[0].Env) {
+		diff := cmp.Diff(existing.Spec.Template.Spec.Containers[0].Env, desired.Spec.Template.Spec.Containers[0].Env)
+		log.Info(fmt.Sprintf("%s spec.template.spec.containers[0].Env has changed: %s", common.ObjectInfo(desired), diff))
+		// Always set env var CONFIG_REDIS_ASYNC to 1
+		for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
+			if envVar.Name == "CONFIG_REDIS_ASYNC" {
+				if envVar.Value != "1" {
+					existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
+					update = true
+					return update, nil
+				}
+				return update, nil
+			}
+		}
+		// Always set env var create CONFIG_REDIS_ASYNC if not present
+		for envId, envVar := range desired.Spec.Template.Spec.Containers[0].Env {
+			if envVar.Name == "CONFIG_REDIS_ASYNC" {
+				existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, desired.Spec.Template.Spec.Containers[0].Env[envId])
+				update = true
+			}
+		}
+	}
+	return update, nil
+}
+
 func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	update := false
 

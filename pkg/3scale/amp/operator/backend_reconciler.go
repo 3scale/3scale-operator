@@ -39,6 +39,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Listener DC
 	listenerConfigMutator := reconcilers.GenericBackendMutators()
+	listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
 	}
@@ -62,6 +63,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker DC
 	workerConfigMutator := reconcilers.GenericBackendMutators()
+	workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
 	}

@@ -417,6 +417,7 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, backend.buildBackendCommonEnv()...)
 	result = append(result,
+		helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"),
 		helper.EnvVarFromValue("PUMA_WORKERS", "16"),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_USER", BackendSecretInternalApiSecretName, BackendSecretInternalApiUsernameFieldName),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
