@@ -103,6 +103,10 @@ in the OpenAPI spec, therefore those data need to be provided in the OpenAPI CR.
 
 #### OIDC Issuer Secret
 
+- We have previously setup of Issuer Client - RHSSO/keycloak realm and client and are using it in secret example. 
+- `issuerEndpoint` format is `https://<CLIENT_ID>:<CLIENT_SECRET>@<HOST>:<PORT>/auth/realms/<REALM_NAME>"` . Format is described in `3scale Portal/Products page - AUTHENTICATION SETTINGS - OpenID Connect Issuer`.
+- The <CLIENT_SECRET> value will be taken form Issuer Client - `Realm/Clients/ClientID/Credentials/Secret`.
+
 ```yaml
 kind: Secret
 apiVersion: v1
@@ -113,13 +117,11 @@ data:
   issuerEndpoint: https://3scale-zync:some-secret@keycloak-rhsso-test.apps.xxxxx.xxxx.s1.devshift.org/auth/realms/petstore
 type: Opaque
 ```
+
 To create secret:
 ```shell
 oc apply -f my-secret.yaml 
 ```
-
-**NOTE** 
-- The secret value (*some-secret* in this example) will be taken from the Issuer Client secret. If you are using RHSSO - the secret could be found at `Realm/Clients/ClientID/Credentials/Secret`.
 
 #### OpenAPI CR example for OIDC and oauth2
 ```yaml
