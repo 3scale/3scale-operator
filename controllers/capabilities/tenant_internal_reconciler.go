@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
@@ -70,7 +71,12 @@ func (r *TenantInternalReconciler) Run() (ctrl.Result, error) {
 // * tenant will exist
 // * tenant's attributes will be updated if required
 func (r *TenantInternalReconciler) reconcileTenant() (ctrl.Result, error) {
-	tenantDef, err := controllerhelper.FetchTenant(r.tenantR.Status.TenantId, r.portaClient)
+	tenantID, err := r.retrieveTenantID()
+	if err != nil {
+		return ctrl.Result{}, errors.New("failed to convert tenantID annotation to int64")
+	}
+
+	tenantDef, err := controllerhelper.FetchTenant(tenantID, r.portaClient)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -114,11 +120,16 @@ func (r *TenantInternalReconciler) reconcileTenant() (ctrl.Result, error) {
 // * is active
 // * user's attributes will be updated if required
 func (r *TenantInternalReconciler) reconcileAdminUser() (ctrl.Result, error) {
-	if r.tenantR.Status.TenantId == 0 {
-		return ctrl.Result{}, errors.New("Trying to reconcile admin user when tenantID 0")
+	tenantID, err := r.retrieveTenantID()
+	if err != nil {
+		return ctrl.Result{}, errors.New("failed to convert tenantID annotation to int64")
 	}
 
-	adminUser, err := controllerhelper.FindUser(r.portaClient, r.tenantR.Status.TenantId,
+	if tenantID == 0 {
+		return ctrl.Result{}, errors.New("trying to reconcile admin user when tenantID 0")
+	}
+
+	adminUser, err := controllerhelper.FindUser(r.portaClient, tenantID,
 		r.tenantR.Spec.Email, r.tenantR.Spec.Username)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -126,7 +137,7 @@ func (r *TenantInternalReconciler) reconcileAdminUser() (ctrl.Result, error) {
 
 	if adminUser == nil {
 		adminUser, err = controllerhelper.CreateAdminUser(r.portaClient,
-			r.tenantR.Status.TenantId, r.tenantR.Spec.Email, r.tenantR.Spec.Username)
+			tenantID, r.tenantR.Spec.Email, r.tenantR.Spec.Username)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -134,18 +145,18 @@ func (r *TenantInternalReconciler) reconcileAdminUser() (ctrl.Result, error) {
 
 	if adminUser.Element.ID == nil {
 		return ctrl.Result{}, fmt.Errorf("admin returned nil ID for tenantID %d;"+
-			"email %s; username:%s", r.tenantR.Status.TenantId, r.tenantR.Spec.Email,
+			"email %s; username:%s", tenantID, r.tenantR.Spec.Email,
 			r.tenantR.Spec.Username)
 	}
 
-	err = r.syncAdminUser(r.tenantR.Status.TenantId, adminUser)
+	err = r.syncAdminUser(tenantID, adminUser)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	newStatus := &apiv1alpha1.TenantStatus{
 		AdminId:  *adminUser.Element.ID,
-		TenantId: r.tenantR.Status.TenantId,
+		TenantId: tenantID,
 	}
 
 	updated, err := r.reconcileStatus(newStatus)
@@ -275,4 +286,26 @@ func (r *TenantInternalReconciler) reconcileStatus(desiredStatus *apiv1alpha1.Te
 		return true, nil
 	}
 	return false, nil
+}
+
+// Returns tenant ID, tenant.Status.tenantID takes precedence over annotation value
+func (r *TenantInternalReconciler) retrieveTenantID() (int64, error) {
+	var tenantId int64 = 0
+
+	// if the tenant.status.tenantID is 0, check if tenant.annotations.tenantID is present and use it instead
+	if r.tenantR.Status.TenantId == 0 {
+		// If the annotation tenantId is found, convert it to int64
+		if value, found := r.tenantR.ObjectMeta.Annotations[tenantIdAnnotation]; found {
+			tenantIdConvertedFromString, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return 0, err
+			}
+
+			tenantId = tenantIdConvertedFromString
+		}
+	} else {
+		tenantId = r.tenantR.Status.TenantId
+	}
+
+	return tenantId, nil
 }
