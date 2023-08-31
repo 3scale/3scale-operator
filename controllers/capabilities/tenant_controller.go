@@ -102,7 +102,8 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	portaClient, err := controllerhelper.PortaClientFromURLString(tenantR.Spec.SystemMasterUrl, masterAccessToken)
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(tenantR.GetAnnotations())
+	portaClient, err := controllerhelper.PortaClientFromURLString(tenantR.Spec.SystemMasterUrl, masterAccessToken, insecureSkipVerify)
 	if err != nil {
 		reqLogger.Error(err, "Error creating porta client object")
 		// Error reading the object - requeue the request.

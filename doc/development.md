@@ -7,6 +7,7 @@
 * [Run 3scale Operator](#run-3scale-operator)
    * [Run 3scale Operator Locally](#run-3scale-operator-locally)
    * [Deploy custom 3scale Operator using OLM](#deploy-custom-3scale-operator-using-olm)
+   * [Environment Variables](#3scale-operator-environment-variables)
    * [Run tests](#run-tests)
       * [Run all tests](#run-all-tests)
       * [Run unit tests](#run-unit-tests)
@@ -115,6 +116,13 @@ and install it namespace or cluster scoped.
 It will take a few minutes for the operator to become visible under
 the _OperatorHub_ section of the OpenShift console _Catalog_. It can be
 easily found by filtering the provider type to _Custom_.
+
+### 3scale Operator Environment Variables
+There are environment variables that may be used to aid in development. Refer to the table below for details:
+
+| Variable                    | Options    |   Type   | Default | Details                                                                                                                                                    |
+|-----------------------------|------------|:--------:|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| THREESCALE_DEBUG            | `1` or `0` | Optional | `0`     | If `1`, sets the porta client logging to be more verbose.                                                                                                  |
 
 ### Run tests
 

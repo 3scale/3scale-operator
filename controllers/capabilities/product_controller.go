@@ -207,7 +207,8 @@ func (r *ProductReconciler) reconcile(productResource *capabilitiesv1beta1.Produ
 		return statusReconciler, err
 	}
 
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(productResource.GetAnnotations())
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
 	if err != nil {
 		statusReconciler := NewProductStatusReconciler(r.BaseReconciler, productResource, nil, providerAccount.AdminURLStr, err)
 		return statusReconciler, err
@@ -400,7 +401,8 @@ func (r *ProductReconciler) removeProductFrom3scale(product *capabilitiesv1beta1
 		return err
 	}
 
-	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount)
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(product.GetAnnotations())
+	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
 	if err != nil {
 		return err
 	}

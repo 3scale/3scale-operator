@@ -22,6 +22,7 @@
          * [Setting custom TopologySpreadConstraints](#setting-custom-topologyspreadconstraints)
          * [Setting custom labels](#setting-custom-labels)
          * [Setting custom Annotations](#setting-custom-annotations)
+         * [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
          * [Backend replicas](#backend-replicas)
@@ -815,6 +816,17 @@ spec:
         anno-sample2: anno2
 ```
 
+#### Setting porta client to skip certificate verification
+Whenever a controller reconciles an object it creates a new porta client to make API calls. That client is configured to verify the server's certificate chain by default. For development/testing purposes, you may want the client to skip certificate verification when reconciling an object. This can be done using the annotation `insecure_skip_verify: true`, which can be added to the following objects:
+* ActiveDoc
+* Application
+* Backend
+* CustomPolicyDefinition
+* DeveloperAccount
+* DeveloperUser
+* Product
+* ProxyConfigPromote
+* Tenant
 
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set
