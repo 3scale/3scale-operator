@@ -1,10 +1,11 @@
 package helper
 
 import (
-	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"testing"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
+
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"hash/fnv"
 	"strconv"
 
@@ -16,6 +14,8 @@ import (
 
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 

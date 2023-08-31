@@ -17,9 +17,10 @@ limitations under the License.
 package v1beta1
 
 import (
+	"reflect"
+
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/apispkg/helper"
-	"reflect"
 
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"

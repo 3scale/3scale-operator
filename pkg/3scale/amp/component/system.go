@@ -2,7 +2,6 @@ package component
 
 import (
 	"fmt"
-	"github.com/3scale/3scale-operator/apis/apps"
 	"sort"
 	"strconv"
 
@@ -12,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/3scale/3scale-operator/apis/apps"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 

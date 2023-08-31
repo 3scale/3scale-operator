@@ -1,12 +1,13 @@
 package v1alpha1
 
 import (
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"reflect"
 	"testing"
 
-	"github.com/3scale/3scale-operator/version"
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/version"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
