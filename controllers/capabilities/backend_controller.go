@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/3scale/3scale-operator/apis/common/version"
 	"time"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
@@ -37,6 +36,7 @@ import (
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 )
 
 // BackendReconciler reconciles a Backend object

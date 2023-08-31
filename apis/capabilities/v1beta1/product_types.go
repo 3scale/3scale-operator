@@ -19,7 +19,7 @@ package v1beta1
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/3scale/3scale-operator/apis/common/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"reflect"
 	"regexp"
 	"strings"

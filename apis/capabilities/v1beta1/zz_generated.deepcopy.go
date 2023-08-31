@@ -22,7 +22,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	"github.com/3scale/3scale-operator/apis/common/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )

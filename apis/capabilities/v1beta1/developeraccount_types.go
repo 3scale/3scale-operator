@@ -17,9 +17,9 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"reflect"
 
-	"github.com/3scale/3scale-operator/apis/common/pkg/common"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"

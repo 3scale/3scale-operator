@@ -3,7 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/3scale/3scale-operator/apis/common/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"sort"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"

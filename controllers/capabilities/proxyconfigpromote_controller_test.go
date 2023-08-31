@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/apis/common/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"

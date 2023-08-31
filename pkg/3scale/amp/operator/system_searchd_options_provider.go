@@ -2,8 +2,7 @@ package operator
 
 import (
 	"fmt"
-	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
-
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 

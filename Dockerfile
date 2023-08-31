@@ -15,7 +15,7 @@ COPY apis/ apis/
 COPY controllers/ controllers/
 
 COPY pkg/ pkg/
-COPY ./apis/common/version/ version/
+COPY version/ version/
 
 # Build
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=`go env GOARCH` go build -a -o manager main.go

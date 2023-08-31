@@ -18,12 +18,12 @@ package v1alpha1
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"reflect"
 
 	"github.com/3scale/3scale-operator/apis/apps"
-	"github.com/3scale/3scale-operator/apis/common/pkg/3scale/amp/product"
-	"github.com/3scale/3scale-operator/apis/common/pkg/common"
-	"github.com/3scale/3scale-operator/apis/common/version"
+	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"

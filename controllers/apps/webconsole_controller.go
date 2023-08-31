@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"github.com/3scale/3scale-operator/apis/common/version"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -28,6 +27,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

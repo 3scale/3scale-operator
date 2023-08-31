@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"github.com/3scale/3scale-operator/apis/common/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"testing"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
