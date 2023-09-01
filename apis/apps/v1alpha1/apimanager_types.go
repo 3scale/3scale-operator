@@ -28,9 +28,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/apis/apps"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/version"
 )
 
@@ -1251,7 +1251,7 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 				}
 
 				// For now only "jaeger" is accepted" as the tracing library
-				if openTracingConfigSpec.TracingLibrary != nil && *openTracingConfigSpec.TracingLibrary != component.APIcastDefaultTracingLibrary {
+				if openTracingConfigSpec.TracingLibrary != nil && *openTracingConfigSpec.TracingLibrary != apps.APIcastDefaultTracingLibrary {
 					tracingLibraryFldPath := field.NewPath("spec").
 						Child("apicast").
 						Child("productionSpec").
@@ -1322,7 +1322,7 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 					}
 				}
 				// For now only "jaeger" is accepted" as the tracing library
-				if openTracingConfigSpec.TracingLibrary != nil && *openTracingConfigSpec.TracingLibrary != component.APIcastDefaultTracingLibrary {
+				if openTracingConfigSpec.TracingLibrary != nil && *openTracingConfigSpec.TracingLibrary != apps.APIcastDefaultTracingLibrary {
 					tracingLibraryFldPath := field.NewPath("spec").
 						Child("apicast").
 						Child("stagingSpec").

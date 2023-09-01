@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	"github.com/3scale/3scale-operator/pkg/common"
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -365,13 +366,13 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		desiredTracingConfig1SecretName        = "mysecretnametwo"
 
 		existingTracingConfig1 = component.APIcastTracingConfig{
-			TracingLibrary:          component.APIcastDefaultTracingLibrary,
+			TracingLibrary:          apps.APIcastDefaultTracingLibrary,
 			Enabled:                 true,
 			TracingConfigSecretName: &existingTracingConfig1SecretName,
 		}
 
 		desiredTracingConfig1 = component.APIcastTracingConfig{
-			TracingLibrary:          component.APIcastDefaultTracingLibrary,
+			TracingLibrary:          apps.APIcastDefaultTracingLibrary,
 			Enabled:                 true,
 			TracingConfigSecretName: &desiredTracingConfig1SecretName,
 		}

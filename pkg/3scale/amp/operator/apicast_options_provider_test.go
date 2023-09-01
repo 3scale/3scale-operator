@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
@@ -154,8 +155,8 @@ func defaultApicastOptions() *component.ApicastOptions {
 		StagingPodTemplateLabels:       testApicastStagingPodLabels(),
 		ProductionPodTemplateLabels:    testApicastProductionPodLabels(),
 		Namespace:                      namespace,
-		ProductionTracingConfig:        &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary},
-		StagingTracingConfig:           &component.APIcastTracingConfig{TracingLibrary: component.APIcastDefaultTracingLibrary},
+		ProductionTracingConfig:        &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary},
+		StagingTracingConfig:           &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary},
 		AdditionalPodAnnotations:       map[string]string{APIcastEnvironmentCMAnnotation: "788712912"},
 	}
 }
