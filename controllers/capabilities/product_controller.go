@@ -37,7 +37,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	"k8s.io/apimachinery/pkg/types"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ProductReconciler reconciles a Product object
@@ -148,6 +147,12 @@ func (r *ProductReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 		reqLogger.Info("resource defaults updated. Requeueing.")
 		return ctrl.Result{Requeue: true}, nil
+	}
+
+	if product.Spec.OIDCSpec() != nil {
+		if product.Spec.OIDCSpec().IssuerEndpoint == "" {
+			product.Spec.OIDCSpec().IssuerEndpoint, err = r.getIssuerEndpointFromSecret(product)
+		}
 	}
 
 	statusReconciler, reconcileErr := r.reconcile(product)
@@ -423,12 +428,16 @@ func (r *ProductReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func GetIssuerEndpointFromSecret(client k8sclient.Client, secretName string, ns string) (string, error) {
+func (r *ProductReconciler) getIssuerEndpointFromSecret(product *capabilitiesv1beta1.Product) (string, error) {
+	if product.Spec.OIDCSpec().IssuerEndpointRef == nil {
+		return "", fmt.Errorf("IssuerEndpointRef not set in OIDCSpec")
+	}
+
 	secret := &corev1.Secret{}
-	err := client.Get(context.TODO(),
+	err := r.Client().Get(context.TODO(),
 		types.NamespacedName{
-			Name:      secretName,
-			Namespace: ns,
+			Name:      product.Spec.OIDCSpec().IssuerEndpointRef.Name,
+			Namespace: product.Namespace,
 		},
 		secret)
 	if err != nil {

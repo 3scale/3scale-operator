@@ -382,22 +382,28 @@ func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.Exte
 	if p.openapiCR.Spec.OIDC == nil {
 		return nil
 	}
+	tmpHeaders := "headers"
 
 	authSpec := &capabilitiesv1beta1.AuthenticationSpec{
 		OIDC: &capabilitiesv1beta1.OIDCSpec{
-			IssuerType: p.openapiCR.Spec.OIDC.IssuerType,
-			Security:   p.desiredPrivateAPISecurity(),
+			IssuerType:        p.openapiCR.Spec.OIDC.IssuerType,
+			IssuerEndpoint:    p.openapiCR.Spec.OIDC.IssuerEndpoint,
+			IssuerEndpointRef: p.openapiCR.Spec.OIDC.IssuerEndpointRef,
+			Security:          p.desiredPrivateAPISecurity(),
 			AuthenticationFlow: &capabilitiesv1beta1.OIDCAuthenticationFlowSpec{
 				StandardFlowEnabled:       false,
 				ImplicitFlowEnabled:       false,
 				DirectAccessGrantsEnabled: false,
 				ServiceAccountsEnabled:    false,
 			},
+			JwtClaimWithClientID:     p.openapiCR.Spec.OIDC.JwtClaimWithClientID,
+			JwtClaimWithClientIDType: p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType,
+			CredentialsLoc:           &tmpHeaders,
 		},
 	}
 
 	if secReq.Value.Type == "openIdConnect" {
-		p.setOIDCAuthenticationParams(authSpec, secReq)
+		p.setOIDCAuthenticationParams(authSpec)
 	} else { // oauth2
 		p.setOauth2AuthenticationParams(authSpec, secReq)
 	}
@@ -405,62 +411,17 @@ func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.Exte
 	return authSpec
 }
 
-func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
-	tmpHeaders := "headers"
-	authSpec.OIDC.CredentialsLoc = &tmpHeaders
-
-	issuerEndpoint, err := p.getIssuerEndpoint()
-	if err != nil {
-		p.Logger().Info("can't get issuerEndpoint value from OpenAPI CR; not set\n")
-		issuerEndpoint = ""
-	}
-
-	if p.openapiCR.Spec.OIDC != nil {
-		authSpec.OIDC.IssuerType = p.openapiCR.Spec.OIDC.IssuerType
-		authSpec.OIDC.IssuerEndpoint = issuerEndpoint
-		authSpec.OIDC.JwtClaimWithClientID = p.openapiCR.Spec.OIDC.JwtClaimWithClientID
-		authSpec.OIDC.JwtClaimWithClientIDType = p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType
-
-		if p.openapiCR.Spec.OIDC.AuthenticationFlow != nil {
-			authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.StandardFlowEnabled
-			authSpec.OIDC.AuthenticationFlow.ImplicitFlowEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ImplicitFlowEnabled
-			authSpec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled
-			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ServiceAccountsEnabled
-		}
-	}
-}
-
-func (p *OpenAPIProductReconciler) parseOIDCCredentialsLoc(inField string) *string {
-	tmpQuery := "query"
-	tmpHeaders := "headers"
-	tmpAuthorisation := "authorisation"
-	switch inField {
-	case "query":
-		return &tmpQuery
-	case "header":
-		return &tmpHeaders
-	case "authorisation":
-		return &tmpAuthorisation
-	default:
-		return nil
+func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec) {
+	if p.openapiCR.Spec.OIDC.AuthenticationFlow != nil && authSpec != nil && authSpec.OIDC != nil && authSpec.OIDC.AuthenticationFlow != nil {
+		authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.StandardFlowEnabled
+		authSpec.OIDC.AuthenticationFlow.ImplicitFlowEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ImplicitFlowEnabled
+		authSpec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled
+		authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ServiceAccountsEnabled
 	}
 }
 
 func (p *OpenAPIProductReconciler) setOauth2AuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
-	*authSpec.OIDC.CredentialsLoc = "header"
-
-	issuerEndpoint, err := p.getIssuerEndpoint()
-	if err != nil {
-		p.Logger().Info("can't get issuerEndpoint value from OpenAPI CR; not set\n")
-		issuerEndpoint = ""
-	}
-
-	if p.openapiCR.Spec.OIDC != nil {
-		authSpec.OIDC.IssuerType = p.openapiCR.Spec.OIDC.IssuerType
-		authSpec.OIDC.IssuerEndpoint = issuerEndpoint
-		authSpec.OIDC.JwtClaimWithClientID = p.openapiCR.Spec.OIDC.JwtClaimWithClientID
-		authSpec.OIDC.JwtClaimWithClientIDType = p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType
-
+	if authSpec != nil && authSpec.OIDC != nil && authSpec.OIDC.AuthenticationFlow != nil {
 		if secReq.Value.Flows.AuthorizationCode != nil {
 			authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = true
 		}
@@ -474,27 +435,4 @@ func (p *OpenAPIProductReconciler) setOauth2AuthenticationParams(authSpec *capab
 			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = true
 		}
 	}
-}
-
-func (p *OpenAPIProductReconciler) getIssuerEndpoint() (string, error) {
-
-	if p.openapiCR.Spec.OIDC.IssuerEndpoint != "" {
-		return p.openapiCR.Spec.OIDC.IssuerEndpoint, nil
-	}
-
-	if &p.openapiCR.Spec.OIDC.IssuerEndpointRef == nil {
-		return "", nil
-	}
-
-	namespace := p.openapiCR.Namespace
-	if p.openapiCR.Spec.OIDC.IssuerEndpointRef.Namespace != "" {
-		namespace = p.openapiCR.Spec.OIDC.IssuerEndpointRef.Namespace
-	}
-
-	issuerEndpoint, err := GetIssuerEndpointFromSecret(p.Client(), p.openapiCR.Spec.OIDC.IssuerEndpointRef.Name, namespace)
-	if err != nil {
-		return "", err
-	}
-
-	return issuerEndpoint, nil
 }

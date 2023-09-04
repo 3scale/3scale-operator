@@ -358,7 +358,7 @@ type OIDCSpec struct {
 
 	// IssuerEndpointRef  is the reference to OIDC issuer Secret that contains IssuerEndpoint
 	// +optional
-	IssuerEndpointRef corev1.SecretReference `json:"issuerEndpointRef,omitempty"`
+	IssuerEndpointRef *corev1.SecretReference `json:"issuerEndpointRef,omitempty"`
 
 	// AuthenticationFlow specifies OAuth2.0 authorization grant type
 	// +optional
