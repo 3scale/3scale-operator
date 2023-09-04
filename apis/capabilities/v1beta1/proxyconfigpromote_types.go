@@ -29,7 +29,9 @@ const (
 
 	// ProxyPromoteConfigReadyConditionType indicates the activedoc has been successfully synchronized.
 	// Steady state
-	ProxyPromoteConfigReadyConditionType common.ConditionType = "Ready"
+	ProxyPromoteConfigReadyConditionType      common.ConditionType = "Ready"
+	ProxyPromoteConfigFailedConditionType     common.ConditionType = "Failed"
+	ProxyPromoteConfigInProgressConditionType common.ConditionType = "In-progress"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -29,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"strconv"
 )
 
 // ProxyConfigPromoteReconciler reconciles a ProxyConfigPromote object
@@ -48,13 +49,10 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.R
 	err := r.Client().Get(r.Context(), req.NamespacedName, proxyConfigPromote)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			reqLogger.Info("resource not found. Ignoring since object must have been deleted")
 			return ctrl.Result{}, nil
 		}
-		// Error reading the object - requeue the request
 		return ctrl.Result{}, err
 	}
 
@@ -65,25 +63,32 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.R
 		}
 		reqLogger.V(1).Info(string(jsonData))
 	}
-	// get product
-	product := &capabilitiesv1beta1.Product{}
-	projectMeta := types.NamespacedName{
-		Name:      proxyConfigPromote.Spec.ProductCRName,
-		Namespace: req.Namespace,
-	}
 
-	err = r.Client().Get(r.Context(), projectMeta, product)
+	product := &capabilitiesv1beta1.Product{}
+
+	// Retrieve product CR, on failed retrieval update status and requeue
+	err = r.Client().Get(r.Context(), types.NamespacedName{Name: proxyConfigPromote.Spec.ProductCRName, Namespace: proxyConfigPromote.Namespace}, product)
 	if err != nil {
+		// If the product CR is not found, update status and requeue
 		if errors.IsNotFound(err) {
 			statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", "product not found", 0, 0, err)
-			statusReconciler.Reconcile()
 			reqLogger.Info("product not found. Ignoring since object must have been deleted")
-			return ctrl.Result{}, err
+			statusResult, statusErr := statusReconciler.Reconcile()
+			// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
+			if statusErr != nil {
+				return ctrl.Result{}, statusErr
+			}
+			if statusResult.Requeue {
+				reqLogger.Info("Reconciling status not finished. Requeueing.")
+				return statusResult, nil
+			}
 		}
+
+		// If API call error, return err
 		return ctrl.Result{}, err
 	}
 
-	// get providerAccountRef from product
+	// Retrieve providerAccountRef
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), proxyConfigPromote.GetNamespace(), product.Spec.ProviderAccountRef, r.Logger())
 	if err != nil {
 		return ctrl.Result{}, err
@@ -96,22 +101,29 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, err
 	}
 
-	//if proxyConfigPromote.Status.State != "Completed" {
+	// reconcile spec of the proxyConfigPromote only if the CR isn't already marked as "Completed" since the CR is a one off update.
 	if !proxyConfigPromote.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType) {
 		statusReconciler, reconcileErr := r.proxyConfigPromoteReconciler(proxyConfigPromote, reqLogger, threescaleAPIClient, product)
-		statusResult, statusUpdateErr := statusReconciler.Reconcile()
-		if statusUpdateErr != nil {
-			if reconcileErr != nil {
-				return ctrl.Result{}, fmt.Errorf("Failed to reconcile proxyConfigPromote: %v. Failed to update proxyConfigPromote status: %w", reconcileErr, statusUpdateErr)
-			}
 
-			return ctrl.Result{}, fmt.Errorf("Failed to update proxyConfigPromote status: %w", statusUpdateErr)
+		// If status reconciler is not nil, proceed with reconciling the status
+		if statusReconciler != nil {
+			statusResult, statusErr := statusReconciler.Reconcile()
+			// Reconcile status first as the reconcilerError might need to be updated to the status section of the CR before requeueing
+			if statusErr != nil {
+				return ctrl.Result{}, statusErr
+			}
+			if statusResult.Requeue {
+				reqLogger.Info("Reconciling status not finished. Requeueing.")
+				return statusResult, nil
+			}
 		}
 
-		if statusResult.Requeue {
-			return statusResult, nil
+		// If reconcile error but no status update required, requeue.
+		if reconcileErr != nil {
+			return ctrl.Result{}, reconcileErr
 		}
 	}
+
 	if (proxyConfigPromote.Spec.DeleteCR != nil && *proxyConfigPromote.Spec.DeleteCR) && proxyConfigPromote.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType) {
 		err := r.DeleteResource(proxyConfigPromote)
 		if err != nil && !errors.IsNotFound(err) {
@@ -119,28 +131,30 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.R
 		}
 	}
 
+	reqLogger.Info("Successfully reconciled")
 	return ctrl.Result{}, nil
 }
 
 func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigPromote *capabilitiesv1beta1.ProxyConfigPromote, reqLogger logr.Logger, threescaleAPIClient *threescaleapi.ThreeScaleClient, product *capabilitiesv1beta1.Product) (*ProxyConfigPromoteStatusReconciler, error) {
-
 	var latestStagingVersion int
 	var latestProductionVersion int
-	//get product
 
+	// Only proceed with proxyConfigPromote if status of the product is marked as "Completed"
 	if product.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProductSyncedConditionType) {
 		productID := product.Status.ID
 		productIDInt64 := *productID
 		productIDStr := strconv.Itoa(int(productIDInt64))
 
+		// If wanting to promote to Stage but not production.
 		if proxyConfigPromote.Spec.Production == nil {
-			// check the existing config to get the lastUpdate time
-			_, err := threescaleAPIClient.DeployProductProxy(*product.Status.ID)
+			// Promote to stage
+			_, err := threescaleAPIClient.DeployProductProxy(*productID)
 			if err != nil {
 				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", productIDStr, 0, 0, err)
 				return statusReconciler, err
 			}
 
+			// Retrieve latest stage version
 			stageElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "sandbox")
 			if err != nil {
 				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", productIDStr, 0, 0, err)
@@ -148,6 +162,7 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 			}
 			latestStagingVersion = stageElement.ProxyConfig.Version
 
+			// Fetch production state, if product has not been promoted to production yet the state would be 0.
 			productionElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "production")
 			if err != nil {
 				if !threescaleapi.IsNotFound(err) {
@@ -160,7 +175,10 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 			statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Completed", productIDStr, latestProductionVersion, latestStagingVersion, err)
 			return statusReconciler, nil
 		}
+
+		// If wanting to promote to Production.
 		if *proxyConfigPromote.Spec.Production {
+			// Before promoting to Production we want to update latest changes to staging first
 			_, err := threescaleAPIClient.DeployProductProxy(*product.Status.ID)
 			if err != nil {
 				reqLogger.Info("Error", "Config version already exists in stage, skipping promotion to stage ", err)
@@ -168,6 +186,7 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 				return statusReconciler, err
 			}
 
+			// Retrieving latest stage version
 			stageElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "sandbox")
 			if err != nil {
 				reqLogger.Info("Error while finding sandbox version")
@@ -176,30 +195,34 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 			}
 			latestStagingVersion = stageElement.ProxyConfig.Version
 
+			// Retrieving latest production version
 			productionElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "production")
 			if err != nil {
 				reqLogger.Info("Error while finding production version")
 				if !threescaleapi.IsNotFound(err) {
-					//status := r.proxyConfigPromoteStatus(productIDStr, proxyConfigPromote, err, reqLogger, "Failed")
 					statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", productIDStr, 0, latestStagingVersion, err)
 					return statusReconciler, err
 				}
 			}
 			latestProductionVersion = productionElement.ProxyConfig.Version
 
+			// Promoting staging latest to production
 			_, err = threescaleAPIClient.PromoteProxyConfig(productIDStr, "sandbox", strconv.Itoa(stageElement.ProxyConfig.Version), "production")
 			if err != nil {
-				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", productIDStr, latestProductionVersion, latestStagingVersion, err)
+				// The version can already be in the production meaning that it can't be updated again, the proxyPromote is not going to be deleted by the operator but instead, will notify the user of the issue
+				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, string(capabilitiesv1beta1.ProxyPromoteConfigFailedConditionType), productIDStr, latestProductionVersion, latestStagingVersion, err)
 				return statusReconciler, err
 			} else {
 				latestProductionVersion = latestStagingVersion
 			}
-
 		}
+
 		statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Completed", productIDStr, latestProductionVersion, latestStagingVersion, nil)
 		return statusReconciler, nil
 	} else {
-		err := fmt.Errorf("Proudct CR is not ready")
+		// If product CR is not ready, update the status and requeue based on err.
+		reqLogger.Info("proudct CR is not ready")
+		err := fmt.Errorf("proudct CR is not ready")
 		statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, "Failed", "", 0, 0, err)
 		return statusReconciler, err
 	}

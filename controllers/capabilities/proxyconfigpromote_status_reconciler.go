@@ -61,7 +61,7 @@ func (s *ProxyConfigPromoteStatusReconciler) Reconcile() (reconcile.Result, erro
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		return reconcile.Result{}, fmt.Errorf("Failed to update status: %w", updateErr)
+		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
 	return reconcile.Result{}, nil
 }
@@ -74,19 +74,28 @@ func (s *ProxyConfigPromoteStatusReconciler) calculateStatus() (*capabilitiesv1b
 	newStatus.LatestStagingVersion = s.latestStagingVersion
 
 	newStatus.Conditions = s.resource.Status.Conditions.Copy()
-	newStatus.Conditions.SetCondition(s.readyCondition(s.state))
+	newStatus.Conditions.SetCondition(s.establishCondition())
 
 	return newStatus, nil
 }
 
-func (s *ProxyConfigPromoteStatusReconciler) readyCondition(state string) common.Condition {
+func (s *ProxyConfigPromoteStatusReconciler) establishCondition() common.Condition {
 	condition := common.Condition{
-		Type:   capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType,
-		Status: corev1.ConditionFalse,
+		Status:  corev1.ConditionFalse,
+		Type:    capabilitiesv1beta1.ProxyPromoteConfigInProgressConditionType,
+		Message: "in progress",
 	}
 
-	if state == "Completed" {
+	if s.state == "Completed" {
 		condition.Status = corev1.ConditionTrue
+		condition.Type = capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType
+		condition.Message = "3scale product has been successfully promoted, any further interactions with this CR (apart from deletion) won't be applied"
+	}
+
+	if s.state == "Failed" {
+		condition.Status = corev1.ConditionTrue
+		condition.Type = capabilitiesv1beta1.ProxyPromoteConfigFailedConditionType
+		condition.Message = s.reconcileError.Error()
 	}
 
 	return condition
