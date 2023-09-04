@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"context"
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
@@ -11,12 +9,7 @@ import (
 	v1 "github.com/openshift/api/config/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	fakeclientset "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/tools/record"
 	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"testing"
@@ -326,26 +319,6 @@ func getApplicationDeveloperAccount() (CR *capabilitiesv1beta1.DeveloperAccount)
 	return CR
 }
 
-func getApplicationBaseReconciler() (baseReconciler *reconcilers.BaseReconciler) {
-	// Register operator types with the runtime scheme.
-	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, getApplicationCR())
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, getApplicationProductCR())
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, getApiManger())
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, getApplicationDeveloperAccount())
-	log := logf.Log.WithName("Application status reconciler test")
-	ctx := context.TODO()
-	// Objects to track in the fake client.
-	objs := []runtime.Object{getApplicationCR(), getProviderAccount(), getApiManger(), getApplicationProductList(), getApplicationDeveloperAccount(), getProviderAccountRefSecret()}
-	// Create a fake client to mock API calls.
-	cl := fake.NewFakeClientWithScheme(s, objs...)
-	clientAPIReader := fake.NewFakeClientWithScheme(s, objs...)
-	clientset := fakeclientset.NewSimpleClientset()
-	recorder := record.NewFakeRecorder(10000)
-	baseReconciler = reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
-	return baseReconciler
-}
-
 func TestApplicationStatusReconciler_Reconcile(t *testing.T) {
 	type fields struct {
 		BaseReconciler      *reconcilers.BaseReconciler
@@ -364,7 +337,7 @@ func TestApplicationStatusReconciler_Reconcile(t *testing.T) {
 		{
 			name: "Test Completed status reconciler for Application",
 			fields: fields{
-				BaseReconciler:      getApplicationBaseReconciler(),
+				BaseReconciler:      getBaseReconciler(getProductList(), getApplicationCR()),
 				applicationResource: getApplicationCR(),
 				entity:              nil,
 				providerAccountHost: "",
@@ -428,7 +401,7 @@ func TestApplicationStatusReconciler_calculateStatus(t *testing.T) {
 		{
 			name: "Test Ready status Application true",
 			fields: fields{
-				BaseReconciler:      getApplicationBaseReconciler(),
+				BaseReconciler:      getBaseReconciler(),
 				applicationResource: getApplicationCR(),
 				entity:              nil,
 				providerAccountHost: "",

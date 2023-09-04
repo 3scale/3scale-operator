@@ -209,7 +209,7 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 		{
 			name: "Test StatusReconciler",
 			fields: fields{
-				BaseReconciler:          getBaseReconciler(),
+				BaseReconciler:          getBaseReconciler(getProxyConfigPromoteCR(), getProviderAccount(), getApiManger(), getProductList()),
 				resource:                getProxyConfigPromoteCR(),
 				state:                   "Completed",
 				productID:               "3",
