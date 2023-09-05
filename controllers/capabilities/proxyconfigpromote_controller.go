@@ -210,7 +210,7 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 			_, err = threescaleAPIClient.PromoteProxyConfig(productIDStr, "sandbox", strconv.Itoa(stageElement.ProxyConfig.Version), "production")
 			if err != nil {
 				// The version can already be in the production meaning that it can't be updated again, the proxyPromote is not going to be deleted by the operator but instead, will notify the user of the issue
-				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, string(capabilitiesv1beta1.ProxyPromoteConfigFailedConditionType), productIDStr, latestProductionVersion, latestStagingVersion, err)
+				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, string(capabilitiesv1beta1.ProxyPromoteConfigFailedConditionType), productIDStr, latestProductionVersion, latestStagingVersion, fmt.Errorf("can't promote to production as no product changes detected, delete the proxyConfigPromote CR or introduce changes to stage env first to proceed"))
 				return statusReconciler, err
 			} else {
 				latestProductionVersion = latestStagingVersion
