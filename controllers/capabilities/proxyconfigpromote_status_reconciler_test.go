@@ -87,7 +87,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 	type fields struct {
 		BaseReconciler          *reconcilers.BaseReconciler
 		resource                *capabilitiesv1beta1.ProxyConfigPromote
-		state                   string
 		productID               string
 		latestProductionVersion int
 		latestStagingVersion    int
@@ -105,7 +104,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 			fields: fields{
 				BaseReconciler:          getBaseReconciler(),
 				resource:                getProxyConfigPromoteCR(),
-				state:                   "Completed",
 				productID:               "3",
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
@@ -130,7 +128,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 			fields: fields{
 				BaseReconciler:          getBaseReconciler(),
 				resource:                getProxyConfigPromoteCR(),
-				state:                   "Failed",
 				productID:               "3",
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
@@ -156,7 +153,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 			s := &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          tt.fields.BaseReconciler,
 				resource:                tt.fields.resource,
-				state:                   tt.fields.state,
 				productID:               tt.fields.productID,
 				latestProductionVersion: tt.fields.latestProductionVersion,
 				latestStagingVersion:    tt.fields.latestStagingVersion,
@@ -227,7 +223,6 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 			s := &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          tt.fields.BaseReconciler,
 				resource:                tt.fields.resource,
-				state:                   tt.fields.state,
 				productID:               tt.fields.productID,
 				latestProductionVersion: tt.fields.latestProductionVersion,
 				latestStagingVersion:    tt.fields.latestStagingVersion,
