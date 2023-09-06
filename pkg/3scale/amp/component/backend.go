@@ -393,7 +393,6 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, backend.buildBackendCommonEnv()...)
 	result = append(result,
-		helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"),
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK", "system-events-hook", "URL"),
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
 	)

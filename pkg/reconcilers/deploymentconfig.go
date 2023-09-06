@@ -10,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
@@ -55,21 +54,7 @@ func GenericBackendMutators() []DCMutateFn {
 		DeploymentConfigPriorityClassMutator,
 		DeploymentConfigTopologySpreadConstraintsMutator,
 		DeploymentConfigPodTemplateAnnotationsMutator,
-		DeploymentConfigEnvMutator,
 	}
-}
-
-func DeploymentConfigEnvMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
-	update := false
-	if desired.Name == component.BackendWorkerName {
-		if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Env, desired.Spec.Template.Spec.Containers[0].Env) {
-			diff := cmp.Diff(existing.Spec.Template.Spec.Containers[0].Env, desired.Spec.Template.Spec.Containers[0].Env)
-			log.Info(fmt.Sprintf("%s spec.template.spec.containers[0].Env has changed: %s", common.ObjectInfo(desired), diff))
-			existing.Spec.Template.Spec.Containers[0].Env = desired.Spec.Template.Spec.Containers[0].Env
-			update = true
-		}
-	}
-	return update, nil
 }
 
 func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
