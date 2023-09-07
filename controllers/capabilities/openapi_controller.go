@@ -20,15 +20,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/url"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"net/url"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
@@ -41,6 +45,8 @@ import (
 // OpenAPIReconciler reconciles a OpenAPI object
 type OpenAPIReconciler struct {
 	*reconcilers.BaseReconciler
+	SecretLabelSelector apimachinerymetav1.LabelSelector
+	WatchedNamespace    string
 }
 
 // blank assignment to verify that OpenAPIReconciler implements reconcile.Reconciler
@@ -124,8 +130,24 @@ func (r *OpenAPIReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 func (r *OpenAPIReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	secretToOpenApiEventMapper := &SecretToOpenApiEventMapper{
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("SecretToOpenApiEventMapper"),
+		Namespace: r.WatchedNamespace,
+	}
+
+	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
+	if err != nil {
+		return nil
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&capabilitiesv1beta1.OpenAPI{}).
+		Watches(
+			&source.Kind{Type: &corev1.Secret{}},
+			handler.EnqueueRequestsFromMapFunc(secretToOpenApiEventMapper.Map),
+			builder.WithPredicates(labelSelectorPredicate),
+		).
 		Complete(r)
 }
 
@@ -178,6 +200,16 @@ func (r *OpenAPIReconciler) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI
 	if err != nil {
 		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
 		return statusReconciler, ctrl.Result{}, err
+	}
+
+	changed, err := r.reconcileOpenAPISecretLabels(openapiCR, r.Context())
+	if err != nil {
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+		return statusReconciler, ctrl.Result{}, err
+	}
+	if changed {
+		err = r.Client().Update(r.Context(), openapiCR)
+		logger.Info("reconciling", "error", err)
 	}
 
 	statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, productSynced)
@@ -355,4 +387,30 @@ func (r *OpenAPIReconciler) readOpenAPIFromURL(resource *capabilitiesv1beta1.Ope
 	}
 
 	return openapiObj, nil
+}
+
+func (r *OpenAPIReconciler) reconcileOpenAPISecretLabels(openapiCR *capabilitiesv1beta1.OpenAPI, ctx context.Context) (bool, error) {
+	openApiSecretUID, err := r.getOpenApiSecretUID(openapiCR, ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return replaceOpenAPISecretLabels(openapiCR, openApiSecretUID), nil
+}
+
+func (r *OpenAPIReconciler) getOpenApiSecretUID(openapiCR *capabilitiesv1beta1.OpenAPI, ctx context.Context) (string, error) {
+	secret := &corev1.Secret{}
+	objectKey := client.ObjectKey{
+		Name:      openapiCR.Spec.OpenAPIRef.SecretRef.Name,
+		Namespace: openapiCR.Spec.OpenAPIRef.SecretRef.Namespace,
+	}
+
+	err := r.Client().Get(ctx, objectKey, secret)
+	r.Logger().V(1).Info("read secret", "objectKey", objectKey, "error", err)
+	if err != nil {
+		return "", err
+	}
+
+	uid := string(secret.GetUID())
+	return uid, nil
 }
