@@ -327,7 +327,6 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			want: &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          getBaseReconciler(),
 				resource:                getProxyConfigPromoteCRStaging(),
-				state:                   "Completed",
 				productID:               "3",
 				latestProductionVersion: 0,
 				latestStagingVersion:    1,
@@ -350,7 +349,6 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			want: &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          getBaseReconciler(),
 				resource:                getProxyConfigPromoteCRProduction(),
-				state:                   "Completed",
 				productID:               "3",
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
@@ -382,9 +380,6 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			if (err != nil) && tt.wantErr {
 				t.Logf("proxyConfigPromoteReconciler(), wantErr %v", tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got.state, tt.want.state) {
-				t.Errorf("proxyConfigPromoteReconciler() got.state = %v, want.state %v", got.state, tt.want.state)
 			}
 			if !reflect.DeepEqual(got.productID, tt.want.productID) {
 				t.Errorf("proxyConfigPromoteReconciler() got.productID = %v, want.productID %v", got.productID, tt.want.productID)

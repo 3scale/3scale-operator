@@ -68,27 +68,18 @@ func getProxyConfigPromoteCR() (CR *capabilitiesv1beta1.ProxyConfigPromote) {
 	return CR
 }
 
-func getBaseReconciler() (baseReconciler *reconcilers.BaseReconciler) {
+func getBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.BaseReconciler) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, getProxyConfigPromoteCR())
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, getProductCR())
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, &appsv1alpha1.APIManagerList{
-		TypeMeta: metav1.TypeMeta{},
-		ListMeta: metav1.ListMeta{},
-		Items:    nil,
-	})
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, getApiManger())
-	log := logf.Log.WithName("proxyPromoteConfig status reconciler test")
-	ctx := context.TODO()
-	// Objects to track in the fake client.
-	objs := []runtime.Object{getProxyConfigPromoteCR(), getProviderAccount(), getApiManger(), getProductList()}
+	capabilitiesv1beta1.AddToScheme(s)
+	appsv1alpha1.AddToScheme(s)
+
 	// Create a fake client to mock API calls.
-	cl := fake.NewFakeClientWithScheme(s, objs...)
-	clientAPIReader := fake.NewFakeClientWithScheme(s, objs...)
+	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objects...).Build()
+	log := logf.Log.WithName("proxyPromoteConfig status reconciler test")
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
-	baseReconciler = reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+	baseReconciler = reconcilers.NewBaseReconciler(context.TODO(), cl, s, cl, log, clientset.Discovery(), recorder)
 	return baseReconciler
 }
 
@@ -96,7 +87,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 	type fields struct {
 		BaseReconciler          *reconcilers.BaseReconciler
 		resource                *capabilitiesv1beta1.ProxyConfigPromote
-		state                   string
 		productID               string
 		latestProductionVersion int
 		latestStagingVersion    int
@@ -114,7 +104,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 			fields: fields{
 				BaseReconciler:          getBaseReconciler(),
 				resource:                getProxyConfigPromoteCR(),
-				state:                   "Completed",
 				productID:               "3",
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
@@ -139,7 +128,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 			fields: fields{
 				BaseReconciler:          getBaseReconciler(),
 				resource:                getProxyConfigPromoteCR(),
-				state:                   "Failed",
 				productID:               "3",
 				latestProductionVersion: 1,
 				latestStagingVersion:    1,
@@ -165,7 +153,6 @@ func TestProxyConfigPromoteStatusReconciler_calculateStatus(t *testing.T) {
 			s := &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          tt.fields.BaseReconciler,
 				resource:                tt.fields.resource,
-				state:                   tt.fields.state,
 				productID:               tt.fields.productID,
 				latestProductionVersion: tt.fields.latestProductionVersion,
 				latestStagingVersion:    tt.fields.latestStagingVersion,
@@ -218,7 +205,7 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 		{
 			name: "Test StatusReconciler",
 			fields: fields{
-				BaseReconciler:          getBaseReconciler(),
+				BaseReconciler:          getBaseReconciler(getProxyConfigPromoteCR(), getProviderAccount(), getApiManger(), getProductList()),
 				resource:                getProxyConfigPromoteCR(),
 				state:                   "Completed",
 				productID:               "3",
@@ -236,7 +223,6 @@ func TestProxyConfigPromoteStatusReconciler_Reconcile(t *testing.T) {
 			s := &ProxyConfigPromoteStatusReconciler{
 				BaseReconciler:          tt.fields.BaseReconciler,
 				resource:                tt.fields.resource,
-				state:                   tt.fields.state,
 				productID:               tt.fields.productID,
 				latestProductionVersion: tt.fields.latestProductionVersion,
 				latestStagingVersion:    tt.fields.latestStagingVersion,

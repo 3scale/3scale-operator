@@ -142,7 +142,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 		{
 			name: "Create application successful",
 			fields: fields{
-				BaseReconciler: getApplicationBaseReconciler(),
+				BaseReconciler: getBaseReconciler(getApplicationCR(), getProductList()),
 			},
 			args: args{
 				applicationResource: getApplicationCR(),
@@ -157,7 +157,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 				accountResource:         getApplicationDeveloperAccount(),
 			},
 			want: NewApplicationStatusReconciler(
-				getApplicationBaseReconciler(),
+				getBaseReconciler(getApplicationCR()),
 				getApplicationCR(),
 				getApplicationEntity(),
 				"https://3scale-admin.test.3scale.net",
@@ -167,7 +167,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 		{
 			name: "Attempt to create application with unknown Product and Account CR",
 			fields: fields{
-				BaseReconciler: getApplicationBaseReconciler(),
+				BaseReconciler: getBaseReconciler(),
 			},
 			args: args{
 				applicationResource: getFailedApplicationCR(),
@@ -186,7 +186,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 		{
 			name: "Attempt to create application with unknown Account CR name",
 			fields: fields{
-				BaseReconciler: getApplicationBaseReconciler(),
+				BaseReconciler: getBaseReconciler(),
 			},
 			args: args{
 				applicationResource: unknowAccountApplicationCR(),
@@ -205,7 +205,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 		{
 			name: "Attempt to create application with invalid applicacationPlanName",
 			fields: fields{
-				BaseReconciler: getApplicationBaseReconciler(),
+				BaseReconciler: getBaseReconciler(),
 			},
 			args: args{
 				applicationResource: getUnknownPlanApplicationCR(),
@@ -264,7 +264,7 @@ func TestApplicationReconciler_removeApplicationFrom3scale(t *testing.T) {
 		{
 			name: "Delete Application successfully",
 			fields: fields{
-				BaseReconciler: getApplicationBaseReconciler(),
+				BaseReconciler: getBaseReconciler(getApplicationCR(), getProviderAccount(), getApiManger(), getApplicationProductList(), getApplicationDeveloperAccount(), getProviderAccountRefSecret()),
 			},
 			args: args{
 				application: getApplicationDeleteCR(),

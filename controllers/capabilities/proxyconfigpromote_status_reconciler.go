@@ -15,7 +15,6 @@ import (
 type ProxyConfigPromoteStatusReconciler struct {
 	*reconcilers.BaseReconciler
 	resource                *capabilitiesv1beta1.ProxyConfigPromote
-	state                   string
 	productID               string
 	latestProductionVersion int
 	latestStagingVersion    int
@@ -23,11 +22,10 @@ type ProxyConfigPromoteStatusReconciler struct {
 	logger                  logr.Logger
 }
 
-func NewProxyConfigPromoteStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.ProxyConfigPromote, state string, productID string, latestProductionVersion int, latestStagingVersion int, reconcileError error) *ProxyConfigPromoteStatusReconciler {
+func NewProxyConfigPromoteStatusReconciler(b *reconcilers.BaseReconciler, resource *capabilitiesv1beta1.ProxyConfigPromote, productID string, latestProductionVersion int, latestStagingVersion int, reconcileError error) *ProxyConfigPromoteStatusReconciler {
 	return &ProxyConfigPromoteStatusReconciler{
 		BaseReconciler:          b,
 		resource:                resource,
-		state:                   state,
 		productID:               productID,
 		latestProductionVersion: latestProductionVersion,
 		latestStagingVersion:    latestStagingVersion,
@@ -61,7 +59,7 @@ func (s *ProxyConfigPromoteStatusReconciler) Reconcile() (reconcile.Result, erro
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		return reconcile.Result{}, fmt.Errorf("Failed to update status: %w", updateErr)
+		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
 	return reconcile.Result{}, nil
 }
@@ -74,19 +72,35 @@ func (s *ProxyConfigPromoteStatusReconciler) calculateStatus() (*capabilitiesv1b
 	newStatus.LatestStagingVersion = s.latestStagingVersion
 
 	newStatus.Conditions = s.resource.Status.Conditions.Copy()
-	newStatus.Conditions.SetCondition(s.readyCondition(s.state))
+	newStatus.Conditions.SetCondition(s.readyCondition())
+	newStatus.Conditions.SetCondition(s.failedCondition())
 
 	return newStatus, nil
 }
 
-func (s *ProxyConfigPromoteStatusReconciler) readyCondition(state string) common.Condition {
+func (s *ProxyConfigPromoteStatusReconciler) readyCondition() common.Condition {
 	condition := common.Condition{
 		Type:   capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType,
 		Status: corev1.ConditionFalse,
 	}
 
-	if state == "Completed" {
+	if s.reconcileError == nil {
 		condition.Status = corev1.ConditionTrue
+		condition.Message = "3scale product has been successfully promoted, any further interactions with this CR (apart from deletion) won't be applied"
+	}
+
+	return condition
+}
+
+func (s *ProxyConfigPromoteStatusReconciler) failedCondition() common.Condition {
+	condition := common.Condition{
+		Type:   capabilitiesv1beta1.ProxyPromoteConfigFailedConditionType,
+		Status: corev1.ConditionFalse,
+	}
+
+	if s.reconcileError != nil {
+		condition.Status = corev1.ConditionTrue
+		condition.Message = s.reconcileError.Error()
 	}
 
 	return condition

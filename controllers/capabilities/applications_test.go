@@ -110,7 +110,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 		{
 			name: "Application CR no change ",
 			fields: fields{
-				BaseReconciler:      getApplicationBaseReconciler(),
+				BaseReconciler:      getBaseReconciler(),
 				applicationResource: getApplicationCR(),
 				applicationEntity:   getApplicationEntity(),
 				accountResource:     getApplicationDeveloperAccount(),
@@ -123,7 +123,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 		{
 			name: "Application CR setting state to suspend",
 			fields: fields{
-				BaseReconciler:      getApplicationBaseReconciler(),
+				BaseReconciler:      getBaseReconciler(),
 				applicationResource: getApplicationCRSuspend(),
 				applicationEntity:   getApplicationEntity(),
 				accountResource:     getApplicationDeveloperAccount(),
@@ -136,7 +136,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 		{
 			name: "Application CR setting state to live",
 			fields: fields{
-				BaseReconciler:      getApplicationBaseReconciler(),
+				BaseReconciler:      getBaseReconciler(),
 				applicationResource: getApplicationCR(),
 				applicationEntity:   getApplicationEntitySuspended(),
 				accountResource:     getApplicationDeveloperAccount(),
@@ -149,7 +149,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 		{
 			name: "Application CR change application Plan",
 			fields: fields{
-				BaseReconciler:      getApplicationBaseReconciler(),
+				BaseReconciler:      getBaseReconciler(),
 				applicationResource: getApplicationCR(),
 				applicationEntity:   getApplicationEntityPlanID(),
 				accountResource:     getApplicationDeveloperAccount(),
