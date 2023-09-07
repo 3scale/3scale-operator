@@ -94,6 +94,15 @@ oc create secret generic custom-policy-example-1 \
   --from-file=./example.lua
 ```
 
+By default, content changes in the secret will not be noticed by the 3scale operator.
+The 3scale operator allows the monitoring of secret changes, this can be achieved by adding the 
+`apimanager.apps.3scale.net/watched-by=apimanager` label to the required secret.
+With the label in place, when the content of the secret changes, the operator will update the deployment of the apicast 
+where that secret is used (staging or production).  
+The operator will not take *ownership* of the secret in any way.
+```
+kubectl label secret custom-policy-example-1 apimanager.apps.3scale.net/watched-by=apimanager
+```
 
 #### Configure and deploy APIManager CR with the custom policy
 
