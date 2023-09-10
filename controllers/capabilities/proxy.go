@@ -86,7 +86,10 @@ func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
 
 	t.syncProxyGatewayResponse(params, existing)
 
-	t.syncProxyOIDC(params, existing)
+	err = t.syncProxyOIDC(params, existing)
+	if err != nil {
+		return fmt.Errorf("Error syncProxyOIDC: %w", err)
+	}
 
 	if len(params) > 0 {
 		err := t.productEntity.UpdateProxy(params)
@@ -188,14 +191,25 @@ func (t *ProductThreescaleReconciler) syncProxyGatewayResponse(params threescale
 	}
 }
 
-func (t *ProductThreescaleReconciler) syncProxyOIDC(params threescaleapi.Params, existing *threescaleapi.ProxyJSON) {
+func (t *ProductThreescaleReconciler) syncProxyOIDC(params threescaleapi.Params, existing *threescaleapi.ProxyJSON) error {
 	oidcSpec := t.resource.Spec.OIDCSpec()
 	if oidcSpec == nil {
-		return
+		return nil
 	}
 
-	if existing.Element.OidcIssuerEndpoint != oidcSpec.IssuerEndpoint {
-		params["oidc_issuer_endpoint"] = oidcSpec.IssuerEndpoint
+	// If plain value is not nil - use plain value as precedence over secret
+	issuerEndpoint := oidcSpec.IssuerEndpoint
+	if issuerEndpoint == "" {
+		secretSource := helper.NewSecretSource(t.Client(), t.resource.Namespace)
+		val, err := secretSource.RequiredFieldValueFromRequiredSecret(oidcSpec.IssuerEndpointRef.Name, "issuerEndpoint")
+		if err != nil {
+			return err
+		}
+		issuerEndpoint = val
+	}
+
+	if existing.Element.OidcIssuerEndpoint != issuerEndpoint {
+		params["oidc_issuer_endpoint"] = issuerEndpoint
 	}
 
 	if existing.Element.OidcIssuerType != oidcSpec.IssuerType {
@@ -209,4 +223,5 @@ func (t *ProductThreescaleReconciler) syncProxyOIDC(params threescaleapi.Params,
 	if oidcSpec.JwtClaimWithClientIDType != nil && existing.Element.JwtClaimWithClientIDType != *oidcSpec.JwtClaimWithClientIDType {
 		params["jwt_claim_with_client_id_type"] = *oidcSpec.JwtClaimWithClientIDType
 	}
+	return nil
 }
