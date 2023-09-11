@@ -605,7 +605,7 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 			Name: customPolicy.VolumeName(),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: customPolicy.SecretRef.Name,
+					SecretName: customPolicy.Secret.Name,
 				},
 			},
 		})
@@ -661,7 +661,7 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 			Name: customPolicy.VolumeName(),
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: customPolicy.SecretRef.Name,
+					SecretName: customPolicy.Secret.Name,
 				},
 			},
 		})
@@ -825,7 +825,7 @@ func (apicast *Apicast) stagingPodAnnotations() map[string]string {
 		"prometheus.io/port":   "9421",
 	}
 
-	for key, val := range apicast.Options.AdditionalPodAnnotations {
+	for key, val := range apicast.Options.StagingAdditionalPodAnnotations {
 		annotations[key] = val
 	}
 
@@ -842,7 +842,7 @@ func (apicast *Apicast) productionPodAnnotations() map[string]string {
 		"prometheus.io/port":   "9421",
 	}
 
-	for key, val := range apicast.Options.AdditionalPodAnnotations {
+	for key, val := range apicast.Options.ProductionAdditionalPodAnnotations {
 		annotations[key] = val
 	}
 

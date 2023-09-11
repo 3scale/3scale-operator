@@ -155,16 +155,29 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		trueValue                  = true
 		oneValue             int64 = 1
 
+		p1Secret = &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "someSecretP1",
+				Namespace: namespace, // Update this with the appropriate namespace
+			},
+			Data: map[string][]byte{
+				"apicast-policy.json": []byte("testApicastPolicy"),
+				"example.lua":         []byte("testExampleLua"),
+				"init.lua":            []byte("testInitLua"),
+			},
+			Type: v1.SecretTypeOpaque,
+		}
+
 		p1CustomPolicy = component.CustomPolicy{
-			Name:      "P1",
-			Version:   "0.1.0",
-			SecretRef: v1.LocalObjectReference{Name: "someSecretP1"},
+			Name:    "P1",
+			Version: "0.1.0",
+			Secret:  p1Secret,
 		}
 
 		p2CustomPolicy = component.CustomPolicy{
-			Name:      "P2",
-			Version:   "0.1.0",
-			SecretRef: v1.LocalObjectReference{Name: "someSecretP2"},
+			Name:    "P2",
+			Version: "0.1.0",
+			Secret:  p1Secret,
 		}
 	)
 
@@ -196,7 +209,7 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 						{
 							Name:      p2CustomPolicy.Name,
 							Version:   p2CustomPolicy.Version,
-							SecretRef: &p2CustomPolicy.SecretRef,
+							SecretRef: &v1.LocalObjectReference{Name: "someSecretP1"},
 						},
 					},
 				},
@@ -232,7 +245,7 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 
 	p2Secret := &v1.Secret{
 		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
-		ObjectMeta: metav1.ObjectMeta{Name: p2CustomPolicy.SecretRef.Name, Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: p2CustomPolicy.Secret.Name, Namespace: namespace},
 		Data: map[string][]byte{
 			"init.lua":            []byte("some lua code"),
 			"apicast-policy.json": []byte("{}"),
