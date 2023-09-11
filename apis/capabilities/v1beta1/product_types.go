@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/go-logr/logr"
@@ -1188,14 +1187,6 @@ func (product *Product) SetDefaults(logger logr.Logger) bool {
 	// Respect 3scale API defaults
 	if product.Spec.SystemName == "" {
 		product.Spec.SystemName = productSystemNameRegexp.ReplaceAllString(product.Spec.Name, "")
-		updated = true
-	}
-
-	// 3scale API ignores case of the system name field
-	systemNameLowercase := strings.ToLower(product.Spec.SystemName)
-	if product.Spec.SystemName != systemNameLowercase {
-		logger.Info("System name updated", "from", product.Spec.SystemName, "to", systemNameLowercase)
-		product.Spec.SystemName = systemNameLowercase
 		updated = true
 	}
 
