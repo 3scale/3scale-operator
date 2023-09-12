@@ -144,6 +144,33 @@ func (r *OpenAPIReconciler) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI
 		return statusReconciler, ctrl.Result{}, err
 	}
 
+	// Sets ownerReference on OpenAPI CR if tenantCR exists so that if tenant is deleted, OpenAPI CR is deleted as well
+	// Retrieve ownersReference of tenant CR that owns the Backend CR
+	tenantCR, err := controllerhelper.RetrieveTenantCR(providerAccount, r.Client(), r.Logger(), openapiCR.Namespace)
+	if err != nil {
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
+		return statusReconciler, ctrl.Result{}, err
+	}
+
+	// If tenant CR is found, set it's ownersReference as ownerReference in the OpenAPI CR
+	if tenantCR != nil {
+		updated, err := r.EnsureOwnerReference(tenantCR, openapiCR)
+		if err != nil {
+			statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
+			return statusReconciler, ctrl.Result{}, err
+		}
+
+		if updated {
+			err := r.Client().Update(r.Context(), openapiCR)
+			if err != nil {
+				statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
+				return statusReconciler, ctrl.Result{}, err
+			}
+			statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)
+			return statusReconciler, ctrl.Result{Requeue: true}, err
+		}
+	}
+
 	openapiObj, err := r.readOpenAPI(openapiCR)
 	if err != nil {
 		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, false)

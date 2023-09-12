@@ -203,7 +203,7 @@ func (b *BaseReconciler) HasPodMonitors() (bool, error) {
 }
 
 // SetOwnerReference sets owner as a Controller OwnerReference on owned
-func (b *BaseReconciler) SetOwnerReference(owner, obj common.KubernetesObject) error {
+func (b *BaseReconciler) SetControllerOwnerReference(owner, obj common.KubernetesObject) error {
 	err := controllerutil.SetControllerReference(owner, obj, b.Scheme())
 	if err != nil {
 		b.Logger().Error(err, "Error setting OwnerReference on object",
@@ -217,13 +217,17 @@ func (b *BaseReconciler) SetOwnerReference(owner, obj common.KubernetesObject) e
 
 // EnsureOwnerReference sets owner as a Controller OwnerReference on owned
 // returns boolean to notify when the object has been updated
+// Resource ownerReference isn't set if the resource is already owned by another controller
 func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject) (bool, error) {
 	changed := false
 
 	originalSize := len(obj.GetOwnerReferences())
-	err := b.SetOwnerReference(owner, obj)
-	if err != nil {
-		return false, err
+
+	if !isOwnedByAnotherController(obj) {
+		err := b.SetControllerOwnerReference(owner, obj)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	newSize := len(obj.GetOwnerReferences())
@@ -232,6 +236,20 @@ func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject
 	}
 
 	return changed, nil
+}
+
+func isOwnedByAnotherController(obj common.KubernetesObject) bool {
+	ownerRef := obj.GetOwnerReferences()
+
+	isOwnedByAnotherController := false
+
+	for _, reference := range ownerRef {
+		if *reference.Controller {
+			isOwnedByAnotherController = true
+		}
+	}
+
+	return isOwnedByAnotherController
 }
 
 func resourceExists(dc discovery.DiscoveryInterface, groupVersion, kind string) (bool, error) {

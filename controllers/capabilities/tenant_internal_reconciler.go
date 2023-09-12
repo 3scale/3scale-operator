@@ -196,7 +196,7 @@ func (r *TenantInternalReconciler) reconcileAccessTokenSecret(tenantDef *porta_c
 		Type: v1.SecretTypeOpaque,
 	}
 
-	err = r.SetOwnerReference(r.tenantR, desiredSecret)
+	err = r.SetControllerOwnerReference(r.tenantR, desiredSecret)
 	if err != nil {
 		return err
 	}

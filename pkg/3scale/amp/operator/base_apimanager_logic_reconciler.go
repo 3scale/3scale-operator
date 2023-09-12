@@ -189,7 +189,7 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileResource(obj, desired common.Ku
 	// already have controller-based OwnerReferences and K8s objects
 	// can only be owned by a single controller-based OwnerReference.
 	if desired.GetObjectKind().GroupVersionKind().Kind != "Secret" {
-		if err := r.SetOwnerReference(r.apiManager, desired); err != nil {
+		if err := r.SetControllerOwnerReference(r.apiManager, desired); err != nil {
 			return err
 		}
 	}

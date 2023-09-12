@@ -127,7 +127,7 @@ func (p *OpenAPIBackendReconciler) desired() (*capabilitiesv1beta1.Backend, erro
 		return nil, errors.New(validationErrors.ToAggregate().Error())
 	}
 
-	err = p.SetOwnerReference(p.openapiCR, backend)
+	err = p.SetControllerOwnerReference(p.openapiCR, backend)
 	if err != nil {
 		return nil, err
 	}

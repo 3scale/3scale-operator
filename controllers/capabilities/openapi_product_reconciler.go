@@ -147,7 +147,7 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 		return nil, errors.New(validationErrors.ToAggregate().Error())
 	}
 
-	err = p.SetOwnerReference(p.openapiCR, product)
+	err = p.SetControllerOwnerReference(p.openapiCR, product)
 	if err != nil {
 		return nil, err
 	}
