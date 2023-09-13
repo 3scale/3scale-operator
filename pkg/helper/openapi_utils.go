@@ -24,8 +24,7 @@ var (
 
 func SystemNameFromOpenAPITitle(obj *openapi3.T) string {
 	openapiTitle := obj.Info.Title
-	openapiTitleToLower := strings.ToLower(openapiTitle)
-	return NonWordCharRegexp.ReplaceAllString(openapiTitleToLower, "_")
+	return NonWordCharRegexp.ReplaceAllString(openapiTitle, "_")
 }
 
 func K8sNameFromOpenAPITitle(obj *openapi3.T) string {
