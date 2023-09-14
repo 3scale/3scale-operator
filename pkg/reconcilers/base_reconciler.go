@@ -223,10 +223,12 @@ func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject
 
 	originalSize := len(obj.GetOwnerReferences())
 
-	if !isOwnedByAnotherController(obj) {
-		err := b.SetControllerOwnerReference(owner, obj)
-		if err != nil {
-			return false, err
+	err := b.SetControllerOwnerReference(owner, obj)
+	if err != nil {
+		if err != err.(*controllerutil.AlreadyOwnedError) {
+			return changed, err
+		} else {
+			return changed, nil
 		}
 	}
 
@@ -236,20 +238,6 @@ func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject
 	}
 
 	return changed, nil
-}
-
-func isOwnedByAnotherController(obj common.KubernetesObject) bool {
-	ownerRef := obj.GetOwnerReferences()
-
-	isOwnedByAnotherController := false
-
-	for _, reference := range ownerRef {
-		if *reference.Controller {
-			isOwnedByAnotherController = true
-		}
-	}
-
-	return isOwnedByAnotherController
 }
 
 func resourceExists(dc discovery.DiscoveryInterface, groupVersion, kind string) (bool, error) {
