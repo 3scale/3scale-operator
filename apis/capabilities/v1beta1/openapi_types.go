@@ -101,6 +101,9 @@ type OpenAPISpec struct {
 	// PrivateAPISecretToken Custom secret token sent by the API gateway to the private API
 	// +optional
 	PrivateAPISecretToken *string `json:"privateAPISecretToken,omitempty"`
+
+	// +optional
+	OIDC *OIDCSpec `json:"oidc,omitempty"`
 }
 
 // OpenAPIStatus defines the observed state of OpenAPI

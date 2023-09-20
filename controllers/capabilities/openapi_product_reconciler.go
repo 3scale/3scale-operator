@@ -13,10 +13,9 @@ import (
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/google/go-cmp/cmp"
-
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -244,6 +243,14 @@ func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.
 	// TODO types "oauth2", "openIdConnect"
 	case "apiKey":
 		authenticationSpec = p.desiredUserKeyAuthentication(secRequirementExtended)
+	case "oauth2":
+		authenticationSpec = p.desiredOIDCAuthentication(secRequirementExtended)
+	case "openIdConnect":
+		authenticationSpec = p.desiredOIDCAuthentication(secRequirementExtended)
+	}
+
+	if authenticationSpec == nil {
+		return p.desiredUserKeyAuthentication(nil)
 	}
 
 	return authenticationSpec
@@ -368,4 +375,64 @@ func (p *OpenAPIProductReconciler) desiredPrivateAPISecurity() *capabilitiesv1be
 	}
 
 	return privateAPISec
+}
+
+func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.ExtendedSecurityRequirement) *capabilitiesv1beta1.AuthenticationSpec {
+
+	if p.openapiCR.Spec.OIDC == nil {
+		return nil
+	}
+	tmpHeaders := "headers"
+
+	authSpec := &capabilitiesv1beta1.AuthenticationSpec{
+		OIDC: &capabilitiesv1beta1.OIDCSpec{
+			IssuerType:        p.openapiCR.Spec.OIDC.IssuerType,
+			IssuerEndpoint:    p.openapiCR.Spec.OIDC.IssuerEndpoint,
+			IssuerEndpointRef: p.openapiCR.Spec.OIDC.IssuerEndpointRef,
+			Security:          p.desiredPrivateAPISecurity(),
+			AuthenticationFlow: &capabilitiesv1beta1.OIDCAuthenticationFlowSpec{
+				StandardFlowEnabled:       false,
+				ImplicitFlowEnabled:       false,
+				DirectAccessGrantsEnabled: false,
+				ServiceAccountsEnabled:    false,
+			},
+			JwtClaimWithClientID:     p.openapiCR.Spec.OIDC.JwtClaimWithClientID,
+			JwtClaimWithClientIDType: p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType,
+			CredentialsLoc:           &tmpHeaders,
+		},
+	}
+
+	if secReq.Value.Type == "openIdConnect" {
+		p.setOIDCAuthenticationParams(authSpec)
+	} else { // oauth2
+		p.setOauth2AuthenticationParams(authSpec, secReq)
+	}
+
+	return authSpec
+}
+
+func (p *OpenAPIProductReconciler) setOIDCAuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec) {
+	if p.openapiCR.Spec.OIDC.AuthenticationFlow != nil && authSpec != nil && authSpec.OIDC != nil && authSpec.OIDC.AuthenticationFlow != nil {
+		authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.StandardFlowEnabled
+		authSpec.OIDC.AuthenticationFlow.ImplicitFlowEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ImplicitFlowEnabled
+		authSpec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled
+		authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = p.openapiCR.Spec.OIDC.AuthenticationFlow.ServiceAccountsEnabled
+	}
+}
+
+func (p *OpenAPIProductReconciler) setOauth2AuthenticationParams(authSpec *capabilitiesv1beta1.AuthenticationSpec, secReq *helper.ExtendedSecurityRequirement) {
+	if authSpec != nil && authSpec.OIDC != nil && authSpec.OIDC.AuthenticationFlow != nil {
+		if secReq.Value.Flows.AuthorizationCode != nil {
+			authSpec.OIDC.AuthenticationFlow.StandardFlowEnabled = true
+		}
+		if secReq.Value.Flows.Implicit != nil {
+			authSpec.OIDC.AuthenticationFlow.ImplicitFlowEnabled = true
+		}
+		if secReq.Value.Flows.Password != nil {
+			authSpec.OIDC.AuthenticationFlow.DirectAccessGrantsEnabled = true
+		}
+		if secReq.Value.Flows.ClientCredentials != nil {
+			authSpec.OIDC.AuthenticationFlow.ServiceAccountsEnabled = true
+		}
+	}
 }

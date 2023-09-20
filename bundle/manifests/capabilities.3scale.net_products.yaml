@@ -308,6 +308,17 @@ spec:
                               issuerEndpoint:
                                 description: Issuer is the OIDC issuer
                                 type: string
+                              issuerEndpointRef:
+                                description: IssuerEndpointRef  is the reference to OIDC issuer Secret that contains IssuerEndpoint
+                                properties:
+                                  name:
+                                    description: name is unique within a namespace to reference a secret resource.
+                                    type: string
+                                  namespace:
+                                    description: namespace defines the space within which the secret name must be unique.
+                                    type: string
+                                type: object
+                                x-kubernetes-map-type: atomic
                               issuerType:
                                 description: IssuerType is the type of the OIDC issuer
                                 enum:
@@ -334,7 +345,6 @@ spec:
                                     type: string
                                 type: object
                             required:
-                            - issuerEndpoint
                             - issuerType
                             type: object
                           userkey:
@@ -565,6 +575,17 @@ spec:
                               issuerEndpoint:
                                 description: Issuer is the OIDC issuer
                                 type: string
+                              issuerEndpointRef:
+                                description: IssuerEndpointRef  is the reference to OIDC issuer Secret that contains IssuerEndpoint
+                                properties:
+                                  name:
+                                    description: name is unique within a namespace to reference a secret resource.
+                                    type: string
+                                  namespace:
+                                    description: namespace defines the space within which the secret name must be unique.
+                                    type: string
+                                type: object
+                                x-kubernetes-map-type: atomic
                               issuerType:
                                 description: IssuerType is the type of the OIDC issuer
                                 enum:
@@ -591,7 +612,6 @@ spec:
                                     type: string
                                 type: object
                             required:
-                            - issuerEndpoint
                             - issuerType
                             type: object
                           userkey:

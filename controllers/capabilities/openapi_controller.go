@@ -183,6 +183,12 @@ func (r *OpenAPIReconciler) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI
 		return statusReconciler, ctrl.Result{}, err
 	}
 
+	err = r.validateOIDCSettingsInCR(openapiCR, openapiObj)
+	if err != nil {
+		statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, "", err, false)
+		return statusReconciler, ctrl.Result{}, err
+	}
+
 	backendReconciler := NewOpenAPIBackendReconciler(r.BaseReconciler, openapiCR, openapiObj, providerAccount, logger)
 	_, err = backendReconciler.Reconcile()
 	if err != nil {
@@ -336,6 +342,10 @@ func (r *OpenAPIReconciler) validateOpenAPIAs3scaleProduct(openapiCR *capabiliti
 		switch globalSecRequirements[0].Value.Type {
 		case "apiKey":
 			break
+		case "oauth2":
+			break
+		case "openIdConnect":
+			break
 		default:
 			fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, fmt.Sprintf("Unexpected security schema type: %s", globalSecRequirements[0].Value.Type)))
 			return &helper.SpecFieldError{
@@ -382,4 +392,32 @@ func (r *OpenAPIReconciler) readOpenAPIFromURL(resource *capabilitiesv1beta1.Ope
 	}
 
 	return openapiObj, nil
+}
+
+func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1beta1.OpenAPI, openapiObj *openapi3.T) error {
+	logger := r.Logger().WithValues("openapi", openapiCR.Name)
+	fieldErrors := field.ErrorList{}
+	specFldPath := field.NewPath("spec")
+	openapiRefFldPath := specFldPath.Child("openapiRef")
+
+	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(openapiObj)
+	if len(globalSecRequirements) == 0 && openapiCR.Spec.OIDC != nil {
+		logger.Info("OIDC definitions in CR will be ignored, as no security requirements are found. Default to UserKey authentication")
+	}
+
+	if len(globalSecRequirements) == 1 {
+		// when the referenced OpenAPI spec's sec scheme is openIdConnect or oauth2, the spec.oidc must not be nil or empty
+		if globalSecRequirements[0].Value.Type == "openIdConnect" || globalSecRequirements[0].Value.Type == "oauth2" {
+			if openapiCR.Spec.OIDC == nil {
+				fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, "Missing "+
+					"OIDC definitions in CR. The referenced OpenAPI spec's sec scheme is openIdConnect or oauth2, the spec.oidc must not be nil or empty"))
+				return &helper.SpecFieldError{
+					ErrorType:      helper.InvalidError,
+					FieldErrorList: fieldErrors,
+				}
+			}
+		}
+	}
+
+	return nil
 }
