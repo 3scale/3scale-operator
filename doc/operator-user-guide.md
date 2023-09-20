@@ -824,6 +824,7 @@ Whenever a controller reconciles an object it creates a new porta client to make
 * CustomPolicyDefinition
 * DeveloperAccount
 * DeveloperUser
+* OpenAPI - backend and product
 * Product
 * ProxyConfigPromote
 * Tenant
