@@ -24,7 +24,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | --- | --- | --- | --- | --- |
 | OpenAPIRef | `openapiRef` | object | Reference to the OpenAPI Specification. See [OpenAPIRef](#openapiref) | Yes |
 | Provider Account Reference | `providerAccountRef` | object | [Provider account credentials secret reference](#provider-account-reference) | No |
-| ProductionPublicBaseURL | `productionPublicBaseURL` | string | Custom public production URL | No |
+| ProductionPublicBaseURL | `productionPublicBaseURL` | string | Custom public productiona URL | No |
 | StagingPublicBaseURL | `stagingPublicBaseURL` | string | Custom public staging URL | No |
 | ProductSystemName | `productSystemName` | string | Custom 3scale product system name | No |
 | PrivateBaseURL | `privateBaseURL` | string | Custom private base URL | No |
