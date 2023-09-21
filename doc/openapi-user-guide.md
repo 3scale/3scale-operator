@@ -11,8 +11,6 @@ one [3scale Backend custom resource](backend-reference.md).
    * [OpenAPI document sources](#openapi-document-sources)
       * [Secret OpenAPI spec source](#secret-openapi-spec-source)
       * [URL OpenAPI spec source](#url-openapi-spec-source)
-      * [OpenID Connect and OAuth2 example](#openid-connect-and-oauth2-example)
-      * [OIDC Issuer secret](#oidc-issuer-secret)
    * [Supported OpenAPI spec version and limitations](#supported-openapi-spec-version-and-limitations)
    * [OpenAPI importing rules](#openapi-importing-rules)
       * [Product name](#product-name)
@@ -93,99 +91,6 @@ spec:
 ```
 
 [OpenAPI CRD Reference](openapi-reference.md) for more info.
-
-### OpenID Connect and OAuth2 example
-
-3scale requires some additional information that are not included 
-in the OpenAPI spec, therefore those data need to be provided in the OpenAPI CR. Specifically:
-- OpenID Connect Issuer Type, which will default to rest but can be overridden from the OpenAPI CR
-- OpenID Connect Issuer Endpoint Referense (Secret). 3scale requires that the issuer URL must include a client secret.
-- Flows object. When the sec scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those.
-
-#### OIDC Issuer Secret
-
-- We have previously setup of Issuer Client - RHSSO/keycloak realm and client and are using it in secret example. 
-- `issuerEndpoint` format is `https://<CLIENT_ID>:<CLIENT_SECRET>@<HOST>:<PORT>/auth/realms/<REALM_NAME>"` . Format is described in `3scale Portal/Products page - AUTHENTICATION SETTINGS - OpenID Connect Issuer`.
-- The <CLIENT_SECRET> value will be taken form Issuer Client - `Realm/Clients/ClientID/Credentials/Secret`.
-
-```yaml
-kind: Secret
-apiVersion: v1
-metadata:
-  name: my-secret
-  namespace: 3scale-test
-data:
-  issuerEndpoint: https://3scale-zync:some-secret@keycloak-rhsso-test.example.com/auth/realms/petstore
-type: Opaque
-```
-
-To create secret:
-```shell
-oc apply -f my-secret.yaml 
-```
-
-#### OpenAPI CR example for OIDC and oauth2
-```yaml
-apiVersion: capabilities.3scale.net/v1beta1
-kind: OpenAPI
-metadata:
-  generation: 1
-  name: openapi-example
-spec:
-  openapiRef:
-    url: "https://example.com/petstore.yaml"
-  oidc:
-    issuerType: keycloak
-    issuerEndpointRef:
-      name: my-secret
-    jwtClaimWithClientID: azp
-    jwtClaimWithClientIDType: plain
-    authenticationFlow:
-      standardFlowEnabled: true
-      implicitFlowEnabled: true
-      serviceAccountsEnabled: true
-      directAccessGrantsEnabled: true
-```
-- **oidc** is optional field in OpenAPI CR, Only for OIDC.  
-- **issuerEndpointRef** - Secret, that contains **issuerEndpoint**
-
-| **Field ** | **Required** | **Description** |
-| --- | --- | --- |
-| issuerType | no | Valid values: [keycloak, rest]. Defaults to `rest` |
-| issuerEndpoint | no | issuerEndpoint can be defined in `issuerEndpointRef` or as plain value (please see CR example and notes below). The format of this endpoint is determined on your OpenID Provider setup. For RHSSO:  https://<client_id>:<client_secret>@<host>:<port>/auth/realms/<realm_name> |
-| issuerEndpointRef | no | The secret that contains  `issuerEndpoint` |
-| jwtClaimWithClientID | no | JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp' |
-| jwtClaimWithClientIDType | no | JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template. Valid values: plain, liquid. Defaults to 'plain' |
-| authenticationFlow | no | flows object. When the sec scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those. There are 4 flows parameters (for OIDC only): `standardFlowEnabled`, `implicitFlowEnabled`,`serviceAccountsEnabled`, `directAccessGrantsEnabled`. See [3scale product reference](product-reference.md) for more info |
-
-- **issuerEndpoint** - The format of this endpoint is determined on your OpenID Provider setup.
-  see in 3scale portal - `Product/Integration/Settings/AUTHENTICATION SETTINGS/OpenID Connect Issuer`.  
-- **If issuerEndpoint plain value is defined in CR - it will be used as precedence over secret**.
-
-OpenAPI CR example where issuerEndpoint defined both as plain value and in secret (plain value will be used):
-```yaml
-apiVersion: capabilities.3scale.net/v1beta1
-kind: OpenAPI
-metadata:
-  generation: 1
-  name: openapi-example
-spec:
-  openapiRef:
-    url: "https://example.com/petstore.yaml"
-  oidc:
-    issuerType: keycloak
-    issuerEndpoint: https://3scale-zync:some-secret@keycloak-rhsso-test.example.com/auth/realms/petstore
-    issuerEndpointRef:
-      name: my-secret
-    jwtClaimWithClientID: azp
-    jwtClaimWithClientIDType: plain
-    authenticationFlow:
-      standardFlowEnabled: true
-      implicitFlowEnabled: true
-      serviceAccountsEnabled: true
-      directAccessGrantsEnabled: true
-``` 
-
 
 ## Supported OpenAPI spec version and limitations
 
