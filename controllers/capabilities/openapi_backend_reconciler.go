@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -101,6 +102,8 @@ func (p *OpenAPIBackendReconciler) desired() (*capabilitiesv1beta1.Backend, erro
 		return nil, err
 	}
 
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(p.openapiCR.GetAnnotations())
+
 	backend := &capabilitiesv1beta1.Backend{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       capabilitiesv1beta1.BackendKind,
@@ -109,6 +112,9 @@ func (p *OpenAPIBackendReconciler) desired() (*capabilitiesv1beta1.Backend, erro
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objName,
 			Namespace: p.openapiCR.Namespace,
+			Annotations: map[string]string{
+				"insecure_skip_verify": strconv.FormatBool(insecureSkipVerify),
+			},
 		},
 		Spec: capabilitiesv1beta1.BackendSpec{
 			Name:               name,

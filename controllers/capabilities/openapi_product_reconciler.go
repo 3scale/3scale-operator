@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -99,6 +100,8 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	// product description
 	description := fmt.Sprintf(p.openapiObj.Info.Description)
 
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(p.openapiCR.GetAnnotations())
+
 	product := &capabilitiesv1beta1.Product{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       capabilitiesv1beta1.ProductKind,
@@ -107,6 +110,9 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objName,
 			Namespace: p.openapiCR.Namespace,
+			Annotations: map[string]string{
+				"insecure_skip_verify": strconv.FormatBool(insecureSkipVerify),
+			},
 		},
 		Spec: capabilitiesv1beta1.ProductSpec{
 			Name:               name,

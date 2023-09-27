@@ -3,6 +3,7 @@
 ## Table of Contents
 
 * [OpenAPI](#openapi)
+   * [OpenAPIAnnotations](#openapiannotations)
    * [OpenAPISpec](#openapispec)
       * [OpenAPIRef](#openapiref)
       * [Provider Account Reference](#provider-account-reference)
@@ -17,6 +18,12 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | --- | --- | --- | --- |
 | Spec | `spec` | [OpenAPISpec](#openapispec) | The specfication for the custom resource |
 | Status | `status` | [OpenAPIStatus](#openapistatus) | The status for the custom resource |
+
+### OpenAPIAnnotations
+
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| insecure_skip_verify | `insecure_skip_verify` | boolean | 3scale client skips certificate verification when reconciling a backend and product object created via OpenAPI - defaults to "false" | No |
 
 ### OpenAPISpec
 
