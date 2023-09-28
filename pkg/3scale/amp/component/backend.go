@@ -2,16 +2,14 @@ package component
 
 import (
 	"fmt"
-	"strconv"
-
 	"github.com/3scale/3scale-operator/pkg/helper"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"strconv"
 )
 
 const (
@@ -395,6 +393,7 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 	result = append(result,
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK", "system-events-hook", "URL"),
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
+		helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"),
 	)
 
 	if backend.Options.WorkerMetrics {
@@ -417,10 +416,10 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
 	result = append(result, backend.buildBackendCommonEnv()...)
 	result = append(result,
-		helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"),
 		helper.EnvVarFromValue("PUMA_WORKERS", "16"),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_USER", BackendSecretInternalApiSecretName, BackendSecretInternalApiUsernameFieldName),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
+		helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"),
 	)
 
 	if backend.Options.ListenerMetrics {

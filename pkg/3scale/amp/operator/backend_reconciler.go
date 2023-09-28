@@ -5,6 +5,9 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"strings"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -38,8 +41,18 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Listener DC
+	backendRedisSecret := &v1.Secret{}
+	r.Client().Get(r.Context(), types.NamespacedName{
+		Name:      "backend-redis",
+		Namespace: r.apiManager.Namespace,
+	}, backendRedisSecret)
+	redisQueuesUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_QUEUES_URL"]), "1")
+	redisStorageUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_STORAGE_URL"]), "0")
+
 	listenerConfigMutator := reconcilers.GenericBackendMutators()
-	listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
+	if redisStorageUrl != redisQueuesUrl {
+		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
+	}
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
 	}
@@ -63,7 +76,9 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker DC
 	workerConfigMutator := reconcilers.GenericBackendMutators()
-	workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
+	if redisStorageUrl != redisQueuesUrl {
+		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
+	}
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
 	}
