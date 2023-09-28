@@ -13,10 +13,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
 
 	apiv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
@@ -44,47 +44,43 @@ func NewTenantInternalReconciler(b *reconcilers.BaseReconciler, tenantR *apiv1al
 // - Have 3scale Tenant Account
 // - Have active admin user
 // - Have secret with tenant's access_token
-func (r *TenantInternalReconciler) Run() (ctrl.Result, error) {
-	res, err := r.reconcileTenant()
+func (r *TenantInternalReconciler) Run() error {
+	updateRequired, err := r.reconcileTenant()
 	if err != nil {
-		return ctrl.Result{}, err
+		return err
 	}
 
-	if res.Requeue {
-		return res, nil
+	if updateRequired {
+		return nil
 	}
 
-	res, err = r.reconcileAdminUser()
+	err = r.reconcileAdminUser()
 	if err != nil {
-		return ctrl.Result{}, err
+		return err
 	}
 
-	if res.Requeue {
-		return res, nil
-	}
-
-	return ctrl.Result{}, err
+	return nil
 }
 
 // This method makes sure that tenant exists, otherwise it will create one
 // On method completion:
 // * tenant will exist
 // * tenant's attributes will be updated if required
-func (r *TenantInternalReconciler) reconcileTenant() (ctrl.Result, error) {
+func (r *TenantInternalReconciler) reconcileTenant() (bool, error) {
 	tenantID, err := r.retrieveTenantID()
 	if err != nil {
-		return ctrl.Result{}, errors.New("failed to convert tenantID annotation to int64")
+		return false, errors.New("failed to convert tenantID annotation to int64")
 	}
 
 	tenantDef, err := controllerhelper.FetchTenant(tenantID, r.portaClient)
 	if err != nil {
-		return ctrl.Result{}, err
+		return false, err
 	}
 
 	if tenantDef == nil {
 		tenantDef, err = r.createTenant()
 		if err != nil {
-			return ctrl.Result{}, err
+			return false, err
 		}
 
 		// Early save access token as it is only available on the response of the
@@ -92,7 +88,7 @@ func (r *TenantInternalReconciler) reconcileTenant() (ctrl.Result, error) {
 
 		err = r.reconcileAccessTokenSecret(tenantDef)
 		if err != nil {
-			return ctrl.Result{}, err
+			return false, err
 		}
 
 		// Early update status with the new tenantID
@@ -104,54 +100,56 @@ func (r *TenantInternalReconciler) reconcileTenant() (ctrl.Result, error) {
 
 		updated, err := r.reconcileStatus(newStatus)
 		if err != nil {
-			return ctrl.Result{}, err
+			return false, err
 		}
 
+		// If updated - update the status and requeue
 		if updated {
-			// requeue to have a new run with the updated tenant resource
-			return ctrl.Result{Requeue: true}, nil
+			return true, nil
 		}
 	}
 
-	return ctrl.Result{}, nil
+	return false, nil
 }
 
 // This method makes sure admin user:
 // * is active
 // * user's attributes will be updated if required
-func (r *TenantInternalReconciler) reconcileAdminUser() (ctrl.Result, error) {
+func (r *TenantInternalReconciler) reconcileAdminUser() error {
 	tenantID, err := r.retrieveTenantID()
 	if err != nil {
-		return ctrl.Result{}, errors.New("failed to convert tenantID annotation to int64")
+		return errors.New("failed to convert tenantID annotation to int64")
 	}
 
 	if tenantID == 0 {
-		return ctrl.Result{}, errors.New("trying to reconcile admin user when tenantID 0")
+		return errors.New("trying to reconcile admin user when tenantID 0")
 	}
 
 	adminUser, err := controllerhelper.FindUser(r.portaClient, tenantID,
 		r.tenantR.Spec.Email, r.tenantR.Spec.Username)
 	if err != nil {
-		return ctrl.Result{}, err
+		return err
 	}
 
 	if adminUser == nil {
 		adminUser, err = controllerhelper.CreateAdminUser(r.portaClient,
 			tenantID, r.tenantR.Spec.Email, r.tenantR.Spec.Username)
 		if err != nil {
-			return ctrl.Result{}, err
+			return &helper.WaitError{
+				Err: fmt.Errorf("3scale client failed creating the admin user: %v", err),
+			}
 		}
 	}
 
 	if adminUser.Element.ID == nil {
-		return ctrl.Result{}, fmt.Errorf("admin returned nil ID for tenantID %d;"+
+		return fmt.Errorf("admin returned nil ID for tenantID %d;"+
 			"email %s; username:%s", tenantID, r.tenantR.Spec.Email,
 			r.tenantR.Spec.Username)
 	}
 
 	err = r.syncAdminUser(tenantID, adminUser)
 	if err != nil {
-		return ctrl.Result{}, err
+		return err
 	}
 
 	newStatus := &apiv1alpha1.TenantStatus{
@@ -161,15 +159,15 @@ func (r *TenantInternalReconciler) reconcileAdminUser() (ctrl.Result, error) {
 
 	updated, err := r.reconcileStatus(newStatus)
 	if err != nil {
-		return ctrl.Result{}, err
+		return err
 	}
 
+	// If updated - update the status and requeue
 	if updated {
-		// requeue to have a new run with the updated tenant resource
-		return ctrl.Result{Requeue: true}, nil
+		return nil
 	}
 
-	return ctrl.Result{}, nil
+	return nil
 }
 
 // This method makes sure secret with tenant's access_token exists
@@ -238,9 +236,11 @@ func (r *TenantInternalReconciler) getAdminPassword() (string, error) {
 
 	passwordByteArray, ok := tenantAdminSecret.Data[TenantAdminPasswordSecretField]
 	if !ok {
-		return "", fmt.Errorf("Not found admin password secret (%s) attribute: %s",
-			r.tenantR.AdminPassSecretKey(),
-			TenantAdminPasswordSecretField)
+		return "", &helper.WaitError{
+			Err: fmt.Errorf("not found admin password secret (%s) - missing required attribute: %s",
+				r.tenantR.AdminPassSecretKey(),
+				TenantAdminPasswordSecretField),
+		}
 	}
 
 	return bytes.NewBuffer(passwordByteArray).String(), err
@@ -252,7 +252,9 @@ func (r *TenantInternalReconciler) syncAdminUser(tenantID int64, adminUser *port
 		r.logger.Info("Activating pending admin user", "Account ID", tenantID, "ID", *adminUser.Element.ID)
 		updatedAdminUser, err := r.portaClient.ActivateDeveloperUser(tenantID, *adminUser.Element.ID)
 		if err != nil {
-			return err
+			return &helper.WaitError{
+				Err: fmt.Errorf("3scale client failed activating developer user: %v", err),
+			}
 		}
 
 		adminUser.Element.State = updatedAdminUser.Element.State
@@ -263,7 +265,9 @@ func (r *TenantInternalReconciler) syncAdminUser(tenantID int64, adminUser *port
 		r.logger.Info("Change role to admin", "Account ID", tenantID, "ID", *adminUser.Element.ID)
 		updatedAdminUser, err := r.portaClient.ChangeRoleToAdminDeveloperUser(tenantID, *adminUser.Element.ID)
 		if err != nil {
-			return err
+			return &helper.WaitError{
+				Err: fmt.Errorf("3scale client failed changing the role to admin for developer user: %v", err),
+			}
 		}
 
 		adminUser.Element.Role = updatedAdminUser.Element.Role
@@ -272,17 +276,13 @@ func (r *TenantInternalReconciler) syncAdminUser(tenantID int64, adminUser *port
 	return nil
 }
 
-// Returns whether the status have been updated or not and the error
+// Returns whether the status should be updated or not and the error
 func (r *TenantInternalReconciler) reconcileStatus(desiredStatus *apiv1alpha1.TenantStatus) (bool, error) {
 	if !reflect.DeepEqual(r.tenantR.Status, *desiredStatus) {
 		diff := cmp.Diff(r.tenantR.Status, *desiredStatus)
 		r.logger.V(1).Info(fmt.Sprintf("status has changed: %s", diff))
 		r.tenantR.Status = *desiredStatus
 		r.logger.Info("Update tenant status with tenantID", "tenantID", r.tenantR.Status.TenantId)
-		err := r.UpdateResourceStatus(r.tenantR)
-		if err != nil {
-			return false, err
-		}
 		return true, nil
 	}
 	return false, nil
