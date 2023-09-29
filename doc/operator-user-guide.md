@@ -30,9 +30,9 @@
          * [System replicas](#system-replicas)
          * [Pod Disruption Budget](#pod-disruption-budget)
       * [Upgrading 3scale](#upgrading-3scale)
-      * [<a href="operator-backup-and-restore.md">3scale installation Backup and Restore</a>](#3scale-installation-backup-and-restore)
-      * [<a href="operator-application-capabilities.md">Application Capabilities</a>](#application-capabilities)
-      * [<a href="apimanager-reference.md">APIManager CRD reference</a>](#apimanager-crd-reference)
+      * [3scale installation Backup and Restore](#3scale-installation-backup-and-restore)
+      * [Application Capabilities](#application-capabilities)
+      * [APIManager CRD reference](#apimanager-crd-reference)
          * [CR Samples](#cr-samples)
 <!--te-->
 
@@ -936,11 +936,14 @@ If you selected *Manual updates*, when a newer version of the Operator is availa
 the OLM creates an update request. As a cluster administrator, you must then manually approve
 that update request to have the Operator updated to the new version.
 
-### [3scale installation Backup and Restore](operator-backup-and-restore.md)
+### 3scale installation Backup and Restore
+* [3scale installation Backup and Restore](operator-backup-and-restore.md)
 
-### [Application Capabilities](operator-application-capabilities.md)
+### Application Capabilities
+* [Application Capabilities](operator-application-capabilities.md)
 
-### [APIManager CRD reference](apimanager-reference.md)
+### APIManager CRD reference
+* [APIManager CRD reference](apimanager-reference.md)
 
 #### CR Samples
 

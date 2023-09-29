@@ -45,7 +45,7 @@ The following diagram shows available custom resource definitions and their rela
       * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
       * [Product custom resource status field](#product-custom-resource-status-field)
       * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
-   * [<a href="openapi-user-guide.md">OpenAPI custom resource</a>](#openapi-custom-resource)
+   * [OpenAPI custom resource](#openapi-custom-resource)
    * [ActiveDoc custom resource](#activedoc-custom-resource)
       * [Features](#features)
       * [Reference your OpenAPI document using secret source](#reference-your-openapi-document-using-secret-source)
@@ -889,7 +889,8 @@ oc create secret generic threescale-provider-account --from-literal=adminURL=htt
 
 The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
 
-## [OpenAPI custom resource](openapi-user-guide.md)
+## OpenAPI custom resource
+* [OpenAPI custom resource](openapi-user-guide.md)
 
 ## ActiveDoc custom resource
 
