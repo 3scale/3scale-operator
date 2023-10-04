@@ -8,6 +8,7 @@ metadata:
     certified: "false"
     containerImage: quay.io/3scale/3scale-operator:master
     createdAt: "2019-05-30T22:40:00Z"
+    olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.14"}]'
     description: 3scale Operator to provision 3scale and publish/manage API
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale API Management"]'
