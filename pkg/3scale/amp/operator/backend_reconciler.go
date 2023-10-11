@@ -52,6 +52,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	listenerConfigMutator := reconcilers.GenericBackendMutators()
 	if redisStorageUrl != redisQueuesUrl {
 		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
+		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigArgsMutator)
 	}
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)

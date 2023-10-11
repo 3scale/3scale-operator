@@ -393,7 +393,6 @@ func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
 	result = append(result,
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK", "system-events-hook", "URL"),
 		helper.EnvVarFromSecret("CONFIG_EVENTS_HOOK_SHARED_SECRET", "system-events-hook", "PASSWORD"),
-		helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"),
 	)
 
 	if backend.Options.WorkerMetrics {
@@ -419,7 +418,6 @@ func (backend *Backend) buildBackendListenerEnv() []v1.EnvVar {
 		helper.EnvVarFromValue("PUMA_WORKERS", "16"),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_USER", BackendSecretInternalApiSecretName, BackendSecretInternalApiUsernameFieldName),
 		helper.EnvVarFromSecret("CONFIG_INTERNAL_API_PASSWORD", BackendSecretInternalApiSecretName, BackendSecretInternalApiPasswordFieldName),
-		helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"),
 	)
 
 	if backend.Options.ListenerMetrics {

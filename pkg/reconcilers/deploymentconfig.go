@@ -57,31 +57,74 @@ func GenericBackendMutators() []DCMutateFn {
 	}
 }
 
+func DeploymentConfigArgsMutator(_, existing *appsv1.DeploymentConfig) (bool, error) {
+	update := true
+	existing.Spec.Template.Spec.Containers[0].Args = []string{"bin/3scale_backend", "-s", "falcon", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	return update, nil
+}
+
 func DeploymentConfigEnvMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	update := false
 
 	// Always set env var CONFIG_REDIS_ASYNC to 1 this logic is only hit when you don't have logical redis db
 	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
+		if envVar.Name == "LISTENER_WORKERS" {
+			if envVar.Value == "0" {
+				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
+				update = true
+				return update, nil
+			}
+		}
 		if envVar.Name == "CONFIG_REDIS_ASYNC" {
 			if envVar.Value == "0" {
 				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
 				update = true
 				return update, nil
 			}
-			return update, nil
 		}
 	}
 	// Always set env var create CONFIG_REDIS_ASYNC if not present
-	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Env, desired.Spec.Template.Spec.Containers[0].Env) {
-		diff := cmp.Diff(existing.Spec.Template.Spec.Containers[0].Env, desired.Spec.Template.Spec.Containers[0].Env)
-		log.Info(fmt.Sprintf("%s spec.template.spec.containers[0].Env has changed: %s", common.ObjectInfo(desired), diff))
-		for envId, envVar := range desired.Spec.Template.Spec.Containers[0].Env {
+	hasListenerWorkers := true
+	hasConfigRedisAsync := true
+	for _, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
+		if existing.Name == "backend-worker" {
 			if envVar.Name == "CONFIG_REDIS_ASYNC" {
-				existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env, desired.Spec.Template.Spec.Containers[0].Env[envId])
-				update = true
+				update = false
+				return update, nil
+			}
+		}
+		if existing.Name == "backend-listener" {
+			if envVar.Name == "LISTENER_WORKERS" {
+				hasListenerWorkers = false
+			}
+			if envVar.Name == "CONFIG_REDIS_ASYNC" {
+				hasConfigRedisAsync = false
 			}
 		}
 	}
+	if hasListenerWorkers || hasConfigRedisAsync {
+		update = true
+	} else {
+		update = false
+		return update, nil
+	}
+	if existing.Name == "backend-listener" {
+		if hasConfigRedisAsync {
+			existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+				helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
+		}
+		if hasListenerWorkers {
+			existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+				helper.EnvVarFromValue("LISTENER_WORKERS", "1"))
+		}
+		update = true
+	}
+	if existing.Name == "backend-worker" {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
+		update = true
+	}
+
 	return update, nil
 }
 
