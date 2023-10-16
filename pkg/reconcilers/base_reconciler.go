@@ -3,6 +3,7 @@ package reconcilers
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -28,6 +29,20 @@ var log = logf.Log.WithName("reconcilers")
 type MutateFn func(existing, desired common.KubernetesObject) (bool, error)
 
 func CreateOnlyMutator(existing, desired common.KubernetesObject) (bool, error) {
+	return false, nil
+}
+
+func UpdatePrometheusRulesMutator(existing, desired common.KubernetesObject) (bool, error) {
+	existingRules := existing.(*monitoringv1.PrometheusRule)
+	desiredRules := desired.(*monitoringv1.PrometheusRule)
+
+	if !reflect.DeepEqual(existingRules.Spec, desiredRules.Spec) {
+		log.Info("Updating PrometheusRules")
+		existingRules.Spec = desiredRules.Spec
+		return true, nil
+	}
+
+	log.Info("PrometheusRules equal no update required.")
 	return false, nil
 }
 
