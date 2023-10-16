@@ -38,7 +38,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 const (
@@ -79,8 +78,8 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	reqLogger.Info("Reconcile Tenant", "Operator version", version.Version)
 
 	// Fetch the Tenant instance
-	tenantR := &capabilitiesv1alpha1.Tenant{}
-	err := r.Client().Get(context.TODO(), req.NamespacedName, tenantR)
+	tenantCR := &capabilitiesv1alpha1.Tenant{}
+	err := r.Client().Get(context.TODO(), req.NamespacedName, tenantCR)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -89,109 +88,109 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			reqLogger.Info("Tenant resource not found")
 			return ctrl.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
+		// On error, always requeue the request
 		return ctrl.Result{}, err
 	}
 
-	// Ignore deleted resources, this can happen when foregroundDeletion is enabled
-	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
-	if tenantR.GetDeletionTimestamp() != nil && !controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
-		return ctrl.Result{}, nil
-	}
+	originalTenantCR := tenantCR.DeepCopy()
 
 	if reqLogger.V(1).Enabled() {
-		jsonData, err := json.MarshalIndent(tenantR, "", "  ")
+		jsonData, err := json.MarshalIndent(tenantCR, "", "  ")
 		if err != nil {
 			return ctrl.Result{}, err
 		}
 		reqLogger.V(1).Info(string(jsonData))
 	}
 
-	// reconcileErr can be an error of different types - generic k8s err, isInvalid, waitError, isOrphaned
-	// different errors are handled differently when it comes to requeueing the reconciliation loop
-	statusReconciler, reconcileErr := r.specReconciler(tenantR, reqLogger)
+	// Setup porta client
+	portaClient, err := r.setupPortaClient(tenantCR, reqLogger)
+	if err != nil {
+		_, statusReconcilerError := r.reconcileStatus(tenantCR, originalTenantCR, err)
+		if statusReconcilerError != nil {
+			return helper.ReconcileErrorHandler(err, reqLogger), nil
+		}
 
-	// statusUpdateError can be an error when making the update call to the resource
-	res, statusUpdateErr := statusReconciler.Reconcile()
-	if statusUpdateErr != nil {
-		return ctrl.Result{}, fmt.Errorf("failed to update tenantCR: %w", statusUpdateErr)
+		return helper.ReconcileErrorHandler(err, reqLogger), nil
 	}
 
-	// Requeue if either object or status were updated
-	if res.Requeue {
-		return reconcile.Result{}, nil
+	// Reconcile whether or not the tenant should be removed
+	if tenantCR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantCR, tenantFinalizer) {
+		existingTenant, err := controllerhelper.FetchTenant(tenantCR.Status.TenantId, portaClient)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		// delete tenantCR if tenant is present in 3scale
+		if existingTenant != nil {
+			// do not attempt to delete tenant that is already scheduled for deletion
+			if existingTenant.Signup.Account.State != scheduledForDeletionState {
+				err := portaClient.DeleteTenant(tenantCR.Status.TenantId)
+				if err != nil {
+					r.EventRecorder().Eventf(tenantCR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
+					return ctrl.Result{}, err
+				}
+			} else {
+				reqLogger.Info("Removing tenant CR - tenant is already scheduled for deletion", "tenantID", existingTenant.Signup.Account.ID)
+			}
+		}
+
+		controllerutil.RemoveFinalizer(tenantCR, tenantFinalizer)
+		err = r.UpdateResource(tenantCR)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
 	}
 
-	if reconcileErr != nil {
-		// On validation error, do not retry since there's something wrong with the spec
-		if helper.IsInvalidSpecError(reconcileErr) {
-			reqLogger.Info("ERROR", "spec validation error", reconcileErr)
-			r.EventRecorder().Eventf(tenantR, corev1.EventTypeWarning, "Invalid Spec", "%v", reconcileErr)
-			return ctrl.Result{}, nil
+	// Ignore deleted resources, this can happen when foregroundDeletion is enabled
+	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
+	if tenantCR.GetDeletionTimestamp() != nil {
+		return ctrl.Result{}, nil
+	}
+
+	// Update/Check metadata and defaults
+	metadataUpdated := r.reconcileMetadata(tenantCR)
+	defaultsUpdated := tenantCR.SetDefaults()
+	if metadataUpdated || defaultsUpdated {
+		err := r.UpdateResource(tenantCR)
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 
-		// On wait error, retry
-		if helper.IsWaitError(reconcileErr) {
-			reqLogger.Info("ERROR", "wait error", reconcileErr)
-			return ctrl.Result{Requeue: true}, nil
-		}
+		// Do not retrigger - automatic retrigger done by udpating the tenantCR
+		return ctrl.Result{}, nil
+	}
 
-		// On orphan error, do not retry
-		if helper.IsOrphanSpecError(reconcileErr) {
-			reqLogger.Info("ERROR", "orphan error", reconcileErr)
-			return ctrl.Result{Requeue: false}, nil
-		}
+	// Validate and update spec if required
+	internalReconciler := NewTenantThreescaleReconciler(r.BaseReconciler, tenantCR, portaClient, reqLogger)
+	specReconcileErr := internalReconciler.Run()
+	statusIsEqual, statusReconcilerError := r.reconcileStatus(tenantCR, originalTenantCR, specReconcileErr)
+	if statusReconcilerError != nil {
+		return helper.ReconcileErrorHandler(statusReconcilerError, reqLogger), nil
+	}
 
-		// On all other errors, retry
-		reqLogger.Error(reconcileErr, "failed to reconcile")
-		r.EventRecorder().Eventf(tenantR, corev1.EventTypeWarning, "ReconcileError", "%v", reconcileErr)
-		return ctrl.Result{}, reconcileErr
+	if specReconcileErr != nil {
+		return helper.ReconcileErrorHandler(specReconcileErr, reqLogger), nil
+	}
+
+	// If error did not occur and the status was updated, quit the reoncile loop since another reconcile is incoming
+	if !statusIsEqual {
+		return ctrl.Result{}, nil
 	}
 
 	reqLogger.Info("Tenant reconciled successfully")
 	return ctrl.Result{}, nil
 }
 
-func (r *TenantReconciler) specReconciler(tenantCR *capabilitiesv1alpha1.Tenant, logger logr.Logger) (*TenantStatusReconciler, error) {
-	// Save a copy of the original tenant CR prior to changing it for status reconciler
-	originalTenantCR := tenantCR.DeepCopy()
-
-	// Setup porta client
-	portaClient, err := r.setupPortaClient(tenantCR, originalTenantCR, logger)
+func (r *TenantReconciler) reconcileStatus(updatedTenantCR, originalTenantCR *capabilitiesv1alpha1.Tenant, reconcileError error) (bool, error) {
+	statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, updatedTenantCR, originalTenantCR, reconcileError)
+	statusEqual, err := statusReconciler.Reconcile()
 	if err != nil {
-		statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, tenantCR, originalTenantCR, err)
-		return statusReconciler, err
+		return statusEqual, err
 	}
 
-	// Process tenant deletion
-	tenantInDeletion, err := r.reconcileDeletion(tenantCR, portaClient, logger)
-	if err != nil || tenantInDeletion {
-		statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, tenantCR, originalTenantCR, err)
-		return statusReconciler, err
-	}
-
-	// Adding annotations and finalizers
-	changedMetadata := r.reconcileMetadata(tenantCR)
-
-	// Bring tenant secret ref and namespace to lower if setup incorrectly
-	changedDefaults := tenantCR.SetDefaults()
-
-	if changedMetadata || changedDefaults {
-		statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, tenantCR, originalTenantCR, err)
-		return statusReconciler, err
-	}
-
-	// Main logic for reconciling the tenant CR against 3scale
-	internalReconciler := NewTenantInternalReconciler(r.BaseReconciler, tenantCR, portaClient, logger)
-	err = internalReconciler.Run()
-	if err != nil {
-		// Can be multiple error types depending on where it failed
-		statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, tenantCR, originalTenantCR, err)
-		return statusReconciler, err
-	}
-
-	statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, tenantCR, originalTenantCR, err)
-	return statusReconciler, err
+	return statusEqual, nil
 }
 
 func (r *TenantReconciler) reconcileMetadata(tenantCR *capabilitiesv1alpha1.Tenant) bool {
@@ -234,7 +233,7 @@ func (r *TenantReconciler) fetchMasterCredentials(tenantR *capabilitiesv1alpha1.
 	return bytes.NewBuffer(masterAccessTokenByteArray).String(), nil
 }
 
-func (r *TenantReconciler) setupPortaClient(tenantCR, originalTenantCR *capabilitiesv1alpha1.Tenant, logger logr.Logger) (*threescaleapi.ThreeScaleClient, error) {
+func (r *TenantReconciler) setupPortaClient(tenantCR *capabilitiesv1alpha1.Tenant, logger logr.Logger) (*threescaleapi.ThreeScaleClient, error) {
 	masterAccessToken, err := r.fetchMasterCredentials(tenantCR)
 	if err != nil {
 		logger.Error(err, "Error fetching master credentials secret")
@@ -248,44 +247,6 @@ func (r *TenantReconciler) setupPortaClient(tenantCR, originalTenantCR *capabili
 	}
 
 	return portaClient, nil
-}
-
-func (r *TenantReconciler) reconcileDeletion(tenantCR *capabilitiesv1alpha1.Tenant, portaClient *threescaleapi.ThreeScaleClient, logger logr.Logger) (bool, error) {
-	if tenantCR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantCR, tenantFinalizer) {
-		existingTenant, err := controllerhelper.FetchTenant(tenantCR.Status.TenantId, portaClient)
-		if err != nil {
-			// Error fetching tenant from 3scale
-			return true, err
-		}
-
-		// delete tenantCR if tenant is present in 3scale
-		if existingTenant != nil {
-			// do not attempt to delete tenant that is already scheduled for deletion
-			if existingTenant.Signup.Account.State != scheduledForDeletionState {
-				err := portaClient.DeleteTenant(tenantCR.Status.TenantId)
-				if err != nil {
-					r.EventRecorder().Eventf(tenantCR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
-					// Error when deleting the tenant from 3scale
-					return true, err
-				}
-			} else {
-				logger.Info("Removing tenant CR - tenant is already scheduled for deletion", "tenantID", existingTenant.Signup.Account.ID)
-				parentFldPath := field.NewPath("status").Child("TenantID")
-				err := &helper.SpecFieldError{
-					ErrorType: helper.OrphanError,
-					FieldErrorList: field.ErrorList{
-						field.Invalid(parentFldPath, tenantCR.Status.TenantId, "tenant account already marked for deletion, please delete the tenant CR manually"),
-					},
-				}
-				return true, err
-			}
-		}
-
-		controllerutil.RemoveFinalizer(tenantCR, tenantFinalizer)
-		return true, nil
-	}
-
-	return false, nil
 }
 
 func (r *TenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
