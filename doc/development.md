@@ -121,7 +121,7 @@ easily found by filtering the provider type to _Custom_.
 
 #### Run all tests
 
-Access to a Openshift v4.1.0+ cluster required
+Access to a Openshift v4.6.0+ cluster required
 
 ```sh
 make test
