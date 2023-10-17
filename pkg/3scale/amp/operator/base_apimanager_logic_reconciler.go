@@ -246,7 +246,7 @@ func (b *BaseAPIManagerLogicReconciler) HasGrafanaDashboards() (bool, error) {
 	return *b.crdAvailabilityCache.grafanaDashboardCRDAvailable, nil
 }
 
-//HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
+// HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
 func (b *BaseAPIManagerLogicReconciler) HasPrometheusRules() (bool, error) {
 	if b.crdAvailabilityCache.prometheusRuleCRDAvailable == nil {
 		res, err := b.BaseReconciler.HasPrometheusRules()
