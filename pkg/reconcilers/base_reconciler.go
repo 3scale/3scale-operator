@@ -3,7 +3,6 @@ package reconcilers
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -32,17 +31,23 @@ func CreateOnlyMutator(existing, desired common.KubernetesObject) (bool, error) 
 	return false, nil
 }
 
-func UpdatePrometheusRulesMutator(existing, desired common.KubernetesObject) (bool, error) {
-	existingRules := existing.(*monitoringv1.PrometheusRule)
-	desiredRules := desired.(*monitoringv1.PrometheusRule)
+// Remove 'ThreeScaleApicastRequestTime' alert
+func RemovePrometheusRulesMutator(existing, desired common.KubernetesObject) (bool, error) {
+	group := existing.(*monitoringv1.PrometheusRule).Spec.Groups[0]
+	removed := false
 
-	if !reflect.DeepEqual(existingRules.Spec, desiredRules.Spec) {
-		log.Info("Updating PrometheusRules")
-		existingRules.Spec = desiredRules.Spec
+	for i, rule := range group.Rules {
+		if rule.Alert == "ThreescaleApicastRequestTime" {
+			group.Rules = append(group.Rules[:i], group.Rules[i+1:]...)
+			removed = true
+			break
+		}
+	}
+	if removed {
+		log.Info("Alert 'ThreescaleApicastRequestTime' removed from PrometheusRules")
 		return true, nil
 	}
-
-	log.Info("PrometheusRules equal no update required.")
+	log.Info("Alert 'ThreescaleApicastRequestTime' not found, no update required.")
 	return false, nil
 }
 

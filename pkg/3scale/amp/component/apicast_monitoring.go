@@ -114,19 +114,6 @@ func (apicast *Apicast) ApicastPrometheusRules() *monitoringv1.PrometheusRule {
 								"severity": "critical",
 							},
 						},
-						// {
-						// 	Alert: "ThreescaleApicastRequestTime",
-						// 	Annotations: map[string]string{
-						// 		"sop_url":     ThreescaleApicastRequestTimeURL,
-						// 		"summary":     "Request on instance {{ $labels.instance }} is taking more than one second to process the requests",
-						// 		"description": "High number of request taking more than a second to be processed",
-						// 	},
-						// 	Expr: intstr.FromString(fmt.Sprintf(`sum(rate(total_response_time_seconds_bucket{namespace='%s', pod=~'apicast-production.*'}[1m])) - sum(rate(upstream_response_time_seconds_bucket{namespace='%s', pod=~'apicast-production.*'}[1m])) > 1`, apicast.Options.Namespace, apicast.Options.Namespace)),
-						// 	For:  "2m",
-						// 	Labels: map[string]string{
-						// 		"severity": "warning",
-						// 	},
-						// },
 						{
 							Alert: "ThreescaleApicastHttp4xxErrorRate",
 							Annotations: map[string]string{
