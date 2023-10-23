@@ -181,12 +181,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePrometheusRules(apicast.ApicastPrometheusRules(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	err = r.ReconcilePrometheusRules(apicast.ApicastPrometheusRules(), reconcilers.RemovePrometheusRulesMutator)
+	err = r.ReconcilePrometheusRules(apicast.ApicastPrometheusRules(), reconcilers.UpdatePrometheusRulesMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

@@ -33,22 +33,40 @@ func CreateOnlyMutator(existing, desired common.KubernetesObject) (bool, error) 
 
 // Remove 'ThreeScaleApicastRequestTime' alert
 func RemovePrometheusRulesMutator(existing, desired common.KubernetesObject) (bool, error) {
-	group := existing.(*monitoringv1.PrometheusRule).Spec.Groups[0]
+	existingPrometheusRule := existing.(*monitoringv1.PrometheusRule)
 	removed := false
+	updatedRules := []monitoringv1.Rule{}
+	group := existingPrometheusRule.Spec.Groups[0]
 
-	for i, rule := range group.Rules {
-		if rule.Alert == "ThreescaleApicastRequestTime" {
-			group.Rules = append(group.Rules[:i], group.Rules[i+1:]...)
+	for _, rule := range group.Rules {
+		if rule.Alert != "ThreescaleApicastRequestTime" {
+			updatedRules = append(updatedRules, rule)
+		} else {
 			removed = true
-			break
 		}
 	}
 	if removed {
+		group.Rules = updatedRules
+		existingPrometheusRule.Spec.Groups[0] = group
+
 		log.Info("Alert 'ThreescaleApicastRequestTime' removed from PrometheusRules")
 		return true, nil
 	}
 	log.Info("Alert 'ThreescaleApicastRequestTime' not found, no update required.")
 	return false, nil
+}
+
+func UpdatePrometheusRulesMutator(existing, desired common.KubernetesObject) (bool, error) {
+	created, err := CreateOnlyMutator(existing, desired)
+	if err != nil {
+		return false, err
+	}
+
+	removed, err := RemovePrometheusRulesMutator(existing, desired)
+	if err != nil {
+		return false, err
+	}
+	return created || removed, nil
 }
 
 type BaseReconciler struct {
