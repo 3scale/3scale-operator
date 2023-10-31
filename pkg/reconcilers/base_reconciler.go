@@ -98,8 +98,10 @@ func (b *BaseReconciler) EventRecorder() record.EventRecorder {
 // with the existing state inside the passed in callback MutateFn.
 //
 // obj: Object of the same type as the 'desired' object.
-//            Used to read the resource from the kubernetes cluster.
-//            Could be zero-valued initialized object.
+//
+//	Used to read the resource from the kubernetes cluster.
+//	Could be zero-valued initialized object.
+//
 // desired: Object representing the desired state
 //
 // It returns an error.
@@ -166,41 +168,41 @@ func (b *BaseReconciler) UpdateResourceStatus(obj common.KubernetesObject) error
 	return b.Client().Status().Update(context.TODO(), obj)
 }
 
-//HasConsoleLink checks if the ConsoleLink is supported in current cluster
+// HasConsoleLink checks if the ConsoleLink is supported in current cluster
 func (b *BaseReconciler) HasConsoleLink() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
 		consolev1.GroupVersion.String(), "ConsoleLink")
 }
 
-//HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
+// HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
 func (b *BaseReconciler) HasGrafanaDashboards() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
 		grafanav1alpha1.GroupVersion.String(),
 		"GrafanaDashboard")
 }
 
-//HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
+// HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster
 func (b *BaseReconciler) HasPrometheusRules() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.PrometheusRuleKind)
 }
 
-//HasServiceMonitors checks if the ServiceMonitors CRD is supported in current cluster
+// HasServiceMonitors checks if the ServiceMonitors CRD is supported in current cluster
 func (b *BaseReconciler) HasServiceMonitors() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.ServiceMonitorsKind)
 }
 
-//HasPodMonitors checks if the PodMonitors CRD is supported in current cluster
+// HasPodMonitors checks if the PodMonitors CRD is supported in current cluster
 func (b *BaseReconciler) HasPodMonitors() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
 		monitoringv1.SchemeGroupVersion.String(),
 		monitoringv1.PodMonitorsKind)
 }
 
-//SetOwnerReference sets owner as a Controller OwnerReference on owned
+// SetOwnerReference sets owner as a Controller OwnerReference on owned
 func (b *BaseReconciler) SetOwnerReference(owner, obj common.KubernetesObject) error {
 	err := controllerutil.SetControllerReference(owner, obj, b.Scheme())
 	if err != nil {
@@ -213,7 +215,7 @@ func (b *BaseReconciler) SetOwnerReference(owner, obj common.KubernetesObject) e
 	return err
 }
 
-//EnsureOwnerReference sets owner as a Controller OwnerReference on owned
+// EnsureOwnerReference sets owner as a Controller OwnerReference on owned
 // returns boolean to notify when the object has been updated
 func (b *BaseReconciler) EnsureOwnerReference(owner, obj common.KubernetesObject) (bool, error) {
 	changed := false
