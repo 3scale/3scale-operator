@@ -84,7 +84,8 @@ Each element of the Condition array has the following fields:
 * The *reason* field is a unique, one-word, CamelCase reason for the condition’s last transition.
 * The *status* field is a string, with possible values **True**, **False**, and **Unknown**.
 * The *type* field is a string with the following possible values:
-  * Ready: Indicates the ActiveDoc resource has been successfully reconciled;
+  * Ready: Indicates the ProxyConfigPromote resource has been successfully reconciled;
+  * Failed: Indicates the ProxyConfigPromote resource is in failed state;
 
 | **Field** | **json field**| **Type** | **Info** |
 | --- | --- | --- | --- |

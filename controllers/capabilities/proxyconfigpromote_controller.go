@@ -146,7 +146,7 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 		productIDStr := strconv.Itoa(int(productIDInt64))
 
 		// If wanting to promote to Stage but not production.
-		if proxyConfigPromote.Spec.Production == nil {
+		if proxyConfigPromote.Spec.Production == nil || !*proxyConfigPromote.Spec.Production {
 			// Promote to stage
 			_, err := threescaleAPIClient.DeployProductProxy(*productID)
 			if err != nil {
