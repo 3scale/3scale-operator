@@ -6,7 +6,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// Remove 'ThreeScaleApicastRequestTime' alert
+// RemovePrometheusRulesMutator removes the 'ThreeScaleApicastRequestTime' alert
 func RemovePrometheusRulesMutator(existing, desired common.KubernetesObject) (bool, error) {
 	existingPrometheusRule := existing.(*monitoringv1.PrometheusRule)
 	removed := false
