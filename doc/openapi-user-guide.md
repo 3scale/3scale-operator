@@ -13,6 +13,8 @@ one [3scale Backend custom resource](backend-reference.md).
       * [URL OpenAPI spec source](#url-openapi-spec-source)
       * [OpenID Connect and OAuth2 example](#openid-connect-and-oauth2-example)
    * [Supported OpenAPI spec version and limitations](#supported-openapi-spec-version-and-limitations)
+     * [OpenAPI 3.0.2 limitations](#openapi-302-limitation)
+     * [OpenIdConnect and OAuth2 limitations](#openidconnect-and-oauth2-limitations)
    * [OpenAPI importing rules](#openapi-importing-rules)
       * [Product name](#product-name)
       * [Private Base URL](#private-base-url)
@@ -189,12 +191,26 @@ spec:
 
 ## Supported OpenAPI spec version and limitations
 
+### OpenAPI 3.0.2 limitation
+
 * [OpenAPI __3.0.2__ specification](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md) with some limitations:
   * `info.title` field value must not exceed `253-38 = 215` character length. It will be used to create some openshift object names with some length [limitations](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/).
   * Only first `servers[0].url` element in `servers` list parsed as *private base url*. As OpenAPI specification `basePath` property, `servers[0].url` URL's base path component will be used.
   * `servers` element in path item or operation items are not supported.
   * Just a single top level security requirement supported. Operation level security requirements not supported.
-  * Supported security schemes: `apiKey`.
+  * Supported security schemes: 
+    * `apiKey`
+    * `openIdConnect/oauth2`   
+
+### OpenIdConnect and OAuth2 limitations
+
+* As detailed in section [OpenID Connect and OAuth2 example](#openid-connect-and-oauth2-example)  - 
+3scale requires some additional pieces of information that are not included in the OpenAPI spec and need to be provided in the OpenAPI CR:
+  * OpenID Connect Issuer Type, which will default to rest but can be overridden from the OpenAPI CR 
+  * OpenID Connect Issuer Endpoint Reference (Secret). 3scale requires that the issuer URL includes a client secret. 
+  * Flows object. When the security scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those.
+
+
 
 ## OpenAPI importing rules
 
