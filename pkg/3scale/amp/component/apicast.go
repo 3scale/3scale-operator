@@ -9,8 +9,9 @@ import (
 	"strings"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appsv1 "github.com/openshift/api/apps/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,8 +19,9 @@ import (
 )
 
 const (
-	ApicastStagingName    = "apicast-staging"
-	ApicastProductionName = "apicast-production"
+	ApicastStagingName                 = "apicast-staging"
+	ApicastProductionName              = "apicast-production"
+	ApicastProductionInitContainerName = "system-master-svc"
 
 	CustomPoliciesMountBasePath               = "/opt/app-root/src/policies"
 	CustomPoliciesAnnotationNameSegmentPrefix = "apicast-policy-volume"
@@ -66,7 +68,7 @@ func (apicast *Apicast) StagingService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports:    apicast.stagingServicePorts(),
-			Selector: map[string]string{"deploymentConfig": ApicastStagingName},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: ApicastStagingName},
 		},
 	}
 }
@@ -83,59 +85,40 @@ func (apicast *Apicast) ProductionService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports:    apicast.productionServicePorts(),
-			Selector: map[string]string{"deploymentConfig": ApicastProductionName},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: ApicastProductionName},
 		},
 	}
 }
 
-func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
+func (apicast *Apicast) StagingDeployment() *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        ApicastStagingName,
 			Labels:      apicast.Options.CommonStagingLabels,
-			Annotations: apicast.stagingDeploymentConfigAnnotations(),
+			Annotations: apicast.stagingDeploymentAnnotations(),
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: apicast.Options.StagingReplicas,
-			Selector: map[string]string{
-				"deploymentConfig": ApicastStagingName,
+		Spec: k8sappsv1.DeploymentSpec{
+			Replicas: &apicast.Options.StagingReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: ApicastStagingName,
+				},
 			},
-			Strategy: appsv1.DeploymentStrategy{
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					IntervalSeconds: &[]int64{1}[0],
+			Strategy: k8sappsv1.DeploymentStrategy{
+				RollingUpdate: &k8sappsv1.RollingUpdateDeployment{
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
-					TimeoutSeconds:      &[]int64{1800}[0],
-					UpdatePeriodSeconds: &[]int64{1}[0],
 				},
-				Type: appsv1.DeploymentStrategyTypeRolling,
+				Type: k8sappsv1.RollingUpdateDeploymentStrategyType,
 			},
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							ApicastStagingName,
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-apicast:%s", apicast.Options.ImageTag),
-						},
-					},
-				},
-			},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      apicast.Options.StagingPodTemplateLabels,
 					Annotations: apicast.stagingPodAnnotations(),
@@ -146,7 +129,7 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 					ServiceAccountName: "amp",
 					Volumes:            apicast.stagingVolumes(),
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Ports:           apicast.stagingContainerPorts(),
 							Env:             apicast.buildApicastStagingEnv(),
 							Image:           "amp-apicast:latest",
@@ -182,55 +165,35 @@ func (apicast *Apicast) StagingDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{APIVersion: "apps.openshift.io/v1", Kind: "DeploymentConfig"},
+func (apicast *Apicast) ProductionDeployment() *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        ApicastProductionName,
 			Labels:      apicast.Options.CommonProductionLabels,
-			Annotations: apicast.productionDeploymentConfigAnnotations(),
+			Annotations: apicast.productionDeploymentAnnotations(),
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: apicast.Options.ProductionReplicas,
-			Selector: map[string]string{
-				"deploymentConfig": ApicastProductionName,
+		Spec: k8sappsv1.DeploymentSpec{
+			Replicas: &apicast.Options.ProductionReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: ApicastProductionName,
+				},
 			},
-			Strategy: appsv1.DeploymentStrategy{
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					IntervalSeconds: &[]int64{1}[0],
+			Strategy: k8sappsv1.DeploymentStrategy{
+				RollingUpdate: &k8sappsv1.RollingUpdateDeployment{
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
-					TimeoutSeconds:      &[]int64{1800}[0],
-					UpdatePeriodSeconds: &[]int64{1}[0],
 				},
-				Type: appsv1.DeploymentStrategyTypeRolling,
+				Type: k8sappsv1.RollingUpdateDeploymentStrategyType,
 			},
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"system-master-svc",
-							ApicastProductionName,
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-apicast:%s", apicast.Options.ImageTag),
-						},
-					},
-				},
-			},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      apicast.Options.ProductionPodTemplateLabels,
 					Annotations: apicast.productionPodAnnotations(),
@@ -241,12 +204,12 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 					ServiceAccountName: "amp",
 					Volumes:            apicast.productionVolumes(),
 					InitContainers: []v1.Container{
-						v1.Container{
-							Name:    "system-master-svc",
+						{
+							Name:    ApicastProductionInitContainerName,
 							Image:   "amp-apicast:latest",
 							Command: []string{"sh", "-c", "until $(curl --output /dev/null --silent --fail --head http://system-master:3000/status); do sleep $SLEEP_SECONDS; done"},
 							Env: []v1.EnvVar{
-								v1.EnvVar{
+								{
 									Name:  "SLEEP_SECONDS",
 									Value: "1",
 								},
@@ -254,7 +217,7 @@ func (apicast *Apicast) ProductionDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Ports:           apicast.productionContainerPorts(),
 							Env:             apicast.buildApicastProductionEnv(),
 							Image:           "amp-apicast:latest",
@@ -495,7 +458,7 @@ func (apicast *Apicast) StagingPodDisruptionBudget() *policyv1.PodDisruptionBudg
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": ApicastStagingName},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: ApicastStagingName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -514,7 +477,7 @@ func (apicast *Apicast) ProductionPodDisruptionBudget() *policyv1.PodDisruptionB
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": ApicastProductionName},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: ApicastProductionName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -763,8 +726,21 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 	return volumes
 }
 
-func (apicast *Apicast) productionDeploymentConfigAnnotations() map[string]string {
+func (apicast *Apicast) productionDeploymentAnnotations() map[string]string {
 	annotations := map[string]string{}
+
+	// Image trigger annotation should always be present
+	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
+		{
+			Name: ApicastProductionInitContainerName,
+			Tag:  fmt.Sprintf("amp-apicast:%v", apicast.Options.ImageTag),
+		},
+		{
+			Name: ApicastProductionName,
+			Tag:  fmt.Sprintf("amp-apicast:%v", apicast.Options.ImageTag),
+		},
+	})
+	annotations[reconcilers.DeploymentImageTriggerAnnotation] = imageTriggerString
 
 	for _, customPolicy := range apicast.Options.ProductionCustomPolicies {
 		annotations[customPolicy.AnnotationKey()] = customPolicy.AnnotationValue()
@@ -779,16 +755,20 @@ func (apicast *Apicast) productionDeploymentConfigAnnotations() map[string]strin
 		annotations[customEnvAnnotationKey(customEnvSecret)] = customEnvAnnotationValue(customEnvSecret)
 	}
 
-	// keep backward compat
-	if len(annotations) == 0 {
-		return nil
-	}
-
 	return annotations
 }
 
-func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
+func (apicast *Apicast) stagingDeploymentAnnotations() map[string]string {
 	annotations := map[string]string{}
+
+	// Image trigger annotation should always be present
+	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
+		{
+			Name: ApicastStagingName,
+			Tag:  fmt.Sprintf("amp-apicast:%v", apicast.Options.ImageTag),
+		},
+	})
+	annotations[reconcilers.DeploymentImageTriggerAnnotation] = imageTriggerString
 
 	for _, customPolicy := range apicast.Options.StagingCustomPolicies {
 		annotations[customPolicy.AnnotationKey()] = customPolicy.AnnotationValue()
@@ -801,11 +781,6 @@ func (apicast *Apicast) stagingDeploymentConfigAnnotations() map[string]string {
 
 	for _, customEnvSecret := range apicast.Options.StagingCustomEnvironments {
 		annotations[customEnvAnnotationKey(customEnvSecret)] = customEnvAnnotationValue(customEnvSecret)
-	}
-
-	// keep backward compat
-	if len(annotations) == 0 {
-		return nil
 	}
 
 	return annotations

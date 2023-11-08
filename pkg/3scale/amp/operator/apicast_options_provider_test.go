@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"reflect"
 	"strconv"
 	"testing"
@@ -53,10 +54,10 @@ func testApicastProductionLabels() map[string]string {
 
 func testApicastStagingPodLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "apicast",
-		"threescale_component_element": "staging",
-		"deploymentConfig":             "apicast-staging",
+		"app":                               appLabel,
+		"threescale_component":              "apicast",
+		"threescale_component_element":      "staging",
+		reconcilers.DeploymentLabelSelector: "apicast-staging",
 	}
 	addExpectedMeteringLabels(labels, "apicast-staging", helper.ApplicationType)
 
@@ -65,10 +66,10 @@ func testApicastStagingPodLabels() map[string]string {
 
 func testApicastProductionPodLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "apicast",
-		"threescale_component_element": "production",
-		"deploymentConfig":             "apicast-production",
+		"app":                               appLabel,
+		"threescale_component":              "apicast",
+		"threescale_component_element":      "production",
+		reconcilers.DeploymentLabelSelector: "apicast-production",
 	}
 	addExpectedMeteringLabels(labels, "apicast-production", helper.ApplicationType)
 

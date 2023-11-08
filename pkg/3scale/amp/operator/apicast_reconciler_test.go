@@ -14,6 +14,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -120,8 +121,8 @@ func TestApicastReconciler(t *testing.T) {
 		objName  string
 		obj      k8sclient.Object
 	}{
-		{"stagingDeployment", "apicast-staging", &appsv1.DeploymentConfig{}},
-		{"productionDeployment", "apicast-production", &appsv1.DeploymentConfig{}},
+		{"stagingDeployment", "apicast-staging", &k8sappsv1.Deployment{}},
+		{"productionDeployment", "apicast-production", &k8sappsv1.Deployment{}},
 		{"stagingService", "apicast-staging", &v1.Service{}},
 		{"productionService", "apicast-production", &v1.Service{}},
 		{"envConfigMap", "apicast-environment", &v1.ConfigMap{}},
@@ -218,10 +219,10 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		},
 	}
 
-	// Existing DC has 1 custom policy defined: P1
-	// Desired DC has 1 custom policy defined: P2
-	// P2 should be added to existing DC
-	// P1 should be deleted from existing DC
+	// Existing Deployment has 1 custom policy defined: P1
+	// Desired Deployment has 1 custom policy defined: P2
+	// P2 should be added to existing Deployment
+	// P1 should be deleted from existing Deployment
 	apicastOptions := &component.ApicastOptions{
 
 		ProductionCustomPolicies: []component.CustomPolicy{p1CustomPolicy},
@@ -229,12 +230,12 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		ProductionTracingConfig:  &component.APIcastTracingConfig{},
 	}
 	apicast := component.NewApicast(apicastOptions)
-	existingProdDC := apicast.ProductionDeploymentConfig()
-	existingProdDC.Namespace = namespace
+	existingProdDeployment := apicast.ProductionDeployment()
+	existingProdDeployment.Namespace = namespace
 
 	// - Policy annotation for P1 added
 	p1Found := false
-	for key := range existingProdDC.Annotations {
+	for key := range existingProdDeployment.Annotations {
 		if p1CustomPolicy.AnnotationKey() == key {
 			p1Found = true
 		}
@@ -255,7 +256,7 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager, existingProdDC, p2Secret}
+	objs := []runtime.Object{apimanager, existingProdDeployment, p2Secret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
@@ -299,14 +300,14 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		Name:      "apicast-production",
 		Namespace: namespace,
 	}
-	existing := &appsv1.DeploymentConfig{}
+	existing := &k8sappsv1.Deployment{}
 	err = cl.Get(context.TODO(), namespacedName, existing)
 	// object must exist, that is all required to be tested
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Assert existing DC:
+	// Assert existing Deployment:
 	// - Volume for P1 deleted
 	for idx := range existing.Spec.Template.Spec.Volumes {
 		if existing.Spec.Template.Spec.Volumes[idx].Name == p1CustomPolicy.VolumeName() {
@@ -397,12 +398,12 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		ProductionTracingConfig: &existingTracingConfig1,
 	}
 	apicast := component.NewApicast(apicastOptions)
-	existingProdDC := apicast.ProductionDeploymentConfig()
-	existingProdDC.Namespace = namespace
+	existingProdDeployment := apicast.ProductionDeployment()
+	existingProdDeployment.Namespace = namespace
 
-	// - Tracing Configuration 1 added into the Production DC with the expected key
+	// - Tracing Configuration 1 added into the Production Deployment with the expected key
 	existingTracingConfig1Found := false
-	for key := range existingProdDC.Annotations {
+	for key := range existingProdDeployment.Annotations {
 		if existingTracingConfig1.AnnotationKey() == key {
 			existingTracingConfig1Found = true
 		}
@@ -470,7 +471,7 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager, existingProdDC, existingTc1Secret, desiredTc1Secret}
+	objs := []runtime.Object{apimanager, existingProdDeployment, existingTc1Secret, desiredTc1Secret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
@@ -515,14 +516,14 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		Name:      "apicast-production",
 		Namespace: namespace,
 	}
-	existing := &appsv1.DeploymentConfig{}
+	existing := &k8sappsv1.Deployment{}
 	err = cl.Get(context.TODO(), namespacedName, existing)
 	// object must exist, that is all required to be tested
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// // Assert existing DC:
+	// // Assert existing Deployment:
 	// // - Volume for existingTracingConfig1 deleted
 	for idx := range existing.Spec.Template.Spec.Volumes {
 		if existing.Spec.Template.Spec.Volumes[idx].Name == existingTracingConfig1.VolumeName() {
@@ -838,22 +839,22 @@ func TestReplicaApicastReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			dc := &appsv1.DeploymentConfig{}
+			deployment := &k8sappsv1.Deployment{}
 			namespacedName := types.NamespacedName{
 				Name:      tc.objName,
 				Namespace: namespace,
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			// bump the amount of replicas in the dc
-			dc.Spec.Replicas = twoValue
-			err = cl.Update(context.TODO(), dc)
+			// bump the amount of replicas in the deployment
+			deployment.Spec.Replicas = &twoValue
+			err = cl.Update(context.TODO(), deployment)
 			if err != nil {
-				subT.Errorf("error updating dc of %s: %v", tc.objName, err)
+				subT.Errorf("error updating deployment of %s: %v", tc.objName, err)
 			}
 
 			// re-run the reconciler
@@ -862,13 +863,13 @@ func TestReplicaApicastReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
-				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			if tc.expectedAmountOfReplicas != *deployment.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, deployment.Spec.Replicas)
 			}
 		})
 	}
@@ -912,14 +913,14 @@ func testApicastAPIManagerCreator(stagingReplicas, productionReplicas *int64) *a
 
 func TestReplicaApicastTelemtryReconciler(t *testing.T) {
 	var (
-		trueValue                 = true
-		log                       = logf.Log.WithName("operator_test")
-		opentelemtryEnabled  bool = true
-		apicastManagementAPI      = "enabled"
-		openSSLVerify             = &trueValue
-		includeResponseCodes      = &trueValue
-		customKey                 = "my-custom-key.json"
-		configJsonKey             = "config.json"
+		trueValue            = true
+		log                  = logf.Log.WithName("operator_test")
+		opentelemtryEnabled  = true
+		apicastManagementAPI = "enabled"
+		openSSLVerify        = &trueValue
+		includeResponseCodes = &trueValue
+		customKey            = "my-custom-key.json"
+		configJsonKey        = "config.json"
 	)
 
 	ctx := context.TODO()
@@ -930,6 +931,10 @@ func TestReplicaApicastTelemtryReconciler(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = k8sappsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1181,7 +1186,7 @@ func TestReplicaApicastTelemtryReconciler(t *testing.T) {
 					},
 				},
 			),
-			opentelemetryEnvExistsWithCustomKeysOnBothDCs,
+			opentelemetryEnvExistsWithCustomKeysOnBothDeployments,
 			false,
 			false,
 			multiKeyOtlpSecret(),
@@ -1292,19 +1297,19 @@ func TestReplicaApicastTelemtryReconciler(t *testing.T) {
 	}
 }
 
-func validateOpentelemetryIsDisabled(dcType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
-	dc := &appsv1.DeploymentConfig{}
+func validateOpentelemetryIsDisabled(dType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
+	deployment := &k8sappsv1.Deployment{}
 	namespacedName := types.NamespacedName{
-		Name:      dcType,
+		Name:      dType,
 		Namespace: namespace,
 	}
 
-	err := client.Get(context.TODO(), namespacedName, dc)
+	err := client.Get(context.TODO(), namespacedName, deployment)
 	if err != nil {
-		return false, fmt.Errorf("error fetching object %s: %v", dcType, err)
+		return false, fmt.Errorf("error fetching object %s: %v", dType, err)
 	}
 
-	envs := dc.Spec.Template.Spec.Containers[0].Env
+	envs := deployment.Spec.Template.Spec.Containers[0].Env
 	var (
 		configEnvfound                     bool
 		configEnvValueCorrect              bool
@@ -1330,22 +1335,22 @@ func validateOpentelemetryIsDisabled(dcType string, desiredConfigValue string, c
 
 	// Check if required environment variables are present and have correct values
 	if configEnvfound {
-		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on dc %s", dcType)
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on deployment %s", dType)
 	}
 	if opentelemtryEnabledEnvFound {
-		return false, fmt.Errorf("OPENTELEMTRY env not found on dc %s", dcType)
+		return false, fmt.Errorf("OPENTELEMTRY env not found on deployment %s", dType)
 	}
 	if configEnvValueCorrect {
-		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on dc %s", dcType)
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on deployment %s", dType)
 	}
 	if opentelemtryEnabledEnvValueCorrect {
-		return false, fmt.Errorf("OPENTELEMTRY env value not correct on dc %s", dcType)
+		return false, fmt.Errorf("OPENTELEMTRY env value not correct on deployment %s", dType)
 	}
 
-	volumeMounts := dc.Spec.Template.Spec.Containers[0].VolumeMounts
+	volumeMounts := deployment.Spec.Template.Spec.Containers[0].VolumeMounts
 	var volumeMountFound bool
 
-	volumes := dc.Spec.Template.Spec.Volumes
+	volumes := deployment.Spec.Template.Spec.Volumes
 	var volumeFound bool
 
 	// Iterate over environment variables
@@ -1362,16 +1367,16 @@ func validateOpentelemetryIsDisabled(dcType string, desiredConfigValue string, c
 	}
 
 	if volumeMountFound {
-		return false, fmt.Errorf("Opentelemetry volume mount found on dc %s", dcType)
+		return false, fmt.Errorf("opentelemetry volume mount found on deployment %s", dType)
 	}
 	if volumeFound {
-		return false, fmt.Errorf("Opentelemetry volume found on dc %s", dcType)
+		return false, fmt.Errorf("opentelemetry volume found on deployment %s", dType)
 	}
 
 	return true, nil
 }
 
-func disableOpentelemtry(dc string, client k8sclient.WithWatch) (error, *appsv1alpha1.APIManager) {
+func disableOpentelemtry(deployment string, client k8sclient.WithWatch) (error, *appsv1alpha1.APIManager) {
 	apim := &appsv1alpha1.APIManager{}
 	namespacedName := types.NamespacedName{
 		Name:      "example-apimanager",
@@ -1383,29 +1388,29 @@ func disableOpentelemtry(dc string, client k8sclient.WithWatch) (error, *appsv1a
 		return fmt.Errorf("error fetching APIM %s", err), nil
 	}
 
-	if dc == "apicast-staging" {
+	if deployment == "apicast-staging" {
 		*apim.Spec.Apicast.StagingSpec.OpenTelemetry = appsv1alpha1.OpenTelemetrySpec{}
 	}
-	if dc == "apicast-production" {
+	if deployment == "apicast-production" {
 		*apim.Spec.Apicast.ProductionSpec.OpenTelemetry = appsv1alpha1.OpenTelemetrySpec{}
 	}
 
 	return nil, apim
 }
 
-func opentelemetryEnvExistsWithDefaultValues(dcType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
-	dc := &appsv1.DeploymentConfig{}
+func opentelemetryEnvExistsWithDefaultValues(dType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
+	deployment := &k8sappsv1.Deployment{}
 	namespacedName := types.NamespacedName{
-		Name:      dcType,
+		Name:      dType,
 		Namespace: namespace,
 	}
 
-	err := client.Get(context.TODO(), namespacedName, dc)
+	err := client.Get(context.TODO(), namespacedName, deployment)
 	if err != nil {
-		return false, fmt.Errorf("error fetching object %s: %v", dcType, err)
+		return false, fmt.Errorf("error fetching object %s: %v", dType, err)
 	}
 
-	envs := dc.Spec.Template.Spec.Containers[0].Env
+	envs := deployment.Spec.Template.Spec.Containers[0].Env
 	var (
 		configEnvfound                     bool
 		configEnvValueCorrect              bool
@@ -1431,22 +1436,22 @@ func opentelemetryEnvExistsWithDefaultValues(dcType string, desiredConfigValue s
 
 	// Check if required environment variables are present and have correct values
 	if !configEnvfound {
-		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on dc %s", dcType)
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on deployment %s", dType)
 	}
 	if !opentelemtryEnabledEnvFound {
-		return false, fmt.Errorf("OPENTELEMTRY env not found on dc %s", dcType)
+		return false, fmt.Errorf("OPENTELEMTRY env not found on deployment %s", dType)
 	}
 	if !configEnvValueCorrect {
-		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on dc %s", dcType)
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on deployment %s", dType)
 	}
 	if !opentelemtryEnabledEnvValueCorrect {
-		return false, fmt.Errorf("OPENTELEMTRY env value not correct on dc %s", dcType)
+		return false, fmt.Errorf("OPENTELEMTRY env value not correct on deployment %s", dType)
 	}
 
-	volumeMounts := dc.Spec.Template.Spec.Containers[0].VolumeMounts
+	volumeMounts := deployment.Spec.Template.Spec.Containers[0].VolumeMounts
 	var volumeMountFound bool
 
-	volumes := dc.Spec.Template.Spec.Volumes
+	volumes := deployment.Spec.Template.Spec.Volumes
 	var volumeFound bool
 
 	// Iterate over environment variables
@@ -1463,29 +1468,29 @@ func opentelemetryEnvExistsWithDefaultValues(dcType string, desiredConfigValue s
 	}
 
 	if !volumeMountFound {
-		return false, fmt.Errorf("Opentelemetry volume mount not found on dc %s", dcType)
+		return false, fmt.Errorf("opentelemetry volume mount not found on deployment %s", dType)
 	}
 	if !volumeFound {
-		return false, fmt.Errorf("Opentelemetry volume not found on dc %s", dcType)
+		return false, fmt.Errorf("opentelemetry volume not found on deployment %s", dType)
 	}
 
 	// All environment variables are correctly set
 	return true, nil
 }
 
-func opentelemetryEnvExistsWithCustomKeysOnBothDCs(dcType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
-	dc := &appsv1.DeploymentConfig{}
+func opentelemetryEnvExistsWithCustomKeysOnBothDeployments(dType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
+	deployment := &k8sappsv1.Deployment{}
 	namespacedName := types.NamespacedName{
 		Name:      "apicast-staging",
 		Namespace: namespace,
 	}
 
-	err := client.Get(context.TODO(), namespacedName, dc)
+	err := client.Get(context.TODO(), namespacedName, deployment)
 	if err != nil {
-		return false, fmt.Errorf("error fetching object %s: %v", dcType, err)
+		return false, fmt.Errorf("error fetching object %s: %v", dType, err)
 	}
 
-	stageEnvs := dc.Spec.Template.Spec.Containers[0].Env
+	stageEnvs := deployment.Spec.Template.Spec.Containers[0].Env
 	var (
 		stageConfigEnvfound                     bool
 		stageConfigEnvValueCorrect              bool
@@ -1511,30 +1516,30 @@ func opentelemetryEnvExistsWithCustomKeysOnBothDCs(dcType string, desiredConfigV
 
 	// Check if required environment variables are present and have correct values
 	if !stageConfigEnvfound {
-		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on dc stage %s", err)
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on deployment stage %s", err)
 	}
 	if !stageOpentelemtryEnabledEnvFound {
-		return false, fmt.Errorf("OPENTELEMTRY env not found on dc stage %s", err)
+		return false, fmt.Errorf("OPENTELEMTRY env not found on deployment stage %s", err)
 	}
 	if !stageConfigEnvValueCorrect {
-		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on dc stage %s", err)
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on deployment stage %s", err)
 	}
 	if !stageOpentelemtryEnabledEnvValueCorrect {
-		return false, fmt.Errorf("OPENTELEMTRY env value not correct on dc stage %s", err)
+		return false, fmt.Errorf("OPENTELEMTRY env value not correct on deployment stage %s", err)
 	}
 
-	dc = &appsv1.DeploymentConfig{}
+	deployment = &k8sappsv1.Deployment{}
 	namespacedName = types.NamespacedName{
 		Name:      "apicast-production",
 		Namespace: namespace,
 	}
 
-	err = client.Get(context.TODO(), namespacedName, dc)
+	err = client.Get(context.TODO(), namespacedName, deployment)
 	if err != nil {
-		return false, fmt.Errorf("error fetching object %s: %v", dcType, err)
+		return false, fmt.Errorf("error fetching object %s: %v", dType, err)
 	}
 
-	prodEnvs := dc.Spec.Template.Spec.Containers[0].Env
+	prodEnvs := deployment.Spec.Template.Spec.Containers[0].Env
 	var (
 		prodConfigEnvfound                     bool
 		prodConfigEnvValueCorrect              bool
@@ -1560,16 +1565,16 @@ func opentelemetryEnvExistsWithCustomKeysOnBothDCs(dcType string, desiredConfigV
 
 	// Check if required environment variables are present and have correct values
 	if !prodConfigEnvfound {
-		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on dc production %s", err)
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on deployment production %s", err)
 	}
 	if !prodOpentelemtryEnabledEnvFound {
-		return false, fmt.Errorf("OPENTELEMTRY env not found on dc production %s", err)
+		return false, fmt.Errorf("OPENTELEMTRY env not found on deployment production %s", err)
 	}
 	if !prodConfigEnvValueCorrect {
-		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on dc production %s", err)
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on deployment production %s", err)
 	}
 	if !prodOpentelemtryEnabledEnvValueCorrect {
-		return false, fmt.Errorf("OPENTELEMTRY env value not correct on dc production %s", err)
+		return false, fmt.Errorf("OPENTELEMTRY env value not correct on deployment production %s", err)
 	}
 
 	// All environment variables are correctly set
