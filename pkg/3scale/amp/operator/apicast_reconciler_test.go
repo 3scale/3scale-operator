@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -119,8 +120,8 @@ func TestApicastReconciler(t *testing.T) {
 		objName  string
 		obj      k8sclient.Object
 	}{
-		{"stagingDeployment", "apicast-staging", &appsv1.DeploymentConfig{}},
-		{"productionDeployment", "apicast-production", &appsv1.DeploymentConfig{}},
+		{"stagingDeployment", "apicast-staging", &k8sappsv1.Deployment{}},
+		{"productionDeployment", "apicast-production", &k8sappsv1.Deployment{}},
 		{"stagingService", "apicast-staging", &v1.Service{}},
 		{"productionService", "apicast-production", &v1.Service{}},
 		{"envConfigMap", "apicast-environment", &v1.ConfigMap{}},
@@ -217,10 +218,10 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		},
 	}
 
-	// Existing DC has 1 custom policy defined: P1
-	// Desired DC has 1 custom policy defined: P2
-	// P2 should be added to existing DC
-	// P1 should be deleted from existing DC
+	// Existing Deployment has 1 custom policy defined: P1
+	// Desired Deployment has 1 custom policy defined: P2
+	// P2 should be added to existing Deployment
+	// P1 should be deleted from existing Deployment
 	apicastOptions := &component.ApicastOptions{
 
 		ProductionCustomPolicies: []component.CustomPolicy{p1CustomPolicy},
@@ -228,12 +229,12 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		ProductionTracingConfig:  &component.APIcastTracingConfig{},
 	}
 	apicast := component.NewApicast(apicastOptions)
-	existingProdDC := apicast.ProductionDeploymentConfig()
-	existingProdDC.Namespace = namespace
+	existingProdDeployment := apicast.ProductionDeployment()
+	existingProdDeployment.Namespace = namespace
 
 	// - Policy annotation for P1 added
 	p1Found := false
-	for key := range existingProdDC.Annotations {
+	for key := range existingProdDeployment.Annotations {
 		if p1CustomPolicy.AnnotationKey() == key {
 			p1Found = true
 		}
@@ -254,7 +255,7 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager, existingProdDC, p2Secret}
+	objs := []runtime.Object{apimanager, existingProdDeployment, p2Secret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
@@ -298,14 +299,14 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		Name:      "apicast-production",
 		Namespace: namespace,
 	}
-	existing := &appsv1.DeploymentConfig{}
+	existing := &k8sappsv1.Deployment{}
 	err = cl.Get(context.TODO(), namespacedName, existing)
 	// object must exist, that is all required to be tested
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Assert existing DC:
+	// Assert existing Deployment:
 	// - Volume for P1 deleted
 	for idx := range existing.Spec.Template.Spec.Volumes {
 		if existing.Spec.Template.Spec.Volumes[idx].Name == p1CustomPolicy.VolumeName() {
@@ -396,12 +397,12 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		ProductionTracingConfig: &existingTracingConfig1,
 	}
 	apicast := component.NewApicast(apicastOptions)
-	existingProdDC := apicast.ProductionDeploymentConfig()
-	existingProdDC.Namespace = namespace
+	existingProdDeployment := apicast.ProductionDeployment()
+	existingProdDeployment.Namespace = namespace
 
-	// - Tracing Configuration 1 added into the Production DC with the expected key
+	// - Tracing Configuration 1 added into the Production Deployment with the expected key
 	existingTracingConfig1Found := false
-	for key := range existingProdDC.Annotations {
+	for key := range existingProdDeployment.Annotations {
 		if existingTracingConfig1.AnnotationKey() == key {
 			existingTracingConfig1Found = true
 		}
@@ -469,7 +470,7 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager, existingProdDC, existingTc1Secret, desiredTc1Secret}
+	objs := []runtime.Object{apimanager, existingProdDeployment, existingTc1Secret, desiredTc1Secret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := appsv1.AddToScheme(s)
@@ -514,14 +515,14 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		Name:      "apicast-production",
 		Namespace: namespace,
 	}
-	existing := &appsv1.DeploymentConfig{}
+	existing := &k8sappsv1.Deployment{}
 	err = cl.Get(context.TODO(), namespacedName, existing)
 	// object must exist, that is all required to be tested
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// // Assert existing DC:
+	// // Assert existing Deployment:
 	// // - Volume for existingTracingConfig1 deleted
 	for idx := range existing.Spec.Template.Spec.Volumes {
 		if existing.Spec.Template.Spec.Volumes[idx].Name == existingTracingConfig1.VolumeName() {
@@ -837,22 +838,22 @@ func TestReplicaApicastReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			dc := &appsv1.DeploymentConfig{}
+			deployment := &k8sappsv1.Deployment{}
 			namespacedName := types.NamespacedName{
 				Name:      tc.objName,
 				Namespace: namespace,
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			// bump the amount of replicas in the dc
-			dc.Spec.Replicas = twoValue
-			err = cl.Update(context.TODO(), dc)
+			// bump the amount of replicas in the deployment
+			deployment.Spec.Replicas = &twoValue
+			err = cl.Update(context.TODO(), deployment)
 			if err != nil {
-				subT.Errorf("error updating dc of %s: %v", tc.objName, err)
+				subT.Errorf("error updating deployment of %s: %v", tc.objName, err)
 			}
 
 			// re-run the reconciler
@@ -861,13 +862,13 @@ func TestReplicaApicastReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
-				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			if tc.expectedAmountOfReplicas != *deployment.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, deployment.Spec.Replicas)
 			}
 		})
 	}

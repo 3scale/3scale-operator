@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	appsv1 "github.com/openshift/api/apps/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -17,6 +17,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 )
 
 func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
@@ -62,12 +63,12 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	stagingMutators := []reconcilers.DCMutateFn{
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+	stagingMutators := []reconcilers.DMutateFn{
+		reconcilers.DeploymentAnnotationsMutator,
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
 		apicastLogLevelEnvVarMutator,
 		apicastTracingConfigEnvVarsMutator,
 		apicastEnvironmentEnvVarMutator,
@@ -81,28 +82,37 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume mutator
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 	}
 
 	if r.apiManager.Spec.Apicast.StagingSpec.Replicas != nil {
-		stagingMutators = append(stagingMutators, reconcilers.DeploymentConfigReplicasMutator)
+		stagingMutators = append(stagingMutators, reconcilers.DeploymentReplicasMutator)
 	}
 
-	// Staging DC
-	err = r.ReconcileDeploymentConfig(apicast.StagingDeploymentConfig(), reconcilers.DeploymentConfigMutator(stagingMutators...))
+	// Staging Deployment
+	err = r.ReconcileDeployment(apicast.StagingDeployment(), reconcilers.DeploymentMutator(stagingMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+	// 3scale 2.14 -> 2.15
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.ApicastStagingName, r.apiManager.GetNamespace(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
 	// add apicast production env var mutator
-	productionMutators := []reconcilers.DCMutateFn{
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
+	productionMutators := []reconcilers.DMutateFn{
+		reconcilers.DeploymentAnnotationsMutator,
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
 		apicastProductionWorkersEnvVarMutator,
 		apicastLogLevelEnvVarMutator,
 		apicastTracingConfigEnvVarsMutator,
@@ -117,33 +127,43 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 	}
 
 	if r.apiManager.Spec.Apicast.ProductionSpec.Replicas != nil {
-		productionMutators = append(productionMutators, reconcilers.DeploymentConfigReplicasMutator)
+		productionMutators = append(productionMutators, reconcilers.DeploymentReplicasMutator)
 	}
 
-	// Production DC
-	productionDCMutator := reconcilers.DeploymentConfigMutator(
-		productionMutators...,
-	)
-
-	err = r.ReconcileDeploymentConfig(apicast.ProductionDeploymentConfig(), productionDCMutator)
+	// Production Deployment
+	err = r.ReconcileDeployment(apicast.ProductionDeployment(), reconcilers.DeploymentMutator(productionMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+	// 3scale 2.14 -> 2.15
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ApicastProductionName, r.apiManager.GetNamespace(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	serviceMutators := []reconcilers.MutateFn{
+		getApiCastServiceMutator(r.apiManager.ObjectMeta.GetAnnotations()),
+		reconcilers.ServiceSelectorMutator,
+	}
+
 	// Staging Service
-	err = r.ReconcileService(apicast.StagingService(), getApiCastServiceMutator(r.apiManager.ObjectMeta.GetAnnotations()))
+	err = r.ReconcileService(apicast.StagingService(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Production Service
-	err = r.ReconcileService(apicast.ProductionService(), getApiCastServiceMutator(r.apiManager.ObjectMeta.GetAnnotations()))
+	err = r.ReconcileService(apicast.ProductionService(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -222,33 +242,33 @@ func getApiCastServiceMutator(apiManagerAnnotations map[string]string) reconcile
 	return reconcilers.ServicePortMutator
 }
 
-func apicastProductionWorkersEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastProductionWorkersEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Reconcile EnvVar only for "APICAST_WORKERS"
-	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_WORKERS"), nil
+	return reconcilers.DeploymentEnvVarReconciler(desired, existing, "APICAST_WORKERS"), nil
 }
 
-func apicastLogLevelEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastLogLevelEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Reconcile EnvVar only for "APICAST_LOG_LEVEL"
-	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL"), nil
+	return reconcilers.DeploymentEnvVarReconciler(desired, existing, "APICAST_LOG_LEVEL"), nil
 }
 
-func apicastTracingConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastTracingConfigEnvVarsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Reconcile EnvVars related to opentracing
 	var changed bool
-	changed = reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTRACING_TRACER")
+	changed = reconcilers.DeploymentEnvVarReconciler(desired, existing, "OPENTRACING_TRACER")
 
-	tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTRACING_CONFIG")
+	tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, "OPENTRACING_CONFIG")
 	changed = changed || tmpChanged
 
 	return changed, nil
 }
 
-func apicastEnvironmentEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastEnvironmentEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Reconcile EnvVar only for "APICAST_ENVIRONMENT"
-	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_ENVIRONMENT"), nil
+	return reconcilers.DeploymentEnvVarReconciler(desired, existing, "APICAST_ENVIRONMENT"), nil
 }
 
-func apicastHTTPSEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastHTTPSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Reconcile EnvVars related to opentracing
 	var changed bool
 
@@ -258,14 +278,14 @@ func apicastHTTPSEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool
 		"APICAST_HTTPS_CERTIFICATE",
 		"APICAST_HTTPS_CERTIFICATE_KEY",
 	} {
-		tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, envVar)
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
 		changed = changed || tmpChanged
 	}
 
 	return changed, nil
 }
 
-func apicastProxyConfigurationsEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastProxyConfigurationsEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Reconcile EnvVars related to APIcast proxy-related configurations
 	var changed bool
 
@@ -275,18 +295,18 @@ func apicastProxyConfigurationsEnvVarMutator(desired, existing *appsv1.Deploymen
 		"HTTPS_PROXY",
 		"NO_PROXY",
 	} {
-		tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, envVar)
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
 		changed = changed || tmpChanged
 	}
 
 	return changed, nil
 }
 
-func apicastServiceCacheSizeEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
-	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_SERVICE_CACHE_SIZE"), nil
+func apicastServiceCacheSizeEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	return reconcilers.DeploymentEnvVarReconciler(desired, existing, "APICAST_SERVICE_CACHE_SIZE"), nil
 }
 
-func portsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func portsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	changed := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Ports, desired.Spec.Template.Spec.Containers[0].Ports) {
@@ -297,11 +317,11 @@ func portsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	return changed, nil
 }
 
-// volumeMountsMutator implements basic VolumeMount reconcilliation
+// apicastVolumeMountsMutator implements basic VolumeMount reconciliation
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
 // Existing not in desired will NOT be removed. Allows manually added volumemounts
-func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastVolumeMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	changed := false
 	existingContainer := &existing.Spec.Template.Spec.Containers[0]
 	desiredContainer := &desired.Spec.Template.Spec.Containers[0]
@@ -380,11 +400,11 @@ func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) (boo
 	return changed, nil
 }
 
-// volumeMountsMutator implements basic VolumeMount reconcilliation
+// apicastVolumesMutator implements basic VolumeMount reconciliation
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
 // Existing not in desired will NOT be removed. Allows manually added volumemounts
-func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastVolumesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	changed := false
 	existingSpec := &existing.Spec.Template.Spec
 	desiredSpec := &desired.Spec.Template.Spec
@@ -463,7 +483,7 @@ func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) (bool, er
 	return changed, nil
 }
 
-func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastCustomPolicyAnnotationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
 	// find existing custom policy annotations not in desired and delete them
 	updated := false
@@ -487,7 +507,7 @@ func apicastCustomPolicyAnnotationsMutator(desired, existing *appsv1.DeploymentC
 	return updated, nil
 }
 
-func apicastTracingConfigAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastTracingConfigAnnotationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
 	// find existing tracing config volume annotations not in desired and delete them
 	updated := false
@@ -511,7 +531,7 @@ func apicastTracingConfigAnnotationsMutator(desired, existing *appsv1.Deployment
 	return updated, nil
 }
 
-func apicastCustomEnvAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastCustomEnvAnnotationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
 	// find existing custom environments annotations not in desired and delete them
 	updated := false
@@ -535,7 +555,7 @@ func apicastCustomEnvAnnotationsMutator(desired, existing *appsv1.DeploymentConf
 	return updated, nil
 }
 
-func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Only reconcile the pod annotation regarding apicast-environment hash
 	desiredVal, ok := desired.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation]
 	if !ok {
