@@ -123,6 +123,18 @@ func (s *SystemSearchd) DeploymentConfig() *appsv1.DeploymentConfig {
 								InitialDelaySeconds: 60,
 								PeriodSeconds:       10,
 							},
+							ReadinessProbe: &v1.Probe{
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.FromInt(9306),
+									},
+								},
+								InitialDelaySeconds: 30,
+								TimeoutSeconds:      10,
+								PeriodSeconds:       30,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
+							},
 							Resources: s.Options.ContainerResourceRequirements,
 						},
 					},
