@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
@@ -12,9 +13,12 @@ import (
 	"io/ioutil"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"net/http"
 	"reflect"
+	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"testing"
 	"time"
 )
@@ -389,6 +393,65 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 			}
 			if !reflect.DeepEqual(got.latestStagingVersion, tt.want.latestStagingVersion) {
 				t.Errorf("proxyConfigPromoteReconciler() got.latestStagingVersion = %v, want.latestStagingVersion %v", got.latestStagingVersion, tt.want.latestStagingVersion)
+			}
+		})
+	}
+}
+
+func TestProxyConfigPromoteReconciler_Reconcile(t *testing.T) {
+	ctx := context.Background()
+	requestFactory := func(name, namespace string) ctrl.Request {
+		return ctrl.Request{NamespacedName: types.NamespacedName{
+			Name:      name,
+			Namespace: namespace,
+		}}
+	}
+	type fields struct {
+		BaseReconciler *reconcilers.BaseReconciler
+	}
+	type args struct {
+		ctx context.Context
+		req ctrl.Request
+	}
+	var tests = []struct {
+		name    string
+		fields  fields
+		args    args
+		want    reconcile.Result
+		wantErr bool
+	}{
+		{
+			name: "Test Reconciler",
+			fields: fields{
+				BaseReconciler: getBaseReconciler(getProxyConfigPromoteCR(), getProviderAccount(), getApiManger(), getProductList()),
+			},
+			args: args{
+				ctx: ctx,
+				req: requestFactory("test", "test"),
+			},
+			want:    reconcile.Result{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				proxyConfigPromoteReconcilerNew = (*ProxyConfigPromoteReconciler).proxyConfigPromoteReconciler
+			}()
+			proxyConfigPromoteReconcilerNew = func(r *ProxyConfigPromoteReconciler, proxyConfigPromote *capabilitiesv1beta1.ProxyConfigPromote, reqLogger logr.Logger, threescaleAPIClient *client.ThreeScaleClient, product *capabilitiesv1beta1.Product) (*ProxyConfigPromoteStatusReconciler, error) {
+				return nil, nil
+			}
+			s := &ProxyConfigPromoteReconciler{
+				BaseReconciler: tt.fields.BaseReconciler,
+			}
+			got, err := s.Reconcile(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Reconcile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Reconcile() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

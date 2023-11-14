@@ -38,6 +38,8 @@ type ProxyConfigPromoteReconciler struct {
 	*reconcilers.BaseReconciler
 }
 
+var proxyConfigPromoteReconcilerNew = (*ProxyConfigPromoteReconciler).proxyConfigPromoteReconciler
+
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=proxyconfigpromotes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=proxyconfigpromotes/status,verbs=get;update;patch
 
@@ -103,7 +105,8 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	// reconcile spec of the proxyConfigPromote only if the CR isn't already marked as "Completed" since the CR is a one off update.
 	if !proxyConfigPromote.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ProxyPromoteConfigReadyConditionType) {
-		statusReconciler, reconcileErr := r.proxyConfigPromoteReconciler(proxyConfigPromote, reqLogger, threescaleAPIClient, product)
+		f := &ProxyConfigPromoteReconciler{}
+		statusReconciler, reconcileErr := proxyConfigPromoteReconcilerNew(f, proxyConfigPromote, reqLogger, threescaleAPIClient, product)
 
 		// If status reconciler is not nil, proceed with reconciling the status
 		if statusReconciler != nil {
