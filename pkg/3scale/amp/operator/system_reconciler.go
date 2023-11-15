@@ -110,6 +110,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigTolerationsMutator,
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
+		reconcilers.DeploymentConfigArgsMutator,
+		reconcilers.DeploymentConfigProbesMutator,
 		// 3scale 2.13 -> 2.14
 		upgrade.SphinxAddressReference,
 		reconcilers.DeploymentConfigPriorityClassMutator,

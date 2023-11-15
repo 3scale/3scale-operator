@@ -57,6 +57,8 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigStrategyMutator,
 		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentConfigProbesMutator,
+		reconcilers.DeploymentConfigArgsMutator,
 	)
 	err = r.ReconcileDeploymentConfig(searchd.DeploymentConfig(), searchdDCmutator)
 	if err != nil {
