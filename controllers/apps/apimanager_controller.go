@@ -19,8 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	k8sappsv1 "k8s.io/api/apps/v1"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 
 	v1 "k8s.io/api/core/v1"
@@ -154,7 +154,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			handler.EnqueueRequestsFromMapFunc(secretToApimanagerEventMapper.Map),
 			builder.WithPredicates(labelSelectorPredicate),
 		).
-		Owns(&appsv1.DeploymentConfig{}).
+		Owns(&k8sappsv1.Deployment{}).
 		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
 		Complete(r)
 }
