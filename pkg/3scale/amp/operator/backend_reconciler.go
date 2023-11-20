@@ -51,8 +51,8 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	listenerConfigMutator := reconcilers.GenericBackendMutators()
 	if redisStorageUrl != redisQueuesUrl {
-		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
-		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigArgsMutator)
+		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigListenerEnvMutator)
+		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigListenerArgsMutator)
 	}
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
@@ -78,7 +78,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	// Worker DC
 	workerConfigMutator := reconcilers.GenericBackendMutators()
 	if redisStorageUrl != redisQueuesUrl {
-		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigEnvMutator)
+		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigWorkerEnvMutator)
 	}
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)

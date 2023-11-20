@@ -57,74 +57,81 @@ func GenericBackendMutators() []DCMutateFn {
 	}
 }
 
-func DeploymentConfigArgsMutator(_, existing *appsv1.DeploymentConfig) (bool, error) {
+func DeploymentConfigListenerArgsMutator(_, existing *appsv1.DeploymentConfig) (bool, error) {
 	update := true
-	existing.Spec.Template.Spec.Containers[0].Args = []string{"bin/3scale_backend", "-s", "falcon", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	falconArgs := []string{"bin/3scale_backend", "-s", "falcon", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Args, falconArgs) {
+		existing.Spec.Template.Spec.Containers[0].Args = falconArgs
+		return update, nil
+	}
+	update = false
 	return update, nil
 }
 
-func DeploymentConfigEnvMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func DeploymentConfigListenerEnvMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	update := false
-
-	// Always set env var CONFIG_REDIS_ASYNC to 1 this logic is only hit when you don't have logical redis db
+	updateListenerWorkers := true
+	updateConfigRedisAsync := true
+	// This may be redundant as operator crashes if LISTENER_WORKERS=0
+	// Update LISTENER_WORKERS and CONFIG_REDIS_ASYNC to 1 if found
 	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
 		if envVar.Name == "LISTENER_WORKERS" {
+			updateListenerWorkers = false
 			if envVar.Value == "0" {
 				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
 				update = true
-				return update, nil
 			}
 		}
+		if envVar.Name == "CONFIG_REDIS_ASYNC" {
+			updateConfigRedisAsync = false
+			if envVar.Value == "0" {
+				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
+				update = true
+
+			}
+		}
+		if update {
+			return update, nil
+		}
+	}
+	// if either updateListenerWorkers or updateConfigRedisAsync is true then proceed to the append logic
+	// to add the env var LISTENER_WORKERS and CONFIG_REDIS_ASYNC
+	if updateListenerWorkers || updateConfigRedisAsync {
+		update = true
+	} else {
+		update = false
+	}
+	if updateConfigRedisAsync {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
+	}
+	if updateListenerWorkers {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+			helper.EnvVarFromValue("LISTENER_WORKERS", "1"))
+	}
+
+	return update, nil
+}
+
+func DeploymentConfigWorkerEnvMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	update := true
+	// Always set env var CONFIG_REDIS_ASYNC to 1 this logic is only hit when you don't have logical redis db
+	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
 		if envVar.Name == "CONFIG_REDIS_ASYNC" {
 			if envVar.Value == "0" {
 				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
 				update = true
 				return update, nil
 			}
+			update = false
+
 		}
 	}
-	// Always set env var create CONFIG_REDIS_ASYNC if not present
-	hasListenerWorkers := true
-	hasConfigRedisAsync := true
-	for _, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
-		if existing.Name == "backend-worker" {
-			if envVar.Name == "CONFIG_REDIS_ASYNC" {
-				update = false
-				return update, nil
-			}
-		}
-		if existing.Name == "backend-listener" {
-			if envVar.Name == "LISTENER_WORKERS" {
-				hasListenerWorkers = false
-			}
-			if envVar.Name == "CONFIG_REDIS_ASYNC" {
-				hasConfigRedisAsync = false
-			}
-		}
-	}
-	if hasListenerWorkers || hasConfigRedisAsync {
-		update = true
-	} else {
-		update = false
-		return update, nil
-	}
-	if existing.Name == "backend-listener" {
-		if hasConfigRedisAsync {
-			existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
-				helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
-		}
-		if hasListenerWorkers {
-			existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
-				helper.EnvVarFromValue("LISTENER_WORKERS", "1"))
-		}
-		update = true
-	}
-	if existing.Name == "backend-worker" {
+	// Adds the env CONFIG_REDIS_ASYNC if not present
+	if update {
 		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
 			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
-		update = true
 	}
-
 	return update, nil
 }
 
