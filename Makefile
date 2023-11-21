@@ -12,6 +12,11 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
+CONTAINER_ENGINE ?= docker
+CONTAINER_PLATFORM ?= linux/amd64
+ORG ?= vmogilev_rhmi
+REG=quay.io
+
 OS := $(shell uname | awk '{print tolower($$0)}' | sed -e s/linux/linux-gnu/ )
 ARCH := $(shell uname -m)
 
