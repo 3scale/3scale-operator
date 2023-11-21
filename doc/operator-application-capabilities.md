@@ -1642,4 +1642,5 @@ status:
 
 ## Limitations and unimplemented functionalities
 
-* [Product CRD](product-reference.md) Single sign on (SSO) authentication for the admin and developers portal
+* Single sign on (SSO) authentication for the admin portal
+* Single sign on (SSO) authentication for the developers portal

@@ -22,18 +22,6 @@ spec:
       for: 1m
       labels:
         severity: critical
-    - alert: ThreescaleApicastRequestTime
-      annotations:
-        description: High number of request taking more than a second to be processed
-        sop_url: https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/apicast_request_time.adoc
-        summary: Request on instance {{ $labels.instance }} is taking more than one
-          second to process the requests
-      expr: sum(rate(total_response_time_seconds_bucket{namespace='__NAMESPACE__',
-        pod=~'apicast-production.*'}[1m])) - sum(rate(upstream_response_time_seconds_bucket{namespace='__NAMESPACE__',
-        pod=~'apicast-production.*'}[1m])) > 1
-      for: 2m
-      labels:
-        severity: warning
     - alert: ThreescaleApicastHttp4xxErrorRate
       annotations:
         description: The number of request with 4XX is bigger than the 5% of total
