@@ -127,6 +127,20 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 							Resources:       backend.Options.WorkerResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Ports:           backend.workerPorts(),
+							LivenessProbe: &v1.Probe{
+								ProbeHandler: v1.ProbeHandler{
+									HTTPGet: &v1.HTTPGetAction{
+										Port:   intstr.FromInt(9421),
+										Path:   "/metrics",
+										Scheme: v1.URISchemeHTTP,
+									},
+								},
+								FailureThreshold:    3,
+								InitialDelaySeconds: 30,
+								PeriodSeconds:       30,
+								SuccessThreshold:    1,
+								TimeoutSeconds:      60,
+							},
 						},
 					},
 					ServiceAccountName:        "amp",
@@ -200,10 +214,19 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 						v1.Container{
 							Name:            "backend-cron",
 							Image:           "amp-backend:latest",
-							Args:            []string{"backend-cron"},
+							Args:            []string{"touch /tmp/healthy && backend-cron"},
 							Env:             backend.buildBackendCronEnv(),
 							Resources:       backend.Options.CronResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
+							LivenessProbe: &v1.Probe{
+								ProbeHandler: v1.ProbeHandler{
+									Exec: &v1.ExecAction{
+										Command: []string{"cat", "/tmp/healthy"},
+									},
+								},
+								InitialDelaySeconds: 30,
+								PeriodSeconds:       5,
+							},
 						},
 					},
 					ServiceAccountName:        "amp",

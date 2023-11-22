@@ -890,6 +890,18 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 							VolumeMounts:    system.sidekiqContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Ports:           system.sideKiqPorts(),
+							LivenessProbe: &v1.Probe{
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.FromInt(9394),
+									},
+								},
+								FailureThreshold:    40,
+								InitialDelaySeconds: 30,
+								PeriodSeconds:       30,
+								SuccessThreshold:    1,
+								TimeoutSeconds:      30,
+							},
 						},
 					},
 					ServiceAccountName:        "amp",
