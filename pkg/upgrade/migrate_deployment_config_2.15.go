@@ -3,12 +3,14 @@ package upgrade
 import (
 	"context"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/helper"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
 // MigrateDeploymentConfigToDeployment verifies the Deployment is healthy and then deletes the corresponding DeploymentConfig
@@ -36,10 +38,10 @@ func MigrateDeploymentConfigToDeployment(dName string, dNamespace string, client
 		Namespace: dNamespace,
 		Name:      dName,
 	}, deployment)
-	if err != nil {
-		return false, fmt.Errorf("error getting deployment %s: %v", deployment.Name, err)
+	if err != nil && !k8serr.IsNotFound(err) {
+		return false, fmt.Errorf("error getting deployment %s: %w", deployment.Name, err)
 	}
-	if !helper.IsDeploymentAvailable(deployment) {
+	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) {
 		log.V(1).Info(fmt.Sprintf("deployment %s is not yet available", deployment.Name))
 		return false, nil
 	}

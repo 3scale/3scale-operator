@@ -9,6 +9,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
@@ -56,10 +57,10 @@ func testBackendCommonCronLabels() map[string]string {
 
 func testBackendListenerPodLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "backend",
-		"threescale_component_element": "listener",
-		"deploymentConfig":             "backend-listener",
+		"app":                               appLabel,
+		"threescale_component":              "backend",
+		"threescale_component_element":      "listener",
+		reconcilers.DeploymentLabelSelector: "backend-listener",
 	}
 	addExpectedMeteringLabels(labels, "backend-listener", helper.ApplicationType)
 
@@ -68,10 +69,10 @@ func testBackendListenerPodLabels() map[string]string {
 
 func testBackendWorkerPodLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "backend",
-		"threescale_component_element": "worker",
-		"deploymentConfig":             "backend-worker",
+		"app":                               appLabel,
+		"threescale_component":              "backend",
+		"threescale_component_element":      "worker",
+		reconcilers.DeploymentLabelSelector: "backend-worker",
 	}
 	addExpectedMeteringLabels(labels, "backend-worker", helper.ApplicationType)
 
@@ -80,10 +81,10 @@ func testBackendWorkerPodLabels() map[string]string {
 
 func testBackendCronPodLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "backend",
-		"threescale_component_element": "cron",
-		"deploymentConfig":             "backend-cron",
+		"app":                               appLabel,
+		"threescale_component":              "backend",
+		"threescale_component_element":      "cron",
+		reconcilers.DeploymentLabelSelector: "backend-cron",
 	}
 	addExpectedMeteringLabels(labels, "backend-cron", helper.ApplicationType)
 
