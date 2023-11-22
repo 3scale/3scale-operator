@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	"sort"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -12,7 +13,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/go-logr/logr"
-	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -60,7 +60,7 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		return reconcile.Result{}, fmt.Errorf("Failed to update status: %w", updateErr)
+		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
 	return reconcile.Result{}, nil
 }
@@ -81,7 +81,7 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 	}
 	newStatus.Conditions.SetCondition(availableCondition)
 
-	deploymentStatus := olm.GetDeploymentConfigStatus(deployments)
+	deploymentStatus := olm.GetDeploymentStatus(deployments)
 	newStatus.Deployments = deploymentStatus
 
 	return newStatus, nil
@@ -117,7 +117,7 @@ func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alp
 	return deploymentLister.DeploymentNames()
 }
 
-func (s *APIManagerStatusReconciler) deploymentsAvailable(existingDeployments []appsv1.DeploymentConfig) bool {
+func (s *APIManagerStatusReconciler) deploymentsAvailable(existingDeployments []k8sappsv1.Deployment) bool {
 	expectedDeploymentNames := s.expectedDeploymentNames(s.apimanagerResource)
 	for _, deploymentName := range expectedDeploymentNames {
 		foundExistingDCIdx := -1
@@ -127,7 +127,7 @@ func (s *APIManagerStatusReconciler) deploymentsAvailable(existingDeployments []
 				break
 			}
 		}
-		if foundExistingDCIdx == -1 || !helper.IsDeploymentConfigAvailable(&existingDeployments[foundExistingDCIdx]) {
+		if foundExistingDCIdx == -1 || !helper.IsDeploymentAvailable(&existingDeployments[foundExistingDCIdx]) {
 			return false
 		}
 	}
@@ -135,13 +135,13 @@ func (s *APIManagerStatusReconciler) deploymentsAvailable(existingDeployments []
 	return true
 }
 
-func (s *APIManagerStatusReconciler) existingDeployments() ([]appsv1.DeploymentConfig, error) {
+func (s *APIManagerStatusReconciler) existingDeployments() ([]k8sappsv1.Deployment, error) {
 	expectedDeploymentNames := s.expectedDeploymentNames(s.apimanagerResource)
 
-	var dcs []appsv1.DeploymentConfig
-	for _, dcName := range expectedDeploymentNames {
-		existingDeploymentConfig := &appsv1.DeploymentConfig{}
-		err := s.Client().Get(context.Background(), types.NamespacedName{Namespace: s.apimanagerResource.Namespace, Name: dcName}, existingDeploymentConfig)
+	var deployments []k8sappsv1.Deployment
+	for _, dName := range expectedDeploymentNames {
+		existingDeployment := &k8sappsv1.Deployment{}
+		err := s.Client().Get(context.Background(), types.NamespacedName{Namespace: s.apimanagerResource.Namespace, Name: dName}, existingDeployment)
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, err
 		}
@@ -149,19 +149,19 @@ func (s *APIManagerStatusReconciler) existingDeployments() ([]appsv1.DeploymentC
 			continue
 		}
 
-		for _, ownerRef := range existingDeploymentConfig.GetOwnerReferences() {
+		for _, ownerRef := range existingDeployment.GetOwnerReferences() {
 			if ownerRef.UID == s.apimanagerResource.UID {
-				dcs = append(dcs, *existingDeploymentConfig)
+				deployments = append(deployments, *existingDeployment)
 				break
 			}
 		}
 	}
-	sort.Slice(dcs, func(i, j int) bool { return dcs[i].Name < dcs[j].Name })
+	sort.Slice(deployments, func(i, j int) bool { return deployments[i].Name < deployments[j].Name })
 
-	return dcs, nil
+	return deployments, nil
 }
 
-func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeployments []appsv1.DeploymentConfig) (common.Condition, error) {
+func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeployments []k8sappsv1.Deployment) (common.Condition, error) {
 	deploymentsAvailable := s.deploymentsAvailable(existingDeployments)
 
 	defaultRoutesReady, err := s.defaultRoutesReady()
@@ -200,7 +200,7 @@ func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
 	routeList := &routev1.RouteList{}
 	err := s.Client().List(context.TODO(), routeList, listOps...)
 	if err != nil {
-		return false, fmt.Errorf("Failed to list routes: %w", err)
+		return false, fmt.Errorf("failed to list routes: %w", err)
 	}
 
 	routes := append([]routev1.Route(nil), routeList.Items...)

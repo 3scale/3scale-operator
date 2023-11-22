@@ -14,6 +14,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -61,6 +62,10 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileImagestream(desired *imagev1.Im
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileDeploymentConfig(desired *appsv1.DeploymentConfig, mutatefn reconcilers.MutateFn) error {
 	return r.ReconcileResource(&appsv1.DeploymentConfig{}, desired, mutatefn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) ReconcileDeployment(desired *k8sappsv1.Deployment, mutatefn reconcilers.MutateFn) error {
+	return r.ReconcileResource(&k8sappsv1.Deployment{}, desired, mutatefn)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileService(desired *v1.Service, mutateFn reconcilers.MutateFn) error {
