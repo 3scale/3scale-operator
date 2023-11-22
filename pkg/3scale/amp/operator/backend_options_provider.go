@@ -7,6 +7,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -197,7 +198,7 @@ func (o *OperatorBackendOptionsProvider) listenerPodTemplateLabels() map[string]
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "backend-listener"
+	labels[reconcilers.DeploymentLabelSelector] = "backend-listener"
 
 	return labels
 }
@@ -213,7 +214,7 @@ func (o *OperatorBackendOptionsProvider) workerPodTemplateLabels() map[string]st
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "backend-worker"
+	labels[reconcilers.DeploymentLabelSelector] = "backend-worker"
 
 	return labels
 }
@@ -229,7 +230,7 @@ func (o *OperatorBackendOptionsProvider) cronPodTemplateLabels() map[string]stri
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "backend-cron"
+	labels[reconcilers.DeploymentLabelSelector] = "backend-cron"
 
 	return labels
 }
