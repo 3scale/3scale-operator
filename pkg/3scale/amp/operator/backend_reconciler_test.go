@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -60,19 +61,31 @@ func TestNewBackendReconciler(t *testing.T) {
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
 	}
+
+	backendRedisSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "backend-redis",
+			Namespace: namespace,
+		},
+	}
+
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager}
+	objs := []runtime.Object{apimanager, backendRedisSecret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err := appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = imagev1.AddToScheme(s)
+	err = imagev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = routev1.AddToScheme(s)
+	err = routev1.Install(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = configv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,11 +110,11 @@ func TestNewBackendReconciler(t *testing.T) {
 		objName  string
 		obj      k8sclient.Object
 	}{
-		{"cronDC", "backend-cron", &appsv1.DeploymentConfig{}},
-		{"listenerDC", "backend-listener", &appsv1.DeploymentConfig{}},
+		{"cronDeployment", "backend-cron", &k8sappsv1.Deployment{}},
+		{"listenerDeployment", "backend-listener", &k8sappsv1.Deployment{}},
 		{"listenerService", "backend-listener", &v1.Service{}},
 		{"listenerRoute", "backend", &routev1.Route{}},
-		{"workerDC", "backend-worker", &appsv1.DeploymentConfig{}},
+		{"workerDeployment", "backend-worker", &k8sappsv1.Deployment{}},
 		{"environmentCM", "backend-environment", &v1.ConfigMap{}},
 		{"internalAPISecret", component.BackendSecretInternalApiSecretName, &v1.Secret{}},
 		{"listenerSecret", component.BackendSecretBackendListenerSecretName, &v1.Secret{}},
@@ -141,16 +154,23 @@ func TestReplicaBackendReconciler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = appsv1.AddToScheme(s)
+	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := configv1.AddToScheme(s); err != nil {
+	if err := configv1.Install(s); err != nil {
 		t.Fatal(err)
 	}
-	err = routev1.AddToScheme(s)
+	err = routev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	backendRedisSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "backend-redis",
+			Namespace: namespace,
+		},
 	}
 
 	cases := []struct {
@@ -171,7 +191,7 @@ func TestReplicaBackendReconciler(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			objs := []runtime.Object{tc.apimanager}
+			objs := []runtime.Object{tc.apimanager, backendRedisSecret}
 			cl := fake.NewFakeClient(objs...)
 			clientAPIReader := fake.NewFakeClient(objs...)
 			clientset := fakeclientset.NewSimpleClientset()
@@ -185,21 +205,21 @@ func TestReplicaBackendReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			dc := &appsv1.DeploymentConfig{}
+			deployment := &k8sappsv1.Deployment{}
 			namespacedName := types.NamespacedName{
 				Name:      tc.objName,
 				Namespace: namespace,
 			}
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			// bump the amount of replicas in the dc
-			dc.Spec.Replicas = twoValue
-			err = cl.Update(context.TODO(), dc)
+			// bump the amount of replicas in the deployment
+			deployment.Spec.Replicas = &twoValue
+			err = cl.Update(context.TODO(), deployment)
 			if err != nil {
-				subT.Errorf("error updating dc of %s: %v", tc.objName, err)
+				subT.Errorf("error updating deployment of %s: %v", tc.objName, err)
 			}
 
 			// re-run the reconciler
@@ -208,13 +228,13 @@ func TestReplicaBackendReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
-				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			if tc.expectedAmountOfReplicas != *deployment.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, deployment.Spec.Replicas)
 			}
 		})
 	}

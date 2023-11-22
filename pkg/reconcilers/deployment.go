@@ -81,6 +81,8 @@ func GenericBackendDeploymentMutators() []DMutateFn {
 		DeploymentPriorityClassMutator,
 		DeploymentTopologySpreadConstraintsMutator,
 		DeploymentPodTemplateAnnotationsMutator,
+		DeploymentArgsMutator,
+		DeploymentProbesMutator,
 	}
 }
 
@@ -263,6 +265,43 @@ func DeploymentPodTemplateAnnotationsMutator(desired, existing *k8sappsv1.Deploy
 	updated := false
 
 	helper.MergeMapStringString(&updated, &existing.Spec.Template.Annotations, desired.Spec.Template.Annotations)
+
+	return updated, nil
+}
+
+// DeploymentArgsMutator ensures deployment's containers' args are reconciled
+func DeploymentArgsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	for i, desiredContainer := range desired.Spec.Template.Spec.Containers {
+		existingContainer := &existing.Spec.Template.Spec.Containers[i]
+
+		if !reflect.DeepEqual(existingContainer.Args, desiredContainer.Args) {
+			existingContainer.Args = desiredContainer.Args
+			updated = true
+		}
+	}
+
+	return updated, nil
+}
+
+// DeploymentProbesMutator ensures probes are reconciled
+func DeploymentProbesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	for i, desiredContainer := range desired.Spec.Template.Spec.Containers {
+		existingContainer := &existing.Spec.Template.Spec.Containers[i]
+
+		if !reflect.DeepEqual(existingContainer.LivenessProbe, desiredContainer.LivenessProbe) {
+			existingContainer.LivenessProbe = desiredContainer.LivenessProbe
+			updated = true
+		}
+
+		if !reflect.DeepEqual(existingContainer.ReadinessProbe, desiredContainer.ReadinessProbe) {
+			existingContainer.ReadinessProbe = desiredContainer.ReadinessProbe
+			updated = true
+		}
+	}
 
 	return updated, nil
 }
