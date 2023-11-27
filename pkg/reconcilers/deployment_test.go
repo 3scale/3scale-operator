@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestDeploymentReplicasMutator(t *testing.T) {
@@ -795,6 +796,298 @@ func TestDeploymentPodTemplateAnnotationsMutator(t *testing.T) {
 			}
 			if !reflect.DeepEqual(existing.Spec.Template.Annotations, tc.expectedNewAnnotations) {
 				subT.Fatal(cmp.Diff(existing.Spec.Template.Annotations, tc.expectedNewAnnotations))
+			}
+		})
+	}
+}
+
+func TestDeploymentArgsMutator(t *testing.T) {
+	type args struct {
+		desired  *k8sappsv1.Deployment
+		existing *k8sappsv1.Deployment
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "No Args Update Required",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Args: []string{"testArg"}},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Args: []string{"testArg"}},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "Args Update Required",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Args: []string{"testArg1", "testArg2"}},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Args: []string{"testArg1"}},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeploymentArgsMutator(tt.args.desired, tt.args.existing)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeploymentConfigArgsMutator() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeploymentConfigArgsMutator() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDeploymentProbesMutator(t *testing.T) {
+	type args struct {
+		desired  *k8sappsv1.Deployment
+		existing *k8sappsv1.Deployment
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "Liveness Probe Updated",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										LivenessProbe: &corev1.Probe{
+											ProbeHandler: corev1.ProbeHandler{
+												TCPSocket: &corev1.TCPSocketAction{
+													Port: intstr.FromInt(9306),
+												},
+											},
+											InitialDelaySeconds: 60,
+											PeriodSeconds:       10,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										LivenessProbe: nil,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "Liveness Probe Not Updated",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										LivenessProbe: &corev1.Probe{
+											ProbeHandler: corev1.ProbeHandler{
+												TCPSocket: &corev1.TCPSocketAction{
+													Port: intstr.FromInt(9306),
+												},
+											},
+											InitialDelaySeconds: 60,
+											PeriodSeconds:       10,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										LivenessProbe: &corev1.Probe{
+											ProbeHandler: corev1.ProbeHandler{
+												TCPSocket: &corev1.TCPSocketAction{
+													Port: intstr.FromInt(9306),
+												},
+											},
+											InitialDelaySeconds: 60,
+											PeriodSeconds:       10,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "Readiness Probe Updated",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										ReadinessProbe: &corev1.Probe{
+											ProbeHandler: corev1.ProbeHandler{HTTPGet: &corev1.HTTPGetAction{
+												Path: "/status",
+												Port: intstr.IntOrString{
+													Type:   intstr.Type(intstr.Int),
+													IntVal: 3000}},
+											},
+											InitialDelaySeconds: 30,
+											TimeoutSeconds:      5,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										ReadinessProbe: nil,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "Readiness Probe Not Updated",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										ReadinessProbe: &corev1.Probe{
+											ProbeHandler: corev1.ProbeHandler{HTTPGet: &corev1.HTTPGetAction{
+												Path: "/status",
+												Port: intstr.IntOrString{
+													Type:   intstr.Type(intstr.Int),
+													IntVal: 3000}},
+											},
+											InitialDelaySeconds: 30,
+											TimeoutSeconds:      5,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										ReadinessProbe: &corev1.Probe{
+											ProbeHandler: corev1.ProbeHandler{HTTPGet: &corev1.HTTPGetAction{
+												Path: "/status",
+												Port: intstr.IntOrString{
+													Type:   intstr.Type(intstr.Int),
+													IntVal: 3000}},
+											},
+											InitialDelaySeconds: 30,
+											TimeoutSeconds:      5,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeploymentProbesMutator(tt.args.desired, tt.args.existing)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeploymentConfigProbesMutator() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeploymentConfigProbesMutator() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"strings"
@@ -29,42 +30,68 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Cron DC
-	cronConfigMutator := reconcilers.GenericBackendMutators()
+	// Cron Deployment
+	cronDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	if r.apiManager.Spec.Backend.CronSpec.Replicas != nil {
-		cronConfigMutator = append(cronConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeploymentConfig(backend.CronDeploymentConfig(), reconcilers.DeploymentConfigMutator(cronConfigMutator...))
+	err = r.ReconcileDeployment(backend.CronDeployment(), reconcilers.DeploymentMutator(cronDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Listener DC
+	// 3scale 2.14 -> 2.15
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.BackendCronName, r.apiManager.GetNamespace(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	// Listener Deployment
 	backendRedisSecret := &v1.Secret{}
-	r.Client().Get(r.Context(), types.NamespacedName{
+	err = r.Client().Get(r.Context(), types.NamespacedName{
 		Name:      "backend-redis",
 		Namespace: r.apiManager.Namespace,
 	}, backendRedisSecret)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 	redisQueuesUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_QUEUES_URL"]), "1")
 	redisStorageUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_STORAGE_URL"]), "0")
 
-	listenerConfigMutator := reconcilers.GenericBackendMutators()
+	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	if redisStorageUrl != redisQueuesUrl {
-		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigListenerEnvMutator)
-		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigListenerArgsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerEnvMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerArgsMutator)
 	}
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
-		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeploymentConfig(backend.ListenerDeploymentConfig(), reconcilers.DeploymentConfigMutator(listenerConfigMutator...))
+	err = r.ReconcileDeployment(backend.ListenerDeployment(), reconcilers.DeploymentMutator(listenerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+	// 3scale 2.14 -> 2.15
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendListenerName, r.apiManager.GetNamespace(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	serviceMutators := []reconcilers.MutateFn{
+		reconcilers.CreateOnlyMutator,
+		reconcilers.ServiceSelectorMutator,
+	}
+
 	// Listener Service
-	err = r.ReconcileService(backend.ListenerService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(backend.ListenerService(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -75,18 +102,27 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Worker DC
-	workerConfigMutator := reconcilers.GenericBackendMutators()
+	// Worker Deployment
+	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	if redisStorageUrl != redisQueuesUrl {
-		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigWorkerEnvMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
 	}
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
-		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeploymentConfig(backend.WorkerDeploymentConfig(), reconcilers.DeploymentConfigMutator(workerConfigMutator...))
+	err = r.ReconcileDeployment(backend.WorkerDeployment(), reconcilers.DeploymentMutator(workerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// 3scale 2.14 -> 2.15
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendWorkerName, r.apiManager.GetNamespace(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// Environment ConfigMap
