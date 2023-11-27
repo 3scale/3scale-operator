@@ -6,12 +6,8 @@ WORKDIR /workspace
 COPY go.mod go.mod
 COPY go.sum go.sum
 COPY vendor ./vendor
-
-# cache deps before building and copying source so that we don't need to re-download as much
-# and so that source changes don't invalidate our downloaded layer
 RUN go mod download
 
-# Copy the go source
 COPY apis/ apis/
 COPY controllers/ controllers/
 
@@ -19,6 +15,9 @@ COPY pkg/ pkg/
 COPY version/ version/
 COPY bin/ bin/
 COPY testbin/ testbin/
+COPY config/ config/
+COPY e2e-dockerfile-cmd.sh ./
+
 
 # copy make
 COPY make ./make
@@ -27,14 +26,13 @@ COPY Makefile ./
 # compile test binary
 RUN make test/compile/osde2e
 
-#FROM gcr.io/distroless/static:nonroot
-#FROM registry.access.redhat.com/ubi8/ubi:latest
 FROM registry.redhat.io/ubi8/go-toolset:1.19.13-2
-
 WORKDIR /
-COPY --from=builder /workspace/3scale-operator-test-harness.test .
-COPY --from=builder /workspace/bin/e2e-dockerfile-cmd.sh .
+COPY --from=builder /workspace/e2e-dockerfile-cmd.sh .
+COPY --from=builder /workspace/3scale-operator-test-harness-controllers-apps.test .
+COPY --from=builder /workspace/3scale-operator-test-harness-controllers-capabilities.test .
 COPY --from=builder /workspace/testbin/ testbin/
+COPY --from=builder /workspace/config/ config/
 
 ENTRYPOINT ["/e2e-dockerfile-cmd.sh"]
 
