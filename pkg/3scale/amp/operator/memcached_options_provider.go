@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -80,7 +81,7 @@ func (m *MemcachedOptionsProvider) podTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-memcache"
+	labels[reconcilers.DeploymentLabelSelector] = "system-memcache"
 
 	return labels
 }
