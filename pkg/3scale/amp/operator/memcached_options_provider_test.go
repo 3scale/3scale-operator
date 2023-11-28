@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"reflect"
 	"testing"
 
@@ -24,10 +25,10 @@ func testMemcachedDeploymentLabels() map[string]string {
 
 func testPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "memcache",
-		"deploymentConfig":             "system-memcache",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "memcache",
+		reconcilers.DeploymentLabelSelector: "system-memcache",
 	}
 	addExpectedMeteringLabels(labels, "system-memcache", helper.ApplicationType)
 

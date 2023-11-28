@@ -4,6 +4,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -23,20 +24,28 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// DC
-	mutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
+	// Deployment
+	mutator := reconcilers.DeploymentMutator(
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 	)
-	err = r.ReconcileDeploymentConfig(memcached.DeploymentConfig(), mutator)
+	err = r.ReconcileDeployment(memcached.Deployment(), mutator)
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// 3scale 2.14 -> 2.15
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemMemcachedDeploymentName, r.apiManager.GetNamespace(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	return reconcile.Result{}, nil
