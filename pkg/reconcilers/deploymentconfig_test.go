@@ -1078,76 +1078,14 @@ func TestDeploymentConfigProbesMutator(t *testing.T) {
 		wantErr bool
 	}{
 		{
-            name: "Liveness Probe Updated",
-            args: args{
-                desired: &appsv1.DeploymentConfig{
-                    Spec: appsv1.DeploymentConfigSpec{
-                        Template: &v1.PodTemplateSpec{
-                            Spec: v1.PodSpec{
-                                Containers: []v1.Container{
-                                    {
-                                        LivenessProbe: &v1.Probe{
-											ProbeHandler: v1.ProbeHandler{
-												TCPSocket: &v1.TCPSocketAction{
-													Port: intstr.FromInt(9306),
-												},
-											},
-											InitialDelaySeconds: 60,
-											PeriodSeconds:       10,
-										},
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-                existing: &appsv1.DeploymentConfig{
-                    Spec: appsv1.DeploymentConfigSpec{
-                        Template: &v1.PodTemplateSpec{
-                            Spec: v1.PodSpec{
-                                Containers: []v1.Container{
-                                    {
-                                        LivenessProbe: nil,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            want:    true,
-            wantErr: false,
-        },
-		{
-            name: "Liveness Probe Not Updated",
-            args: args{
-                desired: &appsv1.DeploymentConfig{
-                    Spec: appsv1.DeploymentConfigSpec{
-                        Template: &v1.PodTemplateSpec{
-                            Spec: v1.PodSpec{
-                                Containers: []v1.Container{
-                                    {
-                                        LivenessProbe: &v1.Probe{
-											ProbeHandler: v1.ProbeHandler{
-												TCPSocket: &v1.TCPSocketAction{
-													Port: intstr.FromInt(9306),
-												},
-											},
-											InitialDelaySeconds: 60,
-											PeriodSeconds:       10,
-										},
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-                existing: &appsv1.DeploymentConfig{
-                    Spec: appsv1.DeploymentConfigSpec{
-                        Template: &v1.PodTemplateSpec{
-                            Spec: v1.PodSpec{
-                                Containers: []v1.Container{
-                                    {
+			name: "Liveness Probe Updated",
+			args: args{
+				desired: &appsv1.DeploymentConfig{
+					Spec: appsv1.DeploymentConfigSpec{
+						Template: &v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
 										LivenessProbe: &v1.Probe{
 											ProbeHandler: v1.ProbeHandler{
 												TCPSocket: &v1.TCPSocketAction{
@@ -1156,26 +1094,88 @@ func TestDeploymentConfigProbesMutator(t *testing.T) {
 											},
 											InitialDelaySeconds: 60,
 											PeriodSeconds:       10,
-										},                                    
+										},
 									},
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            want:    false,
-            wantErr: false,
-        },
+								},
+							},
+						},
+					},
+				},
+				existing: &appsv1.DeploymentConfig{
+					Spec: appsv1.DeploymentConfigSpec{
+						Template: &v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
+										LivenessProbe: nil,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
 		{
-            name: "Readiness Probe Updated",
-            args: args{
-                desired: &appsv1.DeploymentConfig{
-                    Spec: appsv1.DeploymentConfigSpec{
-                        Template: &v1.PodTemplateSpec{
-                            Spec: v1.PodSpec{
-                                Containers: []v1.Container{
-                                    {
+			name: "Liveness Probe Not Updated",
+			args: args{
+				desired: &appsv1.DeploymentConfig{
+					Spec: appsv1.DeploymentConfigSpec{
+						Template: &v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
+										LivenessProbe: &v1.Probe{
+											ProbeHandler: v1.ProbeHandler{
+												TCPSocket: &v1.TCPSocketAction{
+													Port: intstr.FromInt(9306),
+												},
+											},
+											InitialDelaySeconds: 60,
+											PeriodSeconds:       10,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &appsv1.DeploymentConfig{
+					Spec: appsv1.DeploymentConfigSpec{
+						Template: &v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
+										LivenessProbe: &v1.Probe{
+											ProbeHandler: v1.ProbeHandler{
+												TCPSocket: &v1.TCPSocketAction{
+													Port: intstr.FromInt(9306),
+												},
+											},
+											InitialDelaySeconds: 60,
+											PeriodSeconds:       10,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "Readiness Probe Updated",
+			args: args{
+				desired: &appsv1.DeploymentConfig{
+					Spec: appsv1.DeploymentConfigSpec{
+						Template: &v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
 										ReadinessProbe: &v1.Probe{
 											ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 												Path: "/status",
@@ -1186,60 +1186,38 @@ func TestDeploymentConfigProbesMutator(t *testing.T) {
 											InitialDelaySeconds: 30,
 											TimeoutSeconds:      5,
 										},
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-                existing: &appsv1.DeploymentConfig{
-                    Spec: appsv1.DeploymentConfigSpec{
-                        Template: &v1.PodTemplateSpec{
-                            Spec: v1.PodSpec{
-                                Containers: []v1.Container{
-                                    {
-                                        ReadinessProbe: nil,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            want:    true,
-            wantErr: false,
-        },
+									},
+								},
+							},
+						},
+					},
+				},
+				existing: &appsv1.DeploymentConfig{
+					Spec: appsv1.DeploymentConfigSpec{
+						Template: &v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
+										ReadinessProbe: nil,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		},
 		{
-            name: "Readiness Probe Not Updated",
-            args: args{
-                desired: &appsv1.DeploymentConfig{
-                    Spec: appsv1.DeploymentConfigSpec{
-                        Template: &v1.PodTemplateSpec{
-                            Spec: v1.PodSpec{
-                                Containers: []v1.Container{
-                                    {
-                                        ReadinessProbe: &v1.Probe{
-											ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
-												Path: "/status",
-												Port: intstr.IntOrString{
-													Type:   intstr.Type(intstr.Int),
-													IntVal: 3000}},
-											},
-											InitialDelaySeconds: 30,
-											TimeoutSeconds:      5,
-										},
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-                existing: &appsv1.DeploymentConfig{
-                    Spec: appsv1.DeploymentConfigSpec{
-                        Template: &v1.PodTemplateSpec{
-                            Spec: v1.PodSpec{
-                                Containers: []v1.Container{
-                                    {
+			name: "Readiness Probe Not Updated",
+			args: args{
+				desired: &appsv1.DeploymentConfig{
+					Spec: appsv1.DeploymentConfigSpec{
+						Template: &v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
 										ReadinessProbe: &v1.Probe{
 											ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 												Path: "/status",
@@ -1249,17 +1227,39 @@ func TestDeploymentConfigProbesMutator(t *testing.T) {
 											},
 											InitialDelaySeconds: 30,
 											TimeoutSeconds:      5,
-										},                              
+										},
 									},
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            want:    false,
-            wantErr: false,
-        },
+								},
+							},
+						},
+					},
+				},
+				existing: &appsv1.DeploymentConfig{
+					Spec: appsv1.DeploymentConfigSpec{
+						Template: &v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
+										ReadinessProbe: &v1.Probe{
+											ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
+												Path: "/status",
+												Port: intstr.IntOrString{
+													Type:   intstr.Type(intstr.Int),
+													IntVal: 3000}},
+											},
+											InitialDelaySeconds: 30,
+											TimeoutSeconds:      5,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

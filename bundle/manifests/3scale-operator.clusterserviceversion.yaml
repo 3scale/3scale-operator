@@ -643,6 +643,17 @@ spec:
           - update
           - watch
         - apiGroups:
+          - autoscaling
+          resources:
+          - horizontalpodautoscaler
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
           - batch
           resources:
           - jobs

@@ -19,6 +19,7 @@
          * [Setting custom compute resource requirements at component level](#setting-custom-compute-resource-requirements-at-component-level)
          * [Setting custom storage resource requirements](#setting-custom-storage-resource-requirements)
          * [Setting custom PriorityClassName](#setting-custom-priorityclassname)
+         * [Setting Horizontal Pod Autoscaling](#setting-horizontal-pod-autoscaling)
          * [Setting custom TopologySpreadConstraints](#setting-custom-topologyspreadconstraints)
          * [Setting custom labels](#setting-custom-labels)
          * [Setting custom Annotations](#setting-custom-annotations)
@@ -735,6 +736,105 @@ spec:
         listenerSpec:
             priorityClassName: openshift-user-critical
 ```
+#### Setting Horizontal Pod Autoscaling 
+Horizontal Pod Autoscaling(HPA) is available for Apicast-production, Backend-listener and Backend-worker. The backend
+components require Redis running [async mode](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#async). 
+Async is enabled by default by the operator provided you aren't using [logical Redis databases](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#redis-databases).
+If you are not running in Async mode you won't be able to enable HPA.
+
+Provided you are running in Async mode, you can enable hpa for the components and accept the default configuration which
+will give you a HPA with 90% resources set and max and min pods set to 5 and 1. The following is an example of the 
+output HPA for backend-worker using the defaults. 
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: 
+  name: backend-worker
+  namespace: 3scale-test
+spec: 
+  scaleTargetRef: 
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    name: backend-worker
+  minReplicas: 1
+  maxReplicas: 5
+  metrics: 
+    - type: Resource
+      resource: 
+        name: cpu
+        target: 
+          averageUtilization: 90
+          type: Utilization
+    - type: Resource
+      resource: 
+        name: memory
+        target: 
+          averageUtilization: 90
+          type: Utilization
+```
+Here is an example of the APIManager CR set with backend-worker, backend-listener and apicast-production set to default 
+HPA values e.g.
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+    name: example-apimanager
+spec:
+    wildcardDomain: example.com
+    resourceRequirementsEnabled: false
+    apicast:
+        productionSpec:
+          hpa:
+            enabled: true
+    backend:
+        listenerSpec:
+          hpa:
+            enabled: true
+        workerSpec:
+          hpa:
+            enabled: true
+```
+Removing hpa field or setting enabled to false will remove the HPA for the component. 
+Once `enabled: true` you can manually edit the HPA instances that are created to optimize your [configuration](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/). 
+
+Alternatively you can set the HPA configuration in the APIManager CR. this will override the defaults. With this change
+you are enabling syncing of the values between the APIManager CR and HPA CRs. APIManager will be the source of truth for
+the HPA created. That is if you manually edit values in the HPA they will be reverted to match the values in the 
+APIManager CR  e.g. of APIManager configuration for managing HPA 
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+    name: example-apimanager
+spec:
+    wildcardDomain: example.com
+    resourceRequirementsEnabled: false
+    apicast:
+        productionSpec:
+          hpa:
+            enabled: true
+            minPods: 1
+            maxPods: 6
+            cpuPercent: 60
+            memoryPercent: 70
+    backend:
+        listenerSpec:
+          hpa:
+            enabled: true
+            minPods: 1
+            maxPods: 7
+            cpuPercent: 80
+            memoryPercent: 70
+        workerSpec:
+          hpa:
+            enabled: true
+            minPods: 1
+            maxPods: 8
+            cpuPercent: 70
+            memoryPercent: 95
+``` 
+We recommend using the default values 
 
 #### Setting custom TopologySpreadConstraints
 TopologySpreadConstraints specifies how to spread matching pods among the given topology.  See [here](https://docs.openshift.com/container-platform/4.13/nodes/scheduling/nodes-scheduler-pod-topology-spread-constraints.html) for more information.  

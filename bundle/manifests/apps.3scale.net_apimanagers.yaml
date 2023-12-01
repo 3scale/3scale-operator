@@ -563,6 +563,31 @@ spec:
                           - version
                           type: object
                         type: array
+                      hpa:
+                        description: Hpa specifies an array of defined HPA values
+                        properties:
+                          cpuPercent:
+                            description: CpuPercent specifies the CPU resource usage percentage to trigger autoscaling
+                            format: int32
+                            type: integer
+                          enabled:
+                            description: Enabled switch to enable/disable per component
+                            type: boolean
+                          maxPods:
+                            description: MaxPods specifies the maximum amount of pods for HPA to scale at
+                            format: int32
+                            type: integer
+                          memoryPercent:
+                            description: MemoryValue specifies the memory resource usage in bytes to trigger autoscaling
+                            format: int32
+                            type: integer
+                          minPods:
+                            description: MinPods specifies the minimum available pods
+                            format: int32
+                            type: integer
+                        required:
+                        - enabled
+                        type: object
                       httpProxy:
                         description: HTTPProxy specifies a HTTP(S) Proxy to be used for connecting to HTTP services. Authentication is not supported. Format is <scheme>://<host>:<port>
                         type: string
@@ -2502,6 +2527,31 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      hpa:
+                        description: Hpa specifies an array of defined HPA values
+                        properties:
+                          cpuPercent:
+                            description: CpuPercent specifies the CPU resource usage percentage to trigger autoscaling
+                            format: int32
+                            type: integer
+                          enabled:
+                            description: Enabled switch to enable/disable per component
+                            type: boolean
+                          maxPods:
+                            description: MaxPods specifies the maximum amount of pods for HPA to scale at
+                            format: int32
+                            type: integer
+                          memoryPercent:
+                            description: MemoryValue specifies the memory resource usage in bytes to trigger autoscaling
+                            format: int32
+                            type: integer
+                          minPods:
+                            description: MinPods specifies the minimum available pods
+                            format: int32
+                            type: integer
+                        required:
+                        - enabled
+                        type: object
                       labels:
                         additionalProperties:
                           type: string
@@ -3676,6 +3726,31 @@ spec:
                       annotations:
                         additionalProperties:
                           type: string
+                        type: object
+                      hpa:
+                        description: Hpa specifies an array of defined HPA values
+                        properties:
+                          cpuPercent:
+                            description: CpuPercent specifies the CPU resource usage percentage to trigger autoscaling
+                            format: int32
+                            type: integer
+                          enabled:
+                            description: Enabled switch to enable/disable per component
+                            type: boolean
+                          maxPods:
+                            description: MaxPods specifies the maximum amount of pods for HPA to scale at
+                            format: int32
+                            type: integer
+                          memoryPercent:
+                            description: MemoryValue specifies the memory resource usage in bytes to trigger autoscaling
+                            format: int32
+                            type: integer
+                          minPods:
+                            description: MinPods specifies the minimum available pods
+                            format: int32
+                            type: integer
+                        required:
+                        - enabled
                         type: object
                       labels:
                         additionalProperties:
