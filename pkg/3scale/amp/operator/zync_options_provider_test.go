@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"reflect"
 	"testing"
 
@@ -61,10 +62,10 @@ func testZyncDatabaseCommonLabels() map[string]string {
 
 func testZyncPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "zync",
-		"threescale_component_element": "zync",
-		"deploymentConfig":             "zync",
+		"app":                               appLabel,
+		"threescale_component":              "zync",
+		"threescale_component_element":      "zync",
+		reconcilers.DeploymentLabelSelector: "zync",
 	}
 	addExpectedMeteringLabels(labels, "zync", helper.ApplicationType)
 
@@ -73,10 +74,10 @@ func testZyncPodTemplateLabels() map[string]string {
 
 func testZyncQuePodTemplateCommonLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "zync",
-		"threescale_component_element": "zync-que",
-		"deploymentConfig":             "zync-que",
+		"app":                               appLabel,
+		"threescale_component":              "zync",
+		"threescale_component_element":      "zync-que",
+		reconcilers.DeploymentLabelSelector: "zync-que",
 	}
 	addExpectedMeteringLabels(labels, "zync-que", helper.ApplicationType)
 
@@ -85,10 +86,10 @@ func testZyncQuePodTemplateCommonLabels() map[string]string {
 
 func testZyncDatabasePodTemplateCommonLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "zync",
-		"threescale_component_element": "database",
-		"deploymentConfig":             "zync-database",
+		"app":                               appLabel,
+		"threescale_component":              "zync",
+		"threescale_component_element":      "database",
+		reconcilers.DeploymentLabelSelector: "zync-database",
 	}
 	addExpectedMeteringLabels(labels, "zync-database", helper.ApplicationType)
 

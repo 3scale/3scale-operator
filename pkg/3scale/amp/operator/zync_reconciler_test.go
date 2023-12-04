@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	"testing"
 
 	policyv1 "k8s.io/api/policy/v1"
@@ -68,15 +69,19 @@ func TestNewZyncReconciler(t *testing.T) {
 	objs := []runtime.Object{apimanager}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err := k8sappsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = imagev1.AddToScheme(s)
+	err = configv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = routev1.AddToScheme(s)
+	err = imagev1.Install(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = routev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,6 +89,12 @@ func TestNewZyncReconciler(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := grafanav1alpha1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -110,9 +121,9 @@ func TestNewZyncReconciler(t *testing.T) {
 		{"queRole", "zync-que-role", &rbacv1.Role{}},
 		{"queServiceAccount", "zync-que-sa", &v1.ServiceAccount{}},
 		{"queRoleBinding", "zync-que-rolebinding", &rbacv1.RoleBinding{}},
-		{"zyncDC", "zync", &appsv1.DeploymentConfig{}},
-		{"zyncQueDC", "zync-que", &appsv1.DeploymentConfig{}},
-		{"zyncDatabaseDC", "zync-database", &appsv1.DeploymentConfig{}},
+		{"zyncDeployment", "zync", &k8sappsv1.Deployment{}},
+		{"zyncQueDeployment", "zync-que", &k8sappsv1.Deployment{}},
+		{"zyncDatabaseDeployment", "zync-database", &k8sappsv1.Deployment{}},
 		{"zyncService", "zync", &v1.Service{}},
 		{"zyncDatabaseService", "zync-database", &v1.Service{}},
 		{"zyncSecret", component.ZyncSecretName, &v1.Secret{}},
@@ -182,15 +193,19 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 	objs := []runtime.Object{apimanager, zyncExternalDatabaseSecret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err := k8sappsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = imagev1.AddToScheme(s)
+	err = configv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = routev1.AddToScheme(s)
+	err = imagev1.Install(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = routev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,6 +213,12 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := grafanav1alpha1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -225,9 +246,9 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 		{"queRole", "zync-que-role", &rbacv1.Role{}, true},
 		{"queServiceAccount", "zync-que-sa", &v1.ServiceAccount{}, true},
 		{"queRoleBinding", "zync-que-rolebinding", &rbacv1.RoleBinding{}, true},
-		{"zyncDC", "zync", &appsv1.DeploymentConfig{}, true},
-		{"zyncQueDC", "zync-que", &appsv1.DeploymentConfig{}, true},
-		{"zyncDatabaseDC", "zync-database", &appsv1.DeploymentConfig{}, false},
+		{"zyncDeployment", "zync", &k8sappsv1.Deployment{}, true},
+		{"zyncQueDeployment", "zync-que", &k8sappsv1.Deployment{}, true},
+		{"zyncDatabaseDeployment", "zync-database", &k8sappsv1.Deployment{}, false},
 		{"zyncService", "zync", &v1.Service{}, true},
 		{"zyncDatabaseService", "zync-database", &v1.Service{}, false},
 		{"zyncSecret", component.ZyncSecretName, &v1.Secret{}, true},
@@ -271,12 +292,18 @@ func TestReplicaZyncReconciler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = appsv1.AddToScheme(s)
+	err = k8sappsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := configv1.AddToScheme(s); err != nil {
+	if err := configv1.Install(s); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -310,20 +337,20 @@ func TestReplicaZyncReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			dc := &appsv1.DeploymentConfig{}
+			deployment := &k8sappsv1.Deployment{}
 			namespacedName := types.NamespacedName{
 				Name:      tc.objName,
 				Namespace: namespace,
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
 			// bump the amount of replicas in the dc
-			dc.Spec.Replicas = twoValue
-			err = cl.Update(context.TODO(), dc)
+			deployment.Spec.Replicas = &twoValue
+			err = cl.Update(context.TODO(), deployment)
 			if err != nil {
 				subT.Errorf("error updating dc of %s: %v", tc.objName, err)
 			}
@@ -334,13 +361,13 @@ func TestReplicaZyncReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
-				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			if tc.expectedAmountOfReplicas != *deployment.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, deployment.Spec.Replicas)
 			}
 		})
 	}
