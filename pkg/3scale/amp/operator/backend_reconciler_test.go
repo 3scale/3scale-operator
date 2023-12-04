@@ -90,6 +90,12 @@ func TestNewBackendReconciler(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
