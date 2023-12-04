@@ -5,6 +5,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -27,7 +28,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Zync Que Role
-	err = r.ReconcileRole(zync.QueRole(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileRole(zync.QueRole(), reconcilers.RoleRuleMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -44,69 +45,98 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Zync DC
-	zyncMutators := []reconcilers.DCMutateFn{
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
+	// Zync Deployment
+	zyncMutators := []reconcilers.DMutateFn{
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 	}
 	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
-		zyncMutators = append(zyncMutators, reconcilers.DeploymentConfigReplicasMutator)
+		zyncMutators = append(zyncMutators, reconcilers.DeploymentReplicasMutator)
 	}
-	err = r.ReconcileDeploymentConfig(zync.DeploymentConfig(), reconcilers.DeploymentConfigMutator(zyncMutators...))
+	err = r.ReconcileDeployment(zync.Deployment(), reconcilers.DeploymentMutator(zyncMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Zync Que DC
-	zyncQueMutators := []reconcilers.DCMutateFn{
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
-	}
-	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
-		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentConfigReplicasMutator)
-	}
-	err = r.ReconcileDeploymentConfig(zync.QueDeploymentConfig(), reconcilers.DeploymentConfigMutator(zyncQueMutators...))
+	// 3scale 2.14 -> 2.15
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.ZyncName, r.apiManager.GetNamespace(), r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	// Zync Que Deployment
+	zyncQueMutators := []reconcilers.DMutateFn{
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+	}
+	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
+		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentReplicasMutator)
+	}
+	err = r.ReconcileDeployment(zync.QueDeployment(), reconcilers.DeploymentMutator(zyncQueMutators...))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// 3scale 2.14 -> 2.15
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ZyncQueDeploymentName, r.apiManager.GetNamespace(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	serviceMutators := []reconcilers.MutateFn{
+		reconcilers.CreateOnlyMutator,
+		reconcilers.ServiceSelectorMutator,
 	}
 
 	// Zync Service
-	err = r.ReconcileService(zync.Service(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(zync.Service(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
-		// Zync DB DC
-		zyncDBDCMutator := reconcilers.DeploymentConfigMutator(
-			reconcilers.DeploymentConfigImageChangeTriggerMutator,
-			reconcilers.DeploymentConfigContainerResourcesMutator,
-			reconcilers.DeploymentConfigAffinityMutator,
-			reconcilers.DeploymentConfigTolerationsMutator,
-			reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-			reconcilers.DeploymentConfigPriorityClassMutator,
-			reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-			reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
+		// Zync DB Deployment
+		zyncDBDMutator := reconcilers.DeploymentMutator(
+			reconcilers.DeploymentContainerResourcesMutator,
+			reconcilers.DeploymentAffinityMutator,
+			reconcilers.DeploymentTolerationsMutator,
+			reconcilers.DeploymentPodTemplateLabelsMutator,
+			reconcilers.DeploymentPriorityClassMutator,
+			reconcilers.DeploymentTopologySpreadConstraintsMutator,
+			reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		)
-		err = r.ReconcileDeploymentConfig(zync.DatabaseDeploymentConfig(), zyncDBDCMutator)
+		err = r.ReconcileDeployment(zync.DatabaseDeployment(), zyncDBDMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
+		// 3scale 2.14 -> 2.15
+		isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ZyncDatabaseDeploymentName, r.apiManager.GetNamespace(), r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if !isMigrated {
+			return reconcile.Result{Requeue: true}, nil
+		}
+
 		// Zync DB Service
-		err = r.ReconcileService(zync.DatabaseService(), reconcilers.CreateOnlyMutator)
+		err = r.ReconcileService(zync.DatabaseService(), reconcilers.ServiceMutator(serviceMutators...))
 		if err != nil {
 			return reconcile.Result{}, err
 		}
