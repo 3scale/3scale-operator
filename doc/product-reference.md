@@ -170,13 +170,13 @@ Specifies product security
 
 Specifies product mapping rules
 
-| **Field** | **json field**| **Type** | **Info** | **Required** |
-| --- | --- | --- | --- | --- |
-| HTTPMethod | `httpMethod` | string | Valid values: GET;HEAD;POST;PUT;DELETE;OPTIONS;TRACE;PATCH;CONNECT | Yes |
-| Pattern | `pattern` | string | Mapping Rule pattern | Yes |
-| Metric Method Reference | `metricMethodRef` | string | Existing method or metric **system name** | Yes |
-| Increment | `increment` | int | Increase the metric by this delta | Yes |
-| Last | `last` | \*bool | Last matched Mapping Rule to process | No |
+| **Field** | **json field**| **Type** | **Info**                                                              | **Required** |
+| --- | --- | --- |-----------------------------------------------------------------------| --- |
+| HTTPMethod | `httpMethod` | string | Valid values: GET;HEAD;POST;PUT;DELETE;OPTIONS;TRACE;PATCH;CONNECT    | Yes |
+| Pattern | `pattern` | string | Mapping Rule pattern. The combination of Pattern and HTTPMethod must be unique among all mapping rules. | Yes |
+| Metric Method Reference | `metricMethodRef` | string | Existing method or metric **system name**                             | Yes |
+| Increment | `increment` | int | Increase the metric by this delta                                     | Yes |
+| Last | `last` | \*bool | Last matched Mapping Rule to process                                  | No |
 
 #### MetricSpec
 

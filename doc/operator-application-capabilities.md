@@ -269,6 +269,12 @@ Check on the fields of **Backend** custom resource and possible values in the [B
 
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
 * **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
+* **NOTE 3**: The combination of `pattern + httpMethod` must be unique among all mapping rules. 
+    - If Backend CR contains mapping rules where `pattern and httpMethod` are same, even if `metricMethodRef` fields differ -
+      such mapping rules concidered as **duplicated**.
+    - The last rule from duplicated will be accepted by 3scale, but previouse duplicated rules
+      will be ignored and will not appear in 3scale portal Mapping Rules page.
+    - CRs should be updated manually.
 
 ### Backend custom resource status field
 
@@ -558,6 +564,12 @@ spec:
 
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
 * **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
+* **NOTE 3**: The combination of `pattern + httpMethod` must be unique among all mapping rules.
+  - If Product CR contains mapping rules where `pattern and httpMethod` are same, even if `metricMethodRef` fields differ -
+  such mapping rules concidered as duplicated. 
+  - The last rule from duplicated will be accepted by 3scale, but previouse duplicated rules
+  will be ignored and will not appear in 3scale portal Mapping Rules page. 
+  - CRs should be updated manually.
 
 ### Product application plans
 

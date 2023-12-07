@@ -183,6 +183,13 @@ func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired c
 }
 
 func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
+	isValidRule, err := t.validateMappingRulesDuplication(desired)
+	if err != nil {
+		return err
+	}
+	if !isValidRule {
+		return errors.New("mapping rule duplication; pattern " + desired.Pattern + " already exists. The pattern must be unique among all mapping rules")
+	}
 	metricID, err := t.productEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
 	if err != nil {
 		return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
@@ -212,4 +219,18 @@ func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired c
 	}
 
 	return nil
+}
+
+func (t *ProductThreescaleReconciler) validateMappingRulesDuplication(desired capabilitiesv1beta1.MappingRuleSpec) (bool, error) {
+	existingMap, err := t.getExistingMappingRules()
+	if err != nil {
+		return false, fmt.Errorf("error getExistingMappingRules: %w", err)
+	}
+	for _, existingRule := range existingMap {
+		if desired.Pattern == existingRule.Pattern &&
+			desired.HTTPMethod == existingRule.HTTPMethod {
+			return false, fmt.Errorf("duplicated Mapping Rules found that using same Pattern [%s] and same HTTPMethod [%s]! Only last Rule was accepted. You can fix Rules in CR manually.", desired.Pattern, desired.HTTPMethod)
+		}
+	}
+	return true, nil
 }
