@@ -403,6 +403,7 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(openapiObj)
 	if len(globalSecRequirements) == 0 && openapiCR.Spec.OIDC != nil {
 		logger.Info("OIDC definitions in CR will be ignored, as no security requirements are found. Default to UserKey authentication")
+		r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "No security requirements are found in OAS", "%v", "OIDC definitions in CR will be ignored, as no security requirements are found. Default to UserKey authentication")
 	}
 
 	if len(globalSecRequirements) == 1 {
