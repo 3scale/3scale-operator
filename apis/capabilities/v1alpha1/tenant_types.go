@@ -36,10 +36,6 @@ const (
 	// TenantReadyConditionType indicates the tenant has been successfully created.
 	// Steady state
 	TenantReadyConditionType common.ConditionType = "Ready"
-
-	// TenantFailedConditionType indicates that an error occurred during creation.
-	// The operator will retry.
-	TenantFailedConditionType common.ConditionType = "Failed"
 )
 
 // TenantSpec defines the desired state of Tenant
@@ -165,7 +161,7 @@ func (b *TenantStatus) StatusEqual(other *TenantStatus, logger logr.Logger) bool
 		equal = false
 	}
 
-	equal = conditionsEqual(TenantReadyConditionType, b.Conditions, other.Conditions) && conditionsEqual(TenantFailedConditionType, b.Conditions, other.Conditions)
+	equal = conditionsEqual(TenantReadyConditionType, b.Conditions, other.Conditions)
 
 	return equal
 }

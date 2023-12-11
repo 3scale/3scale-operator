@@ -5,12 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 
 	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
-	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -98,7 +96,7 @@ func (r *TenantThreescaleReconciler) reconcileTenant() (bool, error) {
 			TenantId: tenantDef.Signup.Account.ID,
 		}
 
-		updated, err := r.reconcileStatus(newStatus)
+		updated, err := r.reconcileStatusIDs(newStatus)
 		if err != nil {
 			return false, err
 		}
@@ -157,7 +155,7 @@ func (r *TenantThreescaleReconciler) reconcileAdminUser() error {
 		TenantId: tenantID,
 	}
 
-	updated, err := r.reconcileStatus(newStatus)
+	updated, err := r.reconcileStatusIDs(newStatus)
 	if err != nil {
 		return err
 	}
@@ -277,14 +275,16 @@ func (r *TenantThreescaleReconciler) syncAdminUser(tenantID int64, adminUser *po
 }
 
 // Returns whether the status should be updated or not and the error
-func (r *TenantThreescaleReconciler) reconcileStatus(desiredStatus *apiv1alpha1.TenantStatus) (bool, error) {
-	if !reflect.DeepEqual(r.tenantR.Status, *desiredStatus) {
-		diff := cmp.Diff(r.tenantR.Status, *desiredStatus)
-		r.logger.V(1).Info(fmt.Sprintf("status has changed: %s", diff))
-		r.tenantR.Status = *desiredStatus
-		r.logger.Info("Update tenant status with tenantID", "tenantID", r.tenantR.Status.TenantId)
+func (r *TenantThreescaleReconciler) reconcileStatusIDs(desiredStatus *apiv1alpha1.TenantStatus) (bool, error) {
+	if desiredStatus.TenantId != r.tenantR.Status.TenantId {
+		r.tenantR.Status.TenantId = desiredStatus.TenantId
 		return true, nil
 	}
+	if desiredStatus.AdminId != r.tenantR.Status.AdminId {
+		r.tenantR.Status.AdminId = desiredStatus.AdminId
+		return true, nil
+	}
+
 	return false, nil
 }
 

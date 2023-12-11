@@ -92,8 +92,6 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	originalTenantCR := tenantCR.DeepCopy()
-
 	if reqLogger.V(1).Enabled() {
 		jsonData, err := json.MarshalIndent(tenantCR, "", "  ")
 		if err != nil {
@@ -105,7 +103,7 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	// Setup porta client
 	portaClient, err := r.setupPortaClient(tenantCR, reqLogger)
 	if err != nil {
-		_, statusReconcilerError := r.reconcileStatus(tenantCR, originalTenantCR, err)
+		_, statusReconcilerError := r.reconcileStatus(tenantCR, err)
 		if statusReconcilerError != nil {
 			return helper.ReconcileErrorHandler(err, reqLogger), nil
 		}
@@ -165,7 +163,7 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	// Validate and update spec if required
 	internalReconciler := NewTenantThreescaleReconciler(r.BaseReconciler, tenantCR, portaClient, reqLogger)
 	specReconcileErr := internalReconciler.Run()
-	statusIsEqual, statusReconcilerError := r.reconcileStatus(tenantCR, originalTenantCR, specReconcileErr)
+	statusIsEqual, statusReconcilerError := r.reconcileStatus(tenantCR, specReconcileErr)
 	if statusReconcilerError != nil {
 		return helper.ReconcileErrorHandler(statusReconcilerError, reqLogger), nil
 	}
@@ -183,8 +181,8 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	return ctrl.Result{}, nil
 }
 
-func (r *TenantReconciler) reconcileStatus(updatedTenantCR, originalTenantCR *capabilitiesv1alpha1.Tenant, reconcileError error) (bool, error) {
-	statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, updatedTenantCR, originalTenantCR, reconcileError)
+func (r *TenantReconciler) reconcileStatus(tenantCR *capabilitiesv1alpha1.Tenant, reconcileError error) (bool, error) {
+	statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, tenantCR, reconcileError)
 	statusEqual, err := statusReconciler.Reconcile()
 	if err != nil {
 		return statusEqual, err
@@ -198,7 +196,7 @@ func (r *TenantReconciler) reconcileMetadata(tenantCR *capabilitiesv1alpha1.Tena
 	// If the tenant.Status.TenantID is found and the annotation is not found - create
 	// If the tenant.Status.TenantID is found and the annotation is found but, the value of annotation is different to the status.TenantID - update
 	tenantId := tenantCR.Status.TenantId
-	if value, found := tenantCR.ObjectMeta.Annotations[tenantIdAnnotation]; tenantId != 0 && !found || tenantId != 0 && found && value != strconv.FormatInt(tenantCR.Status.TenantId, 10) {
+	if value, found := tenantCR.ObjectMeta.Annotations[tenantIdAnnotation]; (tenantId != 0 && !found) || (tenantId != 0 && found && value != strconv.FormatInt(tenantCR.Status.TenantId, 10)) {
 		if tenantCR.ObjectMeta.Annotations == nil {
 			tenantCR.ObjectMeta.Annotations = make(map[string]string)
 		}
