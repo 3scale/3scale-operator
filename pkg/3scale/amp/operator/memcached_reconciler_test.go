@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	appsv1 "github.com/openshift/api/apps/v1"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -25,6 +26,12 @@ func TestMemcachedDeploymentReconciler(t *testing.T) {
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := k8sappsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
