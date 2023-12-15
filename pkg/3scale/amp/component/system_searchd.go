@@ -2,8 +2,9 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	k8sappsv1 "k8s.io/api/apps/v1"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -36,53 +37,39 @@ func (s *SystemSearchd) Service() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "searchd",
 					Protocol:   v1.ProtocolTCP,
 					Port:       9306,
 					TargetPort: intstr.FromInt(9306),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-searchd"},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-searchd"},
 		},
 	}
 }
 
-func (s *SystemSearchd) DeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (s *SystemSearchd) Deployment() *k8sappsv1.Deployment {
+	var searchdReplicas int32 = 1
+
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSearchdDeploymentName,
-			Labels: s.Options.Labels,
+			Name:        SystemSearchdDeploymentName,
+			Labels:      s.Options.Labels,
+			Annotations: s.DeploymentAnnotations(),
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"system-searchd",
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("system-searchd:%s", s.Options.ImageTag),
-						},
-					},
+		Spec: k8sappsv1.DeploymentSpec{
+			Replicas: &searchdReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: SystemSearchdDeploymentName,
 				},
 			},
-			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": SystemSearchdDeploymentName},
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRecreate,
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RecreateDeploymentStrategyType,
 			},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      s.Options.PodTemplateLabels,
 					Annotations: s.Options.PodTemplateAnnotations,
@@ -92,7 +79,7 @@ func (s *SystemSearchd) DeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations:        s.Options.Tolerations,
 					ServiceAccountName: "amp",
 					Volumes: []v1.Volume{
-						v1.Volume{
+						{
 							Name: SystemSearchdDBVolumeName,
 							VolumeSource: v1.VolumeSource{
 								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
@@ -103,12 +90,12 @@ func (s *SystemSearchd) DeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
-							Name:            "system-searchd",
+						{
+							Name:            SystemSearchdDeploymentName,
 							Image:           "system-searchd:latest",
 							ImagePullPolicy: v1.PullIfNotPresent,
 							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
+								{
 									ReadOnly:  false,
 									Name:      SystemSearchdDBVolumeName,
 									MountPath: "/var/lib/searchd",
@@ -169,4 +156,15 @@ func (s *SystemSearchd) PVC() *v1.PersistentVolumeClaim {
 			},
 		},
 	}
+}
+
+func (s *SystemSearchd) DeploymentAnnotations() map[string]string {
+	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
+		{
+			Name: SystemSearchdDeploymentName,
+			Tag:  fmt.Sprintf("system-searchd:%v", s.Options.ImageTag),
+		},
+	})
+	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
+
 }

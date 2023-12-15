@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"reflect"
 	"testing"
 
@@ -49,10 +50,10 @@ func testSystemSearchdLabels() map[string]string {
 
 func testSystemSearchdPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "searchd",
-		"deploymentConfig":             "system-searchd",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "searchd",
+		reconcilers.DeploymentLabelSelector: "system-searchd",
 	}
 	addExpectedMeteringLabels(labels, "system-searchd", helper.ApplicationType)
 

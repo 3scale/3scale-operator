@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -14,6 +15,7 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,19 +37,31 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	ctx := context.TODO()
 
 	apimanager := basicApimanagerSpecTestSystemOptions()
+	appPreHookJob := &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{Name: component.SystemAppPreHookJobName, Namespace: apimanager.Namespace},
+		Status: batchv1.JobStatus{
+			Conditions: []batchv1.JobCondition{
+				{
+					Type:   batchv1.JobComplete,
+					Status: v1.ConditionTrue,
+				},
+			},
+		},
+	}
+
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager}
+	objs := []runtime.Object{apimanager, appPreHookJob}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err := k8sappsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = imagev1.AddToScheme(s)
+	err = imagev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = routev1.AddToScheme(s)
+	err = routev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +71,13 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	if err := grafanav1alpha1.AddToScheme(s); err != nil {
 		t.Fatal(err)
 	}
-	if err := configv1.AddToScheme(s); err != nil {
+	if err := configv1.Install(s); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -86,8 +106,8 @@ func TestSystemReconcilerCreate(t *testing.T) {
 		{"systemMasterService", "system-master", &v1.Service{}},
 		{"systemDeveloperService", "system-developer", &v1.Service{}},
 		{"systemMemcacheService", "system-memcache", &v1.Service{}},
-		{"systemAppDC", "system-app", &appsv1.DeploymentConfig{}},
-		{"systemSideKiqDC", "system-sidekiq", &appsv1.DeploymentConfig{}},
+		{"systemAppDeployment", "system-app", &k8sappsv1.Deployment{}},
+		{"systemSideKiqDeployment", "system-sidekiq", &k8sappsv1.Deployment{}},
 		{"systemCM", "system", &v1.ConfigMap{}},
 		{"systemEnvironmentCM", "system-environment", &v1.ConfigMap{}},
 		{"systemSMTPSecret", "system-smtp", &v1.Secret{}},
@@ -126,6 +146,19 @@ func TestReplicaSystemReconciler(t *testing.T) {
 		oneValue64 int64 = 1
 		twoValue   int32 = 2
 	)
+
+	appPreHookJob := &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{Name: component.SystemAppPreHookJobName, Namespace: namespace},
+		Status: batchv1.JobStatus{
+			Conditions: []batchv1.JobCondition{
+				{
+					Type:   batchv1.JobComplete,
+					Status: v1.ConditionTrue,
+				},
+			},
+		},
+	}
+
 	ctx := context.TODO()
 	s := scheme.Scheme
 
@@ -133,12 +166,17 @@ func TestReplicaSystemReconciler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = appsv1.AddToScheme(s)
+	err = k8sappsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := configv1.Install(s); err != nil {
+		t.Fatal(err)
+	}
 
-	if err := configv1.AddToScheme(s); err != nil {
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -157,7 +195,7 @@ func TestReplicaSystemReconciler(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			objs := []runtime.Object{tc.apimanager}
+			objs := []runtime.Object{tc.apimanager, appPreHookJob}
 			// Create a fake client to mock API calls.
 			cl := fake.NewFakeClient(objs...)
 			clientAPIReader := fake.NewFakeClient(objs...)
@@ -172,22 +210,22 @@ func TestReplicaSystemReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			dc := &appsv1.DeploymentConfig{}
+			deployment := &k8sappsv1.Deployment{}
 			namespacedName := types.NamespacedName{
 				Name:      tc.objName,
 				Namespace: namespace,
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			// bump the amount of replicas in the dc
-			dc.Spec.Replicas = twoValue
-			err = cl.Update(context.TODO(), dc)
+			// bump the amount of replicas in the deployment
+			deployment.Spec.Replicas = &twoValue
+			err = cl.Update(context.TODO(), deployment)
 			if err != nil {
-				subT.Errorf("error updating dc of %s: %v", tc.objName, err)
+				subT.Errorf("error updating deployment of %s: %v", tc.objName, err)
 			}
 
 			// re-run the reconciler
@@ -196,13 +234,13 @@ func TestReplicaSystemReconciler(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			err = cl.Get(context.TODO(), namespacedName, dc)
+			err = cl.Get(context.TODO(), namespacedName, deployment)
 			if err != nil {
 				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 
-			if tc.expectedAmountOfReplicas != dc.Spec.Replicas {
-				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, dc.Spec.Replicas)
+			if tc.expectedAmountOfReplicas != *deployment.Spec.Replicas {
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, deployment.Spec.Replicas)
 			}
 		})
 	}
