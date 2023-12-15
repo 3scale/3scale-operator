@@ -2,10 +2,12 @@ package component
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	k8sappsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	"sort"
 	"strconv"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -91,8 +93,11 @@ const (
 )
 
 const (
-	SystemSidekiqName       = "system-sidekiq"
-	SystemAppDeploymentName = "system-app"
+	SystemSidekiqName              = "system-sidekiq"
+	SystemSideKiqInitContainerName = "check-svc"
+	SystemAppDeploymentName        = "system-app"
+	SystemAppPreHookJobName        = "system-app-pre"
+	SystemAppPostHookJobName       = "system-app-post"
 
 	SystemAppMasterContainerName    = "system-master"
 	SystemAppProviderContainerName  = "system-provider"
@@ -309,7 +314,9 @@ func (system *System) buildSystemAppPreHookEnv() []v1.EnvVar {
 }
 
 func (system *System) buildSystemAppPostHookEnv() []v1.EnvVar {
-	var result []v1.EnvVar
+	result := []v1.EnvVar{}
+	baseEnv := system.buildSystemBaseEnv()
+	result = append(result, baseEnv...)
 	if system.Options.IncludeOracleOptionalSettings {
 		result = append(result, helper.EnvVarFromSecretOptional("ORACLE_SYSTEM_PASSWORD", SystemSecretSystemDatabaseSecretName, "ORACLE_SYSTEM_PASSWORD"))
 	}
@@ -527,75 +534,51 @@ func (system *System) appPodVolumes() []v1.Volume {
 	return res
 }
 
-func (system *System) volumeNamesForSystemAppPreHookPod() []string {
-	res := []string{}
+func (system *System) volumesForSystemAppLifecycleHookPods() []v1.VolumeMount {
+	res := []v1.VolumeMount{}
 	if system.Options.PvcFileStorageOptions != nil {
-		res = append(res, SystemFileStoragePVCName)
+		res = append(res, v1.VolumeMount{
+			Name: SystemFileStoragePVCName,
+		})
 	}
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
-		res = append(res, S3StsCredentialsSecretName)
+		res = append(res, v1.VolumeMount{
+			Name: S3StsCredentialsSecretName,
+		})
 	}
 	return res
 }
 
-func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (system *System) AppDeployment() *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemAppDeploymentName,
-			Labels: system.Options.CommonAppLabels,
+			Name:        SystemAppDeploymentName,
+			Labels:      system.Options.CommonAppLabels,
+			Annotations: system.appDeploymentAnnotations(),
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRolling,
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					UpdatePeriodSeconds: &[]int64{1}[0],
-					IntervalSeconds:     &[]int64{1}[0],
-					TimeoutSeconds:      &[]int64{1200}[0],
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: &k8sappsv1.RollingUpdateDeployment{
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
-					Pre: &appsv1.LifecycleHook{
-						FailurePolicy: appsv1.LifecycleHookFailurePolicyRetry,
-						ExecNewPod: &appsv1.ExecNewPodHook{
-							// TODO the MASTER_ACCESS_TOKEN reference should be probably set as an envvar that gathers its value from the system-seed secret
-							// but changing that probably has some implications during an upgrade process of the product
-							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:deploy"},
-							Env:           system.buildSystemAppPreHookEnv(),
-							ContainerName: SystemAppMasterContainerName,
-							Volumes:       system.volumeNamesForSystemAppPreHookPod()},
-					},
-					Post: &appsv1.LifecycleHook{
-						FailurePolicy: appsv1.LifecycleHookFailurePolicyAbort,
-						ExecNewPod: &appsv1.ExecNewPodHook{
-							Command:       []string{"bash", "-c", "bundle exec rake boot openshift:post_deploy"},
-							Env:           system.buildSystemAppPostHookEnv(),
-							ContainerName: SystemAppMasterContainerName}}},
+				},
 			},
 			MinReadySeconds: 0,
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic:      true,
-						ContainerNames: []string{SystemAppProviderContainerName, SystemAppDeveloperContainerName, SystemAppMasterContainerName},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag)}}},
+			Replicas:        &system.Options.AppReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: SystemAppDeploymentName,
+				},
 			},
-			Replicas: system.Options.AppReplicas,
-			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      system.Options.AppPodTemplateLabels,
 					Annotations: system.Options.AppPodTemplateAnnotations,
@@ -605,7 +588,7 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations: system.Options.AppTolerations,
 					Volumes:     system.appPodVolumes(),
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:         SystemAppMasterContainerName,
 							Image:        "amp-system:latest",
 							Args:         []string{"env", "TENANT_MODE=master", "PORT=3002", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
@@ -617,8 +600,10 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.String),
-											StrVal: "master"}},
+											Type:   intstr.String,
+											StrVal: "master",
+										},
+									},
 								},
 								InitialDelaySeconds: 40,
 								TimeoutSeconds:      10,
@@ -631,14 +616,17 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									HTTPGet: &v1.HTTPGetAction{
 										Path: "/check.txt",
 										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.String),
+											Type:   intstr.String,
 											StrVal: "master",
 										},
 										Scheme: v1.URISchemeHTTP,
 										HTTPHeaders: []v1.HTTPHeader{
-											v1.HTTPHeader{
+											{
 												Name:  "X-Forwarded-Proto",
-												Value: "https"}}},
+												Value: "https",
+											},
+										},
+									},
 								},
 								InitialDelaySeconds: 60,
 								TimeoutSeconds:      10,
@@ -650,7 +638,8 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Stdin:           false,
 							StdinOnce:       false,
 							TTY:             false,
-						}, v1.Container{
+						},
+						{
 							Name:         SystemAppProviderContainerName,
 							Image:        "amp-system:latest",
 							Args:         []string{"env", "TENANT_MODE=provider", "PORT=3000", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
@@ -662,8 +651,10 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.String),
-											StrVal: "provider"}},
+											Type:   intstr.String,
+											StrVal: "provider",
+										},
+									},
 								},
 								InitialDelaySeconds: 40,
 								TimeoutSeconds:      10,
@@ -676,14 +667,17 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									HTTPGet: &v1.HTTPGetAction{
 										Path: "/check.txt",
 										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.String),
+											Type:   intstr.String,
 											StrVal: "provider",
 										},
 										Scheme: v1.URISchemeHTTP,
 										HTTPHeaders: []v1.HTTPHeader{
-											v1.HTTPHeader{
+											{
 												Name:  "X-Forwarded-Proto",
-												Value: "https"}}},
+												Value: "https",
+											},
+										},
+									},
 								},
 								InitialDelaySeconds: 60,
 								TimeoutSeconds:      10,
@@ -695,7 +689,8 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 							Stdin:           false,
 							StdinOnce:       false,
 							TTY:             false,
-						}, v1.Container{
+						},
+						{
 							Name:         SystemAppDeveloperContainerName,
 							Image:        "amp-system:latest",
 							Args:         []string{"env", "PORT=3001", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
@@ -707,8 +702,10 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.String),
-											StrVal: "developer"}},
+											Type:   intstr.String,
+											StrVal: "developer",
+										},
+									},
 								},
 								InitialDelaySeconds: 40,
 								TimeoutSeconds:      10,
@@ -721,14 +718,17 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 									HTTPGet: &v1.HTTPGetAction{
 										Path: "/check.txt",
 										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.String),
+											Type:   intstr.String,
 											StrVal: "developer",
 										},
 										Scheme: v1.URISchemeHTTP,
 										HTTPHeaders: []v1.HTTPHeader{
-											v1.HTTPHeader{
+											{
 												Name:  "X-Forwarded-Proto",
-												Value: "https"}}},
+												Value: "https",
+											},
+										},
+									},
 								},
 								InitialDelaySeconds: 60,
 								TimeoutSeconds:      10,
@@ -742,7 +742,82 @@ func (system *System) AppDeploymentConfig() *appsv1.DeploymentConfig {
 					ServiceAccountName:        "amp",
 					PriorityClassName:         system.Options.AppPriorityClassName,
 					TopologySpreadConstraints: system.Options.AppTopologySpreadConstraints,
-				}},
+				},
+			},
+		},
+	}
+}
+
+func (system *System) AppPreHookJob(containerImage string) *batchv1.Job {
+	var completions int32 = 1
+
+	return &batchv1.Job{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "batch/v1",
+			Kind:       "Job",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   SystemAppPreHookJobName,
+			Labels: system.Options.CommonAppLabels,
+		},
+		Spec: batchv1.JobSpec{
+			Completions: &completions,
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Volumes: system.appPodVolumes(),
+					Containers: []v1.Container{
+						{
+							Name:            SystemAppPreHookJobName,
+							Image:           containerImage,
+							Args:            []string{"bash", "-c", "bundle exec rake boot openshift:deploy"},
+							Env:             system.buildSystemAppPreHookEnv(),
+							Resources:       *system.Options.AppMasterContainerResourceRequirements,
+							VolumeMounts:    system.volumesForSystemAppLifecycleHookPods(),
+							ImagePullPolicy: v1.PullIfNotPresent,
+						},
+					},
+					RestartPolicy:      v1.RestartPolicyNever,
+					ServiceAccountName: "amp",
+					PriorityClassName:  system.Options.AppPriorityClassName,
+				},
+			},
+		},
+	}
+}
+
+func (system *System) AppPostHookJob(containerImage string) *batchv1.Job {
+	var completions int32 = 1
+
+	return &batchv1.Job{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "batch/v1",
+			Kind:       "Job",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   SystemAppPostHookJobName,
+			Labels: system.Options.CommonAppLabels,
+		},
+		Spec: batchv1.JobSpec{
+			Completions: &completions,
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Volumes: system.appPodVolumes(),
+					Containers: []v1.Container{
+						{
+							Name:            SystemAppPostHookJobName,
+							Image:           containerImage,
+							Args:            []string{"bash", "-c", "bundle exec rake boot openshift:post_deploy"},
+							Env:             system.buildSystemAppPostHookEnv(),
+							Resources:       *system.Options.AppMasterContainerResourceRequirements,
+							VolumeMounts:    system.volumesForSystemAppLifecycleHookPods(),
+							ImagePullPolicy: v1.PullIfNotPresent,
+						},
+					},
+					RestartPolicy:      v1.RestartPolicyNever,
+					ServiceAccountName: "amp",
+					PriorityClassName:  system.Options.AppPriorityClassName,
+				},
+			},
 		},
 	}
 }
@@ -819,47 +894,36 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 	return res
 }
 
-func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (system *System) SidekiqDeployment() *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSidekiqName,
-			Labels: system.Options.CommonSidekiqLabels,
+			Name:        SystemSidekiqName,
+			Labels:      system.Options.CommonSidekiqLabels,
+			Annotations: system.sidekiqDeploymentAnnotations(),
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRolling,
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					UpdatePeriodSeconds: &[]int64{1}[0],
-					IntervalSeconds:     &[]int64{1}[0],
-					TimeoutSeconds:      &[]int64{1200}[0],
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: &k8sappsv1.RollingUpdateDeployment{
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%"}},
+						Type:   intstr.String,
+						StrVal: "25%",
+					},
+				},
 			},
 			MinReadySeconds: 0,
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic:      true,
-						ContainerNames: []string{"check-svc", SystemSidekiqName},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-system:%s", system.Options.ImageTag)}}},
+			Replicas:        &system.Options.SidekiqReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: SystemSidekiqName,
+				},
 			},
-			Replicas: system.Options.SidekiqReplicas,
-			Selector: map[string]string{"deploymentConfig": SystemSidekiqName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      system.Options.SidekiqPodTemplateLabels,
 					Annotations: system.Options.SideKiqPodTemplateAnnotations,
@@ -869,7 +933,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations: system.Options.SidekiqTolerations,
 					Volumes:     system.SidekiqPodVolumes(),
 					InitContainers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "check-svc",
 							Image: "amp-system:latest",
 							Command: []string{
@@ -881,7 +945,7 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:            SystemSidekiqName,
 							Image:           "amp-system:latest",
 							Args:            []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
@@ -907,7 +971,8 @@ func (system *System) SidekiqDeploymentConfig() *appsv1.DeploymentConfig {
 					ServiceAccountName:        "amp",
 					PriorityClassName:         system.Options.SideKiqPriorityClassName,
 					TopologySpreadConstraints: system.Options.SideKiqTopologySpreadConstraints,
-				}},
+				},
+			},
 		},
 	}
 }
@@ -1034,7 +1099,7 @@ func (system *System) ProviderService() *v1.Service {
 					TargetPort: intstr.FromString("provider"),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: SystemAppDeploymentName},
 		},
 	}
 }
@@ -1058,7 +1123,7 @@ func (system *System) MasterService() *v1.Service {
 					TargetPort: intstr.FromString("master"),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: SystemAppDeploymentName},
 		},
 	}
 }
@@ -1082,7 +1147,7 @@ func (system *System) DeveloperService() *v1.Service {
 					TargetPort: intstr.FromString("developer"),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": SystemAppDeploymentName},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: SystemAppDeploymentName},
 		},
 	}
 }
@@ -1106,7 +1171,7 @@ func (system *System) MemcachedService() *v1.Service {
 					TargetPort: intstr.FromInt(11211),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-memcache"},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-memcache"},
 		},
 	}
 }
@@ -1204,7 +1269,7 @@ func (system *System) AppPodDisruptionBudget() *policyv1.PodDisruptionBudget {
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": SystemAppDeploymentName},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: SystemAppDeploymentName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -1223,7 +1288,7 @@ func (system *System) SidekiqPodDisruptionBudget() *policyv1.PodDisruptionBudget
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "system-sidekiq"},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: "system-sidekiq"},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -1274,4 +1339,37 @@ func (system *System) appDeveloperPorts() []v1.ContainerPort {
 	}
 
 	return ports
+}
+
+func (system *System) sidekiqDeploymentAnnotations() map[string]string {
+	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
+		{
+			Name: SystemSideKiqInitContainerName,
+			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
+		},
+		{
+			Name: SystemSidekiqName,
+			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
+		},
+	})
+	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
+}
+
+func (system *System) appDeploymentAnnotations() map[string]string {
+	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
+		{
+			Name: SystemAppProviderContainerName,
+			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
+		},
+		{
+			Name: SystemAppDeveloperContainerName,
+			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
+		},
+		{
+			Name: SystemAppMasterContainerName,
+			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
+		},
+	})
+
+	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
 }

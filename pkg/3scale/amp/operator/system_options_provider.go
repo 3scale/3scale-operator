@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
@@ -546,7 +547,7 @@ func (s *SystemOptionsProvider) appPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-app"
+	labels[reconcilers.DeploymentLabelSelector] = "system-app"
 
 	return labels
 }
@@ -568,7 +569,7 @@ func (s *SystemOptionsProvider) sidekiqPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-sidekiq"
+	labels[reconcilers.DeploymentLabelSelector] = "system-sidekiq"
 
 	return labels
 }

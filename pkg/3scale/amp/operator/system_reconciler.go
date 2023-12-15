@@ -1,7 +1,15 @@
 package operator
 
 import (
+	"context"
 	"fmt"
+	"time"
+
+	k8sappsv1 "k8s.io/api/apps/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -9,13 +17,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	appsv1 "github.com/openshift/api/apps/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type SystemReconciler struct {
@@ -42,6 +45,11 @@ func (r *SystemReconciler) reconcileFileStorage(system *component.System) error 
 }
 
 func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
+	ampImages, err := AmpImages(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	system, err := System(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
@@ -52,78 +60,31 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	serviceMutators := []reconcilers.MutateFn{
+		reconcilers.CreateOnlyMutator,
+		reconcilers.ServiceSelectorMutator,
+	}
+
 	// Provider Service
-	err = r.ReconcileService(system.ProviderService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(system.ProviderService(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Master Service
-	err = r.ReconcileService(system.MasterService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(system.MasterService(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Developer Service
-	err = r.ReconcileService(system.DeveloperService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(system.DeveloperService(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Memcached Service
-	err = r.ReconcileService(system.MemcachedService(), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// SystemApp DC
-	systemAppDCMutators := []reconcilers.DCMutateFn{
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
-		r.systemAppDCResourceMutator,
-		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
-		// 3scale 2.13 -> 2.14
-		upgrade.SphinxAddressReference,
-		// 3scale 2.13 -> 2.14
-		upgrade.SystemBackendUrls,
-	}
-
-	if r.apiManager.Spec.System.AppSpec.Replicas != nil {
-		systemAppDCMutators = append(systemAppDCMutators, reconcilers.DeploymentConfigReplicasMutator)
-	}
-
-	err = r.ReconcileDeploymentConfig(system.AppDeploymentConfig(), reconcilers.DeploymentConfigMutator(systemAppDCMutators...))
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Sidekiq DC
-	sidekiqDCMutators := []reconcilers.DCMutateFn{
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigRemoveDuplicateEnvVarMutator,
-		reconcilers.DeploymentConfigArgsMutator,
-		reconcilers.DeploymentConfigProbesMutator,
-		// 3scale 2.13 -> 2.14
-		upgrade.SphinxAddressReference,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
-	}
-
-	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
-		sidekiqDCMutators = append(sidekiqDCMutators, reconcilers.DeploymentConfigReplicasMutator)
-	}
-
-	err = r.ReconcileDeploymentConfig(system.SidekiqDeploymentConfig(), reconcilers.DeploymentConfigMutator(sidekiqDCMutators...))
+	err = r.ReconcileService(system.MemcachedService(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -182,6 +143,103 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// Used to synchronize rollout of system Deployments
+	systemComponentNotReady := false
+
+	// SystemApp PreHook Job
+	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage)
+	err = r.ReconcileJob(preHookJob, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Block reconciling system-app Deployment until PreHook Job has completed
+	if !helper.HasJobCompleted(preHookJob.Name, preHookJob.Namespace, r.Client()) {
+		systemComponentNotReady = true
+	}
+
+	// SystemApp Deployment
+	systemAppDeploymentMutators := []reconcilers.DMutateFn{
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		r.systemAppDeploymentResourceMutator,
+		reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
+	}
+	if r.apiManager.Spec.System.AppSpec.Replicas != nil {
+		systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
+	}
+	if !systemComponentNotReady {
+		err = r.ReconcileDeployment(system.AppDeployment(), reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	// Block reconciling PostHook Job unless system-app Deployment is ready
+	deployment := &k8sappsv1.Deployment{}
+	err = r.Client().Get(context.TODO(), client.ObjectKey{
+		Namespace: r.apiManager.GetNamespace(),
+		Name:      component.SystemAppDeploymentName,
+	}, deployment)
+	if err != nil && !k8serr.IsNotFound(err) {
+		return reconcile.Result{}, err
+	}
+	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) {
+		systemComponentNotReady = true
+	}
+
+	// SystemApp PostHook Job
+	if !systemComponentNotReady {
+		err = r.ReconcileJob(system.AppPostHookJob(ampImages.Options.SystemImage), reconcilers.CreateOnlyMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	// 3scale 2.14 -> 2.15
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemAppDeploymentName, r.apiManager.GetNamespace(), false, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		systemComponentNotReady = true
+	}
+
+	// Sidekiq Deployment
+	sidekiqDeploymentMutators := []reconcilers.DMutateFn{
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
+		reconcilers.DeploymentArgsMutator,
+		reconcilers.DeploymentProbesMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+	}
+	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
+	}
+
+	err = r.ReconcileDeployment(system.SidekiqDeployment(), reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// 3scale 2.14 -> 2.15
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.SystemSidekiqName, r.apiManager.GetNamespace(), false, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		systemComponentNotReady = true
+	}
+
 	// SystemApp PDB
 	err = r.ReconcilePodDisruptionBudget(system.AppPodDisruptionBudget(), reconcilers.GenericPDBMutator)
 	if err != nil {
@@ -224,16 +282,19 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// Requeue if any of the system-app Deployment's components aren't ready
+	if systemComponentNotReady {
+		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+	}
+
 	return reconcile.Result{}, nil
 }
 
-func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	desiredName := common.ObjectInfo(desired)
 	update := false
 
-	//
 	// Check containers
-	//
 	if len(desired.Spec.Template.Spec.Containers) != 3 {
 		return false, fmt.Errorf(fmt.Sprintf("%s desired spec.template.spec.containers length changed to '%d', should be 3", desiredName, len(desired.Spec.Template.Spec.Containers)))
 	}
@@ -244,10 +305,7 @@ func (r *SystemReconciler) systemAppDCResourceMutator(desired, existing *appsv1.
 		update = true
 	}
 
-	//
 	// Check containers resource requirements
-	//
-
 	for idx := 0; idx < 3; idx++ {
 		if !helper.CmpResources(&existing.Spec.Template.Spec.Containers[idx].Resources, &desired.Spec.Template.Spec.Containers[idx].Resources) {
 			diff := cmp.Diff(existing.Spec.Template.Spec.Containers[idx].Resources, desired.Spec.Template.Spec.Containers[idx].Resources, cmpopts.IgnoreUnexported(resource.Quantity{}))

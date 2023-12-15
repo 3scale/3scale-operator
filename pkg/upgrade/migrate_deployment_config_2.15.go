@@ -15,7 +15,7 @@ import (
 
 // MigrateDeploymentConfigToDeployment verifies the Deployment is healthy and then deletes the corresponding DeploymentConfig
 // 3scale 2.14 -> 2.15
-func MigrateDeploymentConfigToDeployment(dName string, dNamespace string, client k8sclient.Client) (bool, error) {
+func MigrateDeploymentConfigToDeployment(dName string, dNamespace string, overrideDeploymentHealth bool, client k8sclient.Client) (bool, error) {
 	deploymentConfig := &appsv1.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      dName,
@@ -32,21 +32,31 @@ func MigrateDeploymentConfigToDeployment(dName string, dNamespace string, client
 		return false, fmt.Errorf("error getting deploymentconfig %s: %v", deploymentConfig.Name, err)
 	}
 
-	// Verify that the Deployment is healthy
+	// Check Deployment health
 	deployment := &k8sappsv1.Deployment{}
 	err = client.Get(context.TODO(), k8sclient.ObjectKey{
 		Namespace: dNamespace,
 		Name:      dName,
 	}, deployment)
+
+	// Return error if can't get Deployment
 	if err != nil && !k8serr.IsNotFound(err) {
 		return false, fmt.Errorf("error getting deployment %s: %w", deployment.Name, err)
 	}
-	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) {
-		log.V(1).Info(fmt.Sprintf("deployment %s is not yet available", deployment.Name))
+
+	// Requeue if Deployment doesn't exist yet
+	if k8serr.IsNotFound(err) {
+		log.V(1).Info(fmt.Sprintf("deployment %s does not exist", deployment.Name))
 		return false, nil
 	}
 
-	// Delete the DeploymentConfig because the Deployment replacing it is healthy
+	// Requeue if Deployment isn't healthy and override is set to false, otherwise proceed
+	if !helper.IsDeploymentAvailable(deployment) && !overrideDeploymentHealth {
+		log.V(1).Info(fmt.Sprintf("deployment %s is not yet available and overrideDeploymentHealth is set to %t", deployment.Name, overrideDeploymentHealth))
+		return false, nil
+	}
+
+	// Delete the DeploymentConfig because the Deployment replacing it is healthy or overrideDeploymentHealth is set to true
 	err = client.Delete(context.TODO(), deploymentConfig)
 	if err != nil {
 		if !k8serr.IsNotFound(err) {

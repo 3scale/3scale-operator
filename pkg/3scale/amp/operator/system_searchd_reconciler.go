@@ -1,14 +1,11 @@
 package operator
 
 import (
-	appsv1 "github.com/openshift/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
@@ -28,14 +25,13 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// 3scale 2.13 -> 2.14
-	err = r.upgradeFromSphinx()
-	if err != nil {
-		return reconcile.Result{}, err
+	serviceMutators := []reconcilers.MutateFn{
+		reconcilers.CreateOnlyMutator,
+		reconcilers.ServiceSelectorMutator,
 	}
 
 	// Service
-	err = r.ReconcileService(searchd.Service(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(searchd.Service(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -46,52 +42,35 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// DC
-	searchdDCmutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigStrategyMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
-		reconcilers.DeploymentConfigProbesMutator,
-		reconcilers.DeploymentConfigArgsMutator,
+	// Deployment
+	searchdDeploymentMutator := reconcilers.DeploymentMutator(
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentStrategyMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentProbesMutator,
+		reconcilers.DeploymentArgsMutator,
 	)
-	err = r.ReconcileDeploymentConfig(searchd.DeploymentConfig(), searchdDCmutator)
+	err = r.ReconcileDeployment(searchd.Deployment(), searchdDeploymentMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+	// 3scale 2.14 -> 2.15
+	// Overriding the Deployment health check because the system-searchd PVC is ReadWriteOnce and so it can't be assigned across multiple nodes (pods)
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemSearchdDeploymentName, r.apiManager.GetNamespace(), true, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
 	return reconcile.Result{}, nil
-}
-
-func (r *SystemSearchdReconciler) upgradeFromSphinx() error {
-	// The upgrade procedure is simply based on:
-	// * Delete "old" DC called system-sphinx (if found)
-	// * The regular reconciling logic will create a new DC called system-searchd
-
-	oldService := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{Name: "system-sphinx", Namespace: r.apiManager.Namespace},
-	}
-	common.TagObjectToDelete(oldService)
-	err := r.ReconcileResource(&v1.Service{}, oldService, reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return err
-	}
-
-	oldDC := &appsv1.DeploymentConfig{
-		ObjectMeta: metav1.ObjectMeta{Name: "system-sphinx", Namespace: r.apiManager.Namespace},
-	}
-	common.TagObjectToDelete(oldDC)
-	err = r.ReconcileResource(&appsv1.DeploymentConfig{}, oldDC, reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func SystemSearchd(cr *appsv1alpha1.APIManager) (*component.SystemSearchd, error) {
