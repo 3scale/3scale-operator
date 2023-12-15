@@ -31,10 +31,10 @@ func NewProductThreescaleReconciler(b *reconcilers.BaseReconciler, resource *cap
 	}
 }
 
-func (t *ProductThreescaleReconciler) Reconcile() (*controllerhelper.ProductEntity, error) {
+func (t *ProductThreescaleReconciler) Reconcile() (*controllerhelper.ProductEntity, error, []string) {
 	productEntity, err := t.reconcile3scaleProduct()
 	if err != nil {
-		return nil, err
+		return nil, err, []string{}
 	}
 	t.productEntity = productEntity
 
@@ -53,12 +53,12 @@ func (t *ProductThreescaleReconciler) Reconcile() (*controllerhelper.ProductEnti
 	taskRunner.AddTask("SyncPolicies", t.syncPolicies)
 	taskRunner.AddTask("SyncOIDCConfiguration", t.syncOIDCConfiguration)
 
-	err = taskRunner.Run()
+	err, warnings := taskRunner.Run()
 	if err != nil {
-		return nil, err
+		return nil, err, warnings
 	}
 
-	return t.productEntity, nil
+	return t.productEntity, nil, warnings
 }
 
 func (t *ProductThreescaleReconciler) reconcile3scaleProduct() (*controllerhelper.ProductEntity, error) {

@@ -161,7 +161,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 				getApplicationCR(),
 				getApplicationEntity(),
 				"https://3scale-admin.test.3scale.net",
-				nil),
+				nil, []string{}),
 			wantErr: false,
 		},
 		{

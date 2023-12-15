@@ -21,16 +21,18 @@ type BackendStatusReconciler struct {
 	backendAPIEntity    *controllerhelper.BackendAPIEntity
 	providerAccountHost string
 	syncError           error
+	warnings            []string
 	logger              logr.Logger
 }
 
-func NewBackendStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, backendAPIEntity *controllerhelper.BackendAPIEntity, providerAccountHost string, syncError error) *BackendStatusReconciler {
+func NewBackendStatusReconciler(b *reconcilers.BaseReconciler, backendResource *capabilitiesv1beta1.Backend, backendAPIEntity *controllerhelper.BackendAPIEntity, providerAccountHost string, syncError error, warnings []string) *BackendStatusReconciler {
 	return &BackendStatusReconciler{
 		BaseReconciler:      b,
 		backendResource:     backendResource,
 		backendAPIEntity:    backendAPIEntity,
 		providerAccountHost: providerAccountHost,
 		syncError:           syncError,
+		warnings:            warnings,
 		logger:              b.Logger().WithValues("Status Reconciler", backendResource.Name),
 	}
 }
@@ -86,8 +88,23 @@ func (s *BackendStatusReconciler) calculateStatus() *capabilitiesv1beta1.Backend
 	newStatus.Conditions.SetCondition(s.syncCondition())
 	newStatus.Conditions.SetCondition(s.invalidCondition())
 	newStatus.Conditions.SetCondition(s.failedCondition())
+	var warningConditions []common.Condition
+	for _, warning := range s.warnings {
+		warningConditions = append(warningConditions, s.warningCondition(warning))
+	}
+	newStatus.Conditions.SetWarningCondition(warningConditions)
 
 	return newStatus
+}
+
+func (s *BackendStatusReconciler) warningCondition(warning string) common.Condition {
+	condition := common.Condition{
+		Type:    capabilitiesv1beta1.BackendWarningConditionType,
+		Status:  corev1.ConditionTrue,
+		Message: warning,
+	}
+
+	return condition
 }
 
 func (s *BackendStatusReconciler) syncCondition() common.Condition {

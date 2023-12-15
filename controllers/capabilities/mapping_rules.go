@@ -11,7 +11,8 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) (error, []string) {
+	var warnings []string
 	desiredKeys := make([]string, 0, len(t.resource.Spec.MappingRules))
 	desiredMap := map[string]capabilitiesv1beta1.MappingRuleSpec{}
 	for _, spec := range t.resource.Spec.MappingRules {
@@ -22,7 +23,7 @@ func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 
 	existingMap, err := t.getExistingMappingRules()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err), warnings
 	}
 	existingKeys := make([]string, 0, len(existingMap))
 	for existingKey := range existingMap {
@@ -42,7 +43,7 @@ func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	}
 	err = t.processNotDesiredMappingRules(notDesiredList)
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	// If existing non-desired mapping rules have been detected we refetch
@@ -51,7 +52,7 @@ func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	if len(notDesiredList) > 0 {
 		existingMap, err = t.getExistingMappingRules()
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+			return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err), warnings
 		}
 	}
 
@@ -88,19 +89,20 @@ func (t *ProductThreescaleReconciler) syncMappingRules(_ interface{}) error {
 			t.logger.V(1).Info("syncMappingRules", "desiredMappingRuleToReconcile", desiredKey, "position", desiredIdx)
 			err := t.reconcileMappingRuleWithPosition(desiredMappingRule, desiredIdx, existingMappingRule)
 			if err != nil {
-				return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+				return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err), warnings
 			}
 		} else {
 			// Create MappingRule
 			t.logger.V(1).Info("syncMappingRules", "desiredMappingRuleToCreate", desiredKey, "position", desiredIdx)
-			err := t.createNewMappingRuleWithPosition(desiredMappingRule, desiredIdx)
+			err, mappingRulesWarnings := t.createNewMappingRuleWithPosition(desiredMappingRule, desiredIdx)
+			warnings = append(warnings, mappingRulesWarnings...)
 			if err != nil {
-				return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+				return fmt.Errorf("Error sync product [%s] mappingrules: %w", t.resource.Spec.SystemName, err), warnings
 			}
 		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func (t *ProductThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
@@ -117,7 +119,7 @@ func (t *ProductThreescaleReconciler) getExistingMappingRules() (map[string]thre
 	existingMap := map[string]threescaleapi.MappingRuleItem{}
 	existingList, err := t.productEntity.MappingRules()
 	if err != nil {
-		return nil, fmt.Errorf("Error getting product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
+		return nil, fmt.Errorf("error getting product [%s] mappingrules: %w", t.resource.Spec.SystemName, err)
 	}
 	for _, item := range existingList.MappingRules {
 		key := fmt.Sprintf("%s:%s", item.Element.HTTPMethod, item.Element.Pattern)
@@ -175,29 +177,29 @@ func (t *ProductThreescaleReconciler) reconcileMappingRuleWithPosition(desired c
 	if len(params) > 0 {
 		err := t.productEntity.UpdateMappingRule(existing.ID, params)
 		if err != nil {
-			return fmt.Errorf("Error reconcile product mapping rule: %w", err)
+			return fmt.Errorf("error reconcile product mapping rule: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
-	isValidRule, err := t.validateMappingRulesDuplication(desired)
+func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) (error, []string) {
+	isValidRule, err, warnings := t.validateMappingRulesDuplication(desired)
 	if err != nil {
-		return err
+		return err, warnings
 	}
 	if !isValidRule {
-		return errors.New("mapping rule duplication; pattern " + desired.Pattern + " already exists. The pattern must be unique among all mapping rules")
+		return errors.New("mapping rule duplication; pattern " + desired.Pattern + " already exists. The pattern must be unique among all mapping rules"), warnings
 	}
 	metricID, err := t.productEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
 	if err != nil {
-		return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	if metricID < 0 {
 		// Should not happen as metric and method references have been validated and should exists
-		return errors.New("product metric method ref for mapping rule not found")
+		return errors.New("product metric method ref for mapping rule not found"), warnings
 	}
 
 	params := threescaleapi.Params{
@@ -215,22 +217,23 @@ func (t *ProductThreescaleReconciler) createNewMappingRuleWithPosition(desired c
 
 	err = t.productEntity.CreateMappingRule(params)
 	if err != nil {
-		return fmt.Errorf("Error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("error creating product [%s] mappingrule: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
-	return nil
+	return nil, warnings
 }
 
-func (t *ProductThreescaleReconciler) validateMappingRulesDuplication(desired capabilitiesv1beta1.MappingRuleSpec) (bool, error) {
+func (t *ProductThreescaleReconciler) validateMappingRulesDuplication(desired capabilitiesv1beta1.MappingRuleSpec) (bool, error, []string) {
+	var warnings []string
 	existingMap, err := t.getExistingMappingRules()
 	if err != nil {
-		return false, fmt.Errorf("error getExistingMappingRules: %w", err)
+		return false, fmt.Errorf("error getExistingMappingRules: %w", err), []string{}
 	}
 	for _, existingRule := range existingMap {
 		if desired.Pattern == existingRule.Pattern &&
 			desired.HTTPMethod == existingRule.HTTPMethod {
-			return false, fmt.Errorf("duplicated Mapping Rules found that using same Pattern [%s] and same HTTPMethod [%s]! Only last Rule was accepted. You can fix Rules in CR manually.", desired.Pattern, desired.HTTPMethod)
+			warnings = append(warnings, fmt.Sprintf("duplicated Mapping Rules found that using same Pattern [%s] and same HTTPMethod [%s]! Only last Rule was accepted. You can fix Rules in CR manually.", desired.Pattern, desired.HTTPMethod))
 		}
 	}
-	return true, nil
+	return true, nil, warnings
 }

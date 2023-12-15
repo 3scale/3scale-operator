@@ -4,15 +4,16 @@ import (
 	"fmt"
 )
 
-func (t *ProductThreescaleReconciler) syncOIDCConfiguration(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncOIDCConfiguration(_ interface{}) (error, []string) {
+	var warnings []string
 	desiredSpec := t.resource.Spec.OIDCSpec()
 	if desiredSpec == nil || desiredSpec.AuthenticationFlow == nil {
-		return nil
+		return nil, warnings
 	}
 
 	existing, err := t.productEntity.OIDCConfiguration()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] oidc configuration: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] oidc configuration: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	newOIDCConf := *existing
@@ -42,9 +43,9 @@ func (t *ProductThreescaleReconciler) syncOIDCConfiguration(_ interface{}) error
 	if updated {
 		err := t.productEntity.UpdateOIDCConfiguration(&newOIDCConf)
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s] oidc configuration: %w", t.resource.Spec.SystemName, err)
+			return fmt.Errorf("Error sync product [%s] oidc configuration: %w", t.resource.Spec.SystemName, err), warnings
 		}
 	}
 
-	return nil
+	return nil, warnings
 }

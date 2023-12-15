@@ -221,7 +221,7 @@ func (r *ProductReconciler) reconcile(productResource *capabilitiesv1beta1.Produ
 	}
 
 	reconciler := NewProductThreescaleReconciler(r.BaseReconciler, productResource, threescaleAPIClient, backendRemoteIndex)
-	productEntity, err := reconciler.Reconcile()
+	productEntity, err, _ := reconciler.Reconcile()
 	statusReconciler := NewProductStatusReconciler(r.BaseReconciler, productResource, productEntity, providerAccount.AdminURLStr, err)
 	return statusReconciler, err
 }

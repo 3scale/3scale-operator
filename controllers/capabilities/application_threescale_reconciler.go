@@ -32,21 +32,22 @@ func NewApplicationReconciler(b *reconcilers.BaseReconciler, applicationResource
 	}
 }
 
-func (t *ApplicationThreescaleReconciler) Reconcile() (*controllerhelper.ApplicationEntity, error) {
+func (t *ApplicationThreescaleReconciler) Reconcile() (*controllerhelper.ApplicationEntity, error, []string) {
+	var warnings []string
 	applicationEntity, err := t.reconcile3scaleApplication()
 	if err != nil {
-		return nil, err
+		return nil, err, warnings
 	}
 	t.applicationEntity = applicationEntity
 	taskRunner := helper.NewTaskRunner(nil, t.logger)
 	taskRunner.AddTask("SyncApplication", t.syncApplication)
 
-	err = taskRunner.Run()
+	err, warnings = taskRunner.Run()
 	if err != nil {
-		return nil, err
+		return nil, err, warnings
 	}
 
-	return t.applicationEntity, nil
+	return t.applicationEntity, nil, warnings
 }
 
 func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*controllerhelper.ApplicationEntity, error) {

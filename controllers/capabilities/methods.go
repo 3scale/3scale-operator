@@ -14,7 +14,8 @@ type methodData struct {
 	spec capabilitiesv1beta1.MethodSpec
 }
 
-func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) (error, []string) {
+	var warnings []string
 	desiredKeys := make([]string, 0, len(t.resource.Spec.Methods))
 	for systemName := range t.resource.Spec.Methods {
 		desiredKeys = append(desiredKeys, systemName)
@@ -23,7 +24,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	existingMap := map[string]threescaleapi.MethodItem{}
 	existingList, err := t.productEntity.Methods()
 	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	existingKeys := make([]string, 0, len(existingList.Methods))
@@ -46,7 +47,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 	err = t.processNotDesiredMethods(notDesiredMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -64,7 +65,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 
 	err = t.reconcileMatchedMethods(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -80,10 +81,10 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 	err = t.createNewMethods(desiredNewMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func (t *ProductThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {

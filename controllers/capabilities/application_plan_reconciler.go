@@ -60,21 +60,22 @@ func newApplicationPlanReconciler(b *reconcilers.BaseReconciler,
 }
 
 // Reconcile ensures plan attrs, limits and pricingRules are reconciled
-func (a *applicationPlanReconciler) Reconcile() error {
+func (a *applicationPlanReconciler) Reconcile() (error, []string) {
 	taskRunner := helper.NewTaskRunner(nil, a.logger)
 	taskRunner.AddTask("SyncPlan", a.syncPlan)
 	taskRunner.AddTask("SyncLimits", a.syncLimits)
 	taskRunner.AddTask("SyncPricingRules", a.syncPricingRules)
 
-	err := taskRunner.Run()
+	err, warnings := taskRunner.Run()
 	if err != nil {
-		return err
+		return err, warnings
 	}
 
-	return nil
+	return nil, warnings
 }
 
-func (a *applicationPlanReconciler) syncPlan(_ interface{}) error {
+func (a *applicationPlanReconciler) syncPlan(_ interface{}) (error, []string) {
+	var warnings []string
 	params := threescaleapi.Params{}
 
 	if a.resource.Name != nil {
@@ -126,33 +127,34 @@ func (a *applicationPlanReconciler) syncPlan(_ interface{}) error {
 	if len(params) > 0 {
 		err := a.planEntity.Update(params)
 		if err != nil {
-			return fmt.Errorf("Error sync plan [%s;%d]: %w", a.systemName, a.planEntity.ID(), err)
+			return fmt.Errorf("Error sync plan [%s;%d]: %w", a.systemName, a.planEntity.ID(), err), warnings
 		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
-func (a *applicationPlanReconciler) syncLimits(_ interface{}) error {
+func (a *applicationPlanReconciler) syncLimits(_ interface{}) (error, []string) {
+	var warnings []string
 	// desired Limits
 	desiredList := a.resource.Limits
 
 	// existing Limits
 	existingList, err := a.planEntity.Limits()
 	if err != nil {
-		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err)
+		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err), warnings
 	}
 
 	// item is not updated, either created or deleted.
 	// computeUnDesiredLimits should match the entire object
 	undesiredLimits, err := a.computeUnDesiredLimits(existingList.Limits, desiredList)
 	if err != nil {
-		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err)
+		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err), warnings
 	}
 	for idx := range undesiredLimits {
 		err := a.planEntity.DeleteLimit(undesiredLimits[idx].Element.MetricID, undesiredLimits[idx].Element.ID)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 	}
 
@@ -160,7 +162,7 @@ func (a *applicationPlanReconciler) syncLimits(_ interface{}) error {
 	// computeDesiredLimits should match the entire object
 	desiredLimits, err := a.computeDesiredLimits(desiredList, existingList.Limits)
 	if err != nil {
-		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err)
+		return fmt.Errorf("Error sync plan [%s] limits: %w", a.systemName, err), warnings
 	}
 
 	for idx := range desiredLimits {
@@ -171,38 +173,39 @@ func (a *applicationPlanReconciler) syncLimits(_ interface{}) error {
 
 		metricID, err := a.findID(desiredLimits[idx].MetricMethodRef)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 
 		err = a.planEntity.CreateLimit(metricID, params)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
-func (a *applicationPlanReconciler) syncPricingRules(_ interface{}) error {
+func (a *applicationPlanReconciler) syncPricingRules(_ interface{}) (error, []string) {
+	var warnings []string
 	// desired pricing rules
 	desiredList := a.resource.PricingRules
 
 	// existing pricing rules
 	existingList, err := a.planEntity.PricingRules()
 	if err != nil {
-		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err)
+		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err), warnings
 	}
 
 	// item is not updated, either created or deleted.
 	// computeUnDesiredPricingRules should match the entire object
 	undesiredRules, err := a.computeUnDesiredPricingRules(existingList.Rules, desiredList)
 	if err != nil {
-		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err)
+		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err), warnings
 	}
 	for idx := range undesiredRules {
 		err := a.planEntity.DeletePricingRule(undesiredRules[idx].Element.MetricID, undesiredRules[idx].Element.ID)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 	}
 
@@ -210,7 +213,7 @@ func (a *applicationPlanReconciler) syncPricingRules(_ interface{}) error {
 	// computeDesiredPricingRules should match the entire object
 	desiredRules, err := a.computeDesiredPricingRules(desiredList, existingList.Rules)
 	if err != nil {
-		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err)
+		return fmt.Errorf("Error sync plan [%s] pricing rules: %w", a.systemName, err), warnings
 	}
 
 	for idx := range desiredRules {
@@ -222,16 +225,16 @@ func (a *applicationPlanReconciler) syncPricingRules(_ interface{}) error {
 
 		metricID, err := a.findID(desiredRules[idx].MetricMethodRef)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 
 		err = a.planEntity.CreatePricingRule(metricID, params)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func (a *applicationPlanReconciler) computeUnDesiredLimits(

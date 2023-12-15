@@ -9,15 +9,15 @@ import (
 
 type task struct {
 	Name string
-	Run  func(interface{}) error
+	Run  func(interface{}) (error, []string)
 }
 
 // TaskRunner abstracts task running engine
 type TaskRunner interface {
-	Run() error
+	Run() (error, []string)
 	// AddTask register tasks to be executed sequentially
 	// Tasks will be executed in order. First in, first to be executed.
-	AddTask(string, func(interface{}) error)
+	AddTask(string, func(interface{}) (error, []string))
 }
 
 type taskRunnerImpl struct {
@@ -35,18 +35,22 @@ func NewTaskRunner(ctx interface{}, logger logr.Logger) TaskRunner {
 	}
 }
 
-func (t *taskRunnerImpl) Run() error {
+func (t *taskRunnerImpl) Run() (error, []string) {
+	var warning []string
 	for _, task := range t.taskList {
 		start := time.Now()
-		if err := task.Run(t.ctx); err != nil {
-			return fmt.Errorf("Task failed %s: %w", task.Name, err)
+		err, warningMessages := task.Run(t.ctx)
+		warning = append(warning, warningMessages...)
+		if err != nil {
+			return fmt.Errorf("Task failed %s: %w", task.Name, err), warning
 		}
+
 		elapsed := time.Since(start)
 		t.logger.V(1).Info("Measure", task.Name, elapsed)
 	}
-	return nil
+	return nil, warning
 }
 
-func (t *taskRunnerImpl) AddTask(name string, f func(interface{}) error) {
+func (t *taskRunnerImpl) AddTask(name string, f func(interface{}) (error, []string)) {
 	t.taskList = append(t.taskList, task{Name: name, Run: f})
 }

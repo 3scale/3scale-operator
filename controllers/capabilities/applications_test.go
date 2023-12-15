@@ -171,7 +171,7 @@ func TestApplicationThreescaleReconciler_syncApplication(t1 *testing.T) {
 				threescaleAPIClient: tt.fields.threescaleAPIClient,
 				logger:              tt.fields.logger,
 			}
-			if err := t.syncApplication(tt.args.in0); (err != nil) != tt.wantErr {
+			if err, _ := t.syncApplication(tt.args.in0); (err != nil) != tt.wantErr {
 				t1.Errorf("syncApplication() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

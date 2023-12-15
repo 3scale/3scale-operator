@@ -14,7 +14,8 @@ type metricData struct {
 	spec capabilitiesv1beta1.MetricSpec
 }
 
-func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) (error, []string) {
+	var warnings []string
 	desiredKeys := make([]string, 0, len(t.resource.Spec.Metrics))
 	for systemName := range t.resource.Spec.Metrics {
 		desiredKeys = append(desiredKeys, systemName)
@@ -23,7 +24,7 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	existingMap := map[string]threescaleapi.MetricItem{}
 	existingList, err := t.productEntity.Metrics()
 	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	existingKeys := make([]string, 0, len(existingList.Metrics))
@@ -47,7 +48,7 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 	err = t.processNotDesiredMetrics(notDesiredMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -66,7 +67,7 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 
 	err = t.reconcileMatchedMetrics(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -83,10 +84,10 @@ func (t *ProductThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 	err = t.createNewMetrics(desiredNewMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product metrics [%s]: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func (t *ProductThreescaleReconciler) processNotDesiredMetrics(notDesiredMap map[string]threescaleapi.MetricItem) error {

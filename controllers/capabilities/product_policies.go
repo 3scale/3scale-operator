@@ -12,15 +12,16 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (t *ProductThreescaleReconciler) syncPolicies(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncPolicies(_ interface{}) (error, []string) {
+	var warnings []string
 	existing, err := t.productEntity.Policies()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] policies: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] policies: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	desired, err := t.convertResourcePolicies()
 	if err != nil {
-		return err
+		return err, warnings
 	}
 
 	// Compare Go unmarshalled objects (not byte arrays)
@@ -31,11 +32,11 @@ func (t *ProductThreescaleReconciler) syncPolicies(_ interface{}) error {
 		t.logger.V(1).Info("syncPolicies", "policies not equal", diff)
 		err = t.productEntity.UpdatePolicies(desired)
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s] policies: %w", t.resource.Spec.SystemName, err)
+			return fmt.Errorf("Error sync product [%s] policies: %w", t.resource.Spec.SystemName, err), warnings
 		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
 // Convert Policies from []capabilitiesv1beta1.PolicyConfig to *threescaleapi.PoliciesConfigList to be comparable

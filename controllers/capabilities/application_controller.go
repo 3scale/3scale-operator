@@ -83,7 +83,7 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			reqLogger.Error(err, "error developer account not found ")
-			statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, application, nil, "", err)
+			statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, application, nil, "", err, []string{})
 			statusResult, statusUpdateErr := statusReconciler.Reconcile()
 			if statusUpdateErr != nil {
 				if err != nil {
@@ -190,24 +190,24 @@ func (r *ApplicationReconciler) applicationReconciler(applicationResource *capab
 	err := r.Client().Get(r.Context(), projectMeta, productResource)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, "", err)
+			statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, "", err, []string{})
 			return statusReconciler, err
 		}
 	}
 
 	err = r.checkExternalResources(applicationResource, accountResource, productResource)
 	if err != nil {
-		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, "", err)
+		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, "", err, []string{})
 		return statusReconciler, err
 	}
 
 	reconciler := NewApplicationReconciler(r.BaseReconciler, applicationResource, accountResource, productResource, threescaleAPIClient)
-	ApplicationEntity, err := reconciler.Reconcile()
+	ApplicationEntity, err, _ := reconciler.Reconcile()
 	if err != nil {
-		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, providerAccountAdminURLStr, err)
+		statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, nil, providerAccountAdminURLStr, err, []string{})
 		return statusReconciler, err
 	}
-	statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, ApplicationEntity, providerAccountAdminURLStr, err)
+	statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, applicationResource, ApplicationEntity, providerAccountAdminURLStr, err, []string{})
 	return statusReconciler, err
 }
 

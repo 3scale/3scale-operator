@@ -47,6 +47,8 @@ const (
 	// BackendFailedConditionType indicates that an error occurred during synchronization.
 	// The operator will retry.
 	BackendFailedConditionType common.ConditionType = "Failed"
+
+	BackendWarningConditionType common.ConditionType = "Warning"
 )
 
 var (

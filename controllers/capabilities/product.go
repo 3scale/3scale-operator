@@ -6,7 +6,8 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-func (t *ProductThreescaleReconciler) syncProduct(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncProduct(_ interface{}) (error, []string) {
+	var warnings []string
 	params := threescaleapi.Params{}
 
 	if t.productEntity.Name() != t.resource.Spec.Name {
@@ -34,9 +35,9 @@ func (t *ProductThreescaleReconciler) syncProduct(_ interface{}) error {
 	if len(params) > 0 {
 		err := t.productEntity.Update(params)
 		if err != nil {
-			return fmt.Errorf("Error sync product [%s;%d]: %w", t.resource.Spec.SystemName, t.productEntity.ID(), err)
+			return fmt.Errorf("Error sync product [%s;%d]: %w", t.resource.Spec.SystemName, t.productEntity.ID(), err), warnings
 		}
 	}
 
-	return nil
+	return nil, warnings
 }

@@ -156,6 +156,52 @@ func (conditions *Conditions) SetCondition(newCond Condition) bool {
 	return true
 }
 
+func (conditions *Conditions) SetWarningCondition(newCond []Condition) bool {
+
+	// Filter out warning conditions only
+	var existingWarningConditions []Condition
+
+	for _, condition := range *conditions {
+		if condition.Type == "Warning" {
+			existingWarningConditions = append(existingWarningConditions, condition)
+		}
+	}
+
+	// Add new condtions
+	for _, newCondition := range newCond {
+		exists := false
+		for _, existingCondition := range existingWarningConditions {
+			if newCondition.Message == existingCondition.Message {
+				exists = true
+			}
+		}
+
+		// create new condition if it doesn't exists
+		if !exists {
+			newCondition.LastTransitionTime = metav1.Time{Time: clock.Now()}
+			*conditions = append(*conditions, newCondition)
+		}
+
+	}
+
+	// Remove no more valid conditions
+	for i, existingConditions := range *conditions {
+		if existingConditions.Type == "Warning" {
+			conditionIsValid := false
+			for _, newCondition := range newCond {
+				if existingConditions.Message == newCondition.Message {
+					conditionIsValid = true
+				}
+			}
+			if !conditionIsValid {
+				*conditions = append((*conditions)[:i], (*conditions)[i+1:]...)
+			}
+		}
+	}
+
+	return true
+}
+
 // GetCondition searches the set of conditions for the condition with the given
 // ConditionType and returns it. If the matching condition is not found,
 // GetCondition returns nil.

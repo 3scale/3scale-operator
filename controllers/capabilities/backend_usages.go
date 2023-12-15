@@ -21,7 +21,8 @@ type newBackendUsageData struct {
 	spec capabilitiesv1beta1.BackendUsageSpec
 }
 
-func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) (error, []string) {
+	var warnings []string
 	desiredKeys := make([]string, 0, len(t.resource.Spec.BackendUsages))
 	for systemName := range t.resource.Spec.BackendUsages {
 		desiredKeys = append(desiredKeys, systemName)
@@ -29,7 +30,7 @@ func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 
 	existingList, err := t.productEntity.BackendUsages()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	existingKeys := make([]string, 0, len(existingList))
@@ -38,7 +39,7 @@ func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 		// backend usage ID should exist in the backend list
 		backend, ok := t.backendRemoteIndex.FindByID(existing.Element.BackendAPIID)
 		if !ok {
-			return fmt.Errorf("Backend ID %d not found in 3scale backend index", existing.Element.BackendAPIID)
+			return fmt.Errorf("Backend ID %d not found in 3scale backend index", existing.Element.BackendAPIID), warnings
 		}
 		existingKeys = append(existingKeys, backend.SystemName())
 		existingMap[backend.SystemName()] = existing.Element
@@ -57,7 +58,7 @@ func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	}
 	err = t.processNotDesiredBackendUsages(notDesiredList)
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -74,7 +75,7 @@ func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	}
 	err = t.reconcileMatchedBackendUsages(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -90,7 +91,7 @@ func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 		// Thus, existing Backend entities should contain desired systemName
 		backend, ok := t.backendRemoteIndex.FindBySystemName(backendSystemName)
 		if !ok {
-			return fmt.Errorf("Backend SystemName %s not found in 3scale backend index", backendSystemName)
+			return fmt.Errorf("Backend SystemName %s not found in 3scale backend index", backendSystemName), warnings
 		}
 		desiredNewList = append(desiredNewList, newBackendUsageData{
 			spec: t.resource.Spec.BackendUsages[backendSystemName],
@@ -99,9 +100,9 @@ func (t *ProductThreescaleReconciler) syncBackendUsage(_ interface{}) error {
 	}
 	err = t.createNewBackendUsage(desiredNewList)
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] backendusages: %w", t.resource.Spec.SystemName, err), warnings
 	}
-	return nil
+	return nil, warnings
 }
 
 func (t *ProductThreescaleReconciler) processNotDesiredBackendUsages(notDesiredList []threescaleapi.BackendAPIUsageItem) error {

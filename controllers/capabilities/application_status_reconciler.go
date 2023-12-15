@@ -18,16 +18,18 @@ type ApplicationStatusReconciler struct {
 	entity              *controllerhelper.ApplicationEntity
 	providerAccountHost string
 	syncError           error
+	warnings            []string
 	logger              logr.Logger
 }
 
-func NewApplicationStatusReconciler(b *reconcilers.BaseReconciler, applicationResource *capabilitiesv1beta1.Application, entity *controllerhelper.ApplicationEntity, providerAccountHost string, syncError error) *ApplicationStatusReconciler {
+func NewApplicationStatusReconciler(b *reconcilers.BaseReconciler, applicationResource *capabilitiesv1beta1.Application, entity *controllerhelper.ApplicationEntity, providerAccountHost string, syncError error, warnings []string) *ApplicationStatusReconciler {
 	return &ApplicationStatusReconciler{
 		BaseReconciler:      b,
 		applicationResource: applicationResource,
 		entity:              entity,
 		providerAccountHost: providerAccountHost,
 		syncError:           syncError,
+		warnings:            warnings,
 		logger:              b.Logger().WithValues("Status Reconciler", applicationResource.Name),
 	}
 }

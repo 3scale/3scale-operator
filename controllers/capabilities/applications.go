@@ -6,7 +6,8 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
+func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) (error, []string) {
+	var warnings []string
 	params := threescaleapi.Params{}
 
 	if t.applicationEntity.AppName() != t.applicationResource.Spec.Name {
@@ -19,12 +20,12 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
 
 	planID, err := t.findPlanId(*t.productResource.Status.ID)
 	if err != nil {
-		return fmt.Errorf("error finding plan ID for plan : [%s]", t.applicationResource.Spec.ApplicationPlanName)
+		return fmt.Errorf("error finding plan ID for plan : [%s]", t.applicationResource.Spec.ApplicationPlanName), warnings
 	}
 	if t.applicationEntity.PlanID() != planID {
 		_, err := t.threescaleAPIClient.ChangeApplicationPlan(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, planID)
 		if err != nil {
-			return fmt.Errorf("error sync applicaiton [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
+			return fmt.Errorf("error sync applicaiton [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err), warnings
 		}
 		params["applicationPlanName"] = t.applicationResource.Spec.ApplicationPlanName
 	}
@@ -32,7 +33,7 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
 	if t.applicationResource.Spec.Suspend == true && t.applicationEntity.ApplicationState() == "live" {
 		_, err := t.threescaleAPIClient.ApplicationSuspend(*t.accountResource.Status.ID, t.applicationEntity.ID())
 		if err != nil {
-			return fmt.Errorf("error sync applicaiton [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
+			return fmt.Errorf("error sync applicaiton [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err), warnings
 		}
 		params["state"] = "suspended"
 	}
@@ -40,7 +41,7 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
 	if t.applicationResource.Spec.Suspend == false && t.applicationEntity.ApplicationState() == "suspended" {
 		_, err := t.threescaleAPIClient.ApplicationResume(*t.accountResource.Status.ID, t.applicationEntity.ID())
 		if err != nil {
-			return fmt.Errorf("error sync applicaiton [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
+			return fmt.Errorf("error sync applicaiton [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err), warnings
 		}
 		params["state"] = "live"
 	}
@@ -48,11 +49,11 @@ func (t *ApplicationThreescaleReconciler) syncApplication(_ interface{}) error {
 	if len(params) > 0 {
 		_, err := t.threescaleAPIClient.UpdateApplication(*t.accountResource.Status.ID, *t.applicationResource.Status.ID, params)
 		if err != nil {
-			return fmt.Errorf("error sync applicaiton [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err)
+			return fmt.Errorf("error sync applicaiton [%s;%d]: %w", t.applicationResource.Spec.Name, t.applicationEntity.ID(), err), warnings
 		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func (t *ApplicationThreescaleReconciler) findPlanId(productID int64) (int64, error) {

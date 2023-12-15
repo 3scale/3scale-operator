@@ -41,7 +41,7 @@ func NewThreescaleReconciler(b *reconcilers.BaseReconciler,
 	}
 }
 
-func (t *BackendThreescaleReconciler) Reconcile() (*controllerhelper.BackendAPIEntity, error) {
+func (t *BackendThreescaleReconciler) Reconcile() (*controllerhelper.BackendAPIEntity, []string, error) {
 	taskRunner := helper.NewTaskRunner(nil, t.logger)
 	taskRunner.AddTask("SyncBackend", t.syncBackend)
 	// First methods and metrics, then mapping rules.
@@ -52,18 +52,19 @@ func (t *BackendThreescaleReconciler) Reconcile() (*controllerhelper.BackendAPIE
 	taskRunner.AddTask("SyncMetrics", t.syncMetrics)
 	taskRunner.AddTask("SyncMappingRules", t.syncMappingRules)
 
-	err := taskRunner.Run()
+	err, warnings := taskRunner.Run()
 	if err != nil {
-		return nil, err
+		return nil, warnings, err
 	}
 
-	return t.backendAPIEntity, nil
+	return t.backendAPIEntity, warnings, nil
 }
 
-func (t *BackendThreescaleReconciler) syncBackend(_ interface{}) error {
+func (t *BackendThreescaleReconciler) syncBackend(_ interface{}) (error, []string) {
 	var (
 		err              error
 		backendAPIEntity *controllerhelper.BackendAPIEntity
+		warnings         []string
 	)
 
 	backendAPIEntity, exists := t.backendRemoteIndex.FindBySystemName(t.backendResource.Spec.SystemName)
@@ -78,7 +79,7 @@ func (t *BackendThreescaleReconciler) syncBackend(_ interface{}) error {
 		}
 		backendAPIEntity, err = t.backendRemoteIndex.CreateBackendAPI(params)
 		if err != nil {
-			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err)
+			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 		}
 	}
 
@@ -102,14 +103,15 @@ func (t *BackendThreescaleReconciler) syncBackend(_ interface{}) error {
 	if len(updatedParams) > 0 {
 		err = t.backendAPIEntity.Update(updatedParams)
 		if err != nil {
-			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err)
+			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
-func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
+func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) (error, []string) {
+	var warnings []string
 	desiredKeys := make([]string, 0, len(t.backendResource.Spec.Methods))
 	for systemName := range t.backendResource.Spec.Methods {
 		desiredKeys = append(desiredKeys, systemName)
@@ -118,7 +120,7 @@ func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 	existingMap := map[string]threescaleapi.MethodItem{}
 	existingList, err := t.backendAPIEntity.Methods()
 	if err != nil {
-		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	existingKeys := make([]string, 0, len(existingList.Methods))
@@ -140,12 +142,12 @@ func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 	err = t.deleteNotDesiredMethodsFrom3scale(notDesiredMap)
 	if err != nil {
-		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	err = t.deleteExternalMetricReferences(notDesiredExistingKeys)
 	if err != nil {
-		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -162,7 +164,7 @@ func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 
 	err = t.reconcileMatchedMethods(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -177,10 +179,10 @@ func (t *BackendThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 	err = t.createNewMethods(desiredNewMap)
 	if err != nil {
-		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend methods [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func (t *BackendThreescaleReconciler) createNewMethods(desiredNewMap map[string]capabilitiesv1beta1.MethodSpec) error {
@@ -316,7 +318,8 @@ func (t *BackendThreescaleReconciler) reconcileMatchedMethods(matchedMap map[str
 	return nil
 }
 
-func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
+func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) (error, []string) {
+	var warnings []string
 	desiredKeys := make([]string, 0, len(t.backendResource.Spec.Metrics))
 	for systemName := range t.backendResource.Spec.Metrics {
 		desiredKeys = append(desiredKeys, systemName)
@@ -325,7 +328,7 @@ func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 	existingMap := map[string]threescaleapi.MetricItem{}
 	existingList, err := t.backendAPIEntity.Metrics()
 	if err != nil {
-		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	existingKeys := make([]string, 0, len(existingList.Metrics))
@@ -348,12 +351,12 @@ func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 	err = t.deleteNotDesiredMetricsFrom3scale(notDesiredMap)
 	if err != nil {
-		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	err = t.deleteExternalMetricReferences(notDesiredExistingKeys)
 	if err != nil {
-		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -371,7 +374,7 @@ func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 
 	err = t.reconcileMatchedMetrics(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	//
@@ -387,10 +390,10 @@ func (t *BackendThreescaleReconciler) syncMetrics(_ interface{}) error {
 	}
 	err = t.createNewMetrics(desiredNewMap)
 	if err != nil {
-		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend metrics [%s]: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func (t *BackendThreescaleReconciler) createNewMetrics(desiredNewMap map[string]capabilitiesv1beta1.MetricSpec) error {
@@ -447,18 +450,32 @@ func (t *BackendThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[str
 	return nil
 }
 
-func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
+func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) (error, []string) {
+	var warnings []string
 	desiredKeys := make([]string, 0, len(t.backendResource.Spec.MappingRules))
 	desiredMap := map[string]capabilitiesv1beta1.MappingRuleSpec{}
 	for _, spec := range t.backendResource.Spec.MappingRules {
-		key := fmt.Sprintf("%s:%s", spec.HTTPMethod, spec.Pattern)
+		key := fmt.Sprintf("%s:%s:%s", spec.HTTPMethod, spec.Pattern, spec.MetricMethodRef)
+
+		// IF THE DESIRED KEY, ALREADY EXISTS IN THE DESIRED MAP, DO NOT BE ADDING IT.
+		// THE RULES ARE AS FOLLOW:
+		// same HTTPMethod
+		// same Pattern
+		// same metricMethodRef
+
+		if _, exists := desiredMap[key]; exists {
+			// The key already exists in the map
+			warnings = append(warnings, fmt.Sprintf("The mapping rule with HTTPMethod: %s, Pattern: %s and Metric Reference: %s, are duplicated. Only the first rule is going to be created in 3scale, remove the remaining duplicated rules as they have no effect.", spec.HTTPMethod, spec.Pattern, spec.MetricMethodRef))
+			continue
+		}
+
 		desiredKeys = append(desiredKeys, key)
 		desiredMap[key] = spec
 	}
 
 	existingMap, err := t.getExistingMappingRules()
 	if err != nil {
-		return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 	existingKeys := make([]string, 0, len(existingMap))
 	for existingKey := range existingMap {
@@ -477,7 +494,7 @@ func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	}
 	err = t.processNotDesiredMappingRules(notDesiredList)
 	if err != nil {
-		return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err), warnings
 	}
 
 	// If existing non-desired mapping rules have been detected we refetch
@@ -486,7 +503,7 @@ func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	if len(notDesiredList) > 0 {
 		existingMap, err = t.getExistingMappingRules()
 		if err != nil {
-			return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+			return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err), warnings
 		}
 	}
 
@@ -523,19 +540,20 @@ func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 			t.logger.V(1).Info("syncMappingRules", "desiredMappingRuleToReconcile", desiredKey, "position", desiredIdx)
 			err := t.reconcileMappingRuleWithPosition(desiredMappingRule, desiredIdx, existingMappingRule)
 			if err != nil {
-				return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+				return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err), warnings
 			}
 		} else {
 			// Create MappingRule
 			t.logger.V(1).Info("syncMappingRules", "desiredMappingRuleToCreate", desiredKey, "position", desiredIdx)
-			err := t.createNewMappingRuleWithPosition(desiredMappingRule, desiredIdx)
+			err, newMappingRulesWarnings := t.createNewMappingRuleWithPosition(desiredMappingRule, desiredIdx)
+			warnings = append(warnings, newMappingRulesWarnings...)
 			if err != nil {
-				return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+				return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err), warnings
 			}
 		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func (t *BackendThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
@@ -618,23 +636,21 @@ func (t *BackendThreescaleReconciler) reconcileMappingRuleWithPosition(desired c
 	return nil
 }
 
-func (t *BackendThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
-	isValidRule, err := t.validateMappingRulesDuplication(desired)
+func (t *BackendThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) (error, []string) {
+	var warning []string
+	err, warning := t.validateMappingRulesDuplication(desired)
 	if err != nil {
-		return err
-	}
-	if !isValidRule {
-		return errors.New("mapping rule duplication; pattern " + desired.Pattern + " already exists. The pattern must be unique among all mapping rules")
+		return err, warning
 	}
 
 	metricID, err := t.backendAPIEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
 	if err != nil {
-		return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err), warning
 	}
 
 	if metricID < 0 {
 		// Should not happen as metric and method references have been validated and should exists
-		return errors.New("backend metric method ref for mapping rule not found")
+		return errors.New("backend metric method ref for mapping rule not found"), warning
 	}
 
 	params := threescaleapi.Params{
@@ -652,21 +668,28 @@ func (t *BackendThreescaleReconciler) createNewMappingRuleWithPosition(desired c
 
 	err = t.backendAPIEntity.CreateMappingRule(params)
 	if err != nil {
-		return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err)
+		return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err), warning
 	}
-	return nil
+	return nil, warning
 }
 
-func (t *BackendThreescaleReconciler) validateMappingRulesDuplication(desired capabilitiesv1beta1.MappingRuleSpec) (bool, error) {
-	existingMap, err := t.getExistingMappingRules()
-	if err != nil {
-		return false, fmt.Errorf("error getExistingMappingRules: %w", err)
-	}
-	for _, existingRule := range existingMap {
-		if desired.Pattern == existingRule.Pattern &&
-			desired.HTTPMethod == existingRule.HTTPMethod {
-			return false, fmt.Errorf("duplicated Mapping Rules found that using same Pattern [%s] and same HTTPMethod [%s]! Only last Rule was accepted. You can fix Rules in CR manually.", desired.Pattern, desired.HTTPMethod)
-		}
-	}
-	return true, nil
+func (t *BackendThreescaleReconciler) validateMappingRulesDuplication(desired capabilitiesv1beta1.MappingRuleSpec) (error, []string) {
+	var warning []string
+
+	// This logic needs to change since we are comparing existsing mapping rules (what is in 3scale db) vs desired (what is on CR) - it makes no point in checking what's in 3scale vs what's in the CR as part of
+	// validating mapping rules because this is our point, we want to have mapping rules from CR on the 3scale DB.
+	// Validating mapping rules should check instead, if the CR mapping rules, pre-creation - are duplicated and if so, do not even attempt to create them.
+
+	// existingMap, err := t.getExistingMappingRules()
+	// if err != nil {
+	// 	return fmt.Errorf("error getExistingMappingRules: %w", err), warning
+	// }
+	// for _, existingRule := range existingMap {
+	// 	if desired.Pattern == existingRule.Pattern &&
+	// 		desired.HTTPMethod == existingRule.HTTPMethod {
+	// 			warning = append(warning, fmt.Sprintf("duplicated Mapping Rules found that using same Pattern [%s] and same HTTPMethod [%s]! Only last Rule was accepted. You can fix Rules in CR manually.", desired.Pattern, desired.HTTPMethod))
+	// 	}
+	// }
+
+	return nil, warning
 }

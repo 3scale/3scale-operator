@@ -197,32 +197,32 @@ func (r *BackendReconciler) reconcile(backendResource *capabilitiesv1beta1.Backe
 
 	err := r.validateSpec(backendResource)
 	if err != nil {
-		statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, nil, "", err)
+		statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, nil, "", err, []string{})
 		return statusReconciler, err
 	}
 
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), backendResource.Namespace, backendResource.Spec.ProviderAccountRef, logger)
 	if err != nil {
-		statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, nil, "", err)
+		statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, nil, "", err, []string{})
 		return statusReconciler, err
 	}
 
 	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(backendResource.GetAnnotations())
 	threescaleAPIClient, err := controllerhelper.PortaClient(providerAccount, insecureSkipVerify)
 	if err != nil {
-		statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, nil, providerAccount.AdminURLStr, err)
+		statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, nil, providerAccount.AdminURLStr, err, []string{})
 		return statusReconciler, err
 	}
 
 	backendRemoteIndex, err := controllerhelper.NewBackendAPIRemoteIndex(threescaleAPIClient, logger)
 	if err != nil {
-		statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, nil, providerAccount.AdminURLStr, err)
+		statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, nil, providerAccount.AdminURLStr, err, []string{})
 		return statusReconciler, err
 	}
 
 	reconciler := NewThreescaleReconciler(r.BaseReconciler, backendResource, threescaleAPIClient, backendRemoteIndex, providerAccount)
-	backendAPIEntity, err := reconciler.Reconcile()
-	statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, backendAPIEntity, providerAccount.AdminURLStr, err)
+	backendAPIEntity, warnings, err := reconciler.Reconcile()
+	statusReconciler := NewBackendStatusReconciler(r.BaseReconciler, backendResource, backendAPIEntity, providerAccount.AdminURLStr, err, warnings)
 	return statusReconciler, err
 }
 

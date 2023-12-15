@@ -9,10 +9,11 @@ import (
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
+func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) (error, []string) {
+	var warnings []string
 	existing, err := t.productEntity.Proxy()
 	if err != nil {
-		return fmt.Errorf("Error sync product [%s] proxy: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product [%s] proxy: %w", t.resource.Spec.SystemName, err), warnings
 	}
 
 	// respect 3scale defaults.
@@ -88,16 +89,16 @@ func (t *ProductThreescaleReconciler) syncProxy(_ interface{}) error {
 
 	err = t.syncProxyOIDC(params, existing)
 	if err != nil {
-		return fmt.Errorf("Error syncProxyOIDC: %w", err)
+		return fmt.Errorf("Error syncProxyOIDC: %w", err), warnings
 	}
 
 	if len(params) > 0 {
 		err := t.productEntity.UpdateProxy(params)
 		if err != nil {
-			return fmt.Errorf("Error updating product proxy: %w", err)
+			return fmt.Errorf("Error updating product proxy: %w", err), warnings
 		}
 	}
-	return nil
+	return nil, warnings
 }
 
 func (t *ProductThreescaleReconciler) syncProxyGatewayResponse(params threescaleapi.Params, existing *threescaleapi.ProxyJSON) {
