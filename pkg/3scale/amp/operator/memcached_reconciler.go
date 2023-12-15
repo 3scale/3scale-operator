@@ -40,7 +40,7 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemMemcachedDeploymentName, r.apiManager.GetNamespace(), r.Client())
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemMemcachedDeploymentName, r.apiManager.GetNamespace(), false, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}

@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"reflect"
 	"testing"
 
@@ -39,10 +40,10 @@ func testSystemCommonAppLabels() map[string]string {
 
 func testSystemAppPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "app",
-		"deploymentConfig":             "system-app",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "app",
+		reconcilers.DeploymentLabelSelector: "system-app",
 	}
 	addExpectedMeteringLabels(labels, "system-app", helper.ApplicationType)
 
@@ -59,10 +60,10 @@ func testSystemCommonSidekiqLabels() map[string]string {
 
 func testSystemSidekiqPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "sidekiq",
-		"deploymentConfig":             "system-sidekiq",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "sidekiq",
+		reconcilers.DeploymentLabelSelector: "system-sidekiq",
 	}
 	addExpectedMeteringLabels(labels, "system-sidekiq", helper.ApplicationType)
 

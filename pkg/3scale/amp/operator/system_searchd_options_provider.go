@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -85,7 +86,7 @@ func (s *SystemSearchdOptionsProvider) podTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-searchd"
+	labels[reconcilers.DeploymentLabelSelector] = "system-searchd"
 
 	return labels
 }
