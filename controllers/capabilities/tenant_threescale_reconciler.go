@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"strconv"
 
 	porta_client_pkg "github.com/3scale/3scale-porta-go-client/client"
@@ -13,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	apiv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
+	apispkghelper "github.com/3scale/3scale-operator/pkg/apispkg/helper"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -105,6 +107,11 @@ func (r *TenantThreescaleReconciler) reconcileTenant() (bool, error) {
 		if updated {
 			return true, nil
 		}
+	}
+
+	err = r.SetUpdateTenantInfo(tenantDef)
+	if err != nil {
+		return false, err
 	}
 
 	return false, nil
@@ -308,4 +315,67 @@ func (r *TenantThreescaleReconciler) retrieveTenantID() (int64, error) {
 	}
 
 	return tenantId, nil
+}
+
+func (r *TenantThreescaleReconciler) SetUpdateTenantInfo(tenant *porta_client_pkg.Tenant) error {
+	// set/update Tenant optional Info parameters
+	params := map[string]string{}
+	fieldErrors := field.ErrorList{}
+	specFldPath := field.NewPath("spec")
+
+	if r.tenantR.Spec.FromEmail != nil {
+		if tenant.Signup.Account.FromEmail != *r.tenantR.Spec.FromEmail {
+			if !apispkghelper.IsEmailValid(*r.tenantR.Spec.FromEmail) {
+				fieldErrors = append(fieldErrors, field.Invalid(specFldPath.Child("fromEmail"), r.tenantR.Spec.FromEmail, "invalid FromEmail"))
+				return &helper.SpecFieldError{
+					ErrorType:      helper.InvalidError,
+					FieldErrorList: fieldErrors,
+				}
+			}
+			params["from_email"] = *r.tenantR.Spec.FromEmail
+		}
+	}
+	if r.tenantR.Spec.SupportEmail != nil {
+		if tenant.Signup.Account.SupportEmail != *r.tenantR.Spec.SupportEmail {
+			if !apispkghelper.IsEmailValid(*r.tenantR.Spec.SupportEmail) {
+				fieldErrors = append(fieldErrors, field.Invalid(specFldPath.Child("supportEmail"), r.tenantR.Spec.SupportEmail, "invalid SupportEmail"))
+				return &helper.SpecFieldError{
+					ErrorType:      helper.InvalidError,
+					FieldErrorList: fieldErrors,
+				}
+			}
+			params["support_email"] = *r.tenantR.Spec.SupportEmail
+		}
+	}
+	if r.tenantR.Spec.FinanceSupportEmail != nil {
+		if tenant.Signup.Account.FinanceSupportEmail != *r.tenantR.Spec.FinanceSupportEmail {
+			if !apispkghelper.IsEmailValid(*r.tenantR.Spec.FinanceSupportEmail) {
+				fieldErrors = append(fieldErrors, field.Invalid(specFldPath.Child("financeSupportEmail"), r.tenantR.Spec.FinanceSupportEmail, "invalid FinanceSupportEmail"))
+				return &helper.SpecFieldError{
+					ErrorType:      helper.InvalidError,
+					FieldErrorList: fieldErrors,
+				}
+			}
+			params["finance_support_email"] = *r.tenantR.Spec.FinanceSupportEmail
+		}
+	}
+
+	if r.tenantR.Spec.SiteAccessCode != nil {
+		if tenant.Signup.Account.SiteAccessCode != *r.tenantR.Spec.SiteAccessCode {
+			params["site_access_code"] = *r.tenantR.Spec.SiteAccessCode
+		}
+	}
+
+	if len(params) > 0 {
+		r.logger.Info("Set/Update Optional parameters for tenant", "OrganizationName", r.tenantR.Spec.OrganizationName, "Username", r.tenantR.Spec.Username)
+		_, err := r.portaClient.UpdateTenant(
+			tenant.Signup.Account.ID,
+			params,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

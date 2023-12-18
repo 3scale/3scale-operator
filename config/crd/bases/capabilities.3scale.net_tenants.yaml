@@ -37,6 +37,12 @@ spec:
             properties:
               email:
                 type: string
+              financeSupportEmail:
+                type: string
+              fromEmail:
+                description: additional parameters, used for Update, as in master
+                  portal Api Docs
+                type: string
               masterCredentialsRef:
                 description: SecretReference represents a Secret Reference. It has
                   enough information to retrieve secret in any namespace
@@ -67,6 +73,10 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
+              siteAccessCode:
+                type: string
+              supportEmail:
+                type: string
               systemMasterUrl:
                 type: string
               tenantSecretRef:
