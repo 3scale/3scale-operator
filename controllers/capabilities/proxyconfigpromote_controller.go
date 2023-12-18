@@ -181,10 +181,20 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 			}
 			latestStagingVersion = stageElement.ProxyConfig.Version
 
+			// Fetch production state, if product has not been promoted to production yet the state would be 0.
+			productionElement, err := threescaleAPIClient.GetLatestProxyConfig(productIDStr, "production")
+			if err != nil {
+				if !threescaleapi.IsNotFound(err) {
+					statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, productIDStr, 0, latestStagingVersion, err)
+					return statusReconciler, err
+				}
+			}
+			latestProductionVersion = productionElement.ProxyConfig.Version
+			
 			// Compare the version before and after promotion
 			if currentStagingVersion == latestStagingVersion {
 				// If no changes have been applied, return an error
-				err := fmt.Errorf("can't promote to staging as no product changes detected, delete the proxyConfigPromote CR or introduce changes to configuration env first to proceed")
+				err := fmt.Errorf("can't promote to staging as no product changes detected. Delete this proxyConfigPromote CR, then introduce changes to configuration, and then create a new proxyConfigPromote CR")
 				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, productIDStr, latestStagingVersion, 0, err)
 				return statusReconciler, err
 			}
@@ -223,7 +233,7 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 				_, err = threescaleAPIClient.PromoteProxyConfig(productIDStr, "sandbox", strconv.Itoa(stageElement.ProxyConfig.Version), "production")
 				if err != nil {
 					// The version can already be in the production meaning that it can't be updated again, the proxyPromote is not going to be deleted by the operator but instead, will notify the user of the issue
-					statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, productIDStr, latestProductionVersion, latestStagingVersion, fmt.Errorf("can't promote to production as no product changes detected, delete the proxyConfigPromote CR or introduce changes to stage env first to proceed"))
+					statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, productIDStr, latestProductionVersion, latestStagingVersion, fmt.Errorf("can't promote to production as no product changes detected. Delete this proxyConfigPromote CR, then introduce changes to configuration, and then create a new proxyConfigPromote CR"))
 					return statusReconciler, err
 				} else {
 					latestProductionVersion = latestStagingVersion
