@@ -430,5 +430,11 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 		}
 	}
 
+	if openapiCR.Spec.OIDC != nil &&
+		(openapiCR.Spec.OIDC.IssuerEndpoint == "" && openapiCR.Spec.OIDC.IssuerEndpointRef == nil) {
+		logger.Info("OIDC issuer endpoint definition is missing, as no IssuerEndpoint nor IssuerEndpointRef found in CR.")
+		r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "OIDC issuer endpoint definition is missing in CR", "%v", "No IssuerEndpoint nor IssuerEndpointRef found in OIDC spec in CR; please set it to fix the problem.")
+	}
+
 	return nil
 }
