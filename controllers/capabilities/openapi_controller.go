@@ -428,8 +428,13 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 				}
 			}
 		}
+		// when OAS securitySchemes type is oauth2, and openapiCR spec is OIDC, then CR OIDC Authentication Flows parameters will be ignored,
+		// and Product authentication flows will be set to match oauth2 flows in OAS
+		if openapiCR.Spec.OIDC != nil && globalSecRequirements[0].Value.Type == "oauth2" {
+			logger.Info("OIDC authentication flows in CR will be ignored and Product OIDC authentication flows will be set to match oauth2 flows in OAS since the SecuritySchemes type in OAS is \"oauth2\" (for OIDC it should be \"openIdConnect\")")
+			r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "OIDC authentication flows in CR will be ignored and Product OIDC authentication flows will be set to match oauth2 flows in OAS since the SecuritySchemes type in OAS is \"oauth2\" (for OIDC it should be \"openIdConnect\")", "%v", "Product OIDC authentication flows parameters will be set to match oauth2 flows as following (OIDC ~ OAuth2): StandardFlowEnabled ~ AuthorizationCode, ImplicitFlowEnabled ~ Implicit, DirectAccessGrantsEnabled ~ Password, ServiceAccountsEnabled ~ ClientCredentials")
+		}
 	}
-
 	if openapiCR.Spec.OIDC != nil &&
 		(openapiCR.Spec.OIDC.IssuerEndpoint == "" && openapiCR.Spec.OIDC.IssuerEndpointRef == nil) {
 		logger.Info("OIDC issuer endpoint definition is missing, as no IssuerEndpoint nor IssuerEndpointRef found in CR.")
