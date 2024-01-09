@@ -657,6 +657,38 @@ spec:
         - apiGroups:
           - capabilities.3scale.net
           resources:
+          - Billings
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - Billings/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - Billings/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
           - activedocs
           verbs:
           - create
