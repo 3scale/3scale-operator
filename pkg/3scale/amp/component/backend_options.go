@@ -82,6 +82,19 @@ func DefaultBackendListenerResourceRequirements() v1.ResourceRequirements {
 	}
 }
 
+func DefaultHPABackendListenerResourceRequirements() v1.ResourceRequirements {
+	return v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("700Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("700Mi"),
+		},
+	}
+}
+
 func DefaultBackendWorkerResourceRequirements() v1.ResourceRequirements {
 	return v1.ResourceRequirements{
 		Limits: v1.ResourceList{
@@ -91,6 +104,19 @@ func DefaultBackendWorkerResourceRequirements() v1.ResourceRequirements {
 		Requests: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse("150m"),
 			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+	}
+}
+
+func DefaultHPABackendWorkerResourceRequirements() v1.ResourceRequirements {
+	return v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("300Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("300Mi"),
 		},
 	}
 }

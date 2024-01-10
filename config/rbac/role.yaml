@@ -200,6 +200,13 @@ rules:
   - update
   - watch
 - apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscaler
+  verbs:
+  - create
+  - delete
+- apiGroups:
   - batch
   resources:
   - jobs
