@@ -400,6 +400,16 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 	specFldPath := field.NewPath("spec")
 	openapiRefFldPath := specFldPath.Child("openapiRef")
 
+	if openapiCR.Spec.OIDC != nil &&
+		(openapiCR.Spec.OIDC.IssuerEndpoint == "" && openapiCR.Spec.OIDC.IssuerEndpointRef == nil) {
+		fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, "OIDC issuer endpoint definition is missing in CR - "+
+			"No IssuerEndpoint nor IssuerEndpointRef found in OIDC spec in CR, one of them must be set."))
+		return &helper.SpecFieldError{
+			ErrorType:      helper.InvalidError,
+			FieldErrorList: fieldErrors,
+		}
+	}
+
 	globalSecRequirements := helper.OpenAPIGlobalSecurityRequirements(openapiObj)
 	if len(globalSecRequirements) == 0 && openapiCR.Spec.OIDC != nil {
 		logger.Info("OIDC definitions in CR will be ignored, as no security requirements are found. Default to UserKey authentication")
@@ -418,12 +428,6 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 				}
 			}
 		}
-	}
-
-	if openapiCR.Spec.OIDC != nil &&
-		(openapiCR.Spec.OIDC.IssuerEndpoint == "" && openapiCR.Spec.OIDC.IssuerEndpointRef == nil) {
-		logger.Info("OIDC issuer endpoint definition is missing, as no IssuerEndpoint nor IssuerEndpointRef found in CR.")
-		r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "OIDC issuer endpoint definition is missing in CR", "%v", "No IssuerEndpoint nor IssuerEndpointRef found in OIDC spec in CR; please set it to fix the problem.")
 	}
 
 	return nil
