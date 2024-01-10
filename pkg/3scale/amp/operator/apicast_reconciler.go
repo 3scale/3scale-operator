@@ -200,12 +200,12 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 
 	hpa := r.apiManager.Spec.Apicast.ProductionSpec.Hpa
 	if hpa.MinPods != nil || hpa.MaxPods != 0 || hpa.CpuPercent != nil || hpa.MemoryPercent != nil {
-		err = r.ReconcileHpa(apicast.ApicastProductionHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
+		err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 	} else {
-		err = r.ReconcileHpa(apicast.ApicastProductionHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
+		err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
