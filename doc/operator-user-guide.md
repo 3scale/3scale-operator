@@ -798,10 +798,11 @@ spec:
 Removing hpa field or setting enabled to false will remove the HPA for the component. 
 Once `enabled: true` you can manually edit the HPA instances that are created to optimize your [configuration](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/). 
 
-Alternatively you can set the HPA configuration in the APIManager CR. this will override the defaults. With this change
+Alternatively you can set the HPA configuration in the APIManager CR. This will override the defaults. With this change
 you are enabling syncing of the values between the APIManager CR and HPA CRs. APIManager will be the source of truth for
-the HPA created. That is if you manually edit values in the HPA they will be reverted to match the values in the 
-APIManager CR  e.g. of APIManager configuration for managing HPA 
+the HPA created. That is if you manually edit values in the HPA they can be reverted to match the values in the 
+APIManager CR the next time it reconciles. The operator reconciles when there is a change to the APIManger CR, or when the
+operator upgrades or restarts  e.g. of APIManager configuration for managing HPA 
 ```yaml
 apiVersion: apps.3scale.net/v1alpha1
 kind: APIManager
