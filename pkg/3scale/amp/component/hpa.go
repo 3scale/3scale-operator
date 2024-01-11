@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (apicast *Apicast) ApicastProductionHpa(namespace string, minPods *int32, maxPods int32, cpuPercent *int32, memoryPercent *int32) *hpa.HorizontalPodAutoscaler {
+func DefaultHpa(name string, namespace string, minPods *int32, maxPods int32, cpuPercent *int32, memoryPercent *int32) *hpa.HorizontalPodAutoscaler {
 	if minPods == nil {
 		minPods = helper.Int32Ptr(1)
 	}
@@ -19,16 +19,16 @@ func (apicast *Apicast) ApicastProductionHpa(namespace string, minPods *int32, m
 	if memoryPercent == nil {
 		memoryPercent = helper.Int32Ptr(90)
 	}
-	// currently pointing at dc will need to change to deployment
+	// needs to change from dc to deployment
 	return &hpa.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ApicastProductionName,
+			Name:      name,
 			Namespace: namespace,
 		},
 		Spec: hpa.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: hpa.CrossVersionObjectReference{
 				Kind:       "DeploymentConfig",
-				Name:       ApicastProductionName,
+				Name:       name,
 				APIVersion: "apps.openshift.io/v1",
 			},
 			MinReplicas: minPods,

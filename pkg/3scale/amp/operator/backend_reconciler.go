@@ -154,53 +154,52 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if r.apiManager.Spec.Backend.ListenerSpec.Hpa.Enabled || r.apiManager.Spec.Backend.WorkerSpec.Hpa.Enabled {
-		if redisStorageUrl != redisQueuesUrl {
-			hpa := r.apiManager.Spec.Backend.ListenerSpec.Hpa
-			// If any of the ApiManager hpa fields are populated then you are in a sync with the ApiManger values
-			if hpa.MinPods != nil || hpa.MaxPods != 0 || hpa.CpuPercent != nil || hpa.MemoryPercent != nil {
-				//err = r.ReconcileHpa(backend.BackendListenerHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
-				err = r.ReconcileHpa(component.DefaultHpa(component.BackendListenerName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
-				if err != nil {
-					return reconcile.Result{}, err
-				}
-			} else {
-				//err = r.ReconcileHpa(backend.BackendListenerHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
-				err = r.ReconcileHpa(component.DefaultHpa(component.BackendListenerName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
-				if err != nil {
-					return reconcile.Result{}, err
-				}
-			}
-			hpa = r.apiManager.Spec.Backend.WorkerSpec.Hpa
-			// If any of the ApiManager hpa fields are populated then you are in a sync with the ApiManger values
-			if hpa.MinPods != nil || hpa.MaxPods != 0 || hpa.CpuPercent != nil || hpa.MemoryPercent != nil {
-				//err = r.ReconcileHpa(backend.BackendWorkerHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
-				err = r.ReconcileHpa(component.DefaultHpa(component.BackendWorkerName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
-				if err != nil {
-					return reconcile.Result{}, err
-				}
-			} else {
-				//err = r.ReconcileHpa(backend.BackendWorkerHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
-				err = r.ReconcileHpa(component.DefaultHpa(component.BackendWorkerName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
-				if err != nil {
-					return reconcile.Result{}, err
-				}
+	if redisStorageUrl != redisQueuesUrl {
+		hpa := r.apiManager.Spec.Backend.ListenerSpec.Hpa
+		// If any of the ApiManager hpa fields are populated then you are in a sync with the ApiManger values
+		if hpa.MinPods != nil || hpa.MaxPods != 0 || hpa.CpuPercent != nil || hpa.MemoryPercent != nil {
+			//err = r.ReconcileHpa(backend.BackendListenerHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
+			err = r.ReconcileHpa(component.DefaultHpa(component.BackendListenerName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
+			if err != nil {
+				return reconcile.Result{}, err
 			}
 		} else {
-			// set status message if logical redis db are detected in the backend
-			message := "logical redis instances found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
-			r.logger.Info(message)
-			if r.apiManager.Status.Conditions != nil {
-				if r.apiManager.Status.Conditions.IsTrueFor("Available") {
-					if r.apiManager.Status.Conditions[0].Message == "" {
-						r.apiManager.Status.Conditions[0].Message = message
-						r.UpdateResourceStatus(r.apiManager)
-					}
-				}
+			//err = r.ReconcileHpa(backend.BackendListenerHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
+			err = r.ReconcileHpa(component.DefaultHpa(component.BackendListenerName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
+			if err != nil {
+				return reconcile.Result{}, err
 			}
-
+		}
+		hpa = r.apiManager.Spec.Backend.WorkerSpec.Hpa
+		// If any of the ApiManager hpa fields are populated then you are in a sync with the ApiManger values
+		if hpa.MinPods != nil || hpa.MaxPods != 0 || hpa.CpuPercent != nil || hpa.MemoryPercent != nil {
+			//err = r.ReconcileHpa(backend.BackendWorkerHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
+			err = r.ReconcileHpa(component.DefaultHpa(component.BackendWorkerName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		} else {
+			//err = r.ReconcileHpa(backend.BackendWorkerHpa(r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
+			err = r.ReconcileHpa(component.DefaultHpa(component.BackendWorkerName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
 		}
 	} else {
+		// set status message if logical redis db are detected in the backend
+		message := "logical redis instances found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
+		r.logger.Info(message)
+		if r.apiManager.Status.Conditions != nil {
+			if r.apiManager.Status.Conditions.IsTrueFor("Available") {
+				if r.apiManager.Status.Conditions[0].Message == "" {
+					r.apiManager.Status.Conditions[0].Message = message
+					r.UpdateResourceStatus(r.apiManager)
+				}
+			}
+		}
+
+	}
+	if !r.apiManager.Spec.Backend.ListenerSpec.Hpa.Enabled || !r.apiManager.Spec.Backend.WorkerSpec.Hpa.Enabled {
 		// remove status message if hpa is disabled for backend message
 		message := ""
 		if r.apiManager.Status.Conditions != nil {
