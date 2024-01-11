@@ -187,15 +187,18 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		}
 	} else {
 		// set status message if logical redis db are detected in the backend
-		message := "logical redis instances found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
-		r.logger.Info(message)
-		// TODO update the status once the status update framework is in place.
-
+		if r.apiManager.Spec.Backend.ListenerSpec.Hpa.Enabled || !r.apiManager.Spec.Backend.WorkerSpec.Hpa.Enabled {
+			message := "logical redis instances found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
+			r.logger.Info(message)
+			// TODO update the status once the status update framework is in place.
+		}
 	}
-	if !r.apiManager.Spec.Backend.ListenerSpec.Hpa.Enabled && !r.apiManager.Spec.Backend.WorkerSpec.Hpa.Enabled {
-		// remove status message if hpa is disabled for backend message
-		r.logger.Info("hpa is set to disabled")
-		// TODO update the status to remove any hpa status updates once the status update framework is in place.
+	if redisStorageUrl == redisQueuesUrl {
+		if !r.apiManager.Spec.Backend.ListenerSpec.Hpa.Enabled && !r.apiManager.Spec.Backend.WorkerSpec.Hpa.Enabled {
+			// remove status message if hpa is disabled for backend message
+			r.logger.Info("hpa is set to disabled")
+			// TODO update the status to remove any hpa status updates once the status update framework is in place.
+		}
 	}
 
 	return reconcile.Result{}, nil
