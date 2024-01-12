@@ -161,13 +161,13 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileHpa(desired *hpa.HorizontalPodAutoscaler, mutateFn reconcilers.MutateFn) error {
-	if desired.Spec.ScaleTargetRef.Name == component.ApicastProductionName && r.apiManager.Spec.Apicast.ProductionSpec.Hpa.Enabled {
+	if desired.Spec.ScaleTargetRef.Name == component.ApicastProductionName && r.apiManager.Spec.Apicast.ProductionSpec.Hpa {
 		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
 	}
-	if desired.Spec.ScaleTargetRef.Name == component.BackendListenerName && r.apiManager.Spec.Backend.ListenerSpec.Hpa.Enabled {
+	if desired.Spec.ScaleTargetRef.Name == component.BackendListenerName && r.apiManager.Spec.Backend.ListenerSpec.Hpa {
 		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
 	}
-	if desired.Spec.ScaleTargetRef.Name == component.BackendWorkerName && r.apiManager.Spec.Backend.WorkerSpec.Hpa.Enabled {
+	if desired.Spec.ScaleTargetRef.Name == component.BackendWorkerName && r.apiManager.Spec.Backend.WorkerSpec.Hpa {
 		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
 	}
 	err := r.DeleteResource(desired)

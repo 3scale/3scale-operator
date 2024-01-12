@@ -187,20 +187,6 @@ func (c *CustomPolicySpec) VersionName() string {
 	return fmt.Sprintf("%s%s", c.Name, c.Version)
 }
 
-// HpaSpec common contains or has reference to HPA settings
-type HpaSpec struct {
-	// Enabled switch to enable/disable per component
-	Enabled bool `json:"enabled"`
-	// MinPods specifies the minimum available pods
-	MinPods *int32 `json:"minPods,omitempty"`
-	// MaxPods specifies the maximum amount of pods for HPA to scale at
-	MaxPods int32 `json:"maxPods,omitempty"`
-	// CpuPercent specifies the CPU resource usage percentage to trigger autoscaling
-	CpuPercent *int32 `json:"cpuPercent,omitempty"`
-	// MemoryValue specifies the memory resource usage in bytes to trigger autoscaling
-	MemoryPercent *int32 `json:"memoryPercent,omitempty"`
-}
-
 type ApicastSpec struct {
 	// +optional
 	ApicastManagementAPI *string `json:"managementAPI,omitempty"`
@@ -238,7 +224,7 @@ type ApicastProductionSpec struct {
 	CustomPolicies []CustomPolicySpec `json:"customPolicies,omitempty"`
 	// Hpa specifies an array of defined HPA values
 	//+optional
-	Hpa HpaSpec `json:"hpa,omitempty"`
+	Hpa bool `json:"hpa,omitempty"`
 	// OpenTracing contains the OpenTracing integration configuration
 	// with APIcast in the production environment.
 	// +optional
@@ -403,7 +389,7 @@ type BackendListenerSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// Hpa specifies an array of defined HPA values
 	//+optional
-	Hpa HpaSpec `json:"hpa,omitempty"`
+	Hpa bool `json:"hpa,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
@@ -425,7 +411,7 @@ type BackendWorkerSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// Hpa specifies an array of defined HPA values
 	//+optional
-	Hpa HpaSpec `json:"hpa,omitempty"`
+	Hpa bool `json:"hpa,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional

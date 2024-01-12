@@ -196,20 +196,12 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// create update or delete HPA
-
-	hpa := r.apiManager.Spec.Apicast.ProductionSpec.Hpa
-	if hpa.MinPods != nil || hpa.MaxPods != 0 || hpa.CpuPercent != nil || hpa.MemoryPercent != nil {
-		err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.GenericHPAMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	} else {
-		err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace, hpa.MinPods, hpa.MaxPods, hpa.CpuPercent, hpa.MemoryPercent), reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+	// create or delete HPA
+	err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
+
 	res, err := r.reconcileAPImanagerCR(context.TODO())
 	if err != nil {
 		return ctrl.Result{}, err

@@ -6,19 +6,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func DefaultHpa(name string, namespace string, minPods *int32, maxPods int32, cpuPercent *int32, memoryPercent *int32) *hpa.HorizontalPodAutoscaler {
-	if minPods == nil {
-		minPods = helper.Int32Ptr(1)
-	}
-	if maxPods == 0 {
-		maxPods = 5
-	}
-	if cpuPercent == nil {
-		cpuPercent = helper.Int32Ptr(90)
-	}
-	if memoryPercent == nil {
-		memoryPercent = helper.Int32Ptr(90)
-	}
+func DefaultHpa(name string, namespace string) *hpa.HorizontalPodAutoscaler {
+	minPods := helper.Int32Ptr(1)
+	maxPods := int32(5)
+	cpuPercent := helper.Int32Ptr(90)
+	memoryPercent := helper.Int32Ptr(90)
+
 	// needs to change from dc to deployment
 	return &hpa.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{

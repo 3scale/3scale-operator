@@ -740,7 +740,7 @@ spec:
 Horizontal Pod Autoscaling(HPA) is available for Apicast-production, Backend-listener and Backend-worker. The backend
 components require Redis running [async mode](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#async). 
 Async is enabled by default by the operator provided you aren't using [logical Redis databases](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#redis-databases).
-If you are not running in Async mode you won't be able to enable HPA.
+If you are not running in Async mode you won't be able to enable HPA for the backend.
 
 Provided you are running in Async mode, you can enable hpa for the components and accept the default configuration which
 will give you a HPA with 90% resources set and max and min pods set to 5 and 1. The following is an example of the 
@@ -785,57 +785,16 @@ spec:
     resourceRequirementsEnabled: false
     apicast:
         productionSpec:
-          hpa:
-            enabled: true
+          hpa: true
     backend:
         listenerSpec:
-          hpa:
-            enabled: true
+          hpa: true
         workerSpec:
-          hpa:
-            enabled: true
+          hpa: true
 ```
 Removing hpa field or setting enabled to false will remove the HPA for the component. 
 Once `enabled: true` you can manually edit the HPA instances that are created to optimize your [configuration](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/). 
 
-Alternatively you can set the HPA configuration in the APIManager CR. This will override the defaults. With this change
-you are enabling syncing of the values between the APIManager CR and HPA CRs. APIManager will be the source of truth for
-the HPA created. That is if you manually edit values in the HPA they can be reverted to match the values in the 
-APIManager CR the next time it reconciles. The operator reconciles when there is a change to the APIManger CR, or when the
-operator upgrades or restarts  e.g. of APIManager configuration for managing HPA 
-```yaml
-apiVersion: apps.3scale.net/v1alpha1
-kind: APIManager
-metadata:
-    name: example-apimanager
-spec:
-    wildcardDomain: example.com
-    resourceRequirementsEnabled: false
-    apicast:
-        productionSpec:
-          hpa:
-            enabled: true
-            minPods: 1
-            maxPods: 6
-            cpuPercent: 60
-            memoryPercent: 70
-    backend:
-        listenerSpec:
-          hpa:
-            enabled: true
-            minPods: 1
-            maxPods: 7
-            cpuPercent: 80
-            memoryPercent: 70
-        workerSpec:
-          hpa:
-            enabled: true
-            minPods: 1
-            maxPods: 8
-            cpuPercent: 70
-            memoryPercent: 95
-``` 
-We recommend using the default values 
 
 #### Setting custom TopologySpreadConstraints
 TopologySpreadConstraints specifies how to spread matching pods among the given topology.  See [here](https://docs.openshift.com/container-platform/4.13/nodes/scheduling/nodes-scheduler-pod-topology-spread-constraints.html) for more information.  
