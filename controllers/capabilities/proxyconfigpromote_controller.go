@@ -25,12 +25,14 @@ import (
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -121,7 +123,7 @@ func (r *ProxyConfigPromoteReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 		// If reconcile error but no status update required, requeue.
 		if reconcileErr != nil {
-			return ctrl.Result{}, reconcileErr
+			return helper.ReconcileErrorHandler(reconcileErr, reqLogger), nil
 		}
 	}
 
@@ -190,11 +192,16 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 				}
 			}
 			latestProductionVersion = productionElement.ProxyConfig.Version
-			
+
 			// Compare the version before and after promotion
 			if currentStagingVersion == latestStagingVersion {
 				// If no changes have been applied, return an error
-				err := fmt.Errorf("can't promote to staging as no product changes detected. Delete this proxyConfigPromote CR, then introduce changes to configuration, and then create a new proxyConfigPromote CR")
+				err := &helper.SpecFieldError{
+					ErrorType: helper.InvalidError,
+					FieldErrorList: field.ErrorList{
+						field.Invalid(field.NewPath(""), "", "cannot promote to staging as no product changes detected. Delete this proxyConfigPromote CR, then introduce changes to configuration, and then create a new proxyConfigPromote CR"),
+					},
+				}
 				statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, productIDStr, latestStagingVersion, 0, err)
 				return statusReconciler, err
 			}
@@ -233,7 +240,14 @@ func (r *ProxyConfigPromoteReconciler) proxyConfigPromoteReconciler(proxyConfigP
 				_, err = threescaleAPIClient.PromoteProxyConfig(productIDStr, "sandbox", strconv.Itoa(stageElement.ProxyConfig.Version), "production")
 				if err != nil {
 					// The version can already be in the production meaning that it can't be updated again, the proxyPromote is not going to be deleted by the operator but instead, will notify the user of the issue
-					statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, productIDStr, latestProductionVersion, latestStagingVersion, fmt.Errorf("can't promote to production as no product changes detected. Delete this proxyConfigPromote CR, then introduce changes to configuration, and then create a new proxyConfigPromote CR"))
+					err := &helper.SpecFieldError{
+						ErrorType: helper.InvalidError,
+						FieldErrorList: field.ErrorList{
+							field.Invalid(field.NewPath(""), "", "cannot promote to production as no product changes detected. Delete this proxyConfigPromote CR, then introduce changes to configuration, and then create a new proxyConfigPromote CR"),
+						},
+					}
+
+					statusReconciler := NewProxyConfigPromoteStatusReconciler(r.BaseReconciler, proxyConfigPromote, productIDStr, latestProductionVersion, latestStagingVersion, err)
 					return statusReconciler, err
 				} else {
 					latestProductionVersion = latestStagingVersion
