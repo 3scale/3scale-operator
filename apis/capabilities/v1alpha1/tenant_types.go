@@ -18,15 +18,25 @@ package v1alpha1
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
+	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+const (
+	// TenantReadyConditionType indicates the tenant has been successfully created.
+	// Steady state
+	TenantReadyConditionType common.ConditionType = "Ready"
+)
 
 // TenantSpec defines the desired state of Tenant
 type TenantSpec struct {
@@ -49,6 +59,13 @@ type TenantStatus struct {
 
 	TenantId int64 `json:"tenantId"`
 	AdminId  int64 `json:"adminId"`
+
+	// Current state of the tenant resource.
+	// Conditions represent the latest available observations of an object's state
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
 // +kubebuilder:object:root=true
@@ -117,6 +134,60 @@ func (t *Tenant) TenantSecretKey() client.ObjectKey {
 		Name:      t.Spec.TenantSecretRef.Name,
 		Namespace: namespace,
 	}
+}
+
+func (b *Tenant) SpecEqual(other *Tenant, logger logr.Logger) bool {
+	equal := true
+
+	if !reflect.DeepEqual(b.ObjectMeta, other.ObjectMeta) || !reflect.DeepEqual(b.Spec, other.Spec) {
+		equal = false
+	}
+
+	return equal
+}
+
+func (b *TenantStatus) StatusEqual(other *TenantStatus, logger logr.Logger) bool {
+	equal := true
+
+	if b.TenantId != other.TenantId {
+		equal = false
+	}
+
+	if b.AdminId != other.AdminId {
+		equal = false
+	}
+
+	if other.Conditions == nil {
+		equal = false
+	}
+
+	equal = conditionsEqual(TenantReadyConditionType, b.Conditions, other.Conditions)
+
+	return equal
+}
+
+// Compare conditions of a specific type
+func conditionsEqual(typeToCompare common.ConditionType, currentConditions, incomingConditions []common.Condition) bool {
+	for _, condition1 := range incomingConditions {
+		if condition1.Type != typeToCompare {
+			continue
+		}
+
+		// Find the corresponding condition in conditions2
+		var condition2 common.Condition
+		for _, c := range currentConditions {
+			if c.Type == typeToCompare {
+				condition2 = c
+				break
+			}
+		}
+
+		// Compare the status and message
+		if condition1.Status != condition2.Status || condition1.Message != condition2.Message {
+			return false
+		}
+	}
+	return true
 }
 
 // +kubebuilder:object:root=true

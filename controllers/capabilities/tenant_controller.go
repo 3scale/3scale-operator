@@ -23,9 +23,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -33,27 +34,31 @@ import (
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 )
 
-// tenant deletion state
-const scheduledForDeletionState = "scheduled_for_deletion"
+const (
+	// tenant deletion state
+	scheduledForDeletionState = "scheduled_for_deletion"
 
-// tenant finalizer
-const tenantFinalizer = "tenant.capabilities.3scale.net/finalizer"
+	// tenant finalizer
+	tenantFinalizer = "tenant.capabilities.3scale.net/finalizer"
 
-// Secret field name with Tenant's admin user password
-const TenantAdminPasswordSecretField = "admin_password"
+	// Secret field name with Tenant's admin user password
+	TenantAdminPasswordSecretField = "admin_password"
 
-// Tenant's credentials secret field name for access token
-const TenantAccessTokenSecretField = "token"
+	// Tenant's credentials secret field name for access token
+	TenantAccessTokenSecretField = "token"
 
-// Tenant's credentials secret field name for admin domain url
-const TenantAdminDomainKeySecretField = "adminURL"
+	// Tenant's credentials secret field name for admin domain url
+	TenantAdminDomainKeySecretField = "adminURL"
 
-// Tenant ID annotation matches the tenant.status.ID
-const tenantIdAnnotation = "tenantID"
+	// Tenant ID annotation matches the tenant.status.ID
+	tenantIdAnnotation = "tenantID"
+)
 
 // TenantReconciler reconciles a Tenant object
 type TenantReconciler struct {
@@ -73,46 +78,42 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	reqLogger.Info("Reconcile Tenant", "Operator version", version.Version)
 
 	// Fetch the Tenant instance
-	tenantR := &capabilitiesv1alpha1.Tenant{}
-	err := r.Client().Get(context.TODO(), req.NamespacedName, tenantR)
+	tenantCR := &capabilitiesv1alpha1.Tenant{}
+	err := r.Client().Get(context.TODO(), req.NamespacedName, tenantCR)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			reqLogger.Info("Tenant resource not found")
 			return ctrl.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
+		// On error, always requeue the request
 		return ctrl.Result{}, err
 	}
 
 	if reqLogger.V(1).Enabled() {
-		jsonData, err := json.MarshalIndent(tenantR, "", "  ")
+		jsonData, err := json.MarshalIndent(tenantCR, "", "  ")
 		if err != nil {
 			return ctrl.Result{}, err
 		}
 		reqLogger.V(1).Info(string(jsonData))
 	}
 
-	masterAccessToken, err := r.fetchMasterCredentials(tenantR)
+	// Setup porta client
+	portaClient, err := r.setupPortaClient(tenantCR, reqLogger)
 	if err != nil {
-		reqLogger.Error(err, "Error fetching master credentials secret")
-		// Error reading the object - requeue the request.
-		return ctrl.Result{}, err
+		_, statusReconcilerError := r.reconcileStatus(tenantCR, err)
+		if statusReconcilerError != nil {
+			return helper.ReconcileErrorHandler(err, reqLogger), nil
+		}
+
+		return helper.ReconcileErrorHandler(err, reqLogger), nil
 	}
 
-	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(tenantR.GetAnnotations())
-	portaClient, err := controllerhelper.PortaClientFromURLString(tenantR.Spec.SystemMasterUrl, masterAccessToken, insecureSkipVerify)
-	if err != nil {
-		reqLogger.Error(err, "Error creating porta client object")
-		// Error reading the object - requeue the request.
-		return ctrl.Result{}, err
-	}
-
-	// Tenant has been marked for deletion
-	if tenantR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
-		existingTenant, err := controllerhelper.FetchTenant(tenantR.Status.TenantId, portaClient)
+	// Reconcile whether or not the tenant should be removed
+	if tenantCR.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(tenantCR, tenantFinalizer) {
+		existingTenant, err := controllerhelper.FetchTenant(tenantCR.Status.TenantId, portaClient)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -121,9 +122,9 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		if existingTenant != nil {
 			// do not attempt to delete tenant that is already scheduled for deletion
 			if existingTenant.Signup.Account.State != scheduledForDeletionState {
-				err := portaClient.DeleteTenant(tenantR.Status.TenantId)
+				err := portaClient.DeleteTenant(tenantCR.Status.TenantId)
 				if err != nil {
-					r.EventRecorder().Eventf(tenantR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
+					r.EventRecorder().Eventf(tenantCR, corev1.EventTypeWarning, "Failed to delete tenant", "%v", err)
 					return ctrl.Result{}, err
 				}
 			} else {
@@ -131,8 +132,8 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			}
 		}
 
-		controllerutil.RemoveFinalizer(tenantR, tenantFinalizer)
-		err = r.UpdateResource(tenantR)
+		controllerutil.RemoveFinalizer(tenantCR, tenantFinalizer)
+		err = r.UpdateResource(tenantCR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -142,72 +143,77 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	// Ignore deleted resources, this can happen when foregroundDeletion is enabled
 	// https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#foreground-cascading-deletion
-	if tenantR.GetDeletionTimestamp() != nil {
+	if tenantCR.GetDeletionTimestamp() != nil {
 		return ctrl.Result{}, nil
 	}
 
-	// If the tenant.Status.TenantID is found and the annotation is not found - create
-	// If the tenant.Status.TenantID is found and the annotation is found but, the value of annotation is different to the status.TenantID - update
-	tenantIdAnnotationFound := true
-	tenantId := tenantR.Status.TenantId
-	if value, found := tenantR.ObjectMeta.Annotations[tenantIdAnnotation]; tenantId != 0 && !found || tenantId != 0 && found && value != strconv.FormatInt(tenantR.Status.TenantId, 10) {
-		if tenantR.ObjectMeta.Annotations == nil {
-			tenantR.ObjectMeta.Annotations = make(map[string]string)
-		}
-
-		tenantR.ObjectMeta.Annotations[tenantIdAnnotation] = strconv.FormatInt(tenantR.Status.TenantId, 10)
-		tenantIdAnnotationFound = false
-	}
-
-	tenantFinalizerFound := true
-	if !controllerutil.ContainsFinalizer(tenantR, tenantFinalizer) {
-		controllerutil.AddFinalizer(tenantR, tenantFinalizer)
-		tenantFinalizerFound = false
-	}
-
-	if !tenantFinalizerFound || !tenantIdAnnotationFound {
-		err = r.UpdateResource(tenantR)
+	// Update/Check metadata and defaults
+	metadataUpdated := r.reconcileMetadata(tenantCR)
+	defaultsUpdated := tenantCR.SetDefaults()
+	if metadataUpdated || defaultsUpdated {
+		err := r.UpdateResource(tenantCR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+
+		// Do not retrigger - automatic retrigger done by udpating the tenantCR
 		return ctrl.Result{}, nil
 	}
 
-	changed := tenantR.SetDefaults()
-	if changed {
-		err = r.UpdateResource(tenantR)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		reqLogger.Info("Tenant resource updated with defaults")
-		// Expect for re-trigger
+	// Validate and update spec if required
+	internalReconciler := NewTenantThreescaleReconciler(r.BaseReconciler, tenantCR, portaClient, reqLogger)
+	specReconcileErr := internalReconciler.Run()
+	statusIsEqual, statusReconcilerError := r.reconcileStatus(tenantCR, specReconcileErr)
+	if statusReconcilerError != nil {
+		return helper.ReconcileErrorHandler(statusReconcilerError, reqLogger), nil
+	}
+
+	if specReconcileErr != nil {
+		return helper.ReconcileErrorHandler(specReconcileErr, reqLogger), nil
+	}
+
+	// If error did not occur and the status was updated, quit the reoncile loop since another reconcile is incoming
+	if !statusIsEqual {
 		return ctrl.Result{}, nil
-	}
-
-	internalReconciler := NewTenantInternalReconciler(r.BaseReconciler, tenantR, portaClient, reqLogger)
-	res, err := internalReconciler.Run()
-	if err != nil {
-		reqLogger.Error(err, "Error in tenant reconciliation")
-		// Error reading the object - requeue the request.
-		return ctrl.Result{}, err
-	}
-
-	if res.Requeue {
-		return res, nil
 	}
 
 	reqLogger.Info("Tenant reconciled successfully")
 	return ctrl.Result{}, nil
 }
 
-func (r *TenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&capabilitiesv1alpha1.Tenant{}).
-		Complete(r)
+func (r *TenantReconciler) reconcileStatus(tenantCR *capabilitiesv1alpha1.Tenant, reconcileError error) (bool, error) {
+	statusReconciler := NewTenantStatusReconciler(r.BaseReconciler, tenantCR, reconcileError)
+	statusEqual, err := statusReconciler.Reconcile()
+	if err != nil {
+		return statusEqual, err
+	}
+
+	return statusEqual, nil
+}
+
+func (r *TenantReconciler) reconcileMetadata(tenantCR *capabilitiesv1alpha1.Tenant) bool {
+	changed := false
+	// If the tenant.Status.TenantID is found and the annotation is not found - create
+	// If the tenant.Status.TenantID is found and the annotation is found but, the value of annotation is different to the status.TenantID - update
+	tenantId := tenantCR.Status.TenantId
+	if value, found := tenantCR.ObjectMeta.Annotations[tenantIdAnnotation]; (tenantId != 0 && !found) || (tenantId != 0 && found && value != strconv.FormatInt(tenantCR.Status.TenantId, 10)) {
+		if tenantCR.ObjectMeta.Annotations == nil {
+			tenantCR.ObjectMeta.Annotations = make(map[string]string)
+		}
+		tenantCR.ObjectMeta.Annotations[tenantIdAnnotation] = strconv.FormatInt(tenantCR.Status.TenantId, 10)
+		changed = true
+	}
+
+	if !controllerutil.ContainsFinalizer(tenantCR, tenantFinalizer) {
+		controllerutil.AddFinalizer(tenantCR, tenantFinalizer)
+		changed = true
+	}
+
+	return changed
 }
 
 func (r *TenantReconciler) fetchMasterCredentials(tenantR *capabilitiesv1alpha1.Tenant) (string, error) {
-	masterCredentialsSecret := &v1.Secret{}
+	masterCredentialsSecret := &corev1.Secret{}
 
 	err := r.Client().Get(context.TODO(), tenantR.MasterSecretKey(), masterCredentialsSecret)
 
@@ -217,10 +223,32 @@ func (r *TenantReconciler) fetchMasterCredentials(tenantR *capabilitiesv1alpha1.
 
 	masterAccessTokenByteArray, ok := masterCredentialsSecret.Data[component.SystemSecretSystemSeedMasterAccessTokenFieldName]
 	if !ok {
-		return "", fmt.Errorf("Key not found in master secret (%s) key: %s",
-			tenantR.MasterSecretKey(),
-			component.SystemSecretSystemSeedMasterAccessTokenFieldName)
+		return "", &helper.WaitError{
+			Err: fmt.Errorf("key not found in master secret (%s) key: %s", tenantR.MasterSecretKey(), component.SystemSecretSystemSeedMasterAccessTokenFieldName),
+		}
 	}
 
 	return bytes.NewBuffer(masterAccessTokenByteArray).String(), nil
+}
+
+func (r *TenantReconciler) setupPortaClient(tenantCR *capabilitiesv1alpha1.Tenant, logger logr.Logger) (*threescaleapi.ThreeScaleClient, error) {
+	masterAccessToken, err := r.fetchMasterCredentials(tenantCR)
+	if err != nil {
+		logger.Error(err, "Error fetching master credentials secret")
+		return nil, err
+	}
+
+	insecureSkipVerify := controllerhelper.GetInsecureSkipVerifyAnnotation(tenantCR.GetAnnotations())
+	portaClient, err := controllerhelper.PortaClientFromURLString(tenantCR.Spec.SystemMasterUrl, masterAccessToken, insecureSkipVerify)
+	if err != nil {
+		return nil, err
+	}
+
+	return portaClient, nil
+}
+
+func (r *TenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&capabilitiesv1alpha1.Tenant{}).
+		Complete(r)
 }
