@@ -147,23 +147,25 @@ spec:
       serviceAccountsEnabled: true
       directAccessGrantsEnabled: true
 ```
-- **oidc** is optional field in OpenAPI CR, Only for OIDC.  
-- **issuerEndpointRef** - Secret, that contains **issuerEndpoint**
-
+- **oidc** is optional field in OpenAPI CR
+- Only for OIDC: 
 
 | **Field**                | **Required** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | --- | --- | --- |
 | issuerType               | no           | Valid values: [keycloak, rest]. Defaults to `rest`                                                                                                                                                                                                                                                                                                                                                                                                    |
-| issuerEndpoint           | no           | issuerEndpoint can be defined in `issuerEndpointRef` or as plain value (please see CR example and notes below). The format of this endpoint is determined on your OpenID Provider setup. For RHSSO:  https://<client_id>:<client_secret>@<host>:<port>/auth/realms/<realm_name>                                                                                                                                                                       |
+| issuerEndpoint           | no           | Issuer endpoint. It can be defined in `issuerEndpointRef` or as plain value (please see CR example and notes below). The format of this endpoint is determined on your OpenID Provider setup. For RHSSO:  https://<client_id>:<client_secret>@<host>:<port>/auth/realms/<realm_name>                                                                                                                                                                  |
 | issuerEndpointRef        | no           | The secret that contains  `issuerEndpoint`                                                                                                                                                                                                                                                                                                                                                                                                            |
 | jwtClaimWithClientID     | no           | JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.                                                                                                                                                                                                                                                                                                                                                               |
 | jwtClaimWithClientIDType | no           | JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template. Valid values: plain, liquid. Defaults to 'plain'                                                                                                                                                                                                                                                                                         |
 | authenticationFlow       | no           | flows object. When the sec scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those. There are 4 flows parameters (for OIDC only): `standardFlowEnabled`, `implicitFlowEnabled`, `serviceAccountsEnabled`, `directAccessGrantsEnabled`. See [3scale product reference](product-reference.md) for more info |
 
-
-- **issuerEndpoint** - The format of this endpoint is determined on your OpenID Provider setup.
+- **One of IssuerEndpointRef or IssuerEndpoint must be defined in OIDC Spec** (both fields can be defined, see next note).
+- **If issuerEndpoint plain value is defined in CR - it will be used as precedence over issuerEndpointRef secret**.
+- The format of issuerEndpoint is determined on your OpenID Provider setup;
   see in 3scale portal - `Product/Integration/Settings/AUTHENTICATION SETTINGS/OpenID Connect Issuer`.  
-- **If issuerEndpoint plain value is defined in CR - it will be used as precedence over secret**.   
+
+
+
 OpenAPI CR example where issuerEndpoint defined both as plain value and in secret (plain value will be used):
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1

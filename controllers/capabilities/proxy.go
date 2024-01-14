@@ -200,6 +200,10 @@ func (t *ProductThreescaleReconciler) syncProxyOIDC(params threescaleapi.Params,
 	// If plain value is not nil - use plain value as precedence over secret
 	issuerEndpoint := oidcSpec.IssuerEndpoint
 	if issuerEndpoint == "" {
+		if oidcSpec.IssuerEndpointRef == nil {
+			// If missing both IssuerEndpoint and  IssuerEndpointRef in OpenApi CR - Product will fail SyncProxy
+			return fmt.Errorf("missing IssuerEndpoint definition in OIDC spec in openapi CR. Product OpenID Connect Issuer will not be set.")
+		}
 		secretSource := helper.NewSecretSource(t.Client(), t.resource.Namespace)
 		val, err := secretSource.RequiredFieldValueFromRequiredSecret(oidcSpec.IssuerEndpointRef.Name, "issuerEndpoint")
 		if err != nil {
