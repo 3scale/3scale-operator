@@ -193,6 +193,17 @@ func mockHttpClient(proxyJson *client.ProxyJSON, productList *client.ProductList
 	return httpClient
 }
 
+func emptyMockHttpClient() *http.Client {
+	return NewTestClient(func(req *http.Request) *http.Response {
+		// Return an empty response for all requests
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     make(http.Header),
+			Body:       ioutil.NopCloser(bytes.NewBuffer([]byte{})),
+		}
+	})
+}
+
 func responseBody(class interface{}) (responseBodyBytes []byte) {
 	responseBodyBytes, err := json.Marshal(class)
 	if err != nil {
@@ -314,7 +325,29 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 		wantErr bool
 	}{
 		{
-			name: "Test promotion to staging Completed",
+			name: "Test promotion to Staging Completed",
+			fields: fields{
+				BaseReconciler: getBaseReconciler(),
+			},
+			args: args{
+				proxyConfigPromote:  getProxyConfigPromoteCRStaging(),
+				reqLogger:           logf.Log.WithName("test reqlogger"),
+				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClient(proxyJson, productList, proxyConfigElementSandbox, failedProxyConfigElementProduction)),
+				product:             getProductCR(),
+			},
+			want: &ProxyConfigPromoteStatusReconciler{
+				BaseReconciler:          getBaseReconciler(),
+				resource:                getProxyConfigPromoteCRStaging(),
+				productID:               "3",
+				latestProductionVersion: 1,
+				latestStagingVersion:    0,
+				reconcileError:          nil,
+				logger:                  logf.Log.WithValues("Status Reconciler", "test"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test promotion to Staging not Completed",
 			fields: fields{
 				BaseReconciler: getBaseReconciler(),
 			},
@@ -329,9 +362,31 @@ func TestProxyConfigPromoteReconciler_proxyConfigPromoteReconciler(t *testing.T)
 				resource:                getProxyConfigPromoteCRStaging(),
 				productID:               "3",
 				latestProductionVersion: 0,
-				latestStagingVersion:    1,
-				reconcileError:          nil,
+				latestStagingVersion:    0,
+				reconcileError:          fmt.Errorf("no changes detected between configuration & staging environment"),
 				logger:                  logf.Log.WithValues("Status Reconciler", "test"),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Test empty staging environment response",
+			fields: fields{
+				BaseReconciler: getBaseReconciler(),
+			},
+			args: args{
+				proxyConfigPromote:  getProxyConfigPromoteCRStaging(),
+				reqLogger:           logf.Log.WithName("test reqlogger"),
+				threescaleAPIClient: client.NewThreeScale(ap, "test", emptyMockHttpClient()),
+				product:             getProductCR(),
+			},
+			want: &ProxyConfigPromoteStatusReconciler{
+				BaseReconciler:          getBaseReconciler(),
+				resource:                getProxyConfigPromoteCRStaging(),
+				productID:               "3",
+				latestProductionVersion: 0,
+				latestStagingVersion:    0,
+				reconcileError:          nil,
+				logger:                  logf.Log.WithValues("Status Reconciler", "staging environment is empty"),
 			},
 			wantErr: false,
 		},
