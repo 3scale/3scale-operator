@@ -208,8 +208,6 @@ rules:
   - delete
   - get
   - list
-  - update
-  - watch
 - apiGroups:
   - batch
   resources:
