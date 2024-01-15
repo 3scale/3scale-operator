@@ -125,6 +125,9 @@ Specifies product OIDC authentication mode
 | Security | `security`                 | object | See [SecuritySpec](#SecuritySpec)                                                                                                                                                                             | No           |
 | GatewayResponse | `gatewayResponse`          | object | See [GatewayResponseSpec](#GatewayResponseSpec)                                                                                                                                                               | No           |
 
+- **One of IssuerEndpointRef or IssuerEndpoint must be defined in OIDC Spec** (both fields can be defined, see next note).
+- **If issuerEndpoint plain value is defined in CR - it will be used as precedence over issuerEndpointRef secret**.
+
 ##### IssuerEndpointRef  
 - Example of definition of IssuerEndpointRef in OIDCSpec 
 ```yaml
