@@ -398,11 +398,14 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 	logger := r.Logger().WithValues("openapi", openapiCR.Name)
 	fieldErrors := field.ErrorList{}
 	specFldPath := field.NewPath("spec")
-	openapiRefFldPath := specFldPath.Child("openapiRef")
+	openapiOidcFldPath := specFldPath.Child("oidc")
+	openapiIssuerEndpointFldPath := openapiOidcFldPath.Child("IssuerEndpoint")
+	openapiIssuerEndpointRefFldPath := openapiOidcFldPath.Child("IssuerEndpointRef")
 
 	if openapiCR.Spec.OIDC != nil &&
 		(openapiCR.Spec.OIDC.IssuerEndpoint == "" && openapiCR.Spec.OIDC.IssuerEndpointRef == nil) {
-		fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, "OIDC issuer endpoint definition is missing in CR - "+
+		fieldErrors = append(fieldErrors, field.Invalid(openapiIssuerEndpointFldPath, openapiCR.Spec.OIDC.IssuerEndpoint, "OIDC IssuerEndpoint definition is missing in CR."))
+		fieldErrors = append(fieldErrors, field.Invalid(openapiIssuerEndpointRefFldPath, openapiCR.Spec.OIDC.IssuerEndpointRef, "OIDC IssuerEndpointRef definition is missing in CR. "+
 			"No IssuerEndpoint nor IssuerEndpointRef found in OIDC spec in CR, one of them must be set."))
 		return &helper.SpecFieldError{
 			ErrorType:      helper.InvalidError,
@@ -420,7 +423,7 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 		// when the referenced OpenAPI spec's sec scheme is openIdConnect or oauth2, the spec.oidc must not be nil or empty
 		if globalSecRequirements[0].Value.Type == "openIdConnect" || globalSecRequirements[0].Value.Type == "oauth2" {
 			if openapiCR.Spec.OIDC == nil {
-				fieldErrors = append(fieldErrors, field.Invalid(openapiRefFldPath, openapiCR.Spec.OpenAPIRef, "Missing "+
+				fieldErrors = append(fieldErrors, field.Invalid(openapiOidcFldPath, openapiCR.Spec.OIDC, "Missing "+
 					"OIDC definitions in CR. The referenced OpenAPI spec's sec scheme is openIdConnect or oauth2, the spec.oidc must not be nil or empty"))
 				return &helper.SpecFieldError{
 					ErrorType:      helper.InvalidError,
@@ -434,11 +437,6 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 			logger.Info("OIDC authentication flows in CR will be ignored and Product OIDC authentication flows will be set to match oauth2 flows in OAS since the SecuritySchemes type in OAS is \"oauth2\" (for OIDC it should be \"openIdConnect\")")
 			r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "OIDC authentication flows in CR will be ignored and Product OIDC authentication flows will be set to match oauth2 flows in OAS since the SecuritySchemes type in OAS is \"oauth2\" (for OIDC it should be \"openIdConnect\")", "%v", "Product OIDC authentication flows parameters will be set to match oauth2 flows as following (OIDC ~ OAuth2): StandardFlowEnabled ~ AuthorizationCode, ImplicitFlowEnabled ~ Implicit, DirectAccessGrantsEnabled ~ Password, ServiceAccountsEnabled ~ ClientCredentials")
 		}
-	}
-	if openapiCR.Spec.OIDC != nil &&
-		(openapiCR.Spec.OIDC.IssuerEndpoint == "" && openapiCR.Spec.OIDC.IssuerEndpointRef == nil) {
-		logger.Info("OIDC issuer endpoint definition is missing, as no IssuerEndpoint nor IssuerEndpointRef found in CR.")
-		r.EventRecorder().Eventf(openapiCR, corev1.EventTypeWarning, "OIDC issuer endpoint definition is missing in CR", "%v", "No IssuerEndpoint nor IssuerEndpointRef found in OIDC spec in CR; please set it to fix the problem.")
 	}
 
 	return nil

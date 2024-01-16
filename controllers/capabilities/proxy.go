@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -196,13 +197,20 @@ func (t *ProductThreescaleReconciler) syncProxyOIDC(params threescaleapi.Params,
 	if oidcSpec == nil {
 		return nil
 	}
+	fieldErrors := field.ErrorList{}
+	specFldPath := field.NewPath("spec")
+	oidcRefFldPath := specFldPath.Child("oidc")
 
 	// If plain value is not nil - use plain value as precedence over secret
 	issuerEndpoint := oidcSpec.IssuerEndpoint
 	if issuerEndpoint == "" {
 		if oidcSpec.IssuerEndpointRef == nil {
 			// If missing both IssuerEndpoint and  IssuerEndpointRef in OpenApi CR - Product will fail SyncProxy
-			return fmt.Errorf("missing IssuerEndpoint definition in OIDC spec in openapi CR. Product OpenID Connect Issuer will not be set.")
+			fieldErrors = append(fieldErrors, field.Invalid(oidcRefFldPath.Child("IssuerEndpoint"), t.resource.Spec.OIDCSpec().IssuerEndpoint, "no IssuerEndpoint nor IssuerEndpointRef found in OIDC spec in CR. Product OpenID Connect Issuer will not be set"))
+			return &helper.SpecFieldError{
+				ErrorType:      helper.InvalidError,
+				FieldErrorList: fieldErrors,
+			}
 		}
 		secretSource := helper.NewSecretSource(t.Client(), t.resource.Namespace)
 		val, err := secretSource.RequiredFieldValueFromRequiredSecret(oidcSpec.IssuerEndpointRef.Name, "issuerEndpoint")
