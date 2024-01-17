@@ -247,7 +247,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status=~'2[0-9]*'}[1m])) by (controller)",
+          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status='2xx'}[1m])) by (controller)",
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
@@ -335,7 +335,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status=~'4[0-9]*'}[1m])) by (controller)",
+          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status='4xx'}[1m])) by (controller)",
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
@@ -423,7 +423,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status=~'5[0-9]*'}[1m])) by (controller)",
+          "expr": "sum(rate(rails_requests_total{namespace='$namespace',pod=~'system-app-[a-z0-9]+-[a-z0-9]+',status='5xx'}[1m])) by (controller)",
           "format": "time_series",
           "interval": "1m",
           "intervalFactor": 1,
