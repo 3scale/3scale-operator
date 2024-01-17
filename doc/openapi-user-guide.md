@@ -164,8 +164,6 @@ spec:
 - The format of issuerEndpoint is determined on your OpenID Provider setup;
   see in 3scale portal - `Product/Integration/Settings/AUTHENTICATION SETTINGS/OpenID Connect Issuer`.  
 
-
-
 OpenAPI CR example where issuerEndpoint defined both as plain value and in secret (plain value will be used):
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
@@ -190,6 +188,42 @@ spec:
       directAccessGrantsEnabled: true
 ``` 
 
+- **If OpenAPI CR spec is OIDC but securitySchemes type in OAS is oauth2** then CR OIDC Authentication Flows parameters will be ignored,
+  and Product OIDC Authentication Flows will be set to match oauth2 flows that defined in OAS, as following
+    - StandardFlowEnabled = true  if oauth2 AuthorizationCode is defined
+    - ImplicitFlowEnabled = true if oauth2 Implicit is defined
+    - DirectAccessGrantsEnabled = true if oauth2 Password is defined
+    - ServiceAccountsEnabled = true if oauth2 ClientCredentials is defined
+
+An example of **OAS securitySchemes** definition that allows selection of all Product OIDC Authentication Flows (OIDC should be defined in OpenAPI CR)
+```yaml
+      securitySchemes:
+        myOauth:
+          description: This API uses OAuth 2 with the implicit grant flow. [More info](https://api.example.com/docs/auth)
+          flows:
+            password:
+              scopes:
+                read_pets: read your pets
+                write_pets: modify pets in your account
+              tokenUrl: https://api.example.com/oauth2/token
+            implicit:
+              authorizationUrl: https://example.com/api/oauth/dialog
+              scopes:
+                write_pets: modify pets in your account
+                read_pets: read your pets
+            authorizationCode:
+              authorizationUrl: https://example.com/api/oauth/dialog
+              tokenUrl: https://example.com/api/oauth/token
+              scopes:
+                write_pets: modify pets in your account
+                read_pets: read your pets 
+            clientCredentials:
+              tokenUrl: https://example.com/api/oauth/token
+              scopes:
+                write_pets: modify pets in your account
+                read_pets: read your pets           
+          type: oauth2
+```
 
 ## Supported OpenAPI spec version and limitations
 
