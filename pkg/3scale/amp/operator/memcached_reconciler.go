@@ -19,6 +19,11 @@ func NewMemcachedReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicRe
 }
 
 func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
+	ampImages, err := AmpImages(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	memcached, err := Memcached(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -34,7 +39,7 @@ func (r *MemcachedReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 	)
-	err = r.ReconcileDeployment(memcached.Deployment(), mutator)
+	err = r.ReconcileDeployment(memcached.Deployment(ampImages.Options.SystemMemcachedImage), mutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

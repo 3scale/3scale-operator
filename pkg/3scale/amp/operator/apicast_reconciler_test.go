@@ -218,6 +218,10 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 			},
 		},
 	}
+	ampImages, err := AmpImages(apimanager)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Existing Deployment has 1 custom policy defined: P1
 	// Desired Deployment has 1 custom policy defined: P2
@@ -230,7 +234,7 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		ProductionTracingConfig:  &component.APIcastTracingConfig{},
 	}
 	apicast := component.NewApicast(apicastOptions)
-	existingProdDeployment := apicast.ProductionDeployment()
+	existingProdDeployment := apicast.ProductionDeployment(ampImages.Options.ApicastImage)
 	existingProdDeployment.Namespace = namespace
 
 	// - Policy annotation for P1 added
@@ -259,7 +263,7 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 	objs := []runtime.Object{apimanager, existingProdDeployment, p2Secret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -393,44 +397,6 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		}
 	)
 
-	apicastOptions := &component.ApicastOptions{
-		StagingTracingConfig:    &component.APIcastTracingConfig{},
-		ProductionTracingConfig: &existingTracingConfig1,
-	}
-	apicast := component.NewApicast(apicastOptions)
-	existingProdDeployment := apicast.ProductionDeployment()
-	existingProdDeployment.Namespace = namespace
-
-	// - Tracing Configuration 1 added into the Production Deployment with the expected key
-	existingTracingConfig1Found := false
-	for key := range existingProdDeployment.Annotations {
-		if existingTracingConfig1.AnnotationKey() == key {
-			existingTracingConfig1Found = true
-		}
-	}
-
-	if !existingTracingConfig1Found {
-		t.Fatal("tracing config 1 annotation not found. Should have been created")
-	}
-
-	existingTc1Secret := &v1.Secret{
-		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
-		ObjectMeta: metav1.ObjectMeta{Name: *existingTracingConfig1.TracingConfigSecretName, Namespace: namespace},
-		Data: map[string][]byte{
-			"config": []byte("some existing tracing config"),
-		},
-		Type: v1.SecretTypeOpaque,
-	}
-
-	desiredTc1Secret := &v1.Secret{
-		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
-		ObjectMeta: metav1.ObjectMeta{Name: *desiredTracingConfig1.TracingConfigSecretName, Namespace: namespace},
-		Data: map[string][]byte{
-			"config": []byte("some desired tracing config"),
-		},
-		Type: v1.SecretTypeOpaque,
-	}
-
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -469,12 +435,54 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 			},
 		},
 	}
+	ampImages, err := AmpImages(apimanager)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	apicastOptions := &component.ApicastOptions{
+		StagingTracingConfig:    &component.APIcastTracingConfig{},
+		ProductionTracingConfig: &existingTracingConfig1,
+	}
+	apicast := component.NewApicast(apicastOptions)
+	existingProdDeployment := apicast.ProductionDeployment(ampImages.Options.ApicastImage)
+	existingProdDeployment.Namespace = namespace
+
+	// - Tracing Configuration 1 added into the Production Deployment with the expected key
+	existingTracingConfig1Found := false
+	for key := range existingProdDeployment.Annotations {
+		if existingTracingConfig1.AnnotationKey() == key {
+			existingTracingConfig1Found = true
+		}
+	}
+
+	if !existingTracingConfig1Found {
+		t.Fatal("tracing config 1 annotation not found. Should have been created")
+	}
+
+	existingTc1Secret := &v1.Secret{
+		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
+		ObjectMeta: metav1.ObjectMeta{Name: *existingTracingConfig1.TracingConfigSecretName, Namespace: namespace},
+		Data: map[string][]byte{
+			"config": []byte("some existing tracing config"),
+		},
+		Type: v1.SecretTypeOpaque,
+	}
+
+	desiredTc1Secret := &v1.Secret{
+		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
+		ObjectMeta: metav1.ObjectMeta{Name: *desiredTracingConfig1.TracingConfigSecretName, Namespace: namespace},
+		Data: map[string][]byte{
+			"config": []byte("some desired tracing config"),
+		},
+		Type: v1.SecretTypeOpaque,
+	}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager, existingProdDeployment, existingTc1Secret, desiredTc1Secret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err = appsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,7 +1,6 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	k8sappsv1 "k8s.io/api/apps/v1"
 
@@ -49,15 +48,14 @@ func (s *SystemSearchd) Service() *v1.Service {
 	}
 }
 
-func (s *SystemSearchd) Deployment() *k8sappsv1.Deployment {
+func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment {
 	var searchdReplicas int32 = 1
 
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        SystemSearchdDeploymentName,
-			Labels:      s.Options.Labels,
-			Annotations: s.DeploymentAnnotations(),
+			Name:   SystemSearchdDeploymentName,
+			Labels: s.Options.Labels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Replicas: &searchdReplicas,
@@ -92,7 +90,7 @@ func (s *SystemSearchd) Deployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:            SystemSearchdDeploymentName,
-							Image:           "system-searchd:latest",
+							Image:           containerImage,
 							ImagePullPolicy: v1.PullIfNotPresent,
 							VolumeMounts: []v1.VolumeMount{
 								{
@@ -156,15 +154,4 @@ func (s *SystemSearchd) PVC() *v1.PersistentVolumeClaim {
 			},
 		},
 	}
-}
-
-func (s *SystemSearchd) DeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: SystemSearchdDeploymentName,
-			Tag:  fmt.Sprintf("system-searchd:%v", s.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
-
 }

@@ -1,7 +1,6 @@
 package reconcilers
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -304,26 +303,4 @@ func DeploymentProbesMutator(desired, existing *k8sappsv1.Deployment) (bool, err
 	}
 
 	return updated, nil
-}
-
-// CreateImageTriggerAnnotationString creates the annotation for Deployments to leverage existing ImageStreamTags
-func CreateImageTriggerAnnotationString(containers []ContainerImage) string {
-	var triggers []ImageTrigger
-
-	for _, container := range containers {
-		triggers = append(triggers, ImageTrigger{
-			From: ImageTriggerFrom{
-				Kind: "ImageStreamTag",
-				Name: container.Tag,
-			},
-			FieldPath: fmt.Sprintf(`spec.template.spec.containers[?(@.name=="%v")].image`, container.Name),
-		})
-	}
-
-	if len(triggers) > 0 {
-		jsonData, _ := json.Marshal(triggers)
-		return string(jsonData)
-	}
-
-	return ""
 }

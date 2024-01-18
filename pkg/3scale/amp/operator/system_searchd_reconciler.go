@@ -20,6 +20,11 @@ func NewSystemSearchdReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLog
 }
 
 func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
+	ampImages, err := AmpImages(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	searchd, err := SystemSearchd(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -55,7 +60,7 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentProbesMutator,
 		reconcilers.DeploymentArgsMutator,
 	)
-	err = r.ReconcileDeployment(searchd.Deployment(), searchdDeploymentMutator)
+	err = r.ReconcileDeployment(searchd.Deployment(ampImages.Options.SystemSearchdImage), searchdDeploymentMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
