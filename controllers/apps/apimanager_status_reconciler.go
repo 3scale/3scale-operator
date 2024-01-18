@@ -3,10 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"sort"
-
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -16,9 +15,11 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sort"
 )
 
 type APIManagerStatusReconciler struct {
@@ -37,7 +38,6 @@ func NewAPIManagerStatusReconciler(b *reconcilers.BaseReconciler, apimanagerReso
 
 func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 	s.logger.V(1).Info("START")
-
 	newStatus, err := s.calculateStatus()
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("failed to calculate status: %w", err)
@@ -80,6 +80,8 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 		return nil, err
 	}
 	newStatus.Conditions.SetCondition(availableCondition)
+
+	s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource, s.Client())
 
 	deploymentStatus := olm.GetDeploymentConfigStatus(deployments)
 	newStatus.Deployments = deploymentStatus
@@ -223,4 +225,48 @@ func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
 	}
 
 	return allDefaultRoutesReady, nil
+}
+
+func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager, client2 client.Client) {
+	cond := common.Condition{
+		Type:    appsv1alpha1.APIManagerWarningConditionType,
+		Status:  v1.ConditionStatus(metav1.ConditionTrue),
+		Reason:  "HPA",
+		Message: "HorizontalPodAutoscaling (Hpa) enabled overrides values applied to request, limits and replicas",
+	}
+
+	// check if condition is already present
+	foundCondition := conditions.GetCondition(appsv1alpha1.APIManagerWarningConditionType)
+	//foundCondition := meta.FindStatusCondition(conditions, "Warning")
+
+	// If hpa is enabled but the condition is not found, add it
+	if (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa || cr.Spec.Apicast.ProductionSpec.Hpa) && foundCondition == nil {
+		conditions.SetCondition(cond)
+	}
+
+	// if hpa is disabled and condition is found, remove it
+	if !cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa && !cr.Spec.Apicast.ProductionSpec.Hpa && foundCondition != nil {
+		conditions.RemoveCondition(appsv1alpha1.APIManagerWarningConditionType)
+	}
+
+	foundConfigurationCondition := conditions.GetCondition(appsv1alpha1.APIManagerConfigurationWarningType)
+	cond = common.Condition{
+		Type:   appsv1alpha1.APIManagerConfigurationWarningType,
+		Status: v1.ConditionStatus(metav1.ConditionTrue),
+		Reason: "HPA",
+		Message: "HorizontalPodAutoscaling (HPA) Logical Redis instances detected for backend, logical Redis instances are not" +
+			" compatible with async mode, HPA requires async mode in order for HPA on the backend to function, HPA currently disabled for backend",
+	}
+
+	// get url's to confirm if logical Redis DB used
+	redisQueuesUrl, redisStorageUrl := operator.GetBackendRedisSecret(cr.Namespace, context.TODO(), client2)
+
+	if redisQueuesUrl == redisStorageUrl && (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa) && foundConfigurationCondition == nil {
+		conditions.SetCondition(cond)
+	}
+
+	if redisQueuesUrl != redisStorageUrl && (!cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa) && foundConfigurationCondition != nil {
+		conditions.RemoveCondition(appsv1alpha1.APIManagerConfigurationWarningType)
+	}
+
 }

@@ -149,7 +149,9 @@ type APIManager struct {
 }
 
 const (
-	APIManagerAvailableConditionType common.ConditionType = "Available"
+	APIManagerAvailableConditionType   common.ConditionType = "Available"
+	APIManagerWarningConditionType     common.ConditionType = "Warning"
+	APIManagerConfigurationWarningType common.ConditionType = "Configuration Warning"
 )
 
 type APIManagerCommonSpec struct {

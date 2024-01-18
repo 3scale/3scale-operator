@@ -30,6 +30,7 @@ const (
 	APIcastEnvironmentCMAnnotation             = "apps.3scale.net/env-configmap-hash"
 	PodPrioritySystemNodeCritical              = "system-node-critical"
 	CustomPoliciesSecretResverAnnotationPrefix = "apimanager.apps.3scale.net/custompolicy-secret-resource-version-"
+	HPAEnabledWarning                          = "HorzontalPodAutoscaling enabled this overrides values applied to request, limits and replicas"
 )
 
 func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {
@@ -122,7 +123,11 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 
 func (a *ApicastOptionsProvider) setResourceRequirementsOptions() {
 	if *a.apimanager.Spec.ResourceRequirementsEnabled {
-		a.apicastOptions.ProductionResourceRequirements = component.DefaultProductionResourceRequirements()
+		if a.apimanager.Spec.Apicast.ProductionSpec.Hpa {
+			a.apicastOptions.ProductionResourceRequirements = component.DefaultHPAProductionResourceRequirements()
+		} else {
+			a.apicastOptions.ProductionResourceRequirements = component.DefaultProductionResourceRequirements()
+		}
 		a.apicastOptions.StagingResourceRequirements = component.DefaultStagingResourceRequirements()
 	} else {
 		a.apicastOptions.ProductionResourceRequirements = v1.ResourceRequirements{}
@@ -133,7 +138,11 @@ func (a *ApicastOptionsProvider) setResourceRequirementsOptions() {
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if a.apimanager.Spec.Apicast.ProductionSpec.Resources != nil {
-		a.apicastOptions.ProductionResourceRequirements = *a.apimanager.Spec.Apicast.ProductionSpec.Resources
+		if a.apimanager.Spec.Apicast.ProductionSpec.Hpa {
+			a.apicastOptions.ProductionResourceRequirements = component.DefaultHPAProductionResourceRequirements()
+		} else {
+			a.apicastOptions.ProductionResourceRequirements = *a.apimanager.Spec.Apicast.ProductionSpec.Resources
+		}
 	}
 
 	if a.apimanager.Spec.Apicast.StagingSpec.Resources != nil {
@@ -152,7 +161,9 @@ func (a *ApicastOptionsProvider) setNodeAffinityAndTolerationsOptions() {
 func (a *ApicastOptionsProvider) setReplicas() {
 	a.apicastOptions.ProductionReplicas = 1
 	if a.apimanager.Spec.Apicast.ProductionSpec.Replicas != nil {
-		a.apicastOptions.ProductionReplicas = int32(*a.apimanager.Spec.Apicast.ProductionSpec.Replicas)
+		if !a.apimanager.Spec.Apicast.ProductionSpec.Hpa {
+			a.apicastOptions.ProductionReplicas = int32(*a.apimanager.Spec.Apicast.ProductionSpec.Replicas)
+		}
 	}
 
 	a.apicastOptions.StagingReplicas = 1
