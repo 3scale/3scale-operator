@@ -793,7 +793,8 @@ spec:
           hpa: true
 ```
 Removing hpa field or setting enabled to false will remove the HPA for the component. 
-Once `enabled: true` you can manually edit the HPA instances that are created to optimize your [configuration](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/). 
+Once `enabled: true` you can manually edit the HPA instances that are created to optimize your [configuration](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
+With hpa enabled it overrides and ignores values for replicas and resources for apicast production, backend listener and worker. 
 
 
 #### Setting custom TopologySpreadConstraints
