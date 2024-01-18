@@ -164,6 +164,8 @@ spec:
 - The format of issuerEndpoint is determined on your OpenID Provider setup;
   see in 3scale portal - `Product/Integration/Settings/AUTHENTICATION SETTINGS/OpenID Connect Issuer`.  
 
+
+
 OpenAPI CR example where issuerEndpoint defined both as plain value and in secret (plain value will be used):
 ```yaml
 apiVersion: capabilities.3scale.net/v1beta1
