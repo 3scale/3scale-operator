@@ -127,6 +127,7 @@ Specifies product OIDC authentication mode
 
 - **One of IssuerEndpointRef or IssuerEndpoint must be defined in OIDC Spec** (both fields can be defined, see next note).
 - **If issuerEndpoint plain value is defined in CR - it will be used as precedence over issuerEndpointRef secret**.
+- **OIDC Security is populated in the CR from the OpenApi CR PrivateAPISecretToken and PrivateAPIHostHeader parameters if one or both of them are defined in the OpenAPI CR**. See OpenAPISpec in [openapi reference](openapi-reference.md).
 
 ##### IssuerEndpointRef  
 - Example of definition of IssuerEndpointRef in OIDCSpec 
