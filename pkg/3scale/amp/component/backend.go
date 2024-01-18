@@ -1,7 +1,6 @@
 package component
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -62,13 +61,12 @@ func NewBackend(options *BackendOptions) *Backend {
 	return &Backend{Options: options}
 }
 
-func (backend *Backend) WorkerDeployment() *k8sappsv1.Deployment {
+func (backend *Backend) WorkerDeployment(containerImage string) *k8sappsv1.Deployment {
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        BackendWorkerName,
-			Labels:      backend.Options.CommonWorkerLabels,
-			Annotations: backend.backendWorkerDeploymentAnnotations(),
+			Name:   BackendWorkerName,
+			Labels: backend.Options.CommonWorkerLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Strategy: k8sappsv1.DeploymentStrategy{
@@ -102,7 +100,7 @@ func (backend *Backend) WorkerDeployment() *k8sappsv1.Deployment {
 					InitContainers: []v1.Container{
 						{
 							Name:  "backend-redis-svc",
-							Image: "amp-backend:latest",
+							Image: containerImage,
 							Command: []string{
 								"/opt/app/entrypoint.sh",
 								"sh",
@@ -115,7 +113,7 @@ func (backend *Backend) WorkerDeployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:            BackendWorkerName,
-							Image:           "amp-backend:latest",
+							Image:           containerImage,
 							Args:            []string{"bin/3scale_backend_worker", "run"},
 							Env:             backend.buildBackendWorkerEnv(),
 							Resources:       backend.Options.WorkerResourceRequirements,
@@ -146,13 +144,12 @@ func (backend *Backend) WorkerDeployment() *k8sappsv1.Deployment {
 	}
 }
 
-func (backend *Backend) CronDeployment() *k8sappsv1.Deployment {
+func (backend *Backend) CronDeployment(containerImage string) *k8sappsv1.Deployment {
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        BackendCronName,
-			Labels:      backend.Options.CommonCronLabels,
-			Annotations: backend.backendCronDeploymentAnnotations(),
+			Name:   BackendCronName,
+			Labels: backend.Options.CommonCronLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Strategy: k8sappsv1.DeploymentStrategy{
@@ -186,7 +183,7 @@ func (backend *Backend) CronDeployment() *k8sappsv1.Deployment {
 					InitContainers: []v1.Container{
 						{
 							Name:  "backend-redis-svc",
-							Image: "amp-backend:latest",
+							Image: containerImage,
 							Command: []string{
 								"/opt/app/entrypoint.sh",
 								"sh",
@@ -199,7 +196,7 @@ func (backend *Backend) CronDeployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:            "backend-cron",
-							Image:           "amp-backend:latest",
+							Image:           containerImage,
 							Args:            []string{"touch /tmp/healthy && backend-cron"},
 							Env:             backend.buildBackendCronEnv(),
 							Resources:       backend.Options.CronResourceRequirements,
@@ -224,13 +221,12 @@ func (backend *Backend) CronDeployment() *k8sappsv1.Deployment {
 	}
 }
 
-func (backend *Backend) ListenerDeployment() *k8sappsv1.Deployment {
+func (backend *Backend) ListenerDeployment(containerImage string) *k8sappsv1.Deployment {
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        BackendListenerName,
-			Labels:      backend.Options.CommonListenerLabels,
-			Annotations: backend.backendListenerDeploymentAnnotations(),
+			Name:   BackendListenerName,
+			Labels: backend.Options.CommonListenerLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Strategy: k8sappsv1.DeploymentStrategy{
@@ -264,7 +260,7 @@ func (backend *Backend) ListenerDeployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:      BackendListenerName,
-							Image:     "amp-backend:latest",
+							Image:     containerImage,
 							Args:      []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
 							Ports:     backend.listenerPorts(),
 							Env:       backend.buildBackendListenerEnv(),
@@ -542,42 +538,4 @@ func (backend *Backend) workerPorts() []v1.ContainerPort {
 	}
 
 	return ports
-}
-
-func (backend *Backend) backendWorkerDeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: BackendInitContainerName,
-			Tag:  fmt.Sprintf("amp-backend:%v", backend.Options.ImageTag),
-		},
-		{
-			Name: BackendWorkerName,
-			Tag:  fmt.Sprintf("amp-backend:%v", backend.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
-}
-
-func (backend *Backend) backendCronDeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: BackendInitContainerName,
-			Tag:  fmt.Sprintf("amp-backend:%v", backend.Options.ImageTag),
-		},
-		{
-			Name: BackendCronName,
-			Tag:  fmt.Sprintf("amp-backend:%v", backend.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
-}
-
-func (backend *Backend) backendListenerDeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: BackendListenerName,
-			Tag:  fmt.Sprintf("amp-backend:%v", backend.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
 }

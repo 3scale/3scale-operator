@@ -22,6 +22,11 @@ func NewZyncReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconci
 }
 
 func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
+	ampImages, err := AmpImages(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	zync, err := Zync(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
@@ -58,7 +63,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
 		zyncMutators = append(zyncMutators, reconcilers.DeploymentReplicasMutator)
 	}
-	err = r.ReconcileDeployment(zync.Deployment(), reconcilers.DeploymentMutator(zyncMutators...))
+	err = r.ReconcileDeployment(zync.Deployment(ampImages.Options.ZyncImage), reconcilers.DeploymentMutator(zyncMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -85,7 +90,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
 		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentReplicasMutator)
 	}
-	err = r.ReconcileDeployment(zync.QueDeployment(), reconcilers.DeploymentMutator(zyncQueMutators...))
+	err = r.ReconcileDeployment(zync.QueDeployment(ampImages.Options.ZyncImage), reconcilers.DeploymentMutator(zyncQueMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -121,7 +126,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 			reconcilers.DeploymentTopologySpreadConstraintsMutator,
 			reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		)
-		err = r.ReconcileDeployment(zync.DatabaseDeployment(), zyncDBDMutator)
+		err = r.ReconcileDeployment(zync.DatabaseDeployment(ampImages.Options.ZyncDatabasePostgreSQLImage), zyncDBDMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}

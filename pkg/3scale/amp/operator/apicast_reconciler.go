@@ -58,6 +58,11 @@ func NewApicastReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReco
 }
 
 func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
+	ampImages, err := AmpImages(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	apicast, err := Apicast(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
@@ -92,7 +97,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging Deployment
-	err = r.ReconcileDeployment(apicast.StagingDeployment(), reconcilers.DeploymentMutator(stagingMutators...))
+	err = r.ReconcileDeployment(apicast.StagingDeployment(ampImages.Options.ApicastImage), reconcilers.DeploymentMutator(stagingMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -137,7 +142,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Production Deployment
-	err = r.ReconcileDeployment(apicast.ProductionDeployment(), reconcilers.DeploymentMutator(productionMutators...))
+	err = r.ReconcileDeployment(apicast.ProductionDeployment(ampImages.Options.ApicastImage), reconcilers.DeploymentMutator(productionMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
