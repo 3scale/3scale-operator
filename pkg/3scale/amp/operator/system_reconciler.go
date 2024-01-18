@@ -173,7 +173,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
 	}
 	if !systemComponentNotReady {
-		err = r.ReconcileDeployment(system.AppDeployment(), reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
+		err = r.ReconcileDeployment(system.AppDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -226,7 +226,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeployment(system.SidekiqDeployment(), reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
+	err = r.ReconcileDeployment(system.SidekiqDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}

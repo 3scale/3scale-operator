@@ -1,8 +1,6 @@
 package component
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -23,15 +21,14 @@ func NewMemcached(options *MemcachedOptions) *Memcached {
 	return &Memcached{Options: options}
 }
 
-func (m *Memcached) Deployment() *k8sappsv1.Deployment {
+func (m *Memcached) Deployment(containerImage string) *k8sappsv1.Deployment {
 	var memcachedReplicas int32 = 1
 
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        SystemMemcachedDeploymentName,
-			Labels:      m.Options.DeploymentLabels,
-			Annotations: m.memcacheDeploymentAnnotations(),
+			Name:   SystemMemcachedDeploymentName,
+			Labels: m.Options.DeploymentLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Strategy: k8sappsv1.DeploymentStrategy{
@@ -56,7 +53,7 @@ func (m *Memcached) Deployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:    "memcache",
-							Image:   "system-memcached:latest",
+							Image:   containerImage,
 							Command: []string{"memcached", "-m", "64"},
 							Ports: []v1.ContainerPort{
 								{HostPort: 0,
@@ -103,14 +100,4 @@ func (m *Memcached) Deployment() *k8sappsv1.Deployment {
 			},
 		},
 	}
-}
-
-func (m *Memcached) memcacheDeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: "memcache",
-			Tag:  fmt.Sprintf("system-memcached:%v", m.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
 }

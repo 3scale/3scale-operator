@@ -1,7 +1,6 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -549,13 +548,12 @@ func (system *System) volumesForSystemAppLifecycleHookPods() []v1.VolumeMount {
 	return res
 }
 
-func (system *System) AppDeployment() *k8sappsv1.Deployment {
+func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment {
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        SystemAppDeploymentName,
-			Labels:      system.Options.CommonAppLabels,
-			Annotations: system.appDeploymentAnnotations(),
+			Name:   SystemAppDeploymentName,
+			Labels: system.Options.CommonAppLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Strategy: k8sappsv1.DeploymentStrategy{
@@ -590,7 +588,7 @@ func (system *System) AppDeployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:         SystemAppMasterContainerName,
-							Image:        "amp-system:latest",
+							Image:        containerImage,
 							Args:         []string{"env", "TENANT_MODE=master", "PORT=3002", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appMasterPorts(),
 							Env:          system.buildAppMasterContainerEnv(),
@@ -641,7 +639,7 @@ func (system *System) AppDeployment() *k8sappsv1.Deployment {
 						},
 						{
 							Name:         SystemAppProviderContainerName,
-							Image:        "amp-system:latest",
+							Image:        containerImage,
 							Args:         []string{"env", "TENANT_MODE=provider", "PORT=3000", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appProviderPorts(),
 							Env:          system.buildAppProviderContainerEnv(),
@@ -692,7 +690,7 @@ func (system *System) AppDeployment() *k8sappsv1.Deployment {
 						},
 						{
 							Name:         SystemAppDeveloperContainerName,
-							Image:        "amp-system:latest",
+							Image:        containerImage,
 							Args:         []string{"env", "PORT=3001", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appDeveloperPorts(),
 							Env:          system.buildAppDeveloperContainerEnv(),
@@ -894,13 +892,12 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 	return res
 }
 
-func (system *System) SidekiqDeployment() *k8sappsv1.Deployment {
+func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deployment {
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        SystemSidekiqName,
-			Labels:      system.Options.CommonSidekiqLabels,
-			Annotations: system.sidekiqDeploymentAnnotations(),
+			Name:   SystemSidekiqName,
+			Labels: system.Options.CommonSidekiqLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Strategy: k8sappsv1.DeploymentStrategy{
@@ -935,7 +932,7 @@ func (system *System) SidekiqDeployment() *k8sappsv1.Deployment {
 					InitContainers: []v1.Container{
 						{
 							Name:  "check-svc",
-							Image: "amp-system:latest",
+							Image: containerImage,
 							Command: []string{
 								"bash",
 								"-c",
@@ -947,7 +944,7 @@ func (system *System) SidekiqDeployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:            SystemSidekiqName,
-							Image:           "amp-system:latest",
+							Image:           containerImage,
 							Args:            []string{"rake", "sidekiq:worker", "RAILS_MAX_THREADS=25"},
 							Env:             system.buildSystemSidekiqContainerEnv(),
 							Resources:       *system.Options.SidekiqContainerResourceRequirements,
@@ -1339,37 +1336,4 @@ func (system *System) appDeveloperPorts() []v1.ContainerPort {
 	}
 
 	return ports
-}
-
-func (system *System) sidekiqDeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: SystemSideKiqInitContainerName,
-			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
-		},
-		{
-			Name: SystemSidekiqName,
-			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
-}
-
-func (system *System) appDeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: SystemAppProviderContainerName,
-			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
-		},
-		{
-			Name: SystemAppDeveloperContainerName,
-			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
-		},
-		{
-			Name: SystemAppMasterContainerName,
-			Tag:  fmt.Sprintf("amp-system:%v", system.Options.ImageTag),
-		},
-	})
-
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
 }

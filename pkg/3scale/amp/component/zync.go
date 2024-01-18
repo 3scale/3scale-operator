@@ -1,7 +1,6 @@
 package component
 
 import (
-	"fmt"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	k8sappsv1 "k8s.io/api/apps/v1"
 
@@ -165,13 +164,12 @@ func (zync *Zync) QueRole() *rbacv1.Role {
 	}
 }
 
-func (zync *Zync) Deployment() *k8sappsv1.Deployment {
+func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        ZyncName,
-			Labels:      zync.Options.CommonZyncLabels,
-			Annotations: zync.deploymentAnnotations(),
+			Name:   ZyncName,
+			Labels: zync.Options.CommonZyncLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Replicas: &zync.Options.ZyncReplicas,
@@ -192,7 +190,7 @@ func (zync *Zync) Deployment() *k8sappsv1.Deployment {
 					InitContainers: []v1.Container{
 						{
 							Name:  ZyncInitContainerName,
-							Image: "amp-zync:latest",
+							Image: containerImage,
 							Command: []string{
 								"bash",
 								"-c",
@@ -220,7 +218,7 @@ func (zync *Zync) Deployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:  ZyncName,
-							Image: "amp-zync:latest",
+							Image: containerImage,
 							Ports: zync.zyncPorts(),
 							Env:   zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
@@ -289,13 +287,12 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		},
 	}
 }
-func (zync *Zync) QueDeployment() *k8sappsv1.Deployment {
+func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        ZyncQueDeploymentName,
-			Labels:      zync.Options.CommonZyncQueLabels,
-			Annotations: zync.queDeploymentAnnotations(),
+			Name:   ZyncQueDeploymentName,
+			Labels: zync.Options.CommonZyncQueLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Replicas: &zync.Options.ZyncQueReplicas,
@@ -333,7 +330,7 @@ func (zync *Zync) QueDeployment() *k8sappsv1.Deployment {
 							Name:            "que",
 							Command:         []string{"/usr/bin/bash"},
 							Args:            []string{"-c", "bundle exec rake 'que[--worker-count 10]'"},
-							Image:           "amp-zync:latest",
+							Image:           containerImage,
 							ImagePullPolicy: v1.PullAlways,
 							LivenessProbe: &v1.Probe{
 								FailureThreshold:    3,
@@ -368,15 +365,14 @@ func (zync *Zync) QueDeployment() *k8sappsv1.Deployment {
 	}
 }
 
-func (zync *Zync) DatabaseDeployment() *k8sappsv1.Deployment {
+func (zync *Zync) DatabaseDeployment(containerImage string) *k8sappsv1.Deployment {
 	var zyncDatabaseReplicas int32 = 1
 
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        ZyncDatabaseDeploymentName,
-			Labels:      zync.Options.CommonZyncDatabaseLabels,
-			Annotations: zync.databaseDeploymentAnnotations(),
+			Name:   ZyncDatabaseDeploymentName,
+			Labels: zync.Options.CommonZyncDatabaseLabels,
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Replicas: &zyncDatabaseReplicas,
@@ -401,7 +397,7 @@ func (zync *Zync) DatabaseDeployment() *k8sappsv1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:  "postgresql",
-							Image: " ",
+							Image: containerImage,
 							Ports: []v1.ContainerPort{
 								{
 									ContainerPort: 5432,
@@ -571,38 +567,4 @@ func (zync *Zync) zyncPorts() []v1.ContainerPort {
 	}
 
 	return ports
-}
-
-func (zync *Zync) deploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: ZyncInitContainerName,
-			Tag:  fmt.Sprintf("amp-zync:%v", zync.Options.ImageTag),
-		},
-		{
-			Name: ZyncName,
-			Tag:  fmt.Sprintf("amp-zync:%v", zync.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
-}
-
-func (zync *Zync) queDeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: "que",
-			Tag:  fmt.Sprintf("amp-zync:%v", zync.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
-}
-
-func (zync *Zync) databaseDeploymentAnnotations() map[string]string {
-	imageTriggerString := reconcilers.CreateImageTriggerAnnotationString([]reconcilers.ContainerImage{
-		{
-			Name: "postgresql",
-			Tag:  fmt.Sprintf("zync-database-postgresql:%v", zync.Options.ImageTag),
-		},
-	})
-	return map[string]string{reconcilers.DeploymentImageTriggerAnnotation: imageTriggerString}
 }
