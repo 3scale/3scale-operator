@@ -649,8 +649,6 @@ spec:
           verbs:
           - create
           - delete
-          - get
-          - list
         - apiGroups:
           - batch
           resources:
