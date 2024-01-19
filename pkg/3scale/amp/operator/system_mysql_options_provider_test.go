@@ -10,6 +10,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -41,10 +42,10 @@ func testSystemMysqlDeploymentLabels() map[string]string {
 
 func testSystemMysqlPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "mysql",
-		"deploymentConfig":             "system-mysql",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "mysql",
+		reconcilers.DeploymentLabelSelector: "system-mysql",
 	}
 	addExpectedMeteringLabels(labels, "system-mysql", helper.ApplicationType)
 

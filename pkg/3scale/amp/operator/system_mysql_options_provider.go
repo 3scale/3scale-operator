@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"net/url"
 	"strings"
 
@@ -145,7 +146,7 @@ func (s *SystemMysqlOptionsProvider) setResourceRequirementsOptions() {
 		s.mysqlOptions.ContainerResourceRequirements = v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
@@ -209,7 +210,7 @@ func (s *SystemMysqlOptionsProvider) podTemplateLabels() map[string]string {
 		}
 	}
 
-	labels["deploymentConfig"] = "system-mysql"
+	labels[reconcilers.DeploymentLabelSelector] = "system-mysql"
 
 	return labels
 }

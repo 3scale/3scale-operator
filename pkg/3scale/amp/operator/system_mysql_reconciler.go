@@ -4,6 +4,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -19,29 +20,48 @@ func NewSystemMySQLReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogic
 }
 
 func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
+	systemMySQLImage, err := SystemMySQLImage(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	systemMySQL, err := SystemMySQL(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// DC
-	dcMutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
+	// MySQL Deployment
+	deploymentMutator := reconcilers.DeploymentMutator(
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 	)
-	err = r.ReconcileDeploymentConfig(systemMySQL.DeploymentConfig(), dcMutator)
+	err = r.ReconcileDeployment(systemMySQL.Deployment(systemMySQLImage.Options.Image), deploymentMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+	// 3scale 2.14 -> 2.15
+	// Overriding the Deployment health check because the mysql-storage PVC is ReadWriteOnce and so it can't be assigned across multiple nodes (pods)
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemMySQLDeploymentName, r.apiManager.GetNamespace(), true, r.Client(), nil)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	serviceMutators := []reconcilers.MutateFn{
+		reconcilers.CreateOnlyMutator,
+		reconcilers.ServiceSelectorMutator,
+	}
+
 	// Service
-	err = r.ReconcileService(systemMySQL.Service(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(systemMySQL.Service(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -58,7 +78,7 @@ func (r *SystemMySQLReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// PCV
+	// PVC
 	err = r.ReconcilePersistentVolumeClaim(systemMySQL.PersistentVolumeClaim(), reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
