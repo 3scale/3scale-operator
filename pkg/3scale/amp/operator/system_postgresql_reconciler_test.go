@@ -10,6 +10,7 @@ import (
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -60,7 +61,13 @@ func TestSystemPostgreSQLReconcilerCreate(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := imagev1.AddToScheme(s)
+	err := imagev1.Install(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +95,7 @@ func TestSystemPostgreSQLReconcilerCreate(t *testing.T) {
 		objName  string
 		obj      client.Object
 	}{
-		{"systemPostgreSQL_DC", "system-postgresql", &appsv1.DeploymentConfig{}},
+		{"systemPostgreSQL_Deployment", "system-postgresql", &k8sappsv1.Deployment{}},
 		{"systemPostgreSQL_Service", "system-postgresql", &v1.Service{}},
 		{"systemPostgreSQL_PVC", "postgresql-data", &v1.PersistentVolumeClaim{}},
 		{"systemDatabaseSecret", component.SystemSecretSystemDatabaseSecretName, &v1.Secret{}},
