@@ -1,10 +1,10 @@
 package component
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/helper"
-	appsv1 "github.com/openshift/api/apps/v1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -34,14 +34,14 @@ func (mysql *SystemMysql) Service() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "system-mysql",
 					Protocol:   v1.ProtocolTCP,
 					Port:       3306,
 					TargetPort: intstr.FromInt(3306),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-mysql"},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-mysql"},
 		},
 	}
 }
@@ -117,40 +117,26 @@ func (mysql *SystemMysql) PersistentVolumeClaim() *v1.PersistentVolumeClaim {
 	}
 }
 
-func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (mysql *SystemMysql) Deployment(containerImage string) *k8sappsv1.Deployment {
+	var mysqlReplicas int32 = 1
+
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   SystemMySQLDeploymentName,
 			Labels: mysql.Options.DeploymentLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRecreate,
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RecreateDeploymentStrategyType,
 			},
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"system-mysql",
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("system-mysql:%s", mysql.Options.ImageTag),
-						},
-					},
+			Replicas: &mysqlReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: SystemMySQLDeploymentName,
 				},
 			},
-			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": SystemMySQLDeploymentName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      mysql.Options.PodTemplateLabels,
 					Annotations: mysql.Options.PodTemplateAnnotations,
@@ -160,30 +146,46 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations:        mysql.Options.Tolerations,
 					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
-						v1.Volume{
+						{
 							Name: "mysql-storage",
-							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: "mysql-storage",
-								ReadOnly:  false}},
-						}, v1.Volume{
+							VolumeSource: v1.VolumeSource{
+								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+									ClaimName: "mysql-storage",
+									ReadOnly:  false,
+								},
+							},
+						},
+						{
 							Name: "mysql-extra-conf",
-							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "mysql-extra-conf"}}},
-						}, v1.Volume{
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "mysql-extra-conf",
+									},
+								},
+							},
+						},
+						{
 							Name: "mysql-main-conf",
-							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "mysql-main-conf"}}}},
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "mysql-main-conf",
+									},
+								},
+							},
+						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "system-mysql",
-							Image: "system-mysql:latest",
+							Image: containerImage,
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{HostPort: 0,
+								{
+									HostPort:      0,
 									ContainerPort: 3306,
-									Protocol:      v1.ProtocolTCP},
+									Protocol:      v1.ProtocolTCP,
+								},
 							},
 							Env: []v1.EnvVar{
 								helper.EnvVarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
@@ -198,25 +200,30 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 							},
 							Resources: mysql.Options.ContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
+								{
 									Name:      "mysql-storage",
 									ReadOnly:  false,
 									MountPath: "/var/lib/mysql/data",
-								}, v1.VolumeMount{
+								},
+								{
 									Name:      "mysql-extra-conf",
 									ReadOnly:  false,
 									MountPath: "/etc/my-extra.d",
-								}, v1.VolumeMount{
+								},
+								{
 									Name:      "mysql-main-conf",
 									ReadOnly:  false,
-									MountPath: "/etc/my-extra"},
+									MountPath: "/etc/my-extra",
+								},
 							},
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
 										Port: intstr.IntOrString{
-											Type:   intstr.Type(intstr.Int),
-											IntVal: 3306}},
+											Type:   intstr.Int,
+											IntVal: 3306,
+										},
+									},
 								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      0,
@@ -227,7 +234,8 @@ func (mysql *SystemMysql) DeploymentConfig() *appsv1.DeploymentConfig {
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
-										Command: []string{"/bin/sh", "-i", "-c", "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"}},
+										Command: []string{"/bin/sh", "-i", "-c", "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"},
+									},
 								},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
