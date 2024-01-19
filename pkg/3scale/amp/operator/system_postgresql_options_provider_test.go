@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"reflect"
 	"strings"
 	"testing"
@@ -41,10 +42,10 @@ func testSystemPostgreSQLDeploymentLabels() map[string]string {
 
 func testSystemPostgreSQLPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "postgresql",
-		"deploymentConfig":             "system-postgresql",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "postgresql",
+		reconcilers.DeploymentLabelSelector: "system-postgresql",
 	}
 	addExpectedMeteringLabels(labels, "system-postgresql", helper.ApplicationType)
 

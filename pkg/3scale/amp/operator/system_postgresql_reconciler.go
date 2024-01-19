@@ -4,6 +4,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -20,29 +21,48 @@ func NewSystemPostgreSQLReconciler(baseAPIManagerLogicReconciler *BaseAPIManager
 }
 
 func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
+	systemPostgreSQLImage, err := SystemPostgreSQLImage(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	systemPostgreSQL, err := SystemPostgreSQL(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// DC
-	dcMutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
+	// PostgreSQL Deployment
+	deploymentMutator := reconcilers.DeploymentMutator(
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 	)
-	err = r.ReconcileDeploymentConfig(systemPostgreSQL.DeploymentConfig(), dcMutator)
+	err = r.ReconcileDeployment(systemPostgreSQL.Deployment(systemPostgreSQLImage.Options.Image), deploymentMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+	// 3scale 2.14 -> 2.15
+	// Overriding the Deployment health check because the postgresql-data PVC is ReadWriteOnce and so it can't be assigned across multiple nodes (pods)
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemPostgreSQLDeploymentName, r.apiManager.GetNamespace(), true, r.Client(), nil)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	serviceMutators := []reconcilers.MutateFn{
+		reconcilers.CreateOnlyMutator,
+		reconcilers.ServiceSelectorMutator,
+	}
+
 	// Service
-	err = r.ReconcileService(systemPostgreSQL.Service(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(systemPostgreSQL.Service(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
