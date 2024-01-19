@@ -1,12 +1,13 @@
 package component
 
 import (
-	"fmt"
 	"path"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
-	appsv1 "github.com/openshift/api/apps/v1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	imagev1 "github.com/openshift/api/image/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,22 +27,22 @@ func NewRedis(options *RedisOptions) *Redis {
 	return &Redis{Options: options}
 }
 
-func (redis *Redis) BackendDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta:   redis.buildDeploymentConfigTypeMeta(),
-		ObjectMeta: redis.buildDeploymentConfigObjectMeta(),
-		Spec:       redis.buildDeploymentConfigSpec(),
+func (redis *Redis) BackendDeployment() *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta:   redis.buildDeploymentTypeMeta(),
+		ObjectMeta: redis.buildDeploymentObjectMeta(),
+		Spec:       redis.buildDeploymentSpec(),
 	}
 }
 
-func (redis *Redis) buildDeploymentConfigTypeMeta() metav1.TypeMeta {
+func (redis *Redis) buildDeploymentTypeMeta() metav1.TypeMeta {
 	return metav1.TypeMeta{
-		Kind:       "DeploymentConfig",
-		APIVersion: "apps.openshift.io/v1",
+		Kind:       reconcilers.DeploymentKind,
+		APIVersion: reconcilers.DeploymentAPIVersion,
 	}
 }
 
-func (redis *Redis) buildDeploymentConfigObjectMeta() metav1.ObjectMeta {
+func (redis *Redis) buildDeploymentObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:   backendRedisObjectMetaName,
 		Labels: redis.Options.BackendRedisLabels,
@@ -51,63 +52,45 @@ func (redis *Redis) buildDeploymentConfigObjectMeta() metav1.ObjectMeta {
 const (
 	redisConfigVolumeName = "redis-config"
 
-	backendRedisObjectMetaName    = "backend-redis"
-	backendRedisDCSelectorName    = backendRedisObjectMetaName
-	backendRedisStorageVolumeName = "backend-redis-storage"
-	backendRedisConfigMapKey      = "redis.conf"
-	backendRedisContainerName     = "backend-redis"
-	backendRedisConfigPath        = "/etc/redis.d/"
+	backendRedisObjectMetaName         = "backend-redis"
+	backendRedisDeploymentSelectorName = backendRedisObjectMetaName
+	backendRedisStorageVolumeName      = "backend-redis-storage"
+	backendRedisConfigMapKey           = "redis.conf"
+	backendRedisContainerName          = "backend-redis"
+	backendRedisConfigPath             = "/etc/redis.d/"
 )
 
-func (redis *Redis) buildDeploymentConfigSpec() appsv1.DeploymentConfigSpec {
-	return appsv1.DeploymentConfigSpec{
+func (redis *Redis) buildDeploymentSpec() k8sappsv1.DeploymentSpec {
+	var redisReplicas int32 = 1
+
+	return k8sappsv1.DeploymentSpec{
 		Template: redis.buildPodTemplateSpec(),
 		Strategy: redis.buildDeploymentStrategy(),
-		Selector: redis.buildDeploymentConfigSelector(),
-		Replicas: 1,
-		Triggers: redis.buildDeploymentConfigTriggers(),
+		Selector: redis.buildDeploymentSelector(),
+		Replicas: &redisReplicas,
 	}
 }
 
-func (redis *Redis) buildDeploymentStrategy() appsv1.DeploymentStrategy {
-	return appsv1.DeploymentStrategy{
-		Type: appsv1.DeploymentStrategyTypeRecreate,
+func (redis *Redis) buildDeploymentStrategy() k8sappsv1.DeploymentStrategy {
+	return k8sappsv1.DeploymentStrategy{
+		Type: k8sappsv1.RecreateDeploymentStrategyType,
 	}
 }
 
 func (redis *Redis) getSelectorLabels() map[string]string {
 	return map[string]string{
-		"deploymentConfig": backendRedisDCSelectorName,
+		reconcilers.DeploymentLabelSelector: backendRedisDeploymentSelectorName,
 	}
 }
 
-func (redis *Redis) buildDeploymentConfigSelector() map[string]string {
-	return redis.getSelectorLabels()
-}
-
-func (redis *Redis) buildDeploymentConfigTriggers() appsv1.DeploymentTriggerPolicies {
-	return appsv1.DeploymentTriggerPolicies{
-		appsv1.DeploymentTriggerPolicy{
-			Type: appsv1.DeploymentTriggerOnConfigChange,
-		},
-		appsv1.DeploymentTriggerPolicy{
-			Type: appsv1.DeploymentTriggerOnImageChange,
-			ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-				Automatic: true,
-				ContainerNames: []string{
-					"backend-redis",
-				},
-				From: v1.ObjectReference{
-					Kind: "ImageStreamTag",
-					Name: fmt.Sprintf("backend-redis:%s", redis.Options.BackendImageTag),
-				},
-			},
-		},
+func (redis *Redis) buildDeploymentSelector() *metav1.LabelSelector {
+	return &metav1.LabelSelector{
+		MatchLabels: redis.getSelectorLabels(),
 	}
 }
 
-func (redis *Redis) buildPodTemplateSpec() *v1.PodTemplateSpec {
-	return &v1.PodTemplateSpec{
+func (redis *Redis) buildPodTemplateSpec() v1.PodTemplateSpec {
+	return v1.PodTemplateSpec{
 		Spec: v1.PodSpec{
 			Affinity:                  redis.Options.BackendRedisAffinity,
 			Tolerations:               redis.Options.BackendRedisTolerations,
@@ -126,7 +109,7 @@ func (redis *Redis) buildPodTemplateSpec() *v1.PodTemplateSpec {
 
 func (redis *Redis) buildPodVolumes() []v1.Volume {
 	return []v1.Volume{
-		v1.Volume{
+		{
 			Name: backendRedisStorageVolumeName,
 			VolumeSource: v1.VolumeSource{
 				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
@@ -134,7 +117,7 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 				},
 			},
 		},
-		v1.Volume{
+		{
 			Name: redisConfigVolumeName,
 			VolumeSource: v1.VolumeSource{
 				ConfigMap: &v1.ConfigMapVolumeSource{
@@ -142,7 +125,7 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 						Name: redisConfigVolumeName,
 					},
 					Items: []v1.KeyToPath{
-						v1.KeyToPath{
+						{
 							Key:  backendRedisConfigMapKey,
 							Path: backendRedisConfigMapKey,
 						},
@@ -155,8 +138,8 @@ func (redis *Redis) buildPodVolumes() []v1.Volume {
 
 func (redis *Redis) buildPodContainers() []v1.Container {
 	return []v1.Container{
-		v1.Container{
-			Image:           "backend-redis:latest",
+		{
+			Image:           redis.Options.BackendImage,
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Name:            backendRedisContainerName,
 			Env:             redis.buildEnv(),
@@ -204,13 +187,13 @@ func (redis *Redis) buildPodContainerLivenessProbe() *v1.Probe {
 
 func (redis *Redis) buildPodContainerVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
-		v1.VolumeMount{
+		{
 			Name: backendRedisStorageVolumeName,
 			// https://github.com/sclorg/redis-container/ images have
 			// redis data directory hardcoded on /var/lib/redis/data
 			MountPath: "/var/lib/redis/data",
 		},
-		v1.VolumeMount{
+		{
 			Name:      redisConfigVolumeName,
 			MountPath: backendRedisConfigPath,
 		},
@@ -248,7 +231,7 @@ func (redis *Redis) buildServiceSpec() v1.ServiceSpec {
 
 func (redis *Redis) buildServicePorts() []v1.ServicePort {
 	return []v1.ServicePort{
-		v1.ServicePort{
+		{
 			Port:       6379,
 			TargetPort: intstr.FromInt(6379),
 			Protocol:   v1.ProtocolTCP,
@@ -258,7 +241,7 @@ func (redis *Redis) buildServicePorts() []v1.ServicePort {
 
 func (redis *Redis) buildServiceSelector() map[string]string {
 	return map[string]string{
-		"deploymentConfig": backendRedisDCSelectorName,
+		reconcilers.DeploymentLabelSelector: backendRedisDeploymentSelectorName,
 	}
 }
 
@@ -430,41 +413,27 @@ func (redis *Redis) BackendRedisSecret() *v1.Secret {
 
 ////// Begin System Redis
 
-func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (redis *Redis) SystemDeployment() *k8sappsv1.Deployment {
+	var redisReplicas int32 = 1
+
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   SystemRedisDeploymentName,
 			Labels: redis.Options.SystemRedisLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRecreate,
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RecreateDeploymentStrategyType,
 			},
 			MinReadySeconds: 0,
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"system-redis",
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("system-redis:%s", redis.Options.SystemImageTag),
-						},
-					},
+			Replicas:        &redisReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: SystemRedisDeploymentName,
 				},
 			},
-			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": SystemRedisDeploymentName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      redis.Options.SystemRedisPodTemplateLabels,
 					Annotations: redis.Options.SystemRedisPodTemplateAnnotations,
@@ -474,43 +443,57 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations:        redis.Options.SystemRedisTolerations,
 					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
-						v1.Volume{
+						{
 							Name: "system-redis-storage",
-							VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-								ClaimName: "system-redis-storage",
-								ReadOnly:  false}},
-						}, v1.Volume{
-							Name: "redis-config",
-							VolumeSource: v1.VolumeSource{ConfigMap: &v1.ConfigMapVolumeSource{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "redis-config",
+							VolumeSource: v1.VolumeSource{
+								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+									ClaimName: "system-redis-storage",
+									ReadOnly:  false,
 								},
-								Items: []v1.KeyToPath{
-									v1.KeyToPath{
-										Key:  "redis.conf",
-										Path: "redis.conf"}}}}},
+							},
+						}, {
+							Name: "redis-config",
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "redis-config",
+									},
+									Items: []v1.KeyToPath{
+										{
+											Key:  "redis.conf",
+											Path: "redis.conf",
+										},
+									},
+								},
+							},
+						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:      "system-redis",
-							Image:     "system-redis:latest",
+							Image:     redis.Options.SystemImage,
 							Env:       redis.buildEnv(),
 							Resources: *redis.Options.SystemRedisContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
+								{
 									Name:      "system-redis-storage",
 									ReadOnly:  false,
 									MountPath: "/var/lib/redis/data",
-								}, v1.VolumeMount{
+								},
+								{
 									Name:      "redis-config",
 									ReadOnly:  false,
-									MountPath: "/etc/redis.d/"},
+									MountPath: "/etc/redis.d/",
+								},
 							},
 							LivenessProbe: &v1.Probe{
-								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
-									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.Int),
-										IntVal: 6379}},
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Int,
+											IntVal: 6379,
+										},
+									},
 								},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      0,
@@ -521,7 +504,8 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
-										Command: []string{"container-entrypoint", "bash", "-c", "redis-cli set liveness-probe \"`date`\" | grep OK"}},
+										Command: []string{"container-entrypoint", "bash", "-c", "redis-cli set liveness-probe \"`date`\" | grep OK"},
+									},
 								},
 								InitialDelaySeconds: 30,
 								TimeoutSeconds:      5,
@@ -535,7 +519,8 @@ func (redis *Redis) SystemDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					PriorityClassName:         redis.Options.SystemRedisPriorityClassName,
 					TopologySpreadConstraints: redis.Options.SystemRedisTopologySpreadConstraints,
-				}},
+				},
+			},
 		},
 	}
 }
@@ -552,14 +537,14 @@ func (redis *Redis) SystemService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "redis",
 					Protocol:   v1.ProtocolTCP,
 					Port:       6379,
 					TargetPort: intstr.FromInt(6379),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-redis"},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-redis"},
 		},
 	}
 }
@@ -576,7 +561,7 @@ func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
-				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
+				"ReadWriteOnce",
 			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")},

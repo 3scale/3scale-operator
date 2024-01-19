@@ -1,8 +1,9 @@
 package operator
 
 import (
-	appsv1 "github.com/openshift/api/apps/v1"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 	imagev1 "github.com/openshift/api/image/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -10,15 +11,14 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 )
 
-// RedisDependencyReconciler is a generic DependencyReconciler that reconciles
+// RedisReconciler is a generic DependencyReconciler that reconciles
 // an internal Redis instance using the Redis options
 type RedisReconciler struct {
 	*BaseAPIManagerLogicReconciler
 
-	DeploymentConfig      func(redis *component.Redis) *appsv1.DeploymentConfig
+	Deployment            func(redis *component.Redis) *k8sappsv1.Deployment
 	Service               func(redis *component.Redis) *corev1.Service
 	ConfigMap             func(redis *component.Redis) *corev1.ConfigMap
 	PersistentVolumeClaim func(redis *component.Redis) *corev1.PersistentVolumeClaim
@@ -32,7 +32,7 @@ func NewSystemRedisDependencyReconciler(baseAPIManagerLogicReconciler *BaseAPIMa
 	return &RedisReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 
-		DeploymentConfig:      (*component.Redis).SystemDeploymentConfig,
+		Deployment:            (*component.Redis).SystemDeployment,
 		Service:               (*component.Redis).SystemService,
 		ConfigMap:             (*component.Redis).ConfigMap,
 		PersistentVolumeClaim: (*component.Redis).SystemPVC,
@@ -45,7 +45,7 @@ func NewBackendRedisDependencyReconciler(baseAPIManagerLogicReconciler *BaseAPIM
 	return &RedisReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
 
-		DeploymentConfig:      (*component.Redis).BackendDeploymentConfig,
+		Deployment:            (*component.Redis).BackendDeployment,
 		Service:               (*component.Redis).BackendService,
 		ConfigMap:             (*component.Redis).ConfigMap,
 		PersistentVolumeClaim: (*component.Redis).BackendPVC,
@@ -60,25 +60,38 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	dcMutator := reconcilers.DeploymentConfigMutator(
-		reconcilers.DeploymentConfigImageChangeTriggerMutator,
-		reconcilers.DeploymentConfigContainerResourcesMutator,
-		reconcilers.DeploymentConfigAffinityMutator,
-		reconcilers.DeploymentConfigTolerationsMutator,
-		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
-		reconcilers.DeploymentConfigPriorityClassMutator,
-		reconcilers.DeploymentConfigTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentConfigPodTemplateAnnotationsMutator,
-		// 3scale 2.13 -> 2.14
-		upgrade.Redis6CommandArgsEnv,
+	deploymentMutator := reconcilers.DeploymentMutator(
+		reconcilers.DeploymentContainerResourcesMutator,
+		reconcilers.DeploymentAffinityMutator,
+		reconcilers.DeploymentTolerationsMutator,
+		reconcilers.DeploymentPodTemplateLabelsMutator,
+		reconcilers.DeploymentPriorityClassMutator,
+		reconcilers.DeploymentTopologySpreadConstraintsMutator,
+		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 	)
-	err = r.ReconcileDeploymentConfig(r.DeploymentConfig(redis), dcMutator)
+	redisDeployment := r.Deployment(redis)
+	err = r.ReconcileDeployment(redisDeployment, deploymentMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// redis Service
-	err = r.ReconcileService(r.Service(redis), reconcilers.CreateOnlyMutator)
+	// 3scale 2.14 -> 2.15
+	// Overriding the Deployment health check because the redis PVCs are ReadWriteOnce and so they can't be assigned across multiple nodes (pods)
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(redisDeployment.Name, r.apiManager.GetNamespace(), true, r.Client(), nil)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	serviceMutators := []reconcilers.MutateFn{
+		reconcilers.CreateOnlyMutator,
+		reconcilers.ServiceSelectorMutator,
+	}
+
+	// Service
+	err = r.ReconcileService(r.Service(redis), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -103,7 +116,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Redis Secret
+	// Secret
 	err = r.ReconcileSecret(r.Secret(redis), reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
