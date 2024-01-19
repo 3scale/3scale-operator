@@ -7,6 +7,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -168,7 +169,7 @@ func (r *RedisOptionsProvider) setResourceRequirementsOptions() {
 		r.options.SystemRedisContainerResourceRequirements = &v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if r.apimanager.Spec.Backend.RedisResources != nil {
@@ -234,7 +235,7 @@ func (r *RedisOptionsProvider) systemRedisPodTemplateLabels() map[string]string 
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-redis"
+	labels[reconcilers.DeploymentLabelSelector] = "system-redis"
 
 	return labels
 }
@@ -250,7 +251,7 @@ func (r *RedisOptionsProvider) backendRedisPodTemplateLabels() map[string]string
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "backend-redis"
+	labels[reconcilers.DeploymentLabelSelector] = "backend-redis"
 
 	return labels
 }

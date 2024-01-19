@@ -7,6 +7,8 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
+	k8sappsv1 "k8s.io/api/apps/v1"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	v1 "k8s.io/api/core/v1"
@@ -60,7 +62,13 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = appsv1.AddToScheme(s)
+	err = k8sappsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +97,7 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 			objName string
 			obj     client.Object
 		}{
-			{"backend-redis", &appsv1.DeploymentConfig{}},
+			{"backend-redis", &k8sappsv1.Deployment{}},
 			{"backend-redis", &v1.Service{}},
 			{"redis-config", &v1.ConfigMap{}},
 			{"backend-redis-storage", &v1.PersistentVolumeClaim{}},
@@ -99,7 +107,7 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 			objName string
 			obj     client.Object
 		}{
-			{"system-redis", &appsv1.DeploymentConfig{}},
+			{"system-redis", &k8sappsv1.Deployment{}},
 			{"system-redis-storage", &v1.PersistentVolumeClaim{}},
 			{"system-redis", &imagev1.ImageStream{}},
 			{"system-redis", &v1.Service{}},
