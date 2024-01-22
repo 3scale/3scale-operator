@@ -39,7 +39,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.BackendCronName, r.apiManager.GetNamespace(), false, r.Client())
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.BackendCronName, r.apiManager.GetNamespace(), false, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -59,7 +59,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendListenerName, r.apiManager.GetNamespace(), false, r.Client())
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendListenerName, r.apiManager.GetNamespace(), false, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -96,7 +96,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendWorkerName, r.apiManager.GetNamespace(), false, r.Client())
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendWorkerName, r.apiManager.GetNamespace(), false, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

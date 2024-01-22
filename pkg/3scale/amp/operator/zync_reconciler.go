@@ -64,7 +64,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.ZyncName, r.apiManager.GetNamespace(), false, r.Client())
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.ZyncName, r.apiManager.GetNamespace(), false, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -91,7 +91,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ZyncQueDeploymentName, r.apiManager.GetNamespace(), false, r.Client())
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ZyncQueDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), r.BaseReconciler.Scheme())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -127,7 +127,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		}
 
 		// 3scale 2.14 -> 2.15
-		isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ZyncDatabaseDeploymentName, r.apiManager.GetNamespace(), false, r.Client())
+		isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ZyncDatabaseDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), nil)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
