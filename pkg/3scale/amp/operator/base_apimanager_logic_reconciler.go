@@ -2,11 +2,13 @@ package operator
 
 import (
 	"fmt"
-
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	hpa "k8s.io/api/autoscaling/v2"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
@@ -156,6 +158,23 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 		common.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&monitoringv1.ServiceMonitor{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) ReconcileHpa(desired *hpa.HorizontalPodAutoscaler, mutateFn reconcilers.MutateFn) error {
+	if desired.Spec.ScaleTargetRef.Name == component.ApicastProductionName && r.apiManager.Spec.Apicast.ProductionSpec.Hpa {
+		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
+	}
+	if desired.Spec.ScaleTargetRef.Name == component.BackendListenerName && r.apiManager.Spec.Backend.ListenerSpec.Hpa {
+		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
+	}
+	if desired.Spec.ScaleTargetRef.Name == component.BackendWorkerName && r.apiManager.Spec.Backend.WorkerSpec.Hpa {
+		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
+	}
+	err := r.DeleteResource(desired)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	return nil
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcilePodMonitor(desired *monitoringv1.PodMonitor, mutateFn reconcilers.MutateFn) error {

@@ -222,6 +222,9 @@ type ApicastProductionSpec struct {
 	// CustomPolicies specifies an array of defined custome policies to be loaded
 	// +optional
 	CustomPolicies []CustomPolicySpec `json:"customPolicies,omitempty"`
+	// Hpa specifies an array of defined HPA values
+	//+optional
+	Hpa bool `json:"hpa,omitempty"`
 	// OpenTracing contains the OpenTracing integration configuration
 	// with APIcast in the production environment.
 	// +optional
@@ -360,7 +363,6 @@ type BackendSpec struct {
 	RedisLabels map[string]string `json:"redisLabels,omitempty"`
 	// +optional
 	RedisAnnotations map[string]string `json:"redisAnnotations,omitempty"`
-
 	// +optional
 	ListenerSpec *BackendListenerSpec `json:"listenerSpec,omitempty"`
 	// +optional
@@ -385,6 +387,9 @@ type BackendListenerSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// Hpa specifies an array of defined HPA values
+	//+optional
+	Hpa bool `json:"hpa,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
@@ -404,6 +409,9 @@ type BackendWorkerSpec struct {
 	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// Hpa specifies an array of defined HPA values
+	//+optional
+	Hpa bool `json:"hpa,omitempty"`
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// +optional
