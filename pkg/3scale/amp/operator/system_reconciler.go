@@ -201,7 +201,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemAppDeploymentName, r.apiManager.GetNamespace(), false, r.Client())
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemAppDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -232,7 +232,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.SystemSidekiqName, r.apiManager.GetNamespace(), false, r.Client())
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.SystemSidekiqName, r.apiManager.GetNamespace(), false, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
