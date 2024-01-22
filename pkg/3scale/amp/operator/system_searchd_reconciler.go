@@ -62,7 +62,7 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 
 	// 3scale 2.14 -> 2.15
 	// Overriding the Deployment health check because the system-searchd PVC is ReadWriteOnce and so it can't be assigned across multiple nodes (pods)
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemSearchdDeploymentName, r.apiManager.GetNamespace(), true, r.Client())
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemSearchdDeploymentName, r.apiManager.GetNamespace(), true, r.Client(), nil)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
