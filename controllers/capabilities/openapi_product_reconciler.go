@@ -405,6 +405,7 @@ func (p *OpenAPIProductReconciler) desiredOIDCAuthentication(secReq *helper.Exte
 			JwtClaimWithClientID:     p.openapiCR.Spec.OIDC.JwtClaimWithClientID,
 			JwtClaimWithClientIDType: p.openapiCR.Spec.OIDC.JwtClaimWithClientIDType,
 			CredentialsLoc:           &tmpHeaders,
+			GatewayResponse:          p.openapiCR.Spec.OIDC.GatewayResponse,
 		},
 	}
 
