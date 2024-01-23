@@ -30,7 +30,6 @@ const (
 	APIcastEnvironmentCMAnnotation             = "apps.3scale.net/env-configmap-hash"
 	PodPrioritySystemNodeCritical              = "system-node-critical"
 	CustomPoliciesSecretResverAnnotationPrefix = "apimanager.apps.3scale.net/custompolicy-secret-resource-version-"
-	HPAEnabledWarning                          = "HorzontalPodAutoscaling enabled this overrides values applied to request, limits and replicas"
 )
 
 func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {

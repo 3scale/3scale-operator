@@ -159,16 +159,10 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 	} else {
-		// set status message if logical redis db are detected in the backend
+		// set log message if logical redis db are detected in the backend
 		if r.apiManager.Spec.Backend.ListenerSpec.Hpa || r.apiManager.Spec.Backend.WorkerSpec.Hpa {
 			message := "logical redis instances found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
 			r.logger.Info(message)
-		}
-	}
-	if RedisStorageUrl == RedisQueuesUrl {
-		if !r.apiManager.Spec.Backend.ListenerSpec.Hpa && !r.apiManager.Spec.Backend.WorkerSpec.Hpa {
-			// remove status message if hpa is disabled for backend message
-			r.logger.Info("hpa is set to disabled")
 		}
 	}
 
@@ -184,9 +178,9 @@ func Backend(apimanager *appsv1alpha1.APIManager, client client.Client) (*compon
 	return component.NewBackend(opts), nil
 }
 
-func GetBackendRedisSecret(apimanagerNs string, ctx context.Context, client2 client.Client) (string, string) {
+func GetBackendRedisSecret(apimanagerNs string, ctx context.Context, client client.Client) (string, string) {
 	backendRedisSecret := &v1.Secret{}
-	client2.Get(ctx, types.NamespacedName{
+	client.Get(ctx, types.NamespacedName{
 		Name:      "backend-redis",
 		Namespace: apimanagerNs,
 	}, backendRedisSecret)

@@ -236,37 +236,36 @@ func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *com
 	}
 
 	// check if condition is already present
-	foundCondition := conditions.GetCondition(appsv1alpha1.APIManagerWarningConditionType)
-	//foundCondition := meta.FindStatusCondition(conditions, "Warning")
+	foundCondition := conditions.GetConditionByMessage(cond.Message)
 
 	// If hpa is enabled but the condition is not found, add it
 	if (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa || cr.Spec.Apicast.ProductionSpec.Hpa) && foundCondition == nil {
-		conditions.SetCondition(cond)
+		*conditions = append(*conditions, cond)
 	}
 
 	// if hpa is disabled and condition is found, remove it
 	if !cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa && !cr.Spec.Apicast.ProductionSpec.Hpa && foundCondition != nil {
-		conditions.RemoveCondition(appsv1alpha1.APIManagerWarningConditionType)
+		conditions.RemoveConditionByMessage(cond.Message)
 	}
 
-	foundConfigurationCondition := conditions.GetCondition(appsv1alpha1.APIManagerConfigurationWarningType)
 	cond = common.Condition{
-		Type:   appsv1alpha1.APIManagerConfigurationWarningType,
+		Type:   appsv1alpha1.APIManagerWarningConditionType,
 		Status: v1.ConditionStatus(metav1.ConditionTrue),
 		Reason: "HPA",
 		Message: "HorizontalPodAutoscaling (HPA) Logical Redis instances detected for backend, logical Redis instances are not" +
 			" compatible with async mode, HPA requires async mode in order for HPA on the backend to function, HPA currently disabled for backend",
 	}
+	foundConfigurationCondition := conditions.GetConditionByMessage(cond.Message)
 
 	// get url's to confirm if logical Redis DB used
-	redisQueuesUrl, redisStorageUrl := operator.GetBackendRedisSecret(cr.Namespace, context.TODO(), client2)
+	redisQueuesUrl, redisStorageUrl := operator.GetBackendRedisSecret(cr.Namespace, context.TODO(), s.Client())
 
 	if redisQueuesUrl == redisStorageUrl && (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa) && foundConfigurationCondition == nil {
-		conditions.SetCondition(cond)
+		*conditions = append(*conditions, cond)
 	}
 
-	if redisQueuesUrl != redisStorageUrl && (!cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa) && foundConfigurationCondition != nil {
-		conditions.RemoveCondition(appsv1alpha1.APIManagerConfigurationWarningType)
+	if redisQueuesUrl != redisStorageUrl || (!cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa) && foundConfigurationCondition != nil {
+		conditions.RemoveConditionByMessage(cond.Message)
 	}
 
 }
