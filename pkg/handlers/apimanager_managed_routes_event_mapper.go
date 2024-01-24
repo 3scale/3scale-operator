@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"context"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appscommon "github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/go-logr/logr"
-	appsv1 "github.com/openshift/api/apps/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -62,19 +63,19 @@ func (h *APIManagerRoutesEventMapper) getAPIManagerOwnerReconcileRequest(object 
 			return request
 		}
 
-		// If the OwnerReference of the received object is a DeploymentConfig and
+		// If the OwnerReference of the received object is a Deployment and
 		// its name is Zync Que's name then we fetch that Object and recursively
 		// try to find an OwnerReference that is an APIManager. If it is found
 		// we return it.
-		zyncQueKind := "DeploymentConfig"
-		zyncQueGroup := appsv1.GroupVersion.Group
+		zyncQueKind := reconcilers.DeploymentKind
+		zyncQueGroup := k8sappsv1.GroupName
 		// An alternative to hardcode Zync-Que name would be just try to recurse
 		// OwnerReferences until there are no more of them. That would be
 		// potentially more costly.
 		zyncQueDeploymentName := component.ZyncQueDeploymentName
 		if ref.Kind == zyncQueKind && refGV.Group == zyncQueGroup && ref.Name == zyncQueDeploymentName {
 			h.Logger.V(2).Info("OwnerReference to Zync-Que detected. Recursively looking for APIManager OwnerReferences...")
-			existing := &appsv1.DeploymentConfig{}
+			existing := &k8sappsv1.Deployment{}
 			getErr := h.K8sClient.Get(context.Background(), types.NamespacedName{Name: ref.Name, Namespace: object.GetNamespace()}, existing)
 			if getErr != nil {
 				// If there's an error getting the object it might be due to
