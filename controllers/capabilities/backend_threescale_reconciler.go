@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
@@ -451,7 +451,11 @@ func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.backendResource.Spec.MappingRules))
 	desiredMap := map[string]capabilitiesv1beta1.MappingRuleSpec{}
 	for _, spec := range t.backendResource.Spec.MappingRules {
-		key := fmt.Sprintf("%s:%s", spec.HTTPMethod, spec.Pattern)
+		metricID, err := t.backendAPIEntity.FindMethodMetricIDBySystemName(spec.MetricMethodRef)
+		if err != nil {
+			return fmt.Errorf("error syncMappingRules: %w", err)
+		}
+		key := fmt.Sprintf("%s:%s:%s", spec.HTTPMethod, spec.Pattern, strconv.FormatInt(metricID, 10))
 		desiredKeys = append(desiredKeys, key)
 		desiredMap[key] = spec
 	}
@@ -511,6 +515,12 @@ func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	// the configuration
 	t.logger.V(1).Info("syncMappingRules", "desiredKeys", desiredKeys)
 	for desiredIdxZeroBased, desiredKey := range desiredKeys {
+		sMetricID := strings.Split(desiredKey, ":")[2]
+		metricID, err := strconv.ParseInt(sMetricID, 10, 64)
+		if err != nil {
+			return fmt.Errorf("can't convert metricID string : %s to an int64!\n", sMetricID)
+		}
+
 		desiredMappingRule := desiredMap[desiredKey]
 		// We define the position sent to System starting from one (one-based array)
 		// instead of zero-based. The reason for that is that System API does not
@@ -521,14 +531,14 @@ func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 		if existingMappingRule, ok := existingMap[desiredKey]; ok {
 			// Reconcile MappingRule
 			t.logger.V(1).Info("syncMappingRules", "desiredMappingRuleToReconcile", desiredKey, "position", desiredIdx)
-			err := t.reconcileMappingRuleWithPosition(desiredMappingRule, desiredIdx, existingMappingRule)
+			err := t.reconcileMappingRuleWithPosition(desiredMappingRule, desiredIdx, existingMappingRule, metricID)
 			if err != nil {
 				return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
 			}
 		} else {
 			// Create MappingRule
 			t.logger.V(1).Info("syncMappingRules", "desiredMappingRuleToCreate", desiredKey, "position", desiredIdx)
-			err := t.createNewMappingRuleWithPosition(desiredMappingRule, desiredIdx)
+			err := t.createNewMappingRuleWithPosition(desiredMappingRule, desiredIdx, metricID)
 			if err != nil {
 				return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
 			}
@@ -540,9 +550,12 @@ func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 
 func (t *BackendThreescaleReconciler) processNotDesiredMappingRules(notDesiredList []threescaleapi.MappingRuleItem) error {
 	for _, mappingRule := range notDesiredList {
-		err := t.backendAPIEntity.DeleteMappingRule(mappingRule.ID)
-		if err != nil {
-			return err
+		if mappingRule.HTTPMethod == "" || mappingRule.Pattern == "" || mappingRule.Pattern == "/" {
+			t.logger.V(1).Info("processNotDesiredMappingRules, delete", "HTTPMethod", mappingRule.HTTPMethod, "Pattern", mappingRule.Pattern, "MetricID", strconv.FormatInt(mappingRule.MetricID, 10))
+			err := t.backendAPIEntity.DeleteMappingRule(mappingRule.ID)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -555,28 +568,19 @@ func (t *BackendThreescaleReconciler) getExistingMappingRules() (map[string]thre
 		return nil, fmt.Errorf("Error getting backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
 	}
 	for _, item := range existingList.MappingRules {
-		key := fmt.Sprintf("%s:%s", item.Element.HTTPMethod, item.Element.Pattern)
+		key := fmt.Sprintf("%s:%s:%s", item.Element.HTTPMethod, item.Element.Pattern, strconv.FormatInt(item.Element.MetricID, 10))
 		existingMap[key] = item.Element
 	}
 
 	return existingMap, nil
 }
 
-func (t *BackendThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int, existing threescaleapi.MappingRuleItem) error {
+func (t *BackendThreescaleReconciler) reconcileMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int, existing threescaleapi.MappingRuleItem, metricID int64) error {
 	params := threescaleapi.Params{}
 
 	//
 	// Reconcile metric or method
 	//
-	metricID, err := t.backendAPIEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
-	if err != nil {
-		return fmt.Errorf("Error reconcile backend mapping rule: %w", err)
-	}
-
-	if metricID < 0 {
-		// Should not happen as metric and method references have been validated and should exists
-		return errors.New("backend metric method ref for mapping rule not found")
-	}
 
 	if metricID != existing.MetricID {
 		params["metric_id"] = strconv.FormatInt(metricID, 10)
@@ -618,17 +622,7 @@ func (t *BackendThreescaleReconciler) reconcileMappingRuleWithPosition(desired c
 	return nil
 }
 
-func (t *BackendThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int) error {
-	metricID, err := t.backendAPIEntity.FindMethodMetricIDBySystemName(desired.MetricMethodRef)
-	if err != nil {
-		return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err)
-	}
-
-	if metricID < 0 {
-		// Should not happen as metric and method references have been validated and should exists
-		return errors.New("backend metric method ref for mapping rule not found")
-	}
-
+func (t *BackendThreescaleReconciler) createNewMappingRuleWithPosition(desired capabilitiesv1beta1.MappingRuleSpec, desiredPosition int, metricID int64) error {
 	params := threescaleapi.Params{
 		"pattern":     desired.Pattern,
 		"http_method": desired.HTTPMethod,
@@ -642,7 +636,7 @@ func (t *BackendThreescaleReconciler) createNewMappingRuleWithPosition(desired c
 
 	params["position"] = strconv.FormatInt(int64(desiredPosition), 10)
 
-	err = t.backendAPIEntity.CreateMappingRule(params)
+	err := t.backendAPIEntity.CreateMappingRule(params)
 	if err != nil {
 		return fmt.Errorf("Error creating backend [%s] mappingrule: %w", t.backendResource.Spec.SystemName, err)
 	}
