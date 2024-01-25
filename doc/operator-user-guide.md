@@ -503,25 +503,25 @@ spec:
 Check [*APIManager DatabaseSpec*](apimanager-reference.md#DatabaseSpec) for reference.
 
 #### Enabling Pod Disruption Budgets
-The 3scale API Management solution DeploymentConfigs deployed and managed by the
+The 3scale API Management solution Deployments deployed and managed by the
 APIManager will be configured with Kubernetes Pod Disruption Budgets
 enabled.
 
 A Pod Disruption Budget limits the number of pods related to an application
-(in this case, pods of a DeploymentConfig) that are down simultaneously
+(in this case, pods of a Deployment) that are down simultaneously
 from **voluntary disruptions**.
 
-When enabling the Pod Disruption Budgets for non-database DeploymentConfigs will
+When enabling the Pod Disruption Budgets for non-database Deployments will
 be set with a setting of maximum of 1 unavailable pod at any given time.
-Database-related DeploymentConfigs are excluded from this configuration.
-Additionally, `system-sphinx` DeploymentConfig is also excluded.
+Database-related Deployments are excluded from this configuration.
+Additionally, `system-sphinx` Deployment is also excluded.
 
 For details about the behavior of Pod Disruption Budgets, what they perform and
 what constitutes a 'voluntary disruption' see the following
 [Kubernetes Documentation](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)
 
 Pods which are deleted or unavailable due to a rolling upgrade to an application
-do count against the disruption budget, but the DeploymentConfigs are not
+do count against the disruption budget, but the Deployments are not
 limited by Pod Disruption Budgets when doing rolling upgrades or they are
 scaled up/down.
 
@@ -719,7 +719,7 @@ Check [Expanding persistent volumes](https://docs.openshift.com/container-platfo
 
 #### Setting custom PriorityClassName
 PriorityClassName specifies the Pod priority.  See [here](https://docs.openshift.com/container-platform/4.13/nodes/pods/nodes-pods-priority.html) for more information.   
-It be can be customized through APIManager CR `priorityClassName` attribute for each DeploymentConfig.  
+It be can be customized through APIManager CR `priorityClassName` attribute for each Deployment.  
 Example for apicast-staging and backend-listener:
 ```yaml
 apiVersion: apps.3scale.net/v1alpha1
@@ -739,7 +739,7 @@ spec:
 
 #### Setting custom TopologySpreadConstraints
 TopologySpreadConstraints specifies how to spread matching pods among the given topology.  See [here](https://docs.openshift.com/container-platform/4.13/nodes/scheduling/nodes-scheduler-pod-topology-spread-constraints.html) for more information.  
-It be can be customized through APIManager CR `topologySpreadConstraints` attribute for each DeploymentConfig.  
+It be can be customized through APIManager CR `topologySpreadConstraints` attribute for each Deployment.  
 Example for apicast-staging and backend-listener:
 ```yaml
 apiVersion: apps.3scale.net/v1alpha1
@@ -772,7 +772,7 @@ spec:
 ```
 
 #### Setting custom labels
-[Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) can be customized through the APIManager CR `labels` attribute for each DeploymentConfig and are applied to  their pods.
+[Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) can be customized through the APIManager CR `labels` attribute for each Deployment and are applied to  their pods.
 Example for apicast-staging and backend-listener:
 ```yaml
  apiVersion: apps.3scale.net/v1alpha1
@@ -912,7 +912,7 @@ spec:
 ```
 
 #### Pod Disruption Budget
-Whether Pod Disruption Budgets are enabled for non-database DeploymentConfigs
+Whether Pod Disruption Budgets are enabled for non-database Deployments
 
 ```yaml
 apiVersion: apps.3scale.net/v1alpha1
