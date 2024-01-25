@@ -112,8 +112,16 @@ func (o *OperatorBackendOptionsProvider) setSecretBasedOptions() error {
 
 func (o *OperatorBackendOptionsProvider) setResourceRequirementsOptions() {
 	if *o.apimanager.Spec.ResourceRequirementsEnabled {
-		o.backendOptions.ListenerResourceRequirements = component.DefaultBackendListenerResourceRequirements()
-		o.backendOptions.WorkerResourceRequirements = component.DefaultBackendWorkerResourceRequirements()
+		if o.apimanager.Spec.Backend.ListenerSpec.Hpa {
+			o.backendOptions.ListenerResourceRequirements = component.DefaultHPABackendListenerResourceRequirements()
+		} else {
+			o.backendOptions.ListenerResourceRequirements = component.DefaultBackendListenerResourceRequirements()
+		}
+		if o.apimanager.Spec.Backend.WorkerSpec.Hpa {
+			o.backendOptions.WorkerResourceRequirements = component.DefaultHPABackendWorkerResourceRequirements()
+		} else {
+			o.backendOptions.WorkerResourceRequirements = component.DefaultBackendWorkerResourceRequirements()
+		}
 		o.backendOptions.CronResourceRequirements = component.DefaultCronResourceRequirements()
 	} else {
 		o.backendOptions.ListenerResourceRequirements = v1.ResourceRequirements{}
@@ -125,10 +133,18 @@ func (o *OperatorBackendOptionsProvider) setResourceRequirementsOptions() {
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if o.apimanager.Spec.Backend.ListenerSpec.Resources != nil {
-		o.backendOptions.ListenerResourceRequirements = *o.apimanager.Spec.Backend.ListenerSpec.Resources
+		if o.apimanager.Spec.Backend.ListenerSpec.Hpa {
+			o.backendOptions.ListenerResourceRequirements = component.DefaultHPABackendListenerResourceRequirements()
+		} else {
+			o.backendOptions.ListenerResourceRequirements = *o.apimanager.Spec.Backend.ListenerSpec.Resources
+		}
 	}
 	if o.apimanager.Spec.Backend.WorkerSpec.Resources != nil {
-		o.backendOptions.WorkerResourceRequirements = *o.apimanager.Spec.Backend.WorkerSpec.Resources
+		if o.apimanager.Spec.Backend.WorkerSpec.Hpa {
+			o.backendOptions.WorkerResourceRequirements = component.DefaultHPABackendWorkerResourceRequirements()
+		} else {
+			o.backendOptions.WorkerResourceRequirements = *o.apimanager.Spec.Backend.WorkerSpec.Resources
+		}
 	}
 	if o.apimanager.Spec.Backend.CronSpec.Resources != nil {
 		o.backendOptions.CronResourceRequirements = *o.apimanager.Spec.Backend.CronSpec.Resources
@@ -147,12 +163,16 @@ func (o *OperatorBackendOptionsProvider) setNodeAffinityAndTolerationsOptions() 
 func (o *OperatorBackendOptionsProvider) setReplicas() {
 	o.backendOptions.ListenerReplicas = 1
 	if o.apimanager.Spec.Backend.ListenerSpec.Replicas != nil {
-		o.backendOptions.ListenerReplicas = int32(*o.apimanager.Spec.Backend.ListenerSpec.Replicas)
+		if !o.apimanager.Spec.Backend.ListenerSpec.Hpa {
+			o.backendOptions.ListenerReplicas = int32(*o.apimanager.Spec.Backend.ListenerSpec.Replicas)
+		}
 	}
 
 	o.backendOptions.WorkerReplicas = 1
 	if o.apimanager.Spec.Backend.WorkerSpec.Replicas != nil {
-		o.backendOptions.WorkerReplicas = int32(*o.apimanager.Spec.Backend.WorkerSpec.Replicas)
+		if !o.apimanager.Spec.Backend.WorkerSpec.Hpa {
+			o.backendOptions.WorkerReplicas = int32(*o.apimanager.Spec.Backend.WorkerSpec.Replicas)
+		}
 	}
 
 	o.backendOptions.CronReplicas = 1

@@ -51,7 +51,6 @@ One APIManager custom resource per project is allowed.
       * [ExternalSystemComponents](#externalsystemcomponents)
       * [ExternalBackendComponents](#externalbackendcomponents)
       * [ExternalZyncComponents](#externalzynccomponents)
-      * [HpaSpec](#hpaspec)
       * [PodDisruptionBudgetSpec](#poddisruptionbudgetspec)
       * [MonitoringSpec](#monitoringspec)
       * [APIManagerStatus](#apimanagerstatus)
@@ -145,7 +144,7 @@ One APIManager custom resource per project is allowed.
 | TopologySpreadConstraints | `topologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` | Specifies how to spread matching pods among the given topology |
 | Labels | `labels` | map[string]string | No | `nil ` | Specifies labels that should be added to component |
 | Annotations | `annotations` | map[string]string | No | `nil ` | Specifies Annotations that should be added to component |
-| HpaSpec | `hpa` | *HpaSpec | No | `nil` | Specifies the horizontal pod autoscaling config |
+| Hpa | `hpa` | bool | No | `nil` | Enables the horizontal pod autoscaling with default values |
 
 
 
@@ -269,7 +268,7 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | TopologySpreadConstraints | `topologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` | Specifies how to spread matching pods among the given topology |
 | Labels | `labels` | map[string]string | No | `nil ` | Specifies labels that should be added to component |
 | Annotations | `annotations` | map[string]string | No | `nil ` | Specifies Annotations that should be added to component |
-| HpaSpec | `hpa` | *HpaSpec | No | `nil` | Specifies the horizontal pod autoscaling config |
+| HpaSpec | `hpa` | bool | No | `nil` | Enables the horizontal pod autoscaling with default values |
 
 
 ### BackendWorkerSpec
@@ -284,7 +283,7 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | TopologySpreadConstraints | `topologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` | Specifies how to spread matching pods among the given topology | 
 | Labels | `labels` | map[string]string | No | `nil ` | Specifies labels that should be added to component |
 | Annotations | `annotations` | map[string]string | No | `nil ` | Specifies Annotations that should be added to component |
-| HpaSpec | `hpa` | *HpaSpec | No | `nil` | Specifies the horizontal pod autoscaling config |
+| HpaSpec | `hpa` | bool | No | `nil` | Enable the horizontal pod autoscaling with default values |
 
 ### BackendCronSpec
 
@@ -614,18 +613,6 @@ When zync `database` is enabled the following secret has to be pre-created by th
 
 * [zync](#zync) with the `DATABASE_URL` and `DATABASE_PASSWORD` fields
   with the values pointing to the desired external database settings.
-
-### HpaSpec
-Horizontal Pod Autoscaling can be set on Apicast-production,Backend-listener and the Backend-worker
-
-| **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
-| --- | --- | --- | --- | --- | --- |
-| Enabled | `enabled` | bool | Yes | `false`| Enabled [Horizontal Pod Autoscaling](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) |
-| MinPods | `minPods` | int32 | No | `0` | Override default minimum pods set for autoscaling |
-| MaxPods | `maxPods` | int32 | No | `5` | Override default maximum pods set for autoscaling |
-| CpuPercent | `cpuPercent` | int32 | No | `90` | Override default cpu resource percentage set for autoscaling |
-| MemoryPercent | `memoryPercent` | int32 | No | `90` | Override default memory resource percentage set for autoscaling |
-
 
 ### PodDisruptionBudgetSpec
 

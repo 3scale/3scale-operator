@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -41,16 +42,10 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Listener DC
-	backendRedisSecret := &v1.Secret{}
-	r.Client().Get(r.Context(), types.NamespacedName{
-		Name:      "backend-redis",
-		Namespace: r.apiManager.Namespace,
-	}, backendRedisSecret)
-	redisQueuesUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_QUEUES_URL"]), "1")
-	redisStorageUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_STORAGE_URL"]), "0")
+	RedisQueuesUrl, RedisStorageUrl := GetBackendRedisSecret(r.apiManager.Namespace, r.Context(), r.Client())
 
 	listenerConfigMutator := reconcilers.GenericBackendMutators()
-	if redisStorageUrl != redisQueuesUrl {
+	if RedisStorageUrl != RedisQueuesUrl {
 		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigListenerEnvMutator)
 		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigListenerArgsMutator)
 	}
@@ -77,7 +72,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker DC
 	workerConfigMutator := reconcilers.GenericBackendMutators()
-	if redisStorageUrl != redisQueuesUrl {
+	if RedisStorageUrl != RedisQueuesUrl {
 		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigWorkerEnvMutator)
 	}
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
@@ -154,7 +149,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if redisStorageUrl != redisQueuesUrl {
+	if RedisStorageUrl != RedisQueuesUrl {
 		err = r.ReconcileHpa(component.DefaultHpa(component.BackendListenerName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -164,18 +159,10 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 	} else {
-		// set status message if logical redis db are detected in the backend
+		// set log message if logical redis db are detected in the backend
 		if r.apiManager.Spec.Backend.ListenerSpec.Hpa || r.apiManager.Spec.Backend.WorkerSpec.Hpa {
 			message := "logical redis instances found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
 			r.logger.Info(message)
-			// TODO update the status once the status update framework is in place.
-		}
-	}
-	if redisStorageUrl == redisQueuesUrl {
-		if !r.apiManager.Spec.Backend.ListenerSpec.Hpa && !r.apiManager.Spec.Backend.WorkerSpec.Hpa {
-			// remove status message if hpa is disabled for backend message
-			r.logger.Info("hpa is set to disabled")
-			// TODO update the status to remove any hpa status updates once the status update framework is in place.
 		}
 	}
 
@@ -189,4 +176,15 @@ func Backend(apimanager *appsv1alpha1.APIManager, client client.Client) (*compon
 		return nil, err
 	}
 	return component.NewBackend(opts), nil
+}
+
+func GetBackendRedisSecret(apimanagerNs string, ctx context.Context, client client.Client) (string, string) {
+	backendRedisSecret := &v1.Secret{}
+	client.Get(ctx, types.NamespacedName{
+		Name:      "backend-redis",
+		Namespace: apimanagerNs,
+	}, backendRedisSecret)
+	RedisQueuesUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_QUEUES_URL"]), "1")
+	RedisStorageUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_STORAGE_URL"]), "0")
+	return RedisQueuesUrl, RedisStorageUrl
 }
