@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
-	k8sappsv1 "k8s.io/api/apps/v1"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -23,12 +23,13 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func TestRedisBackendDCReconcilerCreate(t *testing.T) {
+func TestSystemMySQLReconcilerCreate(t *testing.T) {
 	var (
 		appLabel       = "someLabel"
 		name           = "example-apimanager"
 		namespace      = "operator-unittest"
 		trueValue      = true
+		imageURL       = "mysql:test"
 		wildcardDomain = "test.3scale.net"
 		tenantName     = "someTenant"
 		log            = logf.Log.WithName("operator_test")
@@ -49,20 +50,18 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 				WildcardDomain:               wildcardDomain,
 				TenantName:                   &tenantName,
 			},
+			System: &appsv1alpha1.SystemSpec{
+				DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{
+					MySQL: &appsv1alpha1.SystemMySQLSpec{
+						Image: &imageURL,
+					},
+				},
+			},
 		},
 	}
-	_, err := apimanager.SetDefaults()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err = imagev1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = k8sappsv1.AddToScheme(s)
+	err := imagev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,53 +84,36 @@ func TestRedisBackendDCReconcilerCreate(t *testing.T) {
 	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
+	reconciler := NewSystemMySQLReconciler(baseAPIManagerLogicReconciler)
+	_, err = reconciler.Reconcile()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	cases := []struct {
-		testName              string
-		reconcilerConstructor DependencyReconcilerConstructor
-		expectedObjs          []struct {
-			objName string
-			obj     client.Object
-		}
+		testName string
+		objName  string
+		obj      client.Object
 	}{
-		{"backendRedis", NewBackendRedisDependencyReconciler, []struct {
-			objName string
-			obj     client.Object
-		}{
-			{"backend-redis", &k8sappsv1.Deployment{}},
-			{"backend-redis", &v1.Service{}},
-			{"redis-config", &v1.ConfigMap{}},
-			{"backend-redis-storage", &v1.PersistentVolumeClaim{}},
-			{"backend-redis", &imagev1.ImageStream{}},
-		}},
-		{"systemRedis", NewSystemRedisDependencyReconciler, []struct {
-			objName string
-			obj     client.Object
-		}{
-			{"system-redis", &k8sappsv1.Deployment{}},
-			{"system-redis-storage", &v1.PersistentVolumeClaim{}},
-			{"system-redis", &imagev1.ImageStream{}},
-			{"system-redis", &v1.Service{}},
-		}},
+		{"systemMySQL_Deployment", "system-mysql", &k8sappsv1.Deployment{}},
+		{"systemMySQL_Service", "system-mysql", &v1.Service{}},
+		{"systemMySQL_Main_CM", "mysql-main-conf", &v1.ConfigMap{}},
+		{"systemMySQL_Extra_CM", "mysql-extra-conf", &v1.ConfigMap{}},
+		{"systemMySQL_PVC", "mysql-storage", &v1.PersistentVolumeClaim{}},
+		{"systemDatabaseSecret", component.SystemSecretSystemDatabaseSecretName, &v1.Secret{}},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			reconciler := tc.reconcilerConstructor(baseAPIManagerLogicReconciler)
-			_, err := reconciler.Reconcile()
-			if err != nil {
-				subT.Fatal(err)
+			obj := tc.obj
+			namespacedName := types.NamespacedName{
+				Name:      tc.objName,
+				Namespace: namespace,
 			}
-
-			for _, obj := range tc.expectedObjs {
-				namespacedName := types.NamespacedName{
-					Name:      obj.objName,
-					Namespace: namespace,
-				}
-				err = cl.Get(context.TODO(), namespacedName, obj.obj)
-				// object must exist, that is all required to be tested
-				if err != nil {
-					subT.Errorf("error fetching object %s: %v", obj.objName, err)
-				}
+			err = cl.Get(context.TODO(), namespacedName, obj)
+			// object must exist, that is all required to be tested
+			if err != nil {
+				subT.Errorf("error fetching object %s: %v", tc.objName, err)
 			}
 		})
 	}

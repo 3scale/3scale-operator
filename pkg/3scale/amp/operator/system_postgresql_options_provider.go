@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"net/url"
 	"strings"
 
@@ -132,7 +133,7 @@ func (s *SystemPostgresqlOptionsProvider) setResourceRequirementsOptions() {
 		s.options.ContainerResourceRequirements = v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
@@ -194,7 +195,7 @@ func (s *SystemPostgresqlOptionsProvider) podTemplateLabels() map[string]string 
 		}
 	}
 
-	labels["deploymentConfig"] = "system-postgresql"
+	labels[reconcilers.DeploymentLabelSelector] = "system-postgresql"
 
 	return labels
 }

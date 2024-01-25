@@ -25,6 +25,11 @@ func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReco
 }
 
 func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
+	ampImages, err := AmpImages(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	backend, err := Backend(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
@@ -36,7 +41,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeployment(backend.CronDeployment(), reconcilers.DeploymentMutator(cronDeploymentMutator...))
+	err = r.ReconcileDeployment(backend.CronDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(cronDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -71,7 +76,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeployment(backend.ListenerDeployment(), reconcilers.DeploymentMutator(listenerDeploymentMutator...))
+	err = r.ReconcileDeployment(backend.ListenerDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(listenerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -111,7 +116,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeployment(backend.WorkerDeployment(), reconcilers.DeploymentMutator(workerDeploymentMutator...))
+	err = r.ReconcileDeployment(backend.WorkerDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(workerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
