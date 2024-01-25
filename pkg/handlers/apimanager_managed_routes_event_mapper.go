@@ -46,7 +46,7 @@ func (h *APIManagerRoutesEventMapper) getAPIManagerOwnerReconcileRequest(object 
 
 		h.Logger.V(2).Info("Evaluating OwnerReference", "GroupVersion", refGV, "Kind", ref.Kind, "Name", ref.Name)
 		// Compare the OwnerReference Group and Kind against the APIManager Kind
-		// or the name of the Zync Que DeploymentConfig.
+		// or the name of the Zync Que Deployment.
 
 		// If the OwnerReference of the received object is an APIManager we
 		// return a reconcile Request using the name from the OwnerReference and the

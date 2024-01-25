@@ -122,7 +122,7 @@ func (o *OperatorBackendOptionsProvider) setResourceRequirementsOptions() {
 		o.backendOptions.CronResourceRequirements = v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if o.apimanager.Spec.Backend.ListenerSpec.Resources != nil {

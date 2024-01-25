@@ -874,11 +874,11 @@ func TestDeploymentArgsMutator(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := DeploymentArgsMutator(tt.args.desired, tt.args.existing)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("DeploymentConfigArgsMutator() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DeploymentArgsMutator() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("DeploymentConfigArgsMutator() = %v, want %v", got, tt.want)
+				t.Errorf("DeploymentArgsMutator() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1083,11 +1083,11 @@ func TestDeploymentProbesMutator(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := DeploymentProbesMutator(tt.args.desired, tt.args.existing)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("DeploymentConfigProbesMutator() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DeploymentProbesMutator() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("DeploymentConfigProbesMutator() = %v, want %v", got, tt.want)
+				t.Errorf("DeploymentProbesMutator() = %v, want %v", got, tt.want)
 			}
 		})
 	}

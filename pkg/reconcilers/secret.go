@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultsOnlySecretMutator is useful for secrets pre-created by the user and when not all the fields are created.
-// Fields referenced from deployment configs must exist,
+// Fields referenced from deployments must exist,
 // so defaults only reconciliation makes sure they exist with default values when user does doe pre-create them
 func DefaultsOnlySecretMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*v1.Secret)
