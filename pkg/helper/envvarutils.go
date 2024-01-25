@@ -123,10 +123,10 @@ func RemoveDuplicateEnvVars(envVars []v1.EnvVar) []v1.EnvVar {
 	return result
 }
 
-// EnvVarReconciler implements basic env var reconcilliation.
+// EnvVarReconciler implements basic env var reconciliation.
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
-// Removed when not in desired and exists in existing DC
+// Removed when not in desired and exists in existing Deployment
 func EnvVarReconciler(desired []v1.EnvVar, existing *[]v1.EnvVar, envVar string) bool {
 	update := false
 

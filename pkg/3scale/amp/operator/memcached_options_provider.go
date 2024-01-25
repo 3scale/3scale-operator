@@ -49,7 +49,7 @@ func (m *MemcachedOptionsProvider) setResourceRequirementsOptions() {
 		m.memcachedOptions.ResourceRequirements = v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if m.apimanager.Spec.System.MemcachedResources != nil {

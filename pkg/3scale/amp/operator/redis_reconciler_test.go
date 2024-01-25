@@ -23,7 +23,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func TestRedisBackendDCReconcilerCreate(t *testing.T) {
+func TestRedisBackendDeploymentReconcilerCreate(t *testing.T) {
 	var (
 		appLabel       = "someLabel"
 		name           = "example-apimanager"
