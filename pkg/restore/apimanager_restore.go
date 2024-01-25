@@ -395,13 +395,13 @@ func (b *APIManagerRestore) restoreSecretsAndConfigMapsContainerArgs() string {
 
 func (b *APIManagerRestore) zyncResyncDomainsContainerArgs() string {
 	return `
-	dcname="system-sidekiq"
-	dcpods=$(oc get pods --ignore-not-found=true -l deploymentconfig=${dcname} --no-headers=true -o custom-columns=:metadata.name)
-	if [ -z "${dcpods}" ]; then
-		echo "No pods found for Deployment ${dcname}"
+	dname="system-sidekiq"
+	dpods=$(oc get pods --ignore-not-found=true -l deployment=${dname} --no-headers=true -o custom-columns=:metadata.name)
+	if [ -z "${dpods}" ]; then
+		echo "No pods found for Deployment ${dname}"
 		exit 1
 	fi
-	podname=$(echo -n $dcpods | awk '{print $1}')
+	podname=$(echo -n $dpods | awk '{print $1}')
 	oc exec ${podname} -- bash -c "bundle exec rake zync:resync:domains"
 `
 }

@@ -374,7 +374,7 @@ func (s *SystemOptionsProvider) setResourceRequirementsOptions() {
 		s.options.SidekiqContainerResourceRequirements = &v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if s.apimanager.Spec.System.AppSpec.MasterContainerResources != nil {

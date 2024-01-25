@@ -130,7 +130,7 @@ func (s *APIManagerStatus) Equals(other *APIManagerStatus, logger logr.Logger) b
 // APIManager is the Schema for the apimanagers API
 // +kubebuilder:resource:path=apimanagers,scope=Namespaced
 // +operator-sdk:csv:customresourcedefinitions:displayName="APIManager"
-// +operator-sdk:csv:customresourcedefinitions:resources={{"DeploymentConfig","apps.openshift.io/v1"}}
+// +operator-sdk:csv:customresourcedefinitions:resources={{"Deployment","apps.openshift.io/v1"}}
 // +operator-sdk:csv:customresourcedefinitions:resources={{"PersistentVolumeClaim","v1"}}
 // +operator-sdk:csv:customresourcedefinitions:resources={{"Service","v1"}}
 // +operator-sdk:csv:customresourcedefinitions:resources={{"Route","route.openshift.io/v1"}}

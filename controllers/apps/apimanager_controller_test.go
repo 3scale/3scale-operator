@@ -12,8 +12,8 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -143,10 +143,10 @@ var _ = Describe("APIManager controller", func() {
 				return err == nil
 			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
-			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed DeploymentConfigs\n")
-			err = waitForAllAPIManagerStandardDeploymentConfigs(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
+			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Deployments\n")
+			err = waitForAllAPIManagerStandardDeployments(testNamespace, 5*time.Second, 15*time.Minute, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
-			fmt.Fprintf(GinkgoWriter, "All APIManager managed DeploymentConfigs are ready\n")
+			fmt.Fprintf(GinkgoWriter, "All APIManager managed Deployments are ready\n")
 
 			fmt.Fprintf(GinkgoWriter, "Waiting for all APIManager managed Routes\n")
 			err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
@@ -164,8 +164,8 @@ var _ = Describe("APIManager controller", func() {
 	})
 })
 
-func waitForAllAPIManagerStandardDeploymentConfigs(namespace string, retryInterval, timeout time.Duration, w io.Writer) error {
-	deploymentConfigNames := []string{ // TODO gather this from constants/somewhere centralized
+func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, timeout time.Duration, w io.Writer) error {
+	deploymentNames := []string{ // TODO gather this from constants/somewhere centralized
 		"apicast-production",
 		"apicast-staging",
 		"backend-cron",
@@ -183,23 +183,23 @@ func waitForAllAPIManagerStandardDeploymentConfigs(namespace string, retryInterv
 		"zync-database",
 	}
 
-	for _, dcName := range deploymentConfigNames {
-		lookupKey := types.NamespacedName{Name: dcName, Namespace: namespace}
-		createdDeployment := &appsv1.DeploymentConfig{}
+	for _, dName := range deploymentNames {
+		lookupKey := types.NamespacedName{Name: dName, Namespace: namespace}
+		createdDeployment := &k8sappsv1.Deployment{}
 		Eventually(func() bool {
 			err := testK8sClient.Get(context.Background(), lookupKey, createdDeployment)
 			if err != nil {
 				return false
 			}
 
-			if helper.IsDeploymentConfigAvailable(createdDeployment) {
-				fmt.Fprintf(w, "DeploymentConfig '%s' available\n", dcName)
+			if helper.IsDeploymentAvailable(createdDeployment) {
+				fmt.Fprintf(w, "Deployment '%s' available\n", dName)
 				return true
 			}
 
 			availableReplicas := createdDeployment.Status.AvailableReplicas
 			desiredReplicas := createdDeployment.Spec.Replicas
-			fmt.Fprintf(w, "Waiting for full availability of %s DeploymentConfig (%d/%d)\n", dcName, availableReplicas, desiredReplicas)
+			fmt.Fprintf(w, "Waiting for full availability of %s Deployment (%d/%d)\n", dName, availableReplicas, desiredReplicas)
 			return false
 
 		}, timeout, retryInterval).Should(BeTrue())

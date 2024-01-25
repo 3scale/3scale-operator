@@ -15,10 +15,9 @@ import (
 )
 
 const (
-	DeploymentKind                   = "Deployment"
-	DeploymentAPIVersion             = "apps/v1"
-	DeploymentLabelSelector          = "deployment"
-	DeploymentImageTriggerAnnotation = "image.openshift.io/triggers"
+	DeploymentKind          = "Deployment"
+	DeploymentAPIVersion    = "apps/v1"
+	DeploymentLabelSelector = "deployment"
 )
 
 type ContainerImage struct {
@@ -156,10 +155,10 @@ func DeploymentContainerResourcesMutator(desired, existing *k8sappsv1.Deployment
 }
 
 // DeploymentEnvVarReconciler implements basic env var reconciliation deployments.
-// Existing and desired DC must have same number of containers
+// Existing and desired Deployment must have same number of containers
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
-// Removed when not in desired and exists in existing DC
+// Removed when not in desired and exists in existing Deployment
 func DeploymentEnvVarReconciler(desired, existing *k8sappsv1.Deployment, envVar string) bool {
 	updated := false
 

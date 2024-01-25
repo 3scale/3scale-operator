@@ -66,7 +66,7 @@ func TestSystemSearchdReconciler(t *testing.T) {
 	}{
 		{"PVC", component.SystemSearchdPVCName, &v1.PersistentVolumeClaim{}},
 		{"Service", component.SystemSearchdServiceName, &v1.Service{}},
-		{"DC", component.SystemSearchdDeploymentName, &k8sappsv1.Deployment{}},
+		{"Deployment", component.SystemSearchdDeploymentName, &k8sappsv1.Deployment{}},
 	}
 
 	for _, tc := range cases {

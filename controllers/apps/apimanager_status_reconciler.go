@@ -120,14 +120,14 @@ func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alp
 func (s *APIManagerStatusReconciler) deploymentsAvailable(existingDeployments []k8sappsv1.Deployment) bool {
 	expectedDeploymentNames := s.expectedDeploymentNames(s.apimanagerResource)
 	for _, deploymentName := range expectedDeploymentNames {
-		foundExistingDCIdx := -1
-		for idx, existingDC := range existingDeployments {
-			if existingDC.Name == deploymentName {
-				foundExistingDCIdx = idx
+		foundExistingDeploymentIdx := -1
+		for idx, existingDeployment := range existingDeployments {
+			if existingDeployment.Name == deploymentName {
+				foundExistingDeploymentIdx = idx
 				break
 			}
 		}
-		if foundExistingDCIdx == -1 || !helper.IsDeploymentAvailable(&existingDeployments[foundExistingDCIdx]) {
+		if foundExistingDeploymentIdx == -1 || !helper.IsDeploymentAvailable(&existingDeployments[foundExistingDeploymentIdx]) {
 			return false
 		}
 	}
