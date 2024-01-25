@@ -81,7 +81,7 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 	}
 	newStatus.Conditions.SetCondition(availableCondition)
 
-	s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource, s.Client())
+	s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource)
 
 	deploymentStatus := olm.GetDeploymentConfigStatus(deployments)
 	newStatus.Deployments = deploymentStatus
@@ -227,7 +227,7 @@ func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
 	return allDefaultRoutesReady, nil
 }
 
-func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager, client2 client.Client) {
+func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
 	cond := common.Condition{
 		Type:    appsv1alpha1.APIManagerWarningConditionType,
 		Status:  v1.ConditionStatus(metav1.ConditionTrue),
