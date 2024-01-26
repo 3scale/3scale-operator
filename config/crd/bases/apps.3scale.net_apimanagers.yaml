@@ -19931,7 +19931,7 @@ spec:
                   type: object
                 type: array
               deployments:
-                description: APIManager Deployment Configs
+                description: APIManager Deployments
                 properties:
                   ready:
                     description: Deployments are ready to serve requests

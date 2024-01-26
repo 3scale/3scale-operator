@@ -242,9 +242,9 @@ spec:
       kind: APIManager
       name: apimanagers.apps.3scale.net
       resources:
-      - kind: DeploymentConfig
+      - kind: Deployment
         name: ""
-        version: apps.openshift.io/v1
+        version: apps/v1
       - kind: ImageStream
         name: ""
         version: image.openshift.io/v1
@@ -264,7 +264,7 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:label
       statusDescriptors:
-      - description: APIManager Deployment Configs
+      - description: APIManager Deployments
         displayName: Deployments
         path: deployments
         x-descriptors:
