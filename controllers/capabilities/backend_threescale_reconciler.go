@@ -450,8 +450,8 @@ func (t *BackendThreescaleReconciler) reconcileMatchedMetrics(matchedMap map[str
 func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 	desiredKeys := make([]string, 0, len(t.backendResource.Spec.MappingRules))
 	desiredMap := map[string]capabilitiesv1beta1.MappingRuleSpec{}
-	for _, spec := range t.backendResource.Spec.MappingRules {
-		key := fmt.Sprintf("%s:%s", spec.HTTPMethod, spec.Pattern)
+	for position, spec := range t.backendResource.Spec.MappingRules {
+		key := fmt.Sprintf("%s:%s:%s", spec.HTTPMethod, spec.Pattern, fmt.Sprint(position+1))
 		desiredKeys = append(desiredKeys, key)
 		desiredMap[key] = spec
 	}
@@ -533,6 +533,10 @@ func (t *BackendThreescaleReconciler) syncMappingRules(_ interface{}) error {
 				return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
 			}
 		}
+		existingMap, err = t.getExistingMappingRules()
+		if err != nil {
+			return fmt.Errorf("Error sync backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
+		}
 	}
 
 	return nil
@@ -555,7 +559,7 @@ func (t *BackendThreescaleReconciler) getExistingMappingRules() (map[string]thre
 		return nil, fmt.Errorf("Error getting backend [%s] mappingrules: %w", t.backendResource.Spec.SystemName, err)
 	}
 	for _, item := range existingList.MappingRules {
-		key := fmt.Sprintf("%s:%s", item.Element.HTTPMethod, item.Element.Pattern)
+		key := fmt.Sprintf("%s:%s:%s", item.Element.HTTPMethod, item.Element.Pattern, fmt.Sprint(item.Element.Position))
 		existingMap[key] = item.Element
 	}
 
