@@ -1153,3 +1153,169 @@ func TestDeploymentAnnotationsMutator(t *testing.T) {
 		})
 	}
 }
+
+func TestDeploymentPodContainerImageMutator(t *testing.T) {
+	type args struct {
+		desired  *k8sappsv1.Deployment
+		existing *k8sappsv1.Deployment
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "No Image Update Required",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Image: "test-image"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Image: "test-image"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "Image Update Required",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Image: "test-image-desired"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Image: "test-image-existing"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeploymentPodContainerImageMutator(tt.args.desired, tt.args.existing)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeploymentPodContainerImageMutator() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeploymentPodContainerImageMutator() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDeploymentPodInitContainerImageMutator(t *testing.T) {
+	type args struct {
+		desired  *k8sappsv1.Deployment
+		existing *k8sappsv1.Deployment
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "No Image Update Required",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Image: "test-image"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{Image: "test-image"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "Image Update Required",
+			args: args{
+				desired: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{Image: "test-image-desired"},
+								},
+							},
+						},
+					},
+				},
+				existing: &k8sappsv1.Deployment{
+					Spec: k8sappsv1.DeploymentSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								InitContainers: []corev1.Container{
+									{Image: "test-image-existing"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    true,
+			wantErr: false,
+		}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DeploymentPodInitContainerImageMutator(tt.args.desired, tt.args.existing)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeploymentPodInitContainerImageMutator() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("DeploymentPodInitContainerImageMutator() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

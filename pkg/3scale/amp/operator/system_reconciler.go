@@ -168,6 +168,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		r.systemAppDeploymentResourceMutator,
 		reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
+		reconcilers.DeploymentPodContainerImageMutator,
 	}
 	if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 		systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
@@ -221,6 +222,8 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentPodContainerImageMutator,
+		reconcilers.DeploymentPodInitContainerImageMutator,
 	}
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)

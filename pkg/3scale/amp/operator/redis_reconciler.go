@@ -68,6 +68,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentPodContainerImageMutator,
 	)
 	redisDeployment := r.Deployment(redis)
 	err = r.ReconcileDeployment(redisDeployment, deploymentMutator)

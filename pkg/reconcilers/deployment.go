@@ -81,6 +81,8 @@ func GenericBackendDeploymentMutators() []DMutateFn {
 		DeploymentPodTemplateAnnotationsMutator,
 		DeploymentArgsMutator,
 		DeploymentProbesMutator,
+		DeploymentPodContainerImageMutator,
+		DeploymentPodInitContainerImageMutator,
 	}
 }
 
@@ -301,5 +303,35 @@ func DeploymentProbesMutator(desired, existing *k8sappsv1.Deployment) (bool, err
 		}
 	}
 
+	return updated, nil
+}
+
+// DeploymentPodContainerImageMutator ensures that the deployment's pod's containers are reconciled
+func DeploymentPodContainerImageMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	for i, desiredContainer := range desired.Spec.Template.Spec.Containers {
+		existingContainer := &existing.Spec.Template.Spec.Containers[i]
+
+		if !reflect.DeepEqual(existingContainer.Image, desiredContainer.Image) {
+			existingContainer.Image = desiredContainer.Image
+			updated = true
+		}
+	}
+	return updated, nil
+}
+
+// DeploymentPodInitContainerImageMutator ensures that the deployment's pod's containers are reconciled
+func DeploymentPodInitContainerImageMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	for i, desiredContainer := range desired.Spec.Template.Spec.InitContainers {
+		existingContainer := &existing.Spec.Template.Spec.InitContainers[i]
+
+		if !reflect.DeepEqual(existingContainer.Image, desiredContainer.Image) {
+			existingContainer.Image = desiredContainer.Image
+			updated = true
+		}
+	}
 	return updated, nil
 }
