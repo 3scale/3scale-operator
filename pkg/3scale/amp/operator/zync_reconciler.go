@@ -59,6 +59,8 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentPodContainerImageMutator,
+		reconcilers.DeploymentPodInitContainerImageMutator,
 	}
 	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
 		zyncMutators = append(zyncMutators, reconcilers.DeploymentReplicasMutator)
@@ -86,6 +88,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentPodContainerImageMutator,
 	}
 	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
 		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentReplicasMutator)
@@ -125,6 +128,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 			reconcilers.DeploymentPriorityClassMutator,
 			reconcilers.DeploymentTopologySpreadConstraintsMutator,
 			reconcilers.DeploymentPodTemplateAnnotationsMutator,
+			reconcilers.DeploymentPodContainerImageMutator,
 		)
 		err = r.ReconcileDeployment(zync.DatabaseDeployment(ampImages.Options.ZyncDatabasePostgreSQLImage), zyncDBDMutator)
 		if err != nil {
