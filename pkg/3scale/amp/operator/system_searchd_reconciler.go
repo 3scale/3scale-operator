@@ -59,6 +59,7 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		reconcilers.DeploymentProbesMutator,
 		reconcilers.DeploymentArgsMutator,
+		reconcilers.DeploymentPodContainerImageMutator,
 	)
 	err = r.ReconcileDeployment(searchd.Deployment(ampImages.Options.SystemSearchdImage), searchdDeploymentMutator)
 	if err != nil {

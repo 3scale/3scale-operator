@@ -40,6 +40,7 @@ func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPriorityClassMutator,
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
+		reconcilers.DeploymentPodContainerImageMutator,
 	)
 	err = r.ReconcileDeployment(systemPostgreSQL.Deployment(systemPostgreSQLImage.Options.Image), deploymentMutator)
 	if err != nil {
