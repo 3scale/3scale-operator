@@ -46,28 +46,13 @@ func (system *System) SystemAppPodMonitor() *monitoringv1.PodMonitor {
 					Scheme: "http",
 				},
 				{
-					Port:   SystemAppMasterContainerMetricsPortName,
-					Path:   "/yabeda-metrics",
-					Scheme: "http",
-				},
-				{
 					Port:   SystemAppProviderContainerMetricsPortName,
 					Path:   "/metrics",
 					Scheme: "http",
 				},
 				{
-					Port:   SystemAppProviderContainerMetricsPortName,
-					Path:   "/yabeda-metrics",
-					Scheme: "http",
-				},
-				{
 					Port:   SystemAppDeveloperContainerMetricsPortName,
 					Path:   "/metrics",
-					Scheme: "http",
-				},
-				{
-					Port:   SystemAppDeveloperContainerMetricsPortName,
-					Path:   "/yabeda-metrics",
 					Scheme: "http",
 				},
 			},
