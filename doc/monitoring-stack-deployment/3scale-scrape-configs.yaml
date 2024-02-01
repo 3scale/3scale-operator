@@ -19,9 +19,7 @@
   scheme: https
   tls_config:
     insecure_skip_verify: true
-  basic_auth:
-    username: "internal"
-    password: "<BASIC_AUTH_PASSWD>"
+  bearer_token: "<THANOS_QUERIER_BEARER_TOKEN>"
   metric_relabel_configs:
   - action: labeldrop
     regex: prometheus_replica
