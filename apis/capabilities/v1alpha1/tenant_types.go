@@ -50,6 +50,15 @@ type TenantSpec struct {
 	TenantSecretRef        v1.SecretReference `json:"tenantSecretRef"`
 	PasswordCredentialsRef v1.SecretReference `json:"passwordCredentialsRef"`
 	MasterCredentialsRef   v1.SecretReference `json:"masterCredentialsRef"`
+	// additional parameters, used for Update, as in master portal Api Docs
+	// +optional
+	FromEmail *string `json:"fromEmail,omitempty"`
+	// +optional
+	SupportEmail *string `json:"supportEmail,omitempty"`
+	// +optional
+	FinanceSupportEmail *string `json:"financeSupportEmail,omitempty"`
+	// +optional
+	SiteAccessCode *string `json:"siteAccessCode,omitempty"`
 }
 
 // TenantStatus defines the observed state of Tenant
