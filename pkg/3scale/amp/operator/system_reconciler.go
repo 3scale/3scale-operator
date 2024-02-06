@@ -146,6 +146,28 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	// Used to synchronize rollout of system Deployments
 	systemComponentNotReady := false
 
+	// If the image has changed, delete the PreHook/PostHook Jobs so they can be recreated with the new image
+	imageChanged, err := helper.HasJobImageChanged(component.SystemAppPreHookJobName, r.apiManager.GetNamespace(), ampImages.Options.SystemImage, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if imageChanged {
+		err = helper.DeleteJob(component.SystemAppPreHookJobName, r.apiManager.GetNamespace(), r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+	imageChanged, err = helper.HasJobImageChanged(component.SystemAppPostHookJobName, r.apiManager.GetNamespace(), ampImages.Options.SystemImage, r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if imageChanged {
+		err = helper.DeleteJob(component.SystemAppPostHookJobName, r.apiManager.GetNamespace(), r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	// SystemApp PreHook Job
 	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage)
 	err = r.ReconcileJob(preHookJob, reconcilers.CreateOnlyMutator)
@@ -180,7 +202,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		}
 	}
 
-	// Block reconciling PostHook Job unless system-app Deployment is ready
+	// Block reconciling PostHook Job unless BOTH the PreHook Job has completed and the system-app Deployment is ready and not in the process of updating
 	deployment := &k8sappsv1.Deployment{}
 	err = r.Client().Get(context.TODO(), client.ObjectKey{
 		Namespace: r.apiManager.GetNamespace(),
@@ -189,7 +211,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil && !k8serr.IsNotFound(err) {
 		return reconcile.Result{}, err
 	}
-	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) {
+	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) || !helper.HasJobCompleted(preHookJob.Name, preHookJob.Namespace, r.Client()) {
 		systemComponentNotReady = true
 	}
 
