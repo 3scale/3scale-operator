@@ -16,17 +16,16 @@ spec:
 
 ```bash
 # Get the SECRET name that contains the THANOS_QUERIER_BEARER_TOKEN
-$ SECRET=`oc get secret -n openshift-user-workload-monitoring | grep  prometheus-user-workload-token | head -n 1 | awk '{print $1 }'`
+SECRET=`oc get secret -n openshift-user-workload-monitoring | grep  prometheus-user-workload-token | head -n 1 | awk '{print $1 }'`
 # Get the THANOS_QUERIER_BEARER_TOKEN using the SECRET name
-$ oc get secret $SECRET -n openshift-user-workload-monitoring -o jsonpath="{.data.token}" | base64 -d
-
+oc get secret $SECRET -n openshift-user-workload-monitoring -o jsonpath="{.data.token}" | base64 -d
 ```
 Update the file `3scale-scrape-configs.yaml` bearer_token field with the THANOS_QUERIER_BEARER_TOKEN.
 
 Then create secret:
 
 ```bash
-kubectl create secret generic additional-scrape-configs --from-file=3scale-scrape-configs.yaml=./3scale-scrape-configs.yaml
+oc create secret generic additional-scrape-configs --from-file=3scale-scrape-configs.yaml=./3scale-scrape-configs.yaml
 ```
 
 5. Deploy prometheus
