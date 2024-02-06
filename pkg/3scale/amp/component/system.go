@@ -931,7 +931,7 @@ func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deploy
 					Volumes:     system.SidekiqPodVolumes(),
 					InitContainers: []v1.Container{
 						{
-							Name:  "check-svc",
+							Name:  SystemSideKiqInitContainerName,
 							Image: containerImage,
 							Command: []string{
 								"bash",

@@ -39,6 +39,17 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	apimanager := basicApimanagerSpecTestSystemOptions()
 	appPreHookJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{Name: component.SystemAppPreHookJobName, Namespace: apimanager.Namespace},
+		Spec: batchv1.JobSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Image: SystemImageURL(),
+						},
+					},
+				},
+			},
+		},
 		Status: batchv1.JobStatus{
 			Conditions: []batchv1.JobCondition{
 				{
@@ -149,6 +160,17 @@ func TestReplicaSystemReconciler(t *testing.T) {
 
 	appPreHookJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{Name: component.SystemAppPreHookJobName, Namespace: namespace},
+		Spec: batchv1.JobSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Image: SystemImageURL(),
+						},
+					},
+				},
+			},
+		},
 		Status: batchv1.JobStatus{
 			Conditions: []batchv1.JobCondition{
 				{
