@@ -53,15 +53,15 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err := appsv1.Install(s)
 	if err != nil {
 		t.Fatalf("Unable to add Apps scheme: (%v)", err)
 	}
-	err = imagev1.AddToScheme(s)
+	err = imagev1.Install(s)
 	if err != nil {
 		t.Fatalf("Unable to add Image scheme: (%v)", err)
 	}
-	err = routev1.AddToScheme(s)
+	err = routev1.Install(s)
 	if err != nil {
 		t.Fatalf("Unable to add Route scheme: (%v)", err)
 	}
@@ -71,18 +71,17 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 	if err := grafanav1alpha1.AddToScheme(s); err != nil {
 		t.Fatal(err)
 	}
-	if err := configv1.AddToScheme(s); err != nil {
+	if err := configv1.Install(s); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create a fake client to mock API calls.
-	cl := fake.NewFakeClient(objs...)
-	clientAPIReader := fake.NewFakeClient(objs...)
+	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).WithStatusSubresource(apimanager).Build()
+	clientAPIReader := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).WithStatusSubresource(apimanager).Build()
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
 
-	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, ctrl.Log.WithName("controllers").WithName("APIManager"),
-		clientset.Discovery(), recorder)
+	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, ctrl.Log.WithName("controllers").WithName("APIManager"), clientset.Discovery(), recorder)
 	// Create a ReconcileMemcached object with the scheme and fake client.
 	r := &appscontrollers.APIManagerReconciler{
 		BaseReconciler: baseReconciler,
