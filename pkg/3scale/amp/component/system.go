@@ -746,7 +746,7 @@ func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment
 	}
 }
 
-func (system *System) AppPreHookJob(containerImage string) *batchv1.Job {
+func (system *System) AppPreHookJob(containerImage string, currentSystemAppGeneration int64) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -757,6 +757,9 @@ func (system *System) AppPreHookJob(containerImage string) *batchv1.Job {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   SystemAppPreHookJobName,
 			Labels: system.Options.CommonAppLabels,
+			Annotations: map[string]string{
+				helper.SystemAppGenerationAnnotation: strconv.FormatInt(currentSystemAppGeneration, 10),
+			},
 		},
 		Spec: batchv1.JobSpec{
 			Completions: &completions,
@@ -783,7 +786,7 @@ func (system *System) AppPreHookJob(containerImage string) *batchv1.Job {
 	}
 }
 
-func (system *System) AppPostHookJob(containerImage string) *batchv1.Job {
+func (system *System) AppPostHookJob(containerImage string, currentSystemAppGeneration int64) *batchv1.Job {
 	var completions int32 = 1
 
 	return &batchv1.Job{
@@ -794,6 +797,9 @@ func (system *System) AppPostHookJob(containerImage string) *batchv1.Job {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   SystemAppPostHookJobName,
 			Labels: system.Options.CommonAppLabels,
+			Annotations: map[string]string{
+				helper.SystemAppGenerationAnnotation: strconv.FormatInt(currentSystemAppGeneration, 10),
+			},
 		},
 		Spec: batchv1.JobSpec{
 			Completions: &completions,

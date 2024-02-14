@@ -3,8 +3,10 @@ package helper
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
+	k8sappsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -12,6 +14,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	SystemAppGenerationAnnotation = "system-app-deployment-generation"
 )
 
 // UIDBasedJobName returns a Job name that is compromised of the provided prefix,
@@ -57,26 +63,51 @@ func HasJobCompleted(jName string, jNamespace string, client k8sclient.Client) b
 	return false
 }
 
-// HasJobImageChanged returns true if the Job's existing image is different from the provided image
-func HasJobImageChanged(jName string, jNamespace string, desiredImage string, client k8sclient.Client) (bool, error) {
+// HasAppGenerationChanged returns true if the system-app Deployment's generation doesn't match the Job's annotation tracking it
+func HasAppGenerationChanged(jName string, dName string, namespace string, client k8sclient.Client) (bool, error) {
 	job := &batchv1.Job{}
 	err := client.Get(context.TODO(), k8sclient.ObjectKey{
-		Namespace: jNamespace,
+		Namespace: namespace,
 		Name:      jName,
 	}, job)
-
 	// Return error if can't get Job
 	if err != nil && !k8serr.IsNotFound(err) {
 		return false, fmt.Errorf("error getting job %s: %w", job.Name, err)
 	}
-
 	// Return false if the Job doesn't exist yet
 	if k8serr.IsNotFound(err) {
 		return false, nil
 	}
 
-	// Return true if the Job is using the old image
-	if job.Spec.Template.Spec.Containers[0].Image != desiredImage {
+	deployment := &k8sappsv1.Deployment{}
+	err = client.Get(context.TODO(), k8sclient.ObjectKey{
+		Namespace: namespace,
+		Name:      dName,
+	}, deployment)
+	// Return error if can't get Deployment
+	if err != nil && !k8serr.IsNotFound(err) {
+		return false, fmt.Errorf("error getting deployment %s: %w", deployment.Name, err)
+	}
+	// Return false if the Deployment doesn't exist yet
+	if k8serr.IsNotFound(err) {
+		return false, nil
+	}
+
+	// Parse the Job's observed Deployment generation from its annotations
+	var trackedGeneration int64 = 1
+	if job.Annotations != nil {
+		for key, val := range job.Annotations {
+			if key == SystemAppGenerationAnnotation {
+				trackedGeneration, err = strconv.ParseInt(val, 10, 64)
+				if err != nil {
+					return false, fmt.Errorf("failed to parse system-app Deployment's generation from job %s annotations: %w", job.Name, err)
+				}
+			}
+		}
+	}
+
+	// Return true if the Deployment's version doesn't match the version tracked in the Job's annotation
+	if trackedGeneration != deployment.ObjectMeta.Generation {
 		return true, nil
 	}
 
