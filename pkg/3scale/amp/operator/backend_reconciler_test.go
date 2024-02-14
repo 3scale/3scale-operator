@@ -240,7 +240,7 @@ func TestReplicaBackendReconciler(t *testing.T) {
 			}
 
 			if tc.expectedAmountOfReplicas != *deployment.Spec.Replicas {
-				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, deployment.Spec.Replicas)
+				subT.Errorf("expected replicas do not match. expected: %d actual: %d", tc.expectedAmountOfReplicas, *deployment.Spec.Replicas)
 			}
 		})
 	}
