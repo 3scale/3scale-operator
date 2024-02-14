@@ -245,6 +245,7 @@ func TestReplicaSystemReconciler(t *testing.T) {
 
 			// bump the amount of replicas in the deployment
 			deployment.Spec.Replicas = &twoValue
+			deployment.Generation = oneValue64
 			err = cl.Update(context.TODO(), deployment)
 			if err != nil {
 				subT.Errorf("error updating deployment of %s: %v", tc.objName, err)

@@ -8,7 +8,7 @@ import (
 	k8sappsv1 "k8s.io/api/apps/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -146,30 +146,36 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	// Used to synchronize rollout of system Deployments
 	systemComponentNotReady := false
 
-	// If the image has changed, delete the PreHook/PostHook Jobs so they can be recreated with the new image
-	imageChanged, err := helper.HasJobImageChanged(component.SystemAppPreHookJobName, r.apiManager.GetNamespace(), ampImages.Options.SystemImage, r.Client())
+	// If the system-app Deployment generation has changed, delete the PreHook/PostHook Jobs so they can be recreated
+	generationChanged, err := helper.HasAppGenerationChanged(component.SystemAppPreHookJobName, component.SystemAppDeploymentName, r.apiManager.GetNamespace(), r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if imageChanged {
+	if generationChanged {
 		err = helper.DeleteJob(component.SystemAppPreHookJobName, r.apiManager.GetNamespace(), r.Client())
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 	}
-	imageChanged, err = helper.HasJobImageChanged(component.SystemAppPostHookJobName, r.apiManager.GetNamespace(), ampImages.Options.SystemImage, r.Client())
+	generationChanged, err = helper.HasAppGenerationChanged(component.SystemAppPostHookJobName, component.SystemAppDeploymentName, r.apiManager.GetNamespace(), r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if imageChanged {
+	if generationChanged {
 		err = helper.DeleteJob(component.SystemAppPostHookJobName, r.apiManager.GetNamespace(), r.Client())
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 	}
 
+	// Used to synchronize the system-app Deployment with the PreHook/PostHook Jobs
+	currentAppDeploymentGeneration, err := getSystemAppDeploymentGeneration(r.apiManager.GetNamespace(), r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// SystemApp PreHook Job
-	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage)
+	preHookJob := system.AppPreHookJob(ampImages.Options.SystemImage, currentAppDeploymentGeneration)
 	err = r.ReconcileJob(preHookJob, reconcilers.CreateOnlyMutator)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -204,7 +210,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Block reconciling PostHook Job unless BOTH the PreHook Job has completed and the system-app Deployment is ready and not in the process of updating
 	deployment := &k8sappsv1.Deployment{}
-	err = r.Client().Get(context.TODO(), client.ObjectKey{
+	err = r.Client().Get(context.TODO(), k8sclient.ObjectKey{
 		Namespace: r.apiManager.GetNamespace(),
 		Name:      component.SystemAppDeploymentName,
 	}, deployment)
@@ -217,7 +223,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	// SystemApp PostHook Job
 	if !systemComponentNotReady {
-		err = r.ReconcileJob(system.AppPostHookJob(ampImages.Options.SystemImage), reconcilers.CreateOnlyMutator)
+		err = r.ReconcileJob(system.AppPostHookJob(ampImages.Options.SystemImage, currentAppDeploymentGeneration), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -315,6 +321,26 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
+func getSystemAppDeploymentGeneration(namespace string, client k8sclient.Client) (int64, error) {
+	deployment := &k8sappsv1.Deployment{}
+	err := client.Get(context.TODO(), k8sclient.ObjectKey{
+		Namespace: namespace,
+		Name:      component.SystemAppDeploymentName,
+	}, deployment)
+
+	// Return error if can't get Deployment
+	if err != nil && !k8serr.IsNotFound(err) {
+		return 0, fmt.Errorf("error getting deployment %s: %w", deployment.Name, err)
+	}
+
+	// Return 1 if the Deployment doesn't exist yet
+	if k8serr.IsNotFound(err) {
+		return 1, nil
+	}
+
+	return deployment.Generation, nil
+}
+
 func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	desiredName := common.ObjectInfo(desired)
 	update := false
@@ -343,7 +369,7 @@ func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing 
 	return update, nil
 }
 
-func System(cr *appsv1alpha1.APIManager, client client.Client) (*component.System, error) {
+func System(cr *appsv1alpha1.APIManager, client k8sclient.Client) (*component.System, error) {
 	optsProvider := NewSystemOptionsProvider(cr, cr.Namespace, client)
 	opts, err := optsProvider.GetSystemOptions()
 	if err != nil {
