@@ -18,6 +18,7 @@ One APIManager custom resource per project is allowed.
       * [CustomPolicySpec](#custompolicyspec)
       * [CustomPolicySecret](#custompolicysecret)
       * [APIcastOpenTracingSpec](#apicastopentracingspec)
+      * [OpenTelemetrySpec](#opentelemetryspec)
       * [APIcastTracingConfigSecret](#apicasttracingconfigsecret)
          * [CustomEnvironmentSpec](#customenvironmentspec)
          * [CustomEnvironmentSecret](#customenvironmentsecret)
@@ -208,8 +209,8 @@ Some examples are available [here](/doc/adding-custom-policies.md)
 
 **Watch for secret changes**
 
-By default, content changes in the secret will not be noticed by the apicast operator.
-The apicast operator allows monitoring the secret for changes adding the `apimanager.apps.3scale.net/watched-by=apimanager` label.
+By default, content changes in the secret will not be noticed by the 3scale operator.
+The 3scale operator allows monitoring the secret for changes adding the `apimanager.apps.3scale.net/watched-by=apimanager` label.
 With that label in place, when the content of the secret is changed, the operator will get notified.
 Then, the operator will rollout apicast deployment to make the changes effective.
 The operator will not take *ownership* of the secret in any way.

@@ -497,8 +497,8 @@ func (a *ApicastOptionsProvider) stagingAdditionalPodAnnotations() map[string]st
 		annotations[annotationKey] = a.apicastOptions.StagingCustomPolicies[idx].Secret.ResourceVersion
 	}
 
-	if a.apimanager.OpenTelemetryEnabledForStaging() {
-		if a.apicastOptions.StagingOpentelemetry.Secret.Name != "" && a.apicastOptions.StagingOpentelemetry.Secret.Generation != 0 {
+	if a.apimanager.OpenTelemetryEnabledForStaging() && a.isOpentelemetryPodAnnotationRequired(&a.apicastOptions.StagingOpentelemetry.Secret) {
+		if a.apicastOptions.StagingOpentelemetry.Secret.Name != "" {
 			annotationKey := fmt.Sprintf("%s%s", OpentelemetrySecretResverAnnotationPrefix, a.apicastOptions.StagingOpentelemetry.Secret.Name)
 			annotations[annotationKey] = a.apicastOptions.StagingOpentelemetry.Secret.ResourceVersion
 		}
@@ -519,14 +519,26 @@ func (a *ApicastOptionsProvider) productionAdditionalPodAnnotations() map[string
 		annotations[annotationKey] = a.apicastOptions.ProductionCustomPolicies[idx].Secret.ResourceVersion
 	}
 
-	if a.apimanager.OpenTelemetryEnabledForProduction() {
-		if a.apicastOptions.ProductionOpentelemetry.Secret.Name != "" && a.apicastOptions.ProductionOpentelemetry.Secret.Generation != 0 {
+	if a.apimanager.OpenTelemetryEnabledForProduction() && a.isOpentelemetryPodAnnotationRequired(&a.apicastOptions.ProductionOpentelemetry.Secret) {
+		if a.apicastOptions.ProductionOpentelemetry.Secret.Name != "" {
 			annotationKey := fmt.Sprintf("%s%s", OpentelemetrySecretResverAnnotationPrefix, a.apicastOptions.ProductionOpentelemetry.Secret.Name)
 			annotations[annotationKey] = a.apicastOptions.ProductionOpentelemetry.Secret.ResourceVersion
 		}
 	}
 
 	return annotations
+}
+
+func (a *ApicastOptionsProvider) isOpentelemetryPodAnnotationRequired(secret *v1.Secret) bool {
+	existingLabels := secret.Labels
+
+	if existingLabels != nil {
+		if _, ok := existingLabels["apimanager.apps.3scale.net/watched-by"]; ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 // APIcast environment hash

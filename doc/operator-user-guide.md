@@ -23,7 +23,7 @@
          * [Setting custom labels](#setting-custom-labels)
          * [Setting custom Annotations](#setting-custom-annotations)
          * [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
-         * [Gateway instrumentation](gateway-instrumentation.md)
+         * [Gateway instrumentation](#gateway-instrumentation)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
          * [Backend replicas](#backend-replicas)
@@ -829,6 +829,10 @@ Whenever a controller reconciles an object it creates a new porta client to make
 * Product
 * ProxyConfigPromote
 * Tenant
+
+#### Gateway instrumentation
+
+Please refer to [Gateway instrumentation](gateway-instrumentation.md) document
 
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set
