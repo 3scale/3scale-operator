@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -129,10 +130,12 @@ func basicApimanagerTestApicastOptions() *appsv1alpha1.APIManager {
 		OpenSSLVerify:        &tmpOpenSSLVerify,
 		IncludeResponseCodes: &tmpResponseCodes,
 		StagingSpec: &appsv1alpha1.ApicastStagingSpec{
-			Replicas: &tmpStagingReplicaCount,
+			Replicas:      &tmpStagingReplicaCount,
+			OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{},
 		},
 		ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
-			Replicas: &tmpProductionReplicaCount,
+			Replicas:      &tmpProductionReplicaCount,
+			OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{},
 		},
 	}
 	return apimanager
@@ -157,8 +160,45 @@ func defaultApicastOptions() *component.ApicastOptions {
 		Namespace:                          namespace,
 		ProductionTracingConfig:            &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary},
 		StagingTracingConfig:               &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary},
+		StagingOpentelemetry:               component.OpentelemetryConfig{},
+		ProductionOpentelemetry:            component.OpentelemetryConfig{},
 		StagingAdditionalPodAnnotations:    map[string]string{APIcastEnvironmentCMAnnotation: "788712912"},
 		ProductionAdditionalPodAnnotations: map[string]string{APIcastEnvironmentCMAnnotation: "788712912"},
+	}
+}
+
+func otlpSecret() *v1.Secret {
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            "my-secret-name",
+			Namespace:       "someNS",
+			ResourceVersion: "999",
+		},
+		Data: map[string][]byte{
+			"config.json": []byte(`
+			  exporter = "otlp"
+			  processor = "simple"
+			  [exporters.otlp]
+			  # Alternatively the OTEL_EXPORTER_OTLP_ENDPOINT environment variable can also be used.
+			  host = "jaeger"
+			  port = 4317
+			  # Optional: enable SSL, for endpoints that support it
+			  # use_ssl = true
+			  # Optional: set a filesystem path to a pem file to be used for SSL encryption
+			  # (when use_ssl = true)
+			  # ssl_cert_path = "/path/to/cert.pem"
+			  [processors.batch]
+			  max_queue_size = 2048
+			  schedule_delay_millis = 5000
+			  max_export_batch_size = 512
+			  [service]
+			  name = "apicast" # Opentelemetry resource name,
+			  `),
+		},
 	}
 }
 
@@ -264,11 +304,67 @@ func TestGetApicastOptionsProvider(t *testing.T) {
 				return opts
 			},
 		},
+		{"WithApicastStagingTelemtryConfigurationWithCustomMountPath",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestApicastOptions()
+
+				var trueOpenTelemetry = true
+				var opentelemtryKey = "some-key"
+
+				apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled = &trueOpenTelemetry
+				apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef = &v1.LocalObjectReference{
+					Name: "my-secret-name",
+				}
+				apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretKey = &opentelemtryKey
+
+				return apimanager
+			},
+			func() *component.ApicastOptions {
+				opts := defaultApicastOptions()
+
+				var trueOpenTelemetry bool = true
+				var opentelemtryKey string = component.OpentelemetryConfigMountBasePath + "/some-key"
+
+				opts.StagingOpentelemetry.Enabled = trueOpenTelemetry
+				opts.StagingOpentelemetry.Secret = *otlpSecret()
+				opts.StagingOpentelemetry.ConfigFile = opentelemtryKey
+
+				return opts
+			},
+		},
+		{"WithApicastProductionTelemtryConfigurationWithDefaultMountPath",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerTestApicastOptions()
+
+				var trueOpenTelemetry = true
+
+				apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled = &trueOpenTelemetry
+				apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef = &v1.LocalObjectReference{
+					Name: "my-secret-name",
+				}
+
+				return apimanager
+			},
+			func() *component.ApicastOptions {
+				opts := defaultApicastOptions()
+
+				var trueOpenTelemetry bool = true
+				var opentelemtryKey string = component.OpentelemetryConfigMountBasePath + "/config.json"
+
+				opts.ProductionOpentelemetry.Enabled = trueOpenTelemetry
+				opts.ProductionOpentelemetry.Secret = *otlpSecret()
+				opts.ProductionOpentelemetry.ConfigFile = opentelemtryKey
+
+				return opts
+			},
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(subT *testing.T) {
-			objs := []runtime.Object{}
+			objs := []runtime.Object{
+				otlpSecret(),
+			}
 			cl := fake.NewFakeClient(objs...)
 			optsProvider := NewApicastOptionsProvider(tc.apimanagerFactory(), cl)
 			opts, err := optsProvider.GetApicastOptions()

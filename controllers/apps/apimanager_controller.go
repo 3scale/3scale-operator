@@ -92,6 +92,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	err = r.validateCR(instance)
 	if err != nil {
+		// TODO: Validation errors should also be represented on warning conditions. To be done when HPA feature branch merges with master.
 		return ctrl.Result{}, err
 	}
 

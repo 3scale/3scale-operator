@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  labels:
+    app: jaeger
+spec:
+  ports:
+    - port: 16686
+      name: http
+    - port: 4317
+      name: internal
+  selector:
+    app: jaeger

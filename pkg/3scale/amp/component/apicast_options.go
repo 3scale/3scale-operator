@@ -39,6 +39,12 @@ type APIcastTracingConfig struct {
 	TracingConfigSecretName *string
 }
 
+type OpentelemetryConfig struct {
+	Enabled    bool
+	Secret     v1.Secret
+	ConfigFile string
+}
+
 func (c APIcastTracingConfig) AnnotationValue() string {
 	return c.VolumeName()
 }
@@ -99,6 +105,8 @@ type ApicastOptions struct {
 
 	ProductionTracingConfig *APIcastTracingConfig `validate:"required"`
 	StagingTracingConfig    *APIcastTracingConfig `validate:"required"`
+	ProductionOpentelemetry OpentelemetryConfig   `validate:"-"`
+	StagingOpentelemetry    OpentelemetryConfig   `validate:"-"`
 
 	ProductionCustomEnvironments []*v1.Secret `validate:"-"`
 	StagingCustomEnvironments    []*v1.Secret `validate:"-"`

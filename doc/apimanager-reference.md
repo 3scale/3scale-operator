@@ -130,7 +130,8 @@ One APIManager custom resource per project is allowed.
 | Workers | `workers` | integer | No | Automatically computed. Check [apicast doc](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_workers) for further info. | Defines the number of worker processes |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
-| OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
+| OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | **[DEPRECATED]** Use `openTelementry` instead. Contains the OpenTracing integration configuration |
+| OpenTelemetry | `openTelemetry` | [OpenTelemetrySpec](#OpenTelemetrySpec) | No | N/A | contains the OpenTelemetry integration configuration |
 | CustomEnvironments | `customEnvironments` | [][CustomEnvironmentSpec](#CustomEnvironmentSpec) | No | N/A | List of custom environments |
 | HTTPSPort | `httpsPort` | int | No | **8443** only when `httpsCertificateSecretRef` is provided | Controls on which port APIcast should start listening for HTTPS connections. Do not use `8080` as HTTPS port (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_port)) |
 | HTTPSVerifyDepth | `httpsVerifyDepth` | int | No | N/A | Defines the maximum length of the client certificate chain. (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_verify_depth)) |
@@ -156,7 +157,8 @@ One APIManager custom resource per project is allowed.
 | Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
-| OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | contains the OpenTracing integration configuration |
+| OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | **[DEPRECATED]** Use `openTelementry` instead. Contains the OpenTracing integration configuration |
+| OpenTelemetry | `openTelemetry` | [OpenTelemetrySpec](#OpenTelemetrySpec) | No | N/A | contains the OpenTelemetry integration configuration |
 | CustomEnvironments | `customEnvironments` | [][CustomEnvironmentSpec](#CustomEnvironmentSpec) | No | N/A | List of custom environments |
 | HTTPSPort | `httpsPort` | int | No | **8443** only when `httpsCertificateSecretRef` is provided | Controls on which port APIcast should start listening for HTTPS connections. Do not use `8080` as HTTPS port (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_port)) |
 | HTTPSVerifyDepth | `httpsVerifyDepth` | int | No | N/A | Defines the maximum length of the client certificate chain. (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_verify_depth)) |
@@ -196,6 +198,21 @@ Some examples are available [here](/doc/adding-custom-policies.md)
 | Enabled | `enabled` | bool | No | `false` | Controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled |
 | TracingLibrary | `tracingLibrary` | string | No | `jaeger` | Controls which OpenTracing library is loaded. At the moment the supported values are: `jaeger`. If not set, `jaeger` will be used |
 | TracingConfigSecretRef | `tracingConfigSecretRef` | LocalObjectReference | No | tracing library-specific default | Secret reference with the tracing library-specific configuration. Each supported tracing library provides a default configuration file which is used if `tracingConfigSecretRef` is not specified. See [APIcastTracingConfigSecret](#APIcastTracingConfigSecret) for more information. |
+
+### OpenTelemetrySpec
+| **json/yaml field** | **Type** | **Required** | **Default value** | **Description** |
+| --- | --- | --- | --- | --- |
+| `enabled` | bool | No | `false` | Controls whether opentelemetry based gateway instrumentation is enabled or not. By default it is **disabled** |
+| `tracingConfigSecretRef` | *LocalObjectReference* | No | None | Secret reference with the [opentelemetry tracing configuration](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx). |
+| `tracingConfigSecretKey` | string | No | If unspecified, the first secret key in lexicographical order will be referenced as tracing configuration | The secret key used as tracing configuration |
+
+**Watch for secret changes**
+
+By default, content changes in the secret will not be noticed by the apicast operator.
+The apicast operator allows monitoring the secret for changes adding the `apimanager.apps.3scale.net/watched-by=apimanager` label.
+With that label in place, when the content of the secret is changed, the operator will get notified.
+Then, the operator will rollout apicast deployment to make the changes effective.
+The operator will not take *ownership* of the secret in any way.
 
 ### APIcastTracingConfigSecret
 

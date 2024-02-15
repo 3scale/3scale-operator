@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"path"
+	"sort"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
@@ -30,6 +32,7 @@ const (
 	APIcastEnvironmentCMAnnotation             = "apps.3scale.net/env-configmap-hash"
 	PodPrioritySystemNodeCritical              = "system-node-critical"
 	CustomPoliciesSecretResverAnnotationPrefix = "apimanager.apps.3scale.net/custompolicy-secret-resource-version-"
+	OpentelemetrySecretResverAnnotationPrefix  = "apimanager.apps.3scale.net/opentelemtry-secret-resource-version-"
 )
 
 func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {
@@ -106,6 +109,20 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	if err != nil {
 		return nil, err
 	}
+
+	// Retrieve opentelemtry staging configuration
+	stagingOtelConfig, err := a.getOpenTelemetryStagingConfig(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	a.apicastOptions.StagingOpentelemetry = stagingOtelConfig
+
+	// Retrieve opentelemtry production configuration
+	productionOtelConfig, err := a.getOpenTelemetryProductionConfig(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	a.apicastOptions.ProductionOpentelemetry = productionOtelConfig
 
 	a.setProxyConfigurations()
 
@@ -480,6 +497,13 @@ func (a *ApicastOptionsProvider) stagingAdditionalPodAnnotations() map[string]st
 		annotations[annotationKey] = a.apicastOptions.StagingCustomPolicies[idx].Secret.ResourceVersion
 	}
 
+	if a.apimanager.OpenTelemetryEnabledForStaging() {
+		if a.apicastOptions.StagingOpentelemetry.Secret.Name != "" && a.apicastOptions.StagingOpentelemetry.Secret.Generation != 0 {
+			annotationKey := fmt.Sprintf("%s%s", OpentelemetrySecretResverAnnotationPrefix, a.apicastOptions.StagingOpentelemetry.Secret.Name)
+			annotations[annotationKey] = a.apicastOptions.StagingOpentelemetry.Secret.ResourceVersion
+		}
+	}
+
 	return annotations
 }
 
@@ -493,6 +517,13 @@ func (a *ApicastOptionsProvider) productionAdditionalPodAnnotations() map[string
 		// Annotation key includes the name of the secret
 		annotationKey := fmt.Sprintf("%s%s", CustomPoliciesSecretResverAnnotationPrefix, a.apicastOptions.ProductionCustomPolicies[idx].Secret.Name)
 		annotations[annotationKey] = a.apicastOptions.ProductionCustomPolicies[idx].Secret.ResourceVersion
+	}
+
+	if a.apimanager.OpenTelemetryEnabledForProduction() {
+		if a.apicastOptions.ProductionOpentelemetry.Secret.Name != "" && a.apicastOptions.ProductionOpentelemetry.Secret.Generation != 0 {
+			annotationKey := fmt.Sprintf("%s%s", OpentelemetrySecretResverAnnotationPrefix, a.apicastOptions.ProductionOpentelemetry.Secret.Name)
+			annotations[annotationKey] = a.apicastOptions.ProductionOpentelemetry.Secret.ResourceVersion
+		}
 	}
 
 	return annotations
@@ -531,4 +562,131 @@ func (a *ApicastOptionsProvider) setTopologySpreadConstraints() {
 func (a *ApicastOptionsProvider) setPodTemplateAnnotations() {
 	a.apicastOptions.StagingPodTemplateAnnotations = a.apimanager.Spec.Apicast.StagingSpec.Annotations
 	a.apicastOptions.ProductionPodTemplateAnnotations = a.apimanager.Spec.Apicast.ProductionSpec.Annotations
+}
+
+func (a *ApicastOptionsProvider) getOpenTelemetryStagingConfig(ctx context.Context) (component.OpentelemetryConfig, error) {
+	res := component.OpentelemetryConfig{
+		Enabled: false,
+	}
+
+	if a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry != nil && a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled != nil {
+		res = component.OpentelemetryConfig{
+			Enabled: *a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled,
+		}
+	} else {
+		return res, nil
+	}
+
+	if !res.Enabled {
+		return res, nil
+	}
+
+	// In the APIcast CR validation step it is checked that when enabled, the secret ref is not nil
+	// Adding this to avoid panics
+	if a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef == nil || a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef.Name == "" {
+		fldPath := field.NewPath("spec").Child("apicast").Child("stagingSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
+		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, "tracing config secret name is empty"))
+		return res, errors.ToAggregate()
+	}
+
+	// Read secret and get first key in lexicographical order.
+	// Defining some order is required because maps do not provide order semantics and
+	// key consistency is required accross reconcile loops
+	otelSecretKey := client.ObjectKey{
+		Name:      a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef.Name,
+		Namespace: a.apimanager.Namespace,
+	}
+
+	secret := &v1.Secret{}
+	err := a.client.Get(ctx, otelSecretKey, secret)
+	if err != nil {
+		// NotFoundError is also an error, it is required to exist
+		fldPath := field.NewPath("spec").Child("apicast").Child("stagingSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
+		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, err.Error()))
+		return res, errors.ToAggregate()
+	}
+
+	res.Secret = *secret
+
+	secretKeys := helper.MapKeys(helper.GetSecretStringDataFromData(secret.Data))
+	if len(secretKeys) == 0 {
+		fldPath := field.NewPath("spec").Child("apicast").Child("stagingSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
+		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, "secret is empty, no key found"))
+		return res, errors.ToAggregate()
+	}
+
+	if a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretKey != nil &&
+		*a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretKey != "" {
+		res.ConfigFile = path.Join(component.OpentelemetryConfigMountBasePath, *a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretKey)
+		return res, nil
+	}
+	sort.Strings(secretKeys)
+
+	res.ConfigFile = path.Join(component.OpentelemetryConfigMountBasePath, secretKeys[0])
+
+	return res, nil
+}
+
+func (a *ApicastOptionsProvider) getOpenTelemetryProductionConfig(ctx context.Context) (component.OpentelemetryConfig, error) {
+	res := component.OpentelemetryConfig{
+		Enabled: false,
+	}
+
+	if a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry != nil && a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled != nil {
+		res = component.OpentelemetryConfig{
+			Enabled: *a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled,
+		}
+	} else {
+		return res, nil
+	}
+
+	if !res.Enabled {
+		return res, nil
+	}
+
+	// In the APIcast CR validation step it is checked that when enabled, the secret ref is not nil
+	// Adding this to avoid panics
+	if a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef == nil || a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef.Name == "" {
+		fldPath := field.NewPath("spec").Child("apicast").Child("productionSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
+		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, "tracing config secret name is empty"))
+		return res, errors.ToAggregate()
+	}
+
+	// Read secret and get first key in lexicographical order.
+	// Defining some order is required because maps do not provide order semantics and
+	// key consistency is required accross reconcile loops
+	otelSecretKey := client.ObjectKey{
+		Name:      a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef.Name,
+		Namespace: a.apimanager.Namespace,
+	}
+
+	secret := &v1.Secret{}
+	err := a.client.Get(ctx, otelSecretKey, secret)
+	if err != nil {
+		// NotFoundError is also an error, it is required to exist
+		fldPath := field.NewPath("spec").Child("apicast").Child("productionSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
+		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, err.Error()))
+		return res, errors.ToAggregate()
+	}
+
+	res.Secret = *secret
+
+	secretKeys := helper.MapKeys(helper.GetSecretStringDataFromData(secret.Data))
+	if len(secretKeys) == 0 {
+		fldPath := field.NewPath("spec").Child("apicast").Child("productionSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
+		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, "secret is empty, no key found"))
+		return res, errors.ToAggregate()
+	}
+
+	sort.Strings(secretKeys)
+
+	if a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretKey != nil &&
+		*a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretKey != "" {
+		res.ConfigFile = path.Join(component.OpentelemetryConfigMountBasePath, *a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretKey)
+		return res, nil
+	}
+
+	res.ConfigFile = path.Join(component.OpentelemetryConfigMountBasePath, secretKeys[0])
+
+	return res, nil
 }
