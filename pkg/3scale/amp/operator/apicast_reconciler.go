@@ -70,6 +70,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentConfigPodTemplateLabelsMutator,
 		apicastLogLevelEnvVarMutator,
 		apicastTracingConfigEnvVarsMutator,
+		apicastOpentelemetryConfigEnvVarsMutator,
 		apicastEnvironmentEnvVarMutator,
 		apicastHTTPSEnvVarMutator,
 		apicastProxyConfigurationsEnvVarMutator,
@@ -78,7 +79,8 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastVolumesMutator,
 		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
 		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
-		apicastCustomEnvAnnotationsMutator,     // Should be always after volume mutator
+		apicastOpentelemetryConfigAnnotationsMutator,
+		apicastCustomEnvAnnotationsMutator, // Should be always after volume mutator
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 		reconcilers.DeploymentConfigPriorityClassMutator,
@@ -106,6 +108,7 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastProductionWorkersEnvVarMutator,
 		apicastLogLevelEnvVarMutator,
 		apicastTracingConfigEnvVarsMutator,
+		apicastOpentelemetryConfigEnvVarsMutator,
 		apicastEnvironmentEnvVarMutator,
 		apicastHTTPSEnvVarMutator,
 		apicastProxyConfigurationsEnvVarMutator,
@@ -114,7 +117,8 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		apicastVolumesMutator,
 		apicastCustomPolicyAnnotationsMutator,  // Should be always after volume mutator
 		apicastTracingConfigAnnotationsMutator, // Should be always after volume mutator
-		apicastCustomEnvAnnotationsMutator,     // Should be always after volume
+		apicastOpentelemetryConfigAnnotationsMutator,
+		apicastCustomEnvAnnotationsMutator, // Should be always after volume
 		portsMutator,
 		apicastPodTemplateEnvConfigMapAnnotationsMutator,
 		reconcilers.DeploymentConfigPriorityClassMutator,
@@ -243,6 +247,17 @@ func apicastTracingConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConf
 	return changed, nil
 }
 
+func apicastOpentelemetryConfigEnvVarsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	// Reconcile EnvVars related to opentracing
+	var changed bool
+	changed = reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTELEMETRY")
+
+	tmpChanged := reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "OPENTELEMETRY_CONFIG")
+	changed = changed || tmpChanged
+
+	return changed, nil
+}
+
 func apicastEnvironmentEnvVarMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
 	// Reconcile EnvVar only for "APICAST_ENVIRONMENT"
 	return reconcilers.DeploymentConfigEnvVarReconciler(desired, existing, "APICAST_ENVIRONMENT"), nil
@@ -350,6 +365,16 @@ func apicastVolumeMountsMutator(desired, existing *appsv1.DeploymentConfig) (boo
 		}
 	}
 
+	// If desired volume mounts do not have opentelemtry but it is present in the existsing volume mounts, remove it because it is not required.
+	existingOtlpVolumeMountIdx := helper.FindVolumeMountByName(existingContainer.VolumeMounts, component.OpentelemetryConfigurationVolumeName)
+	if existingOtlpVolumeMountIdx >= 0 {
+		desiredOtlpVolumeMountIdx := helper.FindVolumeMountByName(desiredContainer.VolumeMounts, component.OpentelemetryConfigurationVolumeName)
+		if desiredOtlpVolumeMountIdx < 0 {
+			existingContainer.VolumeMounts = append(existingContainer.VolumeMounts[:existingOtlpVolumeMountIdx], existingContainer.VolumeMounts[existingOtlpVolumeMountIdx+1:]...)
+			changed = true
+		}
+	}
+
 	// Check custom environment annotations in existing and not in desired to delete volumes associated
 	// From the APIManager CR, operator does not know which custom environment have been deleted to reconcile volumes
 	// Only volumes associated to custom environments are deleted. The operator still allows manually arbitrary mounted volumes
@@ -433,6 +458,16 @@ func apicastVolumesMutator(desired, existing *appsv1.DeploymentConfig) (bool, er
 		}
 	}
 
+	// If desired volumes do not have opentelemtry but it is present in the existsing volumes, remove it because it is not required.
+	existingOtlpVolumeMountIdx := helper.FindVolumeByName(existingSpec.Volumes, component.OpentelemetryConfigurationVolumeName)
+	if existingOtlpVolumeMountIdx >= 0 {
+		desiredOtlpVolumeMountIdx := helper.FindVolumeByName(desiredSpec.Volumes, component.OpentelemetryConfigurationVolumeName)
+		if desiredOtlpVolumeMountIdx < 0 {
+			existingSpec.Volumes = append(existingSpec.Volumes[:existingOtlpVolumeMountIdx], existingSpec.Volumes[existingOtlpVolumeMountIdx+1:]...)
+			changed = true
+		}
+	}
+
 	// Check custom environment annotations in existing and not in desired to delete volumes associated
 	// From the APIManager CR, operator does not know which custom environments have been deleted to reconcile volumes
 	// Only volumes associated to custom environments are deleted. The operator still allows manually arbitrary mounted volumes
@@ -502,6 +537,30 @@ func apicastTracingConfigAnnotationsMutator(desired, existing *appsv1.Deployment
 
 		for key, val := range desired.Annotations {
 			if strings.HasPrefix(key, component.APIcastTracingConfigAnnotationPartialKey) {
+				existing.Annotations[key] = val
+			}
+		}
+
+		updated = true
+	}
+	return updated, nil
+}
+
+func apicastOpentelemetryConfigAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+	// It is expected that APIManagerMutator has already added desired annotations to the existing annotations
+	// find existing tracing config volume annotations not in desired and delete them
+	updated := false
+	existingOpentelemetryConfigVolumeNames := component.ApicastOpentelemetryConfigVolumeNamesFromAnnotations(existing.Annotations)
+	desiredOpentelemetryConfigVolumeNames := component.ApicastOpentelemetryConfigVolumeNamesFromAnnotations(desired.Annotations)
+	if !helper.StringSliceEqualWithoutOrder(existingOpentelemetryConfigVolumeNames, desiredOpentelemetryConfigVolumeNames) {
+		for key := range existing.Annotations {
+			if strings.HasPrefix(key, component.APIcastOpentelemetryConfigAnnotationPartialKey) {
+				delete(existing.Annotations, key)
+			}
+		}
+
+		for key, val := range desired.Annotations {
+			if strings.HasPrefix(key, component.APIcastOpentelemetryConfigAnnotationPartialKey) {
 				existing.Annotations[key] = val
 			}
 		}
@@ -600,6 +659,24 @@ func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) ([]string, error)
 		for _, customPolicy := range r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies {
 			secretKeys = append(secretKeys, client.ObjectKey{
 				Name:      customPolicy.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.OpenTelemetryEnabledForStaging() {
+		if r.apiManager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef != nil {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      r.apiManager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.OpenTelemetryEnabledForProduction() {
+		if r.apiManager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef != nil {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      r.apiManager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef.Name,
 				Namespace: r.apiManager.Namespace,
 			})
 		}

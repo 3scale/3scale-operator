@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/3scale/3scale-operator/pkg/common"
@@ -905,6 +906,779 @@ func testApicastAPIManagerCreator(stagingReplicas, productionReplicas *int64) *a
 				ProductionSpec:       &appsv1alpha1.ApicastProductionSpec{Replicas: productionReplicas},
 			},
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+		},
+	}
+}
+
+func TestReplicaApicastTelemtryReconciler(t *testing.T) {
+	var (
+		trueValue                 = true
+		log                       = logf.Log.WithName("operator_test")
+		opentelemtryEnabled  bool = true
+		apicastManagementAPI      = "enabled"
+		openSSLVerify             = &trueValue
+		includeResponseCodes      = &trueValue
+		customKey                 = "my-custom-key.json"
+		configJsonKey             = "config.json"
+	)
+
+	ctx := context.TODO()
+	s := scheme.Scheme
+
+	err := appsv1alpha1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = appsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := configv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		testName           string
+		objName            string
+		apimanager         *appsv1alpha1.APIManager
+		validationFunction func(string, string, k8sclient.WithWatch) (bool, error)
+		reReconcile        bool
+		expectedError      bool
+		otlpSecret         *v1.Secret
+		otlpDesiredKey     string
+		disableOtlp        bool
+	}{
+		{
+			"apicast-staging opentelemtry fails if secret name isn't provided",
+			"apicast-staging",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+						},
+					},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{},
+				},
+			),
+			nil,
+			false,
+			true,
+			&v1.Secret{},
+			"/opt/app-root/src/otel-configs/config.json",
+			false,
+		},
+		{
+			"apicast-production opentelemtry fails if secret name isn't provided",
+			"apicast-production",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec:          &appsv1alpha1.ApicastStagingSpec{},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+						},
+					},
+				},
+			),
+			nil,
+			false,
+			true,
+			&v1.Secret{},
+			"/opt/app-root/src/otel-configs/config.json",
+			false,
+		},
+		{
+			"apicast-staging opentelemtry fails if secret isn't found",
+			"apicast-staging",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-config",
+							},
+						},
+					},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{},
+				},
+			),
+			nil,
+			false,
+			true,
+			&v1.Secret{},
+			"/opt/app-root/src/otel-configs/config.json",
+			false,
+		},
+		{
+			"apicast-production opentelemtry fails if secret isn't found",
+			"apicast-production",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec:          &appsv1alpha1.ApicastStagingSpec{},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-config",
+							},
+						},
+					},
+				},
+			),
+			nil,
+			false,
+			true,
+			&v1.Secret{},
+			"/opt/app-root/src/otel-configs/config.json",
+			false,
+		},
+		{
+			"apicast-staging opentelemtry is enabled on apicast staging deployment configuration",
+			"apicast-staging",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-secret",
+							},
+						},
+					},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{},
+				},
+			),
+			opentelemetryEnvExistsWithDefaultValues,
+			false,
+			false,
+			singleKeyOtlpSecret(),
+			"/opt/app-root/src/otel-configs/config.json",
+			false,
+		},
+		{
+			"apicast-production opentelemtry is enabled on apicast production deployment configuration",
+			"apicast-production",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec:          &appsv1alpha1.ApicastStagingSpec{},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-secret",
+							},
+						},
+					},
+				},
+			),
+			opentelemetryEnvExistsWithDefaultValues,
+			false,
+			false,
+			singleKeyOtlpSecret(),
+			"/opt/app-root/src/otel-configs/config.json",
+			false,
+		},
+		{
+			"apicast-staging opentelemtry is enabled on apicast staging deployment configuration with custom key",
+			"apicast-staging",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-secret",
+							},
+							TracingConfigSecretKey: &customKey,
+						},
+					},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{},
+				},
+			),
+			opentelemetryEnvExistsWithDefaultValues,
+			false,
+			false,
+			multiKeyOtlpSecret(),
+			"/opt/app-root/src/otel-configs/my-custom-key.json",
+			false,
+		},
+		{
+			"apicast-production opentelemtry is enabled on apicast production deployment configuration with custom key",
+			"apicast-production",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec:          &appsv1alpha1.ApicastStagingSpec{},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-secret",
+							},
+							TracingConfigSecretKey: &customKey,
+						},
+					},
+				},
+			),
+			opentelemetryEnvExistsWithDefaultValues,
+			false,
+			false,
+			multiKeyOtlpSecret(),
+			"/opt/app-root/src/otel-configs/my-custom-key.json",
+			false,
+		},
+		{
+			"apicast-production and staging opentelemtry is enabled while both are using different keys from a signle secret",
+			"both",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-secret",
+							},
+							TracingConfigSecretKey: &configJsonKey,
+						},
+					},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-secret",
+							},
+							TracingConfigSecretKey: &customKey,
+						},
+					},
+				},
+			),
+			opentelemetryEnvExistsWithCustomKeysOnBothDCs,
+			false,
+			false,
+			multiKeyOtlpSecret(),
+			"/opt/app-root/src/otel-configs/my-custom-key.json",
+			false,
+		},
+		{
+			"apicast-staging opentelemtry is enabled on apicast staging deployment configuration, then disabled correctly",
+			"apicast-staging",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-secret",
+							},
+						},
+					},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{},
+				},
+			),
+			validateOpentelemetryIsDisabled,
+			// re-reconcile
+			true,
+			false,
+			singleKeyOtlpSecret(),
+			"/opt/app-root/src/otel-configs/config.json",
+			// disable opentelemtry
+			true,
+		},
+		{
+			"apicast-production opentelemtry is enabled on apicast production deployment configuration, then disabled correctly",
+			"apicast-production",
+			testApicastAPIManagerTelemetryCreator(
+				&appsv1alpha1.ApicastSpec{
+					ApicastManagementAPI: &apicastManagementAPI,
+					OpenSSLVerify:        openSSLVerify,
+					IncludeResponseCodes: includeResponseCodes,
+					StagingSpec:          &appsv1alpha1.ApicastStagingSpec{},
+					ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+						OpenTelemetry: &appsv1alpha1.OpenTelemetrySpec{
+							Enabled: &opentelemtryEnabled,
+							TracingConfigSecretRef: &v1.LocalObjectReference{
+								Name: "my-otlp-secret",
+							},
+						},
+					},
+				},
+			),
+			validateOpentelemetryIsDisabled,
+			// re-reconcile
+			true,
+			false,
+			singleKeyOtlpSecret(),
+			"/opt/app-root/src/otel-configs/config.json",
+			// disable opentelemtry
+			true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testName, func(subT *testing.T) {
+			objs := []runtime.Object{tc.apimanager, tc.otlpSecret}
+			// Create a fake client to mock API calls.
+			cl := fake.NewFakeClient(objs...)
+			clientAPIReader := fake.NewFakeClient(objs...)
+			clientset := fakeclientset.NewSimpleClientset()
+			recorder := record.NewFakeRecorder(10000)
+			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, tc.apimanager)
+
+			// Initial reconcile
+			apicastReconciler := NewApicastReconciler(baseAPIManagerLogicReconciler)
+			_, err = apicastReconciler.Reconcile()
+			if err != nil && tc.expectedError == false {
+				t.Fatal(err)
+			}
+
+			// Some tests require a re-reconcile
+			if tc.reReconcile && tc.expectedError == false {
+				apimDisabledOtlp := tc.apimanager
+				if tc.disableOtlp {
+					err, apimDisabledOtlp = disableOpentelemtry(tc.objName, cl)
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+				baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimDisabledOtlp)
+				apicastReconciler := NewApicastReconciler(baseAPIManagerLogicReconciler)
+				_, err = apicastReconciler.Reconcile()
+				if err != nil && tc.expectedError == false {
+					t.Fatal(err)
+				}
+			}
+
+			// Validate the reconile result
+			if tc.expectedError == false {
+				valid, err := tc.validationFunction(tc.objName, tc.otlpDesiredKey, cl)
+				if !valid || err != nil {
+					subT.Errorf("error test %s failed with: %v", tc.testName, err)
+				}
+			}
+		})
+	}
+}
+
+func validateOpentelemetryIsDisabled(dcType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
+	dc := &appsv1.DeploymentConfig{}
+	namespacedName := types.NamespacedName{
+		Name:      dcType,
+		Namespace: namespace,
+	}
+
+	err := client.Get(context.TODO(), namespacedName, dc)
+	if err != nil {
+		return false, fmt.Errorf("error fetching object %s: %v", dcType, err)
+	}
+
+	envs := dc.Spec.Template.Spec.Containers[0].Env
+	var (
+		configEnvfound                     bool
+		configEnvValueCorrect              bool
+		opentelemtryEnabledEnvFound        bool
+		opentelemtryEnabledEnvValueCorrect bool
+	)
+
+	// Iterate over environment variables
+	for _, env := range envs {
+		switch env.Name {
+		case "OPENTELEMETRY_CONFIG":
+			configEnvfound = true
+			if env.Value == desiredConfigValue {
+				configEnvValueCorrect = true
+			}
+		case "OPENTELEMETRY":
+			opentelemtryEnabledEnvFound = true
+			if env.Value == "1" {
+				opentelemtryEnabledEnvValueCorrect = true
+			}
+		}
+	}
+
+	// Check if required environment variables are present and have correct values
+	if configEnvfound {
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on dc %s", dcType)
+	}
+	if opentelemtryEnabledEnvFound {
+		return false, fmt.Errorf("OPENTELEMTRY env not found on dc %s", dcType)
+	}
+	if configEnvValueCorrect {
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on dc %s", dcType)
+	}
+	if opentelemtryEnabledEnvValueCorrect {
+		return false, fmt.Errorf("OPENTELEMTRY env value not correct on dc %s", dcType)
+	}
+
+	volumeMounts := dc.Spec.Template.Spec.Containers[0].VolumeMounts
+	var volumeMountFound bool
+
+	volumes := dc.Spec.Template.Spec.Volumes
+	var volumeFound bool
+
+	// Iterate over environment variables
+	for _, volumeMount := range volumeMounts {
+		if volumeMount.Name == "otel-volume" {
+			volumeMountFound = true
+		}
+	}
+
+	for _, volume := range volumes {
+		if volume.Name == "otel-volume" {
+			volumeFound = true
+		}
+	}
+
+	if volumeMountFound {
+		return false, fmt.Errorf("Opentelemetry volume mount found on dc %s", dcType)
+	}
+	if volumeFound {
+		return false, fmt.Errorf("Opentelemetry volume found on dc %s", dcType)
+	}
+
+	return true, nil
+}
+
+func disableOpentelemtry(dc string, client k8sclient.WithWatch) (error, *appsv1alpha1.APIManager) {
+	apim := &appsv1alpha1.APIManager{}
+	namespacedName := types.NamespacedName{
+		Name:      "example-apimanager",
+		Namespace: namespace,
+	}
+
+	err := client.Get(context.TODO(), namespacedName, apim)
+	if err != nil {
+		return fmt.Errorf("error fetching APIM %s", err), nil
+	}
+
+	if dc == "apicast-staging" {
+		*apim.Spec.Apicast.StagingSpec.OpenTelemetry = appsv1alpha1.OpenTelemetrySpec{}
+	}
+	if dc == "apicast-production" {
+		*apim.Spec.Apicast.ProductionSpec.OpenTelemetry = appsv1alpha1.OpenTelemetrySpec{}
+	}
+
+	return nil, apim
+}
+
+func opentelemetryEnvExistsWithDefaultValues(dcType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
+	dc := &appsv1.DeploymentConfig{}
+	namespacedName := types.NamespacedName{
+		Name:      dcType,
+		Namespace: namespace,
+	}
+
+	err := client.Get(context.TODO(), namespacedName, dc)
+	if err != nil {
+		return false, fmt.Errorf("error fetching object %s: %v", dcType, err)
+	}
+
+	envs := dc.Spec.Template.Spec.Containers[0].Env
+	var (
+		configEnvfound                     bool
+		configEnvValueCorrect              bool
+		opentelemtryEnabledEnvFound        bool
+		opentelemtryEnabledEnvValueCorrect bool
+	)
+
+	// Iterate over environment variables
+	for _, env := range envs {
+		switch env.Name {
+		case "OPENTELEMETRY_CONFIG":
+			configEnvfound = true
+			if env.Value == desiredConfigValue {
+				configEnvValueCorrect = true
+			}
+		case "OPENTELEMETRY":
+			opentelemtryEnabledEnvFound = true
+			if env.Value == "1" {
+				opentelemtryEnabledEnvValueCorrect = true
+			}
+		}
+	}
+
+	// Check if required environment variables are present and have correct values
+	if !configEnvfound {
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on dc %s", dcType)
+	}
+	if !opentelemtryEnabledEnvFound {
+		return false, fmt.Errorf("OPENTELEMTRY env not found on dc %s", dcType)
+	}
+	if !configEnvValueCorrect {
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on dc %s", dcType)
+	}
+	if !opentelemtryEnabledEnvValueCorrect {
+		return false, fmt.Errorf("OPENTELEMTRY env value not correct on dc %s", dcType)
+	}
+
+	volumeMounts := dc.Spec.Template.Spec.Containers[0].VolumeMounts
+	var volumeMountFound bool
+
+	volumes := dc.Spec.Template.Spec.Volumes
+	var volumeFound bool
+
+	// Iterate over environment variables
+	for _, volumeMount := range volumeMounts {
+		if volumeMount.Name == "otel-volume" {
+			volumeMountFound = true
+		}
+	}
+
+	for _, volume := range volumes {
+		if volume.Name == "otel-volume" {
+			volumeFound = true
+		}
+	}
+
+	if !volumeMountFound {
+		return false, fmt.Errorf("Opentelemetry volume mount not found on dc %s", dcType)
+	}
+	if !volumeFound {
+		return false, fmt.Errorf("Opentelemetry volume not found on dc %s", dcType)
+	}
+
+	// All environment variables are correctly set
+	return true, nil
+}
+
+func opentelemetryEnvExistsWithCustomKeysOnBothDCs(dcType string, desiredConfigValue string, client k8sclient.WithWatch) (bool, error) {
+	dc := &appsv1.DeploymentConfig{}
+	namespacedName := types.NamespacedName{
+		Name:      "apicast-staging",
+		Namespace: namespace,
+	}
+
+	err := client.Get(context.TODO(), namespacedName, dc)
+	if err != nil {
+		return false, fmt.Errorf("error fetching object %s: %v", dcType, err)
+	}
+
+	stageEnvs := dc.Spec.Template.Spec.Containers[0].Env
+	var (
+		stageConfigEnvfound                     bool
+		stageConfigEnvValueCorrect              bool
+		stageOpentelemtryEnabledEnvFound        bool
+		stageOpentelemtryEnabledEnvValueCorrect bool
+	)
+
+	// Iterate over environment variables
+	for _, env := range stageEnvs {
+		switch env.Name {
+		case "OPENTELEMETRY_CONFIG":
+			stageConfigEnvfound = true
+			if env.Value == "/opt/app-root/src/otel-configs/config.json" {
+				stageConfigEnvValueCorrect = true
+			}
+		case "OPENTELEMETRY":
+			stageOpentelemtryEnabledEnvFound = true
+			if env.Value == "1" {
+				stageOpentelemtryEnabledEnvValueCorrect = true
+			}
+		}
+	}
+
+	// Check if required environment variables are present and have correct values
+	if !stageConfigEnvfound {
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on dc stage %s", err)
+	}
+	if !stageOpentelemtryEnabledEnvFound {
+		return false, fmt.Errorf("OPENTELEMTRY env not found on dc stage %s", err)
+	}
+	if !stageConfigEnvValueCorrect {
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on dc stage %s", err)
+	}
+	if !stageOpentelemtryEnabledEnvValueCorrect {
+		return false, fmt.Errorf("OPENTELEMTRY env value not correct on dc stage %s", err)
+	}
+
+	dc = &appsv1.DeploymentConfig{}
+	namespacedName = types.NamespacedName{
+		Name:      "apicast-production",
+		Namespace: namespace,
+	}
+
+	err = client.Get(context.TODO(), namespacedName, dc)
+	if err != nil {
+		return false, fmt.Errorf("error fetching object %s: %v", dcType, err)
+	}
+
+	prodEnvs := dc.Spec.Template.Spec.Containers[0].Env
+	var (
+		prodConfigEnvfound                     bool
+		prodConfigEnvValueCorrect              bool
+		prodOpentelemtryEnabledEnvFound        bool
+		prodOpentelemtryEnabledEnvValueCorrect bool
+	)
+
+	// Iterate over environment variables
+	for _, env := range prodEnvs {
+		switch env.Name {
+		case "OPENTELEMETRY_CONFIG":
+			prodConfigEnvfound = true
+			if env.Value == "/opt/app-root/src/otel-configs/my-custom-key.json" {
+				prodConfigEnvValueCorrect = true
+			}
+		case "OPENTELEMETRY":
+			prodOpentelemtryEnabledEnvFound = true
+			if env.Value == "1" {
+				prodOpentelemtryEnabledEnvValueCorrect = true
+			}
+		}
+	}
+
+	// Check if required environment variables are present and have correct values
+	if !prodConfigEnvfound {
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG not found on dc production %s", err)
+	}
+	if !prodOpentelemtryEnabledEnvFound {
+		return false, fmt.Errorf("OPENTELEMTRY env not found on dc production %s", err)
+	}
+	if !prodConfigEnvValueCorrect {
+		return false, fmt.Errorf("OPENTELEMTRY_CONFIG env value not correct on dc production %s", err)
+	}
+	if !prodOpentelemtryEnabledEnvValueCorrect {
+		return false, fmt.Errorf("OPENTELEMTRY env value not correct on dc production %s", err)
+	}
+
+	// All environment variables are correctly set
+	return true, nil
+}
+
+func testApicastAPIManagerTelemetryCreator(apicastSpec *appsv1alpha1.ApicastSpec) *appsv1alpha1.APIManager {
+	var (
+		name           = "example-apimanager"
+		namespace      = namespace
+		wildcardDomain = "test.3scale.net"
+		appLabel       = "someLabel"
+		tenantName     = "someTenant"
+		trueValue      = true
+	)
+
+	return &appsv1alpha1.APIManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appsv1alpha1.APIManagerSpec{
+			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
+				AppLabel:                     &appLabel,
+				ImageStreamTagImportInsecure: &trueValue,
+				WildcardDomain:               wildcardDomain,
+				TenantName:                   &tenantName,
+				ResourceRequirementsEnabled:  &trueValue,
+			},
+			Apicast: apicastSpec,
+		},
+	}
+}
+
+func singleKeyOtlpSecret() *v1.Secret {
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-otlp-secret",
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"config.json": []byte(`
+			  exporter = "otlp"
+			  processor = "simple"
+			  [exporters.otlp]
+			  # Alternatively the OTEL_EXPORTER_OTLP_ENDPOINT environment variable can also be used.
+			  host = "jaeger"
+			  port = 4317
+			  # Optional: enable SSL, for endpoints that support it
+			  # use_ssl = true
+			  # Optional: set a filesystem path to a pem file to be used for SSL encryption
+			  # (when use_ssl = true)
+			  # ssl_cert_path = "/path/to/cert.pem"
+			  [processors.batch]
+			  max_queue_size = 2048
+			  schedule_delay_millis = 5000
+			  max_export_batch_size = 512
+			  [service]
+			  name = "apicast" # Opentelemetry resource name,
+			  `),
+		},
+	}
+}
+
+func multiKeyOtlpSecret() *v1.Secret {
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-otlp-secret",
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"my-custom-key.json": []byte(`
+			  exporter = "otlp"
+			  processor = "simple"
+			  [exporters.otlp]
+			  # Alternatively the OTEL_EXPORTER_OTLP_ENDPOINT environment variable can also be used.
+			  host = "jaeger"
+			  port = 4317
+			  # Optional: enable SSL, for endpoints that support it
+			  # use_ssl = true
+			  # Optional: set a filesystem path to a pem file to be used for SSL encryption
+			  # (when use_ssl = true)
+			  # ssl_cert_path = "/path/to/cert.pem"
+			  [processors.batch]
+			  max_queue_size = 2048
+			  schedule_delay_millis = 5000
+			  max_export_batch_size = 512
+			  [service]
+			  name = "apicast" # Opentelemetry resource name,
+			  `),
+			"config.json": []byte(`
+			  exporter = "otlp"
+			  processor = "simple"
+			  [exporters.otlp]
+			  # Alternatively the OTEL_EXPORTER_OTLP_ENDPOINT environment variable can also be used.
+			  host = "jaeger"
+			  port = 4317
+			  # Optional: enable SSL, for endpoints that support it
+			  # use_ssl = true
+			  # Optional: set a filesystem path to a pem file to be used for SSL encryption
+			  # (when use_ssl = true)
+			  # ssl_cert_path = "/path/to/cert.pem"
+			  [processors.batch]
+			  max_queue_size = 2048
+			  schedule_delay_millis = 5000
+			  max_export_batch_size = 512
+			  [service]
+			  name = "apicast" # Opentelemetry resource name,
+			  `),
 		},
 	}
 }

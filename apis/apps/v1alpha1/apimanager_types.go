@@ -224,8 +224,13 @@ type ApicastProductionSpec struct {
 	CustomPolicies []CustomPolicySpec `json:"customPolicies,omitempty"`
 	// OpenTracing contains the OpenTracing integration configuration
 	// with APIcast in the production environment.
+	// Deprecated
 	// +optional
 	OpenTracing *APIcastOpenTracingSpec `json:"openTracing,omitempty"`
+	// OpenTelemetry contains the gateway instrumentation configuration
+	// with APIcast.
+	// +optional
+	OpenTelemetry *OpenTelemetrySpec `json:"openTelemetry,omitempty"`
 	// CustomEnvironments specifies an array of defined custom environments to be loaded
 	// +optional
 	CustomEnvironments []CustomEnvironmentSpec `json:"customEnvironments,omitempty"` // APICAST_ENVIRONMENT
@@ -290,8 +295,13 @@ type ApicastStagingSpec struct {
 	CustomPolicies []CustomPolicySpec `json:"customPolicies,omitempty"`
 	// OpenTracing contains the OpenTracing integration configuration
 	// with APIcast in the staging environment.
+	// Deprecated
 	// +optional
 	OpenTracing *APIcastOpenTracingSpec `json:"openTracing,omitempty"`
+	// OpenTelemetry contains the gateway instrumentation configuration
+	// with APIcast.
+	// +optional
+	OpenTelemetry *OpenTelemetrySpec `json:"openTelemetry,omitempty"`
 	// CustomEnvironments specifies an array of defined custom environments to be loaded
 	// +optional
 	CustomEnvironments []CustomEnvironmentSpec `json:"customEnvironments,omitempty"` // APICAST_ENVIRONMENT
@@ -815,6 +825,32 @@ type APIcastOpenTracingSpec struct {
 	TracingConfigSecretRef *v1.LocalObjectReference `json:"tracingConfigSecretRef,omitempty"`
 }
 
+type OpenTelemetrySpec struct {
+	// Enabled controls whether OpenTelemetry integration with APIcast is enabled.
+	// By default it is not enabled.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// TracingConfigSecretRef contains a Secret reference the Opentelemetry configuration.
+	// The configuration file specification is defined in the Nginx instrumentation library repo
+	// https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx
+	// +optional
+	TracingConfigSecretRef *v1.LocalObjectReference `json:"tracingConfigSecretRef,omitempty"`
+
+	// TracingConfigSecretKey contains the key of the secret to select the configuration from.
+	// if unspecified, the first secret key in lexicographical order will be selected.
+	// +optional
+	TracingConfigSecretKey *string `json:"tracingConfigSecretKey,omitempty"`
+}
+
+func (a *APIManager) OpenTelemetryEnabledForStaging() bool {
+	return a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.OpenTelemetry != nil && a.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled != nil && *a.Spec.Apicast.StagingSpec.OpenTelemetry.Enabled
+}
+
+func (a *APIManager) OpenTelemetryEnabledForProduction() bool {
+	return a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.OpenTelemetry != nil && a.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled != nil && *a.Spec.Apicast.ProductionSpec.OpenTelemetry.Enabled
+}
+
 // SetDefaults sets the default values for the APIManager spec and returns true if the spec was changed
 func (apimanager *APIManager) SetDefaults() (bool, error) {
 	var err error
@@ -1240,6 +1276,17 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 				duplicatePolicyMap[customPolicySpec.VersionName()] = 0
 			}
 
+			if apimanager.OpenTelemetryEnabledForProduction() {
+				openTelemetrySpec := apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry
+				if openTelemetrySpec.TracingConfigSecretRef != nil {
+					if openTelemetrySpec.TracingConfigSecretRef.Name == "" {
+						apicastOpenTelemtryTracingFldPath := prodSpecFldPath.Child("openTelemetry")
+						customTracingConfigFldPath := apicastOpenTelemtryTracingFldPath.Child("tracingConfigSecretRef")
+						fieldErrors = append(fieldErrors, field.Invalid(customTracingConfigFldPath, openTelemetrySpec, "custom tracing library secret name is empty"))
+					}
+				}
+			}
+
 			if apimanager.IsAPIcastProductionOpenTracingEnabled() {
 				openTracingConfigSpec := apimanager.Spec.Apicast.ProductionSpec.OpenTracing
 				if openTracingConfigSpec.TracingConfigSecretRef != nil {
@@ -1310,6 +1357,17 @@ func (apimanager *APIManager) Validate() field.ErrorList {
 					break
 				}
 				duplicatePolicyMap[customPolicySpec.VersionName()] = 0
+			}
+
+			if apimanager.OpenTelemetryEnabledForStaging() {
+				openTelemetrySpec := apimanager.Spec.Apicast.StagingSpec.OpenTelemetry
+				if openTelemetrySpec.TracingConfigSecretRef != nil {
+					if openTelemetrySpec.TracingConfigSecretRef.Name == "" {
+						apicastStagingOpenTelemtryTracingFldPath := stagingSpecFldPath.Child("openTelemetry")
+						customTracingConfigFldPath := apicastStagingOpenTelemtryTracingFldPath.Child("tracingConfigSecretRef")
+						fieldErrors = append(fieldErrors, field.Invalid(customTracingConfigFldPath, openTelemetrySpec, "custom tracing library secret name is empty"))
+					}
+				}
 			}
 
 			if apimanager.IsAPIcastStagingOpenTracingEnabled() {

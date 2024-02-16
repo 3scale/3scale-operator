@@ -33,6 +33,9 @@ const (
 	HTTPSCertificatesVolumeName = "https-certificates"
 
 	APIcastEnvironmentConfigMapName = "apicast-environment"
+
+	OpentelemetryConfigurationVolumeName = "otel-volume"
+	OpentelemetryConfigMountBasePath     = "/opt/app-root/src/otel-configs"
 )
 
 const (
@@ -40,6 +43,7 @@ const (
 	APIcastTracingConfigMountBasePath               = "/opt/app-root/src/tracing-configs"
 	APIcastTracingConfigAnnotationNameSegmentPrefix = "apicast-tracing-config-volume"
 	APIcastTracingConfigAnnotationPartialKey        = "apps.3scale.net/" + APIcastTracingConfigAnnotationNameSegmentPrefix
+	APIcastOpentelemetryConfigAnnotationPartialKey  = "apps.3scale.net/" + OpentelemetryConfigurationVolumeName
 )
 
 type Apicast struct {
@@ -372,6 +376,11 @@ func (apicast *Apicast) buildApicastStagingEnv() []v1.EnvVar {
 		result = append(result, helper.EnvVarFromValue("APICAST_SERVICE_CACHE_SIZE", fmt.Sprintf("%d", *apicast.Options.StagingServiceCacheSize)))
 	}
 
+	if apicast.Options.StagingOpentelemetry.Enabled {
+		result = append(result, helper.EnvVarFromValue("OPENTELEMETRY", "1"))
+		result = append(result, helper.EnvVarFromValue("OPENTELEMETRY_CONFIG", apicast.Options.StagingOpentelemetry.ConfigFile))
+	}
+
 	return result
 }
 
@@ -446,6 +455,11 @@ func (apicast *Apicast) buildApicastProductionEnv() []v1.EnvVar {
 
 	if apicast.Options.ProductionServiceCacheSize != nil {
 		result = append(result, helper.EnvVarFromValue("APICAST_SERVICE_CACHE_SIZE", fmt.Sprintf("%d", *apicast.Options.ProductionServiceCacheSize)))
+	}
+
+	if apicast.Options.ProductionOpentelemetry.Enabled {
+		result = append(result, helper.EnvVarFromValue("OPENTELEMETRY", "1"))
+		result = append(result, helper.EnvVarFromValue("OPENTELEMETRY_CONFIG", apicast.Options.ProductionOpentelemetry.ConfigFile))
 	}
 
 	return result
@@ -541,6 +555,14 @@ func (apicast *Apicast) productionVolumeMounts() []v1.VolumeMount {
 		})
 	}
 
+	if apicast.Options.ProductionOpentelemetry.Enabled {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      OpentelemetryConfigurationVolumeName,
+			MountPath: OpentelemetryConfigMountBasePath,
+			ReadOnly:  true,
+		})
+	}
+
 	return volumeMounts
 }
 
@@ -574,6 +596,14 @@ func (apicast *Apicast) stagingVolumeMounts() []v1.VolumeMount {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
 			Name:      HTTPSCertificatesVolumeName,
 			MountPath: HTTPSCertificatesMountPath,
+			ReadOnly:  true,
+		})
+	}
+
+	if apicast.Options.StagingOpentelemetry.Enabled {
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
+			Name:      OpentelemetryConfigurationVolumeName,
+			MountPath: OpentelemetryConfigMountBasePath,
 			ReadOnly:  true,
 		})
 	}
@@ -623,6 +653,18 @@ func (apicast *Apicast) productionVolumes() []v1.Volume {
 							Path: apicast.Options.ProductionTracingConfig.VolumeName(),
 						},
 					},
+				},
+			},
+		})
+	}
+
+	if apicast.Options.ProductionOpentelemetry.Enabled {
+		volumes = append(volumes, v1.Volume{
+			Name: OpentelemetryConfigurationVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: apicast.Options.ProductionOpentelemetry.Secret.Name,
+					Optional:   &[]bool{false}[0],
 				},
 			},
 		})
@@ -679,6 +721,18 @@ func (apicast *Apicast) stagingVolumes() []v1.Volume {
 							Path: apicast.Options.StagingTracingConfig.VolumeName(),
 						},
 					},
+				},
+			},
+		})
+	}
+
+	if apicast.Options.StagingOpentelemetry.Enabled {
+		volumes = append(volumes, v1.Volume{
+			Name: OpentelemetryConfigurationVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: apicast.Options.StagingOpentelemetry.Secret.Name,
+					Optional:   &[]bool{false}[0],
 				},
 			},
 		})
@@ -872,6 +926,10 @@ func ApicastPolicyVolumeNamesFromAnnotations(annotations map[string]string) []st
 
 func ApicastTracingConfigVolumeNamesFromAnnotations(annotations map[string]string) []string {
 	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, APIcastTracingConfigAnnotationPartialKey)
+}
+
+func ApicastOpentelemetryConfigVolumeNamesFromAnnotations(annotations map[string]string) []string {
+	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, APIcastOpentelemetryConfigAnnotationPartialKey)
 }
 
 func ApicastEnvVolumeNamesFromAnnotations(annotations map[string]string) []string {

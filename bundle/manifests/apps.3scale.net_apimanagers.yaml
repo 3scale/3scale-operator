@@ -604,8 +604,26 @@ spec:
                       noProxy:
                         description: NoProxy specifies a comma-separated list of hostnames and domain names for which the requests should not be proxied. Setting to a single * character, which matches all hosts, effectively disables the proxy.
                         type: string
+                      openTelemetry:
+                        description: OpenTelemetry contains the gateway instrumentation configuration with APIcast.
+                        properties:
+                          enabled:
+                            description: Enabled controls whether OpenTelemetry integration with APIcast is enabled. By default it is not enabled.
+                            type: boolean
+                          tracingConfigSecretKey:
+                            description: TracingConfigSecretKey contains the key of the secret to select the configuration from. if unspecified, the first secret key in lexicographical order will be selected.
+                            type: string
+                          tracingConfigSecretRef:
+                            description: TracingConfigSecretRef contains a Secret reference the Opentelemetry configuration. The configuration file specification is defined in the Nginx instrumentation library repo https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx
+                            properties:
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                                type: string
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
                       openTracing:
-                        description: OpenTracing contains the OpenTracing integration configuration with APIcast in the production environment.
+                        description: OpenTracing contains the OpenTracing integration configuration with APIcast in the production environment. Deprecated
                         properties:
                           enabled:
                             description: Enabled controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled.
@@ -1303,8 +1321,26 @@ spec:
                       noProxy:
                         description: NoProxy specifies a comma-separated list of hostnames and domain names for which the requests should not be proxied. Setting to a single * character, which matches all hosts, effectively disables the proxy.
                         type: string
+                      openTelemetry:
+                        description: OpenTelemetry contains the gateway instrumentation configuration with APIcast.
+                        properties:
+                          enabled:
+                            description: Enabled controls whether OpenTelemetry integration with APIcast is enabled. By default it is not enabled.
+                            type: boolean
+                          tracingConfigSecretKey:
+                            description: TracingConfigSecretKey contains the key of the secret to select the configuration from. if unspecified, the first secret key in lexicographical order will be selected.
+                            type: string
+                          tracingConfigSecretRef:
+                            description: TracingConfigSecretRef contains a Secret reference the Opentelemetry configuration. The configuration file specification is defined in the Nginx instrumentation library repo https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx
+                            properties:
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                                type: string
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
                       openTracing:
-                        description: OpenTracing contains the OpenTracing integration configuration with APIcast in the staging environment.
+                        description: OpenTracing contains the OpenTracing integration configuration with APIcast in the staging environment. Deprecated
                         properties:
                           enabled:
                             description: Enabled controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled.
