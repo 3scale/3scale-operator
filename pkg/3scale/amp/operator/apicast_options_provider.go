@@ -240,13 +240,13 @@ func (a *ApicastOptionsProvider) setCustomPolicies() error {
 
 		secret, err := a.validateCustomPolicySecret(context.TODO(), customPolicySpec.SecretRef.Name, namespacedName)
 		if err != nil {
-			errors := field.ErrorList{}
+			fldErr := field.ErrorList{}
 			customPoliciesIdxFldPath := field.NewPath("spec").
 				Child("apicast").
 				Child("productionSpec").
 				Child("customPolicies").Index(idx)
-			errors = append(errors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
-			return errors.ToAggregate()
+				fldErr = append(fldErr, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
+			return fldErr.ToAggregate()
 		}
 
 		a.apicastOptions.ProductionCustomPolicies = append(a.apicastOptions.ProductionCustomPolicies, component.CustomPolicy{
@@ -267,13 +267,13 @@ func (a *ApicastOptionsProvider) setCustomPolicies() error {
 
 		secret, err := a.validateCustomPolicySecret(context.TODO(), customPolicySpec.SecretRef.Name, namespacedName)
 		if err != nil {
-			errors := field.ErrorList{}
+			fldErr := field.ErrorList{}
 			customPoliciesIdxFldPath := field.NewPath("spec").
 				Child("apicast").
 				Child("stagingSpec").
 				Child("customPolicies").Index(idx)
-			errors = append(errors, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
-			return errors.ToAggregate()
+				fldErr = append(fldErr, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
+			return fldErr.ToAggregate()
 		}
 
 		a.apicastOptions.StagingCustomPolicies = append(a.apicastOptions.StagingCustomPolicies, component.CustomPolicy{
@@ -340,10 +340,10 @@ func (a *ApicastOptionsProvider) setProductionTracingConfiguration() error {
 			}
 			err := a.validateTracingConfigSecret(namespacedName)
 			if err != nil {
-				errors := field.ErrorList{}
+				fldErr := field.ErrorList{}
 				tracingConfigFldPath := field.NewPath("spec").Child("openTracing").Child("tracingConfigSecretRef")
-				errors = append(errors, field.Invalid(tracingConfigFldPath, openTracingConfigSpec, err.Error()))
-				return errors.ToAggregate()
+				fldErr = append(fldErr, field.Invalid(tracingConfigFldPath, openTracingConfigSpec, err.Error()))
+				return fldErr.ToAggregate()
 			}
 			res.TracingConfigSecretName = &openTracingConfigSpec.TracingConfigSecretRef.Name
 		}
@@ -372,10 +372,10 @@ func (a *ApicastOptionsProvider) setStagingTracingConfiguration() error {
 			}
 			err := a.validateTracingConfigSecret(namespacedName)
 			if err != nil {
-				errors := field.ErrorList{}
+				fldErr := field.ErrorList{}
 				tracingConfigFldPath := field.NewPath("spec").Child("openTracing").Child("tracingConfigSecretRef")
-				errors = append(errors, field.Invalid(tracingConfigFldPath, openTracingConfigSpec, err.Error()))
-				return errors.ToAggregate()
+				fldErr = append(fldErr, field.Invalid(tracingConfigFldPath, openTracingConfigSpec, err.Error()))
+				return fldErr.ToAggregate()
 			}
 			res.TracingConfigSecretName = &openTracingConfigSpec.TracingConfigSecretRef.Name
 		}
@@ -396,7 +396,7 @@ func (a *ApicastOptionsProvider) validateTracingConfigSecret(nn types.Namespaced
 	}
 
 	if _, ok := secret.Data[component.APIcastTracingConfigSecretKey]; !ok {
-		return fmt.Errorf("Required secret key, %s not found", "config")
+		return fmt.Errorf("required secret key, %s not found", "config")
 	}
 
 	return nil
