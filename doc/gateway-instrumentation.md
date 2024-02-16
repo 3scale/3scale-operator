@@ -35,7 +35,7 @@ Change it to whatever you have your collector deployed.
 The name of the secret. `otel-config` in the example, will be used in the APIcast CR.
 
 ```yaml
-kubectl apply -f - <<EOF
+oc apply -f - <<EOF
 ---
 apiVersion: v1
 kind: Secret
@@ -43,7 +43,7 @@ metadata:
   name: otel-config
 type: Opaque
 stringData:
-  config.json: |
+  config.toml: |
     exporter = "otlp"
     processor = "simple"
     [exporters.otlp]
@@ -73,7 +73,7 @@ Install the operator.
 
 Create S3 sample secret:
 ```yaml
-kubectl apply -f - <<EOF   
+oc apply -f - <<EOF   
 ---
 apiVersion: v1
 kind: Secret
@@ -91,7 +91,7 @@ EOF
 Create APIManager with Opentelemetry enabled:
 
 ```
-kubectl apply -f - <<EOF
+oc apply -f - <<EOF
 ---
 apiVersion: apps.3scale.net/v1alpha1
 kind: APIManager
@@ -126,7 +126,7 @@ Note that upstream echo'ed request headers show `Traceparent` W3C standard traci
 Open in local browser jaeger dashboard
 
 ```
-❯ kubectl port-forward service/jaeger 16686&
+❯ oc port-forward service/jaeger 16686&
 ❯ open http://127.0.0.1:16686
 ```
 
