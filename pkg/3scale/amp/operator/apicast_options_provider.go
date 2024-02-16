@@ -597,8 +597,8 @@ func (a *ApicastOptionsProvider) getOpenTelemetryStagingConfig(ctx context.Conte
 	// Adding this to avoid panics
 	if a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef == nil || a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef.Name == "" {
 		fldPath := field.NewPath("spec").Child("apicast").Child("stagingSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
-		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, "tracing config secret name is empty"))
-		return res, errors.ToAggregate()
+		err := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, "tracing config secret name is empty"))
+		return res, err.ToAggregate()
 	}
 
 	// Read secret and get first key in lexicographical order.
@@ -614,8 +614,8 @@ func (a *ApicastOptionsProvider) getOpenTelemetryStagingConfig(ctx context.Conte
 	if err != nil {
 		// NotFoundError is also an error, it is required to exist
 		fldPath := field.NewPath("spec").Child("apicast").Child("stagingSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
-		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, err.Error()))
-		return res, errors.ToAggregate()
+		err := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, err.Error()))
+		return res, err.ToAggregate()
 	}
 
 	res.Secret = *secret
@@ -623,8 +623,8 @@ func (a *ApicastOptionsProvider) getOpenTelemetryStagingConfig(ctx context.Conte
 	secretKeys := helper.MapKeys(helper.GetSecretStringDataFromData(secret.Data))
 	if len(secretKeys) == 0 {
 		fldPath := field.NewPath("spec").Child("apicast").Child("stagingSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
-		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, "secret is empty, no key found"))
-		return res, errors.ToAggregate()
+		err := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef, "secret is empty, no key found"))
+		return res, err.ToAggregate()
 	}
 
 	if a.apimanager.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretKey != nil &&
@@ -660,8 +660,8 @@ func (a *ApicastOptionsProvider) getOpenTelemetryProductionConfig(ctx context.Co
 	// Adding this to avoid panics
 	if a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef == nil || a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef.Name == "" {
 		fldPath := field.NewPath("spec").Child("apicast").Child("productionSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
-		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, "tracing config secret name is empty"))
-		return res, errors.ToAggregate()
+		err := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, "tracing config secret name is empty"))
+		return res, err.ToAggregate()
 	}
 
 	// Read secret and get first key in lexicographical order.
@@ -677,8 +677,8 @@ func (a *ApicastOptionsProvider) getOpenTelemetryProductionConfig(ctx context.Co
 	if err != nil {
 		// NotFoundError is also an error, it is required to exist
 		fldPath := field.NewPath("spec").Child("apicast").Child("productionSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
-		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, err.Error()))
-		return res, errors.ToAggregate()
+		err := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, err.Error()))
+		return res, err.ToAggregate()
 	}
 
 	res.Secret = *secret
@@ -686,8 +686,8 @@ func (a *ApicastOptionsProvider) getOpenTelemetryProductionConfig(ctx context.Co
 	secretKeys := helper.MapKeys(helper.GetSecretStringDataFromData(secret.Data))
 	if len(secretKeys) == 0 {
 		fldPath := field.NewPath("spec").Child("apicast").Child("productionSpec").Child("openTelemetry").Child("tracingConfigSecretRef")
-		errors := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, "secret is empty, no key found"))
-		return res, errors.ToAggregate()
+		err := append(field.ErrorList{}, field.Invalid(fldPath, a.apimanager.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef, "secret is empty, no key found"))
+		return res, err.ToAggregate()
 	}
 
 	sort.Strings(secretKeys)

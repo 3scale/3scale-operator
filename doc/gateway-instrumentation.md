@@ -60,7 +60,7 @@ stringData:
     schedule_delay_millis = 5000
     max_export_batch_size = 512
     [service]
-    name = "apicast-staging" # Opentelemetry resource name <in this example, apicast staging is used
+    name = "apicast-staging" # Opentelemetry resource name <in this example, apicast-staging is used>
 EOF
 ```
 
