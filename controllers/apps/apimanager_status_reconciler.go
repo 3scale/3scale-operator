@@ -43,9 +43,16 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, fmt.Errorf("failed to calculate status: %w", err)
 	}
 
+	apiManagerAvailable := false
+	for _, s := range s.apimanagerResource.Status.Conditions {
+		if s.Type == appsv1alpha1.APIManagerAvailableConditionType && s.IsTrue() {
+			apiManagerAvailable = true
+		}
+	}
+
 	equalStatus := s.apimanagerResource.Status.Equals(newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
-	if equalStatus {
+	if equalStatus && apiManagerAvailable {
 		// Steady state
 		s.logger.V(1).Info("Status was not updated")
 		return reconcile.Result{}, nil
