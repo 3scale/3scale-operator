@@ -110,7 +110,7 @@ func (zync *Zync) QueRole() *rbacv1.Role {
 			{
 				APIGroups: []string{"apps"},
 				Resources: []string{
-					"deployment",
+					"deployments",
 				},
 				Verbs: []string{
 					"get",
