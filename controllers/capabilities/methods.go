@@ -23,7 +23,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	existingMap := map[string]threescaleapi.MethodItem{}
 	existingList, err := t.productEntity.Methods()
 	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product methods (methods) [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	existingKeys := make([]string, 0, len(existingList.Methods))
@@ -46,7 +46,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 	err = t.processNotDesiredMethods(notDesiredMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product methods (process not desired methods) [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	//
@@ -64,7 +64,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 
 	err = t.reconcileMatchedMethods(matchedMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product methods (reconcile matched methods) [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	//
@@ -80,7 +80,7 @@ func (t *ProductThreescaleReconciler) syncMethods(_ interface{}) error {
 	}
 	err = t.createNewMethods(desiredNewMap)
 	if err != nil {
-		return fmt.Errorf("Error sync product methods [%s]: %w", t.resource.Spec.SystemName, err)
+		return fmt.Errorf("Error sync product methods (create new methods) [%s]: %w", t.resource.Spec.SystemName, err)
 	}
 
 	return nil
@@ -105,9 +105,17 @@ func (t *ProductThreescaleReconciler) createNewMethods(desiredNewMap map[string]
 
 func (t *ProductThreescaleReconciler) processNotDesiredMethods(notDesiredMap map[string]threescaleapi.MethodItem) error {
 	for _, notDesiredMethod := range notDesiredMap {
-		err := t.productEntity.DeleteMethod(notDesiredMethod.ID)
+		methodNotInUse, err := t.isMethodNotInUse(notDesiredMethod.ID)
 		if err != nil {
 			return err
+		}
+		if methodNotInUse {
+			err = t.productEntity.DeleteMethod(notDesiredMethod.ID)
+			if err != nil {
+				return err
+			}
+		} else {
+			t.logger.V(1).Info("method in use: ", notDesiredMethod.SystemName, ", not deleted")
 		}
 	}
 	return nil
@@ -133,4 +141,18 @@ func (t *ProductThreescaleReconciler) reconcileMatchedMethods(matchedMap map[str
 	}
 
 	return nil
+}
+
+func (t *ProductThreescaleReconciler) isMethodNotInUse(id int64) (bool, error) {
+	for _, spec := range t.resource.Spec.MappingRules {
+		metricID, err := t.productEntity.FindMethodMetricIDBySystemName(spec.MetricMethodRef)
+		if err != nil {
+			return false, err
+		}
+		if metricID == id {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
