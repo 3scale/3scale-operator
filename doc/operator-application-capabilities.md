@@ -558,6 +558,19 @@ spec:
 
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
 * **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
+* **NOTE 3**: It's recommended to add Mapping Rules via CR, to have the list of Rules  in UI and CR always consistent.
+If rules added in UI only and  promoted - the warning message appears in Product CR like below. 
+The same message appears if you delete at one time Method and Mapping Rule(s) using this method in CR.
+
+```
+Product  Task failed SyncMethods: Error sync product methods [operatedproduct1]:   
+Please check Mapping rules in UI and delete those Rules that not in Product CR, or add them to Product CR.   
+Check rules in UI using method [method2].  product [operatedproduct1] delete method:   
+error calling 3scale system - reason: {"errors":{"base":["Method is used by the latest gateway configuration and cannot be deleted"]}} - code: 403"
+```
+
+To avoid these warnings, please follow the recommenations in the warning message: `Please check Mapping rules in UI and delete those Rules that not in Product CR, or add them to Product CR.`  
+If you deleted both Method and Rule in CR - it's enough to delete only Rule in UI (and promote); the method will disappear. 
 
 ### Product application plans
 
