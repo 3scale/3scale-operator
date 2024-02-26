@@ -144,7 +144,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Used to synchronize rollout of system Deployments
-	systemComponentNotReady := false
+	systemComponentsReady := true
 
 	// If the system-app Deployment generation has changed, delete the PreHook/PostHook Jobs so they can be recreated
 	generationChanged, err := helper.HasAppGenerationChanged(component.SystemAppPreHookJobName, component.SystemAppDeploymentName, r.apiManager.GetNamespace(), r.Client())
@@ -183,25 +183,25 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Block reconciling system-app Deployment until PreHook Job has completed
 	if !helper.HasJobCompleted(preHookJob.Name, preHookJob.Namespace, r.Client()) {
-		systemComponentNotReady = true
+		systemComponentsReady = false
 	}
 
-	// SystemApp Deployment
-	systemAppDeploymentMutators := []reconcilers.DMutateFn{
-		reconcilers.DeploymentAffinityMutator,
-		reconcilers.DeploymentTolerationsMutator,
-		reconcilers.DeploymentPodTemplateLabelsMutator,
-		reconcilers.DeploymentPriorityClassMutator,
-		reconcilers.DeploymentTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentPodTemplateAnnotationsMutator,
-		r.systemAppDeploymentResourceMutator,
-		reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
-		reconcilers.DeploymentPodContainerImageMutator,
-	}
-	if r.apiManager.Spec.System.AppSpec.Replicas != nil {
-		systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
-	}
-	if !systemComponentNotReady {
+	if systemComponentsReady {
+		// SystemApp Deployment
+		systemAppDeploymentMutators := []reconcilers.DMutateFn{
+			reconcilers.DeploymentAffinityMutator,
+			reconcilers.DeploymentTolerationsMutator,
+			reconcilers.DeploymentPodTemplateLabelsMutator,
+			reconcilers.DeploymentPriorityClassMutator,
+			reconcilers.DeploymentTopologySpreadConstraintsMutator,
+			reconcilers.DeploymentPodTemplateAnnotationsMutator,
+			r.systemAppDeploymentResourceMutator,
+			reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
+			reconcilers.DeploymentPodContainerImageMutator,
+		}
+		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
+		}
 		err = r.ReconcileDeployment(system.AppDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
 		if err != nil {
 			return reconcile.Result{}, err
@@ -218,11 +218,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 	if k8serr.IsNotFound(err) || !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) || !helper.HasJobCompleted(preHookJob.Name, preHookJob.Namespace, r.Client()) {
-		systemComponentNotReady = true
+		systemComponentsReady = false
 	}
 
 	// SystemApp PostHook Job
-	if !systemComponentNotReady {
+	if systemComponentsReady {
 		err = r.ReconcileJob(system.AppPostHookJob(ampImages.Options.SystemImage, currentAppDeploymentGeneration), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -235,7 +235,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 	if !isMigrated {
-		systemComponentNotReady = true
+		systemComponentsReady = false
 	}
 
 	// Sidekiq Deployment
@@ -268,7 +268,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 	if !isMigrated {
-		systemComponentNotReady = true
+		systemComponentsReady = false
 	}
 
 	// SystemApp PDB
@@ -314,7 +314,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Requeue if any of the system-app Deployment's components aren't ready
-	if systemComponentNotReady {
+	if !systemComponentsReady {
 		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
