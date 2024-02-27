@@ -15,12 +15,10 @@ const (
 )
 
 func defaultSystemMySQLImageOptions() *component.SystemMySQLImageOptions {
-	tmpInsecure := insecureImportPolicy
 	return &component.SystemMySQLImageOptions{
-		AppLabel:             appLabel,
-		AmpRelease:           product.ThreescaleRelease,
-		InsecureImportPolicy: &tmpInsecure,
-		Image:                component.SystemMySQLImageURL(),
+		AppLabel:   appLabel,
+		AmpRelease: product.ThreescaleRelease,
+		Image:      component.SystemMySQLImageURL(),
 	}
 }
 

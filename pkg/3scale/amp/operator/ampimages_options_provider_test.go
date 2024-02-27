@@ -34,7 +34,6 @@ func defaultAmpImageOptions() *component.AmpImagesOptions {
 		ZyncDatabasePostgreSQLImage: component.ZyncPostgreSQLImageURL(),
 		SystemMemcachedImage:        SystemMemcachedImageURL(),
 		SystemSearchdImage:          SystemSearchdImageURL(),
-		InsecureImportPolicy:        insecureImportPolicy,
 		ImagePullSecrets:            component.AmpImagesDefaultImagePullSecrets(),
 	}
 }

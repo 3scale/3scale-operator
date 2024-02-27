@@ -6,7 +6,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	imagev1 "github.com/openshift/api/image/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -359,36 +358,6 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 	}
 }
 
-func (redis *Redis) BackendImageStream() *imagev1.ImageStream {
-	return &imagev1.ImageStream{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "backend-redis",
-			Labels: redis.Options.BackendCommonLabels,
-			Annotations: map[string]string{
-				"openshift.io/display-name": "Backend Redis",
-			},
-		},
-		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
-		Spec: imagev1.ImageStreamSpec{
-			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
-					Name: redis.Options.AmpRelease,
-					Annotations: map[string]string{
-						"openshift.io/display-name": "Backend " + redis.Options.AmpRelease + " Redis",
-					},
-					From: &v1.ObjectReference{
-						Kind: "DockerImage",
-						Name: redis.Options.BackendImage,
-					},
-					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: *redis.Options.InsecureImportPolicy,
-					},
-				},
-			},
-		},
-	}
-}
-
 func (redis *Redis) BackendRedisSecret() *v1.Secret {
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
@@ -567,36 +536,6 @@ func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
 				Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")},
 			},
 			StorageClassName: redis.Options.SystemRedisPVCStorageClass,
-		},
-	}
-}
-
-func (redis *Redis) SystemImageStream() *imagev1.ImageStream {
-	return &imagev1.ImageStream{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "system-redis",
-			Labels: redis.Options.SystemCommonLabels,
-			Annotations: map[string]string{
-				"openshift.io/display-name": "System Redis",
-			},
-		},
-		TypeMeta: metav1.TypeMeta{APIVersion: "image.openshift.io/v1", Kind: "ImageStream"},
-		Spec: imagev1.ImageStreamSpec{
-			Tags: []imagev1.TagReference{
-				imagev1.TagReference{
-					Name: redis.Options.AmpRelease,
-					Annotations: map[string]string{
-						"openshift.io/display-name": "System " + redis.Options.AmpRelease + " Redis",
-					},
-					From: &v1.ObjectReference{
-						Kind: "DockerImage",
-						Name: redis.Options.SystemImage,
-					},
-					ImportPolicy: imagev1.TagImportPolicy{
-						Insecure: *redis.Options.InsecureImportPolicy,
-					},
-				},
-			},
 		},
 	}
 }

@@ -7190,8 +7190,6 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
-              imageStreamTagImportInsecure:
-                type: boolean
               monitoring:
                 properties:
                   enablePrometheusRules:

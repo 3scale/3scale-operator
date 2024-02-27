@@ -1,7 +1,6 @@
 package operator
 
 import (
-	imagev1 "github.com/openshift/api/image/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -22,7 +21,6 @@ type RedisReconciler struct {
 	Service               func(redis *component.Redis) *corev1.Service
 	ConfigMap             func(redis *component.Redis) *corev1.ConfigMap
 	PersistentVolumeClaim func(redis *component.Redis) *corev1.PersistentVolumeClaim
-	ImageStream           func(redis *component.Redis) *imagev1.ImageStream
 	Secret                func(redis *component.Redis) *corev1.Secret
 }
 
@@ -36,7 +34,6 @@ func NewSystemRedisDependencyReconciler(baseAPIManagerLogicReconciler *BaseAPIMa
 		Service:               (*component.Redis).SystemService,
 		ConfigMap:             (*component.Redis).ConfigMap,
 		PersistentVolumeClaim: (*component.Redis).SystemPVC,
-		ImageStream:           (*component.Redis).SystemImageStream,
 		Secret:                (*component.Redis).SystemRedisSecret,
 	}
 }
@@ -49,7 +46,6 @@ func NewBackendRedisDependencyReconciler(baseAPIManagerLogicReconciler *BaseAPIM
 		Service:               (*component.Redis).BackendService,
 		ConfigMap:             (*component.Redis).ConfigMap,
 		PersistentVolumeClaim: (*component.Redis).BackendPVC,
-		ImageStream:           (*component.Redis).BackendImageStream,
 		Secret:                (*component.Redis).BackendRedisSecret,
 	}
 }
@@ -107,12 +103,6 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 
 	// PVC
 	err = r.ReconcilePersistentVolumeClaim(r.PersistentVolumeClaim(redis), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// IS
-	err = r.ReconcileImagestream(r.ImageStream(redis), reconcilers.GenericImageStreamMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

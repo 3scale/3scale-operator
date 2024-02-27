@@ -288,11 +288,10 @@ func testSystemAPIManagerCreator(appReplicas, sidekiqReplicas *int64) *appsv1alp
 		Spec: appsv1alpha1.APIManagerSpec{
 			Apicast: &appsv1alpha1.ApicastSpec{RegistryURL: &tmpApicastRegistryURL},
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			System: &appsv1alpha1.SystemSpec{
 				AppSpec:         &appsv1alpha1.SystemAppSpec{Replicas: appReplicas},

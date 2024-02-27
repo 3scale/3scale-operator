@@ -45,7 +45,6 @@ const (
 
 const (
 	defaultTenantName                  = "3scale"
-	defaultImageStreamImportInsecure   = false
 	defaultResourceRequirementsEnabled = true
 )
 
@@ -134,7 +133,6 @@ func (s *APIManagerStatus) Equals(other *APIManagerStatus, logger logr.Logger) b
 // +operator-sdk:csv:customresourcedefinitions:resources={{"PersistentVolumeClaim","v1"}}
 // +operator-sdk:csv:customresourcedefinitions:resources={{"Service","v1"}}
 // +operator-sdk:csv:customresourcedefinitions:resources={{"Route","route.openshift.io/v1"}}
-// +operator-sdk:csv:customresourcedefinitions:resources={{"ImageStream","image.openshift.io/v1"}}
 type APIManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -160,8 +158,6 @@ type APIManagerCommonSpec struct {
 	AppLabel *string `json:"appLabel,omitempty"`
 	// +optional
 	TenantName *string `json:"tenantName,omitempty"`
-	// +optional
-	ImageStreamTagImportInsecure *bool `json:"imageStreamTagImportInsecure,omitempty"`
 	// +optional
 	ResourceRequirementsEnabled *bool `json:"resourceRequirementsEnabled,omitempty"`
 	// +optional
@@ -977,7 +973,6 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 
 	tmpDefaultAppLabel := Default3scaleAppLabel
 	tmpDefaultTenantName := defaultTenantName
-	tmpDefaultImageStreamTagImportInsecure := defaultImageStreamImportInsecure
 	tmpDefaultResourceRequirementsEnabled := defaultResourceRequirementsEnabled
 
 	if spec.AppLabel == nil {
@@ -987,11 +982,6 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 
 	if spec.TenantName == nil {
 		spec.TenantName = &tmpDefaultTenantName
-		changed = true
-	}
-
-	if spec.ImageStreamTagImportInsecure == nil {
-		spec.ImageStreamTagImportInsecure = &tmpDefaultImageStreamTagImportInsecure
 		changed = true
 	}
 

@@ -44,11 +44,10 @@ func TestSystemMySQLReconcilerCreate(t *testing.T) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				ResourceRequirementsEnabled:  &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
+				AppLabel:                    &appLabel,
+				ResourceRequirementsEnabled: &trueValue,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
 			},
 			System: &appsv1alpha1.SystemSpec{
 				DatabaseSpec: &appsv1alpha1.SystemDatabaseSpec{

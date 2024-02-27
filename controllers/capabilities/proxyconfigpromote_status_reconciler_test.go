@@ -39,11 +39,10 @@ func getApiManger() (apimanager *appsv1alpha1.APIManager) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Backend: &appsv1alpha1.BackendSpec{
 				ListenerSpec: &appsv1alpha1.BackendListenerSpec{Replicas: &oneValue},

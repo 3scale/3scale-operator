@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
-	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -54,10 +53,6 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodDisruptionBudget(desired *po
 		common.TagObjectToDelete(desired)
 	}
 	return r.ReconcileResource(&policyv1.PodDisruptionBudget{}, desired, mutatefn)
-}
-
-func (r *BaseAPIManagerLogicReconciler) ReconcileImagestream(desired *imagev1.ImageStream, mutatefn reconcilers.MutateFn) error {
-	return r.ReconcileResource(&imagev1.ImageStream{}, desired, mutatefn)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileDeployment(desired *k8sappsv1.Deployment, mutatefn reconcilers.MutateFn) error {

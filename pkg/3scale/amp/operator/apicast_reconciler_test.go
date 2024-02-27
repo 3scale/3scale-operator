@@ -54,11 +54,10 @@ func TestApicastReconciler(t *testing.T) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Apicast: &appsv1alpha1.ApicastSpec{
 				ApicastManagementAPI: &apicastManagementAPI,
@@ -191,11 +190,10 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Apicast: &appsv1alpha1.ApicastSpec{
 				ApicastManagementAPI: &apicastManagementAPI,
@@ -403,11 +401,10 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Apicast: &appsv1alpha1.ApicastSpec{
 				ApicastManagementAPI: &apicastManagementAPI,
@@ -646,11 +643,10 @@ func TestApicastServicePortMutator(t *testing.T) {
 				},
 				Spec: appsv1alpha1.APIManagerSpec{
 					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						WildcardDomain:               wildcardDomain,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &trueValue,
+						AppLabel:                    &appLabel,
+						WildcardDomain:              wildcardDomain,
+						TenantName:                  &tenantName,
+						ResourceRequirementsEnabled: &trueValue,
 					},
 					Apicast: &appsv1alpha1.ApicastSpec{
 						ApicastManagementAPI: &apicastManagementAPI,
@@ -678,11 +674,10 @@ func TestApicastServicePortMutator(t *testing.T) {
 				},
 				Spec: appsv1alpha1.APIManagerSpec{
 					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						WildcardDomain:               wildcardDomain,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &trueValue,
+						AppLabel:                    &appLabel,
+						WildcardDomain:              wildcardDomain,
+						TenantName:                  &tenantName,
+						ResourceRequirementsEnabled: &trueValue,
 					},
 					Apicast: &appsv1alpha1.ApicastSpec{
 						ApicastManagementAPI: &apicastManagementAPI,
@@ -709,11 +704,10 @@ func TestApicastServicePortMutator(t *testing.T) {
 				},
 				Spec: appsv1alpha1.APIManagerSpec{
 					APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-						AppLabel:                     &appLabel,
-						ImageStreamTagImportInsecure: &trueValue,
-						WildcardDomain:               wildcardDomain,
-						TenantName:                   &tenantName,
-						ResourceRequirementsEnabled:  &trueValue,
+						AppLabel:                    &appLabel,
+						WildcardDomain:              wildcardDomain,
+						TenantName:                  &tenantName,
+						ResourceRequirementsEnabled: &trueValue,
 					},
 					Apicast: &appsv1alpha1.ApicastSpec{
 						ApicastManagementAPI: &apicastManagementAPI,
@@ -900,11 +894,10 @@ func testApicastAPIManagerCreator(stagingReplicas, productionReplicas *int64) *a
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Apicast: &appsv1alpha1.ApicastSpec{
 				ApicastManagementAPI: &apicastManagementAPI,
@@ -1605,11 +1598,10 @@ func testApicastAPIManagerTelemetryCreator(apicastSpec *appsv1alpha1.ApicastSpec
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Apicast: apicastSpec,
 		},

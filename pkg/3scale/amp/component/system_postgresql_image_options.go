@@ -3,10 +3,9 @@ package component
 import "github.com/go-playground/validator/v10"
 
 type SystemPostgreSQLImageOptions struct {
-	AppLabel             string `validate:"required"`
-	AmpRelease           string `validate:"required"`
-	Image                string `validate:"required"`
-	InsecureImportPolicy *bool  `validate:"required"`
+	AppLabel   string `validate:"required"`
+	AmpRelease string `validate:"required"`
+	Image      string `validate:"required"`
 }
 
 func NewSystemPostgreSQLImageOptions() *SystemPostgreSQLImageOptions {

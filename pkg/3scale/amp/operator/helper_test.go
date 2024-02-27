@@ -13,13 +13,12 @@ import (
 )
 
 const (
-	wildcardDomain       = "test.3scale.net"
-	appLabel             = "someLabel"
-	apimanagerName       = "example-apimanager"
-	namespace            = "someNS"
-	tenantName           = "someTenant"
-	insecureImportPolicy = false
-	trueValue            = true
+	wildcardDomain = "test.3scale.net"
+	appLabel       = "someLabel"
+	apimanagerName = "example-apimanager"
+	namespace      = "someNS"
+	tenantName     = "someTenant"
+	trueValue      = true
 )
 
 func addExpectedMeteringLabels(src map[string]string, componentName string, componentType helper.ComponentType) {
@@ -43,7 +42,6 @@ func addExpectedMeteringLabels(src map[string]string, componentName string, comp
 func basicApimanager() *appsv1alpha1.APIManager {
 	tmpAppLabel := appLabel
 	tmpTenantName := tenantName
-	tmpInsecureImportPolicy := insecureImportPolicy
 	tmpTrueValue := trueValue
 
 	apimanager := &appsv1alpha1.APIManager{
@@ -53,11 +51,10 @@ func basicApimanager() *appsv1alpha1.APIManager {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				WildcardDomain:               wildcardDomain,
-				AppLabel:                     &tmpAppLabel,
-				ImageStreamTagImportInsecure: &tmpInsecureImportPolicy,
-				TenantName:                   &tmpTenantName,
-				ResourceRequirementsEnabled:  &tmpTrueValue,
+				WildcardDomain:              wildcardDomain,
+				AppLabel:                    &tmpAppLabel,
+				TenantName:                  &tmpTenantName,
+				ResourceRequirementsEnabled: &tmpTrueValue,
 			},
 			System: &appsv1alpha1.SystemSpec{},
 		},

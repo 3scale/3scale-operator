@@ -7,16 +7,15 @@ import (
 
 // AmpImagesOptions container object with all required to create components
 type AmpImagesOptions struct {
-	AppLabel                    string `validate:"required"`
-	AmpRelease                  string `validate:"required"`
-	ApicastImage                string `validate:"required"`
-	BackendImage                string `validate:"required"`
-	SystemImage                 string `validate:"required"`
-	ZyncImage                   string `validate:"required"`
-	ZyncDatabasePostgreSQLImage string `validate:"required"`
-	SystemMemcachedImage        string `validate:"required"`
-	SystemSearchdImage          string `validate:"required"`
-	InsecureImportPolicy        bool
+	AppLabel                    string                    `validate:"required"`
+	AmpRelease                  string                    `validate:"required"`
+	ApicastImage                string                    `validate:"required"`
+	BackendImage                string                    `validate:"required"`
+	SystemImage                 string                    `validate:"required"`
+	ZyncImage                   string                    `validate:"required"`
+	ZyncDatabasePostgreSQLImage string                    `validate:"required"`
+	SystemMemcachedImage        string                    `validate:"required"`
+	SystemSearchdImage          string                    `validate:"required"`
 	ImagePullSecrets            []v1.LocalObjectReference `validate:"required"`
 }
 

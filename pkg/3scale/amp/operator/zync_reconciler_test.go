@@ -51,11 +51,10 @@ func TestNewZyncReconciler(t *testing.T) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Zync: &appsv1alpha1.ZyncSpec{
 				AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &oneValue},
@@ -167,11 +166,10 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Zync: &appsv1alpha1.ZyncSpec{
 				AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: &oneValue},
@@ -389,11 +387,10 @@ func testZyncAPIManagerCreator(zyncReplicas, zyncQueReplicas *int64) *appsv1alph
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Zync: &appsv1alpha1.ZyncSpec{
 				AppSpec: &appsv1alpha1.ZyncAppSpec{Replicas: zyncReplicas},

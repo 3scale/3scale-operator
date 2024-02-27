@@ -59,9 +59,6 @@ spec:
       - kind: Deployment
         name: ""
         version: apps/v1
-      - kind: ImageStream
-        name: ""
-        version: image.openshift.io/v1
       - kind: PersistentVolumeClaim
         name: ""
         version: v1

@@ -14,7 +14,6 @@ type RedisOptions struct {
 	SystemImageTag                            string                   `validate:"required"`
 	BackendRedisContainerResourceRequirements *v1.ResourceRequirements `validate:"required"`
 	SystemRedisContainerResourceRequirements  *v1.ResourceRequirements `validate:"required"`
-	InsecureImportPolicy                      *bool                    `validate:"required"`
 	BackendRedisPVCStorageClass               *string
 	SystemRedisPVCStorageClass                *string
 

@@ -137,7 +137,6 @@ func testSystemRedisSecret() *v1.Secret {
 }
 
 func defaultRedisOptions() *component.RedisOptions {
-	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
 		AmpRelease:      product.ThreescaleRelease,
 		BackendImageTag: product.ThreescaleRelease,
@@ -146,7 +145,6 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemImage:     component.SystemRedisImageURL(),
 		BackendRedisContainerResourceRequirements: component.DefaultBackendRedisContainerResourceRequirements(),
 		SystemRedisContainerResourceRequirements:  component.DefaultSystemRedisContainerResourceRequirements(),
-		InsecureImportPolicy:                      &tmpInsecure,
 		SystemCommonLabels:                        testRedisSystemCommonLabels(),
 		SystemRedisLabels:                         testRedisSystemRedisLabels(),
 		SystemRedisPodTemplateLabels:              testRedisSystemRedisPodTemplateLabels(),

@@ -47,11 +47,10 @@ func TestNewBackendReconciler(t *testing.T) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Backend: &appsv1alpha1.BackendSpec{
 				ListenerSpec: &appsv1alpha1.BackendListenerSpec{Replicas: &oneValue},
@@ -263,11 +262,10 @@ func backendApiManagerCreator(listenerReplicas, cronReplicas, workerReplicas *in
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
-				ResourceRequirementsEnabled:  &trueValue,
+				AppLabel:                    &appLabel,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
+				ResourceRequirementsEnabled: &trueValue,
 			},
 			Backend: &appsv1alpha1.BackendSpec{
 				ListenerSpec: &appsv1alpha1.BackendListenerSpec{Replicas: listenerReplicas},

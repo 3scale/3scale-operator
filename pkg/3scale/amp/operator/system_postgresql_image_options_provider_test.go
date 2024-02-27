@@ -15,12 +15,10 @@ const (
 )
 
 func defaultSystemPostgreSQLImageOptions() *component.SystemPostgreSQLImageOptions {
-	tmpInsecure := insecureImportPolicy
 	return &component.SystemPostgreSQLImageOptions{
-		AppLabel:             appLabel,
-		AmpRelease:           product.ThreescaleRelease,
-		InsecureImportPolicy: &tmpInsecure,
-		Image:                component.SystemPostgreSQLImageURL(),
+		AppLabel:   appLabel,
+		AmpRelease: product.ThreescaleRelease,
+		Image:      component.SystemPostgreSQLImageURL(),
 	}
 }
 

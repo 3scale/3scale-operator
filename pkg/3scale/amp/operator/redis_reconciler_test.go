@@ -42,11 +42,10 @@ func TestRedisBackendDeploymentReconcilerCreate(t *testing.T) {
 		},
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
-				AppLabel:                     &appLabel,
-				ImageStreamTagImportInsecure: &trueValue,
-				ResourceRequirementsEnabled:  &trueValue,
-				WildcardDomain:               wildcardDomain,
-				TenantName:                   &tenantName,
+				AppLabel:                    &appLabel,
+				ResourceRequirementsEnabled: &trueValue,
+				WildcardDomain:              wildcardDomain,
+				TenantName:                  &tenantName,
 			},
 		},
 	}
@@ -100,7 +99,6 @@ func TestRedisBackendDeploymentReconcilerCreate(t *testing.T) {
 			{"backend-redis", &v1.Service{}},
 			{"redis-config", &v1.ConfigMap{}},
 			{"backend-redis-storage", &v1.PersistentVolumeClaim{}},
-			{"backend-redis", &imagev1.ImageStream{}},
 		}},
 		{"systemRedis", NewSystemRedisDependencyReconciler, []struct {
 			objName string
@@ -108,7 +106,6 @@ func TestRedisBackendDeploymentReconcilerCreate(t *testing.T) {
 		}{
 			{"system-redis", &k8sappsv1.Deployment{}},
 			{"system-redis-storage", &v1.PersistentVolumeClaim{}},
-			{"system-redis", &imagev1.ImageStream{}},
 			{"system-redis", &v1.Service{}},
 		}},
 	}
