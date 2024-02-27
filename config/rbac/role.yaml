@@ -206,6 +206,8 @@ rules:
   verbs:
   - create
   - delete
+  - list
+  - watch
 - apiGroups:
   - batch
   resources:
