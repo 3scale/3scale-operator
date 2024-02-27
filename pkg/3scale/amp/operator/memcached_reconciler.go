@@ -5,6 +5,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
+
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 

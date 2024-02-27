@@ -1,12 +1,12 @@
 package operator
 
 import (
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 )
 
 type SystemSearchdReconciler struct {

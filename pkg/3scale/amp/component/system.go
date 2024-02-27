@@ -1,12 +1,11 @@
 package component
 
 import (
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	k8sappsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
 	"sort"
 	"strconv"
 
+	k8sappsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/3scale/3scale-operator/apis/apps"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
 const (

@@ -1,7 +1,6 @@
 package operator
 
 import (
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"reflect"
 	"testing"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"

@@ -2,7 +2,6 @@ package operator
 
 import (
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
@@ -13,6 +12,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
 type SystemOptionsProvider struct {

@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"context"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appscommon "github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	"github.com/go-logr/logr"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

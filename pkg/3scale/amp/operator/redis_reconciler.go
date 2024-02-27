@@ -1,7 +1,6 @@
 package operator
 
 import (
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 	imagev1 "github.com/openshift/api/image/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -11,6 +10,7 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 )
 
 // RedisReconciler is a generic DependencyReconciler that reconciles

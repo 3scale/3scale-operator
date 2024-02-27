@@ -2,7 +2,6 @@ package operator
 
 import (
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"net/url"
 	"strings"
 
@@ -10,6 +9,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

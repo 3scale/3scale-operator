@@ -1,11 +1,12 @@
 package reconcilers
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
-	"testing"
 )
 
 func TestRoleRuleMutator(t *testing.T) {

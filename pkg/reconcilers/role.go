@@ -2,8 +2,9 @@ package reconcilers
 
 import (
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/common"
 	"reflect"
+
+	"github.com/3scale/3scale-operator/pkg/common"
 
 	rbacv1 "k8s.io/api/rbac/v1"
 )

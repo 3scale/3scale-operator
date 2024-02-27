@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	k8sappsv1 "k8s.io/api/apps/v1"
 	"sort"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -14,6 +13,7 @@ import (
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/go-logr/logr"
 	routev1 "github.com/openshift/api/route/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
