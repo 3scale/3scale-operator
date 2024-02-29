@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"strings"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -108,9 +107,6 @@ func (t *ProductThreescaleReconciler) processNotDesiredMethods(notDesiredMap map
 	for _, notDesiredMethod := range notDesiredMap {
 		err := t.productEntity.DeleteMethod(notDesiredMethod.ID)
 		if err != nil {
-			if strings.Contains(err.Error(), "Method is used by the latest gateway configuration and cannot be deleted") {
-				return fmt.Errorf("Please check Mapping Rules in UI and delete those rules that not in Product CR, or add them to Product CR. Check Mapping Rules in UI that use Method [%s].  %w", notDesiredMethod.SystemName, err)
-			}
 			return err
 		}
 	}

@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -36,13 +37,21 @@ func NewTaskRunner(ctx interface{}, logger logr.Logger) TaskRunner {
 }
 
 func (t *taskRunnerImpl) Run() error {
+	reqerr := false
 	for _, task := range t.taskList {
 		start := time.Now()
 		if err := task.Run(t.ctx); err != nil {
+			if strings.Contains(err.Error(), "Method is used by the latest gateway configuration and cannot be deleted") {
+				reqerr = true
+				continue
+			}
 			return fmt.Errorf("Task failed %s: %w", task.Name, err)
 		}
 		elapsed := time.Since(start)
 		t.logger.V(1).Info("Measure", task.Name, elapsed)
+	}
+	if reqerr {
+		return fmt.Errorf("Method is used by the latest gateway configuration, it will be removed from 3scale only once the promotion without the mapping rule that uses the deleted method is done.")
 	}
 	return nil
 }
