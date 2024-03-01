@@ -129,15 +129,6 @@ $(GO_BINDATA):
 .PHONY: go-bindata
 go-bindata: $(GO_BINDATA)
 
-GH-MD-TOC=$(PROJECT_PATH)/bin/gh-md-toc
-$(GH-MD-TOC):
-	mkdir -p $(PROJECT_PATH)/bin
-	curl -sSL https://raw.githubusercontent.com/ekalinin/github-markdown-toc/2e36a87fd077dad842163ef62ef1a7fef6ca1ab3/gh-md-toc -o $(GH-MD-TOC)
-	chmod +x $(GH-MD-TOC)
-
-.PHONY: gh-md-toc
-gh-md-toc: $(GH-MD-TOC)
-
 # Install CRDs into a cluster
 install: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) create -f - || $(KUSTOMIZE) build config/crd | $(KUBECTL) replace -f -
