@@ -24,50 +24,6 @@ func (r *AMPImagesReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// backend IS
-	err = r.ReconcileImagestream(ampImages.BackendImageStream(), reconcilers.GenericImageStreamMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// zync IS
-	err = r.ReconcileImagestream(ampImages.ZyncImageStream(), reconcilers.GenericImageStreamMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// apicast IS
-	err = r.ReconcileImagestream(ampImages.APICastImageStream(), reconcilers.GenericImageStreamMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// system IS
-	err = r.ReconcileImagestream(ampImages.SystemImageStream(), reconcilers.GenericImageStreamMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
-		// zync db postresql IS
-		err = r.ReconcileImagestream(ampImages.ZyncDatabasePostgreSQLImageStream(), reconcilers.GenericImageStreamMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
-	// system memcached IS
-	err = r.ReconcileImagestream(ampImages.SystemMemcachedImageStream(), reconcilers.GenericImageStreamMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// system searchd IS
-	err = r.ReconcileImagestream(ampImages.SystemSearchdImageStream(), reconcilers.GenericImageStreamMutator)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	err = r.ReconcileServiceAccount(ampImages.DeploymentsServiceAccount(), reconcilers.ServiceAccountImagePullPolicyMutator)
 	if err != nil {
 		return reconcile.Result{}, err

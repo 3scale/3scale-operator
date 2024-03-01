@@ -1,13 +1,13 @@
 package component
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	BackendListenerName = "backend-listener"
-	BackendWorkerName   = "backend-worker"
-	BackendCronName     = "backend-cron"
+	BackendListenerName      = "backend-listener"
+	BackendWorkerName        = "backend-worker"
+	BackendCronName          = "backend-cron"
+	BackendInitContainerName = "backend-redis-svc"
 )
 
 const (
@@ -60,47 +61,35 @@ func NewBackend(options *BackendOptions) *Backend {
 	return &Backend{Options: options}
 }
 
-func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (backend *Backend) WorkerDeployment(containerImage string) *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   BackendWorkerName,
 			Labels: backend.Options.CommonWorkerLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRolling,
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					UpdatePeriodSeconds: &[]int64{1}[0],
-					IntervalSeconds:     &[]int64{1}[0],
-					TimeoutSeconds:      &[]int64{1200}[0],
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: &k8sappsv1.RollingUpdateDeployment{
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%"}},
+						Type:   intstr.String,
+						StrVal: "25%",
+					},
+				},
 			},
 			MinReadySeconds: 0,
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic:      true,
-						ContainerNames: []string{"backend-redis-svc", BackendWorkerName},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
+			Replicas:        &backend.Options.WorkerReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: BackendWorkerName,
+				},
 			},
-			Replicas: backend.Options.WorkerReplicas,
-			Selector: map[string]string{"deploymentConfig": BackendWorkerName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      backend.Options.WorkerPodTemplateLabels,
 					Annotations: backend.Options.WorkerPodTemplateAnnotations,
@@ -109,21 +98,22 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 					Affinity:    backend.Options.WorkerAffinity,
 					Tolerations: backend.Options.WorkerTolerations,
 					InitContainers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "backend-redis-svc",
-							Image: "amp-backend:latest",
+							Image: containerImage,
 							Command: []string{
 								"/opt/app/entrypoint.sh",
 								"sh",
 								"-c",
 								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
-							}, Env: append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							},
+							Env: append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:            BackendWorkerName,
-							Image:           "amp-backend:latest",
+							Image:           containerImage,
 							Args:            []string{"bin/3scale_backend_worker", "run"},
 							Env:             backend.buildBackendWorkerEnv(),
 							Resources:       backend.Options.WorkerResourceRequirements,
@@ -147,52 +137,42 @@ func (backend *Backend) WorkerDeploymentConfig() *appsv1.DeploymentConfig {
 					},
 					ServiceAccountName:        "amp",
 					PriorityClassName:         backend.Options.PriorityClassNameWorker,
-					TopologySpreadConstraints: backend.Options.TopologySpreadConstraintsWorker}},
+					TopologySpreadConstraints: backend.Options.TopologySpreadConstraintsWorker,
+				},
+			},
 		},
 	}
 }
 
-func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (backend *Backend) CronDeployment(containerImage string) *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   BackendCronName,
 			Labels: backend.Options.CommonCronLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRolling,
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					UpdatePeriodSeconds: &[]int64{1}[0],
-					IntervalSeconds:     &[]int64{1}[0],
-					TimeoutSeconds:      &[]int64{1200}[0],
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: &k8sappsv1.RollingUpdateDeployment{
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%"}},
+						Type:   intstr.String,
+						StrVal: "25%",
+					},
+				},
 			},
 			MinReadySeconds: 0,
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic:      true,
-						ContainerNames: []string{"backend-redis-svc", "backend-cron"},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
+			Replicas:        &backend.Options.CronReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: BackendCronName,
+				},
 			},
-			Replicas: backend.Options.CronReplicas,
-			Selector: map[string]string{"deploymentConfig": BackendCronName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      backend.Options.CronPodTemplateLabels,
 					Annotations: backend.Options.CronPodTemplateAnnotations,
@@ -201,21 +181,22 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 					Affinity:    backend.Options.CronAffinity,
 					Tolerations: backend.Options.CronTolerations,
 					InitContainers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "backend-redis-svc",
-							Image: "amp-backend:latest",
+							Image: containerImage,
 							Command: []string{
 								"/opt/app/entrypoint.sh",
 								"sh",
 								"-c",
 								"until rake connectivity:redis_storage_queue_check; do sleep $SLEEP_SECONDS; done",
-							}, Env: append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							},
+							Env: append(backend.buildBackendCommonEnv(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:            "backend-cron",
-							Image:           "amp-backend:latest",
+							Image:           containerImage,
 							Args:            []string{"touch /tmp/healthy && backend-cron"},
 							Env:             backend.buildBackendCronEnv(),
 							Resources:       backend.Options.CronResourceRequirements,
@@ -234,52 +215,41 @@ func (backend *Backend) CronDeploymentConfig() *appsv1.DeploymentConfig {
 					ServiceAccountName:        "amp",
 					PriorityClassName:         backend.Options.PriorityClassNameCron,
 					TopologySpreadConstraints: backend.Options.TopologySpreadConstraintsCron,
-				}},
+				},
+			},
 		},
 	}
 }
 
-func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (backend *Backend) ListenerDeployment(containerImage string) *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   BackendListenerName,
 			Labels: backend.Options.CommonListenerLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRolling,
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					UpdatePeriodSeconds: &[]int64{1}[0],
-					IntervalSeconds:     &[]int64{1}[0],
-					TimeoutSeconds:      &[]int64{600}[0],
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: &k8sappsv1.RollingUpdateDeployment{
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
-						StrVal: "25%"}},
+						Type:   intstr.String,
+						StrVal: "25%",
+					},
+				},
 			},
 			MinReadySeconds: 0,
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				}, appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic:      true,
-						ContainerNames: []string{BackendListenerName},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-backend:%s", backend.Options.ImageTag)}}},
+			Replicas:        &backend.Options.ListenerReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: BackendListenerName,
+				},
 			},
-			Replicas: backend.Options.ListenerReplicas,
-			Selector: map[string]string{"deploymentConfig": BackendListenerName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      backend.Options.ListenerPodTemplateLabels,
 					Annotations: backend.Options.ListenerPodTemplateAnnotations,
@@ -288,9 +258,9 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 					Affinity:    backend.Options.ListenerAffinity,
 					Tolerations: backend.Options.ListenerTolerations,
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:      BackendListenerName,
-							Image:     "amp-backend:latest",
+							Image:     containerImage,
 							Args:      []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"},
 							Ports:     backend.listenerPorts(),
 							Env:       backend.buildBackendListenerEnv(),
@@ -298,7 +268,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{TCPSocket: &v1.TCPSocketAction{
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.Int),
+										Type:   intstr.Int,
 										IntVal: 3000}},
 								},
 								InitialDelaySeconds: 30,
@@ -311,7 +281,7 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status",
 									Port: intstr.IntOrString{
-										Type:   intstr.Type(intstr.Int),
+										Type:   intstr.Int,
 										IntVal: 3000}},
 								},
 								InitialDelaySeconds: 30,
@@ -326,7 +296,8 @@ func (backend *Backend) ListenerDeploymentConfig() *appsv1.DeploymentConfig {
 					ServiceAccountName:        "amp",
 					PriorityClassName:         backend.Options.PriorityClassNameListener,
 					TopologySpreadConstraints: backend.Options.TopologySpreadConstraintsListener,
-				}},
+				},
+			},
 		},
 	}
 }
@@ -343,17 +314,17 @@ func (backend *Backend) ListenerService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:     "http",
 					Protocol: v1.ProtocolTCP,
 					Port:     3000,
 					TargetPort: intstr.IntOrString{
-						Type:   intstr.Type(intstr.Int),
+						Type:   intstr.Int,
 						IntVal: 3000,
 					},
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": BackendListenerName},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: BackendListenerName},
 		},
 	}
 }
@@ -502,7 +473,7 @@ func (backend *Backend) WorkerPodDisruptionBudget() *policyv1.PodDisruptionBudge
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": BackendWorkerName},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: BackendWorkerName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -521,7 +492,7 @@ func (backend *Backend) CronPodDisruptionBudget() *policyv1.PodDisruptionBudget 
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "backend-cron"},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: "backend-cron"},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -540,7 +511,7 @@ func (backend *Backend) ListenerPodDisruptionBudget() *policyv1.PodDisruptionBud
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": BackendListenerName},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: BackendListenerName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -549,7 +520,7 @@ func (backend *Backend) ListenerPodDisruptionBudget() *policyv1.PodDisruptionBud
 
 func (backend *Backend) listenerPorts() []v1.ContainerPort {
 	ports := []v1.ContainerPort{
-		v1.ContainerPort{HostPort: 0, ContainerPort: 3000, Protocol: v1.ProtocolTCP},
+		{HostPort: 0, ContainerPort: 3000, Protocol: v1.ProtocolTCP},
 	}
 
 	if backend.Options.ListenerMetrics {

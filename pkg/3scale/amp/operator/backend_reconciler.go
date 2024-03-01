@@ -5,6 +5,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -21,35 +22,63 @@ func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReco
 }
 
 func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
+	ampImages, err := AmpImages(r.apiManager)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	backend, err := Backend(r.apiManager, r.Client())
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Cron DC
-	cronConfigMutator := reconcilers.GenericBackendMutators()
+	// Cron Deployment
+	cronDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	if r.apiManager.Spec.Backend.CronSpec.Replicas != nil {
-		cronConfigMutator = append(cronConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeploymentConfig(backend.CronDeploymentConfig(), reconcilers.DeploymentConfigMutator(cronConfigMutator...))
+	err = r.ReconcileDeployment(backend.CronDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(cronDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Listener DC
-	listenerConfigMutator := reconcilers.GenericBackendMutators()
+	// 3scale 2.14 -> 2.15
+	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.BackendCronName, r.apiManager.GetNamespace(), false, r.Client(), nil)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	// Listener Deployment
+	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
-		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeploymentConfig(backend.ListenerDeploymentConfig(), reconcilers.DeploymentConfigMutator(listenerConfigMutator...))
+	err = r.ReconcileDeployment(backend.ListenerDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(listenerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// 3scale 2.14 -> 2.15
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendListenerName, r.apiManager.GetNamespace(), false, r.Client(), nil)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	serviceMutators := []reconcilers.MutateFn{
+		reconcilers.CreateOnlyMutator,
+		reconcilers.ServiceSelectorMutator,
 	}
 
 	// Listener Service
-	err = r.ReconcileService(backend.ListenerService(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(backend.ListenerService(), reconcilers.ServiceMutator(serviceMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -60,15 +89,24 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// Worker DC
-	workerConfigMutator := reconcilers.GenericBackendMutators()
+	// Worker Deployment
+	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
-		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigReplicasMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeploymentConfig(backend.WorkerDeploymentConfig(), reconcilers.DeploymentConfigMutator(workerConfigMutator...))
+	err = r.ReconcileDeployment(backend.WorkerDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(workerDeploymentMutator...))
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// 3scale 2.14 -> 2.15
+	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.BackendWorkerName, r.apiManager.GetNamespace(), false, r.Client(), nil)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if !isMigrated {
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// Environment ConfigMap

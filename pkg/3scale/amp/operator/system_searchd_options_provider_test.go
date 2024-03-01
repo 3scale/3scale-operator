@@ -9,6 +9,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -49,10 +50,10 @@ func testSystemSearchdLabels() map[string]string {
 
 func testSystemSearchdPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "searchd",
-		"deploymentConfig":             "system-searchd",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "searchd",
+		reconcilers.DeploymentLabelSelector: "system-searchd",
 	}
 	addExpectedMeteringLabels(labels, "system-searchd", helper.ApplicationType)
 

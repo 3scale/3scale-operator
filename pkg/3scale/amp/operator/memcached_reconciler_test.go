@@ -8,6 +8,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	appsv1 "github.com/openshift/api/apps/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
@@ -18,13 +19,19 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func TestMemcachedDCReconciler(t *testing.T) {
+func TestMemcachedDeploymentReconciler(t *testing.T) {
 	log := logf.Log.WithName("operator_test")
 	ctx := context.TODO()
 	apimanager := basicApimanager()
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err := k8sappsv1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 3scale 2.14 -> 2.15
+	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +58,7 @@ func TestMemcachedDCReconciler(t *testing.T) {
 		objName  string
 		obj      client.Object
 	}{
-		{"memcachedDC", "system-memcache", &appsv1.DeploymentConfig{}},
+		{"memcachedDeployment", "system-memcache", &k8sappsv1.Deployment{}},
 	}
 
 	for _, tc := range cases {

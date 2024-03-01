@@ -21,7 +21,6 @@ func NewSystemPostgreSQLImageOptionsProvider(apimanager *appsv1alpha1.APIManager
 func (s *SystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageOptions() (*component.SystemPostgreSQLImageOptions, error) {
 	s.options.AppLabel = *s.apimanager.Spec.AppLabel
 	s.options.AmpRelease = product.ThreescaleRelease
-	s.options.InsecureImportPolicy = s.apimanager.Spec.ImageStreamTagImportInsecure
 
 	s.options.Image = SystemPostgreSQLImageURL()
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&

@@ -10,10 +10,10 @@ import (
 
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
-	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -55,12 +55,8 @@ func (r *BaseAPIManagerLogicReconciler) ReconcilePodDisruptionBudget(desired *po
 	return r.ReconcileResource(&policyv1.PodDisruptionBudget{}, desired, mutatefn)
 }
 
-func (r *BaseAPIManagerLogicReconciler) ReconcileImagestream(desired *imagev1.ImageStream, mutatefn reconcilers.MutateFn) error {
-	return r.ReconcileResource(&imagev1.ImageStream{}, desired, mutatefn)
-}
-
-func (r *BaseAPIManagerLogicReconciler) ReconcileDeploymentConfig(desired *appsv1.DeploymentConfig, mutatefn reconcilers.MutateFn) error {
-	return r.ReconcileResource(&appsv1.DeploymentConfig{}, desired, mutatefn)
+func (r *BaseAPIManagerLogicReconciler) ReconcileDeployment(desired *k8sappsv1.Deployment, mutatefn reconcilers.MutateFn) error {
+	return r.ReconcileResource(&k8sappsv1.Deployment{}, desired, mutatefn)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileService(desired *v1.Service, mutateFn reconcilers.MutateFn) error {
@@ -93,6 +89,10 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileRole(desired *rbacv1.Role, muta
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileRoleBinding(desired *rbacv1.RoleBinding, mutateFn reconcilers.MutateFn) error {
 	return r.ReconcileResource(&rbacv1.RoleBinding{}, desired, mutateFn)
+}
+
+func (r *BaseAPIManagerLogicReconciler) ReconcileJob(desired *batchv1.Job, mutateFn reconcilers.MutateFn) error {
+	return r.ReconcileResource(&batchv1.Job{}, desired, mutateFn)
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafanav1alpha1.GrafanaDashboard, mutateFn reconcilers.MutateFn) error {

@@ -21,7 +21,6 @@ func NewAmpImagesOptionsProvider(apimanager *appsv1alpha1.APIManager) *AmpImages
 func (a *AmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOptions, error) {
 	a.ampImagesOptions.AppLabel = *a.apimanager.Spec.AppLabel
 	a.ampImagesOptions.AmpRelease = product.ThreescaleRelease
-	a.ampImagesOptions.InsecureImportPolicy = *a.apimanager.Spec.ImageStreamTagImportInsecure
 
 	a.ampImagesOptions.ApicastImage = ApicastImageURL()
 	if a.apimanager.Spec.Apicast != nil && a.apimanager.Spec.Apicast.Image != nil {

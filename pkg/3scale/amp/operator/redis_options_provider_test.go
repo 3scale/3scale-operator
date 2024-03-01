@@ -8,6 +8,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -34,10 +35,10 @@ func testRedisSystemRedisLabels() map[string]string {
 
 func testRedisSystemRedisPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "redis",
-		"deploymentConfig":             "system-redis",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "redis",
+		reconcilers.DeploymentLabelSelector: "system-redis",
 	}
 	addExpectedMeteringLabels(labels, "system-redis", helper.ApplicationType)
 
@@ -61,10 +62,10 @@ func testRedisBackendRedisLabels() map[string]string {
 
 func testRedisBackendRedisPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "backend",
-		"threescale_component_element": "redis",
-		"deploymentConfig":             "backend-redis",
+		"app":                               appLabel,
+		"threescale_component":              "backend",
+		"threescale_component_element":      "redis",
+		reconcilers.DeploymentLabelSelector: "backend-redis",
 	}
 	addExpectedMeteringLabels(labels, "backend-redis", helper.ApplicationType)
 
@@ -136,7 +137,6 @@ func testSystemRedisSecret() *v1.Secret {
 }
 
 func defaultRedisOptions() *component.RedisOptions {
-	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
 		AmpRelease:      product.ThreescaleRelease,
 		BackendImageTag: product.ThreescaleRelease,
@@ -145,7 +145,6 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemImage:     component.SystemRedisImageURL(),
 		BackendRedisContainerResourceRequirements: component.DefaultBackendRedisContainerResourceRequirements(),
 		SystemRedisContainerResourceRequirements:  component.DefaultSystemRedisContainerResourceRequirements(),
-		InsecureImportPolicy:                      &tmpInsecure,
 		SystemCommonLabels:                        testRedisSystemCommonLabels(),
 		SystemRedisLabels:                         testRedisSystemRedisLabels(),
 		SystemRedisPodTemplateLabels:              testRedisSystemRedisPodTemplateLabels(),

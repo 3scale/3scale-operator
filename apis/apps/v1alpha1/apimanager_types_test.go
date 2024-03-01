@@ -14,7 +14,6 @@ import (
 func TestSetDefaults(t *testing.T) {
 	tmpDefaultAppLabel := Default3scaleAppLabel
 	tmpDefaultTenantName := defaultTenantName
-	tmpDefaultImageStreamTagImportInsecure := defaultImageStreamImportInsecure
 	tmpDefaultResourceRequirementsEnabled := defaultResourceRequirementsEnabled
 	tmpDefaultApicastManagementAPI := defaultApicastManagementAPI
 	tmpDefaultApicastOpenSSLVerify := defaultApicastOpenSSLVerify
@@ -32,11 +31,10 @@ func TestSetDefaults(t *testing.T) {
 		},
 		Spec: APIManagerSpec{
 			APIManagerCommonSpec: APIManagerCommonSpec{
-				WildcardDomain:               "test.3scale.com",
-				AppLabel:                     &tmpDefaultAppLabel,
-				TenantName:                   &tmpDefaultTenantName,
-				ImageStreamTagImportInsecure: &tmpDefaultImageStreamTagImportInsecure,
-				ResourceRequirementsEnabled:  &tmpDefaultResourceRequirementsEnabled,
+				WildcardDomain:              "test.3scale.com",
+				AppLabel:                    &tmpDefaultAppLabel,
+				TenantName:                  &tmpDefaultTenantName,
+				ResourceRequirementsEnabled: &tmpDefaultResourceRequirementsEnabled,
 			},
 			Apicast: &ApicastSpec{
 				IncludeResponseCodes: &tmpDefaultApicastResponseCodes,

@@ -19,6 +19,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
 type ApicastOptionsProvider struct {
@@ -146,7 +147,7 @@ func (a *ApicastOptionsProvider) setResourceRequirementsOptions() {
 		a.apicastOptions.StagingResourceRequirements = v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if a.apimanager.Spec.Apicast.ProductionSpec.Resources != nil {
@@ -208,7 +209,7 @@ func (a *ApicastOptionsProvider) stagingPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "apicast-staging"
+	labels[reconcilers.DeploymentLabelSelector] = "apicast-staging"
 
 	return labels
 }
@@ -224,7 +225,7 @@ func (a *ApicastOptionsProvider) productionPodTemplateLabels() map[string]string
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "apicast-production"
+	labels[reconcilers.DeploymentLabelSelector] = "apicast-production"
 
 	return labels
 }
@@ -245,7 +246,7 @@ func (a *ApicastOptionsProvider) setCustomPolicies() error {
 				Child("apicast").
 				Child("productionSpec").
 				Child("customPolicies").Index(idx)
-				fldErr = append(fldErr, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
+			fldErr = append(fldErr, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
 			return fldErr.ToAggregate()
 		}
 
@@ -272,7 +273,7 @@ func (a *ApicastOptionsProvider) setCustomPolicies() error {
 				Child("apicast").
 				Child("stagingSpec").
 				Child("customPolicies").Index(idx)
-				fldErr = append(fldErr, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
+			fldErr = append(fldErr, field.Invalid(customPoliciesIdxFldPath, customPolicySpec, err.Error()))
 			return fldErr.ToAggregate()
 		}
 

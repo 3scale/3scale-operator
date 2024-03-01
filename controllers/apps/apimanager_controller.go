@@ -19,10 +19,10 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/upgrade"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
-
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,7 +40,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/handlers"
-
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
@@ -154,7 +153,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			handler.EnqueueRequestsFromMapFunc(secretToApimanagerEventMapper.Map),
 			builder.WithPredicates(labelSelectorPredicate),
 		).
-		Owns(&appsv1.DeploymentConfig{}).
+		Owns(&k8sappsv1.Deployment{}).
 		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
 		Complete(r)
 }
@@ -262,6 +261,9 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 		return result, err
 	}
 
+	// 3scale 2.14 -> 2.15
+	err = upgrade.DeleteImageStreams(r.WatchedNamespace, r.Client())
+
 	return ctrl.Result{}, nil
 }
 
@@ -337,12 +339,10 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 	if cr.Spec.System.DatabaseSpec != nil && cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
 		systemDatabaseReconcilerConstructor = operator.CompositeDependencyReconcilerConstructor(
 			operator.NewSystemPostgreSQLReconciler,
-			operator.NewSystemPostgreSQLImageReconciler,
 		)
 	} else {
 		systemDatabaseReconcilerConstructor = operator.CompositeDependencyReconcilerConstructor(
 			operator.NewSystemMySQLReconciler,
-			operator.NewSystemMySQLImageReconciler,
 		)
 	}
 

@@ -28,8 +28,8 @@ The following diagram shows available custom resource definitions and their rela
       * [Backend custom resource status field](#backend-custom-resource-status-field)
       * [Link your 3scale backend to your 3scale tenant or provider account](#link-your-3scale-backend-to-your-3scale-tenant-or-provider-account)
    * [Product custom resource](#product-custom-resource)
-      * [Product Deployment Config: Apicast Hosted](#product-deployment-config-apicast-hosted)
-      * [Product Deployment Config:Apicast Self Managed](#product-deployment-configapicast-self-managed)
+      * [Product Deployment: Apicast Hosted](#product-deployment-apicast-hosted)
+      * [Product Deployment: Apicast Self Managed](#product-deployment-apicast-self-managed)
       * [Product authentication types](#product-authentication-types)
          * [User Key](#user-key)
          * [AppID and AppKey pair](#appid-and-appkey-pair)
@@ -365,7 +365,7 @@ spec:
   name: "OperatedProduct 1"
 ```
 
-### Product Deployment Config: Apicast Hosted
+### Product Deployment: Apicast Hosted
 
 Configure your product with *Apicast Hosted* deployment mode
 
@@ -380,7 +380,7 @@ spec:
     apicastHosted: {}
 ```
 
-### Product Deployment Config:Apicast Self Managed
+### Product Deployment: Apicast Self Managed
 
 Configure your product with *Apicast Self Managed* deployment mode
 

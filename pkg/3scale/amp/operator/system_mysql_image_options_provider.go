@@ -21,7 +21,6 @@ func NewSystemMysqlImageOptionsProvider(apimanager *appsv1alpha1.APIManager) *Sy
 func (s *SystemMysqlImageOptionsProvider) GetSystemMySQLImageOptions() (*component.SystemMySQLImageOptions, error) {
 	s.mysqlImageOptions.AppLabel = *s.apimanager.Spec.AppLabel
 	s.mysqlImageOptions.AmpRelease = product.ThreescaleRelease
-	s.mysqlImageOptions.InsecureImportPolicy = s.apimanager.Spec.ImageStreamTagImportInsecure
 
 	s.mysqlImageOptions.Image = SystemMySQLImageURL()
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&

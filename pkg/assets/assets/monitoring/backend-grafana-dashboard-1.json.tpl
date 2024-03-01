@@ -3621,15 +3621,15 @@
       },
       "id": 13,
       "panels": [],
-      "repeat": "deploymentConfig",
+      "repeat": "deployment",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
         }
       },
-      "title": "Pods ($deploymentConfig)",
+      "title": "Pods ($deployment)",
       "type": "row"
     },
     {
@@ -3689,7 +3689,7 @@
         }
       ],
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -3704,7 +3704,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -3783,7 +3783,7 @@
         }
       ],
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -3798,7 +3798,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -3876,7 +3876,7 @@
         }
       ],
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -3891,7 +3891,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (node))",
+          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (node))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -3969,7 +3969,7 @@
         }
       ],
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -3984,7 +3984,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod))",
+          "expr": "max(sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -4041,7 +4041,7 @@
       "points": false,
       "renderer": "flot",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -4053,7 +4053,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "total-pods",
@@ -4062,21 +4062,21 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "avail-pods",
           "refId": "B"
         },
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "unavail-pods",
           "refId": "C"
         },
         {
-          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (node))",
+          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (node))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "used-hosts",
@@ -4161,7 +4161,7 @@
       "renderer": "flot",
       "repeatedByRow": false,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -4173,7 +4173,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -4235,13 +4235,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 13,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
         }
       },
-      "title": "Pods ($deploymentConfig)",
+      "title": "Pods ($deployment)",
       "type": "row"
     },
     {
@@ -4304,7 +4304,7 @@
       "repeatPanelId": 30,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -4319,7 +4319,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -4401,7 +4401,7 @@
       "repeatPanelId": 32,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -4416,7 +4416,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -4497,7 +4497,7 @@
       "repeatPanelId": 37,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -4512,7 +4512,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (node))",
+          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (node))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -4593,7 +4593,7 @@
       "repeatPanelId": 36,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -4608,7 +4608,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod))",
+          "expr": "max(sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -4668,7 +4668,7 @@
       "repeatPanelId": 11,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -4680,7 +4680,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "total-pods",
@@ -4689,21 +4689,21 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "avail-pods",
           "refId": "B"
         },
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "unavail-pods",
           "refId": "C"
         },
         {
-          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (node))",
+          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (node))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "used-hosts",
@@ -4790,7 +4790,7 @@
       "repeatPanelId": 9,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -4802,7 +4802,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -4864,13 +4864,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 13,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
         }
       },
-      "title": "Pods ($deploymentConfig)",
+      "title": "Pods ($deployment)",
       "type": "row"
     },
     {
@@ -4933,7 +4933,7 @@
       "repeatPanelId": 30,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -4948,7 +4948,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -5030,7 +5030,7 @@
       "repeatPanelId": 32,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -5045,7 +5045,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -5126,7 +5126,7 @@
       "repeatPanelId": 37,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -5141,7 +5141,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (node))",
+          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (node))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -5222,7 +5222,7 @@
       "repeatPanelId": 36,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -5237,7 +5237,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod))",
+          "expr": "max(sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -5297,7 +5297,7 @@
       "repeatPanelId": 11,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -5309,7 +5309,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "total-pods",
@@ -5318,21 +5318,21 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "avail-pods",
           "refId": "B"
         },
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "unavail-pods",
           "refId": "C"
         },
         {
-          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (node))",
+          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (node))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "used-hosts",
@@ -5419,7 +5419,7 @@
       "repeatPanelId": 9,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -5431,7 +5431,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -5493,13 +5493,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 13,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
         }
       },
-      "title": "Pods ($deploymentConfig)",
+      "title": "Pods ($deployment)",
       "type": "row"
     },
     {
@@ -5562,7 +5562,7 @@
       "repeatPanelId": 30,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -5577,7 +5577,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -5659,7 +5659,7 @@
       "repeatPanelId": 32,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -5674,7 +5674,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -5755,7 +5755,7 @@
       "repeatPanelId": 37,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -5770,7 +5770,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (node))",
+          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (node))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -5851,7 +5851,7 @@
       "repeatPanelId": 36,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -5866,7 +5866,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod))",
+          "expr": "max(sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -5926,7 +5926,7 @@
       "repeatPanelId": 11,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -5938,7 +5938,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "total-pods",
@@ -5947,21 +5947,21 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "avail-pods",
           "refId": "B"
         },
         {
-          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deploymentConfig.*'})",
+          "expr": "sum(kube_replicationcontroller_spec_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'}) - sum(kube_replicationcontroller_status_ready_replicas{namespace='$namespace',replicationcontroller=~'$deployment.*'})",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "unavail-pods",
           "refId": "C"
         },
         {
-          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (node))",
+          "expr": "count(count(container_memory_usage_bytes{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (node))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "used-hosts",
@@ -6048,7 +6048,7 @@
       "repeatPanelId": 9,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -6060,7 +6060,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(delta(kube_pod_container_status_restarts_total{namespace='$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{`{{pod}}`}}",
@@ -6118,15 +6118,15 @@
       },
       "id": 4,
       "panels": [],
-      "repeat": "deploymentConfig",
+      "repeat": "deployment",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
         }
       },
-      "title": "CPU Usage ($deploymentConfig)",
+      "title": "CPU Usage ($deployment)",
       "type": "row"
     },
     {
@@ -6163,7 +6163,7 @@
       "points": false,
       "renderer": "flot",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -6175,7 +6175,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{pod}}`}}",
@@ -6239,13 +6239,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 4,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
         }
       },
-      "title": "CPU Usage ($deploymentConfig)",
+      "title": "CPU Usage ($deployment)",
       "type": "row"
     },
     {
@@ -6285,7 +6285,7 @@
       "repeatPanelId": 64,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -6297,7 +6297,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -6361,13 +6361,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 4,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
         }
       },
-      "title": "CPU Usage ($deploymentConfig)",
+      "title": "CPU Usage ($deployment)",
       "type": "row"
     },
     {
@@ -6407,7 +6407,7 @@
       "repeatPanelId": 64,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -6419,7 +6419,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -6483,13 +6483,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 4,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
         }
       },
-      "title": "CPU Usage ($deploymentConfig)",
+      "title": "CPU Usage ($deployment)",
       "type": "row"
     },
     {
@@ -6529,7 +6529,7 @@
       "repeatPanelId": 64,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -6541,7 +6541,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -6601,15 +6601,15 @@
       },
       "id": 5,
       "panels": [],
-      "repeat": "deploymentConfig",
+      "repeat": "deployment",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
         }
       },
-      "title": "CPU Quota ($deploymentConfig)",
+      "title": "CPU Quota ($deployment)",
       "type": "row"
     },
     {
@@ -6648,7 +6648,7 @@
       "points": false,
       "renderer": "flot",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -6769,7 +6769,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -6778,7 +6778,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -6787,7 +6787,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -6796,7 +6796,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -6805,7 +6805,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -6865,13 +6865,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 5,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
         }
       },
-      "title": "CPU Quota ($deploymentConfig)",
+      "title": "CPU Quota ($deployment)",
       "type": "row"
     },
     {
@@ -6913,7 +6913,7 @@
       "repeatPanelId": 1,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -7034,7 +7034,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7043,7 +7043,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7052,7 +7052,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7061,7 +7061,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7070,7 +7070,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7130,13 +7130,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 5,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
         }
       },
-      "title": "CPU Quota ($deploymentConfig)",
+      "title": "CPU Quota ($deployment)",
       "type": "row"
     },
     {
@@ -7178,7 +7178,7 @@
       "repeatPanelId": 1,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -7299,7 +7299,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7308,7 +7308,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7317,7 +7317,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7326,7 +7326,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7335,7 +7335,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7395,13 +7395,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 5,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
         }
       },
-      "title": "CPU Quota ($deploymentConfig)",
+      "title": "CPU Quota ($deployment)",
       "type": "row"
     },
     {
@@ -7443,7 +7443,7 @@
       "repeatPanelId": 1,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -7564,7 +7564,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7573,7 +7573,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7582,7 +7582,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_requests_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7591,7 +7591,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7600,7 +7600,7 @@
           "step": 10
         },
         {
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:{{ .SumRate }}{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod) / sum(kube_pod_container_resource_limits_cpu_cores{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -7656,15 +7656,15 @@
       },
       "id": 6,
       "panels": [],
-      "repeat": "deploymentConfig",
+      "repeat": "deployment",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
         }
       },
-      "title": "Memory Usage ($deploymentConfig)",
+      "title": "Memory Usage ($deployment)",
       "type": "row"
     },
     {
@@ -7700,7 +7700,7 @@
       "points": false,
       "renderer": "flot",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -7712,7 +7712,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace', pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace', pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -7776,13 +7776,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 6,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
         }
       },
-      "title": "Memory Usage ($deploymentConfig)",
+      "title": "Memory Usage ($deployment)",
       "type": "row"
     },
     {
@@ -7821,7 +7821,7 @@
       "repeatPanelId": 2,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -7833,7 +7833,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace', pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace', pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -7897,13 +7897,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 6,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
         }
       },
-      "title": "Memory Usage ($deploymentConfig)",
+      "title": "Memory Usage ($deployment)",
       "type": "row"
     },
     {
@@ -7942,7 +7942,7 @@
       "repeatPanelId": 2,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -7954,7 +7954,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace', pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace', pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{pod}}`}}",
@@ -8018,13 +8018,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 6,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
         }
       },
-      "title": "Memory Usage ($deploymentConfig)",
+      "title": "Memory Usage ($deployment)",
       "type": "row"
     },
     {
@@ -8063,7 +8063,7 @@
       "repeatPanelId": 2,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -8075,7 +8075,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace', pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace', pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -8135,15 +8135,15 @@
       },
       "id": 7,
       "panels": [],
-      "repeat": "deploymentConfig",
+      "repeat": "deployment",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
         }
       },
-      "title": "Memory Quota ($deploymentConfig)",
+      "title": "Memory Quota ($deployment)",
       "type": "row"
     },
     {
@@ -8182,7 +8182,7 @@
       "points": false,
       "renderer": "flot",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -8303,7 +8303,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8312,7 +8312,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8321,7 +8321,7 @@
           "step": 10
         },
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8330,7 +8330,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8339,7 +8339,7 @@
           "step": 10
         },
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8399,13 +8399,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 7,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
         }
       },
-      "title": "Memory Quota ($deploymentConfig)",
+      "title": "Memory Quota ($deployment)",
       "type": "row"
     },
     {
@@ -8447,7 +8447,7 @@
       "repeatPanelId": 3,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -8568,7 +8568,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8577,7 +8577,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8586,7 +8586,7 @@
           "step": 10
         },
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8595,7 +8595,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8604,7 +8604,7 @@
           "step": 10
         },
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8664,13 +8664,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 7,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
         }
       },
-      "title": "Memory Quota ($deploymentConfig)",
+      "title": "Memory Quota ($deployment)",
       "type": "row"
     },
     {
@@ -8712,7 +8712,7 @@
       "repeatPanelId": 3,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -8833,7 +8833,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8842,7 +8842,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8851,7 +8851,7 @@
           "step": 10
         },
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8860,7 +8860,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8869,7 +8869,7 @@
           "step": 10
         },
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -8929,13 +8929,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 7,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
         }
       },
-      "title": "Memory Quota ($deploymentConfig)",
+      "title": "Memory Quota ($deployment)",
       "type": "row"
     },
     {
@@ -8977,7 +8977,7 @@
       "repeatPanelId": 3,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -9098,7 +9098,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -9107,7 +9107,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -9116,7 +9116,7 @@
           "step": 10
         },
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -9125,7 +9125,7 @@
           "step": 10
         },
         {
-          "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -9134,7 +9134,7 @@
           "step": 10
         },
         {
-          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
+          "expr": "sum(container_memory_usage_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+', container!=''}) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}) by (pod)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
@@ -9190,15 +9190,15 @@
       },
       "id": 15,
       "panels": [],
-      "repeat": "deploymentConfig",
+      "repeat": "deployment",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
         }
       },
-      "title": "Network Usage ($deploymentConfig)",
+      "title": "Network Usage ($deployment)",
       "type": "row"
     },
     {
@@ -9234,7 +9234,7 @@
       "points": false,
       "renderer": "flot",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -9246,7 +9246,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{pod}}`}}",
@@ -9328,7 +9328,7 @@
       "points": false,
       "renderer": "flot",
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-cron",
           "value": "backend-cron"
@@ -9340,7 +9340,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -9402,13 +9402,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 15,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
         }
       },
-      "title": "Network Usage ($deploymentConfig)",
+      "title": "Network Usage ($deployment)",
       "type": "row"
     },
     {
@@ -9447,7 +9447,7 @@
       "repeatPanelId": 17,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -9459,7 +9459,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -9544,7 +9544,7 @@
       "repeatPanelId": 18,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-listener",
           "value": "backend-listener"
@@ -9556,7 +9556,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -9618,13 +9618,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 15,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
         }
       },
-      "title": "Network Usage ($deploymentConfig)",
+      "title": "Network Usage ($deployment)",
       "type": "row"
     },
     {
@@ -9663,7 +9663,7 @@
       "repeatPanelId": 17,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -9675,7 +9675,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -9760,7 +9760,7 @@
       "repeatPanelId": 18,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-redis",
           "value": "backend-redis"
@@ -9772,7 +9772,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -9834,13 +9834,13 @@
       "repeatIteration": 1600791173100,
       "repeatPanelId": 15,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
         }
       },
-      "title": "Network Usage ($deploymentConfig)",
+      "title": "Network Usage ($deployment)",
       "type": "row"
     },
     {
@@ -9879,7 +9879,7 @@
       "repeatPanelId": 17,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -9891,7 +9891,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(irate(container_network_receive_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{ pod }}`}}",
@@ -9976,7 +9976,7 @@
       "repeatPanelId": 18,
       "repeatedByRow": true,
       "scopedVars": {
-        "deploymentConfig": {
+        "deployment": {
           "selected": false,
           "text": "backend-worker",
           "value": "backend-worker"
@@ -9988,7 +9988,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deploymentConfig-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
+          "expr": "sum(irate(container_network_transmit_bytes_total{namespace=~'$namespace',pod=~'$deployment-[a-z0-9]+-[a-z0-9]+'}[5m])) by (pod)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{`{{pod}}`}}",
@@ -10096,9 +10096,9 @@
         "definition": "label_values(kube_pod_info{namespace='$namespace',pod=~'backend-.*'}, pod)",
         "hide": 0,
         "includeAll": true,
-        "label": "deploymentConfig",
+        "label": "deployment",
         "multi": false,
-        "name": "deploymentConfig",
+        "name": "deployment",
         "options": [],
         "query": "label_values(kube_pod_info{namespace='$namespace',pod=~'backend-.*'}, pod)",
         "refresh": 1,

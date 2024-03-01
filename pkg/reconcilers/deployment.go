@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	appsv1 "github.com/openshift/api/apps/v1"
+	k8sappsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -14,18 +14,43 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 )
 
-// DCMutateFn is a function which mutates the existing DeploymentConfig into it's desired state.
-type DCMutateFn func(desired, existing *appsv1.DeploymentConfig) (bool, error)
+const (
+	DeploymentKind          = "Deployment"
+	DeploymentAPIVersion    = "apps/v1"
+	DeploymentLabelSelector = "deployment"
+)
 
-func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
+type ContainerImage struct {
+	Name string
+	Tag  string
+}
+
+type ImageTriggerFrom struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	// +optional
+	Namespace *string `json:"namespace,omitempty"`
+}
+
+type ImageTrigger struct {
+	From      ImageTriggerFrom `json:"from"`
+	FieldPath string           `json:"fieldPath"`
+	// +optional
+	Paused bool `json:"paused,omitempty"`
+}
+
+// DMutateFn is a function which mutates the existing Deployment into it's desired state.
+type DMutateFn func(desired, existing *k8sappsv1.Deployment) (bool, error)
+
+func DeploymentMutator(opts ...DMutateFn) MutateFn {
 	return func(existingObj, desiredObj common.KubernetesObject) (bool, error) {
-		existing, ok := existingObj.(*appsv1.DeploymentConfig)
+		existing, ok := existingObj.(*k8sappsv1.Deployment)
 		if !ok {
-			return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", existingObj)
+			return false, fmt.Errorf("%T is not a *k8sappsv1.Deployment", existingObj)
 		}
-		desired, ok := desiredObj.(*appsv1.DeploymentConfig)
+		desired, ok := desiredObj.(*k8sappsv1.Deployment)
 		if !ok {
-			return false, fmt.Errorf("%T is not a *appsv1.DeploymentConfig", desiredObj)
+			return false, fmt.Errorf("%T is not a *k8sappsv1.Deployment", desiredObj)
 		}
 
 		update := false
@@ -43,23 +68,34 @@ func DeploymentConfigMutator(opts ...DCMutateFn) MutateFn {
 	}
 }
 
-// GenericBackendMutators returns the generic mutators for backend
-func GenericBackendMutators() []DCMutateFn {
-	return []DCMutateFn{
-		DeploymentConfigImageChangeTriggerMutator,
-		DeploymentConfigContainerResourcesMutator,
-		DeploymentConfigAffinityMutator,
-		DeploymentConfigTolerationsMutator,
-		DeploymentConfigPodTemplateLabelsMutator,
-		DeploymentConfigPriorityClassMutator,
-		DeploymentConfigTopologySpreadConstraintsMutator,
-		DeploymentConfigPodTemplateAnnotationsMutator,
-		DeploymentConfigArgsMutator,
-		DeploymentConfigProbesMutator,
+// GenericBackendDeploymentMutators returns the generic mutators for backend
+func GenericBackendDeploymentMutators() []DMutateFn {
+	return []DMutateFn{
+		DeploymentAnnotationsMutator,
+		DeploymentContainerResourcesMutator,
+		DeploymentAffinityMutator,
+		DeploymentTolerationsMutator,
+		DeploymentPodTemplateLabelsMutator,
+		DeploymentPriorityClassMutator,
+		DeploymentTopologySpreadConstraintsMutator,
+		DeploymentPodTemplateAnnotationsMutator,
+		DeploymentArgsMutator,
+		DeploymentProbesMutator,
+		DeploymentPodContainerImageMutator,
+		DeploymentPodInitContainerImageMutator,
 	}
 }
 
-func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentAnnotationsMutator ensures Deployment Annotations are reconciled
+func DeploymentAnnotationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	helper.MergeMapStringString(&updated, &existing.ObjectMeta.Annotations, desired.ObjectMeta.Annotations)
+
+	return updated, nil
+}
+
+func DeploymentReplicasMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	update := false
 
 	if desired.Spec.Replicas != existing.Spec.Replicas {
@@ -70,7 +106,7 @@ func DeploymentConfigReplicasMutator(desired, existing *appsv1.DeploymentConfig)
 	return update, nil
 }
 
-func DeploymentConfigAffinityMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func DeploymentAffinityMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Affinity, desired.Spec.Template.Spec.Affinity) {
@@ -83,7 +119,7 @@ func DeploymentConfigAffinityMutator(desired, existing *appsv1.DeploymentConfig)
 	return updated, nil
 }
 
-func DeploymentConfigTolerationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func DeploymentTolerationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.Tolerations, desired.Spec.Template.Spec.Tolerations) {
@@ -96,7 +132,7 @@ func DeploymentConfigTolerationsMutator(desired, existing *appsv1.DeploymentConf
 	return updated, nil
 }
 
-func DeploymentConfigContainerResourcesMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+func DeploymentContainerResourcesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	desiredName := common.ObjectInfo(desired)
 	update := false
 
@@ -120,23 +156,23 @@ func DeploymentConfigContainerResourcesMutator(desired, existing *appsv1.Deploym
 	return update, nil
 }
 
-// DeploymentConfigEnvVarReconciler implements basic env var reconcilliation deployment configs.
-// Existing and desired DC must have same number of containers
+// DeploymentEnvVarReconciler implements basic env var reconciliation deployments.
+// Existing and desired Deployment must have same number of containers
 // Added when in desired and not in existing
 // Updated when in desired and in existing but not equal
-// Removed when not in desired and exists in existing DC
-func DeploymentConfigEnvVarReconciler(desired, existing *appsv1.DeploymentConfig, envVar string) bool {
+// Removed when not in desired and exists in existing Deployment
+func DeploymentEnvVarReconciler(desired, existing *k8sappsv1.Deployment, envVar string) bool {
 	updated := false
 
 	if len(desired.Spec.Template.Spec.Containers) != len(existing.Spec.Template.Spec.Containers) {
-		log.Info("[WARNING] not reconciling deployment config",
+		log.Info("[WARNING] not reconciling deployment",
 			"name", client.ObjectKeyFromObject(desired),
 			"reason", "existing and desired do not have same number of containers")
 		return false
 	}
 
 	if len(desired.Spec.Template.Spec.InitContainers) != len(existing.Spec.Template.Spec.InitContainers) {
-		log.Info("[WARNING] not reconciling deployment config",
+		log.Info("[WARNING] not reconciling deployment",
 			"name", client.ObjectKeyFromObject(desired),
 			"reason", "existing and desired do not have same number of init containers")
 		return false
@@ -160,64 +196,11 @@ func DeploymentConfigEnvVarReconciler(desired, existing *appsv1.DeploymentConfig
 		updated = updated || tmpChanged
 	}
 
-	// Pre Hook pod
-	if existing.Spec.Strategy.RollingParams != nil &&
-		existing.Spec.Strategy.RollingParams.Pre != nil &&
-		existing.Spec.Strategy.RollingParams.Pre.ExecNewPod != nil &&
-		desired.Spec.Strategy.RollingParams != nil &&
-		desired.Spec.Strategy.RollingParams.Pre != nil &&
-		desired.Spec.Strategy.RollingParams.Pre.ExecNewPod != nil {
-		// reconcile Pre Hook
-		tmpChanged := helper.EnvVarReconciler(
-			desired.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env,
-			&existing.Spec.Strategy.RollingParams.Pre.ExecNewPod.Env,
-			envVar)
-		updated = updated || tmpChanged
-	}
-
-	// Post Hook pod
-	if existing.Spec.Strategy.RollingParams != nil &&
-		existing.Spec.Strategy.RollingParams.Post != nil &&
-		existing.Spec.Strategy.RollingParams.Post.ExecNewPod != nil &&
-		desired.Spec.Strategy.RollingParams != nil &&
-		desired.Spec.Strategy.RollingParams.Post != nil &&
-		desired.Spec.Strategy.RollingParams.Post.ExecNewPod != nil {
-		// reconcile Pre Hook
-		tmpChanged := helper.EnvVarReconciler(
-			desired.Spec.Strategy.RollingParams.Post.ExecNewPod.Env,
-			&existing.Spec.Strategy.RollingParams.Post.ExecNewPod.Env,
-			envVar)
-		updated = updated || tmpChanged
-	}
-
 	return updated
 }
 
-// DeploymentConfigImageChangeTriggerMutator ensures image change triggers are reconciled
-func DeploymentConfigImageChangeTriggerMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
-	desiredDeploymentTriggerImageChangePos, err := helper.FindDeploymentTriggerOnImageChange(desired.Spec.Triggers)
-	if err != nil {
-		return false, fmt.Errorf("unexpected: '%s' in DeploymentConfig '%s'", err, desired.Name)
-
-	}
-	existingDeploymentTriggerImageChangePos, err := helper.FindDeploymentTriggerOnImageChange(existing.Spec.Triggers)
-	if err != nil {
-		return false, fmt.Errorf("unexpected: '%s' in DeploymentConfig '%s'", err, existing.Name)
-	}
-
-	desiredDeploymentTriggerImageChangeParams := desired.Spec.Triggers[desiredDeploymentTriggerImageChangePos].ImageChangeParams
-	existingDeploymentTriggerImageChangeParams := existing.Spec.Triggers[existingDeploymentTriggerImageChangePos].ImageChangeParams
-
-	if !reflect.DeepEqual(existingDeploymentTriggerImageChangeParams.From.Name, desiredDeploymentTriggerImageChangeParams.From.Name) {
-		existingDeploymentTriggerImageChangeParams.From.Name = desiredDeploymentTriggerImageChangeParams.From.Name
-		return true, nil
-	}
-
-	return false, nil
-}
-
-// DeploymentConfigPodTemplateLabelsMutator ensures pod template labels are reconciled
-func DeploymentConfigPodTemplateLabelsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentPodTemplateLabelsMutator ensures pod template labels are reconciled
+func DeploymentPodTemplateLabelsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	helper.MergeMapStringString(&updated, &existing.Spec.Template.Labels, desired.Spec.Template.Labels)
@@ -225,8 +208,8 @@ func DeploymentConfigPodTemplateLabelsMutator(desired, existing *appsv1.Deployme
 	return updated, nil
 }
 
-// DeploymentConfigRemoveDuplicateEnvVarMutator ensures pod env vars are not duplicated
-func DeploymentConfigRemoveDuplicateEnvVarMutator(_, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentRemoveDuplicateEnvVarMutator ensures pod env vars are not duplicated
+func DeploymentRemoveDuplicateEnvVarMutator(_, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 	for idx := range existing.Spec.Template.Spec.Containers {
 		prunedEnvs := helper.RemoveDuplicateEnvVars(existing.Spec.Template.Spec.Containers[idx].Env)
@@ -239,8 +222,8 @@ func DeploymentConfigRemoveDuplicateEnvVarMutator(_, existing *appsv1.Deployment
 	return updated, nil
 }
 
-// DeploymentConfigPriorityClassMutator ensures priorityclass is reconciled
-func DeploymentConfigPriorityClassMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentPriorityClassMutator ensures priorityclass is reconciled
+func DeploymentPriorityClassMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	if existing.Spec.Template.Spec.PriorityClassName != desired.Spec.Template.Spec.PriorityClassName {
@@ -251,8 +234,8 @@ func DeploymentConfigPriorityClassMutator(desired, existing *appsv1.DeploymentCo
 	return updated, nil
 }
 
-// DeploymentConfigStrategyMutator ensures desired strategy
-func DeploymentConfigStrategyMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentStrategyMutator ensures desired strategy
+func DeploymentStrategyMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	if !reflect.DeepEqual(existing.Spec.Strategy, desired.Spec.Strategy) {
@@ -263,8 +246,8 @@ func DeploymentConfigStrategyMutator(desired, existing *appsv1.DeploymentConfig)
 	return updated, nil
 }
 
-// DeploymentConfigTopologySpreadConstraintsMutator ensures TopologySpreadConstraints is reconciled
-func DeploymentConfigTopologySpreadConstraintsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentTopologySpreadConstraintsMutator ensures TopologySpreadConstraints is reconciled
+func DeploymentTopologySpreadConstraintsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	if !reflect.DeepEqual(existing.Spec.Template.Spec.TopologySpreadConstraints, desired.Spec.Template.Spec.TopologySpreadConstraints) {
@@ -277,8 +260,8 @@ func DeploymentConfigTopologySpreadConstraintsMutator(desired, existing *appsv1.
 	return updated, nil
 }
 
-// DeploymentConfigPodTemplateAnnotationsMutator ensures Pod Template Annotations is reconciled
-func DeploymentConfigPodTemplateAnnotationsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentPodTemplateAnnotationsMutator ensures Pod Template Annotations is reconciled
+func DeploymentPodTemplateAnnotationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	helper.MergeMapStringString(&updated, &existing.Spec.Template.Annotations, desired.Spec.Template.Annotations)
@@ -286,8 +269,8 @@ func DeploymentConfigPodTemplateAnnotationsMutator(desired, existing *appsv1.Dep
 	return updated, nil
 }
 
-// DeploymentConfigArgsMutator ensures Args are reconciled
-func DeploymentConfigArgsMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentArgsMutator ensures deployment's containers' args are reconciled
+func DeploymentArgsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	for i, desiredContainer := range desired.Spec.Template.Spec.Containers {
@@ -302,8 +285,8 @@ func DeploymentConfigArgsMutator(desired, existing *appsv1.DeploymentConfig) (bo
 	return updated, nil
 }
 
-// DeploymentConfigProbesMutator ensures probes are reconciled
-func DeploymentConfigProbesMutator(desired, existing *appsv1.DeploymentConfig) (bool, error) {
+// DeploymentProbesMutator ensures probes are reconciled
+func DeploymentProbesMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	updated := false
 
 	for i, desiredContainer := range desired.Spec.Template.Spec.Containers {
@@ -320,5 +303,35 @@ func DeploymentConfigProbesMutator(desired, existing *appsv1.DeploymentConfig) (
 		}
 	}
 
+	return updated, nil
+}
+
+// DeploymentPodContainerImageMutator ensures that the deployment's pod's containers are reconciled
+func DeploymentPodContainerImageMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	for i, desiredContainer := range desired.Spec.Template.Spec.Containers {
+		existingContainer := &existing.Spec.Template.Spec.Containers[i]
+
+		if !reflect.DeepEqual(existingContainer.Image, desiredContainer.Image) {
+			existingContainer.Image = desiredContainer.Image
+			updated = true
+		}
+	}
+	return updated, nil
+}
+
+// DeploymentPodInitContainerImageMutator ensures that the deployment's pod's containers are reconciled
+func DeploymentPodInitContainerImageMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	for i, desiredContainer := range desired.Spec.Template.Spec.InitContainers {
+		existingContainer := &existing.Spec.Template.Spec.InitContainers[i]
+
+		if !reflect.DeepEqual(existingContainer.Image, desiredContainer.Image) {
+			existingContainer.Image = desiredContainer.Image
+			updated = true
+		}
+	}
 	return updated, nil
 }

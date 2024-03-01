@@ -5,12 +5,11 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
+	routev1 "github.com/openshift/api/route/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
-
-	routev1 "github.com/openshift/api/route/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -18,7 +17,8 @@ import (
 	appscommon "github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	appsv1 "github.com/openshift/api/apps/v1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	k8sappsv1 "k8s.io/api/apps/v1"
 )
 
 func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
@@ -35,10 +35,10 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 		},
 	}
 
-	zyncQue := &appsv1.DeploymentConfig{
+	zyncQue := &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
+			Kind:       reconcilers.DeploymentKind,
+			APIVersion: reconcilers.DeploymentAPIVersion,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      component.ZyncQueDeploymentName,
@@ -57,12 +57,12 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
+	err := k8sappsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = routev1.AddToScheme(s)
+	err = routev1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,8 +126,8 @@ func TestAPIManagerRoutesEventMapperMap(t *testing.T) {
 							Name:       "asecret",
 						},
 						metav1.OwnerReference{
-							APIVersion: appsv1.GroupVersion.String(),
-							Kind:       "DeploymentConfig",
+							APIVersion: reconcilers.DeploymentAPIVersion,
+							Kind:       reconcilers.DeploymentKind,
 							Name:       component.ZyncQueDeploymentName,
 						},
 					},

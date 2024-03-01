@@ -12,6 +12,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
 type SystemOptionsProvider struct {
@@ -373,7 +374,7 @@ func (s *SystemOptionsProvider) setResourceRequirementsOptions() {
 		s.options.SidekiqContainerResourceRequirements = &v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if s.apimanager.Spec.System.AppSpec.MasterContainerResources != nil {
@@ -546,7 +547,7 @@ func (s *SystemOptionsProvider) appPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-app"
+	labels[reconcilers.DeploymentLabelSelector] = "system-app"
 
 	return labels
 }
@@ -568,7 +569,7 @@ func (s *SystemOptionsProvider) sidekiqPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-sidekiq"
+	labels[reconcilers.DeploymentLabelSelector] = "system-sidekiq"
 
 	return labels
 }

@@ -9,6 +9,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -132,7 +134,7 @@ func (s *SystemPostgresqlOptionsProvider) setResourceRequirementsOptions() {
 		s.options.ContainerResourceRequirements = v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
@@ -194,7 +196,7 @@ func (s *SystemPostgresqlOptionsProvider) podTemplateLabels() map[string]string 
 		}
 	}
 
-	labels["deploymentConfig"] = "system-postgresql"
+	labels[reconcilers.DeploymentLabelSelector] = "system-postgresql"
 
 	return labels
 }

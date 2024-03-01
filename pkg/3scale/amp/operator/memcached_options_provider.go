@@ -7,6 +7,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	v1 "k8s.io/api/core/v1"
 )
@@ -48,7 +49,7 @@ func (m *MemcachedOptionsProvider) setResourceRequirementsOptions() {
 		m.memcachedOptions.ResourceRequirements = v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if m.apimanager.Spec.System.MemcachedResources != nil {
@@ -80,7 +81,7 @@ func (m *MemcachedOptionsProvider) podTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-memcache"
+	labels[reconcilers.DeploymentLabelSelector] = "system-memcache"
 
 	return labels
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -178,7 +179,7 @@ func (z *ZyncOptionsProvider) setResourceRequirementsOptions() {
 		z.zyncOptions.DatabaseContainerResourceRequirements = v1.ResourceRequirements{}
 	}
 
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if z.apimanager.Spec.Zync.AppSpec.Resources != nil {
@@ -249,7 +250,7 @@ func (z *ZyncOptionsProvider) zyncPodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "zync"
+	labels[reconcilers.DeploymentLabelSelector] = "zync"
 
 	return labels
 }
@@ -265,7 +266,7 @@ func (z *ZyncOptionsProvider) zyncQuePodTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "zync-que"
+	labels[reconcilers.DeploymentLabelSelector] = "zync-que"
 
 	return labels
 }
@@ -281,7 +282,7 @@ func (z *ZyncOptionsProvider) zyncDatabasePodTemplateLabels() map[string]string 
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "zync-database"
+	labels[reconcilers.DeploymentLabelSelector] = "zync-database"
 
 	return labels
 }

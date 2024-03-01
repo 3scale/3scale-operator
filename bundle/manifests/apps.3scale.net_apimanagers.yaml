@@ -3860,8 +3860,6 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
-              imageStreamTagImportInsecure:
-                type: boolean
               monitoring:
                 properties:
                   enablePrometheusRules:
@@ -10540,7 +10538,7 @@ spec:
                   type: object
                 type: array
               deployments:
-                description: APIManager Deployment Configs
+                description: APIManager Deployments
                 properties:
                   ready:
                     description: Deployments are ready to serve requests

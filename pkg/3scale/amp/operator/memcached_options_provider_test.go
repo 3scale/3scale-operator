@@ -8,6 +8,8 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
@@ -24,10 +26,10 @@ func testMemcachedDeploymentLabels() map[string]string {
 
 func testPodTemplateLabels() map[string]string {
 	labels := map[string]string{
-		"app":                          appLabel,
-		"threescale_component":         "system",
-		"threescale_component_element": "memcache",
-		"deploymentConfig":             "system-memcache",
+		"app":                               appLabel,
+		"threescale_component":              "system",
+		"threescale_component_element":      "memcache",
+		reconcilers.DeploymentLabelSelector: "system-memcache",
 	}
 	addExpectedMeteringLabels(labels, "system-memcache", helper.ApplicationType)
 

@@ -1,13 +1,12 @@
 package component
 
 import (
-	"fmt"
-
-	policyv1 "k8s.io/api/policy/v1"
-
 	"github.com/3scale/3scale-operator/pkg/helper"
-	appsv1 "github.com/openshift/api/apps/v1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -17,6 +16,7 @@ const (
 	ZyncName                   = "zync"
 	ZyncQueDeploymentName      = "zync-que"
 	ZyncDatabaseDeploymentName = "zync-database"
+	ZyncInitContainerName      = "zync-db-svc"
 )
 
 const (
@@ -83,7 +83,7 @@ func (zync *Zync) QueRoleBinding() *rbacv1.RoleBinding {
 			Name: "zync-que-rolebinding",
 		},
 		Subjects: []rbacv1.Subject{
-			rbacv1.Subject{
+			{
 				Kind: "ServiceAccount",
 				Name: "zync-que-sa",
 			},
@@ -106,17 +106,17 @@ func (zync *Zync) QueRole() *rbacv1.Role {
 			Name: "zync-que-role",
 		},
 		Rules: []rbacv1.PolicyRule{
-			rbacv1.PolicyRule{
-				APIGroups: []string{"apps.openshift.io"},
+			{
+				APIGroups: []string{"apps"},
 				Resources: []string{
-					"deploymentconfigs",
+					"deployments",
 				},
 				Verbs: []string{
 					"get",
 					"list",
 				},
 			},
-			rbacv1.PolicyRule{
+			{
 				APIGroups: []string{""},
 				Resources: []string{
 					"pods",
@@ -127,7 +127,7 @@ func (zync *Zync) QueRole() *rbacv1.Role {
 					"list",
 				},
 			},
-			rbacv1.PolicyRule{
+			{
 				APIGroups: []string{"route.openshift.io"},
 				Resources: []string{
 					"routes",
@@ -141,7 +141,7 @@ func (zync *Zync) QueRole() *rbacv1.Role {
 					"update",
 				},
 			},
-			rbacv1.PolicyRule{
+			{
 				APIGroups: []string{"route.openshift.io"},
 				Resources: []string{
 					"routes/status",
@@ -150,7 +150,7 @@ func (zync *Zync) QueRole() *rbacv1.Role {
 					"get",
 				},
 			},
-			rbacv1.PolicyRule{
+			{
 				APIGroups: []string{"route.openshift.io"},
 				Resources: []string{
 					"routes/custom-host",
@@ -163,39 +163,21 @@ func (zync *Zync) QueRole() *rbacv1.Role {
 	}
 }
 
-func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   ZyncName,
 			Labels: zync.Options.CommonZyncLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"zync-db-svc",
-							ZyncName,
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-zync:%s", zync.Options.ImageTag),
-						},
-					},
+		Spec: k8sappsv1.DeploymentSpec{
+			Replicas: &zync.Options.ZyncReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: ZyncName,
 				},
 			},
-			Replicas: zync.Options.ZyncReplicas,
-			Selector: map[string]string{"deploymentConfig": ZyncName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      zync.Options.ZyncPodTemplateLabels,
 					Annotations: zync.Options.ZyncPodTemplateAnnotations,
@@ -205,19 +187,20 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations:        zync.Options.ZyncTolerations,
 					ServiceAccountName: "amp",
 					InitContainers: []v1.Container{
-						v1.Container{
-							Name:  "zync-db-svc",
-							Image: "amp-zync:latest",
+						{
+							Name:  ZyncInitContainerName,
+							Image: containerImage,
 							Command: []string{
 								"bash",
 								"-c",
 								"bundle exec sh -c \"until rake boot:db; do sleep $SLEEP_SECONDS; done\"",
-							}, Env: []v1.EnvVar{
-								v1.EnvVar{
+							},
+							Env: []v1.EnvVar{
+								{
 									Name:  "SLEEP_SECONDS",
 									Value: "1",
 								},
-								v1.EnvVar{
+								{
 									Name: "DATABASE_URL",
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
@@ -232,9 +215,9 @@ func (zync *Zync) DeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  ZyncName,
-							Image: "amp-zync:latest",
+							Image: containerImage,
 							Ports: zync.zyncPorts(),
 							Env:   zync.commonZyncEnvVars(),
 							LivenessProbe: &v1.Probe{
@@ -283,7 +266,7 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
 		helper.EnvVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
 		helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
-		v1.EnvVar{
+		{
 			Name: "POD_NAME",
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{
@@ -292,7 +275,7 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 				},
 			},
 		},
-		v1.EnvVar{
+		{
 			Name: "POD_NAMESPACE",
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{
@@ -303,54 +286,34 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		},
 	}
 }
-func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   ZyncQueDeploymentName,
 			Labels: zync.Options.CommonZyncQueLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Replicas: zync.Options.ZyncQueReplicas,
-			Selector: map[string]string{"deploymentConfig": ZyncQueDeploymentName},
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRolling,
-				RollingParams: &appsv1.RollingDeploymentStrategyParams{
-					UpdatePeriodSeconds: &[]int64{1}[0],
-					IntervalSeconds:     &[]int64{1}[0],
-					TimeoutSeconds:      &[]int64{600}[0],
+		Spec: k8sappsv1.DeploymentSpec{
+			Replicas: &zync.Options.ZyncQueReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: ZyncQueDeploymentName,
+				},
+			},
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: &k8sappsv1.RollingUpdateDeployment{
 					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 					MaxSurge: &intstr.IntOrString{
-						Type:   intstr.Type(intstr.String),
+						Type:   intstr.String,
 						StrVal: "25%",
 					},
 				},
 			},
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"que",
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("amp-zync:%s", zync.Options.ImageTag),
-						},
-					},
-				},
-			},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      zync.Options.ZyncQuePodTemplateLabels,
 					Annotations: zync.Options.ZyncQuePodTemplateAnnotations,
@@ -362,11 +325,11 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 					RestartPolicy:                 v1.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &[]int64{30}[0],
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:            "que",
 							Command:         []string{"/usr/bin/bash"},
 							Args:            []string{"-c", "bundle exec rake 'que[--worker-count 10]'"},
-							Image:           "amp-zync:latest",
+							Image:           containerImage,
 							ImagePullPolicy: v1.PullAlways,
 							LivenessProbe: &v1.Probe{
 								FailureThreshold:    3,
@@ -383,7 +346,11 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 								},
 							},
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{Name: "metrics", ContainerPort: ZyncQueMetricsPort, Protocol: v1.ProtocolTCP},
+								{
+									Name:          "metrics",
+									ContainerPort: ZyncQueMetricsPort,
+									Protocol:      v1.ProtocolTCP,
+								},
 							},
 							Resources: zync.Options.QueContainerResourceRequirements,
 							Env:       zync.commonZyncEnvVars(),
@@ -397,41 +364,26 @@ func (zync *Zync) QueDeploymentConfig() *appsv1.DeploymentConfig {
 	}
 }
 
-func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
-			APIVersion: "apps.openshift.io/v1",
-		},
+func (zync *Zync) DatabaseDeployment(containerImage string) *k8sappsv1.Deployment {
+	var zyncDatabaseReplicas int32 = 1
+
+	return &k8sappsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   ZyncDatabaseDeploymentName,
 			Labels: zync.Options.CommonZyncDatabaseLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange,
-				},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"postgresql",
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("zync-database-postgresql:%s", zync.Options.DatabaseImageTag),
-						},
-					},
+		Spec: k8sappsv1.DeploymentSpec{
+			Replicas: &zyncDatabaseReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: ZyncDatabaseDeploymentName,
 				},
 			},
-			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": ZyncDatabaseDeploymentName},
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRecreate,
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RecreateDeploymentStrategyType,
 			},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      zync.Options.ZyncDatabasePodTemplateLabels,
 					Annotations: zync.Options.ZyncDatabasePodTemplateAnnotations,
@@ -442,26 +394,28 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 					RestartPolicy:      v1.RestartPolicyAlways,
 					ServiceAccountName: "amp",
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "postgresql",
-							Image: " ",
+							Image: containerImage,
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
+								{
 									ContainerPort: 5432,
-									Protocol:      v1.ProtocolTCP},
+									Protocol:      v1.ProtocolTCP,
+								},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
+								{
 									Name:      "zync-database-data",
 									MountPath: "/var/lib/pgsql/data",
 								},
 							},
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Env: []v1.EnvVar{
-								v1.EnvVar{
+								{
 									Name:  "POSTGRESQL_USER",
 									Value: "zync",
-								}, v1.EnvVar{
+								},
+								{
 									Name: "POSTGRESQL_PASSWORD",
 									ValueFrom: &v1.EnvVarSource{
 										SecretKeyRef: &v1.SecretKeySelector{
@@ -471,7 +425,8 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 											Key: "ZYNC_DATABASE_PASSWORD",
 										},
 									},
-								}, v1.EnvVar{
+								},
+								{
 									Name:  "POSTGRESQL_DATABASE",
 									Value: "zync_production",
 								},
@@ -500,7 +455,7 @@ func (zync *Zync) DatabaseDeploymentConfig() *appsv1.DeploymentConfig {
 					PriorityClassName:         zync.Options.ZyncDatabasePriorityClassName,
 					TopologySpreadConstraints: zync.Options.ZyncDatabaseTopologySpreadConstraints,
 					Volumes: []v1.Volume{
-						v1.Volume{
+						{
 							Name: "zync-database-data",
 							VolumeSource: v1.VolumeSource{
 								EmptyDir: &v1.EmptyDirVolumeSource{
@@ -527,14 +482,14 @@ func (zync *Zync) Service() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "8080-tcp",
 					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": ZyncName},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: ZyncName},
 		},
 	}
 }
@@ -551,14 +506,14 @@ func (zync *Zync) DatabaseService() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "postgresql",
 					Protocol:   v1.ProtocolTCP,
 					Port:       5432,
 					TargetPort: intstr.FromInt(5432),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "zync-database"},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "zync-database"},
 		},
 	}
 }
@@ -575,7 +530,7 @@ func (zync *Zync) ZyncPodDisruptionBudget() *policyv1.PodDisruptionBudget {
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": ZyncName},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: ZyncName},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -594,7 +549,7 @@ func (zync *Zync) QuePodDisruptionBudget() *policyv1.PodDisruptionBudget {
 		},
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deploymentConfig": "zync-que"},
+				MatchLabels: map[string]string{reconcilers.DeploymentLabelSelector: "zync-que"},
 			},
 			MaxUnavailable: &intstr.IntOrString{IntVal: PDB_MAX_UNAVAILABLE_POD_NUMBER},
 		},
@@ -603,7 +558,7 @@ func (zync *Zync) QuePodDisruptionBudget() *policyv1.PodDisruptionBudget {
 
 func (zync *Zync) zyncPorts() []v1.ContainerPort {
 	ports := []v1.ContainerPort{
-		v1.ContainerPort{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
+		{ContainerPort: 8080, Protocol: v1.ProtocolTCP},
 	}
 
 	if zync.Options.ZyncMetrics {

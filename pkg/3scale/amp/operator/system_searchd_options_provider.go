@@ -10,6 +10,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
 )
 
 type SystemSearchdOptionsProvider struct {
@@ -48,7 +49,7 @@ func (s *SystemSearchdOptionsProvider) setResourceRequirementsOptions() {
 	if *s.apimanager.Spec.ResourceRequirementsEnabled {
 		s.options.ContainerResourceRequirements = component.DefaultSearchdContainerResourceRequirements()
 	}
-	// DeploymentConfig-level ResourceRequirements CR fields have priority over
+	// Deployment-level ResourceRequirements CR fields have priority over
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if s.apimanager.Spec.System.SearchdSpec.Resources != nil {
@@ -85,7 +86,7 @@ func (s *SystemSearchdOptionsProvider) podTemplateLabels() map[string]string {
 		labels[k] = v
 	}
 
-	labels["deploymentConfig"] = "system-searchd"
+	labels[reconcilers.DeploymentLabelSelector] = "system-searchd"
 
 	return labels
 }

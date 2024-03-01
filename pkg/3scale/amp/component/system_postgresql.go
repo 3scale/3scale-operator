@@ -1,10 +1,10 @@
 package component
 
 import (
-	"fmt"
-
 	"github.com/3scale/3scale-operator/pkg/helper"
-	appsv1 "github.com/openshift/api/apps/v1"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+
+	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -34,14 +34,14 @@ func (p *SystemPostgreSQL) Service() *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "system-postgresql",
 					Protocol:   v1.ProtocolTCP,
 					Port:       5432,
 					TargetPort: intstr.FromInt(5432),
 				},
 			},
-			Selector: map[string]string{"deploymentConfig": "system-postgresql"},
+			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-postgresql"},
 		},
 	}
 }
@@ -63,7 +63,7 @@ func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
-				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
+				"ReadWriteOnce",
 			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
@@ -76,40 +76,29 @@ func (p *SystemPostgreSQL) DataPersistentVolumeClaim() *v1.PersistentVolumeClaim
 	}
 }
 
-func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
-	return &appsv1.DeploymentConfig{
+func (p *SystemPostgreSQL) Deployment(containerImage string) *k8sappsv1.Deployment {
+	var postgresReplicas int32 = 1
+
+	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "DeploymentConfig",
+			Kind:       reconcilers.DeploymentLabelSelector,
 			APIVersion: "apps.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   SystemPostgreSQLDeploymentName,
 			Labels: p.Options.DeploymentLabels,
 		},
-		Spec: appsv1.DeploymentConfigSpec{
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.DeploymentStrategyTypeRecreate,
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RecreateDeploymentStrategyType,
 			},
-			Triggers: appsv1.DeploymentTriggerPolicies{
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnConfigChange},
-				appsv1.DeploymentTriggerPolicy{
-					Type: appsv1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &appsv1.DeploymentTriggerImageChangeParams{
-						Automatic: true,
-						ContainerNames: []string{
-							"system-postgresql",
-						},
-						From: v1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: fmt.Sprintf("system-postgresql:%s", p.Options.ImageTag),
-						},
-					},
+			Replicas: &postgresReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					reconcilers.DeploymentLabelSelector: SystemPostgreSQLDeploymentName,
 				},
 			},
-			Replicas: 1,
-			Selector: map[string]string{"deploymentConfig": SystemPostgreSQLDeploymentName},
-			Template: &v1.PodTemplateSpec{
+			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      p.Options.PodTemplateLabels,
 					Annotations: p.Options.PodTemplateAnnotations,
@@ -119,7 +108,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 					Tolerations:        p.Options.Tolerations,
 					ServiceAccountName: "amp", //TODO make this configurable via flag
 					Volumes: []v1.Volume{
-						v1.Volume{
+						{
 							Name: "postgresql-data",
 							VolumeSource: v1.VolumeSource{
 								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
@@ -129,11 +118,11 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 						},
 					},
 					Containers: []v1.Container{
-						v1.Container{
+						{
 							Name:  "system-postgresql",
-							Image: "system-postgresql:latest",
+							Image: containerImage,
 							Ports: []v1.ContainerPort{
-								v1.ContainerPort{
+								{
 									ContainerPort: 5432,
 									Protocol:      v1.ProtocolTCP,
 								},
@@ -148,7 +137,7 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 							},
 							Resources: p.Options.ContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
-								v1.VolumeMount{
+								{
 									Name:      "postgresql-data",
 									MountPath: "/var/lib/pgsql/data",
 								},
@@ -171,7 +160,8 @@ func (p *SystemPostgreSQL) DeploymentConfig() *appsv1.DeploymentConfig {
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
-										Command: []string{"/bin/sh", "-i", "-c", "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'"}},
+										Command: []string{"/bin/sh", "-i", "-c", "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'"},
+									},
 								},
 								InitialDelaySeconds: 10,
 								PeriodSeconds:       30,

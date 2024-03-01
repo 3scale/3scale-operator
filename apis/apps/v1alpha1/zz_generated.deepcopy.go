@@ -205,11 +205,6 @@ func (in *APIManagerCommonSpec) DeepCopyInto(out *APIManagerCommonSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.ImageStreamTagImportInsecure != nil {
-		in, out := &in.ImageStreamTagImportInsecure, &out.ImageStreamTagImportInsecure
-		*out = new(bool)
-		**out = **in
-	}
 	if in.ResourceRequirementsEnabled != nil {
 		in, out := &in.ResourceRequirementsEnabled, &out.ResourceRequirementsEnabled
 		*out = new(bool)
