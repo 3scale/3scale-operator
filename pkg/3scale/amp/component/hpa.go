@@ -9,8 +9,8 @@ import (
 func DefaultHpa(name string, namespace string) *hpa.HorizontalPodAutoscaler {
 	minPods := helper.Int32Ptr(1)
 	maxPods := int32(5)
-	cpuPercent := helper.Int32Ptr(90)
-	memoryPercent := helper.Int32Ptr(90)
+	cpuPercent := helper.Int32Ptr(85)
+	memoryPercent := helper.Int32Ptr(85)
 
 	// needs to change from dc to deployment
 	return &hpa.HorizontalPodAutoscaler{
