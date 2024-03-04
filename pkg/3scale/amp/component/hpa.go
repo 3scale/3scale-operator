@@ -20,9 +20,9 @@ func DefaultHpa(name string, namespace string) *hpa.HorizontalPodAutoscaler {
 		},
 		Spec: hpa.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: hpa.CrossVersionObjectReference{
-				Kind:       "DeploymentConfig",
+				Kind:       "Deployment",
 				Name:       name,
-				APIVersion: "apps.openshift.io/v1",
+				APIVersion: "apps/v1",
 			},
 			MinReplicas: minPods,
 			MaxReplicas: maxPods,

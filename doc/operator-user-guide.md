@@ -755,8 +755,8 @@ metadata:
   namespace: 3scale-test
 spec: 
   scaleTargetRef: 
-    apiVersion: apps.openshift.io/v1
-    kind: DeploymentConfig
+    apiVersion: apps/v1
+    kind: Deployment
     name: backend-worker
   minReplicas: 1
   maxReplicas: 5

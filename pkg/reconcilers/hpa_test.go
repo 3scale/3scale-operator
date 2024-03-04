@@ -16,9 +16,9 @@ func hpaTestFactory(maxPods int32) *hpa.HorizontalPodAutoscaler {
 		},
 		Spec: hpa.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: hpa.CrossVersionObjectReference{
-				Kind:       "DeploymentConfig",
+				Kind:       "Deployment",
 				Name:       "test",
-				APIVersion: "apps.openshift.io/v1",
+				APIVersion: "apps/v1",
 			},
 			MinReplicas: helper.Int32Ptr(1),
 			MaxReplicas: maxPods,
