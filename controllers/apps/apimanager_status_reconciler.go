@@ -90,7 +90,7 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 
 	s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource)
 
-	deploymentStatus := olm.GetDeploymentConfigStatus(deployments)
+	deploymentStatus := olm.GetDeploymentStatus(deployments)
 	newStatus.Deployments = deploymentStatus
 
 	return newStatus, nil
