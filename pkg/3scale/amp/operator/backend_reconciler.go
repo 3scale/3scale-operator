@@ -7,6 +7,9 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"strings"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -54,14 +57,12 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Listener Deployment
-	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	// Listener DC
 	RedisQueuesUrl, RedisStorageUrl := GetBackendRedisSecret(r.apiManager.Namespace, r.Context(), r.Client())
 
-	listenerConfigMutator := reconcilers.GenericBackendMutators()
+	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	if RedisStorageUrl != RedisQueuesUrl {
-		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigListenerEnvMutator)
-		listenerConfigMutator = append(listenerConfigMutator, reconcilers.DeploymentConfigListenerArgsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerEnvMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerArgsMutator)
 	}
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
@@ -100,10 +101,9 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker Deployment
 	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	// Worker DC
-	workerConfigMutator := reconcilers.GenericBackendMutators()
+	//workerConfigMutator := reconcilers.GenericBackendMutators()
 	if RedisStorageUrl != RedisQueuesUrl {
-		workerConfigMutator = append(workerConfigMutator, reconcilers.DeploymentConfigWorkerEnvMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
 	}
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)

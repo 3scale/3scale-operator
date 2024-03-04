@@ -305,3 +305,111 @@ func DeploymentProbesMutator(desired, existing *k8sappsv1.Deployment) (bool, err
 
 	return updated, nil
 }
+
+// DeploymentPodContainerImageMutator ensures that the deployment's pod's containers are reconciled
+func DeploymentPodContainerImageMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	for i, desiredContainer := range desired.Spec.Template.Spec.Containers {
+		existingContainer := &existing.Spec.Template.Spec.Containers[i]
+
+		if !reflect.DeepEqual(existingContainer.Image, desiredContainer.Image) {
+			existingContainer.Image = desiredContainer.Image
+			updated = true
+		}
+	}
+	return updated, nil
+}
+
+// DeploymentPodInitContainerImageMutator ensures that the deployment's pod's containers are reconciled
+func DeploymentPodInitContainerImageMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	for i, desiredContainer := range desired.Spec.Template.Spec.InitContainers {
+		existingContainer := &existing.Spec.Template.Spec.InitContainers[i]
+
+		if !reflect.DeepEqual(existingContainer.Image, desiredContainer.Image) {
+			existingContainer.Image = desiredContainer.Image
+			updated = true
+		}
+	}
+	return updated, nil
+}
+
+func DeploymentListenerArgsMutator(_, existing *k8sappsv1.Deployment) (bool, error) {
+	update := true
+	falconArgs := []string{"bin/3scale_backend", "-s", "falcon", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Args, falconArgs) {
+		existing.Spec.Template.Spec.Containers[0].Args = falconArgs
+		return update, nil
+	}
+	update = false
+	return update, nil
+}
+
+func DeploymentListenerEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	update := false
+	updateListenerWorkers := true
+	updateConfigRedisAsync := true
+	// This may be redundant as operator crashes if LISTENER_WORKERS=0
+	// Update LISTENER_WORKERS and CONFIG_REDIS_ASYNC to 1 if found
+	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
+		if envVar.Name == "LISTENER_WORKERS" {
+			updateListenerWorkers = false
+			if envVar.Value == "0" {
+				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
+				update = true
+			}
+		}
+		if envVar.Name == "CONFIG_REDIS_ASYNC" {
+			updateConfigRedisAsync = false
+			if envVar.Value == "0" {
+				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
+				update = true
+
+			}
+		}
+		if update {
+			return update, nil
+		}
+	}
+	// if either updateListenerWorkers or updateConfigRedisAsync is true then proceed to the append logic
+	// to add the env var LISTENER_WORKERS and CONFIG_REDIS_ASYNC
+	if updateListenerWorkers || updateConfigRedisAsync {
+		update = true
+	} else {
+		update = false
+	}
+	if updateConfigRedisAsync {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
+	}
+	if updateListenerWorkers {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+			helper.EnvVarFromValue("LISTENER_WORKERS", "1"))
+	}
+
+	return update, nil
+}
+
+func DeploymentWorkerEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	update := true
+	// Always set env var CONFIG_REDIS_ASYNC to 1 this logic is only hit when you don't have logical redis db
+	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
+		if envVar.Name == "CONFIG_REDIS_ASYNC" {
+			if envVar.Value == "0" {
+				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "1"
+				update = true
+				return update, nil
+			}
+			update = false
+
+		}
+	}
+	// Adds the env CONFIG_REDIS_ASYNC if not present
+	if update {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
+	}
+	return update, nil
+}

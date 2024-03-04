@@ -72,7 +72,7 @@ var _ reconcile.Reconciler = &APIManagerReconciler{}
 // +kubebuilder:rbac:groups=monitoring.coreos.com,namespace=placeholder,resources=podmonitors;servicemonitors;prometheusrules,verbs=get;list;watch;create;update;delete
 // +kubebuilder:rbac:groups=integreatly.org,namespace=placeholder,resources=grafanadashboards,verbs=get;list;watch;create;update;delete
 // +kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
-// +kubebuilder:rbac:groups=autoscaling,namespace=placeholder,resources=horizontalpodautoscaler,verbs=create;delete
+// +kubebuilder:rbac:groups=autoscaling,namespace=placeholder,resources=horizontalpodautoscaler,verbs=create;delete;list;watch
 
 func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.BaseReconciler.Logger().WithValues("apimanager", req.NamespacedName)
