@@ -558,6 +558,9 @@ spec:
 
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
 * **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
+* **NOTE 3**: If you update Product CR and delete both Method and Mapping Rule using this method - please expect following behavior:
+  - the Mapping Rule will be deleted immediately in 3scale Portal - Product/Integration/Mapping Rules 
+  - If the configuration was promoted to stage or/and production a warning appears in Product CR informing that the Method is used by the latest gateway configuration, it will be removed from 3scale only once the promotion without the mapping rule that uses the deleted method is done.
 
 ### Product application plans
 
