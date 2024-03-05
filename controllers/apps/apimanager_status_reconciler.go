@@ -313,6 +313,6 @@ func apicastOpenTracingCondition(apicast string) common.Condition {
 		Type:    appsv1alpha1.APIManagerWarningConditionType,
 		Status:  v1.ConditionStatus(metav1.ConditionTrue),
 		Reason:  common.ConditionReason(fmt.Sprintf("%s OpenTracing Deprecation", apicast)),
-		Message: "OpenTracing is deperacated, please use OpenTelemetry instead",
+		Message: "OpenTracing is deprecated, please use OpenTelemetry instead",
 	}
 }
