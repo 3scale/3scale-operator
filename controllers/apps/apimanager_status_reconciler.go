@@ -90,6 +90,7 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 	newStatus.Conditions.SetCondition(availableCondition)
 
 	s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource)
+	s.reconcileOpenTracingDeprecationMessage(&newStatus.Conditions, s.apimanagerResource)
 
 	deploymentStatus := olm.GetDeploymentStatus(deployments)
 	newStatus.Deployments = deploymentStatus
@@ -276,4 +277,42 @@ func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *com
 		conditions.RemoveConditionByMessage(cond.Message)
 	}
 
+}
+
+func (s *APIManagerStatusReconciler) reconcileOpenTracingDeprecationMessage(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
+	apicastStaging := "Apicast Staging"
+	apicastProduction := "Apicast Production"
+
+	// check if condition is already present
+	stageFoundCondition := conditions.GetConditionByReason(apicastOpenTracingCondition(apicastStaging).Reason)
+	prodFoundCondition := conditions.GetConditionByReason(apicastOpenTracingCondition(apicastProduction).Reason)
+
+	// If opentracing is enabled on apicast staging but the condition is not found, add it
+	if cr.IsAPIcastStagingOpenTracingEnabled() && stageFoundCondition == nil {
+		*conditions = append(*conditions, apicastOpenTracingCondition(apicastStaging))
+	}
+
+	// If opentracing is enabled on apicast production but the condition is not found, add it
+	if cr.IsAPIcastProductionOpenTracingEnabled() && prodFoundCondition == nil {
+		*conditions = append(*conditions, apicastOpenTracingCondition(apicastProduction))
+	}
+
+	// if opentracing is disabled on apicast staging and condition is found, remove it
+	if !cr.IsAPIcastStagingOpenTracingEnabled() && stageFoundCondition != nil {
+		conditions.RemoveConditionByReason(apicastOpenTracingCondition(apicastStaging).Reason)
+	}
+
+	// if opentracing is disabled on apicast production and condition is found, remove it
+	if !cr.IsAPIcastProductionOpenTracingEnabled() && prodFoundCondition != nil {
+		conditions.RemoveConditionByReason(apicastOpenTracingCondition(apicastProduction).Reason)
+	}
+}
+
+func apicastOpenTracingCondition(apicast string) common.Condition {
+	return common.Condition{
+		Type:    appsv1alpha1.APIManagerWarningConditionType,
+		Status:  v1.ConditionStatus(metav1.ConditionTrue),
+		Reason:  common.ConditionReason(fmt.Sprintf("%s OpenTracing Deprecation", apicast)),
+		Message: "OpenTracing is deperacated, please use OpenTelemetry instead",
+	}
 }
