@@ -642,7 +642,7 @@ spec:
         - apiGroups:
           - autoscaling
           resources:
-          - horizontalpodautoscaler
+          - horizontalpodautoscalers
           verbs:
           - create
           - delete
