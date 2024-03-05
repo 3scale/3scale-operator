@@ -2,9 +2,10 @@ package reconcilers
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/3scale/3scale-operator/pkg/common"
 	hpa "k8s.io/api/autoscaling/v2"
-	"reflect"
 )
 
 func GenericHPAMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {

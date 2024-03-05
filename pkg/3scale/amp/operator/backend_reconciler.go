@@ -2,6 +2,8 @@ package operator
 
 import (
 	"context"
+	"strings"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -9,8 +11,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/upgrade"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"strings"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -101,7 +101,6 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker Deployment
 	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	//workerConfigMutator := reconcilers.GenericBackendMutators()
 	if RedisStorageUrl != RedisQueuesUrl {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
 	}

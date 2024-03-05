@@ -12,7 +12,6 @@ func DefaultHpa(name string, namespace string) *hpa.HorizontalPodAutoscaler {
 	cpuPercent := helper.Int32Ptr(85)
 	memoryPercent := helper.Int32Ptr(85)
 
-	// needs to change from dc to deployment
 	return &hpa.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
