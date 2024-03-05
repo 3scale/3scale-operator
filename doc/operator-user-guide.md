@@ -19,6 +19,7 @@
          * [Setting custom compute resource requirements at component level](#setting-custom-compute-resource-requirements-at-component-level)
          * [Setting custom storage resource requirements](#setting-custom-storage-resource-requirements)
          * [Setting custom PriorityClassName](#setting-custom-priorityclassname)
+         * [Setting Horizontal Pod Autoscaling](#setting-horizontal-pod-autoscaling)
          * [Setting custom TopologySpreadConstraints](#setting-custom-topologyspreadconstraints)
          * [Setting custom labels](#setting-custom-labels)
          * [Setting custom Annotations](#setting-custom-annotations)
@@ -736,6 +737,67 @@ spec:
         listenerSpec:
             priorityClassName: openshift-user-critical
 ```
+#### Setting Horizontal Pod Autoscaling 
+Horizontal Pod Autoscaling(HPA) is available for Apicast-production, Backend-listener and Backend-worker. The backend
+components require Redis running [async mode](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#async). 
+Async is enabled by default by the operator provided you aren't using [logical Redis databases](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#redis-databases).
+If you are not running in Async mode you won't be able to enable HPA for the backend.
+
+Provided you are running in Async mode, you can enable hpa for the components and accept the default configuration which
+will give you a HPA with 90% resources set and max and min pods set to 5 and 1. The following is an example of the 
+output HPA for backend-worker using the defaults. 
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: 
+  name: backend-worker
+  namespace: 3scale-test
+spec: 
+  scaleTargetRef: 
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-worker
+  minReplicas: 1
+  maxReplicas: 5
+  metrics: 
+    - type: Resource
+      resource: 
+        name: cpu
+        target: 
+          averageUtilization: 90
+          type: Utilization
+    - type: Resource
+      resource: 
+        name: memory
+        target: 
+          averageUtilization: 90
+          type: Utilization
+```
+Here is an example of the APIManager CR set with backend-worker, backend-listener and apicast-production set to default 
+HPA values e.g.
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+    name: example-apimanager
+spec:
+    wildcardDomain: example.com
+    resourceRequirementsEnabled: false
+    apicast:
+        productionSpec:
+          hpa: true
+    backend:
+        listenerSpec:
+          hpa: true
+        workerSpec:
+          hpa: true
+```
+Removing hpa field or setting enabled to false will remove the HPA for the component. 
+Once `hpa: true` is set, instances of HPA will be created with the default values. You can manually edit these HPA 
+instances to optimize your [configuration](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
+With hpa enabled it overrides and ignores values for replicas and resources for apicast production, backend listener and worker. 
+
 
 #### Setting custom TopologySpreadConstraints
 TopologySpreadConstraints specifies how to spread matching pods among the given topology.  See [here](https://docs.openshift.com/container-platform/4.13/nodes/scheduling/nodes-scheduler-pod-topology-spread-constraints.html) for more information.  

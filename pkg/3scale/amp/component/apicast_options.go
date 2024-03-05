@@ -168,3 +168,16 @@ func DefaultStagingResourceRequirements() v1.ResourceRequirements {
 		},
 	}
 }
+
+func DefaultHPAProductionResourceRequirements() v1.ResourceRequirements {
+	return v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("128Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("1000m"),
+			v1.ResourceMemory: resource.MustParse("128Mi"),
+		},
+	}
+}

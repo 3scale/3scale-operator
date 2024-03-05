@@ -228,6 +228,12 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// create or delete HPA
+	err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	res, err := r.reconcileAPImanagerCR(context.TODO())
 	if err != nil {
 		return ctrl.Result{}, err
