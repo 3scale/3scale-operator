@@ -318,6 +318,8 @@ activerehashing no
 
 aof-rewrite-incremental-fsync yes
 dir /var/lib/redis/data
+rename-command REPLICAOF ""
+rename-command SLAVEOF ""
 `
 }
 
