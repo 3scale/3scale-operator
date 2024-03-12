@@ -363,18 +363,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Application")
 		os.Exit(1)
 	}
-
-	if err = (&capabilitiescontroller.RedisConfigCMReconciler{
-		BaseReconciler: reconcilers.NewBaseReconciler(
-			context.Background(), mgr.GetClient(), mgr.GetScheme(), mgr.GetAPIReader(),
-			ctrl.Log.WithName("controllers").WithName("RedisConfigCM"),
-			discoveryApplication,
-			mgr.GetEventRecorderFor("RedisConfigCM")),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "RedisConfigCM")
-		os.Exit(1)
-	}
-
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

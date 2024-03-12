@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
-
 	routev1 "github.com/openshift/api/route/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -142,7 +141,23 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Logger:    r.Logger().WithName("APIManagerRoutesHandler"),
 	}
 
+	cmEventMapper := &APIManagerConfigMapsEventMapper{
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("APIManagerConfigMapsEventMapper"),
+	}
+
 	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
+	if err != nil {
+		return nil
+	}
+
+	redisConfigLabelSelector := &apimachinerymetav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"threescale_component":         "system",
+			"threescale_component_element": "redis",
+		},
+	}
+	redisConfigLabelPredicate, err := predicate.LabelSelectorPredicate(*redisConfigLabelSelector)
 	if err != nil {
 		return nil
 	}
@@ -156,6 +171,11 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		).
 		Owns(&k8sappsv1.Deployment{}).
 		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
+		Watches(
+			&source.Kind{Type: &v1.ConfigMap{}},
+			handler.EnqueueRequestsFromMapFunc(cmEventMapper.Map),
+			builder.WithPredicates(redisConfigLabelPredicate),
+		).
 		Complete(r)
 }
 

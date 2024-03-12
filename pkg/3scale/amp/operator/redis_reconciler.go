@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"fmt"
+	"github.com/3scale/3scale-operator/pkg/common"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -95,7 +97,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 
 	// CM
 	if r.ConfigMap != nil {
-		err = r.ReconcileConfigMap(r.ConfigMap(redis), reconcilers.CreateOnlyMutator)
+		err = r.ReconcileConfigMap(r.ConfigMap(redis), r.redisConfigCmMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -123,4 +125,21 @@ func Redis(apimanager *appsv1alpha1.APIManager, client client.Client) (*componen
 		return nil, err
 	}
 	return component.NewRedis(opts), nil
+}
+
+func (r *RedisReconciler) redisConfigCmMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	existing, ok := existingObj.(*corev1.ConfigMap)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)
+	}
+	desired, ok := desiredObj.(*corev1.ConfigMap)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *v1.ConfigMap", desiredObj)
+	}
+
+	update := false
+	fieldUpdated := reconcilers.ConfigMapReconcileField(desired, existing, "redis.conf")
+	update = update || fieldUpdated
+
+	return update, nil
 }
