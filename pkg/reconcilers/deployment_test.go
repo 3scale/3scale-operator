@@ -907,7 +907,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 										LivenessProbe: &corev1.Probe{
 											ProbeHandler: corev1.ProbeHandler{
 												TCPSocket: &corev1.TCPSocketAction{
-													Port: intstr.FromInt(9306),
+													Port: intstr.FromInt32(9306),
 												},
 											},
 											InitialDelaySeconds: 60,
@@ -948,7 +948,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 										LivenessProbe: &corev1.Probe{
 											ProbeHandler: corev1.ProbeHandler{
 												TCPSocket: &corev1.TCPSocketAction{
-													Port: intstr.FromInt(9306),
+													Port: intstr.FromInt32(9306),
 												},
 											},
 											InitialDelaySeconds: 60,
@@ -969,7 +969,7 @@ func TestDeploymentProbesMutator(t *testing.T) {
 										LivenessProbe: &corev1.Probe{
 											ProbeHandler: corev1.ProbeHandler{
 												TCPSocket: &corev1.TCPSocketAction{
-													Port: intstr.FromInt(9306),
+													Port: intstr.FromInt32(9306),
 												},
 											},
 											InitialDelaySeconds: 60,

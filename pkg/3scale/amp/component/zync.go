@@ -223,7 +223,7 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
-										Port:   intstr.FromInt(8080),
+										Port:   intstr.FromInt32(8080),
 										Path:   "/status/live",
 										Scheme: v1.URISchemeHTTP,
 									},
@@ -238,7 +238,7 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
 										Path:   "/status/ready",
-										Port:   intstr.FromInt(8080),
+										Port:   intstr.FromInt32(8080),
 										Scheme: v1.URISchemeHTTP,
 									},
 								},
@@ -339,7 +339,7 @@ func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
 								TimeoutSeconds:      60,
 								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
-										Port:   intstr.FromInt(9394),
+										Port:   intstr.FromInt32(9394),
 										Path:   "/metrics",
 										Scheme: v1.URISchemeHTTP,
 									},
@@ -434,7 +434,7 @@ func (zync *Zync) DatabaseDeployment(containerImage string) *k8sappsv1.Deploymen
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
-										Port: intstr.FromInt(5432),
+										Port: intstr.FromInt32(5432),
 									},
 								},
 								TimeoutSeconds:      1,
@@ -486,7 +486,7 @@ func (zync *Zync) Service() *v1.Service {
 					Name:       "8080-tcp",
 					Protocol:   v1.ProtocolTCP,
 					Port:       8080,
-					TargetPort: intstr.FromInt(8080),
+					TargetPort: intstr.FromInt32(8080),
 				},
 			},
 			Selector: map[string]string{reconcilers.DeploymentLabelSelector: ZyncName},
@@ -510,7 +510,7 @@ func (zync *Zync) DatabaseService() *v1.Service {
 					Name:       "postgresql",
 					Protocol:   v1.ProtocolTCP,
 					Port:       5432,
-					TargetPort: intstr.FromInt(5432),
+					TargetPort: intstr.FromInt32(5432),
 				},
 			},
 			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "zync-database"},

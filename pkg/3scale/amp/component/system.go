@@ -960,7 +960,7 @@ func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deploy
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
-										Port: intstr.FromInt(9394),
+										Port: intstr.FromInt32(9394),
 									},
 								},
 								FailureThreshold:    40,
@@ -1171,7 +1171,7 @@ func (system *System) MemcachedService() *v1.Service {
 					Name:       "memcache",
 					Protocol:   v1.ProtocolTCP,
 					Port:       11211,
-					TargetPort: intstr.FromInt(11211),
+					TargetPort: intstr.FromInt32(11211),
 				},
 			},
 			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-memcache"},

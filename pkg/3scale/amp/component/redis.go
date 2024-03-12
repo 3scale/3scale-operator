@@ -178,7 +178,7 @@ func (redis *Redis) buildPodContainerLivenessProbe() *v1.Probe {
 		PeriodSeconds:       10,
 		ProbeHandler: v1.ProbeHandler{
 			TCPSocket: &v1.TCPSocketAction{
-				Port: intstr.FromInt(6379),
+				Port: intstr.FromInt32(6379),
 			},
 		},
 	}
@@ -232,7 +232,7 @@ func (redis *Redis) buildServicePorts() []v1.ServicePort {
 	return []v1.ServicePort{
 		{
 			Port:       6379,
-			TargetPort: intstr.FromInt(6379),
+			TargetPort: intstr.FromInt32(6379),
 			Protocol:   v1.ProtocolTCP,
 		},
 	}
@@ -510,7 +510,7 @@ func (redis *Redis) SystemService() *v1.Service {
 					Name:       "redis",
 					Protocol:   v1.ProtocolTCP,
 					Port:       6379,
-					TargetPort: intstr.FromInt(6379),
+					TargetPort: intstr.FromInt32(6379),
 				},
 			},
 			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-redis"},

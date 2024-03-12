@@ -40,7 +40,7 @@ func (s *SystemSearchd) Service() *v1.Service {
 					Name:       "searchd",
 					Protocol:   v1.ProtocolTCP,
 					Port:       9306,
-					TargetPort: intstr.FromInt(9306),
+					TargetPort: intstr.FromInt32(9306),
 				},
 			},
 			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-searchd"},
@@ -102,7 +102,7 @@ func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment 
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
-										Port: intstr.FromInt(9306),
+										Port: intstr.FromInt32(9306),
 									},
 								},
 								InitialDelaySeconds: 60,
@@ -111,7 +111,7 @@ func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment 
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
-										Port: intstr.FromInt(9306),
+										Port: intstr.FromInt32(9306),
 									},
 								},
 								InitialDelaySeconds: 30,

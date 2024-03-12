@@ -38,7 +38,7 @@ func (mysql *SystemMysql) Service() *v1.Service {
 					Name:       "system-mysql",
 					Protocol:   v1.ProtocolTCP,
 					Port:       3306,
-					TargetPort: intstr.FromInt(3306),
+					TargetPort: intstr.FromInt32(3306),
 				},
 			},
 			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-mysql"},

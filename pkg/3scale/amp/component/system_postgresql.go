@@ -38,7 +38,7 @@ func (p *SystemPostgreSQL) Service() *v1.Service {
 					Name:       "system-postgresql",
 					Protocol:   v1.ProtocolTCP,
 					Port:       5432,
-					TargetPort: intstr.FromInt(5432),
+					TargetPort: intstr.FromInt32(5432),
 				},
 			},
 			Selector: map[string]string{reconcilers.DeploymentLabelSelector: "system-postgresql"},

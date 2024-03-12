@@ -590,7 +590,7 @@ func TestApicastServicePortMutator(t *testing.T) {
 		name                       = "example-apimanager"
 		namespace                  = "operator-unittest"
 		port                 int32 = 1111
-		targetPort                 = intstr.FromInt(1111)
+		targetPort                 = intstr.FromInt32(1111)
 		wildcardDomain             = "test.3scale.net"
 		log                        = logf.Log.WithName("operator_test")
 		appLabel                   = "someLabel"
@@ -693,7 +693,7 @@ func TestApicastServicePortMutator(t *testing.T) {
 				},
 			},
 			8080,
-			intstr.FromInt(8080),
+			intstr.FromInt32(8080),
 		},
 		{
 			"annotationAbsent",
@@ -723,7 +723,7 @@ func TestApicastServicePortMutator(t *testing.T) {
 				},
 			},
 			8080,
-			intstr.FromInt(8080),
+			intstr.FromInt32(8080),
 		},
 	}
 
