@@ -263,7 +263,7 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 	}
 
 	// 3scale 2.14 -> 2.15
-	err = upgrade.DeleteImageStreams(r.WatchedNamespace, r.Client())
+	err = upgrade.DeleteImageStreams(cr.Namespace, r.Client())
 	if err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
