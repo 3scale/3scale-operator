@@ -38,9 +38,10 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
-	ThreescaleVersionAnnotation = "apps.3scale.net/apimanager-threescale-version"
-	OperatorVersionAnnotation   = "apps.3scale.net/threescale-operator-version"
-	Default3scaleAppLabel       = "3scale-api-management"
+	ThreescaleVersionAnnotation     = "apps.3scale.net/apimanager-threescale-version"
+	OperatorVersionAnnotation       = "apps.3scale.net/threescale-operator-version"
+	Default3scaleAppLabel           = "3scale-api-management"
+	ThreescaleRequirementsConfirmed = "apps.3scale.net/apimanager-confirmed-requirements-version"
 )
 
 const (
@@ -147,8 +148,9 @@ type APIManager struct {
 }
 
 const (
-	APIManagerAvailableConditionType common.ConditionType = "Available"
-	APIManagerWarningConditionType   common.ConditionType = "Warning"
+	APIManagerAvailableConditionType  common.ConditionType = "Available"
+	APIManagerWarningConditionType    common.ConditionType = "Warning"
+	APIManagerPreflightsConditionType common.ConditionType = "Preflights"
 )
 
 type APIManagerCommonSpec struct {
@@ -883,6 +885,81 @@ func (apimanager *APIManager) SetDefaults() (bool, error) {
 	changed = changed || tmpChanged
 
 	return changed, err
+}
+
+func (apimanager *APIManager) IsInFreshInstallationScenario() bool {
+	threescaleAnnotationFound := true
+
+	if _, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; ok {
+		threescaleAnnotationFound = false
+	}
+
+	return threescaleAnnotationFound
+}
+
+func (apimanager *APIManager) IsHealthyUpgradeScenario() bool {
+	threescaleAnnotationFound := false
+
+	// is the version annotation present
+	if _, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; ok {
+		threescaleAnnotationFound = true
+	}
+
+	// is the condition set to "available" = "true"
+	conditionAvailable := apimanager.IsExistingInstallationHealthy()
+
+	if threescaleAnnotationFound && conditionAvailable {
+		return true
+	}
+
+	return false
+}
+
+func (apimanager *APIManager) IsExistingInstallationHealthy() bool {
+	// Fetch ready condition
+	availableCondition := apimanager.Status.Conditions.GetCondition(APIManagerAvailableConditionType)
+
+	// return true if the ready condition is set to true
+	if availableCondition != nil && availableCondition.Status == v1.ConditionTrue {
+		return true
+	}
+
+	return false
+}
+
+func (apimanager *APIManager) RequirementsConfirmed(requirementsConfigMapResourceVersion string) bool {
+	if val, ok := apimanager.Annotations[ThreescaleRequirementsConfirmed]; ok && val == requirementsConfigMapResourceVersion {
+		return true
+	}
+
+	return false
+}
+
+func (apimanager *APIManager) RetrieveRHTVersion() string {
+	if val, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; ok && val != "" {
+		return val
+	}
+
+	return ""
+}
+
+func (apimanager *APIManager) IsMultiMinorHopDetected() (bool, error) {
+	var currentlyInstalledVersion string
+	var multiMinorHopDetected bool
+
+	if val, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; ok && val != "" {
+		currentlyInstalledVersion = val
+	}
+
+	if currentlyInstalledVersion != "" {
+		multiMinorHop, err := common.CompareMinorVersions(currentlyInstalledVersion, product.ThreescaleRelease)
+		if err != nil {
+			return true, err
+		}
+		multiMinorHopDetected = multiMinorHop
+	}
+
+	return multiMinorHopDetected, nil
 }
 
 func (apimanager *APIManager) setAPIManagerAnnotationsDefaults() bool {

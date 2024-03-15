@@ -210,6 +210,10 @@ metadata:
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/3scale/3scale-operator
+    rht_backend_redis_requirements: 6.2.0
+    rht_mysql_requirements: 8.0.0
+    rht_postgres_requirements: 10.0.0
+    rht_system_redis_requirements: 6.2.0
     support: Red Hat
     tectonic-visibility: ocs
   labels:
@@ -350,6 +354,12 @@ spec:
     spec:
       clusterPermissions:
       - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
         - apiGroups:
           - capabilities.3scale.net
           resources:
@@ -965,6 +975,50 @@ spec:
           - delete
           - get
           - list
+          - update
+          - watch
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - clusterserviceversions
+          verbs:
+          - delete
+          - get
+          - list
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - installplans
+          verbs:
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - operatorconditions
+          - subscriptions
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - operators.coreos.com/v1alpha1
+          resources:
+          - subscriptions
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
           - update
           - watch
         - apiGroups:

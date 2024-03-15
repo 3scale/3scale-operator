@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
@@ -32,12 +33,14 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	consolev1 "github.com/openshift/api/console/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +54,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
+	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
+	subcontroller "github.com/3scale/3scale-operator/controllers/subscription"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
+	operatorsv2 "github.com/operator-framework/api/pkg/operators/v2"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -69,6 +84,8 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(appsv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(operatorsv2.AddToScheme(scheme))
+	utilruntime.Must(operatorsv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(capabilitiesv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(capabilitiesv1beta1.AddToScheme(scheme))
 	utilruntime.Must(routev1.Install(scheme))
@@ -102,7 +119,7 @@ func main() {
 
 	printVersion()
 
-	namespace, err := getWatchNamespace()
+	namespace, err := helper.GetWatchNamespace()
 	if err != nil {
 		setupLog.Error(err, "Failed to get watch namespace")
 		os.Exit(1)
@@ -158,6 +175,42 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "APIManager")
 		os.Exit(1)
+	}
+
+	// Subscription controller - skipping subscription controller if preflights are bypassed.
+	if !helper.IsPreflightBypassed() {
+		restConfig := ctrl.GetConfigOrDie()
+		restConfig.Timeout = time.Second * 10
+		k8sclient, err := client.New(restConfig, client.Options{
+			Scheme: mgr.GetScheme(),
+		})
+		if err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Subscription")
+			os.Exit(1)
+		}
+		// For subscription controller, the watchnamespace is always the operator namespace
+		operatorInstallationNamespace, err := helper.GetOperatorNamespace()
+		if err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Subscription")
+			os.Exit(1)
+		}
+		setupLog.Info(fmt.Sprintf("Operator Namespace is: %s", operatorInstallationNamespace))
+		discoveryClientSubscription, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+		if err != nil {
+			setupLog.Error(err, "unable to create discovery client")
+			os.Exit(1)
+		}
+		if err = (&subcontroller.SubscriptionReconciler{
+			BaseReconciler: reconcilers.NewBaseReconciler(
+				context.Background(), k8sclient, mgr.GetScheme(), mgr.GetAPIReader(),
+				ctrl.Log.WithName("controllers").WithName("Subscription"),
+				discoveryClientSubscription,
+				mgr.GetEventRecorderFor("Subscription")),
+			OperatorNamespace: operatorInstallationNamespace,
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Subscription")
+			os.Exit(1)
+		}
 	}
 
 	discoveryClientAPIManagerBackup, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
@@ -381,20 +434,6 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-// getWatchNamespace returns the Namespace the operator should be watching for changes
-func getWatchNamespace() (string, error) {
-	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
-	// which specifies the Namespace to watch.
-	// An empty value means the operator is running with cluster scope.
-	var watchNamespaceEnvVar = "WATCH_NAMESPACE"
-
-	ns, found := os.LookupEnv(watchNamespaceEnvVar)
-	if !found {
-		return "", fmt.Errorf("%s must be set", watchNamespaceEnvVar)
-	}
-	return ns, nil
 }
 
 func printVersion() {
