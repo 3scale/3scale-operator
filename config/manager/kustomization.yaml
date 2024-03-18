@@ -6,4 +6,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quay.io/3scale/3scale-operator
-  newTag: master
+  newTag: v0.11.0
