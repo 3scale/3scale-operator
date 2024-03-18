@@ -50,13 +50,13 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: RELATED_IMAGE_BACKEND
-          value: "quay.io/3scale/apisonator:latest"
+          value: "quay.io/3scale/3scale214:apisonator-3scale-2.14.1-GA"
         - name: RELATED_IMAGE_APICAST
-          value: "quay.io/3scale/apicast:latest"
+          value: "quay.io/3scale/3scale214:apicast-3scale-2.14.1-GA"
         - name: RELATED_IMAGE_SYSTEM
-          value: "quay.io/3scale/porta:latest"
+          value: "quay.io/3scale/3scale214:porta-3scale-2.14.1-GA"
         - name: RELATED_IMAGE_ZYNC
-          value: "quay.io/3scale/zync:latest"
+          value: "quay.io/3scale/3scale214:zync-3scale-2.14.1-GA"
         - name: RELATED_IMAGE_SYSTEM_MEMCACHED
           value: "memcached:1.5"
         - name: RELATED_IMAGE_BACKEND_REDIS

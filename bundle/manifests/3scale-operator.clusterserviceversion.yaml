@@ -202,7 +202,7 @@ metadata:
     capabilities: Deep Insights
     categories: Integration & Delivery
     certified: "false"
-    containerImage: quay.io/3scale/3scale-operator:master
+    containerImage: quay.io/3scale/3scale-operator:v0.11.0
     createdAt: "2019-05-30T22:40:00Z"
     description: 3scale Operator to provision 3scale and publish/manage API
     olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.15"}]'
@@ -446,13 +446,13 @@ spec:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
                 - name: RELATED_IMAGE_BACKEND
-                  value: quay.io/3scale/apisonator:latest
+                  value: quay.io/3scale/3scale214:apisonator-3scale-2.14.1-GA
                 - name: RELATED_IMAGE_APICAST
-                  value: quay.io/3scale/apicast:latest
+                  value: quay.io/3scale/3scale214:apicast-3scale-2.14.1-GA
                 - name: RELATED_IMAGE_SYSTEM
-                  value: quay.io/3scale/porta:latest
+                  value: quay.io/3scale/3scale214:porta-3scale-2.14.1-GA
                 - name: RELATED_IMAGE_ZYNC
-                  value: quay.io/3scale/zync:latest
+                  value: quay.io/3scale/3scale214:zync-3scale-2.14.1-GA
                 - name: RELATED_IMAGE_SYSTEM_MEMCACHED
                   value: memcached:1.5
                 - name: RELATED_IMAGE_BACKEND_REDIS
@@ -469,7 +469,7 @@ spec:
                   value: quay.io/openshift/origin-cli:4.7
                 - name: RELATED_IMAGE_SYSTEM_SEARCHD
                   value: quay.io/3scale/searchd:latest
-                image: quay.io/3scale/3scale-operator:master
+                image: quay.io/3scale/3scale-operator:v0.11.0
                 name: manager
                 ports:
                 - containerPort: 8080

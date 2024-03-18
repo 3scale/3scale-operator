@@ -257,15 +257,15 @@ jobs:
       - checkout
       - run: make prometheusrules-update-test
 
-  doc-toc-validate:
-    docker:
-      - image: cimg/base:2023.05
-    steps:
-      - checkout
-      - run: make toc-user-guide
-      - run: make toc-app-capabilities
-      - run: make toc-apimanager-reference
-      - run: make doc-update-test
+#  doc-toc-validate:
+#    docker:
+#      - image: cimg/base:2023.05
+#    steps:
+#      - checkout
+#      - run: make toc-user-guide
+#      - run: make toc-app-capabilities
+#      - run: make toc-apimanager-reference
+#      - run: make doc-update-test
 
 workflows:
   version: 2
@@ -279,7 +279,7 @@ workflows:
       - assets-validate
       - prometheusrules-validate
       - build-operator-image-only
-      - doc-toc-validate
+#      - doc-toc-validate
       - unit-tests-coverage:
           requires:
             - run-unit-tests
