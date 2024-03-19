@@ -67,8 +67,8 @@ func DefaultSystemMysqlDatabaseName() string {
 	return "system"
 }
 
-func DefaultSystemMysqlDatabaseURL(password, name string) string {
-	return fmt.Sprintf("mysql2://root:%s@system-mysql/%s", password, name)
+func DefaultSystemMysqlDatabaseURL(username, password, databasename string) string {
+	return fmt.Sprintf("mysql2://%s:%s@system-mysql/%s", username, password, databasename)
 }
 
 func DefaultSystemMysqlStorageResources() resource.Quantity {

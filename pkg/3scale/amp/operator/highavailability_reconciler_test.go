@@ -33,7 +33,7 @@ func TestHighAvailabilityReconciler(t *testing.T) {
 	apimanager := basicApimanagerTestHA()
 	backendRedisSecret := testBackendRedisSecret()
 	systemRedisSecret := testSystemRedisSecret()
-	systemDBSecret := getSystemDBSecret(databaseURL, systemMysqlUsername, systemMysqlPassword)
+	systemDBSecret := getSystemDBSecret(databaseURL)
 	// Objects to track in the fake client.
 	objs := []runtime.Object{apimanager, backendRedisSecret, systemRedisSecret, systemDBSecret}
 	s := scheme.Scheme

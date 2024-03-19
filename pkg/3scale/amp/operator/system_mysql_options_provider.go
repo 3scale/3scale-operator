@@ -44,6 +44,8 @@ func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOp
 		return nil, fmt.Errorf("GetMysqlOptions reading secret options: %w", err)
 	}
 
+	s.setMysqlUser()
+	s.setMysqlPassword()
 	s.setResourceRequirementsOptions()
 	s.setPersistentVolumeClaimOptions()
 	s.setNodeAffinityAndTolerationsOptions()
@@ -66,22 +68,10 @@ func (s *SystemMysqlOptionsProvider) setSecretBasedOptions() error {
 		defValue    string
 	}{
 		{
-			&s.mysqlOptions.User,
-			component.SystemSecretSystemDatabaseSecretName,
-			component.SystemSecretSystemDatabaseUserFieldName,
-			component.DefaultSystemMysqlUser(),
-		},
-		{
-			&s.mysqlOptions.Password,
-			component.SystemSecretSystemDatabaseSecretName,
-			component.SystemSecretSystemDatabasePasswordFieldName,
-			component.DefaultSystemMysqlPassword(),
-		},
-		{
 			&s.mysqlOptions.DatabaseURL,
 			component.SystemSecretSystemDatabaseSecretName,
 			component.SystemSecretSystemDatabaseURLFieldName,
-			component.DefaultSystemMysqlDatabaseURL(component.DefaultSystemMysqlRootPassword(), component.DefaultSystemMysqlDatabaseName()),
+			component.DefaultSystemMysqlDatabaseURL(component.DefaultSystemMysqlUser(), component.DefaultSystemMysqlPassword(), component.DefaultSystemMysqlDatabaseName()),
 		},
 	}
 
@@ -121,9 +111,6 @@ func (s *SystemMysqlOptionsProvider) systemDatabaseURLIsValid(rawURL string) (*u
 	}
 	if resultURL.User.Username() == "" {
 		return nil, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain a username", component.SystemSecretSystemDatabaseURLFieldName, component.SystemSecretSystemDatabaseSecretName)
-	}
-	if resultURL.User.Username() != "root" {
-		return nil, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain 'root' as the username", component.SystemSecretSystemDatabaseURLFieldName, component.SystemSecretSystemDatabaseSecretName)
 	}
 	if _, set := resultURL.User.Password(); !set {
 		return nil, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain a password", component.SystemSecretSystemDatabaseURLFieldName, component.SystemSecretSystemDatabaseSecretName)
@@ -235,5 +222,25 @@ func (s *SystemMysqlOptionsProvider) setPodTemplateAnnotations() {
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&
 		s.apimanager.Spec.System.DatabaseSpec.MySQL != nil {
 		s.mysqlOptions.PodTemplateAnnotations = s.apimanager.Spec.System.DatabaseSpec.MySQL.Annotations
+	}
+}
+
+func (s *SystemMysqlOptionsProvider) setMysqlUser() {
+	u, err := url.Parse(s.mysqlOptions.DatabaseURL)
+	if err != nil {
+		s.mysqlOptions.User = component.DefaultSystemMysqlUser()
+	}
+	s.mysqlOptions.User = u.User.Username()
+}
+
+func (s *SystemMysqlOptionsProvider) setMysqlPassword() {
+	u, err := url.Parse(s.mysqlOptions.DatabaseURL)
+	if err != nil {
+		s.mysqlOptions.Password = component.DefaultSystemMysqlPassword()
+	}
+	passwordIsSet := false
+	s.mysqlOptions.Password, passwordIsSet = u.User.Password()
+	if !passwordIsSet {
+		s.mysqlOptions.Password = component.DefaultSystemMysqlPassword()
 	}
 }
