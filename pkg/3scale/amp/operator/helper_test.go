@@ -81,11 +81,9 @@ func GetTestSecret(namespace, secretName string, data map[string]string) *v1.Sec
 	return secret
 }
 
-func getSystemDBSecret(databaseURL, username, password string) *v1.Secret {
+func getSystemDBSecret(databaseURL string) *v1.Secret {
 	data := map[string]string{
-		component.SystemSecretSystemDatabaseUserFieldName:     username,
-		component.SystemSecretSystemDatabasePasswordFieldName: password,
-		component.SystemSecretSystemDatabaseURLFieldName:      databaseURL,
+		component.SystemSecretSystemDatabaseURLFieldName: databaseURL,
 	}
 	return GetTestSecret(namespace, component.SystemSecretSystemDatabaseSecretName, data)
 }

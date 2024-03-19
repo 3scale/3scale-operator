@@ -128,8 +128,8 @@ func (p *SystemPostgreSQL) Deployment(containerImage string) *k8sappsv1.Deployme
 								},
 							},
 							Env: []v1.EnvVar{
-								helper.EnvVarFromSecret("POSTGRESQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
-								helper.EnvVarFromSecret("POSTGRESQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
+								helper.EnvVarFromValue("POSTGRESQL_USER", p.Options.User),
+								helper.EnvVarFromValue("POSTGRESQL_PASSWORD", p.Options.Password),
 								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
 								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
 								// are deprecated we should be able to change this.
@@ -192,9 +192,7 @@ func (p *SystemPostgreSQL) SystemDatabaseSecret() *v1.Secret {
 			Labels: p.Options.CommonLabels,
 		},
 		StringData: map[string]string{
-			SystemSecretSystemDatabaseUserFieldName:     p.Options.User,
-			SystemSecretSystemDatabasePasswordFieldName: p.Options.Password,
-			SystemSecretSystemDatabaseURLFieldName:      p.Options.DatabaseURL,
+			SystemSecretSystemDatabaseURLFieldName: p.Options.DatabaseURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

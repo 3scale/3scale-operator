@@ -188,8 +188,8 @@ func (mysql *SystemMysql) Deployment(containerImage string) *k8sappsv1.Deploymen
 								},
 							},
 							Env: []v1.EnvVar{
-								helper.EnvVarFromSecret("MYSQL_USER", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseUserFieldName),
-								helper.EnvVarFromSecret("MYSQL_PASSWORD", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabasePasswordFieldName),
+								helper.EnvVarFromValue("MYSQL_USER", mysql.Options.User),
+								helper.EnvVarFromValue("MYSQL_PASSWORD", mysql.Options.Password),
 								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
 								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
 								// are deprecated we should be able to change this.
@@ -266,9 +266,7 @@ func (mysql *SystemMysql) SystemDatabaseSecret() *v1.Secret {
 			Labels: mysql.Options.CommonLabels,
 		},
 		StringData: map[string]string{
-			SystemSecretSystemDatabaseUserFieldName:     mysql.Options.User,
-			SystemSecretSystemDatabasePasswordFieldName: mysql.Options.Password,
-			SystemSecretSystemDatabaseURLFieldName:      mysql.Options.DatabaseURL,
+			SystemSecretSystemDatabaseURLFieldName: mysql.Options.DatabaseURL,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

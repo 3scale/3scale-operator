@@ -247,9 +247,7 @@ kind: Secret
 metadata:
   name: system-database
 stringData:
-  URL: "mysql2://root:password0@system-mysql/system"
-  DB_USER: "mysql"
-  DB_PASSWORD: "password1"
+  URL: "mysql2://user:password0@system-mysql/system"
 type: Opaque
 ```
 

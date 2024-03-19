@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	systemMysqlUsername = "user"
-	systemMysqlPassword = "password1"
+	systemMysqlUsername     = "mysql"
+	systemMysqlPassword     = "test1"
+	systemMysqlDatabaseName = "mysql"
 )
 
 func testSystemMysqlCommonLabels() map[string]string {
@@ -80,7 +81,7 @@ func defaultSystemMysqlOptions(opts *component.SystemMysqlOptions) *component.Sy
 		User:                          component.DefaultSystemMysqlUser(),
 		Password:                      opts.Password,
 		RootPassword:                  opts.RootPassword,
-		DatabaseURL:                   component.DefaultSystemMysqlDatabaseURL(opts.RootPassword, component.DefaultSystemMysqlDatabaseName()),
+		DatabaseURL:                   component.DefaultSystemMysqlDatabaseURL(component.DefaultSystemMysqlUser(), opts.Password, component.DefaultSystemMysqlDatabaseName()),
 		ContainerResourceRequirements: component.DefaultSystemMysqlResourceRequirements(),
 		CommonLabels:                  testSystemMysqlCommonLabels(),
 		DeploymentLabels:              testSystemMysqlDeploymentLabels(),
@@ -91,9 +92,7 @@ func defaultSystemMysqlOptions(opts *component.SystemMysqlOptions) *component.Sy
 
 func TestGetMysqlOptionsProvider(t *testing.T) {
 	tmpFalseValue := false
-	systemMysqlRootPassword := "rootPassw1"
-	systemMysqlDatabaseName := "myDatabaseName"
-	databaseURL := fmt.Sprintf("mysql2://root:%s@system-mysql/%s", systemMysqlRootPassword, systemMysqlDatabaseName)
+	databaseURL := fmt.Sprintf("mysql2://%s:%s@system-mysql/%s", systemMysqlUsername, systemMysqlPassword, systemMysqlDatabaseName)
 	customStorageClass := "custommysqlstorageclass"
 
 	cases := []struct {
@@ -119,14 +118,13 @@ func TestGetMysqlOptionsProvider(t *testing.T) {
 				return expecteOpts
 			},
 		},
-		{"SystemDBSecret", getSystemDBSecret(databaseURL, systemMysqlUsername, systemMysqlPassword), basicApimanager,
+		{"SystemDBSecret", getSystemDBSecret(databaseURL), basicApimanager,
 			func(opts *component.SystemMysqlOptions) *component.SystemMysqlOptions {
 				expecteOpts := defaultSystemMysqlOptions(opts)
-				expecteOpts.User = systemMysqlUsername
-				expecteOpts.Password = systemMysqlPassword
 				expecteOpts.DatabaseURL = databaseURL
 				expecteOpts.DatabaseName = systemMysqlDatabaseName
-				expecteOpts.RootPassword = systemMysqlRootPassword
+				expecteOpts.User = systemMysqlUsername
+				expecteOpts.Password = systemMysqlPassword
 				return expecteOpts
 			},
 		},
@@ -278,15 +276,13 @@ func TestGetMysqlOptionsInvalidURL(t *testing.T) {
 		{"invalidURL01", "mysql://root:password1@system-mysql/system", "'mysql2'"},
 		// missing user
 		{"invalidURL02", "mysql2://system-mysql/system", "authentication information"},
-		// user not root
-		{"invalidURL03", "mysql2://user:password1@system-mysql/system", "'root'"},
 		// passwd missing
 		{"invalidURL04", "mysql2://root@system-mysql/system", "secret must contain a password"},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			secret := getSystemDBSecret(tc.databaseURL, systemMysqlUsername, systemMysqlPassword)
+			secret := getSystemDBSecret(tc.databaseURL)
 			objs := []runtime.Object{secret}
 			cl := fake.NewFakeClient(objs...)
 			optsProvider := NewSystemMysqlOptionsProvider(basicApimanager(), namespace, cl)
