@@ -363,6 +363,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	configMapToApimanagerEventMapper := &ConfigMapToApimanagerEventMapper{
+		Context:   r.Context(),
 		K8sClient: r.Client(),
 		Logger:    r.Logger().WithName("configMapToApimanagerEventMapper"),
 		Namespace: r.WatchedNamespace,
@@ -395,16 +396,13 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		).
 		Owns(&k8sappsv1.Deployment{}).
 		Watches(&routev1.Route{}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
-		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
 		Watches(
-			&source.Kind{
-				Type: &v1.ConfigMap{
+			&v1.ConfigMap{
 					ObjectMeta: apimachinerymetav1.ObjectMeta{
 						Name:      helper.OperatorRequirementsConfigMapName,
 						Namespace: operatorNamespace,
 					},
 				},
-			},
 			handler.EnqueueRequestsFromMapFunc(configMapToApimanagerEventMapper.Map),
 			builder.WithPredicates(resourceVersionChangePredicate),
 		).

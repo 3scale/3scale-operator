@@ -12,12 +12,13 @@ import (
 )
 
 type ConfigMapToApimanagerEventMapper struct {
+	Context   context.Context
 	K8sClient client.Client
 	Logger    logr.Logger
 	Namespace string
 }
 
-func (s *ConfigMapToApimanagerEventMapper) Map(obj client.Object) []reconcile.Request {
+func (s *ConfigMapToApimanagerEventMapper) Map(ctx context.Context, obj client.Object) []reconcile.Request {
 	objectName := obj.GetName()
 	if objectName != helper.OperatorRequirementsConfigMapName {
 		return nil
@@ -33,7 +34,7 @@ func (s *ConfigMapToApimanagerEventMapper) Map(obj client.Object) []reconcile.Re
 		opts = append(opts, client.InNamespace(s.Namespace))
 	}
 
-	err := s.K8sClient.List(context.Background(), apimanagerList, opts...)
+	err := s.K8sClient.List(ctx, apimanagerList, opts...)
 	if err != nil {
 		s.Logger.Error(err, "reading apimanager list")
 		return nil

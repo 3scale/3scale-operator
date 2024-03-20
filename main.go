@@ -55,16 +55,8 @@ import (
 	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
-	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
 	subcontroller "github.com/3scale/3scale-operator/controllers/subscription"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/version"
 	operatorsv2 "github.com/operator-framework/api/pkg/operators/v2"
 	// +kubebuilder:scaffold:imports
 )
