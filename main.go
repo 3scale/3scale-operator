@@ -33,7 +33,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
@@ -43,6 +42,7 @@ import (
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
+	corev1 "k8s.io/api/core/v1"
 	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apimachineryruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -51,6 +51,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -117,11 +118,32 @@ func main() {
 		os.Exit(1)
 	}
 
+	operatorInstallationNamespace, err := helper.GetOperatorNamespace()
+	if err != nil {
+		setupLog.Error(err, "Failed to retrieve operator namespace")
+		os.Exit(1)
+	}
+
 	// If a watch namespace is detected (i.e. operator is namespace scoped), then pass the NS to cache.Options.DefaultNamespaces
 	// If no watch namespace is detected (i.e. operator is cluster scoped), then pass an empty Cache object
 	var managerCache = cache.Options{}
 	if namespace != "" {
 		managerCache = cache.Options{
+			// If running in target ns mode or own ns mode, include the operator ns and product ns include both, sub and config maps inn cache
+			ByObject: map[client.Object]cache.ByObject{
+				&corev1.ConfigMap{}: {
+					Namespaces: map[string]cache.Config{
+						operatorInstallationNamespace: {},
+						namespace:                     {},
+					},
+				},
+				&operatorsv1alpha1.Subscription{}: {
+					Namespaces: map[string]cache.Config{
+						operatorInstallationNamespace: {},
+						namespace:                     {},
+					},
+				},
+			},
 			DefaultNamespaces: map[string]cache.Config{
 				namespace: {},
 			},
@@ -180,12 +202,7 @@ func main() {
 			setupLog.Error(err, "unable to create controller", "controller", "Subscription")
 			os.Exit(1)
 		}
-		// For subscription controller, the watchnamespace is always the operator namespace
-		operatorInstallationNamespace, err := helper.GetOperatorNamespace()
-		if err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "Subscription")
-			os.Exit(1)
-		}
+
 		setupLog.Info(fmt.Sprintf("Operator Namespace is: %s", operatorInstallationNamespace))
 		discoveryClientSubscription, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
 		if err != nil {

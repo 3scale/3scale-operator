@@ -398,11 +398,11 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&routev1.Route{}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
 		Watches(
 			&v1.ConfigMap{
-					ObjectMeta: apimachinerymetav1.ObjectMeta{
-						Name:      helper.OperatorRequirementsConfigMapName,
-						Namespace: operatorNamespace,
-					},
+				ObjectMeta: apimachinerymetav1.ObjectMeta{
+					Name:      helper.OperatorRequirementsConfigMapName,
+					Namespace: operatorNamespace,
 				},
+			},
 			handler.EnqueueRequestsFromMapFunc(configMapToApimanagerEventMapper.Map),
 			builder.WithPredicates(resourceVersionChangePredicate),
 		).
