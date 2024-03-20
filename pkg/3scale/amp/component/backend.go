@@ -122,7 +122,7 @@ func (backend *Backend) WorkerDeployment(containerImage string) *k8sappsv1.Deplo
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									HTTPGet: &v1.HTTPGetAction{
-										Port:   intstr.FromInt(9421),
+										Port:   intstr.FromInt32(9421),
 										Path:   "/metrics",
 										Scheme: v1.URISchemeHTTP,
 									},

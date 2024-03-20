@@ -140,7 +140,7 @@ func (apicast *Apicast) StagingDeployment(containerImage string) *k8sappsv1.Depl
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/live",
-									Port: intstr.FromInt(8090),
+									Port: intstr.FromInt32(8090),
 								}},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
@@ -149,7 +149,7 @@ func (apicast *Apicast) StagingDeployment(containerImage string) *k8sappsv1.Depl
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/ready",
-									Port: intstr.FromInt(8090),
+									Port: intstr.FromInt32(8090),
 								}},
 								InitialDelaySeconds: 15,
 								TimeoutSeconds:      5,
@@ -228,7 +228,7 @@ func (apicast *Apicast) ProductionDeployment(containerImage string) *k8sappsv1.D
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/live",
-									Port: intstr.FromInt(8090),
+									Port: intstr.FromInt32(8090),
 								}},
 								InitialDelaySeconds: 10,
 								TimeoutSeconds:      5,
@@ -237,7 +237,7 @@ func (apicast *Apicast) ProductionDeployment(containerImage string) *k8sappsv1.D
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{HTTPGet: &v1.HTTPGetAction{
 									Path: "/status/ready",
-									Port: intstr.FromInt(8090),
+									Port: intstr.FromInt32(8090),
 								}},
 								InitialDelaySeconds: 15,
 								TimeoutSeconds:      5,
@@ -781,9 +781,9 @@ func (apicast *Apicast) productionContainerPorts() []v1.ContainerPort {
 
 func (apicast *Apicast) productionServicePorts() []v1.ServicePort {
 	ports := []v1.ServicePort{
-		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt(8080)},
-		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt(8090)},
-		v1.ServicePort{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt(9421)},
+		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt32(8080)},
+		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt32(8090)},
+		v1.ServicePort{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt32(9421)},
 	}
 
 	if apicast.Options.ProductionHTTPSPort != nil {
@@ -812,9 +812,9 @@ func (apicast *Apicast) stagingContainerPorts() []v1.ContainerPort {
 
 func (apicast *Apicast) stagingServicePorts() []v1.ServicePort {
 	ports := []v1.ServicePort{
-		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt(8080)},
-		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt(8090)},
-		v1.ServicePort{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt(9421)},
+		v1.ServicePort{Name: "gateway", Protocol: v1.ProtocolTCP, Port: 8080, TargetPort: intstr.FromInt32(8080)},
+		v1.ServicePort{Name: "management", Protocol: v1.ProtocolTCP, Port: 8090, TargetPort: intstr.FromInt32(8090)},
+		v1.ServicePort{Name: "metrics", Protocol: v1.ProtocolTCP, Port: 9421, TargetPort: intstr.FromInt32(9421)},
 	}
 
 	if apicast.Options.StagingHTTPSPort != nil {

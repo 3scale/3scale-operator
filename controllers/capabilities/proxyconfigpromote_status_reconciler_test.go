@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -73,8 +74,21 @@ func getBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.B
 	capabilitiesv1beta1.AddToScheme(s)
 	appsv1alpha1.AddToScheme(s)
 
+	// controller-runtime version >= 0.15.0 requires fake clients to specify WithStatusSubresource() in order to protect objects' .status block
+	// WithStatusSubresource() takes client.Objects while this function takes runtime.Objects
+	// Populate a []client.Object slice using the passed []runtime.Objects if present
+	var clientObjects []client.Object
+	if objects != nil {
+		for _, o := range objects {
+			co, ok := o.(client.Object)
+			if ok {
+				clientObjects = append(clientObjects, co)
+			}
+		}
+	}
+
 	// Create a fake client to mock API calls.
-	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objects...).Build()
+	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objects...).WithStatusSubresource(clientObjects...).Build()
 	log := logf.Log.WithName("proxyPromoteConfig status reconciler test")
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)

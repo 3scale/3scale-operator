@@ -23,6 +23,14 @@ import (
 	"os"
 	"runtime"
 
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
+	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -39,17 +47,10 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
-
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
-	capabilitiesv1alpha1 "github.com/3scale/3scale-operator/apis/capabilities/v1alpha1"
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
-	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
-	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
-	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/version"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -70,13 +71,13 @@ func init() {
 	utilruntime.Must(appsv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(capabilitiesv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(capabilitiesv1beta1.AddToScheme(scheme))
-	utilruntime.Must(routev1.AddToScheme(scheme))
-	utilruntime.Must(consolev1.AddToScheme(scheme))
-	utilruntime.Must(imagev1.AddToScheme(scheme))
-	utilruntime.Must(appsv1.AddToScheme(scheme))
+	utilruntime.Must(routev1.Install(scheme))
+	utilruntime.Must(consolev1.Install(scheme))
+	utilruntime.Must(imagev1.Install(scheme))
+	utilruntime.Must(appsv1.Install(scheme))
 	utilruntime.Must(monitoringv1.AddToScheme(scheme))
 	utilruntime.Must(grafanav1alpha1.AddToScheme(scheme))
-	utilruntime.Must(configv1.AddToScheme(scheme))
+	utilruntime.Must(configv1.Install(scheme))
 
 	// +kubebuilder:scaffold:scheme
 }
@@ -107,13 +108,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	// If a watch namespace is detected (i.e. operator is namespace scoped), then pass the NS to cache.Options.DefaultNamespaces
+	// If no watch namespace is detected (i.e. operator is cluster scoped), then pass an empty Cache object
+	var managerCache = cache.Options{}
+	if namespace != "" {
+		managerCache = cache.Options{
+			DefaultNamespaces: map[string]cache.Config{
+				namespace: {},
+			},
+		}
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Namespace:          namespace,
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		Port:               9443,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "82355b9c.3scale.net",
+		Cache:            managerCache,
+		Scheme:           scheme,
+		Metrics:          metricsserver.Options{BindAddress: metricsAddr},
+		LeaderElection:   enableLeaderElection,
+		LeaderElectionID: "82355b9c.3scale.net",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

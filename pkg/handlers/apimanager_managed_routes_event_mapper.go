@@ -21,11 +21,12 @@ import (
 // route to an APIManager. This handler should only be used on Route objects
 // and when APIManager is used.
 type APIManagerRoutesEventMapper struct {
+	Context   context.Context
 	K8sClient client.Client
 	Logger    logr.Logger
 }
 
-func (h *APIManagerRoutesEventMapper) Map(o client.Object) []reconcile.Request {
+func (h *APIManagerRoutesEventMapper) Map(ctx context.Context, o client.Object) []reconcile.Request {
 	var res []reconcile.Request
 	apimanagerReconcileRequest := h.getAPIManagerOwnerReconcileRequest(o)
 	if apimanagerReconcileRequest != nil {
