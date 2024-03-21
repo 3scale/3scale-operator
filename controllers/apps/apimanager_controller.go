@@ -82,6 +82,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
 
 	// your logic here
+	var delayedRequeue bool
 
 	instance, err := r.apiManagerInstance(req.NamespacedName)
 	if err != nil {
@@ -119,57 +120,36 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, nil
 	}
 
-	// Perform preflight checks if the preflights checks are required
-
-	delayedRequeue := false
 	var preflightChecksError error
 	if preflightsRequired {
-		// Perform preflight checks
-		result, preflightChecksError = r.PreflightChecks(instance, logger)
-
-		// If an error during preflights is encountered
+		result, err, preflightChecksError = r.PreflightChecks(instance, logger)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		if preflightChecksError != nil {
-			/*  If there is Requeue (either immediate requeue or requeue after) - we are in failed hard state, do not progress with APIM reconciliation, instead, requeue immediately or after certain time period
-			    This can happen if:
-				- there are any generic errors, for example, throwaway pod creation or os.exec call
-				- an Error with Requeue after, means that we are in error state because of the version mismatch, we do want to give some time for the user to bump the databases etc before requeuing instead of spamming the controller
-			*/
-			if result.Requeue || result.RequeueAfter > 0 {
-				logger.Info("encountered error during preflights checks.")
-				statusResult, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
+			if result.RequeueAfter > 0 {
+				logger.Info("preflights failed, requeueing")
+				_, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
 				if statusErr != nil {
 					return ctrl.Result{}, statusErr
 				}
-				// Only if there is an update error due to resource version mismatch
-				if statusResult.Requeue {
-					logger.Info("Reconciling not finished. Requeueing.")
-					return statusResult, nil
-				}
 				return result, nil
 			}
-			/*
-				If there is an error, but we are not getting a signal to immediately requeue, it means we have encountered a database version mismatch, but we are in scenario where we want to continue with
-				the reconciliation since it's not a hard block that could affect existing 3scale instance. This can for example happen when:
-				2.15 is being used, 2.16 requires a newer version of postgres, but 3scale instance is connected to older version of postgres, in this scenario currently installed operator version and the
-				3scale instance should remain unaffected, meaning, operator should still reconcile the instance as it would normally but it also should periodically check for the database version to eventually
-				pass the preflight giving the upgrade a green light.
-			*/
-			if !result.Requeue {
+			if result.Requeue {
+				logger.Info("preflights for incoming upgrade failed, requeueing")
 				delayedRequeue = true
 				statusResult, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
 				if statusErr != nil {
 					return ctrl.Result{}, statusErr
 				}
-				// Only if there is an update error due to resource version mismatch
 				if statusResult.Requeue {
 					logger.Info("Reconciling not finished. Requeueing.")
 					return statusResult, nil
 				}
 			}
 		}
-		// If the requeue signal was sent with no error, skip the requeue to avoid controller run since the only situation in when the Requeue is sent back with no error is when there was an update done
-		// to the APIM annotation to confirm that the preflights have passed. This call on it's own will trigger a reconcile.
-		if result.Requeue {
+
+		if result.Requeue && preflightChecksError == nil {
 			return ctrl.Result{}, nil
 		}
 	}
@@ -190,7 +170,6 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return specResult, nil
 	}
 
-	// reconcile status regardless specErr
 	statusResult, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
 	if statusErr != nil {
 		return ctrl.Result{}, statusErr
@@ -205,9 +184,6 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return statusResult, nil
 	}
 
-	// This isn't ideal as potentially, if there's a mismatch of version in incoming version of 3scale operator, and user does multiple changes to APIManager, we might get multiple delayedRequests queued up.
-	// However, on the other side, this only happens when user switches channel to next minor version, which means they do attempt to upgrade so the chances that they flipped channel without the intention of
-	// upgrading are slim so this queue won't grow too big.
 	if delayedRequeue {
 		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil
 	}
@@ -215,143 +191,126 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	return ctrl.Result{}, nil
 }
 
-func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIManager, logger logr.Logger) (ctrl.Result, error) {
+func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIManager, logger logr.Logger) (ctrl.Result, error, error) {
+	logger.Info("Running requirements check for preflights...")
+
 	systemRedisVerified := false
 	backendRedisVerified := false
 	systemDatabaseVerified := false
 	var apimVersion string
 
-	logger.Info("Starting preflight checks...")
 	reqConfigMap, err := subController.RetrieveRequirementsConfigMap(r.Client())
 	if err != nil {
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{}, err, nil
 	}
 
-	// If it's fresh install with internal components - no preflights are required, pass requirements directly from here.
-	// TODO: Improvement - not having dbs set as external doesn't necessarily mean they are internal.
-	if apimInstance.IsInFreshInstallationScenario() {
-		logger.Info("Running in fresh install scenario")
-		backendRedisVerified, systemRedisVerified, systemDatabaseVerified = helper.InternalDatabases(*apimInstance, logger)
-
-		// If all are already verified, exit earlier
-		if backendRedisVerified && systemRedisVerified && systemDatabaseVerified {
-			err := r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
-			if err != nil {
-				return ctrl.Result{Requeue: true}, err
-			}
-			return ctrl.Result{Requeue: true}, nil
-		}
-	} else {
-		apimVersion = apimInstance.RetrieveRHTVersion()
+	// Skip preflights entirely if it's a fresh installation with internal databases
+	skipPreflightsFreshInstall, err := r.skipPreflights(apimInstance, *reqConfigMap, logger)
+	if err != nil {
+		return ctrl.Result{}, err, nil
+	}
+	if skipPreflightsFreshInstall {
+		return ctrl.Result{}, nil, nil
 	}
 
-	// if not in fresh install - rht_comp_version must always be present, if it's not, there is something wrong with the CSV and we should not continue.
-	incomingVersion := reqConfigMap.Data[helper.RHTThreescaleVersion]
-	if incomingVersion == "" {
-		return ctrl.Result{Requeue: true}, fmt.Errorf("unable to find %s on requirements config map", helper.RHTThreescaleVersion)
-	}
-
-	// If system redis requirements are not found, pass.
-	systemRedisRequirement := reqConfigMap.Data[helper.RHTThreescaleSystemRedisRequirements]
+	incomingVersion, systemRedisRequirement, backendRedisRequirement, mysqlDatabaseRequirement, postgresDatabaseRequirements := retrieveRequiredVersion(*reqConfigMap, logger)
 	if systemRedisRequirement == "" {
-		logger.Info("No requirements for System Redis found")
 		systemRedisVerified = true
 	}
-
-	// If backend redis requirements are not found, pass.
-	backendRedisRequirement := reqConfigMap.Data[helper.RHTThreescaleBackendRedisRequirements]
 	if backendRedisRequirement == "" {
-		logger.Info("No requirements for Backend Redis found")
 		backendRedisVerified = true
 	}
-
-	// If system db requirements are not found, pass.
-	mysqlDatabaseRequirement := reqConfigMap.Data[helper.RHTThreescaleMysqlRequirements]
-	postgresDatabaseRequirement := reqConfigMap.Data[helper.RHTThreescalePostgresRequirements]
-	if mysqlDatabaseRequirement == "" && postgresDatabaseRequirement == "" {
-		logger.Info("No requirements for System Database found")
+	if mysqlDatabaseRequirement == "" && postgresDatabaseRequirements == "" {
 		systemDatabaseVerified = true
 	}
+	if incomingVersion == "" {
+		return ctrl.Result{}, fmt.Errorf("error could not locate incoming version of 3scale, failing preflights"), nil
+	}
 
-	// If system redis is not verified by now, verify.
+	apimVersion = apimInstance.RetrieveRHTVersion()
+	if apimVersion == "" {
+		logger.Info("Not running in fresh install but 3scale version annotation is missing. Running pre-flights regardless")
+	}
+
+	logger.Info("Starting preflight checks...")
 	if !systemRedisVerified {
-		systemRedisVerified, err = helper.VerifySystemRedis(r.Client(), reqConfigMap, apimInstance, logger)
+		systemRedisVerified, err = helper.VerifySystemRedis(r.Client(), reqConfigMap, systemRedisRequirement, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{Requeue: true}, err
+			return ctrl.Result{}, err, nil
 		}
 	}
-
-	// If backend redis is not verified by now, verify.
 	if !backendRedisVerified {
-		backendRedisVerified, err = helper.VerifyBackendRedis(r.Client(), reqConfigMap, apimInstance, logger)
+		backendRedisVerified, err = helper.VerifyBackendRedis(r.Client(), reqConfigMap, backendRedisRequirement, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{Requeue: true}, err
+			return ctrl.Result{}, err, nil
 		}
 	}
-
-	// If system database is not verified by now, verify.
 	if !systemDatabaseVerified {
 		systemDatabaseVerified, err = helper.VerifySystemDatabase(r.Client(), reqConfigMap, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{Requeue: true}, err
+			return ctrl.Result{}, err, nil
 		}
 	}
 
-	// At this stage, we either want to triggered a Delayed Requeue to give time to handle the components version or, update the APIManager to confirm that requirements are met.
+	culprit := ""
+	if !systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified {
+		culprit = retrieveCulprit(systemDatabaseVerified, backendRedisVerified, systemRedisVerified, postgresDatabaseRequirements, mysqlDatabaseRequirement, backendRedisRequirement, systemRedisRequirement)
+	}
 
-	// Following cases must be covered
-	// Fresh Installation case with external components.
-	/*
-		threescaleProductVersion = 2.15
-		incomingVersion = 2.15
-		APIMVersion = ""
-
-		Scenario:
-		I have no 3scale instance, and now, I've installed 2.15 with External databases
-
-		Expected outcome:
-		Requirements must be confirmed. Do not continue if they are not.
-	*/
 	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == product.ThreescaleRelease) && (apimVersion == "") {
-		return ctrl.Result{RequeueAfter: time.Minute * 10}, fmt.Errorf("fresh installation detected but the requirements have not been met")
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("fresh installation detected but the requirements have not been met, %s", culprit)
 	}
 
-	/*
-		threescaleProductVersion = 2.15
-		incomingVersion = 2.15
-		APIMVersion = 2.14
-
-		Scenario:
-		I have 2.14 installed, I've approved 2.15 upgrade
-
-		Expected outcome:
-		Do not let 2.15 installation if pre-flights are not confirmed
-	*/
 	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == product.ThreescaleRelease) && (apimVersion != product.ThreescaleRelease) {
-		return ctrl.Result{RequeueAfter: time.Minute * 10}, fmt.Errorf("upgrade to %s have been performed but the requirements are not met", product.ThreescaleRelease)
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", product.ThreescaleRelease, culprit)
 	}
 
-	/*
-		threescaleProductVersion = 2.14
-		incomingVersion = 2.15
-		APIMVersion = 2.14
-
-		Scenario:
-		I have 2.14 installed, 2.15 upgrade is discovered
-
-		Expected outcome:
-		Do not let 2.15 progress, but do reconcile existing 2.14
-	*/
 	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion != product.ThreescaleRelease) && (apimVersion == product.ThreescaleRelease) {
-		return ctrl.Result{}, fmt.Errorf("attempted upgrade to %s have been performed but the requirements are not met, operator will keep reconciling but ensure requirements are met in order to proceed with upgrade", incomingVersion)
+		return ctrl.Result{Requeue: true}, nil, fmt.Errorf("attempted upgrade to %s have been performed but the requirements are not met, operator will keep reconciling but ensure requirements are met in order to proceed with upgrade, %s", incomingVersion, culprit)
 	}
 
 	// At this point, all requirements are confirmed
 	err = r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
 	if err != nil {
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{}, err, nil
 	}
-	return ctrl.Result{Requeue: true}, nil
+	return ctrl.Result{Requeue: true}, nil, nil
+}
+
+func retrieveCulprit(systemDatabaseVerified, backendRedisVerified, systemRedisVerified bool, postgresReq, mysqlReq, backendReq, systemReq string) string {
+	message := ""
+	if !systemDatabaseVerified {
+		message = message + fmt.Sprintf("system database version mismatch - required is Postgres %s, MySQL %s;", postgresReq, mysqlReq)
+	}
+	if !backendRedisVerified {
+		message = message + fmt.Sprintf("backend redis version mismatch - required is Redis %s;", backendReq)
+	}
+	if !systemRedisVerified {
+		message = message + fmt.Sprintf("system redis version mismatch - required is Redis %s;", systemReq)
+	}
+
+	return message
+}
+
+func retrieveRequiredVersion(reqConfigMap v1.ConfigMap, logger logr.Logger) (string, string, string, string, string) {
+	// if not in fresh install - rht_comp_version must always be present, if it's not, there is something wrong with the CSV and we should not continue.
+	return reqConfigMap.Data[helper.RHTThreescaleVersion], reqConfigMap.Data[helper.RHTThreescaleSystemRedisRequirements], reqConfigMap.Data[helper.RHTThreescaleBackendRedisRequirements],
+		reqConfigMap.Data[helper.RHTThreescaleMysqlRequirements], reqConfigMap.Data[helper.RHTThreescalePostgresRequirements]
+}
+
+func (r *APIManagerReconciler) skipPreflights(apimInstance *appsv1alpha1.APIManager, reqConfigMap v1.ConfigMap, logger logr.Logger) (bool, error) {
+	if apimInstance.IsInFreshInstallationScenario() {
+		backendRedisVerified, systemRedisVerified, systemDatabaseVerified := helper.InternalDatabases(*apimInstance, logger)
+		// If all are already verified, exit earlier
+		if backendRedisVerified && systemRedisVerified && systemDatabaseVerified {
+			err := r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
+			if err != nil {
+				return false, err
+			}
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {

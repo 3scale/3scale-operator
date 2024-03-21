@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	kube "k8s.io/client-go/kubernetes"
 
-	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"k8s.io/client-go/kubernetes/scheme"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -188,14 +187,14 @@ func DeletePod(k8sclient client.Client, pod *v1.Pod) error {
 	return nil
 }
 
-func CreateDatabaseThrowAwayPod(k8sclient client.Client, dbType string, instance appsv1alpha1.APIManager, dbSecret v1.Secret) (*v1.Pod, error) {
+func CreateDatabaseThrowAwayPod(k8sclient client.Client, namespace, dbType string) (*v1.Pod, error) {
 	// Create throwaway redis deployment
 	dbPod := &v1.Pod{}
 	if dbType == "mysql" {
-		dbPod = throwAwayMysql(instance, dbSecret)
+		dbPod = throwAwayMysql(namespace)
 	}
 	if dbType == "postgres" {
-		dbPod = throwAwayPostgres(instance, dbSecret)
+		dbPod = throwAwayPostgres(namespace)
 	}
 
 	err := k8sclient.Create(context.TODO(), dbPod)
@@ -233,12 +232,12 @@ func CreateDatabaseThrowAwayPod(k8sclient client.Client, dbType string, instance
 	return dbPod, nil
 }
 
-func throwAwayPostgres(instance appsv1alpha1.APIManager, secret v1.Secret) *v1.Pod {
+func throwAwayPostgres(namespace string) *v1.Pod {
 	systemPostgresImage := GetEnvVar("RELATED_IMAGE_SYSTEM_POSTGRESQL", "centos/postgresql-10-centos7")
 	return &v1.Pod{
 		ObjectMeta: apimachinerymetav1.ObjectMeta{
 			Name:      "throwaway-postgres",
-			Namespace: instance.Namespace,
+			Namespace: namespace,
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
@@ -256,12 +255,12 @@ func throwAwayPostgres(instance appsv1alpha1.APIManager, secret v1.Secret) *v1.P
 	}
 }
 
-func throwAwayMysql(instance appsv1alpha1.APIManager, secret v1.Secret) *v1.Pod {
+func throwAwayMysql(namespace string) *v1.Pod {
 	systemMysqlImage := GetEnvVar("RELATED_IMAGE_SYSTEM_MYSQL", "centos/mysql-80-centos7")
 	return &v1.Pod{
 		ObjectMeta: apimachinerymetav1.ObjectMeta{
 			Name:      "throwaway-mysql",
-			Namespace: instance.Namespace,
+			Namespace: namespace,
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{

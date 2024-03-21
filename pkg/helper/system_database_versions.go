@@ -2,8 +2,7 @@ package helper
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
+	"net/url"
 
 	"github.com/go-logr/logr"
 
@@ -12,49 +11,51 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type SystemDatabase struct {
+	scheme   string
+	host     string
+	port     string
+	password string
+	user     string
+	path     string
+}
+
 const (
 	systemDatabaseName = "system-database"
+	postgresScheme     = "postgresql"
+	mysqlScheme        = "mysql2"
 )
 
 func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, apimInstance *appsv1alpha1.APIManager, logger logr.Logger) (bool, error) {
 	databaseVersionVerified := false
-
 	logger.Info("Verifying system database version")
-	// In upgrade scenario, system database secret must always be present, if it's not, we are dealing with already broken installation.
-	// In fresh installation with external databases, it must be present as well otherwise installation will not succeed.
-	connSecret, err := FetchSecret(k8sclient, systemDatabaseName, apimInstance.Namespace)
+	connSecret, err := fetchSecret(k8sclient, systemDatabaseName, apimInstance.Namespace)
 	if err != nil {
 		return databaseVersionVerified, err
 	}
 
-	// Retrieve database type from the URL connection string
-	databaseType := detectDatabaseType(string(connSecret.Data["URL"]))
-	// For now, only mysql and postgresql version are/can be confirmed.
-	if databaseType == "oracle" || databaseType == "unknown" {
-		// by-pass the check if the database type is unknown or is oracle.
-		databaseVersionVerified = true
-	}
+	// validate secret URL
+	databaseUrl, err := systemDatabaseURLIsValid(string(connSecret.Data["URL"]))
+	systemDatabase := databaseObject(databaseUrl)
 
-	if databaseType == "postgres" {
+	if systemDatabase.scheme == postgresScheme {
 		postgresDatabaseRequirement := reqConfigMap.Data[RHTThreescalePostgresRequirements]
-		// If there are no requirements for postgres, and postgres is used, bypass the requirement check
 		if postgresDatabaseRequirement == "" {
 			databaseVersionVerified = true
 		} else {
-			databaseVersionVerified, err = verifySystemPostgresDatabaseVersion(k8sclient, *reqConfigMap, *connSecret, *apimInstance, postgresDatabaseRequirement, logger)
+			databaseVersionVerified, err = verifySystemPostgresDatabaseVersion(k8sclient, apimInstance.Namespace, postgresDatabaseRequirement, systemDatabase, logger)
 			if err != nil {
 				return false, err
 			}
 		}
 	}
 
-	if databaseType == "mysql" {
+	if systemDatabase.scheme == mysqlScheme {
 		mysqlDatabaseRequirement := reqConfigMap.Data[RHTThreescaleMysqlRequirements]
-		// If there are no requirements for mysql, and mysql is used, bypass the requirement check
 		if mysqlDatabaseRequirement == "" {
 			databaseVersionVerified = true
 		} else {
-			databaseVersionVerified, err = verifySystemMysqlDatabaseVersion(k8sclient, *reqConfigMap, *connSecret, *apimInstance, mysqlDatabaseRequirement, logger)
+			databaseVersionVerified, err = verifySystemMysqlDatabaseVersion(k8sclient, apimInstance.Namespace, mysqlDatabaseRequirement, systemDatabase, logger)
 			if err != nil {
 				return false, err
 			}
@@ -70,25 +71,25 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 	return databaseVersionVerified, nil
 }
 
-func verifySystemPostgresDatabaseVersion(k8sclient client.Client, configMap v1.ConfigMap, connSecret v1.Secret, instance appsv1alpha1.APIManager, requiredVersion string, logger logr.Logger) (bool, error) {
-	databasePod, err := CreateDatabaseThrowAwayPod(k8sclient, "postgres", instance, connSecret)
+func databaseObject(url *url.URL) SystemDatabase {
+	password, _ := url.User.Password()
+	return SystemDatabase{
+		scheme:   url.Scheme,
+		host:     url.Host,
+		port:     url.Port(),
+		password: password,
+		user:     url.User.Username(),
+		path:     url.Path,
+	}
+}
+
+func verifySystemPostgresDatabaseVersion(k8sclient client.Client, namespace, requiredVersion string, databaseObject SystemDatabase, logger logr.Logger) (bool, error) {
+	databasePod, err := CreateDatabaseThrowAwayPod(k8sclient, namespace, "postgres")
 	if err != nil {
 		return false, err
 	}
 
-	postgresHost := retrieveSystemHost(connSecret)
-	postgresUser := string(connSecret.Data["DB_USER"])
-	postgresPassword := string(connSecret.Data["DB_PASSWORD"])
-	postgresDatabaseName, err := retrieveDatabaseName(string(connSecret.Data["URL"]))
-	if err != nil {
-		return false, err
-	}
-
-	if postgresHost == "" || postgresPassword == "" || postgresUser == "" {
-		return false, fmt.Errorf("error unable to read credentials from system-database secret")
-	}
-
-	postgresqlCommand := fmt.Sprintf("PGPASSWORD=\"%s\" psql -h \"%s\" -U \"%s\" -d \"%s\" -p\"5432\" -t -A -c \"SELECT version();\"", postgresPassword, postgresHost, postgresUser, postgresDatabaseName)
+	postgresqlCommand := fmt.Sprintf("PGPASSWORD=\"%s\" psql -h \"%s\" -U \"%s\" -d \"%s\" -p\"5432\" -t -A -c \"SELECT version();\"", databaseObject.password, databaseObject.host, databaseObject.user, databaseObject.path)
 	command := []string{"/bin/bash", "-c", postgresqlCommand}
 	podExecutor := NewPodExecutor(logger)
 	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(databasePod.Namespace, databasePod.Name, command)
@@ -99,18 +100,9 @@ func verifySystemPostgresDatabaseVersion(k8sclient client.Client, configMap v1.C
 		return false, fmt.Errorf("error when executing pod exec command to retrieve database version")
 	}
 
-	var currentPostgresVersion string
-
-	if stdout != "" {
-		pattern := `PostgreSQL (\d+(\.\d+)*)`
-		re := regexp.MustCompile(pattern)
-		match := re.FindStringSubmatch(stdout)
-		if len(match) > 1 {
-			// The version number is captured by the first group
-			currentPostgresVersion = match[1]
-		} else {
-			return false, fmt.Errorf("redis version not found in stdout")
-		}
+	currentPostgresVersion, err := retrievePostgresVersion(stdout)
+	if err != nil {
+		return false, err
 	}
 
 	requirementsMet := CompareVersions(requiredVersion, currentPostgresVersion)
@@ -124,57 +116,13 @@ func verifySystemPostgresDatabaseVersion(k8sclient client.Client, configMap v1.C
 	return requirementsMet, nil
 }
 
-func detectDatabaseType(secret string) string {
-	if strings.HasPrefix(secret, "mysql") {
-		return "mysql"
-	} else if strings.HasPrefix(secret, "postgres") {
-		return "postgres"
-	} else if strings.HasPrefix(secret, "oracle") {
-		return "oracle"
-	} else {
-		return "unknown"
-	}
-}
-
-func retrieveSystemHost(secret v1.Secret) string {
-	var systemhost string
-	re := regexp.MustCompile(`@(.*?)(:\d+)?/`)
-	matches := re.FindStringSubmatch(string(secret.Data["URL"]))
-	if len(matches) > 1 {
-		systemhost = matches[1]
-	}
-
-	return systemhost
-}
-
-func retrieveDatabaseName(connectionString string) (string, error) {
-	regexPattern := `postgresql://\w+:\w+@[\w.-]+:\d+/(?P<dbname>.+)`
-	regex := regexp.MustCompile(regexPattern)
-	match := regex.FindStringSubmatch(connectionString)
-
-	if len(match) < 2 {
-		return "", fmt.Errorf("unable to extract dbname from the connection string")
-	}
-
-	// The dbname will be in the captured group named "dbname"
-	dbname := match[regex.SubexpIndex("dbname")]
-	return dbname, nil
-}
-
-func verifySystemMysqlDatabaseVersion(k8sclient client.Client, configMap v1.ConfigMap, connSecret v1.Secret, instance appsv1alpha1.APIManager, requiredVersion string, logger logr.Logger) (bool, error) {
-	databasePod, err := CreateDatabaseThrowAwayPod(k8sclient, "mysql", instance, connSecret)
+func verifySystemMysqlDatabaseVersion(k8sclient client.Client, namespace, requiredVersion string, databaseObject SystemDatabase, logger logr.Logger) (bool, error) {
+	databasePod, err := CreateDatabaseThrowAwayPod(k8sclient, namespace, "mysql")
 	if err != nil {
 		return false, err
 	}
 
-	mysqlHost := retrieveSystemHost(connSecret)
-	password := string(connSecret.Data["DB_PASSWORD"])
-	user := string(connSecret.Data["DB_USER"])
-	if mysqlHost == "" || password == "" || user == "" {
-		return false, fmt.Errorf("error unable to read credentials from system-database secret")
-	}
-
-	mysqlCommand := fmt.Sprintf("mysql -sN -h \"%s\" -u \"%s\" -p\"%s\" -e \"SELECT VERSION();\"", mysqlHost, user, password)
+	mysqlCommand := fmt.Sprintf("mysql -sN -h \"%s\" -u \"%s\" -p\"%s\" -e \"SELECT VERSION();\"", databaseObject.host, databaseObject.user, databaseObject.password)
 	command := []string{"/bin/bash", "-c", mysqlCommand}
 	podExecutor := NewPodExecutor(logger)
 	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(databasePod.Namespace, databasePod.Name, command)
@@ -185,18 +133,9 @@ func verifySystemMysqlDatabaseVersion(k8sclient client.Client, configMap v1.Conf
 		return false, fmt.Errorf("error when executing pod exec command to retrieve database version")
 	}
 
-	var currentMysqlVersion string
-
-	if stdout != "" {
-		pattern := `[0-9]+\.[0-9]+\.[0-9]+`
-		re := regexp.MustCompile(pattern)
-		match := re.FindStringSubmatch(stdout)
-		if len(match) > 0 {
-			// The version number is captured by the first group
-			currentMysqlVersion = match[0]
-		} else {
-			return false, fmt.Errorf("redis version not found in stdout")
-		}
+	currentMysqlVersion, err := retrieveMysqlVersion(stdout)
+	if err != nil {
+		return false, err
 	}
 
 	requirementsMet := CompareVersions(requiredVersion, currentMysqlVersion)

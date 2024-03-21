@@ -42,10 +42,10 @@ func CompareVersions(a, b string) bool {
 	// Compare patch versions
 	patchA, _ := strconv.Atoi(componentsA[2])
 	patchB, _ := strconv.Atoi(componentsB[2])
-	return patchB > patchA // Return false if b's patch version is greater than a's patch version
+	return patchB >= patchA // Return false if b's patch version is greater than a's patch version
 }
 
-func FetchSecret(k8sclient client.Client, secretName, namespace string) (*v1.Secret, error) {
+func fetchSecret(k8sclient client.Client, secretName, namespace string) (*v1.Secret, error) {
 	secret := &v1.Secret{}
 
 	err := k8sclient.Get(context.TODO(), client.ObjectKey{Name: secretName, Namespace: namespace}, secret)
