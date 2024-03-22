@@ -70,7 +70,7 @@ type ProxyConfigPromoteStatus struct {
 	//+optional
 	LatestStagingVersion int `json:"latestStagingVersion,omitempty"`
 
-	// Current state of the activedoc resource.
+	// Current state of the ProxyConfigPromote resource.
 	// Conditions represent the latest available observations of an object's state
 	// +optional
 	// +patchMergeKey=type
