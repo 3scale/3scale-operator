@@ -417,6 +417,36 @@ spec:
           - delete
           - get
           - update
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - clusterserviceversions
+          verbs:
+          - get
+          - list
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - installplans
+          verbs:
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - operatorconditions
+          - subscriptions
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
         serviceAccountName: 3scale-operator
       deployments:
       - name: threescale-operator-controller-manager-v2
@@ -975,38 +1005,6 @@ spec:
           - delete
           - get
           - list
-          - update
-          - watch
-        - apiGroups:
-          - operators.coreos.com
-          resources:
-          - clusterserviceversions
-          verbs:
-          - delete
-          - get
-          - list
-        - apiGroups:
-          - operators.coreos.com
-          resources:
-          - installplans
-          verbs:
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - operators.coreos.com
-          resources:
-          - operatorconditions
-          - subscriptions
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
           - update
           - watch
         - apiGroups:

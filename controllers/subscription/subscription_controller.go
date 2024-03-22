@@ -68,9 +68,9 @@ const (
 )
 
 // +kubebuilder:rbac:groups=operators.coreos.com/v1alpha1,namespace=placeholder,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=operators.coreos.com,namespace=placeholder,resources=subscriptions;operatorconditions,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=operators.coreos.com,namespace=placeholder,resources=installplans,verbs=get;list;watch;update;patch;delete
-// +kubebuilder:rbac:groups=operators.coreos.com,namespace=placeholder,resources=clusterserviceversions,verbs=get;delete;list
+// +kubebuilder:rbac:groups=operators.coreos.com,resources=installplans,verbs=get;list;watch;update;patch;delete
+// +kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions,verbs=get;list
+// +kubebuilder:rbac:groups=operators.coreos.com,resources=subscriptions;operatorconditions,verbs=get;list;watch;create;update;patch
 
 // Permission to get the ConfigMap that embeds the CSV for an InstallPlan
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get

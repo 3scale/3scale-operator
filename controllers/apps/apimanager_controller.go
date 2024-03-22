@@ -197,6 +197,7 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	systemRedisVerified := false
 	backendRedisVerified := false
 	systemDatabaseVerified := false
+	skipPreflightsFreshInstall := false
 	var apimVersion string
 
 	reqConfigMap, err := subController.RetrieveRequirementsConfigMap(r.Client())
@@ -205,7 +206,7 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	}
 
 	// Skip preflights entirely if it's a fresh installation with internal databases
-	skipPreflightsFreshInstall, err := r.skipPreflights(apimInstance, *reqConfigMap, logger)
+	skipPreflightsFreshInstall, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, err = r.skipPreflights(apimInstance, *reqConfigMap, logger)
 	if err != nil {
 		return ctrl.Result{}, err, nil
 	}
@@ -223,14 +224,8 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	if mysqlDatabaseRequirement == "" && postgresDatabaseRequirements == "" {
 		systemDatabaseVerified = true
 	}
-	if incomingVersion == "" {
-		return ctrl.Result{}, fmt.Errorf("error could not locate incoming version of 3scale, failing preflights"), nil
-	}
 
 	apimVersion = apimInstance.RetrieveRHTVersion()
-	if apimVersion == "" {
-		logger.Info("Not running in fresh install but 3scale version annotation is missing. Running pre-flights regardless")
-	}
 
 	logger.Info("Starting preflight checks...")
 	if !systemRedisVerified {
@@ -298,19 +293,22 @@ func retrieveRequiredVersion(reqConfigMap v1.ConfigMap, logger logr.Logger) (str
 		reqConfigMap.Data[helper.RHTThreescaleMysqlRequirements], reqConfigMap.Data[helper.RHTThreescalePostgresRequirements]
 }
 
-func (r *APIManagerReconciler) skipPreflights(apimInstance *appsv1alpha1.APIManager, reqConfigMap v1.ConfigMap, logger logr.Logger) (bool, error) {
+func (r *APIManagerReconciler) skipPreflights(apimInstance *appsv1alpha1.APIManager, reqConfigMap v1.ConfigMap, logger logr.Logger) (bool, bool, bool, bool, error) {
+	systemDatabaseVerified := false
+	systemRedisVerified := false
+	backendRedisVerified := false
 	if apimInstance.IsInFreshInstallationScenario() {
-		backendRedisVerified, systemRedisVerified, systemDatabaseVerified := helper.InternalDatabases(*apimInstance, logger)
+		backendRedisVerified, systemRedisVerified, systemDatabaseVerified = helper.InternalDatabases(*apimInstance, logger)
 		// If all are already verified, exit earlier
 		if backendRedisVerified && systemRedisVerified && systemDatabaseVerified {
 			err := r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
 			if err != nil {
-				return false, err
+				return false, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, err
 			}
-			return true, nil
+			return true, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, nil
 		}
 	}
-	return false, nil
+	return false, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, nil
 }
 
 func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -609,7 +607,7 @@ func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIMa
 	requirementsConfigMap, err = subController.RetrieveRequirementsConfigMap(r.Client())
 	if err != nil {
 		// If configMap isn't ready yet, requeue
-		return ctrl.Result{Requeue: true}, false, err
+		return ctrl.Result{Requeue: true}, false, fmt.Errorf("requirements config map not found yet")
 	}
 
 	// Check if current requirements are already confirmed

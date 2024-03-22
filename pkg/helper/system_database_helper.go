@@ -11,36 +11,42 @@ const (
 	secretName = "system-database"
 )
 
-func systemDatabaseURLIsValid(rawURL string) (*url.URL, error) {
+func systemDatabaseURLIsValid(rawURL string) (*url.URL, bool, error) {
 	resultURL, err := url.Parse(rawURL)
 	if err != nil {
-		return nil, fmt.Errorf("'%s' field of '%s' secret must have 'scheme://user:password@host/path' format", urlKey, secretName)
+		return nil, false, fmt.Errorf("'%s' field of '%s' secret must have 'scheme://user:password@host/path' format", urlKey, secretName)
 	}
-	if resultURL.Scheme != "mysql2" {
-		return nil, fmt.Errorf("'%s' field of '%s' secret must contain 'mysql2' as the scheme part", urlKey, secretName)
+	if resultURL.Scheme != "mysql2" && resultURL.Scheme != "postgresql" {
+		if resultURL.Scheme == "oracle-enhanced" {
+			return nil, true, nil
+		}
+		return nil, false, fmt.Errorf("'%s' field of '%s' secret must contain 'mysql2' or 'postgresql' as the scheme part", urlKey, secretName)
 	}
 
 	if resultURL.User == nil {
-		return nil, fmt.Errorf("authentication information in '%s' field of '%s' secret must be provided", urlKey, secretName)
+		return nil, false, fmt.Errorf("authentication information in '%s' field of '%s' secret must be provided", urlKey, secretName)
 	}
 	if resultURL.User.Username() == "" {
-		return nil, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain a username", urlKey, secretName)
+		return nil, false, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain a username", urlKey, secretName)
 	}
-	if resultURL.User.Username() != "root" {
-		return nil, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain 'root' as the username", urlKey, secretName)
+	if resultURL.Scheme == "mysql2" {
+		if resultURL.User.Username() != "root" {
+			return nil, false, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain 'root' as the username", urlKey, secretName)
+		}
 	}
+
 	if _, set := resultURL.User.Password(); !set {
-		return nil, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain a password", urlKey, secretName)
+		return nil, false, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain a password", urlKey, secretName)
 	}
 
 	if resultURL.Host == "" {
-		return nil, fmt.Errorf("host information in '%s' field of '%s' secret must be provided", urlKey, secretName)
+		return nil, false, fmt.Errorf("host information in '%s' field of '%s' secret must be provided", urlKey, secretName)
 	}
 	if resultURL.Path == "" {
-		return nil, fmt.Errorf("database name in '%s' field of '%s' secret must be provided", urlKey, secretName)
+		return nil, false, fmt.Errorf("database name in '%s' field of '%s' secret must be provided", urlKey, secretName)
 	}
 
-	return resultURL, nil
+	return resultURL, false, nil
 }
 
 func retrievePostgresVersion(stdout string) (string, error) {

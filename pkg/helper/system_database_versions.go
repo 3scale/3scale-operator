@@ -3,6 +3,7 @@ package helper
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/go-logr/logr"
 
@@ -35,7 +36,14 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 	}
 
 	// validate secret URL
-	databaseUrl, err := systemDatabaseURLIsValid(string(connSecret.Data["URL"]))
+	databaseUrl, bypass, err := systemDatabaseURLIsValid(string(connSecret.Data["URL"]))
+	if err != nil {
+		return false, err
+	}
+	if bypass {
+		logger.Info("Oracle system database discovered, bypassing version check")
+		return true, nil
+	}
 	systemDatabase := databaseObject(databaseUrl)
 
 	if systemDatabase.scheme == postgresScheme {
@@ -89,7 +97,7 @@ func verifySystemPostgresDatabaseVersion(k8sclient client.Client, namespace, req
 		return false, err
 	}
 
-	postgresqlCommand := fmt.Sprintf("PGPASSWORD=\"%s\" psql -h \"%s\" -U \"%s\" -d \"%s\" -p\"5432\" -t -A -c \"SELECT version();\"", databaseObject.password, databaseObject.host, databaseObject.user, databaseObject.path)
+	postgresqlCommand := fmt.Sprintf("PGPASSWORD=\"%s\" psql -h \"%s\" -U \"%s\" -d \"%s\" -p\"5432\" -t -A -c \"SELECT version();\"", databaseObject.password, databaseObject.host, databaseObject.user, strings.TrimLeft(databaseObject.path, "/"))
 	command := []string{"/bin/bash", "-c", postgresqlCommand}
 	podExecutor := NewPodExecutor(logger)
 	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(databasePod.Namespace, databasePod.Name, command)

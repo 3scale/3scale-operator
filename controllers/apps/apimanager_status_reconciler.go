@@ -358,7 +358,7 @@ func (s *APIManagerStatusReconciler) reconcilePreflightsError(conditions *common
 		Type:    appsv1alpha1.APIManagerPreflightsConditionType,
 		Status:  v1.ConditionStatus(metav1.ConditionTrue),
 		Reason:  common.ConditionReason("PreflightsPass"),
-		Message: "All requirement for current version are met",
+		Message: "All requirements for the current version are met",
 	}
 
 	upgradeSuccessfulPreflight := "All requirement for incoming version are met. If using automatic upgrades the upgrade will start shortly, if manual, you can proceed with approval"
