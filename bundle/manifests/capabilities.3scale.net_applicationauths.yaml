@@ -6,20 +6,20 @@ metadata:
   creationTimestamp: null
   labels:
     app: 3scale-api-management
-  name: proxyconfigpromotes.capabilities.3scale.net
+  name: applicationauths.capabilities.3scale.net
 spec:
   group: capabilities.3scale.net
   names:
-    kind: ProxyConfigPromote
-    listKind: ProxyConfigPromoteList
-    plural: proxyconfigpromotes
-    singular: proxyconfigpromote
+    kind: ApplicationAuth
+    listKind: ApplicationAuthList
+    plural: applicationauths
+    singular: applicationauth
   scope: Namespaced
   versions:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: ProxyConfigPromote is the Schema for the proxyconfigpromotes API
+        description: ApplicationAuth is the Schema for the applicationauths API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -30,25 +30,39 @@ spec:
           metadata:
             type: object
           spec:
-            description: ProxyConfigPromoteSpec defines the desired state of ProxyConfigPromote
+            description: ApplicationAuthSpec defines the desired state of ApplicationAuth
             properties:
-              deleteCR:
-                description: deleteCR  deletes this CR when it has successfully completed the promotion
-                type: boolean
-              productCRName:
-                description: product CR metadata.name
+              applicationCRName:
+                description: application CR metadata.name
                 type: string
-              production:
-                description: Environment you wish to promote to, if not present defaults to staging and if set to true promotes to production
+              authSecretRef:
+                description: AuthSecretRef references account provider credentials
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              generateSecret:
+                description: GenerateSecret Secret is generated if true and empty
                 type: boolean
+              providerAccountRef:
+                description: ProviderAccountRef references account provider credentials
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
             required:
-            - productCRName
+            - applicationCRName
+            - authSecretRef
             type: object
           status:
-            description: ProxyConfigPromoteStatus defines the observed state of ProxyConfigPromote
+            description: ApplicationAuthStatus defines the observed state of ApplicationAuth
             properties:
               conditions:
-                description: Current state of the ProxyConfigPromote resource. Conditions represent the latest available observations of an object's state
+                description: Current state of the ApplicationAuth resource. Conditions represent the latest available observations of an object's state
                 items:
                   description: "Condition represents an observation of an object's state. Conditions are an extension mechanism intended to be used when the details of an observation are not a priori known or would not apply to all instances of a given Kind. \n Conditions should be added to explicitly convey properties that users and components care about rather than requiring those properties to be inferred from other observations. Once defined, the meaning of a Condition can not be changed arbitrarily - it becomes part of the API, and has the same backwards- and forwards-compatibility concerns of any other part of the API."
                   properties:
@@ -70,15 +84,6 @@ spec:
                   - type
                   type: object
                 type: array
-              latestProductionVersion:
-                description: The latest Version in production
-                type: integer
-              latestStagingVersion:
-                description: The latest Version in staging
-                type: integer
-              productId:
-                description: The id of the product that has been promoted
-                type: string
             type: object
         type: object
     served: true

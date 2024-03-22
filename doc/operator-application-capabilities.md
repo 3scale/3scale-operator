@@ -69,6 +69,8 @@ The following diagram shows available custom resource definitions and their rela
    * [Application Custom Resource](#application-custom-resource)
       * [Application Custom Resource Status Fields](#application-custom-resource-status-fields)
       * [Application Misconfiguration Errors](#application-misconfiguration-errors)
+   * [ApplicationAuth Custom Resource](#applicationauth-custom-resource)
+      * [Application Custom Resource Status Fields](#applicationauth-custom-resource-status-fields)
    * [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
 <!--te-->
 
@@ -76,6 +78,8 @@ The following diagram shows available custom resource definitions and their rela
 
 * [Application CRD reference](application-reference.md)
     * CR samples [\[1\]](../config/samples/capabilities_v1beta1_application.yaml)
+* [ApplicationAuth CRD reference](applicationauth-reference.md)
+    * CR samples [\[1\]](../config/samples/capabilities_v1beta1_applicationauth.yaml)
 * [Backend CRD reference](backend-reference.md)
     * CR samples [\[1\]](../config/samples/capabilities_v1beta1_backend.yaml)
 * [Product CRD reference](product-reference.md)
@@ -1642,6 +1646,132 @@ status:
       type: Ready
   observedGeneration: 9
 ```
+
+## ApplicationAuth Custom Resource
+Notes:
+
+* 3scale applicationsAuth are a one off action i.e. a button click event.
+* 3scale applicationAuth currently give access to update/generate UserKey or ApplicationKey
+
+Consider we have the following application called example which is connected to a product and a developer account
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Application
+metadata:
+  name: example
+spec:
+  accountCR:
+    name: developeraccount01
+  applicationPlanName: plan01
+  productCR:
+    name: product1-cr
+  name: application-name
+  description: description of application
+```
+You can create a secret with UserKey and ApplicationKey set to an empty string e.g. auth-secret in the 3scale-test namespace
+
+```bash
+oc create secret generic auth-secret \
+    --from-literal=UserKey=""\
+    --from-literal=ApplicationKey=""\
+```
+We can use this secret with the applicationAuth CR to generate new keys with the generateSecret bool
+
+```yaml
+---
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ApplicationAuth
+metadata:
+  name: applicationAuth-cr1
+spec:
+  applicationCRName: example
+  generateSecret: true
+  authSecretRef:
+    name: auth-secret
+```
+Once applied you will see the `status.condition` update to
+```yaml
+status:
+  conditions:
+    - lastTransitionTime: '2022-11-01T14:22:14Z'
+      status: 'True'
+      type: Ready
+      message: 'Application authentication has been successfully pushed, any further interactions with this CR will not be applied'
+```
+The values in the auth-secret will also be updated and note that the ApplicationID is also populated e.g.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: auth-secret
+stringData:
+  UserKey: <Generated UserKey value>
+  ApplicationKey: <Generated ApplicationKey value>
+  ApplicationID: <ApplicationID value>
+```
+You can also manually create the key values e.g. auth-secret2
+```bash
+oc create secret generic auth-secret2 \
+    --from-literal=UserKey="testUserKey"\
+    --from-literal=ApplicationKey="testApplicationKey"\
+```
+The GenerateSecret bool is not populate for this CR
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ApplicationAuth
+metadata:
+  name: applicationAuth-cr2
+spec:
+  applicationCRName: example 
+  authSecretRef: 
+     name: auth-secret2
+```
+The values in the auth-secret2 will remain the same and note that the ApplicationID is populated e.g.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: auth-secret
+stringData:
+  UserKey: testUserKey
+  ApplicationKey: testApplicationKey
+  ApplicationID: <ApplicationID value>
+```
+[ApplicationAuth CRD reference](applicationauth-reference.md) for more info about fields.
+
+### Application Custom Resource Status Fields
+
+Fields:
+
+* **conditions**: status.Conditions k8s common pattern. States:
+    * *Ready*: Indicates the keys have successfully updated.
+    * *Failed*: Indicates the keys have not successfully updated.
+
+e.g. of a Successful status
+```yaml
+status:
+  conditions:
+    - lastTransitionTime: '2022-11-01T14:22:14Z'
+      status: 'True'
+      type: Ready
+      message: 'Application authentication has been successfully pushed, any further interactions with this CR will not be applied'
+```
+e.g. of a Failed status
+```yaml
+status:
+  conditions:
+    - lastTransitionTime: '2022-11-01T14:22:14Z'
+      status: 'True'
+      type: Failed
+      message: 'ApplicationKey or UserKey of this value already exists for this application update your authSecretRef with a new value'
+```
+Reasons for a failed state are usually an API limitation 
+Some reasons for failure are 
+- Key already exist for the application
+- Key length needs to be longer than five characters 
+- There is a 5 key limit on the ApplicationKeys
+
+[ApplicationAuth CRD reference](applicationauth-reference.md) for more info about fields.
 
 ## Limitations and unimplemented functionalities
 
