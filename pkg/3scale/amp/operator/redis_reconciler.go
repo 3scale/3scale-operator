@@ -1,8 +1,13 @@
 package operator
 
 import (
+	"context"
+	"fmt"
+	"github.com/3scale/3scale-operator/pkg/common"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -56,6 +61,32 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// We want to reconcile redis-conf ConfigMap before Deployment
+	// to avoid restart redis pods twice in case of User change ConfigMap.
+	// Annotation GenerationID was added to Pod Template to support Upgrade scenario.
+	// this GenerationID is taken from ConfigMap resourceVersion.
+	// If User change Config Map, Operator will revert it to original one,
+	// but resourceVersion could be changed twice (after user change and after operator).
+	// To avoid this scenario by placing CM reconciliation before Deployment
+	if r.ConfigMap != nil {
+		redisConfigMap := r.ConfigMap(redis)
+		isInternalRedis, err := r.isInternalRedis()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if isInternalRedis {
+			redis_configuration := r.ConfigMap(redis).Data["redis.conf"]
+			redisConfigMap.Data["redis.conf"] = redis_configuration + "\n" + "rename-command REPLICAOF \"\"" + "\n" + "rename-command SLAVEOF \"\"" + "\n"
+		}
+		err = r.ReconcileConfigMap(redisConfigMap, r.redisConfigCmMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if isInternalRedis {
+			r.RollOutRedisPods(context.TODO())
+		}
+	}
+
 	deploymentMutator := reconcilers.DeploymentMutator(
 		reconcilers.DeploymentContainerResourcesMutator,
 		reconcilers.DeploymentAffinityMutator,
@@ -93,14 +124,6 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// CM
-	if r.ConfigMap != nil {
-		err = r.ReconcileConfigMap(r.ConfigMap(redis), reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
 	// PVC
 	err = r.ReconcilePersistentVolumeClaim(r.PersistentVolumeClaim(redis), reconcilers.CreateOnlyMutator)
 	if err != nil {
@@ -123,4 +146,69 @@ func Redis(apimanager *appsv1alpha1.APIManager, client client.Client) (*componen
 		return nil, err
 	}
 	return component.NewRedis(opts), nil
+}
+
+func (r *RedisReconciler) redisConfigCmMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	existing, ok := existingObj.(*corev1.ConfigMap)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)
+	}
+	desired, ok := desiredObj.(*corev1.ConfigMap)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *v1.ConfigMap", desiredObj)
+	}
+
+	update := false
+	fieldUpdated := reconcilers.ConfigMapReconcileField(desired, existing, "redis.conf")
+	update = update || fieldUpdated
+
+	return update, nil
+}
+
+func (r *RedisReconciler) isInternalRedis() (bool, error) {
+	if r.apiManager.Spec.ExternalComponents != nil &&
+		r.apiManager.Spec.ExternalComponents.Backend != nil &&
+		r.apiManager.Spec.ExternalComponents.Backend.Redis != nil &&
+		*r.apiManager.Spec.ExternalComponents.Backend.Redis == true {
+		return false, nil
+	}
+	if r.apiManager.Spec.ExternalComponents != nil &&
+		r.apiManager.Spec.ExternalComponents.System != nil &&
+		r.apiManager.Spec.ExternalComponents.System.Redis != nil &&
+		*r.apiManager.Spec.ExternalComponents.System.Redis == true {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (r *RedisReconciler) RollOutRedisPods(ctx context.Context) error {
+
+	podLabelSelector := labels.NewSelector()
+	labelSelector, err := labels.NewRequirement("deployment", selection.In, []string{"backend-redis", "system-redis"})
+	if err != nil {
+		return fmt.Errorf("podlabelSelector failes: %w", err)
+	}
+	podLabelSelector = podLabelSelector.Add(*labelSelector)
+
+	redisPods := &corev1.PodList{}
+	opts := client.ListOptions{
+		Namespace:     r.apiManager.GetNamespace(),
+		LabelSelector: podLabelSelector,
+	}
+	err = r.Client().List(ctx, redisPods, &opts)
+	if err != nil {
+		return fmt.Errorf("failed to list pods: %w", err)
+	}
+
+	if len(redisPods.Items) < 2 {
+		return fmt.Errorf("redis pods not found: %w", err)
+	}
+	for _, pod := range redisPods.Items {
+		err = r.Client().Update(context.Background(), &pod)
+		if err != nil {
+			return fmt.Errorf("error update redis pod: %w", err)
+		}
+	}
+
+	return nil
 }

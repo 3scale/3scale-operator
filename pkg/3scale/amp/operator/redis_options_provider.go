@@ -1,14 +1,13 @@
 package operator
 
 import (
+	"context"
 	"fmt"
-
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -52,8 +51,8 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.options.BackendCommonLabels = r.backendCommonLabels()
 	r.options.BackendRedisLabels = r.backendRedisLabels()
 	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels()
-	r.options.SystemRedisPodTemplateAnnotations = r.apimanager.Spec.System.RedisAnnotations
-	r.options.BackendRedisPodTemplateAnnotations = r.apimanager.Spec.Backend.RedisAnnotations
+	r.options.SystemRedisPodTemplateAnnotations = r.systemRedisPodTemplateAnnotations()
+	r.options.BackendRedisPodTemplateAnnotations = r.backendRedisPodTemplateAnnotations()
 
 	r.setResourceRequirementsOptions()
 	r.setNodeAffinityAndTolerationsOptions()
@@ -271,4 +270,38 @@ func (r *RedisOptionsProvider) setTopologySpreadConstraints() {
 	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisTopologySpreadConstraints != nil {
 		r.options.BackendRedisTopologySpreadConstraints = r.apimanager.Spec.Backend.RedisTopologySpreadConstraints
 	}
+}
+
+func (r *RedisOptionsProvider) systemRedisPodTemplateAnnotations() map[string]string {
+	annotations := make(map[string]string)
+	for k, v := range r.apimanager.Spec.System.RedisAnnotations {
+		annotations[k] = v
+	}
+	annotations["generationID"] = r.generateUniqueID()
+	return annotations
+}
+
+func (r *RedisOptionsProvider) backendRedisPodTemplateAnnotations() map[string]string {
+	annotations := make(map[string]string)
+	for k, v := range r.apimanager.Spec.Backend.RedisAnnotations {
+		annotations[k] = v
+	}
+	annotations["generationID"] = r.generateUniqueID()
+	return annotations
+}
+
+func (r *RedisOptionsProvider) generateUniqueID() string {
+	// get resourceVersion from CM and use it as Annotation "generationID" for redis Pods
+	key := client.ObjectKey{
+		Namespace: r.namespace,
+		Name:      "redis-config",
+	}
+	cm := &v1.ConfigMap{}
+	err := r.client.Get(context.Background(), key, cm)
+	if err != nil {
+		fmt.Printf("Failed to get ConfigMap: %v\n", err)
+		return ""
+	}
+	resourceVersion := cm.GetResourceVersion()
+	return resourceVersion
 }
