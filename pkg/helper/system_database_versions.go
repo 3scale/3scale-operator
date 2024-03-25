@@ -32,6 +32,7 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 	logger.Info("Verifying system database version")
 	connSecret, err := fetchSecret(k8sclient, systemDatabaseName, apimInstance.Namespace)
 	if err != nil {
+		logger.Info("System database secret not found")
 		return databaseVersionVerified, err
 	}
 
@@ -53,6 +54,7 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 		} else {
 			databaseVersionVerified, err = verifySystemPostgresDatabaseVersion(k8sclient, apimInstance.Namespace, postgresDatabaseRequirement, systemDatabase, logger)
 			if err != nil {
+				logger.Info("Encountered error during version verification of system Postgres")
 				return false, err
 			}
 		}
@@ -65,6 +67,7 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 		} else {
 			databaseVersionVerified, err = verifySystemMysqlDatabaseVersion(k8sclient, apimInstance.Namespace, mysqlDatabaseRequirement, systemDatabase, logger)
 			if err != nil {
+				logger.Info("Encountered error during version verification of system MySQL")
 				return false, err
 			}
 		}
@@ -156,24 +159,4 @@ func verifySystemMysqlDatabaseVersion(k8sclient client.Client, namespace, requir
 	}
 
 	return requirementsMet, nil
-}
-
-func InternalDatabases(apimInstance appsv1alpha1.APIManager, logger logr.Logger) (bool, bool, bool) {
-	backendRedisVerified := false
-	systemRedisVerified := false
-	systemDatabaseVerified := false
-	if !apimInstance.IsExternal(appsv1alpha1.BackendRedis) {
-		logger.Info("Backend Redis requirements confirmed")
-		backendRedisVerified = true
-	}
-	if !apimInstance.IsExternal(appsv1alpha1.SystemRedis) {
-		logger.Info("System Redis requirements confirmed")
-		systemRedisVerified = true
-	}
-	if !apimInstance.IsExternal(appsv1alpha1.SystemDatabase) {
-		logger.Info("System Database requirements confirmed")
-		systemDatabaseVerified = true
-	}
-
-	return backendRedisVerified, systemRedisVerified, systemDatabaseVerified
 }

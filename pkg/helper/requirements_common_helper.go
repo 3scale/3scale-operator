@@ -5,6 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-logr/logr"
+
+	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -54,4 +57,24 @@ func fetchSecret(k8sclient client.Client, secretName, namespace string) (*v1.Sec
 	}
 
 	return secret, nil
+}
+
+func InternalDatabases(apimInstance appsv1alpha1.APIManager, logger logr.Logger) (bool, bool, bool) {
+	backendRedisVerified := false
+	systemRedisVerified := false
+	systemDatabaseVerified := false
+	if !apimInstance.IsExternal(appsv1alpha1.BackendRedis) {
+		logger.Info("Backend Redis requirements confirmed")
+		backendRedisVerified = true
+	}
+	if !apimInstance.IsExternal(appsv1alpha1.SystemRedis) {
+		logger.Info("System Redis requirements confirmed")
+		systemRedisVerified = true
+	}
+	if !apimInstance.IsExternal(appsv1alpha1.SystemDatabase) {
+		logger.Info("System Database requirements confirmed")
+		systemDatabaseVerified = true
+	}
+
+	return backendRedisVerified, systemRedisVerified, systemDatabaseVerified
 }

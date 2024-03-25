@@ -214,7 +214,7 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 		return ctrl.Result{}, nil, nil
 	}
 
-	incomingVersion, systemRedisRequirement, backendRedisRequirement, mysqlDatabaseRequirement, postgresDatabaseRequirements := retrieveRequiredVersion(*reqConfigMap, logger)
+	incomingVersion, systemRedisRequirement, backendRedisRequirement, mysqlDatabaseRequirement, postgresDatabaseRequirements := retrieveRequiredVersion(*reqConfigMap)
 	if systemRedisRequirement == "" {
 		systemRedisVerified = true
 	}
@@ -287,7 +287,7 @@ func retrieveCulprit(systemDatabaseVerified, backendRedisVerified, systemRedisVe
 	return message
 }
 
-func retrieveRequiredVersion(reqConfigMap v1.ConfigMap, logger logr.Logger) (string, string, string, string, string) {
+func retrieveRequiredVersion(reqConfigMap v1.ConfigMap) (string, string, string, string, string) {
 	// if not in fresh install - rht_comp_version must always be present, if it's not, there is something wrong with the CSV and we should not continue.
 	return reqConfigMap.Data[helper.RHTThreescaleVersion], reqConfigMap.Data[helper.RHTThreescaleSystemRedisRequirements], reqConfigMap.Data[helper.RHTThreescaleBackendRedisRequirements],
 		reqConfigMap.Data[helper.RHTThreescaleMysqlRequirements], reqConfigMap.Data[helper.RHTThreescalePostgresRequirements]

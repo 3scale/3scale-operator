@@ -34,11 +34,13 @@ func VerifySystemRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, syst
 	systemRedisVerified := false
 	connSecret, err := fetchSecret(k8sclient, "system-redis", apimInstance.Namespace)
 	if err != nil {
+		logger.Info("System redis secret not found")
 		return false, err
 	}
 
 	systemRedisVerified, err = verifySystemRedisVersion(k8sclient, *connSecret, apimInstance.Namespace, systemRedisRequirement, logger)
 	if err != nil {
+		logger.Info("Encountered error during version verification of system Redis")
 		return false, err
 	}
 	if systemRedisVerified {
@@ -55,11 +57,13 @@ func VerifyBackendRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, bac
 	backendRedisVerified := false
 	connSecret, err := fetchSecret(k8sclient, "backend-redis", apimInstance.Namespace)
 	if err != nil {
+		logger.Info("Backend redis secret not found")
 		return false, err
 	}
 
 	backendRedisVerified, err = verifyBackendRedisVersion(k8sclient, *connSecret, apimInstance.Namespace, backendRedisRequirement, logger)
 	if err != nil {
+		logger.Info("Encountered error during version verification of backend Redis")
 		return false, err
 	}
 	if backendRedisVerified {
