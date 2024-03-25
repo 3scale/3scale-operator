@@ -67,7 +67,6 @@ const (
 	threescaleOperatorDeployment   = "threescale-operator-controller-manager-v2"
 )
 
-// +kubebuilder:rbac:groups=operators.coreos.com/v1alpha1,namespace=placeholder,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=operators.coreos.com,resources=installplans,verbs=get;list;watch;update;patch;delete
 // +kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions,verbs=get;list
 // +kubebuilder:rbac:groups=operators.coreos.com,resources=subscriptions;operatorconditions,verbs=get;list;watch;create;update;patch

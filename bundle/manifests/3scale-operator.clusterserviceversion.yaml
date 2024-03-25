@@ -1008,18 +1008,6 @@ spec:
           - update
           - watch
         - apiGroups:
-          - operators.coreos.com/v1alpha1
-          resources:
-          - subscriptions
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - policy
           resources:
           - poddisruptionbudgets
