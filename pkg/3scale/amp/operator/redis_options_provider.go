@@ -277,7 +277,7 @@ func (r *RedisOptionsProvider) systemRedisPodTemplateAnnotations() map[string]st
 	for k, v := range r.apimanager.Spec.System.RedisAnnotations {
 		annotations[k] = v
 	}
-	annotations["generationID"] = r.generateUniqueID()
+	annotations["generationID"] = r.getRedisConfigCmResourceVersion()
 	return annotations
 }
 
@@ -286,11 +286,11 @@ func (r *RedisOptionsProvider) backendRedisPodTemplateAnnotations() map[string]s
 	for k, v := range r.apimanager.Spec.Backend.RedisAnnotations {
 		annotations[k] = v
 	}
-	annotations["generationID"] = r.generateUniqueID()
+	annotations["generationID"] = r.getRedisConfigCmResourceVersion()
 	return annotations
 }
 
-func (r *RedisOptionsProvider) generateUniqueID() string {
+func (r *RedisOptionsProvider) getRedisConfigCmResourceVersion() string {
 	// get resourceVersion from CM and use it as Annotation "generationID" for redis Pods
 	key := client.ObjectKey{
 		Namespace: r.namespace,
