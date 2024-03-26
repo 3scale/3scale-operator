@@ -13,7 +13,7 @@ import (
 )
 
 // APIManagerConfigMapsEventMapper is an EventHandler that maps an existing OpenShift
-// ConigMaps to an APIManager. This handler should only be used on ConigMaps objects
+// ConfigMaps to an APIManager. This handler should only be used on ConfigMaps objects
 // and when APIManager is used.
 type APIManagerConfigMapsEventMapper struct {
 	Context   context.Context

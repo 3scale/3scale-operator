@@ -1,13 +1,10 @@
 package operator
 
 import (
-	"context"
 	"fmt"
 	"github.com/3scale/3scale-operator/pkg/common"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -81,9 +78,6 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		err = r.ReconcileConfigMap(redisConfigMap, r.redisConfigCmMutator)
 		if err != nil {
 			return reconcile.Result{}, err
-		}
-		if isInternalRedis {
-			r.RollOutRedisPods(context.TODO())
 		}
 	}
 
@@ -179,36 +173,4 @@ func (r *RedisReconciler) isInternalRedis() (bool, error) {
 		return false, nil
 	}
 	return true, nil
-}
-
-func (r *RedisReconciler) RollOutRedisPods(ctx context.Context) error {
-
-	podLabelSelector := labels.NewSelector()
-	labelSelector, err := labels.NewRequirement("deployment", selection.In, []string{"backend-redis", "system-redis"})
-	if err != nil {
-		return fmt.Errorf("podlabelSelector failes: %w", err)
-	}
-	podLabelSelector = podLabelSelector.Add(*labelSelector)
-
-	redisPods := &corev1.PodList{}
-	opts := client.ListOptions{
-		Namespace:     r.apiManager.GetNamespace(),
-		LabelSelector: podLabelSelector,
-	}
-	err = r.Client().List(ctx, redisPods, &opts)
-	if err != nil {
-		return fmt.Errorf("failed to list pods: %w", err)
-	}
-
-	if len(redisPods.Items) < 2 {
-		return fmt.Errorf("redis pods not found: %w", err)
-	}
-	for _, pod := range redisPods.Items {
-		err = r.Client().Update(context.Background(), &pod)
-		if err != nil {
-			return fmt.Errorf("error update redis pod: %w", err)
-		}
-	}
-
-	return nil
 }
