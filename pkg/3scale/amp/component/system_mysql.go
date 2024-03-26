@@ -190,11 +190,7 @@ func (mysql *SystemMysql) Deployment(containerImage string) *k8sappsv1.Deploymen
 							Env: []v1.EnvVar{
 								helper.EnvVarFromValue("MYSQL_USER", mysql.Options.User),
 								helper.EnvVarFromValue("MYSQL_PASSWORD", mysql.Options.Password),
-								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
-								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
-								// are deprecated we should be able to change this.
 								helper.EnvVarFromValue("MYSQL_DATABASE", mysql.Options.DatabaseName),
-								helper.EnvVarFromValue("MYSQL_ROOT_PASSWORD", mysql.Options.RootPassword),
 								helper.EnvVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
 								helper.EnvVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
 							},

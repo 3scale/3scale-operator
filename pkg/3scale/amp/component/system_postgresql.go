@@ -130,9 +130,6 @@ func (p *SystemPostgreSQL) Deployment(containerImage string) *k8sappsv1.Deployme
 							Env: []v1.EnvVar{
 								helper.EnvVarFromValue("POSTGRESQL_USER", p.Options.User),
 								helper.EnvVarFromValue("POSTGRESQL_PASSWORD", p.Options.Password),
-								// TODO This should be gathered from secrets but we cannot set them because the URL field of the system-database secret
-								// is already formed from this contents and we would have duplicate information. Once OpenShift templates
-								// are deprecated we should be able to change this.
 								helper.EnvVarFromValue("POSTGRESQL_DATABASE", p.Options.DatabaseName),
 							},
 							Resources: p.Options.ContainerResourceRequirements,
