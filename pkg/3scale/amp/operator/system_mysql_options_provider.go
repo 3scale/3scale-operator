@@ -91,8 +91,6 @@ func (s *SystemMysqlOptionsProvider) setSecretBasedOptions() error {
 
 	// Remove possible leading slash in URL Path
 	s.mysqlOptions.DatabaseName = strings.TrimPrefix(urlObj.Path, "/")
-	dbRootPassword, _ := urlObj.User.Password()
-	s.mysqlOptions.RootPassword = dbRootPassword
 
 	return nil
 }

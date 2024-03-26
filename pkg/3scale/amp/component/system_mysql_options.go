@@ -14,7 +14,6 @@ type SystemMysqlOptions struct {
 	DatabaseName                  string                  `validate:"required"`
 	User                          string                  `validate:"required"`
 	Password                      string                  `validate:"required"`
-	RootPassword                  string                  `validate:"required"`
 	DatabaseURL                   string                  `validate:"required"`
 	ContainerResourceRequirements v1.ResourceRequirements `validate:"-"`
 	PVCStorageClass               *string

@@ -80,7 +80,6 @@ func defaultSystemMysqlOptions(opts *component.SystemMysqlOptions) *component.Sy
 		DatabaseName:                  component.DefaultSystemMysqlDatabaseName(),
 		User:                          component.DefaultSystemMysqlUser(),
 		Password:                      opts.Password,
-		RootPassword:                  opts.RootPassword,
 		DatabaseURL:                   component.DefaultSystemMysqlDatabaseURL(component.DefaultSystemMysqlUser(), opts.Password, component.DefaultSystemMysqlDatabaseName()),
 		ContainerResourceRequirements: component.DefaultSystemMysqlResourceRequirements(),
 		CommonLabels:                  testSystemMysqlCommonLabels(),
