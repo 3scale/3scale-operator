@@ -9,8 +9,6 @@ import (
 )
 
 const (
-	redisSystemSecretName            = "system-redis"
-	redisBackendSecretName           = "backend-redis"
 	systemRedisSentinelHosts         = "SENTINEL_HOSTS"
 	systemRedisUrl                   = "URL"
 	backendRedisQueuesSentinelHosts  = "REDIS_QUEUES_SENTINEL_HOSTS"

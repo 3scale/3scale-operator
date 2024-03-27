@@ -62,9 +62,7 @@ var (
 )
 
 const (
-	communityOperatorSubscription  = "3scale-community-operator"
 	threescaleOperatorSubscription = "3scale"
-	threescaleOperatorDeployment   = "threescale-operator-controller-manager-v2"
 )
 
 // +kubebuilder:rbac:groups=operators.coreos.com,resources=installplans,verbs=get;list;watch;update;patch;delete

@@ -14,8 +14,6 @@ import (
 
 const (
 	OperatorRequirementsConfigMapName     = "3scale-api-management-operator-requirements"
-	communityOperatorSubscription         = "3scale-community-operator"
-	threescaleOperatorSubscription        = "3scale"
 	RHTThreescaleVersion                  = "rht_threescale_version_requirements"
 	RHTThreescaleMysqlRequirements        = "rht_mysql_requirements"
 	RHTThreescalePostgresRequirements     = "rht_postgres_requirements"
