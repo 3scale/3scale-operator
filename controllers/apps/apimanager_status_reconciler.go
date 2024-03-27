@@ -238,8 +238,8 @@ func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
 func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
 
 	// get url's to confirm if logical Redis DB or sentinels with auth used
-	redisQueuesUrl, redisStorageUrl, redisQueuesSentinelHost, redisStorageSentinelHost := operator.GetBackendRedisSecret(cr.Namespace, context.TODO(), s.Client())
-	redisSystemSentinelHost := operator.GetSystemRedisSecret(cr.Namespace, context.TODO(), s.Client())
+	redisQueuesUrl, redisStorageUrl, redisQueuesSentinelHost, redisStorageSentinelHost := operator.GetBackendRedisSecret(cr.Namespace, context.TODO(), s.Client(), s.logger)
+	redisSystemSentinelHost := operator.GetSystemRedisSecret(cr.Namespace, context.TODO(), s.Client(), s.logger)
 
 	cond := common.Condition{
 		Type:    appsv1alpha1.APIManagerWarningConditionType,

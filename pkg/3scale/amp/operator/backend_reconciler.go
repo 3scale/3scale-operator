@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	"strings"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -57,7 +58,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Listener Deployment
-	RedisQueuesUrl, RedisStorageUrl, RedisQueuesSentinelHost, RedisStorageSentinelHost := GetBackendRedisSecret(r.apiManager.Namespace, r.Context(), r.Client())
+	RedisQueuesUrl, RedisStorageUrl, RedisQueuesSentinelHost, RedisStorageSentinelHost := GetBackendRedisSecret(r.apiManager.Namespace, r.Context(), r.Client(), r.logger)
 
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	// this checks for logical redis exists
@@ -220,12 +221,16 @@ func Backend(apimanager *appsv1alpha1.APIManager, client client.Client) (*compon
 	return component.NewBackend(opts), nil
 }
 
-func GetBackendRedisSecret(apimanagerNs string, ctx context.Context, client client.Client) (string, string, bool, bool) {
+func GetBackendRedisSecret(apimanagerNs string, ctx context.Context, client client.Client, logger logr.Logger) (string, string, bool, bool) {
 	backendRedisSecret := &v1.Secret{}
-	client.Get(ctx, types.NamespacedName{
+	err := client.Get(ctx, types.NamespacedName{
 		Name:      "backend-redis",
 		Namespace: apimanagerNs,
 	}, backendRedisSecret)
+	if err != nil {
+		logger.Error(err, "Failed to get system-redis secret, can't check logical databases or authenticated redis sentinels, check the backend-redis secret exists")
+		return "", "", false, false
+	}
 	RedisQueuesUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_QUEUES_URL"]), "1")
 	RedisStorageUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_STORAGE_URL"]), "0")
 	RedisQueuesSentinelHost := strings.Contains(string(backendRedisSecret.Data["REDIS_QUEUES_SENTINEL_HOSTS"]), "@")
