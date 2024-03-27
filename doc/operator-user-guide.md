@@ -922,9 +922,6 @@ the upgrade even if the upgrade is approved by the user until the requirements a
 Preflight checks will also prevent multi-minor version hops which 3scale Operator does not support. For example, it's not allowed to go from 2.14 to 2.16 in a single hop.
 In the event of this happening, the user will have to revert back to the previous version of the operator and follow supported upgrade path.
 
-User can also perform manual confirmation of the requirements. Manual verification can be done by adding the "apps.3scale.net/apimanager-confirmed-requirements-version" annotation 
-with config map "3scale-api-management-operator-requirements" resource number to the APIManager resource.
-
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set
 of parameters from the custom resource in order to modify system configuration options.
