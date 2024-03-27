@@ -25,6 +25,7 @@
          * [Setting custom Annotations](#setting-custom-annotations)
          * [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
          * [Gateway instrumentation](#gateway-instrumentation)
+      * [Preflight checks](#preflights)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
          * [Backend replicas](#backend-replicas)
@@ -895,6 +896,34 @@ Whenever a controller reconciles an object it creates a new porta client to make
 #### Gateway instrumentation
 
 Please refer to [Gateway instrumentation](gateway-instrumentation.md) document
+
+### Preflights
+
+Operator will perform a set of preflight checks to ensure that:
+- the database versions are of minimum required versions
+- in the event of upgrades, the upgrade on APIManager instance can be performed without breaking existing APIManager instance
+
+Operator will create a config map called "3scale-api-management-operator-requirements" which will list the required 
+versions of the databases, which include:
+- system database - both PostgreSQL and MySQL (Oracle databases are not currently checked)
+- backend redis - both, queues and storage databases will be checked
+- system redis
+
+Once the verification is successful the operator will annotate the APIManager with "apps.3scale.net/apimanager-confirmed-requirements-version"
+and the resource version of the config map. 
+
+If the verification fails, the operator will not continue with the installation or upgrade.
+
+When a new upgrade of 3scale Operator is applied on top of existing installation, preflight checks will perform the database version check to ensure that the upgrade 
+version requirements are met before allowing the upgrade to proceed. If the upgrade requirements are not met, the operator will continue to work as normal, but will not 
+allow the upgrade and will check the databases versions every 10 minutes or, on any other change to deployment or APIManager resource. Note that the operator will prevent
+the upgrade even if the upgrade is approved by the user until the requirements are confirmed.
+
+Preflight checks will also prevent multi-minor version hops which 3scale Operator does not support. For example, it's not allowed to go from 2.14 to 2.16 in a single hop.
+In the event of this happening, the user will have to revert back to the previous version of the operator and follow supported upgrade path.
+
+User can also perform manual confirmation of the requirements. Manual verification can be done by adding the "apps.3scale.net/apimanager-confirmed-requirements-version" annotation 
+with config map "3scale-api-management-operator-requirements" resource number to the APIManager resource.
 
 ### Reconciliation
 After 3scale API Management solution has been installed, 3scale Operator enables updating a given set

@@ -275,13 +275,13 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 func retrieveCulprit(systemDatabaseVerified, backendRedisVerified, systemRedisVerified bool, postgresReq, mysqlReq, backendReq, systemReq string) string {
 	message := ""
 	if !systemDatabaseVerified {
-		message = message + fmt.Sprintf("system database version mismatch - required is Postgres %s, MySQL %s;", postgresReq, mysqlReq)
+		message = message + fmt.Sprintf("system database version mismatch - required is Postgres %s, MySQL %s; ", postgresReq, mysqlReq)
 	}
 	if !backendRedisVerified {
-		message = message + fmt.Sprintf("backend redis version mismatch - required is Redis %s;", backendReq)
+		message = message + fmt.Sprintf("backend redis version mismatch - required is Redis %s; ", backendReq)
 	}
 	if !systemRedisVerified {
-		message = message + fmt.Sprintf("system redis version mismatch - required is Redis %s;", systemReq)
+		message = message + fmt.Sprintf("system redis version mismatch - required is Redis %s; ", systemReq)
 	}
 
 	return message
