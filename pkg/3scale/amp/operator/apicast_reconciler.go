@@ -3,6 +3,8 @@ package operator
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	"strings"
 
@@ -229,9 +231,15 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// create or delete HPA
-	err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
-	if err != nil {
-		return reconcile.Result{}, err
+	sentinelHost := GetSystemRedisSecret(r.apiManager.Namespace, r.Context(), r.Client(), r.logger)
+	if !sentinelHost {
+		err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else {
+		message := "SentinelHost with authentication found in the system, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
+		r.logger.Info(message)
 	}
 
 	res, err := r.reconcileAPImanagerCR(context.TODO())
@@ -738,4 +746,20 @@ func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.
 		return nil, err
 	}
 	return component.NewApicast(opts), nil
+}
+
+func GetSystemRedisSecret(apimanagerNs string, ctx context.Context, client client.Client, logger logr.Logger) bool {
+	backendRedisSecret := &v1.Secret{}
+	err := client.Get(ctx, types.NamespacedName{
+		Name:      "system-redis",
+		Namespace: apimanagerNs,
+	}, backendRedisSecret)
+	if err != nil {
+		logger.Error(err, "Failed to get system-redis secret, cant check for authenticated redis sentinels, check the system-redis secret exists")
+		return false
+	}
+
+	RedisSentinelHost := strings.Contains(string(backendRedisSecret.Data["SENTINEL_HOSTS"]), "@")
+
+	return RedisSentinelHost
 }

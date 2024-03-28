@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	"strings"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -57,10 +58,13 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Listener Deployment
-	RedisQueuesUrl, RedisStorageUrl := GetBackendRedisSecret(r.apiManager.Namespace, r.Context(), r.Client())
+	RedisQueuesUrl, RedisStorageUrl, RedisQueuesSentinelHost, RedisStorageSentinelHost := GetBackendRedisSecret(r.apiManager.Namespace, r.Context(), r.Client(), r.logger)
 
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if RedisStorageUrl != RedisQueuesUrl {
+	// this checks for logical redis exists
+	// this checks if SentinelHost are configured with passwords
+	if RedisStorageUrl != RedisQueuesUrl && !RedisQueuesSentinelHost && !RedisStorageSentinelHost {
+		// this checks if SentinelHost are configured with passwords
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerEnvMutator)
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerArgsMutator)
 	}
@@ -101,9 +105,10 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker Deployment
 	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if RedisStorageUrl != RedisQueuesUrl {
+	if RedisStorageUrl != RedisQueuesUrl && !RedisQueuesSentinelHost && !RedisStorageSentinelHost {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
 	}
+
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
@@ -187,7 +192,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if RedisStorageUrl != RedisQueuesUrl {
+	if RedisStorageUrl != RedisQueuesUrl && !RedisQueuesSentinelHost && !RedisStorageSentinelHost {
 		err = r.ReconcileHpa(component.DefaultHpa(component.BackendListenerName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -199,7 +204,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	} else {
 		// set log message if logical redis db are detected in the backend
 		if r.apiManager.Spec.Backend.ListenerSpec.Hpa || r.apiManager.Spec.Backend.WorkerSpec.Hpa {
-			message := "logical redis instances found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
+			message := "logical redis instances or SentinelHost with authentication found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
 			r.logger.Info(message)
 		}
 	}
@@ -216,13 +221,20 @@ func Backend(apimanager *appsv1alpha1.APIManager, client client.Client) (*compon
 	return component.NewBackend(opts), nil
 }
 
-func GetBackendRedisSecret(apimanagerNs string, ctx context.Context, client client.Client) (string, string) {
+func GetBackendRedisSecret(apimanagerNs string, ctx context.Context, client client.Client, logger logr.Logger) (string, string, bool, bool) {
 	backendRedisSecret := &v1.Secret{}
-	client.Get(ctx, types.NamespacedName{
+	err := client.Get(ctx, types.NamespacedName{
 		Name:      "backend-redis",
 		Namespace: apimanagerNs,
 	}, backendRedisSecret)
+	if err != nil {
+		logger.Error(err, "Failed to get system-redis secret, can't check logical databases or authenticated redis sentinels, check the backend-redis secret exists")
+		return "", "", false, false
+	}
 	RedisQueuesUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_QUEUES_URL"]), "1")
 	RedisStorageUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_STORAGE_URL"]), "0")
-	return RedisQueuesUrl, RedisStorageUrl
+	RedisQueuesSentinelHost := strings.Contains(string(backendRedisSecret.Data["REDIS_QUEUES_SENTINEL_HOSTS"]), "@")
+	RedisStorageSentinelHost := strings.Contains(string(backendRedisSecret.Data["REDIS_STORAGE_SENTINEL_HOSTS"]), "@")
+
+	return RedisQueuesUrl, RedisStorageUrl, RedisQueuesSentinelHost, RedisStorageSentinelHost
 }
