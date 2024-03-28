@@ -45,6 +45,8 @@ The following diagram shows available custom resource definitions and their rela
       * [Product custom gateway response on errors](#product-custom-gateway-response-on-errors)
       * [Product custom resource status field](#product-custom-resource-status-field)
       * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
+   * [ProxyConfigPromote custom resource](#proxyconfigpromote-custom-resource)
+      * [ProxyConfigPromote custom resource status field](#proxyconfigpromote-custom-resource-status-field)  
    * [OpenAPI custom resource](#openapi-custom-resource)
    * [ActiveDoc custom resource](#activedoc-custom-resource)
       * [Features](#features)
@@ -66,11 +68,11 @@ The following diagram shows available custom resource definitions and their rela
       * [Create developer user with admin role](#create-developer-user-with-admin-role)
       * [DeveloperUser custom resource status field](#developeruser-custom-resource-status-field)
       * [Link your DeveloperUser to your 3scale tenant or provider account](#link-your-developeruser-to-your-3scale-tenant-or-provider-account)
-   * [Application Custom Resource](#application-custom-resource)
-      * [Application Custom Resource Status Fields](#application-custom-resource-status-fields)
+   * [Application custom resource](#application-custom-resource)
+      * [Application custom resource status fields](#application-custom-resource-status-fields)
       * [Application Misconfiguration Errors](#application-misconfiguration-errors)
-   * [ApplicationAuth Custom Resource](#applicationauth-custom-resource)
-      * [Application Custom Resource Status Fields](#applicationauth-custom-resource-status-fields)
+   * [ApplicationAuth custom resource](#applicationauth-custom-resource)
+      * [Application custom resource status fields](#applicationauth-custom-resource-status-fields)
    * [Limitations and unimplemented functionalities](#limitations-and-unimplemented-functionalities)
 <!--te-->
 
@@ -895,6 +897,72 @@ oc create secret generic threescale-provider-account --from-literal=adminURL=htt
 * Default provider account in the same namespace 3scale deployment
 
 The operator will gather required credentials automatically for the default 3scale tenant (provider account) if 3scale installation is found in the same namespace as the custom resource.
+
+## ProxyConfigPromote custom resource
+
+* Used for promoting Products to staging and production ProxyConfigPromote are a one off action i.e. a button click event.
+
+Say you have a product e.g. product1-cr
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: product1-cr
+spec:
+  name: product1
+  backendUsages:
+    backend1:
+      path: /
+```
+Create proxyconfigpromote resources to promote product to staging.
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ProxyConfigPromote
+metadata:
+  name: product1-v1-staging
+spec:
+  productCRName: product1-cr
+```
+This will promote the product created by product1-cr to staging
+We can also promote directly to production with the production bool set to true
+```yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ProxyConfigPromote
+metadata:
+  name: product1-v1-production
+  namespace: 3scale-test
+spec:
+  productCRName: product1-cr
+  production: true
+  deleteCR: true
+```
+Note the deleteCR bool is set to true this will delete the ProxyConfigPromote CR once successfully promoted.
+
+[ProxyConfigPromote CRD reference](proxyConfigPromote-reference.md)
+
+### ProxyConfigPromote custom resource status field
+
+Fields:
+
+* **conditions**: status.Conditions k8s common pattern. States:
+    * *Ready*: Indicates the keys have successfully updated.
+    * *Failed*: Indicates the keys have not successfully updated.
+* **latestProductionVersion**: returns the latest production version after product promotion
+* **latestStagingVersion**: returns the latest staging version after product promotion
+* **productId**: returns the product ID that was promoted
+
+e.g. of a Successful status
+
+```yaml
+status:
+  conditions:
+    - lastTransitionTime: '2022-05-11T13:41:00Z'
+      status: 'True'
+      type: Ready
+  latestProductionVersion: 7
+  latestStagingVersion: 8
+  productId: '3'
+```
 
 ## OpenAPI custom resource
 * [OpenAPI custom resource](openapi-user-guide.md)
