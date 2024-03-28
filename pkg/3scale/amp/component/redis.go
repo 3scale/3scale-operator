@@ -349,7 +349,7 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 		AccessModes: []v1.PersistentVolumeAccessMode{
 			v1.ReadWriteOnce, // TODO be able to configure this because we have different volume access modes for different claims
 		},
-		Resources: v1.ResourceRequirements{
+		Resources: v1.VolumeResourceRequirements{
 			Requests: v1.ResourceList{
 				v1.ResourceStorage: resource.MustParse("1Gi"),
 			},
@@ -532,7 +532,7 @@ func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				"ReadWriteOnce",
 			},
-			Resources: v1.ResourceRequirements{
+			Resources: v1.VolumeResourceRequirements{
 				Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")},
 			},
 			StorageClassName: redis.Options.SystemRedisPVCStorageClass,

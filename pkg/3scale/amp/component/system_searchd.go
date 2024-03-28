@@ -151,7 +151,7 @@ func (s *SystemSearchd) PVC() *v1.PersistentVolumeClaim {
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
 			},
-			Resources: v1.ResourceRequirements{
+			Resources: v1.VolumeResourceRequirements{
 				Requests: v1.ResourceList{
 					v1.ResourceStorage: s.Options.PVCOptions.StorageRequests,
 				},
