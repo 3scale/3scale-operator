@@ -279,7 +279,7 @@ func throwAwayMysql(namespace string) *v1.Pod {
 }
 
 func throwAwayRedis(namespace string) *v1.Pod {
-	systemRedisImage := GetEnvVar("RELATED_IMAGE_SYSTEM_REDIS", "quay.io/centos7/redis-6-centos7:latest")
+	systemRedisImage := GetEnvVar("RELATED_IMAGE_SYSTEM_REDIS", "quay.io/centos7/redis-6-centos7:centos7")
 	return &v1.Pod{
 		ObjectMeta: apimachinerymetav1.ObjectMeta{
 			Name:      "throwaway-redis",
