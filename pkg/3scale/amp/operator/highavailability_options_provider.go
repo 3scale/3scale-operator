@@ -163,12 +163,6 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 			component.SystemSecretSystemRedisSentinelRole,
 			component.DefaultSystemRedisSentinelRole(),
 		},
-		{
-			&h.options.SystemRedisNamespace,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisNamespace,
-			component.DefaultSystemRedisNamespace(),
-		},
 	}
 
 	for _, option := range casesWithDefault {

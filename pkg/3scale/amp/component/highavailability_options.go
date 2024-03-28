@@ -13,7 +13,6 @@ type HighAvailabilityOptions struct {
 	SystemRedisURL                   string
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
-	SystemRedisNamespace             string
 
 	BackendRedisLabels   map[string]string `validate:"required"`
 	SystemRedisLabels    map[string]string `validate:"required"`

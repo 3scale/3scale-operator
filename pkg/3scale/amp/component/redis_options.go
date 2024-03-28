@@ -104,10 +104,6 @@ func DefaultSystemRedisSentinelRole() string {
 	return ""
 }
 
-func DefaultSystemRedisNamespace() string {
-	return ""
-}
-
 func DefaultBackendStorageSentinelHosts() string {
 	return ""
 }
