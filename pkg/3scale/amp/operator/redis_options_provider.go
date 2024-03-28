@@ -140,12 +140,6 @@ func (r *RedisOptionsProvider) setSecretBasedOptions() error {
 			component.SystemSecretSystemRedisSentinelRole,
 			component.DefaultSystemRedisSentinelRole(),
 		},
-		{
-			&r.options.SystemRedisNamespace,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisNamespace,
-			component.DefaultSystemRedisNamespace(),
-		},
 	}
 
 	for _, option := range cases {

@@ -45,7 +45,6 @@ const (
 const (
 	SystemSecretSystemRedisSecretName    = "system-redis"
 	SystemSecretSystemRedisURLFieldName  = "URL"
-	SystemSecretSystemRedisNamespace     = "NAMESPACE"
 	SystemSecretSystemRedisSentinelHosts = "SENTINEL_HOSTS"
 	SystemSecretSystemRedisSentinelRole  = "SENTINEL_ROLE"
 )
@@ -169,7 +168,6 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 
 	result = append(result,
 		helper.EnvVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
-		helper.EnvVarFromSecret("REDIS_NAMESPACE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisNamespace),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
 	)
