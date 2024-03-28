@@ -128,7 +128,6 @@ func testBackendRedisSecret() *v1.Secret {
 
 func testSystemRedisSecret() *v1.Secret {
 	data := map[string]string{
-		component.SystemSecretSystemRedisNamespace:     "systemRedis",
 		component.SystemSecretSystemRedisURLFieldName:  "redis://system1:6379",
 		component.SystemSecretSystemRedisSentinelHosts: "someHosts1",
 		component.SystemSecretSystemRedisSentinelRole:  "someRole1",
@@ -160,7 +159,6 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemRedisURL:                            component.DefaultSystemRedisURL(),
 		SystemRedisSentinelsHosts:                 component.DefaultSystemRedisSentinelHosts(),
 		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
-		SystemRedisNamespace:                      component.DefaultSystemRedisNamespace(),
 	}
 }
 
@@ -368,7 +366,6 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				opts.SystemRedisURL = "redis://system1:6379"
 				opts.SystemRedisSentinelsHosts = "someHosts1"
 				opts.SystemRedisSentinelsRole = "someRole1"
-				opts.SystemRedisNamespace = "systemRedis"
 				return opts
 			},
 		},
