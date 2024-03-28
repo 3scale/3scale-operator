@@ -22,6 +22,8 @@ cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiy
 cloud.google.com/go/storage v1.5.0/go.mod h1:tpKbwo567HUNpVclU5sGELwQWBDZ8gh0ZeosJ0Rtdos=
 cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohlUTyfDhBk=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
+github.com/3scale/3scale-porta-go-client v0.9.1-0.20240208161959-a6c3b3f36473 h1:5wCuPqH4oHrZf2GoT8P91f+fOaDNfeGYAcqbxuC8jzU=
+github.com/3scale/3scale-porta-go-client v0.9.1-0.20240208161959-a6c3b3f36473/go.mod h1:nUbuVh0fU2rs/lJfowmS5YhEk2tQoybL4htDIdxxMaM=
 github.com/3scale/3scale-porta-go-client v0.10.0 h1:GvwbIAuAlDBAQuVsK5dVRKMn93L5XBkl2P8uddqyTto=
 github.com/3scale/3scale-porta-go-client v0.10.0/go.mod h1:nUbuVh0fU2rs/lJfowmS5YhEk2tQoybL4htDIdxxMaM=
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78/go.mod h1:LmzpDX56iTiv29bbRTIsUNlaFfuhWRQBWjQdVyAevI8=

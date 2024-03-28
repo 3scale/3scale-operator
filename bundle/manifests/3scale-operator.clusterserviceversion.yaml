@@ -271,6 +271,9 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
+    - kind: ApplicationAuth
+      name: applicationauths.capabilities.3scale.net
+      version: v1beta1
     - description: Application is the Schema for the applications API
       displayName: Application
       kind: Application
@@ -360,6 +363,26 @@ spec:
           - configmaps
           verbs:
           - get
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - applicationauths
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - capabilities.3scale.net
+          resources:
+          - applicationauths/status
+          verbs:
+          - get
+          - patch
+          - update
         - apiGroups:
           - capabilities.3scale.net
           resources:
