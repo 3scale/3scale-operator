@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
-
 	routev1 "github.com/openshift/api/route/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -29,12 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
@@ -42,6 +35,11 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // APIManagerReconciler reconciles a APIManager object
@@ -143,7 +141,24 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Logger:    r.Logger().WithName("APIManagerRoutesHandler"),
 	}
 
+	cmEventMapper := &APIManagerConfigMapsEventMapper{
+		Context:   r.Context(),
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("APIManagerConfigMapsEventMapper"),
+	}
+
 	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
+	if err != nil {
+		return nil
+	}
+
+	redisConfigLabelSelector := &apimachinerymetav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"threescale_component":         "system",
+			"threescale_component_element": "redis",
+		},
+	}
+	redisConfigLabelPredicate, err := predicate.LabelSelectorPredicate(*redisConfigLabelSelector)
 	if err != nil {
 		return nil
 	}
@@ -157,6 +172,11 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		).
 		Owns(&k8sappsv1.Deployment{}).
 		Watches(&routev1.Route{}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
+		Watches(
+			&v1.ConfigMap{},
+			handler.EnqueueRequestsFromMapFunc(cmEventMapper.Map),
+			builder.WithPredicates(redisConfigLabelPredicate),
+		).
 		Complete(r)
 }
 

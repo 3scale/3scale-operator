@@ -72,6 +72,20 @@ func testRedisBackendRedisPodTemplateLabels() map[string]string {
 	return labels
 }
 
+func testRedisSystemRedisPodTemplateAnnotations() map[string]string {
+	annotations := map[string]string{
+		"generationID": "",
+	}
+	return annotations
+}
+
+func testRedisBackendRedisPodTemplateAnnotations() map[string]string {
+	annotations := map[string]string{
+		"generationID": "",
+	}
+	return annotations
+}
+
 func testBackendRedisAffinity() *v1.Affinity {
 	return getTestAffinity("backend-redis")
 }
@@ -151,6 +165,8 @@ func defaultRedisOptions() *component.RedisOptions {
 		BackendCommonLabels:                       testRedisBackendCommonLabels(),
 		BackendRedisLabels:                        testRedisBackendRedisLabels(),
 		BackendRedisPodTemplateLabels:             testRedisBackendRedisPodTemplateLabels(),
+		SystemRedisPodTemplateAnnotations:         testRedisSystemRedisPodTemplateAnnotations(),
+		BackendRedisPodTemplateAnnotations:        testRedisBackendRedisPodTemplateAnnotations(),
 		BackendStorageURL:                         component.DefaultBackendRedisStorageURL(),
 		BackendQueuesURL:                          component.DefaultBackendRedisQueuesURL(),
 		BackendRedisStorageSentinelHosts:          component.DefaultBackendStorageSentinelHosts(),
