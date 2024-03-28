@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"time"
 
 	"github.com/3scale/3scale-operator/apis/apps"
@@ -87,7 +88,7 @@ var _ = Describe("APIManager controller", func() {
 		It("Should create successfully", func() {
 
 			start := time.Now()
-
+			os.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 			// Create dummy secret needed to deploy an APIManager
 			// with S3 configuration for the E2E tests. As long as
 			// S3-related functionality is exercised it should work correctly.

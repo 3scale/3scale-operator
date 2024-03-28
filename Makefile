@@ -1,6 +1,8 @@
 SHELL := /bin/bash
 # Current Operator version
 VERSION ?= 0.0.1
+# Current Threescale version
+THREESCALE_VERSION ?= 2.14
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(VERSION)
 # Options for 'bundle-build'
@@ -93,7 +95,8 @@ manager: generate fmt vet
 run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
 run: export THREESCALE_DEBUG=1
 run: generate fmt vet manifests
-	$(GO) run ./main.go --zap-devel
+	@-oc process THREESCALE_VERSION=$(THREESCALE_VERSION) -f config/requirements/operator-requirements.yaml | oc apply -f - -n $(WATCH_NAMESPACE)
+	$(GO) run ./main.go --zap-devel 
 
 # find or download controller-gen
 # download controller-gen if necessary

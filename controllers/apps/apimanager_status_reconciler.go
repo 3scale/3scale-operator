@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	subController "github.com/3scale/3scale-operator/controllers/subscription"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -26,13 +28,15 @@ type APIManagerStatusReconciler struct {
 	*reconcilers.BaseReconciler
 	apimanagerResource *appsv1alpha1.APIManager
 	logger             logr.Logger
+	preflightsErr      error
 }
 
-func NewAPIManagerStatusReconciler(b *reconcilers.BaseReconciler, apimanagerResource *appsv1alpha1.APIManager) *APIManagerStatusReconciler {
+func NewAPIManagerStatusReconciler(b *reconcilers.BaseReconciler, apimanagerResource *appsv1alpha1.APIManager, preflightsError error) *APIManagerStatusReconciler {
 	return &APIManagerStatusReconciler{
 		BaseReconciler:     b,
 		apimanagerResource: apimanagerResource,
 		logger:             b.Logger().WithValues("Status Reconciler", client.ObjectKeyFromObject(apimanagerResource)),
+		preflightsErr:      preflightsError,
 	}
 }
 
@@ -88,8 +92,17 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 	}
 	newStatus.Conditions.SetCondition(availableCondition)
 
-	s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource)
-	s.reconcileOpenTracingDeprecationMessage(&newStatus.Conditions, s.apimanagerResource)
+	if s.preflightsErr == nil {
+		s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource)
+		s.reconcileOpenTracingDeprecationMessage(&newStatus.Conditions, s.apimanagerResource)
+	}
+
+	if !helper.IsPreflightBypassed() {
+		err = s.reconcilePreflightsError(&newStatus.Conditions, s.apimanagerResource)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	deploymentStatus := olm.GetDeploymentStatus(deployments)
 	newStatus.Deployments = deploymentStatus
@@ -193,14 +206,19 @@ func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeploy
 }
 
 func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
+	var expectedRouteHosts []string
 	wildcardDomain := s.apimanagerResource.Spec.WildcardDomain
-	expectedRouteHosts := []string{
-		fmt.Sprintf("backend-%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                // Backend Listener route
-		fmt.Sprintf("api-%s-apicast-production.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain), // Apicast Production default tenant Route
-		fmt.Sprintf("api-%s-apicast-staging.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),    // Apicast Staging default tenant Route
-		fmt.Sprintf("master.%s", wildcardDomain),                                                           // System's Master Portal Route
-		fmt.Sprintf("%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                        // System's default tenant Developer Portal Route
-		fmt.Sprintf("%s-admin.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                  // System's default tenant Admin Portal Route
+	if s.apimanagerResource.Spec.TenantName != nil {
+		expectedRouteHosts = []string{
+			fmt.Sprintf("backend-%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                // Backend Listener route
+			fmt.Sprintf("api-%s-apicast-production.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain), // Apicast Production default tenant Route
+			fmt.Sprintf("api-%s-apicast-staging.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),    // Apicast Staging default tenant Route
+			fmt.Sprintf("master.%s", wildcardDomain),                                                           // System's Master Portal Route
+			fmt.Sprintf("%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                        // System's default tenant Developer Portal Route
+			fmt.Sprintf("%s-admin.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                  // System's default tenant Admin Portal Route
+		}
+	} else {
+		return false, nil
 	}
 
 	listOps := []client.ListOption{
@@ -333,4 +351,65 @@ func apicastOpenTracingCondition(apicast string) common.Condition {
 		Reason:  common.ConditionReason(fmt.Sprintf("%s OpenTracing Deprecation", apicast)),
 		Message: "OpenTracing is deprecated, please use OpenTelemetry instead",
 	}
+}
+
+func (s *APIManagerStatusReconciler) reconcilePreflightsError(conditions *common.Conditions, cr *appsv1alpha1.APIManager) error {
+	prefligtsCondition := common.Condition{
+		Type:    appsv1alpha1.APIManagerPreflightsConditionType,
+		Status:  v1.ConditionStatus(metav1.ConditionTrue),
+		Reason:  common.ConditionReason("PreflightsPass"),
+		Message: "All requirements for the current version are met",
+	}
+
+	upgradeSuccessfulPreflight := "All requirement for incoming version are met. If using automatic upgrades the upgrade will start shortly, if manual, you can proceed with approval"
+	requirementConfigMapNotFoundPreflight := "Requirement config map is not found yet, it should be generated shortly"
+	freshInstallPreflightsErrorMessage := fmt.Sprintf("Preflights failed - %s. Re-running preflights in 10 minutes", s.preflightsErr)
+	upgradePreflightsErrorMessage := fmt.Sprintf("Preflights failed - %s. Re-running preflights in 10 minutes", s.preflightsErr)
+	multiMinorHopPreflightsMessage := fmt.Sprintf("Preflights failed - %s. Multi minor version hop detected. Reconciliation of this 3scale instance is stopped. Remove the operator and refer to official upgrade path for 3scale Operator", s.preflightsErr)
+
+	reqConfigMap, err := subController.RetrieveRequirementsConfigMap(s.Client())
+	if err != nil {
+		if errors.IsNotFound(err) {
+			prefligtsCondition.Message = requirementConfigMapNotFoundPreflight
+			prefligtsCondition.Status = v1.ConditionStatus(metav1.ConditionFalse)
+		} else {
+			return err
+		}
+	}
+
+	isMultiHopDetected, err := cr.IsMultiMinorHopDetected()
+	if err != nil {
+		return err
+	}
+	if isMultiHopDetected {
+		prefligtsCondition.Message = multiMinorHopPreflightsMessage
+		prefligtsCondition.Status = v1.ConditionStatus(metav1.ConditionFalse)
+	}
+
+	if cr.IsInFreshInstallationScenario() && s.preflightsErr != nil && !isMultiHopDetected {
+		prefligtsCondition.Status = v1.ConditionStatus(metav1.ConditionFalse)
+		prefligtsCondition.Message = freshInstallPreflightsErrorMessage
+	}
+
+	if !cr.IsInFreshInstallationScenario() && s.preflightsErr != nil && !isMultiHopDetected {
+		prefligtsCondition.Status = v1.ConditionStatus(metav1.ConditionFalse)
+		prefligtsCondition.Message = upgradePreflightsErrorMessage
+	}
+
+	if !cr.IsInFreshInstallationScenario() && s.preflightsErr == nil && (product.ThreescaleRelease != reqConfigMap.Data[helper.RHTThreescaleVersion]) && !isMultiHopDetected {
+		prefligtsCondition.Status = v1.ConditionStatus(metav1.ConditionTrue)
+		prefligtsCondition.Message = upgradeSuccessfulPreflight
+	}
+
+	existingPreflightCondition := conditions.GetConditionByReason(prefligtsCondition.Reason)
+	if existingPreflightCondition == nil {
+		*conditions = append(*conditions, prefligtsCondition)
+	} else {
+		conditions.RemoveConditionByReason(prefligtsCondition.Reason)
+		existingPreflightCondition.Message = prefligtsCondition.Message
+		existingPreflightCondition.Status = prefligtsCondition.Status
+		*conditions = append(*conditions, prefligtsCondition)
+	}
+
+	return nil
 }

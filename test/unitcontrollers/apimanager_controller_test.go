@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -93,6 +94,8 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 			Namespace: namespace,
 		},
 	}
+
+	os.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 
 	endLoop := false
 	for i := 0; i < 100 && !endLoop; i++ {
