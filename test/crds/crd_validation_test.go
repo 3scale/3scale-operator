@@ -31,6 +31,7 @@ const (
 	productPoliciesConfigurationPath                 = "/spec/policies/configuration"
 	policyConfigurationPath                          = "/spec/schema/configuration"
 	resourceClaimsRegex                              = "^/([a-zA-Z]+)/([a-zA-Z]+)/([a-zA-Z]+)(?:/([a-zA-Z]+))?(?:/([a-zA-Z]+))?/claims.*"
+	podAffinityMatchLabelKeysRegex                   = "^/([a-zA-Z]+)/([a-zA-Z]+)/([a-zA-Z]+)/([a-zA-Z]+)(?:/([a-zA-Z]+))?/.*DuringSchedulingIgnoredDuringExecution/(?:podAffinityTerm/)?(mis)?matchLabelKeys"
 	topologySpreadConstraintsMatchLabelKeysRegex     = "^/([a-zA-Z]+)/([a-zA-Z]+)(?:/([a-zA-Z]+))?(?:/([a-zA-Z]+))?/.*[tT]opologySpreadConstraints/matchLabelKeys$"
 	topologySpreadConstraintsNodeAffinityPolicyRegex = "^/([a-zA-Z]+)/([a-zA-Z]+)(?:/([a-zA-Z]+))?(?:/([a-zA-Z]+))?/.*[tT]opologySpreadConstraints/nodeAffinityPolicy$"
 	topologySpreadConstraintsNodeTaintsPolicyRegex   = "^/([a-zA-Z]+)/([a-zA-Z]+)(?:/([a-zA-Z]+))?(?:/([a-zA-Z]+))?/.*[tT]opologySpreadConstraints/nodeTaintsPolicy$"
@@ -194,6 +195,7 @@ func TestCompleteCRD(t *testing.T) {
 		regexp.MustCompile(topologySpreadConstraintsMatchLabelKeysRegex),
 		regexp.MustCompile(topologySpreadConstraintsNodeAffinityPolicyRegex),
 		regexp.MustCompile(topologySpreadConstraintsNodeTaintsPolicyRegex),
+		regexp.MustCompile(podAffinityMatchLabelKeysRegex),
 	}
 
 	for crd, elem := range crdStructMap {
