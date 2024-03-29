@@ -95,7 +95,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	latestInstallPlan := &operatorsv1alpha1.InstallPlan{}
 	err = wait.Poll(time.Second*5, time.Minute*3, func() (done bool, err error) {
 		if subscription.Status.InstallPlanRef == nil {
-			logger.Info("ReconcileSubscription", "InstallPlanRef from Subscription is nil, trying again...")
+			logger.Info("ReconcileSubscription", "InstallPlanRef from Subscription is nil, trying again...", fmt.Errorf("subscription doesn't contain install plan reference"))
 			return false, nil
 		}
 		err = r.Client().Get(context.TODO(), client.ObjectKey{Name: subscription.Status.InstallPlanRef.Name, Namespace: subscription.Status.InstallPlanRef.Namespace}, latestInstallPlan)
