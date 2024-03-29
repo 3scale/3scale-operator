@@ -97,18 +97,9 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 
 	os.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 
-	endLoop := false
-	for i := 0; i < 100 && !endLoop; i++ {
-		res, err := r.Reconcile(ctx, req)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		endLoop = !res.Requeue
-	}
-
-	if !endLoop {
-		t.Fatal("reconcile did not finish end of reconciliation as expected. APIManager should have been reconciled at this point")
+	_, err = r.Reconcile(ctx, req)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	finalAPIManager := &appsv1alpha1.APIManager{}

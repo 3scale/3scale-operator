@@ -73,6 +73,11 @@ func (s *APIManagerStatusReconciler) Reconcile() (reconcile.Result, error) {
 
 		return reconcile.Result{}, fmt.Errorf("failed to update status: %w", updateErr)
 	}
+
+	if !apiManagerAvailable {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
 	return reconcile.Result{}, nil
 }
 
