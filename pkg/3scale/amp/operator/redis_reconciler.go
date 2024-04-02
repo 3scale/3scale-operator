@@ -67,10 +67,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	// To avoid this scenario by placing CM reconciliation before Deployment
 	if r.ConfigMap != nil {
 		redisConfigMap := r.ConfigMap(redis)
-		isInternalRedis, err := r.isInternalRedis()
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+		isInternalRedis := r.isInternalRedis()
 		if isInternalRedis {
 			redis_configuration := r.ConfigMap(redis).Data["redis.conf"]
 			redisConfigMap.Data["redis.conf"] = redis_configuration + "\n" + "rename-command REPLICAOF \"\"" + "\n" + "rename-command SLAVEOF \"\"" + "\n"
@@ -159,18 +156,12 @@ func (r *RedisReconciler) redisConfigCmMutator(existingObj, desiredObj common.Ku
 	return update, nil
 }
 
-func (r *RedisReconciler) isInternalRedis() (bool, error) {
-	if r.apiManager.Spec.ExternalComponents != nil &&
-		r.apiManager.Spec.ExternalComponents.Backend != nil &&
-		r.apiManager.Spec.ExternalComponents.Backend.Redis != nil &&
-		*r.apiManager.Spec.ExternalComponents.Backend.Redis == true {
-		return false, nil
+func (r *RedisReconciler) isInternalRedis() bool {
+	if r.apiManager.IsExternal(appsv1alpha1.BackendRedis) {
+		return false
 	}
-	if r.apiManager.Spec.ExternalComponents != nil &&
-		r.apiManager.Spec.ExternalComponents.System != nil &&
-		r.apiManager.Spec.ExternalComponents.System.Redis != nil &&
-		*r.apiManager.Spec.ExternalComponents.System.Redis == true {
-		return false, nil
+	if r.apiManager.IsExternal(appsv1alpha1.SystemRedis) {
+		return false
 	}
-	return true, nil
+	return true
 }
