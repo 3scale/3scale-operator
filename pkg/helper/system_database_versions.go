@@ -86,7 +86,7 @@ func databaseObject(url *url.URL) SystemDatabase {
 	password, _ := url.User.Password()
 	return SystemDatabase{
 		scheme:   url.Scheme,
-		host:     url.Host,
+		host:     url.Hostname(),
 		port:     url.Port(),
 		password: password,
 		user:     url.User.Username(),
@@ -100,7 +100,11 @@ func verifySystemPostgresDatabaseVersion(k8sclient client.Client, namespace, req
 		return false, err
 	}
 
-	postgresqlCommand := fmt.Sprintf("PGPASSWORD=\"%s\" psql -h \"%s\" -U \"%s\" -d \"%s\" -p\"5432\" -t -A -c \"SELECT version();\"", databaseObject.password, databaseObject.host, databaseObject.user, strings.TrimLeft(databaseObject.path, "/"))
+	if databaseObject.port == "" {
+		databaseObject.port = "5432"
+	}
+
+	postgresqlCommand := fmt.Sprintf("PGPASSWORD=\"%s\" psql -h \"%s\" -U \"%s\" -d \"%s\" -p\"%s\" -t -A -c \"SELECT version();\"", databaseObject.password, databaseObject.host, databaseObject.user, strings.TrimLeft(databaseObject.path, "/"), databaseObject.port)
 	command := []string{"/bin/bash", "-c", postgresqlCommand}
 	podExecutor := NewPodExecutor(logger)
 	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(databasePod.Namespace, databasePod.Name, command)
