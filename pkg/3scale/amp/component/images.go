@@ -21,19 +21,19 @@ func ZyncImageURL() string {
 }
 
 func BackendRedisImageURL() string {
-	return "quay.io/centos7/redis-6-centos7:centos7"
+	return "quay.io/sclorg/redis-6-c8s"
 }
 
 func SystemRedisImageURL() string {
-	return "quay.io/centos7/redis-6-centos7:centos7"
+	return "quay.io/sclorg/redis-6-c8s"
 }
 
 func SystemMySQLImageURL() string {
-	return "centos/mysql-80-centos7"
+	return "quay.io/sclorg/mysql-80-c8s"
 }
 
 func SystemPostgreSQLImageURL() string {
-	return "centos/postgresql-10-centos7"
+	return "quay.io/sclorg/postgresql-10-c8s"
 }
 
 func SystemMemcachedImageURL() string {

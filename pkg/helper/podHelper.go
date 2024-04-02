@@ -21,6 +21,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	redisDefaultImage      = "quay.io/sclorg/redis-6-c8s"
+	mySqlDefaultImage      = "quay.io/sclorg/mysql-80-c8s"
+	postgreSqlDefaultImage = "quay.io/sclorg/postgresql-10-c8s"
+)
+
 //go:generate moq -out pod_executor_moq.go . PodExecutorInterface
 type PodExecutorInterface interface {
 	ExecuteRemoteCommand(ns string, podName string, command []string) (string, string, error)
@@ -233,7 +239,7 @@ func CreateDatabaseThrowAwayPod(k8sclient client.Client, namespace, dbType strin
 }
 
 func throwAwayPostgres(namespace string) *v1.Pod {
-	systemPostgresImage := GetEnvVar("RELATED_IMAGE_SYSTEM_POSTGRESQL", "centos/postgresql-10-centos7")
+	systemPostgresImage := GetEnvVar("RELATED_IMAGE_SYSTEM_POSTGRESQL", postgreSqlDefaultImage)
 	return &v1.Pod{
 		ObjectMeta: apimachinerymetav1.ObjectMeta{
 			Name:      "throwaway-postgres",
@@ -256,7 +262,7 @@ func throwAwayPostgres(namespace string) *v1.Pod {
 }
 
 func throwAwayMysql(namespace string) *v1.Pod {
-	systemMysqlImage := GetEnvVar("RELATED_IMAGE_SYSTEM_MYSQL", "centos/mysql-80-centos7")
+	systemMysqlImage := GetEnvVar("RELATED_IMAGE_SYSTEM_MYSQL", mySqlDefaultImage)
 	return &v1.Pod{
 		ObjectMeta: apimachinerymetav1.ObjectMeta{
 			Name:      "throwaway-mysql",
@@ -279,7 +285,7 @@ func throwAwayMysql(namespace string) *v1.Pod {
 }
 
 func throwAwayRedis(namespace string) *v1.Pod {
-	systemRedisImage := GetEnvVar("RELATED_IMAGE_SYSTEM_REDIS", "quay.io/centos7/redis-6-centos7:centos7")
+	systemRedisImage := GetEnvVar("RELATED_IMAGE_SYSTEM_REDIS", redisDefaultImage)
 	return &v1.Pod{
 		ObjectMeta: apimachinerymetav1.ObjectMeta{
 			Name:      "throwaway-redis",
