@@ -66,13 +66,7 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	// but resourceVersion could be changed twice (after user change and after operator).
 	// To avoid this scenario by placing CM reconciliation before Deployment
 	if r.ConfigMap != nil {
-		redisConfigMap := r.ConfigMap(redis)
-		isInternalRedis := r.isInternalRedis()
-		if isInternalRedis {
-			redis_configuration := r.ConfigMap(redis).Data["redis.conf"]
-			redisConfigMap.Data["redis.conf"] = redis_configuration + "\n" + "rename-command REPLICAOF \"\"" + "\n" + "rename-command SLAVEOF \"\"" + "\n"
-		}
-		err = r.ReconcileConfigMap(redisConfigMap, r.redisConfigCmMutator)
+		err = r.ReconcileConfigMap(r.ConfigMap(redis), r.redisConfigMapMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -139,7 +133,7 @@ func Redis(apimanager *appsv1alpha1.APIManager, client client.Client) (*componen
 	return component.NewRedis(opts), nil
 }
 
-func (r *RedisReconciler) redisConfigCmMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+func (r *RedisReconciler) redisConfigMapMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
 	existing, ok := existingObj.(*corev1.ConfigMap)
 	if !ok {
 		return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)
@@ -154,14 +148,4 @@ func (r *RedisReconciler) redisConfigCmMutator(existingObj, desiredObj common.Ku
 	update = update || fieldUpdated
 
 	return update, nil
-}
-
-func (r *RedisReconciler) isInternalRedis() bool {
-	if r.apiManager.IsExternal(appsv1alpha1.BackendRedis) {
-		return false
-	}
-	if r.apiManager.IsExternal(appsv1alpha1.SystemRedis) {
-		return false
-	}
-	return true
 }

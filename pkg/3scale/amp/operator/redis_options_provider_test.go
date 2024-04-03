@@ -72,18 +72,18 @@ func testRedisBackendRedisPodTemplateLabels() map[string]string {
 	return labels
 }
 
-func testRedisSystemRedisPodTemplateAnnotations() map[string]string {
-	annotations := map[string]string{
-		"generationID": "",
-	}
-	return annotations
+func testRedisSystemRedisPodTemplateAnnotations() (map[string]string, error) {
+	//annotations := map[string]string{
+	//	"redisConfigMapResourceVersion": "",
+	//}
+	return nil, nil
 }
 
-func testRedisBackendRedisPodTemplateAnnotations() map[string]string {
-	annotations := map[string]string{
-		"generationID": "",
-	}
-	return annotations
+func testRedisBackendRedisPodTemplateAnnotations() (map[string]string, error) {
+	//annotations := map[string]string{
+	//	"redisConfigMapResourceVersion": "",
+	//}
+	return nil, nil
 }
 
 func testBackendRedisAffinity() *v1.Affinity {
@@ -151,6 +151,9 @@ func testSystemRedisSecret() *v1.Secret {
 }
 
 func defaultRedisOptions() *component.RedisOptions {
+	backendRedisPodTemplateAnnotations, _ := testRedisBackendRedisPodTemplateAnnotations()
+	systemRedisPodTemplateAnnotations, _ := testRedisSystemRedisPodTemplateAnnotations()
+
 	return &component.RedisOptions{
 		AmpRelease:      product.ThreescaleRelease,
 		BackendImageTag: product.ThreescaleRelease,
@@ -165,8 +168,8 @@ func defaultRedisOptions() *component.RedisOptions {
 		BackendCommonLabels:                       testRedisBackendCommonLabels(),
 		BackendRedisLabels:                        testRedisBackendRedisLabels(),
 		BackendRedisPodTemplateLabels:             testRedisBackendRedisPodTemplateLabels(),
-		SystemRedisPodTemplateAnnotations:         testRedisSystemRedisPodTemplateAnnotations(),
-		BackendRedisPodTemplateAnnotations:        testRedisBackendRedisPodTemplateAnnotations(),
+		SystemRedisPodTemplateAnnotations:         systemRedisPodTemplateAnnotations,
+		BackendRedisPodTemplateAnnotations:        backendRedisPodTemplateAnnotations,
 		BackendStorageURL:                         component.DefaultBackendRedisStorageURL(),
 		BackendQueuesURL:                          component.DefaultBackendRedisQueuesURL(),
 		BackendRedisStorageSentinelHosts:          component.DefaultBackendStorageSentinelHosts(),

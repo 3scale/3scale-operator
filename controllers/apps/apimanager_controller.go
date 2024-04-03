@@ -352,7 +352,6 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	redisConfigLabelSelector := &apimachinerymetav1.LabelSelector{
 		MatchLabels: map[string]string{
-			"threescale_component":         "system",
 			"threescale_component_element": "redis",
 		},
 	}
