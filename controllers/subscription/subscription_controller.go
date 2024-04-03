@@ -76,11 +76,6 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	logger := r.BaseReconciler.Logger().WithValues("subscription", req.NamespacedName)
 	logger.Info("ReconcileSubscription", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
 
-	// Double check if the reconciled subscription is a valid 3scale operator subscription
-	if !r.shouldReconcileSubscription(req) {
-		return ctrl.Result{}, nil
-	}
-
 	// Retrieve the subscription from the operator namespace
 	subscription := &operatorsv1alpha1.Subscription{}
 	err := r.Client().Get(context.TODO(), client.ObjectKey{Name: req.Name, Namespace: req.Namespace}, subscription)
@@ -89,6 +84,11 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
+	}
+
+	// Double check if the reconciled subscription is a valid 3scale operator subscription
+	if !r.shouldReconcileSubscription(*subscription) {
+		return ctrl.Result{}, nil
 	}
 
 	// Retrieve the latestInstallPlan to read the CSV configMap
@@ -191,7 +191,7 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	conditionReconcileResult, err := r.reconcileOperatorCondtions(fmt.Sprintf("operators.coreos.com/%s.%s", subscription.Name, subscription.Namespace))
+	conditionReconcileResult, err := r.reconcileOperatorCondtions(fmt.Sprintf("operators.coreos.com/%s.%s", subscription.Spec.Package, subscription.Namespace))
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -203,14 +203,15 @@ func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	return ctrl.Result{}, nil
 }
 
-func (r *SubscriptionReconciler) shouldReconcileSubscription(request ctrl.Request) bool {
+func (r *SubscriptionReconciler) shouldReconcileSubscription(subscription operatorsv1alpha1.Subscription) bool {
 	// double check if ns is correct - note, Operator namespace is the namespace where operator runs
-	if request.Namespace != r.OperatorNamespace {
+	if subscription.Namespace != r.OperatorNamespace {
 		return false
 	}
 
-	// only subscriptions we want to reconcile are: 3scale-operator or 3scale-community-operator
-	if strings.Contains(request.Name, threescaleOperatorSubscription) {
+	// only subscriptions we want to reconcile are the ones that include 3scale in package name and are
+	// on the operator namespace
+	if strings.Contains(subscription.Spec.Package, threescaleOperatorSubscription) {
 		return true
 	}
 
