@@ -344,12 +344,6 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	resourceVersionChangePredicate := predicate.ResourceVersionChangedPredicate{}
 
-	cmEventMapper := &APIManagerConfigMapsEventMapper{
-		Context:   r.Context(),
-		K8sClient: r.Client(),
-		Logger:    r.Logger().WithName("APIManagerConfigMapsEventMapper"),
-	}
-
 	redisConfigLabelSelector := &apimachinerymetav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"threescale_component_element": "redis",
@@ -379,11 +373,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			handler.EnqueueRequestsFromMapFunc(configMapToApimanagerEventMapper.Map),
 			builder.WithPredicates(resourceVersionChangePredicate),
 		).
-		Watches(
-			&v1.ConfigMap{},
-			handler.EnqueueRequestsFromMapFunc(cmEventMapper.Map),
-			builder.WithPredicates(redisConfigLabelPredicate),
-		).
+		Owns(&v1.ConfigMap{}, builder.WithPredicates(redisConfigLabelPredicate)).
 		Complete(r)
 }
 
