@@ -3,7 +3,7 @@ module github.com/3scale/3scale-operator
 go 1.20
 
 require (
-	github.com/3scale/3scale-porta-go-client v0.10.0
+	github.com/3scale/3scale-porta-go-client v0.11.0
 	github.com/RHsyseng/operator-utils v1.4.13
 	github.com/getkin/kin-openapi v0.94.0
 	github.com/ghodss/yaml v1.0.0
