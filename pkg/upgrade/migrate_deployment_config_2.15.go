@@ -73,6 +73,12 @@ func MigrateDeploymentConfigToDeployment(dName string, dNamespace string, overri
 		return false, fmt.Errorf("error transferring deploymentconfig env vars to deployment %s: %v", deployment.Name, err)
 	}
 
+	// Copy any custom volumes and volume mounts from the DeploymentConfig to the Deployment
+	err = transferDeploymentConfigVolumes(deploymentConfig, deployment, client)
+	if err != nil {
+		return false, fmt.Errorf("error transferring deploymentconfig volumes to deployment %s: %v", deployment.Name, err)
+	}
+
 	// Update Deployment replica count to match that of the DeploymentConfig
 	err = matchDeploymentConfigReplicaCount(deploymentConfig, deployment, client)
 	if err != nil {
@@ -264,6 +270,80 @@ func transferDeploymentConfigEnvVars(dc *appsv1.DeploymentConfig, deployment *k8
 	}
 
 	if envVarsAdded {
+		// Update the deployment
+		err := client.Update(context.TODO(), deployment)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func transferDeploymentConfigVolumes(dc *appsv1.DeploymentConfig, deployment *k8sappsv1.Deployment, client k8sclient.Client) error {
+	volumesAdded := false
+
+	// Map to store volume names present in deployment
+	dVolumes := make(map[string]bool)
+	for _, dVolume := range deployment.Spec.Template.Spec.Volumes {
+		dVolumes[dVolume.Name] = true
+	}
+
+	// Determine which volumes exist in dc but not in deployment
+	missingVolumes := make([]corev1.Volume, 0)
+	for _, dcVolume := range dc.Spec.Template.Spec.Volumes {
+		if _, exists := dVolumes[dcVolume.Name]; !exists {
+			missingVolumes = append(missingVolumes, dcVolume)
+		}
+	}
+
+	// Add missing volumes to Deployment
+	if len(missingVolumes) > 0 {
+		if deployment.Spec.Template.Spec.Volumes == nil {
+			deployment.Spec.Template.Spec.Volumes = make([]corev1.Volume, 0)
+		}
+		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, missingVolumes...)
+		volumesAdded = true
+	}
+
+	// Loop through each container in dc to check for missing volume mounts
+	for _, dcContainer := range dc.Spec.Template.Spec.Containers {
+		// Find corresponding container in deployment
+		var dContainer *corev1.Container
+		for i, container := range deployment.Spec.Template.Spec.Containers {
+			if dcContainer.Name == container.Name {
+				dContainer = &deployment.Spec.Template.Spec.Containers[i]
+				break
+			}
+		}
+
+		if dContainer == nil {
+			return fmt.Errorf("the deployment %s is missing the container %s", deployment.Name, dcContainer.Name)
+		}
+
+		// Determine which volume mounts exist in dc's container but not in deployment's container
+		var missingVolumeMounts []corev1.VolumeMount
+		for _, dcVolumeMount := range dcContainer.VolumeMounts {
+			found := false
+			for _, deploymentVolumeMount := range dContainer.VolumeMounts {
+				if dcVolumeMount.Name == deploymentVolumeMount.Name {
+					found = true
+					break
+				}
+			}
+			if !found {
+				missingVolumeMounts = append(missingVolumeMounts, dcVolumeMount)
+			}
+		}
+
+		// Add any missing volume mounts to deployment's container
+		if len(missingVolumeMounts) > 0 {
+			dContainer.VolumeMounts = append(dContainer.VolumeMounts, missingVolumeMounts...)
+			volumesAdded = true
+		}
+	}
+
+	if volumesAdded {
 		// Update the deployment
 		err := client.Update(context.TODO(), deployment)
 		if err != nil {
