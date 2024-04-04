@@ -957,11 +957,30 @@ e.g. of a Successful status
 status:
   conditions:
     - lastTransitionTime: '2022-05-11T13:41:00Z'
+      message: >-
+        3scale product has been successfully promoted, any further interactions
+        with this CR (apart from deletion) won't be applied
       status: 'True'
       type: Ready
   latestProductionVersion: 7
   latestStagingVersion: 8
   productId: '3'
+```
+
+e.g. of a product with nothing to promote
+
+```yaml
+status: 
+  conditions: 
+    - lastTransitionTime: '2023-09-05T07:48:08Z'
+      message: >-
+        can't promote to production as no product changes detected, delete the
+        proxyConfigPromote CR or introduce changes to stage env first to proceed
+      status: 'True'
+      type: Failed
+  latestProductionVersion: 1
+  latestStagingVersion: 1
+  productId: '6'
 ```
 
 ## OpenAPI custom resource
