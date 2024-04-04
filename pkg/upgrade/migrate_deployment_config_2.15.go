@@ -73,6 +73,12 @@ func MigrateDeploymentConfigToDeployment(dName string, dNamespace string, overri
 		return false, fmt.Errorf("error transferring deploymentconfig env vars to deployment %s: %v", deployment.Name, err)
 	}
 
+	// Update Deployment replica count to match that of the DeploymentConfig
+	err = matchDeploymentConfigReplicaCount(deploymentConfig, deployment, client)
+	if err != nil {
+		return false, fmt.Errorf("error transferring deploymentconfig replica count to deployment %s: %v", deployment.Name, err)
+	}
+
 	// Requeue if Deployment isn't healthy and override is set to false, otherwise proceed
 	if !helper.IsDeploymentAvailable(deployment) && !overrideDeploymentHealth {
 		log.V(1).Info(fmt.Sprintf("deployment %s is not yet available and overrideDeploymentHealth is set to %t", deployment.Name, overrideDeploymentHealth))
@@ -243,7 +249,10 @@ func transferDeploymentConfigEnvVars(dc *appsv1.DeploymentConfig, deployment *k8
 				}
 			}
 			if !found {
-				missingEnvVars = append(missingEnvVars, dcEnvVar)
+				// Skip adding the REDIS_NAMESPACE env var as it's no longer supported
+				if dcEnvVar.Name != "REDIS_NAMESPACE" {
+					missingEnvVars = append(missingEnvVars, dcEnvVar)
+				}
 			}
 		}
 
@@ -255,6 +264,23 @@ func transferDeploymentConfigEnvVars(dc *appsv1.DeploymentConfig, deployment *k8
 	}
 
 	if envVarsAdded {
+		// Update the deployment
+		err := client.Update(context.TODO(), deployment)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func matchDeploymentConfigReplicaCount(dc *appsv1.DeploymentConfig, deployment *k8sappsv1.Deployment, client k8sclient.Client) error {
+	// Get the replica count from the DeploymentConfig and Deployment
+	dcReplicaCount := dc.Spec.Replicas
+	dReplicaCount := deployment.Spec.Replicas
+
+	if *dReplicaCount != dcReplicaCount {
+		deployment.Spec.Replicas = &dcReplicaCount
 		// Update the deployment
 		err := client.Update(context.TODO(), deployment)
 		if err != nil {
