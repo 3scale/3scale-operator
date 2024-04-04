@@ -67,6 +67,9 @@ For example:
 status:
   conditions:
     - lastTransitionTime: '2022-05-11T13:41:00Z'
+      message: >-
+        3scale product has been successfully promoted, any further interactions
+        with this CR (apart from deletion) won't be applied
       status: 'True'
       type: Ready
   latestProductionVersion: 7
