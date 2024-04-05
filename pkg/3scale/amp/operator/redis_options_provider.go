@@ -5,9 +5,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,9 +32,9 @@ func NewRedisOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace stri
 }
 
 func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error) {
-	r.options.AmpRelease = product.ThreescaleRelease
-	r.options.BackendImageTag = product.ThreescaleRelease
-	r.options.SystemImageTag = product.ThreescaleRelease
+	r.options.AmpRelease = version.ThreescaleVersionMajorMinor()
+	r.options.BackendImageTag = version.ThreescaleVersionMajorMinor()
+	r.options.SystemImageTag = version.ThreescaleVersionMajorMinor()
 
 	r.options.BackendImage = BackendRedisImageURL()
 	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisImage != nil {

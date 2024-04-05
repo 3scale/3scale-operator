@@ -16,9 +16,9 @@ import (
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 )
 
 const (
@@ -147,7 +147,7 @@ func defaultApicastOptions() *component.ApicastOptions {
 		ManagementAPI:                      apicastManagementAPI,
 		OpenSSLVerify:                      strconv.FormatBool(openSSLVerify),
 		ResponseCodes:                      strconv.FormatBool(responseCodes),
-		ImageTag:                           product.ThreescaleRelease,
+		ImageTag:                           version.ThreescaleVersionMajorMinor(),
 		ExtendedMetrics:                    true,
 		ProductionResourceRequirements:     component.DefaultProductionResourceRequirements(),
 		StagingResourceRequirements:        component.DefaultStagingResourceRequirements(),

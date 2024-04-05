@@ -41,7 +41,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	subController "github.com/3scale/3scale-operator/controllers/subscription"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/handlers"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -79,7 +78,7 @@ var _ reconcile.Reconciler = &APIManagerReconciler{}
 
 func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.BaseReconciler.Logger().WithValues("apimanager", req.NamespacedName)
-	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
+	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", version.ThreescaleVersionMajorMinor())
 
 	// your logic here
 	var delayedRequeue bool
@@ -252,15 +251,18 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 		culprit = retrieveCulprit(systemDatabaseVerified, backendRedisVerified, systemRedisVerified, postgresDatabaseRequirements, mysqlDatabaseRequirement, backendRedisRequirement, systemRedisRequirement)
 	}
 
-	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == product.ThreescaleRelease) && (apimVersion == "") {
+	// Fresh install scenario
+	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion == "") {
 		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("fresh installation detected but the requirements have not been met, %s", culprit)
 	}
 
-	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == product.ThreescaleRelease) && (apimVersion != product.ThreescaleRelease) {
-		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", product.ThreescaleRelease, culprit)
+	// 2.14 > 2.15 upgrade + any manual (remove + re-install operator) operator installs scenarios
+	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion != version.ThreescaleVersionMajorMinorPatch()) {
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", version.ThreescaleVersionMajorMinor(), culprit)
 	}
 
-	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion != product.ThreescaleRelease) && (apimVersion == product.ThreescaleRelease) {
+	// Incoming upgrade scenarios
+	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion != version.ThreescaleVersionMajorMinor()) && (apimVersion == version.ThreescaleVersionMajorMinorPatch()) {
 		return ctrl.Result{Requeue: true}, nil, fmt.Errorf("attempted upgrade to %s have been performed but the requirements are not met, operator will keep reconciling but ensure requirements are met in order to proceed with upgrade, %s", incomingVersion, culprit)
 	}
 
@@ -581,10 +583,6 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 	return &operator.CompositeDependencyReconciler{
 		Reconcilers: result,
 	}
-}
-
-func (r *APIManagerReconciler) IsIncomingVersionDifferent(incomingVersion string) bool {
-	return incomingVersion != product.ThreescaleRelease
 }
 
 func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIManager) (ctrl.Result, bool, error) {

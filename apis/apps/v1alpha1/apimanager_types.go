@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/3scale/3scale-operator/apis/apps"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/version"
 )
@@ -952,7 +951,7 @@ func (apimanager *APIManager) IsMultiMinorHopDetected() (bool, error) {
 	}
 
 	if currentlyInstalledVersion != "" {
-		multiMinorHop, err := common.CompareMinorVersions(currentlyInstalledVersion, product.ThreescaleRelease)
+		multiMinorHop, err := common.CompareMinorVersions(currentlyInstalledVersion, version.ThreescaleVersionMajorMinor())
 		if err != nil {
 			return true, err
 		}
@@ -975,8 +974,8 @@ func (apimanager *APIManager) setAPIManagerAnnotationsDefaults() bool {
 		changed = true
 	}
 
-	if v, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; !ok || v != product.ThreescaleRelease {
-		apimanager.Annotations[ThreescaleVersionAnnotation] = product.ThreescaleRelease
+	if v, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; !ok || v != version.ThreescaleVersionMajorMinorPatch() {
+		apimanager.Annotations[ThreescaleVersionAnnotation] = version.ThreescaleVersionMajorMinorPatch()
 		changed = true
 	}
 

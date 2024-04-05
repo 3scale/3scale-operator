@@ -7,10 +7,10 @@ import (
 	subController "github.com/3scale/3scale-operator/controllers/subscription"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/go-logr/logr"
 	routev1 "github.com/openshift/api/route/v1"
@@ -103,7 +103,7 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 	}
 
 	if !helper.IsPreflightBypassed() {
-		err = s.reconcilePreflightsError(&newStatus.Conditions, s.apimanagerResource)
+		err = s.reconcilePreflightsStatus(&newStatus.Conditions, s.apimanagerResource)
 		if err != nil {
 			return nil, err
 		}
@@ -358,7 +358,7 @@ func apicastOpenTracingCondition(apicast string) common.Condition {
 	}
 }
 
-func (s *APIManagerStatusReconciler) reconcilePreflightsError(conditions *common.Conditions, cr *appsv1alpha1.APIManager) error {
+func (s *APIManagerStatusReconciler) reconcilePreflightsStatus(conditions *common.Conditions, cr *appsv1alpha1.APIManager) error {
 	prefligtsCondition := common.Condition{
 		Type:    appsv1alpha1.APIManagerPreflightsConditionType,
 		Status:  v1.ConditionStatus(metav1.ConditionTrue),
@@ -401,7 +401,7 @@ func (s *APIManagerStatusReconciler) reconcilePreflightsError(conditions *common
 		prefligtsCondition.Message = upgradePreflightsErrorMessage
 	}
 
-	if !cr.IsInFreshInstallationScenario() && s.preflightsErr == nil && (product.ThreescaleRelease != reqConfigMap.Data[helper.RHTThreescaleVersion]) && !isMultiHopDetected {
+	if !cr.IsInFreshInstallationScenario() && s.preflightsErr == nil && (version.ThreescaleVersionMajorMinor() != reqConfigMap.Data[helper.RHTThreescaleVersion]) && !isMultiHopDetected {
 		prefligtsCondition.Status = v1.ConditionStatus(metav1.ConditionTrue)
 		prefligtsCondition.Message = upgradeSuccessfulPreflight
 	}

@@ -3,7 +3,7 @@ package operator
 import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/version"
 )
 
 type SystemPostgreSQLImageOptionsProvider struct {
@@ -20,7 +20,7 @@ func NewSystemPostgreSQLImageOptionsProvider(apimanager *appsv1alpha1.APIManager
 
 func (s *SystemPostgreSQLImageOptionsProvider) GetSystemPostgreSQLImageOptions() (*component.SystemPostgreSQLImageOptions, error) {
 	s.options.AppLabel = *s.apimanager.Spec.AppLabel
-	s.options.AmpRelease = product.ThreescaleRelease
+	s.options.AmpRelease = version.ThreescaleVersionMajorMinor()
 
 	s.options.Image = SystemPostgreSQLImageURL()
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&

@@ -10,9 +10,9 @@ import (
 	appscommon "github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 )
 
 type SystemOptionsProvider struct {
@@ -34,7 +34,7 @@ func NewSystemOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace str
 }
 
 func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, error) {
-	s.options.ImageTag = product.ThreescaleRelease
+	s.options.ImageTag = version.ThreescaleVersionMajorMinor()
 	s.options.ApicastRegistryURL = *s.apimanager.Spec.Apicast.RegistryURL
 	s.options.TenantName = *s.apimanager.Spec.TenantName
 	s.options.WildcardDomain = s.apimanager.Spec.WildcardDomain

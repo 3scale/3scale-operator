@@ -37,7 +37,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/3scale/3scale-operator/controllers/subscription/csvlocator"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -74,7 +73,7 @@ const (
 
 func (r *SubscriptionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.BaseReconciler.Logger().WithValues("subscription", req.NamespacedName)
-	logger.Info("ReconcileSubscription", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
+	logger.Info("ReconcileSubscription", "Operator version", version.Version, "3scale release", version.ThreescaleVersionMajorMinor())
 
 	// Retrieve the subscription from the operator namespace
 	subscription := &operatorsv1alpha1.Subscription{}

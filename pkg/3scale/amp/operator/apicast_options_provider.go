@@ -17,9 +17,9 @@ import (
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 )
 
 type ApicastOptionsProvider struct {
@@ -47,7 +47,7 @@ func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client clien
 
 func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions, error) {
 	a.apicastOptions.ManagementAPI = *a.apimanager.Spec.Apicast.ApicastManagementAPI
-	a.apicastOptions.ImageTag = product.ThreescaleRelease
+	a.apicastOptions.ImageTag = version.ThreescaleVersionMajorMinor()
 	a.apicastOptions.OpenSSLVerify = strconv.FormatBool(*a.apimanager.Spec.Apicast.OpenSSLVerify)
 	a.apicastOptions.ResponseCodes = strconv.FormatBool(*a.apimanager.Spec.Apicast.IncludeResponseCodes)
 	a.apicastOptions.ExtendedMetrics = true
