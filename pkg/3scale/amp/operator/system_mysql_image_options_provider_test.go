@@ -6,7 +6,7 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/version"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -17,7 +17,7 @@ const (
 func defaultSystemMySQLImageOptions() *component.SystemMySQLImageOptions {
 	return &component.SystemMySQLImageOptions{
 		AppLabel:   appLabel,
-		AmpRelease: product.ThreescaleRelease,
+		AmpRelease: version.ThreescaleVersionMajorMinor(),
 		Image:      component.SystemMySQLImageURL(),
 	}
 }

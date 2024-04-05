@@ -29,7 +29,6 @@ import (
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	appscontroller "github.com/3scale/3scale-operator/controllers/apps"
 	capabilitiescontroller "github.com/3scale/3scale-operator/controllers/capabilities"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -479,7 +478,7 @@ func register3scaleVersionInfoMetric() {
 			Help: "3scale Operator version and product version",
 			ConstLabels: prometheus.Labels{
 				"operator_version": version.Version,
-				"version":          product.ThreescaleRelease,
+				"version":          version.ThreescaleVersionMajorMinor(),
 			},
 		},
 	)

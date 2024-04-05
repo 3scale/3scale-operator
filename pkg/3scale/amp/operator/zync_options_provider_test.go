@@ -14,9 +14,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 )
 
 const (
@@ -216,8 +216,8 @@ func basicApimanagerWithExternalZyncDatabaseSpecTestZyncOptions() *appsv1alpha1.
 
 func defaultZyncOptions(opts *component.ZyncOptions) *component.ZyncOptions {
 	expectedOpts := &component.ZyncOptions{
-		ImageTag:                              product.ThreescaleRelease,
-		DatabaseImageTag:                      product.ThreescaleRelease,
+		ImageTag:                              version.ThreescaleVersionMajorMinor(),
+		DatabaseImageTag:                      version.ThreescaleVersionMajorMinor(),
 		ContainerResourceRequirements:         component.DefaultZyncContainerResourceRequirements(),
 		QueContainerResourceRequirements:      component.DefaultZyncQueContainerResourceRequirements(),
 		DatabaseContainerResourceRequirements: component.DefaultZyncDatabaseContainerResourceRequirements(),

@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/version"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -26,7 +25,7 @@ func TestSetDefaults(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{
 				OperatorVersionAnnotation:   version.Version,
-				ThreescaleVersionAnnotation: product.ThreescaleRelease,
+				ThreescaleVersionAnnotation: version.ThreescaleVersionMajorMinorPatch(),
 			},
 		},
 		Spec: APIManagerSpec{

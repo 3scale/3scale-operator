@@ -6,9 +6,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -138,9 +138,9 @@ func testSystemRedisSecret() *v1.Secret {
 
 func defaultRedisOptions() *component.RedisOptions {
 	return &component.RedisOptions{
-		AmpRelease:      product.ThreescaleRelease,
-		BackendImageTag: product.ThreescaleRelease,
-		SystemImageTag:  product.ThreescaleRelease,
+		AmpRelease:      version.ThreescaleVersionMajorMinor(),
+		BackendImageTag: version.ThreescaleVersionMajorMinor(),
+		SystemImageTag:  version.ThreescaleVersionMajorMinor(),
 		BackendImage:    component.BackendRedisImageURL(),
 		SystemImage:     component.SystemRedisImageURL(),
 		BackendRedisContainerResourceRequirements: component.DefaultBackendRedisContainerResourceRequirements(),

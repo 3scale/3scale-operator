@@ -7,9 +7,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	v1 "k8s.io/api/core/v1"
@@ -198,7 +198,7 @@ func defaultBackendOptions(opts *component.BackendOptions) *component.BackendOpt
 		SystemBackendPassword:        opts.SystemBackendPassword,
 		TenantName:                   tenantName,
 		WildcardDomain:               wildcardDomain,
-		ImageTag:                     product.ThreescaleRelease,
+		ImageTag:                     version.ThreescaleVersionMajorMinor(),
 		CommonLabels:                 testBackendCommonLabels(),
 		CommonListenerLabels:         testBackendCommonListenerLabels(),
 		CommonWorkerLabels:           testBackendCommonWorkerLabels(),

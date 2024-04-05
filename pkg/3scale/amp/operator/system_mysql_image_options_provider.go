@@ -3,7 +3,7 @@ package operator
 import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/version"
 )
 
 type SystemMysqlImageOptionsProvider struct {
@@ -20,7 +20,7 @@ func NewSystemMysqlImageOptionsProvider(apimanager *appsv1alpha1.APIManager) *Sy
 
 func (s *SystemMysqlImageOptionsProvider) GetSystemMySQLImageOptions() (*component.SystemMySQLImageOptions, error) {
 	s.mysqlImageOptions.AppLabel = *s.apimanager.Spec.AppLabel
-	s.mysqlImageOptions.AmpRelease = product.ThreescaleRelease
+	s.mysqlImageOptions.AmpRelease = version.ThreescaleVersionMajorMinor()
 
 	s.mysqlImageOptions.Image = SystemMySQLImageURL()
 	if s.apimanager.Spec.System.DatabaseSpec != nil &&

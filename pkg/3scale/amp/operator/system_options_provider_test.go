@@ -7,9 +7,9 @@ import (
 	"github.com/3scale/3scale-operator/apis/apps"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -290,7 +290,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 	expectedOpts := &component.SystemOptions{
 		TenantName:                                tenantName,
 		WildcardDomain:                            wildcardDomain,
-		ImageTag:                                  product.ThreescaleRelease,
+		ImageTag:                                  version.ThreescaleVersionMajorMinor(),
 		ApicastRegistryURL:                        apicastRegistryURL,
 		AppMasterContainerResourceRequirements:    component.DefaultAppMasterContainerResourceRequirements(),
 		AppProviderContainerResourceRequirements:  component.DefaultAppProviderContainerResourceRequirements(),
