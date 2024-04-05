@@ -72,7 +72,6 @@ func (ha *HighAvailability) SystemRedisSecret() *v1.Secret {
 			SystemSecretSystemRedisURLFieldName:  ha.Options.SystemRedisURL,
 			SystemSecretSystemRedisSentinelHosts: ha.Options.SystemRedisSentinelsHosts,
 			SystemSecretSystemRedisSentinelRole:  ha.Options.SystemRedisSentinelsRole,
-			SystemSecretSystemRedisNamespace:     ha.Options.SystemRedisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
