@@ -346,6 +346,16 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	resourceVersionChangePredicate := predicate.ResourceVersionChangedPredicate{}
 
+	redisConfigLabelSelector := &apimachinerymetav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"threescale_component_element": "redis",
+		},
+	}
+	redisConfigLabelPredicate, err := predicate.LabelSelectorPredicate(*redisConfigLabelSelector)
+	if err != nil {
+		return nil
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1alpha1.APIManager{}).
 		Watches(
@@ -365,6 +375,7 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			handler.EnqueueRequestsFromMapFunc(configMapToApimanagerEventMapper.Map),
 			builder.WithPredicates(resourceVersionChangePredicate),
 		).
+		Owns(&v1.ConfigMap{}, builder.WithPredicates(redisConfigLabelPredicate)).
 		Complete(r)
 }
 

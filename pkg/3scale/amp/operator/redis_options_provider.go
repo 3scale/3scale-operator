@@ -1,7 +1,9 @@
 package operator
 
 import (
+	"context"
 	"fmt"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -52,8 +54,16 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.options.BackendCommonLabels = r.backendCommonLabels()
 	r.options.BackendRedisLabels = r.backendRedisLabels()
 	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels()
-	r.options.SystemRedisPodTemplateAnnotations = r.apimanager.Spec.System.RedisAnnotations
-	r.options.BackendRedisPodTemplateAnnotations = r.apimanager.Spec.Backend.RedisAnnotations
+
+	var err error
+	r.options.SystemRedisPodTemplateAnnotations, err = r.systemRedisPodTemplateAnnotations()
+	if err != nil && !k8serr.IsNotFound(err) {
+		return nil, fmt.Errorf("GetRedisOptions systemRedisPodTemplateAnnotations: %w", err)
+	}
+	r.options.BackendRedisPodTemplateAnnotations, err = r.backendRedisPodTemplateAnnotations()
+	if err != nil && !k8serr.IsNotFound(err) {
+		return nil, fmt.Errorf("GetRedisOptions backendRedisPodTemplateAnnotations: %w", err)
+	}
 
 	r.setResourceRequirementsOptions()
 	r.setNodeAffinityAndTolerationsOptions()
@@ -67,7 +77,7 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	// If answer is true, why does the operator deploy redis?
 	// If the answer is no, then it would be sufficient to set default URL's (internal redis url)
 	// to options and reconciliate secret for owner reference
-	err := r.setSecretBasedOptions()
+	err = r.setSecretBasedOptions()
 	if err != nil {
 		return nil, fmt.Errorf("GetRedisOptions reading secret options: %w", err)
 	}
@@ -265,4 +275,44 @@ func (r *RedisOptionsProvider) setTopologySpreadConstraints() {
 	if r.apimanager.Spec.Backend != nil && r.apimanager.Spec.Backend.RedisTopologySpreadConstraints != nil {
 		r.options.BackendRedisTopologySpreadConstraints = r.apimanager.Spec.Backend.RedisTopologySpreadConstraints
 	}
+}
+
+func (r *RedisOptionsProvider) systemRedisPodTemplateAnnotations() (map[string]string, error) {
+	annotations := make(map[string]string)
+	for k, v := range r.apimanager.Spec.System.RedisAnnotations {
+		annotations[k] = v
+	}
+	resourceVersion, err := r.redisConfigMapResourceVersion()
+	if err != nil {
+		return nil, err
+	}
+	annotations["redisConfigMapResourceVersion"] = resourceVersion
+	return annotations, nil
+}
+
+func (r *RedisOptionsProvider) backendRedisPodTemplateAnnotations() (map[string]string, error) {
+	annotations := make(map[string]string)
+	for k, v := range r.apimanager.Spec.Backend.RedisAnnotations {
+		annotations[k] = v
+	}
+	resourceVersion, err := r.redisConfigMapResourceVersion()
+	if err != nil {
+		return nil, err
+	}
+	annotations["redisConfigMapResourceVersion"] = resourceVersion
+	return annotations, nil
+}
+
+func (r *RedisOptionsProvider) redisConfigMapResourceVersion() (string, error) {
+	// get resourceVersion from CM and use it as Annotation "generationID" for redis Pods
+	key := client.ObjectKey{
+		Namespace: r.namespace,
+		Name:      "redis-config",
+	}
+	cm := &v1.ConfigMap{}
+	err := r.client.Get(context.Background(), key, cm)
+	if err != nil {
+		return "", err
+	}
+	return cm.GetResourceVersion(), nil
 }
