@@ -516,13 +516,6 @@ func (r *RedisConfigMap) buildConfigMapObjectMeta() metav1.ObjectMeta {
 	}
 }
 
-func (redis *Redis) buildConfigMapTypeMeta() metav1.TypeMeta {
-	return metav1.TypeMeta{
-		Kind:       "ConfigMap",
-		APIVersion: "v1",
-	}
-}
-
 func (r *RedisConfigMap) buildConfigMapData() map[string]string {
 	return map[string]string{
 		"redis.conf": r.getRedisConfData(),
