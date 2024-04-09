@@ -256,7 +256,12 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("fresh installation detected but the requirements have not been met, %s", culprit)
 	}
 
-	// 2.14 > 2.15 upgrade + any manual (remove + re-install operator) operator installs scenarios
+	// 2.14 -> 2.15
+	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion == "2.14") {
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", version.ThreescaleVersionMajorMinor(), culprit)
+	}
+
+	// upgrade + any manual (remove + re-install operator) operator installs scenarios
 	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion != version.ThreescaleVersionMajorMinorPatch()) {
 		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", version.ThreescaleVersionMajorMinor(), culprit)
 	}
