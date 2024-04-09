@@ -19,27 +19,24 @@ package controllers
 import (
 	"context"
 	"fmt"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimachinerymetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/handlers"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -136,12 +133,35 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Namespace: r.WatchedNamespace,
 	}
 
+	configMapToApimanagerEventMapper := &ConfigMapToApimanagerEventMapper{
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("configMapToApimanagerEventMapper"),
+		Namespace: r.WatchedNamespace,
+	}
+
 	handlers := &handlers.APIManagerRoutesEventMapper{
 		K8sClient: r.Client(),
 		Logger:    r.Logger().WithName("APIManagerRoutesHandler"),
 	}
 
+	operatorNamespace, err := helper.GetOperatorNamespace()
+	if err != nil {
+		return err
+	}
+
 	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
+	if err != nil {
+		return nil
+	}
+
+	resourceVersionChangePredicate := predicate.ResourceVersionChangedPredicate{}
+
+	redisConfigLabelSelector := &apimachinerymetav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"threescale_component_element": "redis",
+		},
+	}
+	redisConfigLabelPredicate, err := predicate.LabelSelectorPredicate(*redisConfigLabelSelector)
 	if err != nil {
 		return nil
 	}
@@ -155,6 +175,17 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		).
 		Owns(&appsv1.DeploymentConfig{}).
 		Watches(&source.Kind{Type: &routev1.Route{}}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
+		Watches(
+			&source.Kind{Type: &v1.ConfigMap{
+				ObjectMeta: apimachinerymetav1.ObjectMeta{
+					Name:      helper.OperatorRequirementsConfigMapName,
+					Namespace: operatorNamespace,
+				},
+			}},
+			handler.EnqueueRequestsFromMapFunc(configMapToApimanagerEventMapper.Map),
+			builder.WithPredicates(resourceVersionChangePredicate),
+		).
+		Owns(&v1.ConfigMap{}, builder.WithPredicates(redisConfigLabelPredicate)).
 		Complete(r)
 }
 
