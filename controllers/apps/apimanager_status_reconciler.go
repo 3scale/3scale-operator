@@ -368,8 +368,8 @@ func (s *APIManagerStatusReconciler) reconcilePreflightsStatus(conditions *commo
 
 	upgradeSuccessfulPreflight := "All requirement for incoming version are met. If using automatic upgrades the upgrade will start shortly, if manual, you can proceed with approval"
 	requirementConfigMapNotFoundPreflight := "Requirement config map is not found yet, it should be generated shortly"
-	freshInstallPreflightsErrorMessage := fmt.Sprintf("Preflights failed - %s. Re-running preflights in 10 minutes", s.preflightsErr)
-	upgradePreflightsErrorMessage := fmt.Sprintf("Preflights failed - %s. Re-running preflights in 10 minutes", s.preflightsErr)
+	freshInstallPreflightsErrorMessage := fmt.Sprintf("Preflights failed - %s- re-running preflights in 10 minutes", s.preflightsErr)
+	upgradePreflightsErrorMessage := fmt.Sprintf("Preflights failed - %s- re-running preflights in 10 minutes", s.preflightsErr)
 	multiMinorHopPreflightsMessage := fmt.Sprintf("Preflights failed - %s. Multi minor version hop detected. Reconciliation of this 3scale instance is stopped. Remove the operator and refer to official upgrade path for 3scale Operator", s.preflightsErr)
 
 	reqConfigMap, err := subController.RetrieveRequirementsConfigMap(s.Client())

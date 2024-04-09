@@ -608,20 +608,21 @@ func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIMa
 		return ctrl.Result{}, false, nil
 	}
 
+	requirementsConfigMap, err := subController.RetrieveRequirementsConfigMap(r.Client())
+	if err != nil {
+		// If configMap isn't ready yet, requeue
+		return ctrl.Result{Requeue: true}, false, fmt.Errorf("requirements config map not found yet")
+	}
+
 	isMultiHopDetected, err := cr.IsMultiMinorHopDetected()
 	if err != nil {
 		// If establishing if it's multihop failed, requeue
 		return ctrl.Result{Requeue: true}, false, err
 	}
+
 	if isMultiHopDetected {
 		// if it is multihop, do not requeue but process the error update on APIM Status
-		return ctrl.Result{}, false, fmt.Errorf("multi minor hop detected")
-	}
-
-	requirementsConfigMap, err = subController.RetrieveRequirementsConfigMap(r.Client())
-	if err != nil {
-		// If configMap isn't ready yet, requeue
-		return ctrl.Result{Requeue: true}, false, fmt.Errorf("requirements config map not found yet")
+		return ctrl.Result{}, false, fmt.Errorf("Attempted upgrade from %s to %s not allowed", cr.RetrieveRHTVersion(), requirementsConfigMap.Data[helper.RHTThreescaleVersion])
 	}
 
 	// Check if current requirements are already confirmed
