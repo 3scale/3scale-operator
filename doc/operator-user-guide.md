@@ -188,6 +188,8 @@ operator will deploy and configure system database and zync database components.
 The 3scale operator requires a secret with the connection string for every single external database
 component. If a externally managed database secret does not exist, the operator will not deploy 3scale.
 
+Use of slaves for Internal Redis is not supported.
+
 * **Backend redis secret**
 
 Two external redis instances must be deployed by the customer. Then fill connection settings.

@@ -583,6 +583,8 @@ also enabled the user has to pre-create the following secret too:
   with the values pointing to the desired external database settings.
   The database should be configured in high-availability mode
 
+Use of slaves for Internal Redis is not supported.
+
 ### ExternalComponentsSpec
 
 | **json/yaml field**| **Type** | **Required** | **Description** |
