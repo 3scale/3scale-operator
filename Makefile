@@ -2,7 +2,7 @@ SHELL := /bin/bash
 # Current Operator version
 VERSION ?= 0.0.1
 # Current Threescale version
-THREESCALE_VERSION ?= 2.14
+THREESCALE_VERSION ?= 2.15
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(VERSION)
 # Options for 'bundle-build'
