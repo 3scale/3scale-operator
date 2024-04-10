@@ -19,8 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/3scale/3scale-operator/pkg/upgrade"
 
+	"github.com/go-logr/logr"
 	routev1 "github.com/openshift/api/route/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -36,8 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
+	subController "github.com/3scale/3scale-operator/controllers/subscription"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/handlers"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -75,9 +78,10 @@ var _ reconcile.Reconciler = &APIManagerReconciler{}
 
 func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.BaseReconciler.Logger().WithValues("apimanager", req.NamespacedName)
-	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", product.ThreescaleRelease)
+	logger.Info("ReconcileAPIManager", "Operator version", version.Version, "3scale release", version.ThreescaleVersionMajorMinor())
 
 	// your logic here
+	var delayedRequeue bool
 
 	instance, err := r.apiManagerInstance(req.NamespacedName)
 	if err != nil {
@@ -91,8 +95,62 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	err = r.validateCR(instance)
 	if err != nil {
-		// TODO: Validation errors should also be represented on warning conditions. To be done when HPA feature branch merges with master.
 		return ctrl.Result{}, err
+	}
+
+	// Establish whether or not the preflights checks should be run
+	result, preflightsRequired, err := r.instanceRequiresPreflights(instance)
+	if err != nil {
+		if result.Requeue {
+			logger.Info("failed to establish whether the preflights should be run or not")
+			return ctrl.Result{}, err
+		}
+
+		// If we do not receive signal to requeue, it means we are in multi minor hop and should stop reconciliation after updating APIM Status.
+		statusResult, statusErr := r.reconcileAPIManagerStatus(instance, err)
+		if statusErr != nil {
+			return ctrl.Result{}, statusErr
+		}
+		if statusResult.Requeue {
+			logger.Info("Reconciling not finished. Requeueing.")
+			return statusResult, nil
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	var preflightChecksError error
+	if preflightsRequired {
+		result, err, preflightChecksError = r.PreflightChecks(instance, logger)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		if preflightChecksError != nil {
+			if result.RequeueAfter > 0 {
+				logger.Info("preflights failed, requeueing")
+				_, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
+				if statusErr != nil {
+					return ctrl.Result{}, statusErr
+				}
+				return result, nil
+			}
+			if result.Requeue {
+				logger.Info("preflights for incoming upgrade failed, requeueing")
+				delayedRequeue = true
+				statusResult, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
+				if statusErr != nil {
+					return ctrl.Result{}, statusErr
+				}
+				if statusResult.Requeue {
+					logger.Info("Reconciling not finished. Requeueing.")
+					return statusResult, nil
+				}
+			}
+		}
+
+		if result.Requeue && preflightChecksError == nil {
+			return ctrl.Result{}, nil
+		}
 	}
 
 	res, err := r.setAPIManagerDefaults(instance)
@@ -111,8 +169,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return specResult, nil
 	}
 
-	// reconcile status regardless specErr
-	statusResult, statusErr := r.reconcileAPIManagerStatus(instance)
+	statusResult, statusErr := r.reconcileAPIManagerStatus(instance, preflightChecksError)
 	if statusErr != nil {
 		return ctrl.Result{}, statusErr
 	}
@@ -126,7 +183,139 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return statusResult, nil
 	}
 
+	if delayedRequeue {
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIManager, logger logr.Logger) (ctrl.Result, error, error) {
+	logger.Info("Running requirements check for preflights...")
+
+	systemRedisVerified := false
+	backendRedisVerified := false
+	systemDatabaseVerified := false
+	skipPreflightsFreshInstall := false
+	var apimVersion string
+
+	reqConfigMap, err := subController.RetrieveRequirementsConfigMap(r.Client())
+	if err != nil {
+		return ctrl.Result{}, err, nil
+	}
+
+	// Skip preflights entirely if it's a fresh installation with internal databases
+	skipPreflightsFreshInstall, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, err = r.skipPreflights(apimInstance, *reqConfigMap, logger)
+	if err != nil {
+		return ctrl.Result{}, err, nil
+	}
+	if skipPreflightsFreshInstall {
+		return ctrl.Result{}, nil, nil
+	}
+
+	incomingVersion, systemRedisRequirement, backendRedisRequirement, mysqlDatabaseRequirement, postgresDatabaseRequirements := retrieveRequiredVersion(*reqConfigMap)
+	if systemRedisRequirement == "" {
+		systemRedisVerified = true
+	}
+	if backendRedisRequirement == "" {
+		backendRedisVerified = true
+	}
+	if mysqlDatabaseRequirement == "" && postgresDatabaseRequirements == "" {
+		systemDatabaseVerified = true
+	}
+
+	apimVersion = apimInstance.RetrieveRHTVersion()
+
+	logger.Info("Starting preflight checks...")
+	if !systemRedisVerified {
+		systemRedisVerified, err = helper.VerifySystemRedis(r.Client(), reqConfigMap, systemRedisRequirement, apimInstance, logger)
+		if err != nil {
+			return ctrl.Result{}, err, nil
+		}
+	}
+	if !backendRedisVerified {
+		backendRedisVerified, err = helper.VerifyBackendRedis(r.Client(), reqConfigMap, backendRedisRequirement, apimInstance, logger)
+		if err != nil {
+			return ctrl.Result{}, err, nil
+		}
+	}
+	if !systemDatabaseVerified {
+		systemDatabaseVerified, err = helper.VerifySystemDatabase(r.Client(), reqConfigMap, apimInstance, logger)
+		if err != nil {
+			return ctrl.Result{}, err, nil
+		}
+	}
+
+	culprit := ""
+	if !systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified {
+		culprit = retrieveCulprit(systemDatabaseVerified, backendRedisVerified, systemRedisVerified, postgresDatabaseRequirements, mysqlDatabaseRequirement, backendRedisRequirement, systemRedisRequirement)
+	}
+
+	// Fresh install scenario
+	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion == "") {
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("fresh installation detected but the requirements have not been met, %s", culprit)
+	}
+
+	// 2.14 -> 2.15
+	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion == "2.14") {
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", version.ThreescaleVersionMajorMinor(), culprit)
+	}
+
+	// upgrade + any manual (remove + re-install operator) operator installs scenarios
+	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion != version.ThreescaleVersionMajorMinorPatch()) {
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", version.ThreescaleVersionMajorMinor(), culprit)
+	}
+
+	// Incoming upgrade scenarios
+	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion != version.ThreescaleVersionMajorMinor()) && (apimVersion == version.ThreescaleVersionMajorMinorPatch()) {
+		return ctrl.Result{Requeue: true}, nil, fmt.Errorf("attempted upgrade to %s have been performed but the requirements are not met, operator will keep reconciling but ensure requirements are met in order to proceed with upgrade, %s", incomingVersion, culprit)
+	}
+
+	// At this point, all requirements are confirmed
+	err = r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
+	if err != nil {
+		return ctrl.Result{}, err, nil
+	}
+	return ctrl.Result{Requeue: true}, nil, nil
+}
+
+func retrieveCulprit(systemDatabaseVerified, backendRedisVerified, systemRedisVerified bool, postgresReq, mysqlReq, backendReq, systemReq string) string {
+	message := ""
+	if !systemDatabaseVerified {
+		message = message + fmt.Sprintf("system database version mismatch - required is Postgres %s, MySQL %s; ", postgresReq, mysqlReq)
+	}
+	if !backendRedisVerified {
+		message = message + fmt.Sprintf("backend redis version mismatch - required is Redis %s; ", backendReq)
+	}
+	if !systemRedisVerified {
+		message = message + fmt.Sprintf("system redis version mismatch - required is Redis %s; ", systemReq)
+	}
+
+	return message
+}
+
+func retrieveRequiredVersion(reqConfigMap v1.ConfigMap) (string, string, string, string, string) {
+	// if not in fresh install - rht_comp_version must always be present, if it's not, there is something wrong with the CSV and we should not continue.
+	return reqConfigMap.Data[helper.RHTThreescaleVersion], reqConfigMap.Data[helper.RHTThreescaleSystemRedisRequirements], reqConfigMap.Data[helper.RHTThreescaleBackendRedisRequirements],
+		reqConfigMap.Data[helper.RHTThreescaleMysqlRequirements], reqConfigMap.Data[helper.RHTThreescalePostgresRequirements]
+}
+
+func (r *APIManagerReconciler) skipPreflights(apimInstance *appsv1alpha1.APIManager, reqConfigMap v1.ConfigMap, logger logr.Logger) (bool, bool, bool, bool, error) {
+	systemDatabaseVerified := false
+	systemRedisVerified := false
+	backendRedisVerified := false
+	if apimInstance.IsInFreshInstallationScenario() {
+		backendRedisVerified, systemRedisVerified, systemDatabaseVerified = helper.InternalDatabases(*apimInstance, logger)
+		// If all are already verified, exit earlier
+		if backendRedisVerified && systemRedisVerified && systemDatabaseVerified {
+			err := r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
+			if err != nil {
+				return false, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, err
+			}
+			return true, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, nil
+		}
+	}
+	return false, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, nil
 }
 
 func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -137,13 +326,37 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Namespace: r.WatchedNamespace,
 	}
 
+	configMapToApimanagerEventMapper := &ConfigMapToApimanagerEventMapper{
+		Context:   r.Context(),
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("configMapToApimanagerEventMapper"),
+		Namespace: r.WatchedNamespace,
+	}
+
 	handlers := &handlers.APIManagerRoutesEventMapper{
 		Context:   r.Context(),
 		K8sClient: r.Client(),
 		Logger:    r.Logger().WithName("APIManagerRoutesHandler"),
 	}
 
+	operatorNamespace, err := helper.GetOperatorNamespace()
+	if err != nil {
+		return err
+	}
+
 	labelSelectorPredicate, err := predicate.LabelSelectorPredicate(r.SecretLabelSelector)
+	if err != nil {
+		return nil
+	}
+
+	resourceVersionChangePredicate := predicate.ResourceVersionChangedPredicate{}
+
+	redisConfigLabelSelector := &apimachinerymetav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"threescale_component_element": "redis",
+		},
+	}
+	redisConfigLabelPredicate, err := predicate.LabelSelectorPredicate(*redisConfigLabelSelector)
 	if err != nil {
 		return nil
 	}
@@ -157,6 +370,17 @@ func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		).
 		Owns(&k8sappsv1.Deployment{}).
 		Watches(&routev1.Route{}, handler.EnqueueRequestsFromMapFunc(handlers.Map)).
+		Watches(
+			&v1.ConfigMap{
+				ObjectMeta: apimachinerymetav1.ObjectMeta{
+					Name:      helper.OperatorRequirementsConfigMapName,
+					Namespace: operatorNamespace,
+				},
+			},
+			handler.EnqueueRequestsFromMapFunc(configMapToApimanagerEventMapper.Map),
+			builder.WithPredicates(resourceVersionChangePredicate),
+		).
+		Owns(&v1.ConfigMap{}, builder.WithPredicates(redisConfigLabelPredicate)).
 		Complete(r)
 }
 
@@ -272,8 +496,8 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 	return ctrl.Result{}, nil
 }
 
-func (r *APIManagerReconciler) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
-	statusReconciler := NewAPIManagerStatusReconciler(r.BaseReconciler, cr)
+func (r *APIManagerReconciler) reconcileAPIManagerStatus(cr *appsv1alpha1.APIManager, preflightsError error) (reconcile.Result, error) {
+	statusReconciler := NewAPIManagerStatusReconciler(r.BaseReconciler, cr, preflightsError)
 	res, err := statusReconciler.Reconcile()
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("Failed to update APIManager status: %w", err)
@@ -375,4 +599,53 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 	return &operator.CompositeDependencyReconciler{
 		Reconcilers: result,
 	}
+}
+
+func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIManager) (ctrl.Result, bool, error) {
+	requirementsConfigMap := &v1.ConfigMap{}
+
+	if helper.IsPreflightBypassed() {
+		return ctrl.Result{}, false, nil
+	}
+
+	requirementsConfigMap, err := subController.RetrieveRequirementsConfigMap(r.Client())
+	if err != nil {
+		// If configMap isn't ready yet, requeue
+		return ctrl.Result{Requeue: true}, false, fmt.Errorf("requirements config map not found yet")
+	}
+
+	isMultiHopDetected, err := cr.IsMultiMinorHopDetected()
+	if err != nil {
+		// If establishing if it's multihop failed, requeue
+		return ctrl.Result{Requeue: true}, false, err
+	}
+
+	if isMultiHopDetected {
+		// if it is multihop, do not requeue but process the error update on APIM Status
+		return ctrl.Result{}, false, fmt.Errorf("Attempted upgrade from %s to %s not allowed", cr.RetrieveRHTVersion(), requirementsConfigMap.Data[helper.RHTThreescaleVersion])
+	}
+
+	// Check if current requirements are already confirmed
+	requirementsAlreadyConfirmed := cr.RequirementsConfirmed(requirementsConfigMap.GetResourceVersion())
+	if requirementsAlreadyConfirmed {
+		return ctrl.Result{}, false, nil
+	}
+
+	return ctrl.Result{}, true, nil
+}
+
+func (r *APIManagerReconciler) setRequirementsAnnotation(apim *appsv1alpha1.APIManager, resourceVersion string) error {
+	currentAnnotations := apim.GetAnnotations()
+	if currentAnnotations == nil {
+		currentAnnotations = make(map[string]string)
+	}
+	currentAnnotations[appsv1alpha1.ThreescaleRequirementsConfirmed] = resourceVersion
+	apim.SetAnnotations(currentAnnotations)
+
+	err := r.Client().Update(context.TODO(), apim)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

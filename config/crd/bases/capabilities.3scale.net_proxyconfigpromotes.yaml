@@ -54,8 +54,8 @@ spec:
             description: ProxyConfigPromoteStatus defines the observed state of ProxyConfigPromote
             properties:
               conditions:
-                description: Current state of the activedoc resource. Conditions represent
-                  the latest available observations of an object's state
+                description: Current state of the ProxyConfigPromote resource. Conditions
+                  represent the latest available observations of an object's state
                 items:
                   description: "Condition represents an observation of an object's
                     state. Conditions are an extension mechanism intended to be used

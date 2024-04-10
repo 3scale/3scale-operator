@@ -8,9 +8,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 )
 
 type SystemSearchdOptionsProvider struct {
@@ -26,7 +26,7 @@ func NewSystemSearchdOptionsProvider(apimanager *appsv1alpha1.APIManager) *Syste
 }
 
 func (s *SystemSearchdOptionsProvider) GetOptions() (*component.SystemSearchdOptions, error) {
-	s.options.ImageTag = product.ThreescaleRelease
+	s.options.ImageTag = version.ThreescaleVersionMajorMinor()
 	s.options.Labels = s.labels()
 	s.options.PodTemplateLabels = s.podTemplateLabels()
 	s.options.PodTemplateAnnotations = s.apimanager.Spec.System.SearchdSpec.Annotations

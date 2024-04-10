@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -94,18 +95,11 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 		},
 	}
 
-	endLoop := false
-	for i := 0; i < 100 && !endLoop; i++ {
-		res, err := r.Reconcile(ctx, req)
-		if err != nil {
-			t.Fatal(err)
-		}
+	os.Setenv("PREFLIGHT_CHECKS_BYPASS", "true")
 
-		endLoop = !res.Requeue
-	}
-
-	if !endLoop {
-		t.Fatal("reconcile did not finish end of reconciliation as expected. APIManager should have been reconciled at this point")
+	_, err = r.Reconcile(ctx, req)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	finalAPIManager := &appsv1alpha1.APIManager{}

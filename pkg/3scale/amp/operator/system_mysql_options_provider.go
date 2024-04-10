@@ -8,8 +8,8 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/version"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -34,7 +34,7 @@ func NewSystemMysqlOptionsProvider(apimanager *appsv1alpha1.APIManager, namespac
 }
 
 func (s *SystemMysqlOptionsProvider) GetMysqlOptions() (*component.SystemMysqlOptions, error) {
-	s.mysqlOptions.ImageTag = product.ThreescaleRelease
+	s.mysqlOptions.ImageTag = version.ThreescaleVersionMajorMinor()
 	s.mysqlOptions.CommonLabels = s.commonLabels()
 	s.mysqlOptions.DeploymentLabels = s.deploymentLabels()
 	s.mysqlOptions.PodTemplateLabels = s.podTemplateLabels()

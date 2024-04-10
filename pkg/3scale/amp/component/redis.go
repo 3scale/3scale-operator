@@ -18,6 +18,16 @@ const (
 	SystemRedisDeploymentName  = "system-redis"
 )
 
+const (
+	redisConfigVolumeName              = "redis-config"
+	backendRedisObjectMetaName         = "backend-redis"
+	backendRedisDeploymentSelectorName = backendRedisObjectMetaName
+	backendRedisStorageVolumeName      = "backend-redis-storage"
+	backendRedisConfigMapKey           = "redis.conf"
+	backendRedisContainerName          = "backend-redis"
+	backendRedisConfigPath             = "/etc/redis.d/"
+)
+
 type Redis struct {
 	Options *RedisOptions
 }
@@ -47,17 +57,6 @@ func (redis *Redis) buildDeploymentObjectMeta() metav1.ObjectMeta {
 		Labels: redis.Options.BackendRedisLabels,
 	}
 }
-
-const (
-	redisConfigVolumeName = "redis-config"
-
-	backendRedisObjectMetaName         = "backend-redis"
-	backendRedisDeploymentSelectorName = backendRedisObjectMetaName
-	backendRedisStorageVolumeName      = "backend-redis-storage"
-	backendRedisConfigMapKey           = "redis.conf"
-	backendRedisContainerName          = "backend-redis"
-	backendRedisConfigPath             = "/etc/redis.d/"
-)
 
 func (redis *Redis) buildDeploymentSpec() k8sappsv1.DeploymentSpec {
 	var redisReplicas int32 = 1
@@ -244,83 +243,6 @@ func (redis *Redis) buildServiceSelector() map[string]string {
 	}
 }
 
-func (redis *Redis) ConfigMap() *v1.ConfigMap {
-	return &v1.ConfigMap{
-		ObjectMeta: redis.buildConfigMapObjectMeta(),
-		TypeMeta:   redis.buildConfigMapTypeMeta(),
-		Data:       redis.buildConfigMapData(),
-	}
-}
-
-func (redis *Redis) buildConfigMapObjectMeta() metav1.ObjectMeta {
-	return metav1.ObjectMeta{
-		Name:   redisConfigVolumeName,
-		Labels: redis.Options.SystemRedisLabels,
-	}
-}
-
-func (redis *Redis) buildConfigMapTypeMeta() metav1.TypeMeta {
-	return metav1.TypeMeta{
-		Kind:       "ConfigMap",
-		APIVersion: "v1",
-	}
-}
-
-func (redis *Redis) buildConfigMapData() map[string]string {
-	return map[string]string{
-		"redis.conf": redis.getRedisConfData(),
-	}
-}
-
-func (redis *Redis) getRedisConfData() string { // TODO read this from a real file
-	return `protected-mode no
-
-port 6379
-
-timeout 0
-tcp-keepalive 300
-
-daemonize no
-supervised no
-
-loglevel notice
-
-databases 16
-
-save 900 1
-save 300 10
-save 60 10000
-
-stop-writes-on-bgsave-error yes
-
-rdbcompression yes
-rdbchecksum yes
-
-dbfilename dump.rdb
-
-slave-serve-stale-data yes
-slave-read-only yes
-
-repl-diskless-sync no
-repl-disable-tcp-nodelay no
-
-appendonly yes
-appendfilename "appendonly.aof"
-appendfsync everysec
-no-appendfsync-on-rewrite no
-auto-aof-rewrite-percentage 100
-auto-aof-rewrite-min-size 64mb
-aof-load-truncated yes
-
-lua-time-limit 5000
-
-activerehashing no
-
-aof-rewrite-incremental-fsync yes
-dir /var/lib/redis/data
-`
-}
-
 func (redis *Redis) BackendPVC() *v1.PersistentVolumeClaim {
 	return &v1.PersistentVolumeClaim{
 		ObjectMeta: redis.buildPVCObjectMeta(),
@@ -349,7 +271,7 @@ func (redis *Redis) buildPVCSpec() v1.PersistentVolumeClaimSpec {
 		AccessModes: []v1.PersistentVolumeAccessMode{
 			v1.ReadWriteOnce, // TODO be able to configure this because we have different volume access modes for different claims
 		},
-		Resources: v1.ResourceRequirements{
+		Resources: v1.VolumeResourceRequirements{
 			Requests: v1.ResourceList{
 				v1.ResourceStorage: resource.MustParse("1Gi"),
 			},
@@ -532,7 +454,7 @@ func (redis *Redis) SystemPVC() *v1.PersistentVolumeClaim {
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				"ReadWriteOnce",
 			},
-			Resources: v1.ResourceRequirements{
+			Resources: v1.VolumeResourceRequirements{
 				Requests: v1.ResourceList{"storage": resource.MustParse("1Gi")},
 			},
 			StorageClassName: redis.Options.SystemRedisPVCStorageClass,
@@ -554,7 +476,6 @@ func (redis *Redis) SystemRedisSecret() *v1.Secret {
 			SystemSecretSystemRedisURLFieldName:  redis.Options.SystemRedisURL,
 			SystemSecretSystemRedisSentinelHosts: redis.Options.SystemRedisSentinelsHosts,
 			SystemSecretSystemRedisSentinelRole:  redis.Options.SystemRedisSentinelsRole,
-			SystemSecretSystemRedisNamespace:     redis.Options.SystemRedisNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -569,3 +490,111 @@ func (redis *Redis) buildEnv() []v1.EnvVar {
 }
 
 ////// End System Redis
+
+// //// Redis Config Map Begin
+type RedisConfigMap struct {
+	Options *RedisConfigMapOptions
+}
+
+func NewRedisConfigMap(options *RedisConfigMapOptions) *RedisConfigMap {
+	return &RedisConfigMap{Options: options}
+}
+
+func (r *RedisConfigMap) ConfigMap() *v1.ConfigMap {
+	return &v1.ConfigMap{
+		TypeMeta:   metav1.TypeMeta{Kind: "ConfigMap", APIVersion: "v1"},
+		ObjectMeta: r.buildConfigMapObjectMeta(),
+		Data:       r.buildConfigMapData(),
+	}
+}
+
+func (r *RedisConfigMap) buildConfigMapObjectMeta() metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:      redisConfigVolumeName,
+		Labels:    r.Options.Labels,
+		Namespace: r.Options.Namespace,
+	}
+}
+
+func (r *RedisConfigMap) buildConfigMapData() map[string]string {
+	return map[string]string{
+		"redis.conf": r.getRedisConfData(),
+	}
+}
+
+func (r *RedisConfigMap) getRedisConfData() string { // TODO read this from a real file
+	return `protected-mode no
+
+port 6379
+
+timeout 0
+tcp-keepalive 300
+
+daemonize no
+supervised no
+
+loglevel notice
+
+databases 16
+
+save 900 1
+save 300 10
+save 60 10000
+
+stop-writes-on-bgsave-error yes
+
+rdbcompression yes
+rdbchecksum yes
+
+dbfilename dump.rdb
+
+slave-serve-stale-data yes
+slave-read-only yes
+
+repl-diskless-sync no
+repl-disable-tcp-nodelay no
+
+appendonly yes
+appendfilename "appendonly.aof"
+appendfsync everysec
+no-appendfsync-on-rewrite no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+aof-load-truncated yes
+
+lua-time-limit 5000
+
+activerehashing no
+
+aof-rewrite-incremental-fsync yes
+dir /var/lib/redis/data
+
+rename-command REPLICAOF ""
+rename-command SLAVEOF ""
+`
+}
+
+////// Redis Config Map End
+
+func BackendCommonLabels(appLabel string) map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "backend",
+	}
+}
+func BackendRedisLabels(appLabel string) map[string]string {
+	labels := BackendCommonLabels(appLabel)
+	labels["threescale_component_element"] = "redis"
+	return labels
+}
+func SystemCommonLabels(appLabel string) map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "system",
+	}
+}
+func SystemRedisLabels(appLabel string) map[string]string {
+	labels := SystemCommonLabels(appLabel)
+	labels["threescale_component_element"] = "redis"
+	return labels
+}

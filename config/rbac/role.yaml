@@ -6,6 +6,32 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - applicationauths
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - capabilities.3scale.net
+  resources:
+  - applicationauths/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - capabilities.3scale.net
   resources:
   - applications
@@ -62,6 +88,36 @@ rules:
   - delete
   - get
   - update
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - installplans
+  verbs:
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - operatorconditions
+  - subscriptions
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

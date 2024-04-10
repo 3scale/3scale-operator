@@ -7,9 +7,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -34,7 +34,7 @@ func NewSystemPostgresqlOptionsProvider(apimanager *appsv1alpha1.APIManager, nam
 }
 
 func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*component.SystemPostgreSQLOptions, error) {
-	s.options.ImageTag = product.ThreescaleRelease
+	s.options.ImageTag = version.ThreescaleVersionMajorMinor()
 	s.options.CommonLabels = s.commonLabels()
 	s.options.DeploymentLabels = s.deploymentLabels()
 	s.options.PodTemplateLabels = s.podTemplateLabels()

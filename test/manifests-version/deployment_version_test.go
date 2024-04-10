@@ -2,11 +2,12 @@ package test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
+	"os"
 	"path"
 	"testing"
 
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/version"
 
 	appsv1 "k8s.io/api/apps/v1"
 	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -15,12 +16,12 @@ import (
 func TestDeploymentVersions(t *testing.T) {
 	root := "../../config/manager/"
 	path := path.Join(root, "manager.yaml")
-	yamlBytes, err := ioutil.ReadFile(path)
+	yamlBytes, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	bytesReader := ioutil.NopCloser(bytes.NewReader(yamlBytes))
+	bytesReader := io.NopCloser(bytes.NewReader(yamlBytes))
 	yamlDocumentDecoder := utilyaml.NewDocumentDecoder(bytesReader)
 
 	// Read and discard Namespace object from the yaml file
@@ -53,7 +54,7 @@ func TestDeploymentVersions(t *testing.T) {
 		t.Errorf("Parsed object is not a Deployment object")
 	}
 
-	if deployment.Spec.Template.Labels["rht.comp_ver"] != product.ThreescaleRelease {
-		t.Errorf("rht.comp_ver differ: expected: %s; found: %s", product.ThreescaleRelease, deployment.Spec.Template.Labels["rht.comp_ver"])
+	if deployment.Spec.Template.Labels["rht.comp_ver"] != version.ThreescaleVersionMajorMinor() {
+		t.Errorf("rht.comp_ver differ: expected: %s; found: %s", version.ThreescaleVersionMajorMinor(), deployment.Spec.Template.Labels["rht.comp_ver"])
 	}
 }

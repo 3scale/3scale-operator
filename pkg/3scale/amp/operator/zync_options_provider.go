@@ -6,9 +6,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,8 +33,8 @@ func NewZyncOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace strin
 }
 
 func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
-	z.zyncOptions.ImageTag = product.ThreescaleRelease
-	z.zyncOptions.DatabaseImageTag = product.ThreescaleRelease
+	z.zyncOptions.ImageTag = version.ThreescaleVersionMajorMinor()
+	z.zyncOptions.DatabaseImageTag = version.ThreescaleVersionMajorMinor()
 
 	err := z.setSecretBasedOptions()
 	if err != nil {

@@ -1,14 +1,15 @@
 package operator
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -128,7 +129,6 @@ func testBackendRedisSecret() *v1.Secret {
 
 func testSystemRedisSecret() *v1.Secret {
 	data := map[string]string{
-		component.SystemSecretSystemRedisNamespace:     "systemRedis",
 		component.SystemSecretSystemRedisURLFieldName:  "redis://system1:6379",
 		component.SystemSecretSystemRedisSentinelHosts: "someHosts1",
 		component.SystemSecretSystemRedisSentinelRole:  "someRole1",
@@ -136,11 +136,19 @@ func testSystemRedisSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
 
+func testBackendRedisPodTemplateAnnotations() map[string]string {
+	return map[string]string{"redisConfigMapResourceVersion": "999"}
+}
+
+func testSystemRedisPodTemplateAnnotations() map[string]string {
+	return map[string]string{"redisConfigMapResourceVersion": "999"}
+}
+
 func defaultRedisOptions() *component.RedisOptions {
 	return &component.RedisOptions{
-		AmpRelease:      product.ThreescaleRelease,
-		BackendImageTag: product.ThreescaleRelease,
-		SystemImageTag:  product.ThreescaleRelease,
+		AmpRelease:      version.ThreescaleVersionMajorMinor(),
+		BackendImageTag: version.ThreescaleVersionMajorMinor(),
+		SystemImageTag:  version.ThreescaleVersionMajorMinor(),
 		BackendImage:    component.BackendRedisImageURL(),
 		SystemImage:     component.SystemRedisImageURL(),
 		BackendRedisContainerResourceRequirements: component.DefaultBackendRedisContainerResourceRequirements(),
@@ -160,7 +168,8 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemRedisURL:                            component.DefaultSystemRedisURL(),
 		SystemRedisSentinelsHosts:                 component.DefaultSystemRedisSentinelHosts(),
 		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
-		SystemRedisNamespace:                      component.DefaultSystemRedisNamespace(),
+		SystemRedisPodTemplateAnnotations:         testSystemRedisPodTemplateAnnotations(),
+		BackendRedisPodTemplateAnnotations:        testBackendRedisPodTemplateAnnotations(),
 	}
 }
 
@@ -368,7 +377,6 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 				opts.SystemRedisURL = "redis://system1:6379"
 				opts.SystemRedisSentinelsHosts = "someHosts1"
 				opts.SystemRedisSentinelsRole = "someRole1"
-				opts.SystemRedisNamespace = "systemRedis"
 				return opts
 			},
 		},
@@ -376,6 +384,13 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
+			configMap := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: namespace,
+					Name:      "redis-config",
+				},
+				Data: map[string]string{},
+			}
 			objs := []runtime.Object{}
 			if tc.backendRedisSecret != nil {
 				objs = append(objs, tc.backendRedisSecret)
@@ -383,6 +398,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			if tc.systemRedisSecret != nil {
 				objs = append(objs, tc.systemRedisSecret)
 			}
+			objs = append(objs, configMap)
 			cl := fake.NewFakeClient(objs...)
 			optsProvider := NewRedisOptionsProvider(tc.apimanagerFactory(), namespace, cl)
 			opts, err := optsProvider.GetRedisOptions()

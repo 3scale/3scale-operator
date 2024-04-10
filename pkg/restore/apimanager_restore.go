@@ -313,7 +313,7 @@ func (b *APIManagerRestore) SystemStoragePVC(restoreInfo *RuntimeAPIManagerResto
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteMany,
 			},
-			Resources: v1.ResourceRequirements{
+			Resources: v1.VolumeResourceRequirements{
 				Requests: v1.ResourceList{
 					// We hardcode the size due to in APIManager is hardcoded to 100Mi. If in
 					// the future this changes we should change it here too or update the

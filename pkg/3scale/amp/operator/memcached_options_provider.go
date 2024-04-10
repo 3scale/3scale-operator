@@ -5,9 +5,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	v1 "k8s.io/api/core/v1"
 )
@@ -25,7 +25,7 @@ func NewMemcachedOptionsProvider(apimanager *appsv1alpha1.APIManager) *Memcached
 }
 
 func (m *MemcachedOptionsProvider) GetMemcachedOptions() (*component.MemcachedOptions, error) {
-	m.memcachedOptions.ImageTag = product.ThreescaleRelease
+	m.memcachedOptions.ImageTag = version.ThreescaleVersionMajorMinor()
 	m.memcachedOptions.DeploymentLabels = m.deploymentLabels()
 	m.memcachedOptions.PodTemplateLabels = m.podTemplateLabels()
 	m.memcachedOptions.PodTemplateAnnotations = m.apimanager.Spec.System.MemcachedAnnotations

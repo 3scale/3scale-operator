@@ -6,9 +6,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -59,7 +59,7 @@ func testSystemMemcachedCustomResourceRequirements() *v1.ResourceRequirements {
 
 func defaultMemcachedOptions() *component.MemcachedOptions {
 	return &component.MemcachedOptions{
-		ImageTag:             product.ThreescaleRelease,
+		ImageTag:             version.ThreescaleVersionMajorMinor(),
 		ResourceRequirements: component.DefaultMemcachedResourceRequirements(),
 		DeploymentLabels:     testMemcachedDeploymentLabels(),
 		PodTemplateLabels:    testPodTemplateLabels(),

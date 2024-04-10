@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/version"
 )
 
 type ComponentType string
@@ -18,7 +18,7 @@ func MeteringLabels(componentName string, componentType ComponentType) map[strin
 		// It should be updated on release branch
 		"rht.prod_ver":  "master",
 		"rht.comp":      "3scale",
-		"rht.comp_ver":  product.ThreescaleRelease,
+		"rht.comp_ver":  version.ThreescaleVersionMajorMinor(),
 		"rht.subcomp":   componentName,
 		"rht.subcomp_t": string(componentType),
 	}

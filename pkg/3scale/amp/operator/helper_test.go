@@ -8,8 +8,8 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
+	"github.com/3scale/3scale-operator/version"
 )
 
 const (
@@ -30,7 +30,7 @@ func addExpectedMeteringLabels(src map[string]string, componentName string, comp
 		{"rht.prod_name", "Red_Hat_Integration"},
 		{"rht.prod_ver", "master"},
 		{"rht.comp", "3scale"},
-		{"rht.comp_ver", product.ThreescaleRelease},
+		{"rht.comp_ver", version.ThreescaleVersionMajorMinor()},
 		{"rht.subcomp", componentName},
 		{"rht.subcomp_t", string(componentType)},
 	}

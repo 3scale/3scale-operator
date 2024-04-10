@@ -8,9 +8,9 @@ import (
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"github.com/3scale/3scale-operator/version"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -76,7 +76,7 @@ func testSystemPostgreSQLCustomResourceRequirements() *v1.ResourceRequirements {
 
 func defaultSystemPostgreSQLOptions(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
 	return &component.SystemPostgreSQLOptions{
-		ImageTag:                      product.ThreescaleRelease,
+		ImageTag:                      version.ThreescaleVersionMajorMinor(),
 		DatabaseName:                  component.DefaultSystemPostgresqlDatabaseName(),
 		User:                          component.DefaultSystemPostgresqlUser(),
 		Password:                      opts.Password,

@@ -3,7 +3,7 @@ package operator
 import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
+	"github.com/3scale/3scale-operator/version"
 )
 
 type AmpImagesOptionsProvider struct {
@@ -20,7 +20,7 @@ func NewAmpImagesOptionsProvider(apimanager *appsv1alpha1.APIManager) *AmpImages
 
 func (a *AmpImagesOptionsProvider) GetAmpImagesOptions() (*component.AmpImagesOptions, error) {
 	a.ampImagesOptions.AppLabel = *a.apimanager.Spec.AppLabel
-	a.ampImagesOptions.AmpRelease = product.ThreescaleRelease
+	a.ampImagesOptions.AmpRelease = version.ThreescaleVersionMajorMinor()
 
 	a.ampImagesOptions.ApicastImage = ApicastImageURL()
 	if a.apimanager.Spec.Apicast != nil && a.apimanager.Spec.Apicast.Image != nil {
