@@ -78,10 +78,6 @@ func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*control
 		return -1, false
 	}(applicationList.Applications)
 	var applicationObj *threescaleapi.Application
-	// check if application CR is ready state if not return nil, applications can exist without a validID
-	if t.applicationResource.Status.Conditions.IsFalseFor(capabilitiesv1beta1.ApplicationReadyConditionType) {
-		return nil, nil
-	}
 	if exists {
 		applicationObj = &applicationList.Applications[idx].Application
 	} else {
