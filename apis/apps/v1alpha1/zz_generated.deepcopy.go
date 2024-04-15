@@ -426,6 +426,11 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 		*out = new(ExternalComponentsSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.InternalRedisDB != nil {
+		in, out := &in.InternalRedisDB, &out.InternalRedisDB
+		*out = new(bool)
+		**out = **in
+	}
 	if in.PodDisruptionBudget != nil {
 		in, out := &in.PodDisruptionBudget, &out.PodDisruptionBudget
 		*out = new(PodDisruptionBudgetSpec)

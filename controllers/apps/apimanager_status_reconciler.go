@@ -100,6 +100,7 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 	if s.preflightsErr == nil {
 		s.reconcileHpaWarningMessages(&newStatus.Conditions, s.apimanagerResource)
 		s.reconcileOpenTracingDeprecationMessage(&newStatus.Conditions, s.apimanagerResource)
+		s.reconcileInternalRedisAndDatabaseWarningMessages(&newStatus.Conditions, s.apimanagerResource)
 	}
 
 	if !helper.IsPreflightBypassed() {
@@ -417,4 +418,35 @@ func (s *APIManagerStatusReconciler) reconcilePreflightsStatus(conditions *commo
 	}
 
 	return nil
+}
+
+func (s *APIManagerStatusReconciler) reconcileInternalRedisAndDatabaseWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
+	// Internal Redis and DB will be unsupported from 2.15 onwards.
+	// As such we want to advice customers of this with a warning in the CR.
+	// Jira: https://issues.redhat.com/browse/THREESCALE-10740
+	messageInternalRedisAndDB := "Internal Redis (System and Backend) and Database will be unsupported from 2.15 onwards"
+
+	if !cr.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerInternalDatabasesConditionType) &&
+		(cr.Spec.ExternalComponents == nil ||
+			(*cr.Spec.ExternalComponents.Backend.Redis == false ||
+				*cr.Spec.ExternalComponents.System.Redis == false ||
+				*cr.Spec.ExternalComponents.System.Database == false)) {
+		cond := common.Condition{
+			Type:    appsv1alpha1.APIManagerInternalDatabasesConditionType,
+			Status:  v1.ConditionStatus(metav1.ConditionTrue),
+			Reason:  "Internal Databases",
+			Message: messageInternalRedisAndDB,
+		}
+		*conditions = append(*conditions, cond)
+	}
+
+	// remove messages if Redis or/and System Database were changed from Internal to External
+	if cr.Spec.ExternalComponents != nil &&
+		(*cr.Spec.ExternalComponents.Backend.Redis == true ||
+			*cr.Spec.ExternalComponents.System.Redis == true ||
+			*cr.Spec.ExternalComponents.System.Database == true) {
+		if cr.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerInternalDatabasesConditionType) {
+			conditions.RemoveConditionByMessage(messageInternalRedisAndDB)
+		}
+	}
 }

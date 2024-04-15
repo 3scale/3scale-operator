@@ -57,6 +57,8 @@ type APIManagerReconciler struct {
 // blank assignment to verify that APIManagerReconciler implements reconcile.Reconciler
 var _ reconcile.Reconciler = &APIManagerReconciler{}
 
+var isExternal string = "false"
+
 // +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagers/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps.3scale.net,namespace=placeholder,resources=apimanagers/finalizers,verbs=get;list;watch;create;update;patch;delete
@@ -209,6 +211,7 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	if err != nil {
 		return ctrl.Result{}, err, nil
 	}
+
 	if skipPreflightsFreshInstall {
 		return ctrl.Result{}, nil, nil
 	}
@@ -272,7 +275,7 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	}
 
 	// At this point, all requirements are confirmed
-	err = r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
+	err = r.setAnnotation(apimInstance, appsv1alpha1.ThreescaleRequirementsConfirmed, reqConfigMap.GetResourceVersion())
 	if err != nil {
 		return ctrl.Result{}, err, nil
 	}
@@ -308,7 +311,7 @@ func (r *APIManagerReconciler) skipPreflights(apimInstance *appsv1alpha1.APIMana
 		backendRedisVerified, systemRedisVerified, systemDatabaseVerified = helper.InternalDatabases(*apimInstance, logger)
 		// If all are already verified, exit earlier
 		if backendRedisVerified && systemRedisVerified && systemDatabaseVerified {
-			err := r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
+			err := r.setAnnotation(apimInstance, appsv1alpha1.ThreescaleRequirementsConfirmed, reqConfigMap.GetResourceVersion())
 			if err != nil {
 				return false, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, err
 			}
@@ -439,7 +442,11 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 		return result, err
 	}
 
-	dependencyReconciler := r.dependencyReconcilerForComponents(cr, baseAPIManagerLogicReconciler)
+	dependencyReconciler, err := r.dependencyReconcilerForComponents(cr, baseAPIManagerLogicReconciler)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	result, err = dependencyReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
@@ -544,7 +551,7 @@ func (r *APIManagerReconciler) validateApicastTLSCertificates(cr *appsv1alpha1.A
 	return fieldErrors
 }
 
-func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) operator.DependencyReconciler {
+func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) (operator.DependencyReconciler, error) {
 	// Helper type that contains the constructors for a dependency reconciler
 	// whether it's external or internal
 	type constructors struct {
@@ -558,9 +565,13 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 		constructor := cs.Internal
 		if selectIsExternal(cr.Spec.ExternalComponents) {
 			constructor = cs.External
+			isExternal = "true"
 		}
-
 		return constructor(baseAPIManagerLogicReconciler)
+	}
+	err := r.setAnnotation(cr, appsv1alpha1.ExternalDBsAnnotation, isExternal)
+	if err != nil {
+		return nil, err
 	}
 
 	// Select whether to use PostgreSQL or MySQL for the System database
@@ -598,7 +609,7 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 
 	return &operator.CompositeDependencyReconciler{
 		Reconcilers: result,
-	}
+	}, nil
 }
 
 func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIManager) (ctrl.Result, bool, error) {
@@ -634,12 +645,13 @@ func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIMa
 	return ctrl.Result{}, true, nil
 }
 
-func (r *APIManagerReconciler) setRequirementsAnnotation(apim *appsv1alpha1.APIManager, resourceVersion string) error {
+func (r *APIManagerReconciler) setAnnotation(apim *appsv1alpha1.APIManager, key string, value string) error {
 	currentAnnotations := apim.GetAnnotations()
 	if currentAnnotations == nil {
 		currentAnnotations = make(map[string]string)
 	}
-	currentAnnotations[appsv1alpha1.ThreescaleRequirementsConfirmed] = resourceVersion
+
+	currentAnnotations[key] = value
 	apim.SetAnnotations(currentAnnotations)
 
 	err := r.Client().Update(context.TODO(), apim)

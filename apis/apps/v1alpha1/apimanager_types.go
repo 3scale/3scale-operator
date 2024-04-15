@@ -41,6 +41,7 @@ const (
 	OperatorVersionAnnotation       = "apps.3scale.net/threescale-operator-version"
 	Default3scaleAppLabel           = "3scale-api-management"
 	ThreescaleRequirementsConfirmed = "apps.3scale.net/apimanager-confirmed-requirements-version"
+	ExternalDBsAnnotation           = "external-databases"
 )
 
 const (
@@ -78,6 +79,8 @@ type APIManagerSpec struct {
 	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 	// +optional
 	ExternalComponents *ExternalComponentsSpec `json:"externalComponents,omitempty"`
+	// +optional
+	InternalRedisDB *bool `json:"internaldb,omitempty"`
 
 	// +optional
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
@@ -147,9 +150,10 @@ type APIManager struct {
 }
 
 const (
-	APIManagerAvailableConditionType  common.ConditionType = "Available"
-	APIManagerWarningConditionType    common.ConditionType = "Warning"
-	APIManagerPreflightsConditionType common.ConditionType = "Preflights"
+	APIManagerAvailableConditionType         common.ConditionType = "Available"
+	APIManagerWarningConditionType           common.ConditionType = "Warning"
+	APIManagerPreflightsConditionType        common.ConditionType = "Preflights"
+	APIManagerInternalDatabasesConditionType common.ConditionType = "Warning"
 )
 
 type APIManagerCommonSpec struct {
