@@ -171,7 +171,10 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	// get the authSecret
-	authSecret, err := authSecretReferenceSource(r.Client(), applicationAuth.Namespace, applicationAuth.Spec.AuthSecretRef, reqLogger)
+	authSecretObj := &corev1.Secret{}
+
+	// Retrieve auth secret, on failed retrieval update status and requeue
+	err = r.Client().Get(r.Context(), types.NamespacedName{Name: applicationAuth.Spec.AuthSecretRef.Name, Namespace: applicationAuth.Namespace}, authSecretObj)
 	if err != nil {
 		// If the product CR is not found, update status and requeue
 		if errors.IsNotFound(err) {
@@ -189,6 +192,8 @@ func (r *ApplicationAuthReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 		return ctrl.Result{}, err
 	}
+	// populate authSecret struct
+	authSecret := authSecretReferenceSource(r.Client(), applicationAuth.Namespace, applicationAuth.Spec.AuthSecretRef, reqLogger)
 
 	if !applicationAuth.Status.Conditions.IsTrueFor(capabilitiesv1beta1.ApplicationAuthReadyConditionType) {
 		statusReconciler, reconcileErr := r.applicationAuthReconciler(applicationAuth, developerAccount, application, product, *authSecret, threescaleAPIClient)
@@ -319,7 +324,7 @@ func (r *ApplicationAuthReconciler) applicationAuthReconciler(
 	return statusReconciler, nil
 }
 
-func authSecretReferenceSource(cl client.Client, ns string, authSectretRef *corev1.LocalObjectReference, logger logr.Logger) (*AuthSecret, error) {
+func authSecretReferenceSource(cl client.Client, ns string, authSectretRef *corev1.LocalObjectReference, logger logr.Logger) *AuthSecret {
 	if authSectretRef != nil {
 		logger.Info("LookupAuthSecret", "ns", ns, "authSecretRef", authSectretRef)
 		secretSource := helper.NewSecretSource(cl, ns)
@@ -332,8 +337,8 @@ func authSecretReferenceSource(cl client.Client, ns string, authSectretRef *core
 			applicationKeyStr = ""
 		}
 
-		return &AuthSecret{UserKey: userKeyStr, ApplicationKey: applicationKeyStr}, nil
+		return &AuthSecret{UserKey: userKeyStr, ApplicationKey: applicationKeyStr}
 	}
 
-	return nil, nil
+	return nil
 }
