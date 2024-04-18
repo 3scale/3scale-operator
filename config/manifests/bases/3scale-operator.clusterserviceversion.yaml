@@ -6,7 +6,7 @@ metadata:
     capabilities: Deep Insights
     categories: Integration & Delivery
     certified: "false"
-    containerImage: quay.io/3scale/3scale-operator:v0.11.0
+    containerImage: quay.io/3scale/3scale-operator:master
     createdAt: "2019-05-30T22:40:00Z"
     description: 3scale Operator to provision 3scale and publish/manage API
     olm.properties: '[{"type": "olm.maxOpenShiftVersion", "value": "4.15"}]'
@@ -186,4 +186,3 @@ spec:
   provider:
     name: Red Hat
   version: 0.0.0
-
