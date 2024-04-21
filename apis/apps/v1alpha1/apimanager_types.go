@@ -79,8 +79,6 @@ type APIManagerSpec struct {
 	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 	// +optional
 	ExternalComponents *ExternalComponentsSpec `json:"externalComponents,omitempty"`
-	// +optional
-	InternalRedisDB *bool `json:"internaldb,omitempty"`
 
 	// +optional
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`

@@ -8646,8 +8646,6 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
-              internaldb:
-                type: boolean
               monitoring:
                 properties:
                   enablePrometheusRules:

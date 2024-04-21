@@ -424,13 +424,11 @@ func (s *APIManagerStatusReconciler) reconcileInternalRedisAndDatabaseWarningMes
 	// Internal Redis and DB will be unsupported from 2.15 onwards.
 	// As such we want to advice customers of this with a warning in the CR.
 	// Jira: https://issues.redhat.com/browse/THREESCALE-10740
-	messageInternalRedisAndDB := "Internal Redis (System and Backend) and Database will be unsupported from 2.15 onwards"
+	messageInternalRedisAndDB := "Internal Databases will be unsupported from 2.15 onwards"
+	externalDBsAnnotation := cr.Annotations[appsv1alpha1.ExternalDBsAnnotation]
 
 	if !cr.Status.Conditions.IsTrueFor(appsv1alpha1.APIManagerInternalDatabasesConditionType) &&
-		(cr.Spec.ExternalComponents == nil ||
-			(*cr.Spec.ExternalComponents.Backend.Redis == false ||
-				*cr.Spec.ExternalComponents.System.Redis == false ||
-				*cr.Spec.ExternalComponents.System.Database == false)) {
+		externalDBsAnnotation == "false" {
 		cond := common.Condition{
 			Type:    appsv1alpha1.APIManagerInternalDatabasesConditionType,
 			Status:  v1.ConditionStatus(metav1.ConditionTrue),
@@ -441,7 +439,7 @@ func (s *APIManagerStatusReconciler) reconcileInternalRedisAndDatabaseWarningMes
 	}
 
 	// remove messages if Redis or/and System Database were changed from Internal to External
-	if cr.Spec.ExternalComponents != nil &&
+	if cr.Spec.ExternalComponents != nil && externalDBsAnnotation == "true" &&
 		(*cr.Spec.ExternalComponents.Backend.Redis == true ||
 			*cr.Spec.ExternalComponents.System.Redis == true ||
 			*cr.Spec.ExternalComponents.System.Database == true) {
