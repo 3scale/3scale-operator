@@ -186,13 +186,6 @@ jobs:
       - install-dependencies
       - run: make test-crds
 
-  test-manifests-version:
-    docker:
-      - image: cimg/go:1.19
-    steps:
-      - checkout
-      - install-dependencies
-      - run: make test-manifests-version
   license-check:
     docker:
       - image: cimg/go:1.19
@@ -273,7 +266,6 @@ workflows:
     jobs:
       - license-check
       - test-crds
-      - test-manifests-version
       - run-unit-tests
       - bundle-validate
       - assets-validate

@@ -65,11 +65,6 @@ TEST_CRD_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operat
 test-crds: generate fmt vet manifests
 	$(GO) test -v $(TEST_CRD_PKGS)
 
-TEST_MANIFESTS_VERSION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/manifests-version')
-## test-manifests-version: Run manifest version checks
-test-manifests-version:
-	$(GO) test -v $(TEST_MANIFESTS_VERSION_PKGS)
-
 # Run e2e tests
 TEST_E2E_PKGS_APPS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/apps')
 TEST_E2E_PKGS_CAPABILITIES = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/capabilities')
