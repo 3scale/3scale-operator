@@ -1033,5 +1033,5 @@ spec:
   maturity: stable
   provider:
     name: Red Hat
-  version: 0.11.0
   replaces: 3scale-community-operator.v0.10.1
+  version: 0.11.0
