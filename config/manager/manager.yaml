@@ -72,5 +72,5 @@ spec:
         - name: RELATED_IMAGE_OC_CLI
           value: "quay.io/openshift/origin-cli:4.7"
         - name: RELATED_IMAGE_SYSTEM_SEARCHD
-          value: "quay.io/3scale/searchd:latest"
+          value: "quay.io/3scale/3scale214:searchd-3scale-2.14.1-GA"
       terminationGracePeriodSeconds: 10

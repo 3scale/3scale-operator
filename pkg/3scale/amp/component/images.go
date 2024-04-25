@@ -13,7 +13,7 @@ func SystemImageURL() string {
 }
 
 func SystemSearchdImageURL() string {
-	return "quay.io/3scale/searchd:latest"
+	return "quay.io/3scale/3scale214:searchd-3scale-2.14.1-GA"
 }
 
 func ZyncImageURL() string {
