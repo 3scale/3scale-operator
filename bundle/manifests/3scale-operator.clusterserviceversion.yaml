@@ -449,9 +449,9 @@ spec:
                 - name: RELATED_IMAGE_SYSTEM_MEMCACHED
                   value: memcached:1.5
                 - name: RELATED_IMAGE_BACKEND_REDIS
-                  value: quay.io/fedora/redis-6:latest
+                  value: quay.io/fedora/redis-6:20230816
                 - name: RELATED_IMAGE_SYSTEM_REDIS
-                  value: quay.io/fedora/redis-6:latest
+                  value: quay.io/fedora/redis-6:20230816
                 - name: RELATED_IMAGE_SYSTEM_MYSQL
                   value: quay.io/sclorg/mysql-80-c8s
                 - name: RELATED_IMAGE_SYSTEM_POSTGRESQL
