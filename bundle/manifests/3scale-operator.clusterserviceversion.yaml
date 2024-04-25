@@ -217,7 +217,7 @@ metadata:
     operatorframework.io/arch.amd64: supported
     operatorframework.io/arch.ppc64le: supported
     operatorframework.io/arch.s390x: supported
-  name: 3scale-community-operator.v0.11.0
+  name: 3scale-operator.v0.11.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}

@@ -4,12 +4,8 @@ VERSION ?= 0.11.0
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(VERSION)
 # Options for 'bundle-build'
-ifneq ($(origin CHANNELS), undefined)
-BUNDLE_CHANNELS := --channels=$(CHANNELS)
-endif
-ifneq ($(origin DEFAULT_CHANNEL), undefined)
-BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
-endif
+BUNDLE_CHANNELS := --channels=threescale-2.14
+BUNDLE_DEFAULT_CHANNEL := --default-channel=threescale-2.14
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 OS := $(shell uname | awk '{print tolower($$0)}' | sed -e s/linux/linux-gnu/ )
