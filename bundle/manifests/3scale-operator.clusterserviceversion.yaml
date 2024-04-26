@@ -12,7 +12,8 @@ metadata:
           },
           "spec": {
             "wildcardDomain": "example.com"
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "apps.3scale.net/v1alpha1",
@@ -26,7 +27,8 @@ metadata:
                 "volumeName": "mypreexistingvolume"
               }
             }
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "apps.3scale.net/v1alpha1",
@@ -42,7 +44,8 @@ metadata:
                 }
               }
             }
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1alpha1",
@@ -65,7 +68,8 @@ metadata:
               "namespace": "operator-test"
             },
             "username": "admin"
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -78,7 +82,8 @@ metadata:
               "url": "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.json"
             },
             "name": "Operated ActiveDoc From URL"
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -97,7 +102,23 @@ metadata:
               "name": "product-sample"
             },
             "suspend": false
-          }
+          },
+          "status": {}
+        },
+        {
+          "apiVersion": "capabilities.3scale.net/v1beta1",
+          "kind": "ApplicationAuth",
+          "metadata": {
+            "name": "applicationauth-sample"
+          },
+          "spec": {
+            "applicationCRName": "application-cr-name",
+            "authSecretRef": {
+              "name": "auth-secret-reference"
+            },
+            "generateSecret": true
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -109,7 +130,8 @@ metadata:
             "name": "Operated Backend 1",
             "privateBaseURL": "https://api.example.com",
             "systemName": "backend1"
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -135,7 +157,8 @@ metadata:
               "version": "0.0.1"
             },
             "version": "0.0.1"
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -145,7 +168,8 @@ metadata:
           },
           "spec": {
             "orgName": "Ecorp"
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -163,7 +187,8 @@ metadata:
             },
             "role": "admin",
             "username": "myusername2"
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -175,7 +200,8 @@ metadata:
             "openapiRef": {
               "url": "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml"
             }
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -185,7 +211,8 @@ metadata:
           },
           "spec": {
             "name": "OperatedProduct 1"
-          }
+          },
+          "status": {}
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
@@ -194,9 +221,10 @@ metadata:
             "name": "proxyconfigpromote-sample"
           },
           "spec": {
-            "ProductCRName": "product1-sample",
-            "Production": true
-          }
+            "productCRName": "product1-sample",
+            "production": true
+          },
+          "status": {}
         }
       ]
     capabilities: Deep Insights
@@ -246,6 +274,9 @@ spec:
       kind: APIManager
       name: apimanagers.apps.3scale.net
       resources:
+      - kind: ConfigMap
+        name: ""
+        version: v1
       - kind: Deployment
         name: ""
         version: apps/v1
@@ -271,7 +302,9 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:podStatuses
       version: v1alpha1
-    - kind: ApplicationAuth
+    - description: ApplicationAuth is the Schema for the applicationauths API
+      displayName: Application Auth
+      kind: ApplicationAuth
       name: applicationauths.capabilities.3scale.net
       version: v1beta1
     - description: Application is the Schema for the applications API

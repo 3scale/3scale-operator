@@ -6,3 +6,4 @@ spec:
   backupDestination:
     persistentVolumeClaim:
       volumeName: "mypreexistingvolume"
+status: {}

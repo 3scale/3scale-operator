@@ -6,3 +6,4 @@ spec:
   name: "Operated Backend 1"
   systemName: "backend1"
   privateBaseURL: "https://api.example.com"
+status: {}

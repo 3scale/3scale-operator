@@ -4,3 +4,4 @@ metadata:
   name: apimanager-sample
 spec:
   wildcardDomain: example.com
+status: {}

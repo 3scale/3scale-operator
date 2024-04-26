@@ -16,3 +16,4 @@ spec:
         someAttr:
             description: "Some attribute"
             type: "integer"
+status: {}
