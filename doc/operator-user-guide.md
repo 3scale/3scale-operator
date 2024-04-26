@@ -746,8 +746,11 @@ components require Redis running [async mode](https://github.com/3scale/apisonat
 Async is enabled by default by the operator provided you aren't using [logical Redis databases](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#redis-databases).
 If you are not running in Async mode you won't be able to enable HPA for the backend.
 
+> **NOTE:** If ResourceRequirementsEnabled is set to false HPA can't function as there are no resources set for it to 
+> compare to.
+
 Provided you are running in Async mode, you can enable hpa for the components and accept the default configuration which
-will give you a HPA with 90% resources set and max and min pods set to 5 and 1. The following is an example of the 
+will give you a HPA with 85% resources set and max and min pods set to 5 and 1. The following is an example of the 
 output HPA for backend-worker using the defaults. 
 
 ```yaml
@@ -768,13 +771,13 @@ spec:
       resource: 
         name: cpu
         target: 
-          averageUtilization: 90
+          averageUtilization: 85
           type: Utilization
     - type: Resource
       resource: 
         name: memory
         target: 
-          averageUtilization: 90
+          averageUtilization: 85
           type: Utilization
 ```
 Here is an example of the APIManager CR set with backend-worker, backend-listener and apicast-production set to default 
@@ -799,12 +802,16 @@ spec:
 Removing hpa field or setting enabled to false will remove the HPA for the component. 
 Once `hpa: true` is set, instances of HPA will be created with the default values. You can manually edit these HPA 
 instances to optimize your [configuration](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
-With hpa enabled it overrides and ignores values for replicas and resources for apicast production, backend listener and worker. 
+With hpa enabled it overrides and ignores values for replicas set in the apimanger CR for apicast production, backend listener and worker.  
+
+You can still scale vertically by setting the resource requirements on the components. As HPA scales on 85% of requests
+values having extra resources set aside for limits is unnecessary i.e. set your requests equal to your limits when scaling
+vertically.
 
 
 #### Setting custom TopologySpreadConstraints
 TopologySpreadConstraints specifies how to spread matching pods among the given topology.  See [here](https://docs.openshift.com/container-platform/4.13/nodes/scheduling/nodes-scheduler-pod-topology-spread-constraints.html) for more information.  
-It be can be customized through APIManager CR `topologySpreadConstraints` attribute for each Deployment.  
+It can be customized through APIManager CR `topologySpreadConstraints` attribute for each Deployment.  
 Example for apicast-staging and backend-listener:
 ```yaml
 apiVersion: apps.3scale.net/v1alpha1

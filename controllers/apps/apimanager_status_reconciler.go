@@ -260,19 +260,38 @@ func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
 
 func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
 
+	cond := common.Condition{
+		Type:    appsv1alpha1.APIManagerWarningConditionType,
+		Status:  v1.ConditionStatus(metav1.ConditionTrue),
+		Reason:  "HPA & ResourceRequirementsEnabled false",
+		Message: "HorizontalPodAutoScaling (HPA) can't function if ResourcesRequirementsEnabled is set to false as there would be no resources to compare to in order to scale",
+	}
+	// check if condition is already present
+	foundCondition := conditions.GetConditionByMessage(cond.Message)
+
+	// If hpa is enabled but the condition is not found, add it
+	if !*cr.Spec.ResourceRequirementsEnabled && (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa || cr.Spec.Apicast.ProductionSpec.Hpa) && foundCondition == nil {
+		*conditions = append(*conditions, cond)
+	}
+
+	// if hpa is disabled and condition is found, remove it
+	if !cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa && !cr.Spec.Apicast.ProductionSpec.Hpa && foundCondition != nil {
+		conditions.RemoveConditionByMessage(cond.Message)
+	}
+
 	// get url's to confirm if logical Redis DB or sentinels with auth used
 	redisQueuesUrl, redisStorageUrl, redisQueuesSentinelHost, redisStorageSentinelHost := operator.GetBackendRedisSecret(cr.Namespace, context.TODO(), s.Client(), s.logger)
 	redisSystemSentinelHost := operator.GetSystemRedisSecret(cr.Namespace, context.TODO(), s.Client(), s.logger)
 
-	cond := common.Condition{
+	cond = common.Condition{
 		Type:    appsv1alpha1.APIManagerWarningConditionType,
 		Status:  v1.ConditionStatus(metav1.ConditionTrue),
 		Reason:  "HPA",
-		Message: "HorizontalPodAutoscaling (Hpa) enabled overrides values applied to request, limits and replicas",
+		Message: "HorizontalPodAutoscaling (Hpa) enabled overrides values applied to replicas",
 	}
 
 	// check if condition is already present
-	foundCondition := conditions.GetConditionByMessage(cond.Message)
+	foundCondition = conditions.GetConditionByMessage(cond.Message)
 
 	// If hpa is enabled but the condition is not found, add it
 	if (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa || cr.Spec.Apicast.ProductionSpec.Hpa) && foundCondition == nil {
