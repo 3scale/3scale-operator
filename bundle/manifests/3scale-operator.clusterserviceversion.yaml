@@ -13,7 +13,13 @@ metadata:
           "spec": {
             "wildcardDomain": "example.com"
           },
-          "status": {}
+          "status": {
+            "deployments": {
+              "ready": [
+                "deployment x ready"
+              ]
+            }
+          }
         },
         {
           "apiVersion": "apps.3scale.net/v1alpha1",
@@ -69,7 +75,10 @@ metadata:
             },
             "username": "admin"
           },
-          "status": {}
+          "status": {
+            "adminId": 1,
+            "tenantId": 2
+          }
         },
         {
           "apiVersion": "capabilities.3scale.net/v1beta1",
