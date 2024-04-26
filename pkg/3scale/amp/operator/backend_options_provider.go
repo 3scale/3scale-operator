@@ -134,18 +134,10 @@ func (o *OperatorBackendOptionsProvider) setResourceRequirementsOptions() {
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if o.apimanager.Spec.Backend.ListenerSpec.Resources != nil {
-		if o.apimanager.Spec.Backend.ListenerSpec.Hpa {
-			o.backendOptions.ListenerResourceRequirements = component.DefaultHPABackendListenerResourceRequirements()
-		} else {
-			o.backendOptions.ListenerResourceRequirements = *o.apimanager.Spec.Backend.ListenerSpec.Resources
-		}
+		o.backendOptions.ListenerResourceRequirements = *o.apimanager.Spec.Backend.ListenerSpec.Resources
 	}
 	if o.apimanager.Spec.Backend.WorkerSpec.Resources != nil {
-		if o.apimanager.Spec.Backend.WorkerSpec.Hpa {
-			o.backendOptions.WorkerResourceRequirements = component.DefaultHPABackendWorkerResourceRequirements()
-		} else {
-			o.backendOptions.WorkerResourceRequirements = *o.apimanager.Spec.Backend.WorkerSpec.Resources
-		}
+		o.backendOptions.WorkerResourceRequirements = *o.apimanager.Spec.Backend.WorkerSpec.Resources
 	}
 	if o.apimanager.Spec.Backend.CronSpec.Resources != nil {
 		o.backendOptions.CronResourceRequirements = *o.apimanager.Spec.Backend.CronSpec.Resources
