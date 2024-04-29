@@ -834,7 +834,7 @@ APIManager components are the following ones:
 | system-app's system-provider | 50m | 1000m | 600Mi | 800Mi |
 | system-app's system-developer | 50m | 1000m | 600Mi | 800Mi |
 | system-sidekiq | 100m | 1000m  | 500Mi  | 2Gi |
-| system-sphinx | 80m | 1000m | 250Mi | 512Mi |
+| system-searchd | 80m | 1000m | 250Mi | 512Mi |
 | system-redis | 150m | 500m | 256Mi | 32Gi |
 | system-mysql | 250m | No limit | 512Mi | 2Gi |
 | system-postgresql | 250m | No limit | 512Mi | 2Gi |
