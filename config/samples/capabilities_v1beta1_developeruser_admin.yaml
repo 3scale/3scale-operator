@@ -10,3 +10,4 @@ spec:
   role: admin
   developerAccountRef:
     name: developeraccount1
+status: {}

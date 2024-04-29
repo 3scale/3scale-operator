@@ -3,7 +3,8 @@ kind: ProxyConfigPromote
 metadata:
   name: proxyconfigpromote-sample
 spec:
-  ProductCRName: product1-sample
-  Production: true
+  productCRName: product1-sample
+  production: true
+status: {}
 
 

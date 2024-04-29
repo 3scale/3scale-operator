@@ -14,3 +14,6 @@ spec:
   tenantSecretRef:
     name: ecorp-tenant-secret
     namespace: operator-test
+status:
+  adminId: 1
+  tenantId: 2

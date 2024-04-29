@@ -36,7 +36,7 @@ spec:
                 description: deleteCR  deletes this CR when it has successfully completed the promotion
                 type: boolean
               productCRName:
-                description: product CR metadata.name
+                description: Product CR metadata name
                 type: string
               production:
                 description: Environment you wish to promote to, if not present defaults to staging and if set to true promotes to production

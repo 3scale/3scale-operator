@@ -155,11 +155,8 @@ func (a *ApicastOptionsProvider) setResourceRequirementsOptions() {
 	// spec.resourceRequirementsEnabled, overwriting that setting when they are
 	// defined
 	if a.apimanager.Spec.Apicast.ProductionSpec.Resources != nil {
-		if a.apimanager.Spec.Apicast.ProductionSpec.Hpa {
-			a.apicastOptions.ProductionResourceRequirements = component.DefaultHPAProductionResourceRequirements()
-		} else {
-			a.apicastOptions.ProductionResourceRequirements = *a.apimanager.Spec.Apicast.ProductionSpec.Resources
-		}
+		a.apicastOptions.ProductionResourceRequirements = *a.apimanager.Spec.Apicast.ProductionSpec.Resources
+
 	}
 
 	if a.apimanager.Spec.Apicast.StagingSpec.Resources != nil {

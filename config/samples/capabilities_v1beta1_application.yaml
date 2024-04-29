@@ -11,3 +11,4 @@ spec:
   name: "testApp"
   description: "testing application "
   suspend: false
+status: {}
