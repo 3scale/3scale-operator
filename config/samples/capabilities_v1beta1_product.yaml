@@ -4,3 +4,4 @@ metadata:
   name: product1-sample
 spec:
   name: "OperatedProduct 1"
+status: {}

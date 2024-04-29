@@ -60,6 +60,9 @@ spec:
       kind: APIManager
       name: apimanagers.apps.3scale.net
       resources:
+      - kind: ConfigMap
+        name: ""
+        version: v1
       - kind: Deployment
         name: ""
         version: apps/v1
@@ -119,6 +122,11 @@ spec:
       displayName: Application
       kind: Application
       name: applications.capabilities.3scale.net
+      version: v1beta1
+    - description: ApplicationAuth is the Schema for the applicationauths API
+      displayName: Application Auth
+      kind: ApplicationAuth
+      name: applicationauths.capabilities.3scale.net
       version: v1beta1
   description: |
     The 3scale Operator creates and maintains the Red Hat 3scale API Management on [OpenShift](https://www.openshift.com/) in various deployment configurations.

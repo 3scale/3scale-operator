@@ -7,3 +7,4 @@ spec:
     persistentVolumeClaim:
       claimSource:
         claimName: "mybackeduppvc"
+status: {}

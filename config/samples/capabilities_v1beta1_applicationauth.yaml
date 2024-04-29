@@ -3,5 +3,8 @@ kind: ApplicationAuth
 metadata:
   name: applicationauth-sample
 spec:
-  # Add fields here
-  foo: bar
+  applicationCRName: application-cr-name
+  generateSecret: true
+  authSecretRef:
+    name: auth-secret-reference
+status: {}
