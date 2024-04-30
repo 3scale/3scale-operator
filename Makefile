@@ -1,22 +1,18 @@
 SHELL := /bin/bash
 # Current Operator version
-VERSION ?= 0.0.1
+VERSION ?= 0.11.0
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(VERSION)
 # Options for 'bundle-build'
-ifneq ($(origin CHANNELS), undefined)
-BUNDLE_CHANNELS := --channels=$(CHANNELS)
-endif
-ifneq ($(origin DEFAULT_CHANNEL), undefined)
-BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
-endif
+BUNDLE_CHANNELS := --channels=threescale-2.14
+BUNDLE_DEFAULT_CHANNEL := --default-channel=threescale-2.14
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 OS := $(shell uname | awk '{print tolower($$0)}' | sed -e s/linux/linux-gnu/ )
 ARCH := $(shell uname -m)
 
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/3scale/3scale-operator:master
+IMG ?= quay.io/3scale/3scale-operator:v0.11.0
 
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
@@ -68,11 +64,6 @@ $(PROJECT_PATH)/_output/unit.cov: test-unit
 TEST_CRD_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/crds')
 test-crds: generate fmt vet manifests
 	$(GO) test -v $(TEST_CRD_PKGS)
-
-TEST_MANIFESTS_VERSION_PKGS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/test/manifests-version')
-## test-manifests-version: Run manifest version checks
-test-manifests-version:
-	$(GO) test -v $(TEST_MANIFESTS_VERSION_PKGS)
 
 # Run e2e tests
 TEST_E2E_PKGS_APPS = $(shell $(GO) list ./... | grep 'github.com/3scale/3scale-operator/controllers/apps')
