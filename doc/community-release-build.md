@@ -9,9 +9,8 @@
 
 
 ## Introduction
-* Community Release created in parallel with Minor Product Releases or patch releases, and not for Major release.
+* Community Release is primarily created in parallel with minor or patch Product Releases, but a major community may also be released.
   * Community Release is not required for every productized build or every product patch release.
-  * In this document: Product Releases == Product Releases or patch releases
 * Community release can be released after downstream release
 * Community Release codebase is defined by Tag in the [3scale-operator](https://github.com/3scale/3scale-operator) repository. 
 Tag format as v\<major>.\<minor>.<build#> (for example: v0.10.1, v0.11.0)
@@ -102,19 +101,6 @@ $ git checkout -b 3scale-community-v0.11.0 bf398d34ae9378befc4e6e8bf447adbeef37c
 $ cd 3scale-operator
 $ git tag -a v0.11.0  -m "Community Release branch 3scale-community-v0.11.0, based on product 3scale-2.14.1-GA" ab1783b4207e43480bf7538d62ecbd83636ecf0c
 $ git push myfork v0.11.0
-```
-
-* Compare Product and Community release tags
-
-```
-$ git diff v0.11.0..3scale-2.14.1-GA --name-only
-.circleci/config.yml
-Makefile
-bundle/manifests/3scale-operator.clusterserviceversion.yaml
-config/manager/kustomization.yaml
-config/manager/manager.yaml
-config/manifests/bases/3scale-operator.clusterserviceversion.yaml
-pkg/3scale/amp/component/images.go
 ```
 
 ## Prepare release in community-operators-prod repo
