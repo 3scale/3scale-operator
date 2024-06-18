@@ -6,7 +6,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	subController "github.com/3scale/3scale-operator/controllers/subscription"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/operator"
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
@@ -279,10 +278,6 @@ func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *com
 		conditions.RemoveConditionByMessage(cond.Message)
 	}
 
-	// get url's to confirm if logical Redis DB or sentinels with auth used
-	redisQueuesUrl, redisStorageUrl, redisQueuesSentinelHost, redisStorageSentinelHost := operator.GetBackendRedisSecret(cr.Namespace, context.TODO(), s.Client(), s.logger)
-	redisSystemSentinelHost := operator.GetSystemRedisSecret(cr.Namespace, context.TODO(), s.Client(), s.logger)
-
 	cond = common.Condition{
 		Type:    appsv1alpha1.APIManagerWarningConditionType,
 		Status:  v1.ConditionStatus(metav1.ConditionTrue),
@@ -302,41 +297,6 @@ func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *com
 	if !cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa && !cr.Spec.Apicast.ProductionSpec.Hpa && foundCondition != nil {
 		conditions.RemoveConditionByMessage(cond.Message)
 	}
-
-	cond = common.Condition{
-		Type:   appsv1alpha1.APIManagerWarningConditionType,
-		Status: v1.ConditionStatus(metav1.ConditionTrue),
-		Reason: "HPA",
-		Message: "HorizontalPodAutoscaling (HPA) Logical Redis instances detected for backend, these are not" +
-			" compatible with async mode, HPA requires async mode in order for HPA on the backend to function, HPA currently disabled",
-	}
-	foundConfigurationCondition := conditions.GetConditionByMessage(cond.Message)
-
-	if redisQueuesUrl == redisStorageUrl && redisSystemSentinelHost && redisStorageSentinelHost && redisQueuesSentinelHost && (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa) && foundConfigurationCondition == nil {
-		*conditions = append(*conditions, cond)
-	}
-
-	if redisQueuesUrl != redisStorageUrl || (!cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa) && foundConfigurationCondition != nil {
-		conditions.RemoveConditionByMessage(cond.Message)
-	}
-
-	cond = common.Condition{
-		Type:   appsv1alpha1.APIManagerWarningConditionType,
-		Status: v1.ConditionStatus(metav1.ConditionTrue),
-		Reason: "HPA",
-		Message: "Redis Sentinels with Authentication detected, these are not" +
-			" compatible with async mode, HPA requires async mode in order for HPA to function, HPA currently disabled",
-	}
-	foundConfigurationCondition = conditions.GetConditionByMessage(cond.Message)
-
-	if redisSystemSentinelHost && redisStorageSentinelHost && redisQueuesSentinelHost && (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa || cr.Spec.Apicast.ProductionSpec.Hpa) && foundConfigurationCondition == nil {
-		*conditions = append(*conditions, cond)
-	}
-
-	if !redisSystemSentinelHost && !redisStorageSentinelHost && !redisQueuesSentinelHost && (cr.Spec.Backend.ListenerSpec.Hpa || cr.Spec.Backend.WorkerSpec.Hpa || cr.Spec.Apicast.ProductionSpec.Hpa) && foundConfigurationCondition == nil {
-		conditions.RemoveConditionByMessage(cond.Message)
-	}
-
 }
 
 func (s *APIManagerStatusReconciler) reconcileOpenTracingDeprecationMessage(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
