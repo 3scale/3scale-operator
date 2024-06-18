@@ -712,16 +712,38 @@ spec:
 * **NOTE 1**: `apicast` policy item will be added by the operator if not included.
 
 Alternatively, the configuration for the policy can be referenced in a secret, for example:
+
+Let's create a secret with the policy configuration. First, let's create a file called `policy-config.yaml`
+with the configuration:
+
 ```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: config-policy
-type: Opaque
-stringData:
-  configuration: "{\"http_proxy\":\"http://secret.com\"}"
+cat <<EOF >> policy-config.yaml
+rules:
+- header: X-Cache-Status
+  condition:
+    operations:
+    - left_type: plain
+      right_type: plain
+      op: "=="
+      right: GET
+      left: ein
+    - left_type: plain
+      right_type: plain
+      op: "!="
+      right: RIGHTein
+      left: elftein
+    combine_op: and
+  cache: true
+EOF
 ```
-* **NOTE 1**: `configuration` field must be used to contain the policy configuration.
+
+Then, the secret:
+
+```
+oc create secret generic my-policy-config --from-file=configuration=policy-config.yaml
+```
+
+> **NOTE**: `configuration` field must be used to contain the policy configuration.
 
 This secret can then be referenced using the `configurationRef` field in the policy.
 
@@ -734,7 +756,7 @@ spec:
   name: "OperatedProduct 1"
   policies:
   - configurationRef:
-       name: config-policy
+       name: my-policy-config
     name: camel
     version: builtin
     enabled: true
