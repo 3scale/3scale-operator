@@ -1,6 +1,6 @@
 # OpenAPI Custom Resource
 
-The [OpenAPI CRD](openapi-reference.md) is used as the source of truth to reconciliate
+The [OpenAPI CRD](openapi-reference.md) is used as the source of truth to reconcile
 one [3scale Product custom resource](product-reference.md) and
 one [3scale Backend custom resource](backend-reference.md).
 
@@ -22,6 +22,7 @@ one [3scale Backend custom resource](backend-reference.md).
       * [3scale Mapping Rules](#3scale-mapping-rules)
       * [Authentication](#authentication)
       * [ActiveDocs](#activedocs)
+      * [3scale Application Plans](#3scale-application-plans)
       * [3scale Product Policy Chain](#3scale-product-policy-chain)
       * [3scale Deployment Mode](#3scale-deployment-mode)
    * [Minimum required OAS doc](#minimum-required-oas-doc)
@@ -272,14 +273,19 @@ of the [OpenAPI CRD](openapi-reference.md).
 Each OpenAPI defined operation will translate in one 3scale method at product level.
 The method name is read from the [operationId](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md#operationObject) field of the operation object.
 
+### 3scale Metrics
+
+The default `Hits` metric will be assigned to the OAS-generated Product CR by default however custom metrics can be created and assigned using [OAS 3scale extensions](openapi-3scale-extensions.md#root-level-3scale-extension).
+
 ### 3scale Mapping Rules
 
 Each OpenAPI defined operation will translate in one 3scale mapping rule at product level.
 Previously existing mapping rules will be replaced by those imported from the OpenAPI.
 
-OpenAPI [paths](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md#pathsObject) object provides mapping rules *Verb* and *Pattern* properties. 3scale methods will be associated accordingly to the [operationId](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md#operationObject)
+OpenAPI [paths](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md#pathsObject) object provides mapping rules *Verb* and *Pattern* properties. 3scale methods will be associated accordingly to the [operationId](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md#operationObject).
+The mapping rule can be associated with custom methods/metrics using [OAS 3scale extensions](openapi-3scale-extensions.md#operation-level-3scale-extension).
 
-*Delta* value is hard-coded to `1`.
+*Delta* value is hard-coded to `1`. This can be set to an arbitrary value using [OAS 3scale extensions](openapi-3scale-extensions.md#operation-level-3scale-extension)
 
 By default, *Strict matching* policy is being configured.
 Matching policy can be switched to **Prefix matching** using the `spec.PrefixMatching` field
@@ -322,9 +328,14 @@ When OpenAPI does not specify any security requirements:
 
 No 3scale ActiveDoc is created.
 
+### 3scale Application Plans
+
+Custom application plans can be added to the product using [OAS 3scale extensions](openapi-3scale-extensions.md#root-level-3scale-extension).
+
 ### 3scale Product Policy Chain
 
 3scale policy chain will be the default one created by 3scale.
+This can be overridden with a custom policy chain using [OAS 3scale extensions](openapi-3scale-extensions.md#root-level-3scale-extension).
 
 ### 3scale Deployment Mode
 
