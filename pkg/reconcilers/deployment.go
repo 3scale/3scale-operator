@@ -2,6 +2,7 @@ package reconcilers
 
 import (
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"reflect"
 
 	"github.com/google/go-cmp/cmp"
@@ -346,6 +347,59 @@ func DeploymentListenerArgsMutator(_, existing *k8sappsv1.Deployment) (bool, err
 	update = false
 	return update, nil
 }
+func DeploymentListenerAsyncDisableArgsMutator(_, existing *k8sappsv1.Deployment) (bool, error) {
+	update := true
+	falconArgs := []string{"bin/3scale_backend", "start", "-e", "production", "-p", "3000", "-x", "/dev/stdout"}
+	if !reflect.DeepEqual(existing.Spec.Template.Spec.Containers[0].Args, falconArgs) {
+		existing.Spec.Template.Spec.Containers[0].Args = falconArgs
+		return update, nil
+	}
+	update = false
+	return update, nil
+}
+
+func DeploymentListenerAsyncDisableEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	update := false
+	updateListenerWorkers := true
+	updateConfigRedisAsync := true
+	// This may be redundant as operator crashes if LISTENER_WORKERS=0
+	// Update LISTENER_WORKERS and CONFIG_REDIS_ASYNC to 1 if found
+	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
+		if envVar.Name == "LISTENER_WORKERS" {
+			updateListenerWorkers = false
+			if envVar.Value == "1" {
+				existing.Spec.Template.Spec.Containers[0].Env = removeEnvVar(existing.Spec.Template.Spec.Containers[0].Env, "LISTENER_WORKERS")
+				update = true
+			}
+		}
+		if envVar.Name == "CONFIG_REDIS_ASYNC" {
+			updateConfigRedisAsync = false
+			if envVar.Value == "1" {
+				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "0"
+				update = true
+			}
+		}
+		if update {
+			return update, nil
+		}
+	}
+	// if either updateListenerWorkers or updateConfigRedisAsync is true then proceed to the append logic
+	// to add the env var LISTENER_WORKERS and CONFIG_REDIS_ASYNC
+	if updateListenerWorkers || updateConfigRedisAsync {
+		update = true
+	} else {
+		update = false
+	}
+	if updateConfigRedisAsync {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"))
+	}
+	if updateListenerWorkers {
+		existing.Spec.Template.Spec.Containers[0].Env = removeEnvVar(existing.Spec.Template.Spec.Containers[0].Env, "LISTENER_WORKERS")
+	}
+
+	return update, nil
+}
 
 func DeploymentListenerEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	update := false
@@ -412,4 +466,36 @@ func DeploymentWorkerEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, 
 			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "1"))
 	}
 	return update, nil
+}
+
+func DeploymentWorkerDisableAsyncEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	update := true
+	// Always set env var CONFIG_REDIS_ASYNC to 1 this logic is only hit when you don't have logical redis db
+	for envId, envVar := range existing.Spec.Template.Spec.Containers[0].Env {
+		if envVar.Name == "CONFIG_REDIS_ASYNC" {
+			if envVar.Value == "1" {
+				existing.Spec.Template.Spec.Containers[0].Env[envId].Value = "0"
+				update = true
+				return update, nil
+			}
+			update = false
+
+		}
+	}
+	// Adds the env CONFIG_REDIS_ASYNC if not present
+	if update {
+		existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+			helper.EnvVarFromValue("CONFIG_REDIS_ASYNC", "0"))
+	}
+	return update, nil
+}
+
+func removeEnvVar(envVars []corev1.EnvVar, name string) []corev1.EnvVar {
+	var newEnvVars []corev1.EnvVar
+	for _, envVar := range envVars {
+		if envVar.Name != name {
+			newEnvVars = append(newEnvVars, envVar)
+		}
+	}
+	return newEnvVars
 }

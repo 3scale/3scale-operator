@@ -21,7 +21,7 @@ func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReco
 }
 
 func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
-	DisableAsync := "DisableAsync"
+	DisableAsync := "disable-async"
 	ampImages, err := AmpImages(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -55,7 +55,10 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	// Check for DisableAsync: true in annotations
 	currentAnnotations := r.apiManager.GetAnnotations()
-	if !containsAsyncDisable(currentAnnotations, DisableAsync, "true") {
+	if containsAsyncDisable(currentAnnotations, DisableAsync, "true") {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableArgsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableEnvMutator)
+	} else {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerEnvMutator)
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerArgsMutator)
 	}
@@ -96,7 +99,9 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker Deployment
 	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if !containsAsyncDisable(currentAnnotations, DisableAsync, "true") {
+	if containsAsyncDisable(currentAnnotations, DisableAsync, "true") {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerDisableAsyncEnvMutator)
+	} else {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
 	}
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
