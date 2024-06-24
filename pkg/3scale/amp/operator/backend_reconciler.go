@@ -1,17 +1,11 @@
 package operator
 
 import (
-	"context"
-	"github.com/go-logr/logr"
-	"strings"
-
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -27,6 +21,7 @@ func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReco
 }
 
 func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
+	disableAsyncAnnotation := "apps.3scale.net/disable-async"
 	ampImages, err := AmpImages(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -57,14 +52,13 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	// Listener Deployment
-	RedisQueuesUrl, RedisStorageUrl, RedisQueuesSentinelHost, RedisStorageSentinelHost := GetBackendRedisSecret(r.apiManager.Namespace, r.Context(), r.Client(), r.logger)
-
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	// this checks for logical redis exists
-	// this checks if SentinelHost are configured with passwords
-	if RedisStorageUrl != RedisQueuesUrl && !RedisQueuesSentinelHost && !RedisStorageSentinelHost {
-		// this checks if SentinelHost are configured with passwords
+	// Check for DisableAsync: true in annotations
+	currentAnnotations := r.apiManager.GetAnnotations()
+	if containsAsyncDisable(currentAnnotations, disableAsyncAnnotation, "true") {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableArgsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableEnvMutator)
+	} else {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerEnvMutator)
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerArgsMutator)
 	}
@@ -105,10 +99,11 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker Deployment
 	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if RedisStorageUrl != RedisQueuesUrl && !RedisQueuesSentinelHost && !RedisStorageSentinelHost {
+	if containsAsyncDisable(currentAnnotations, disableAsyncAnnotation, "true") {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerDisableAsyncEnvMutator)
+	} else {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
 	}
-
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
@@ -192,20 +187,16 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	if RedisStorageUrl != RedisQueuesUrl && !RedisQueuesSentinelHost && !RedisStorageSentinelHost {
+
+	if !containsAsyncDisable(currentAnnotations, disableAsyncAnnotation, "true") {
 		err = r.ReconcileHpa(component.DefaultHpa(component.BackendListenerName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+
 		err = r.ReconcileHpa(component.DefaultHpa(component.BackendWorkerName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
-		}
-	} else {
-		// set log message if logical redis db are detected in the backend
-		if r.apiManager.Spec.Backend.ListenerSpec.Hpa || r.apiManager.Spec.Backend.WorkerSpec.Hpa {
-			message := "logical redis instances or SentinelHost with authentication found in the backend, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
-			r.logger.Info(message)
 		}
 	}
 
@@ -221,20 +212,9 @@ func Backend(apimanager *appsv1alpha1.APIManager, client client.Client) (*compon
 	return component.NewBackend(opts), nil
 }
 
-func GetBackendRedisSecret(apimanagerNs string, ctx context.Context, client client.Client, logger logr.Logger) (string, string, bool, bool) {
-	backendRedisSecret := &v1.Secret{}
-	err := client.Get(ctx, types.NamespacedName{
-		Name:      "backend-redis",
-		Namespace: apimanagerNs,
-	}, backendRedisSecret)
-	if err != nil {
-		logger.Error(err, "Failed to get system-redis secret, can't check logical databases or authenticated redis sentinels, check the backend-redis secret exists")
-		return "", "", false, false
+func containsAsyncDisable(m map[string]string, key, value string) bool {
+	if v, ok := m[key]; ok {
+		return v == value
 	}
-	RedisQueuesUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_QUEUES_URL"]), "1")
-	RedisStorageUrl := strings.TrimSuffix(string(backendRedisSecret.Data["REDIS_STORAGE_URL"]), "0")
-	RedisQueuesSentinelHost := strings.Contains(string(backendRedisSecret.Data["REDIS_QUEUES_SENTINEL_HOSTS"]), "@")
-	RedisStorageSentinelHost := strings.Contains(string(backendRedisSecret.Data["REDIS_STORAGE_SENTINEL_HOSTS"]), "@")
-
-	return RedisQueuesUrl, RedisStorageUrl, RedisQueuesSentinelHost, RedisStorageSentinelHost
+	return false
 }
