@@ -113,7 +113,7 @@ func TestGetSystemPostgreSQLOptionsProvider(t *testing.T) {
 				return expecteOpts
 			},
 		},
-		{"SystemDBSecret", getSystemDBSecret(databaseURL, systemPostgreSQLUsername, systemPostgreSQLPassword),
+		{"SystemDBSecret", getSystemDBSecret(databaseURL),
 			basicApimanager, func(opts *component.SystemPostgreSQLOptions) *component.SystemPostgreSQLOptions {
 				expecteOpts := defaultSystemPostgreSQLOptions(opts)
 				expecteOpts.User = systemPostgreSQLUsername
@@ -283,7 +283,7 @@ func TestGetPostgreSQLOptionsInvalidURL(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			secret := getSystemDBSecret(tc.databaseURL, systemPostgreSQLUsername, systemPostgreSQLPassword)
+			secret := getSystemDBSecret(tc.databaseURL)
 			objs := []runtime.Object{secret}
 			cl := fake.NewFakeClient(objs...)
 			optsProvider := NewSystemPostgresqlOptionsProvider(basicApimanager(), namespace, cl)

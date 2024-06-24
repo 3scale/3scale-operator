@@ -44,6 +44,8 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 		return nil, fmt.Errorf("GetSystemPostgreSQLOptions reading secret options: %w", err)
 	}
 
+	s.setPostgresqlUser()
+	s.setPostgresqlPassword()
 	s.setResourceRequirementsOptions()
 	s.setPersistentVolumeClaimOptions()
 	s.setNodeAffinityAndTolerationsOptions()
@@ -59,28 +61,11 @@ func (s *SystemPostgresqlOptionsProvider) GetSystemPostgreSQLOptions() (*compone
 }
 
 func (s *SystemPostgresqlOptionsProvider) setSecretBasedOptions() error {
+
 	val, err := s.secretSource.FieldValue(
 		component.SystemSecretSystemDatabaseSecretName,
-		component.SystemSecretSystemDatabaseUserFieldName,
-		component.DefaultSystemPostgresqlUser())
-	if err != nil {
-		return err
-	}
-	s.options.User = val
-
-	val, err = s.secretSource.FieldValue(
-		component.SystemSecretSystemDatabaseSecretName,
-		component.SystemSecretSystemDatabasePasswordFieldName,
-		component.DefaultSystemPostgresqlPassword())
-	if err != nil {
-		return err
-	}
-	s.options.Password = val
-
-	val, err = s.secretSource.FieldValue(
-		component.SystemSecretSystemDatabaseSecretName,
 		component.SystemSecretSystemDatabaseURLFieldName,
-		component.DefaultSystemPostgresqlDatabaseURL(s.options.User, s.options.Password, component.DefaultSystemPostgresqlDatabaseName()))
+		component.DefaultSystemPostgresqlDatabaseURL(component.DefaultSystemPostgresqlUser(), component.DefaultSystemPostgresqlPassword(), component.DefaultSystemPostgresqlDatabaseName()))
 	if err != nil {
 		return err
 	}
@@ -218,5 +203,25 @@ func (s *SystemPostgresqlOptionsProvider) setTopologySpreadConstraints() {
 func (s *SystemPostgresqlOptionsProvider) setPodTemplateAnnotations() {
 	if s.apimanager.IsSystemPostgreSQLEnabled() {
 		s.options.PodTemplateAnnotations = s.apimanager.Spec.System.DatabaseSpec.PostgreSQL.Annotations
+	}
+}
+
+func (s *SystemPostgresqlOptionsProvider) setPostgresqlUser() {
+	u, err := url.Parse(s.options.DatabaseURL)
+	if err != nil {
+		s.options.User = component.DefaultSystemPostgresqlUser()
+	}
+	s.options.User = u.User.Username()
+}
+
+func (s *SystemPostgresqlOptionsProvider) setPostgresqlPassword() {
+	u, err := url.Parse(s.options.DatabaseURL)
+	if err != nil {
+		s.options.Password = component.DefaultSystemPostgresqlPassword()
+	}
+	passwordIsSet := false
+	s.options.Password, passwordIsSet = u.User.Password()
+	if !passwordIsSet {
+		s.options.Password = component.DefaultSystemPostgresqlPassword()
 	}
 }
