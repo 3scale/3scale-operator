@@ -21,7 +21,7 @@ func NewBackendReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReco
 }
 
 func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
-	DisableAsync := "disable-async"
+	disableAsyncAnnotation := "apps.3scale.net/disable-async"
 	ampImages, err := AmpImages(r.apiManager)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -55,7 +55,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	listenerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
 	// Check for DisableAsync: true in annotations
 	currentAnnotations := r.apiManager.GetAnnotations()
-	if containsAsyncDisable(currentAnnotations, DisableAsync, "true") {
+	if containsAsyncDisable(currentAnnotations, disableAsyncAnnotation, "true") {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableArgsMutator)
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentListenerAsyncDisableEnvMutator)
 	} else {
@@ -99,7 +99,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 
 	// Worker Deployment
 	workerDeploymentMutator := reconcilers.GenericBackendDeploymentMutators()
-	if containsAsyncDisable(currentAnnotations, DisableAsync, "true") {
+	if containsAsyncDisable(currentAnnotations, disableAsyncAnnotation, "true") {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerDisableAsyncEnvMutator)
 	} else {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentWorkerEnvMutator)
@@ -188,7 +188,7 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	if !containsAsyncDisable(currentAnnotations, DisableAsync, "true") {
+	if !containsAsyncDisable(currentAnnotations, disableAsyncAnnotation, "true") {
 		err = r.ReconcileHpa(component.DefaultHpa(component.BackendListenerName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
 		if err != nil {
 			return reconcile.Result{}, err
