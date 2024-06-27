@@ -135,6 +135,33 @@ func (p *OpenAPIProductReconciler) desired() (*capabilitiesv1beta1.Product, erro
 	}
 	product.Spec.MappingRules = mappingRules
 
+	// Metrics
+	metrics, err := p.desiredMetrics()
+	if err != nil {
+		return nil, err
+	}
+	if metrics != nil && len(metrics) > 0 {
+		product.Spec.Metrics = metrics
+	}
+
+	// Policies
+	policies, err := p.desiredPolicies()
+	if err != nil {
+		return nil, err
+	}
+	if policies != nil && len(policies) > 0 {
+		product.Spec.Policies = policies
+	}
+
+	// Application plans
+	applicationPlans, err := p.desiredApplicationPlans()
+	if err != nil {
+		return nil, err
+	}
+	if applicationPlans != nil && len(applicationPlans) > 0 {
+		product.Spec.ApplicationPlans = applicationPlans
+	}
+
 	// backend usages
 	// current implementation assumes same system name for backend and product
 	backendSystemName := p.desiredSystemName()
@@ -246,7 +273,6 @@ func (p *OpenAPIProductReconciler) desiredAuthentication() *capabilitiesv1beta1.
 	var authenticationSpec *capabilitiesv1beta1.AuthenticationSpec
 
 	switch secRequirementExtended.Value.Type {
-	// TODO types "oauth2", "openIdConnect"
 	case "apiKey":
 		authenticationSpec = p.desiredUserKeyAuthentication(secRequirementExtended)
 	case "oauth2":
@@ -313,12 +339,31 @@ func (p *OpenAPIProductReconciler) desiredMappingRules() ([]capabilitiesv1beta1.
 		}
 
 		for opVerb, operation := range pathItem.Operations() {
-			mappingRules = append(mappingRules, capabilitiesv1beta1.MappingRuleSpec{
+			mappingRule := capabilitiesv1beta1.MappingRuleSpec{
 				HTTPMethod:      strings.ToUpper(opVerb),
 				Pattern:         desiredPattern,
 				MetricMethodRef: helper.MethodSystemNameFromOpenAPIOperation(path, opVerb, operation),
 				Increment:       1,
-			})
+			}
+
+			// Extract OAS operation extension
+			operationExtension, err := helper.NewOasOperationExtension(operation)
+			if err != nil {
+				return nil, err
+			}
+			if operationExtension != nil {
+				if operationExtension.MappingRule.MetricMethodRef != "" {
+					mappingRule.MetricMethodRef = operationExtension.MappingRule.MetricMethodRef
+				}
+				if operationExtension.MappingRule.Increment != 0 {
+					mappingRule.Increment = operationExtension.MappingRule.Increment
+				}
+				if operationExtension.MappingRule.Last != nil {
+					mappingRule.Last = operationExtension.MappingRule.Last
+				}
+			}
+
+			mappingRules = append(mappingRules, mappingRule)
 		}
 	}
 	return mappingRules, nil
@@ -341,6 +386,84 @@ func (p *OpenAPIProductReconciler) desiredMappingRulesPattern(path string) (stri
 	}
 
 	return pattern, nil
+}
+
+func (p *OpenAPIProductReconciler) desiredMetrics() (map[string]capabilitiesv1beta1.MetricSpec, error) {
+	metrics := make(map[string]capabilitiesv1beta1.MetricSpec)
+
+	// Extract OAS product extension
+	rootProductExtension, err := helper.NewOasRootProductExtension(p.openapiObj)
+	if err != nil {
+		return nil, err
+	}
+
+	if rootProductExtension != nil && rootProductExtension.Metrics != nil {
+		// Loop through metrics in extension and create Metrics
+		for metricKey, metricObj := range rootProductExtension.Metrics {
+			metric := capabilitiesv1beta1.MetricSpec{
+				Name:        metricObj.Name,
+				Unit:        metricObj.Unit,
+				Description: metricObj.Description,
+			}
+			metrics[metricKey] = metric
+		}
+	}
+	return metrics, nil
+}
+
+func (p *OpenAPIProductReconciler) desiredApplicationPlans() (map[string]capabilitiesv1beta1.ApplicationPlanSpec, error) {
+	applicationPlans := make(map[string]capabilitiesv1beta1.ApplicationPlanSpec)
+
+	// Extract OAS product extension
+	rootProductExtension, err := helper.NewOasRootProductExtension(p.openapiObj)
+	if err != nil {
+		return nil, err
+	}
+
+	if rootProductExtension != nil && rootProductExtension.ApplicationPlans != nil {
+		// Loop through application plans in extension and create ApplicationPlans
+		for appPlanKey, appPlanObj := range rootProductExtension.ApplicationPlans {
+			appPlan := capabilitiesv1beta1.ApplicationPlanSpec{
+				Name:                appPlanObj.Name,
+				AppsRequireApproval: appPlanObj.AppsRequireApproval,
+				TrialPeriod:         appPlanObj.TrialPeriod,
+				SetupFee:            appPlanObj.SetupFee,
+				CostMonth:           appPlanObj.CostMonth,
+				PricingRules:        appPlanObj.PricingRules,
+				Limits:              appPlanObj.Limits,
+				Published:           appPlanObj.Published,
+			}
+			applicationPlans[appPlanKey] = appPlan
+		}
+	}
+
+	return applicationPlans, nil
+}
+
+func (p *OpenAPIProductReconciler) desiredPolicies() ([]capabilitiesv1beta1.PolicyConfig, error) {
+	var policyConfigs []capabilitiesv1beta1.PolicyConfig
+
+	// Extract OAS product extension
+	rootProductExtension, err := helper.NewOasRootProductExtension(p.openapiObj)
+	if err != nil {
+		return nil, err
+	}
+
+	if rootProductExtension != nil && rootProductExtension.Policies != nil {
+		// Loop through policies in extension and create PolicyConfigs
+		for _, policy := range rootProductExtension.Policies {
+			policyConfig := capabilitiesv1beta1.PolicyConfig{
+				Name:             policy.Name,
+				Version:          policy.Version,
+				Enabled:          policy.Enabled,
+				Configuration:    policy.Configuration,
+				ConfigurationRef: policy.ConfigurationRef,
+			}
+			policyConfigs = append(policyConfigs, policyConfig)
+		}
+	}
+
+	return policyConfigs, nil
 }
 
 func (p *OpenAPIProductReconciler) desiredPublicBasePath() (string, error) {

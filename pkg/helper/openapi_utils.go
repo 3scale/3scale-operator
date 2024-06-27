@@ -2,7 +2,9 @@ package helper
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"net/url"
 	"regexp"
 	"strings"
@@ -21,6 +23,61 @@ var (
 	// NonAlphanumRegexp not alphanumeric
 	NonAlphanumRegexp = regexp.MustCompile(`[^0-9A-Za-z]`)
 )
+
+type OasRootProductExtension struct {
+	Metrics          map[string]capabilitiesv1beta1.MetricSpec          `json:"metrics,omitempty"`
+	Policies         []capabilitiesv1beta1.PolicyConfig                 `json:"policies,omitempty"`
+	ApplicationPlans map[string]capabilitiesv1beta1.ApplicationPlanSpec `json:"applicationPlans,omitempty"`
+}
+
+// OasMappingRuleExtension contains fields from the v1beta1.MappingRuleSpec type that can only be set in an OAS extension
+type OasMappingRuleExtension struct {
+	MetricMethodRef string `json:"metricMethodRef"`
+	Increment       int    `json:"increment"`
+	// +optional
+	Last *bool `json:"last,omitempty"`
+}
+
+type OasOperationExtension struct {
+	MappingRule OasMappingRuleExtension `json:"mappingRule,omitempty"`
+}
+
+func NewOasRootProductExtension(oas *openapi3.T) (*OasRootProductExtension, error) {
+	type OasRootProductObject struct {
+		Product *OasRootProductExtension `json:"x-3scale-product,omitempty"`
+	}
+
+	data, err := oas.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	var x OasRootProductObject
+	if err = json.Unmarshal(data, &x); err != nil {
+		return nil, err
+	}
+
+	return x.Product, nil
+}
+
+func NewOasOperationExtension(oas *openapi3.Operation) (*OasOperationExtension, error) {
+	type OasOperationObject struct {
+		Operation *OasOperationExtension `json:"x-3scale-operation,omitempty"`
+	}
+
+	data, err := oas.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	var x OasOperationObject
+	if err = json.Unmarshal(data, &x); err != nil {
+		return nil, err
+	}
+
+	return x.Operation, nil
+
+}
 
 func SystemNameFromOpenAPITitle(obj *openapi3.T) string {
 	openapiTitle := obj.Info.Title
