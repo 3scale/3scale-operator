@@ -21,7 +21,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 ### TenantSpec
 
 | **Field** | **json field**| **Type** | **Info** | **Required** |
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | -- |
 | Organization Name | `organizationName` | string | Organization Name | Yes |
 | Email | `email` | string | Admin email address | Yes |
 | Admin Username | `username` | string | Admin credentials: username | Yes |
@@ -29,6 +29,10 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | Master Account Credentials Secret | `masterCredentialsRef` | object | See [Master Secret](#Master-Secret) for more details | Yes |
 | Admin Secret | `passwordCredentialsRef` | object | See [Admin Secret](#Admin-Secret) for more details | Yes |
 | Tenant Credentials Secret | `tenantSecretRef` | object | See [Tenant Secret](#Tenant-Secret) for more details | No |
+| Finance Support Email             | `financeSupportEmail` | string | Finance support email address            | No |
+| From Email                        | `fromEmail` | string | From email address                                 | No |
+| Support Email                     | `supportEmail` | string | Support email address                           | No |
+| Site Access Code                  | `siteAccessCode` | string | Site access code                              | No |
 
 #### Master Secret
 Tenants can be managed using master provider account credentials. This secret provides those credentials to the 3scale operator.

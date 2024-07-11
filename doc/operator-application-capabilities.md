@@ -1278,6 +1278,34 @@ spec:
     name: tenant-secret
 ```
 
+You can set the following optional parameters in `Tenant` CR:
+
+* fromEmail
+* supportEmail
+* financeSupportEmail
+* siteAccessCode
+
+```yaml
+apiVersion: capabilities.3scale.net/v1alpha1
+kind: Tenant
+metadata:
+  name: ecorp-tenant
+spec:
+  username: admin
+  systemMasterUrl: https://<MASTER_HOSTNAME>
+  email: admin@ecorp.com
+  organizationName: ECorp
+  masterCredentialsRef:
+    name: <MASTER_SECRET>
+  passwordCredentialsRef:
+    name: <ADMIN_SECRET*>
+  tenantSecretRef:
+    name: tenant-secret
+  fromEmail: <tenantFromEmail>
+  supportEmail: <tenantSupportEmail>
+  financeSupportEmail: <tenantFinanceSupportEmail>
+  siteAccessCode: <abc123>
+```
 Check on the fields of Tenant Custom Resource and possible values in the [Tenant CRD Reference](tenant-reference.md) documentation.
 
 Create the tenant resource:
