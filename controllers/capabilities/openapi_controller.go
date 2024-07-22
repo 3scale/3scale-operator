@@ -126,6 +126,8 @@ func (r *OpenAPIReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 func (r *OpenAPIReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&capabilitiesv1beta1.OpenAPI{}).
+		Owns(&capabilitiesv1beta1.Product{}).
+		Owns(&capabilitiesv1beta1.Backend{}).
 		Complete(r)
 }
 
