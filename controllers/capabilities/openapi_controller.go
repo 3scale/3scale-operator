@@ -20,15 +20,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/url"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"net/url"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"time"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
@@ -36,6 +40,14 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
+)
+
+const (
+	oasSecretLabelSelectorKey    = "apimanager.apps.3scale.net/watched-by"
+	oasSecretLabelSelectorValue  = "openapi"
+	openAPISecretRefLabelKey     = "apimanager.apps.3scale.net/oas-source-secret-uid"
+	pollOasURLIntervalAnnotation = "poll_url_interval"
+	defaultPollOasURLInterval    = "5m"
 )
 
 // OpenAPIReconciler reconciles a OpenAPI object
@@ -124,10 +136,26 @@ func (r *OpenAPIReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 func (r *OpenAPIReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	secretToOpenAPIEventMapper := &SecretToOpenAPIEventMapper{
+		Context:   r.Context(),
+		K8sClient: r.Client(),
+		Logger:    r.Logger().WithName("secretToOpenAPIEventMapper"),
+	}
+
+	oasSecretLabelSelectorPredicate, err := predicate.LabelSelectorPredicate(metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			oasSecretLabelSelectorKey: oasSecretLabelSelectorValue,
+		},
+	})
+	if err != nil {
+		return nil
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&capabilitiesv1beta1.OpenAPI{}).
 		Owns(&capabilitiesv1beta1.Product{}).
 		Owns(&capabilitiesv1beta1.Backend{}).
+		Watches(&corev1.Secret{}, handler.EnqueueRequestsFromMapFunc(secretToOpenAPIEventMapper.Map), builder.WatchesOption(builder.WithPredicates(oasSecretLabelSelectorPredicate))).
 		Complete(r)
 }
 
@@ -222,6 +250,15 @@ func (r *OpenAPIReconciler) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI
 	}
 
 	statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, productSynced)
+
+	// If the product is successfully synced AND the OpenAPI CR is using URL ref, then requeue after set amount of time
+	// The duration is parsed from an annotation on the OpenAPI CR
+	// We have to requeue like this in case there were updates to the URL source because we can't watch the URL directly
+	if productSynced && openapiCR.Spec.OpenAPIRef.SecretRef == nil {
+		duration := getPollURLInterval(openapiCR.GetAnnotations())
+		return statusReconciler, ctrl.Result{Requeue: true, RequeueAfter: duration}, err
+	}
+
 	return statusReconciler, ctrl.Result{Requeue: !productSynced}, err
 }
 
@@ -263,11 +300,94 @@ func (r *OpenAPIReconciler) checkProductSynced(resource *capabilitiesv1beta1.Ope
 func (r *OpenAPIReconciler) readOpenAPI(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.T, error) {
 	// OpenAPIRef is oneOf by CRD openapiV3 validation
 	if resource.Spec.OpenAPIRef.SecretRef != nil {
+		// Label the OAS source secret and OpenAPI so the secret can be watched by the openapi_controller
+		err := r.labelOpenAPISecretAndCR(resource)
+		if err != nil {
+			return nil, err
+		}
+
 		return r.readOpenAPISecret(resource)
 	}
 
 	// Must be URL
+	// Since the OpenAPI CR is URL ref, annotate it with a requeue interval so we can watch the OAS source for changes
+	err := r.annotateOpenAPICR(resource)
+	if err != nil {
+		return nil, err
+	}
+
 	return r.readOpenAPIFromURL(resource)
+}
+
+func (r *OpenAPIReconciler) labelOpenAPISecretAndCR(openAPICR *capabilitiesv1beta1.OpenAPI) error {
+	fieldErrors := field.ErrorList{}
+	specFldPath := field.NewPath("spec")
+	openapiRefFldPath := specFldPath.Child("openapiRef")
+	secretRefFldPath := openapiRefFldPath.Child("secretRef")
+
+	oasSourceSecret := &corev1.Secret{}
+	objectKey := types.NamespacedName{Name: openAPICR.Spec.OpenAPIRef.SecretRef.Name, Namespace: openAPICR.Spec.OpenAPIRef.SecretRef.Namespace}
+
+	// Read the OAS source secret
+	if err := r.Client().Get(r.Context(), objectKey, oasSourceSecret); err != nil {
+		if errors.IsNotFound(err) {
+			fieldErrors = append(fieldErrors, field.Invalid(secretRefFldPath, openAPICR.Spec.OpenAPIRef.SecretRef, "Secret not found"))
+			return &helper.SpecFieldError{
+				ErrorType:      helper.InvalidError,
+				FieldErrorList: fieldErrors,
+			}
+		}
+		// Unexpected error
+		return err
+	}
+
+	// Add label to OAS source secret so it can be watched
+	if oasSourceSecret.ObjectMeta.Labels == nil {
+		oasSourceSecret.ObjectMeta.Labels = map[string]string{}
+	}
+	oasSourceSecret.ObjectMeta.Labels[oasSecretLabelSelectorKey] = oasSecretLabelSelectorValue
+	if err := r.Client().Update(r.Context(), oasSourceSecret); err != nil {
+		return err
+	}
+
+	// Add label to OpenAPI CR with source secret's UID
+	if openAPICR.ObjectMeta.Labels == nil {
+		openAPICR.ObjectMeta.Labels = map[string]string{}
+	}
+	openAPICR.ObjectMeta.Labels[openAPISecretRefLabelKey] = string(oasSourceSecret.GetUID())
+	if err := r.Client().Update(r.Context(), openAPICR); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *OpenAPIReconciler) annotateOpenAPICR(openAPICR *capabilitiesv1beta1.OpenAPI) error {
+	if openAPICR.Annotations == nil {
+		openAPICR.Annotations = map[string]string{}
+	}
+
+	// Annotate the CR with a default requeue interval; this is so we can check the source OAS URL for changes
+	// A default interval is provided but we allow the user to override it
+	intervalStr, ok := openAPICR.Annotations[pollOasURLIntervalAnnotation]
+	if !ok {
+		openAPICR.Annotations[pollOasURLIntervalAnnotation] = defaultPollOasURLInterval
+		if err := r.Client().Update(r.Context(), openAPICR); err != nil {
+			return err
+		}
+	} else {
+		// If the user provided interval is invalid, reset it to the default value
+		// This is to ensure a valid interval exists and to let the user know that their interval couldn't be parsed
+		_, err := time.ParseDuration(intervalStr)
+		if err != nil {
+			openAPICR.Annotations[pollOasURLIntervalAnnotation] = defaultPollOasURLInterval
+			if err2 := r.Client().Update(r.Context(), openAPICR); err2 != nil {
+				return err2
+			}
+		}
+	}
+
+	return nil
 }
 
 func (r *OpenAPIReconciler) readOpenAPISecret(resource *capabilitiesv1beta1.OpenAPI) (*openapi3.T, error) {
@@ -430,6 +550,10 @@ func (r *OpenAPIReconciler) readOpenAPIFromURL(resource *capabilitiesv1beta1.Ope
 		}
 	}
 
+	// We need to add a cache-busting query parameter to the URL to ensure we are getting the latest version of the OAS source
+	// The openapi3 library will otherwise cache the previous version of the OAS source by default
+	openAPIURL.RawQuery = fmt.Sprintf("t=%d", time.Now().Unix())
+
 	openapiObj, err := openapi3.NewLoader().LoadFromURI(openAPIURL)
 	if err != nil {
 		fieldErrors = append(fieldErrors, field.Invalid(urlRefFldPath, resource.Spec.OpenAPIRef.URL, err.Error()))
@@ -497,4 +621,22 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 	}
 
 	return nil
+}
+
+func getPollURLInterval(annotations map[string]string) time.Duration {
+	defaultInterval, _ := time.ParseDuration(defaultPollOasURLInterval)
+
+	pollURLIntervalStr, ok := annotations[pollOasURLIntervalAnnotation]
+	if ok {
+		interval, err := time.ParseDuration(pollURLIntervalStr)
+		if err != nil {
+			// Return default poll interval if the annotation couldn't be parsed
+			return defaultInterval
+		}
+
+		return interval
+	}
+
+	// Return default poll interval if the annotation wasn't found
+	return defaultInterval
 }
