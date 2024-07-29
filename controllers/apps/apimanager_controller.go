@@ -230,19 +230,19 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	if !systemRedisVerified {
 		systemRedisVerified, err = helper.VerifySystemRedis(r.Client(), reqConfigMap, systemRedisRequirement, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{}, err, nil
+			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("Failed to verify system redis version. Ensure that the system-redis secret is correctly configured. Error: %s", err)
 		}
 	}
 	if !backendRedisVerified {
 		backendRedisVerified, err = helper.VerifyBackendRedis(r.Client(), reqConfigMap, backendRedisRequirement, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{}, err, nil
+			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("Failed to verify backend redis version. Ensure that the backend-redis secret is correctly configured. Error: %s", err)
 		}
 	}
 	if !systemDatabaseVerified {
 		systemDatabaseVerified, err = helper.VerifySystemDatabase(r.Client(), reqConfigMap, apimInstance, logger)
 		if err != nil {
-			return ctrl.Result{}, err, nil
+			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("Failed to verify system database version. Ensure that the system-database secret is correctly configured. Error: %s", err)
 		}
 	}
 
