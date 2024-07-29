@@ -78,6 +78,7 @@ func verifySystemRedisVersion(k8sclient client.Client, connSecret v1.Secret, nam
 
 	redisPod, err := CreateRedisThrowAwayPod(k8sclient, namespace)
 	if err != nil {
+		logger.Info("Failed to create throwaway pod")
 		return false, err
 	}
 
@@ -86,6 +87,7 @@ func verifySystemRedisVersion(k8sclient client.Client, connSecret v1.Secret, nam
 		redisCliCommand = retrieveRedisSentinelCommand(redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword, redis.sentinelGroup)
 		stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
 		if err != nil {
+			logger.Info("Failed to execute command to retrieve the system redis version")
 			return false, err
 		}
 		redis.redisHost, redis.redisPort = parseRedisSentinelResponse(stdout)
@@ -95,11 +97,13 @@ func verifySystemRedisVersion(k8sclient client.Client, connSecret v1.Secret, nam
 
 	stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
 	if err != nil {
+		logger.Info("Failed to execute command to retrieve the system redis version")
 		return false, err
 	}
 
 	currentRedisVersion, err := retrieveCurrentVersionOfRedis(stdout)
 	if err != nil {
+		logger.Info("Failed to retrieve current version of system redis from the cli command")
 		return false, err
 	}
 
@@ -113,6 +117,7 @@ func verifyBackendRedisVersion(k8sclient client.Client, connSecret v1.Secret, na
 
 	redisPod, err := CreateRedisThrowAwayPod(k8sclient, namespace)
 	if err != nil {
+		logger.Info("Failed to create throwaway pod")
 		return false, err
 	}
 
@@ -121,6 +126,7 @@ func verifyBackendRedisVersion(k8sclient client.Client, connSecret v1.Secret, na
 		redisCliCommand = retrieveRedisSentinelCommand(redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword, redis.sentinelGroup)
 		stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
 		if err != nil {
+			logger.Info("Failed to execute command to retrieve the backend redis version")
 			return false, err
 		}
 		redis.redisHost, redis.redisPort = parseRedisSentinelResponse(stdout)
@@ -130,11 +136,13 @@ func verifyBackendRedisVersion(k8sclient client.Client, connSecret v1.Secret, na
 
 	stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
 	if err != nil {
+		logger.Info("Failed to execute command to retrieve the system redis version")
 		return false, err
 	}
 
 	currentRedisVersion, err := retrieveCurrentVersionOfRedis(stdout)
 	if err != nil {
+		logger.Info("Failed to retrieve current version of Redis from the cli command")
 		return false, err
 	}
 
@@ -145,6 +153,7 @@ func verifyBackendRedisVersion(k8sclient client.Client, connSecret v1.Secret, na
 		redisCliCommand = retrieveRedisSentinelCommand(redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword, redis.sentinelGroup)
 		stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
 		if err != nil {
+			logger.Info("Failed to execute command to retrieve the version")
 			return false, err
 		}
 		redis.redisHost, redis.redisPort = parseRedisSentinelResponse(stdout)
@@ -154,11 +163,13 @@ func verifyBackendRedisVersion(k8sclient client.Client, connSecret v1.Secret, na
 
 	stdout, err = executeRedisCliCommand(*redisPod, redisCliCommand, logger)
 	if err != nil {
+		logger.Info("Failed to execute command to retrieve the version")
 		return false, err
 	}
 
 	currentRedisVersion, err = retrieveCurrentVersionOfRedis(stdout)
 	if err != nil {
+		logger.Info("Failed to retrieve current version of Redis from the cli command")
 		return false, err
 	}
 
