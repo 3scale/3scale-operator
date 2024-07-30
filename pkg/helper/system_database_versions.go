@@ -39,6 +39,7 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 	// validate secret URL
 	databaseUrl, bypass, err := systemDatabaseURLIsValid(string(connSecret.Data["URL"]))
 	if err != nil {
+		logger.Info("System database secret is invalid")
 		return false, err
 	}
 	if bypass {
@@ -97,6 +98,7 @@ func databaseObject(url *url.URL) SystemDatabase {
 func verifySystemPostgresDatabaseVersion(k8sclient client.Client, namespace, requiredVersion string, databaseObject SystemDatabase, logger logr.Logger) (bool, error) {
 	databasePod, err := CreateDatabaseThrowAwayPod(k8sclient, namespace, "postgres")
 	if err != nil {
+		logger.Info("Failed to create system database throwaway pod")
 		return false, err
 	}
 
@@ -109,14 +111,15 @@ func verifySystemPostgresDatabaseVersion(k8sclient client.Client, namespace, req
 	podExecutor := NewPodExecutor(logger)
 	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(databasePod.Namespace, databasePod.Name, command)
 	if err != nil {
-		return false, fmt.Errorf("failed to confirm database version")
+		return false, fmt.Errorf("Failed to execute command to retrieve database version. Error %s", err)
 	}
 	if stderr != "" {
-		return false, fmt.Errorf("error when executing pod exec command to retrieve database version")
+		return false, fmt.Errorf("Failed to execute command to retrieve database version. Error %s", err)
 	}
 
 	currentPostgresVersion, err := retrievePostgresVersion(stdout)
 	if err != nil {
+		logger.Info("Failed to retrieve postgres version from the cli command")
 		return false, err
 	}
 
@@ -142,14 +145,15 @@ func verifySystemMysqlDatabaseVersion(k8sclient client.Client, namespace, requir
 	podExecutor := NewPodExecutor(logger)
 	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(databasePod.Namespace, databasePod.Name, command)
 	if err != nil {
-		return false, fmt.Errorf("failed to confirm database version")
+		return false, fmt.Errorf("Failed to execute command to retrieve database version. Error %s", err)
 	}
 	if stderr != "" {
-		return false, fmt.Errorf("error when executing pod exec command to retrieve database version")
+		return false, fmt.Errorf("Failed to execute command to retrieve database version. Error %s", err)
 	}
 
 	currentMysqlVersion, err := retrieveMysqlVersion(stdout)
 	if err != nil {
+		logger.Info("Failed to retrieve postgres version from the cli command")
 		return false, err
 	}
 
