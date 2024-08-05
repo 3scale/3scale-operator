@@ -743,13 +743,12 @@ spec:
 #### Setting Horizontal Pod Autoscaling 
 Horizontal Pod Autoscaling(HPA) is available for Apicast-production, Backend-listener and Backend-worker. The backend
 components require Redis running [async mode](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#async). 
-Async is enabled by default by the operator provided you aren't using [logical Redis databases](https://github.com/3scale/apisonator/blob/master/docs/openshift_horizontal_scaling.md#redis-databases).
-If you are not running in Async mode you won't be able to enable HPA for the backend.
+Async is enabled by default by the operator.
 
 > **NOTE:** If ResourceRequirementsEnabled is set to false HPA can't function as there are no resources set for it to 
 > compare to.
 
-Provided you are running in Async mode, you can enable hpa for the components and accept the default configuration which
+You can enable hpa for the components and accept the default configuration which
 will give you a HPA with 85% resources set and max and min pods set to 5 and 1. The following is an example of the 
 output HPA for backend-worker using the defaults. 
 
