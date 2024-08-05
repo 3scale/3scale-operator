@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	Version           = "0.12.1"
+	Version           = "0.12.0"
 	threescaleRelease = "2.15.0"
 )
 
