@@ -350,6 +350,12 @@ func (r *OpenAPIReconciler) labelOpenAPISecretAndCR(openAPICR *capabilitiesv1bet
 		return err
 	}
 
+	// Re-fetch the OpenAPI CR in case it's been modified
+	objectKey = types.NamespacedName{Name: openAPICR.Name, Namespace: openAPICR.Namespace}
+	if err := r.Client().Get(r.Context(), objectKey, openAPICR); err != nil {
+		return err
+	}
+
 	// Add label to OpenAPI CR with source secret's UID
 	if openAPICR.ObjectMeta.Labels == nil {
 		openAPICR.ObjectMeta.Labels = map[string]string{}
@@ -363,6 +369,12 @@ func (r *OpenAPIReconciler) labelOpenAPISecretAndCR(openAPICR *capabilitiesv1bet
 }
 
 func (r *OpenAPIReconciler) annotateOpenAPICR(openAPICR *capabilitiesv1beta1.OpenAPI) error {
+	// Re-fetch the OpenAPI CR in case it's been modified
+	objectKey := types.NamespacedName{Name: openAPICR.Name, Namespace: openAPICR.Namespace}
+	if err := r.Client().Get(r.Context(), objectKey, openAPICR); err != nil {
+		return err
+	}
+
 	if openAPICR.Annotations == nil {
 		openAPICR.Annotations = map[string]string{}
 	}
