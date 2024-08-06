@@ -230,16 +230,9 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// create or delete HPA
-	sentinelHost := GetSystemRedisSecret(r.apiManager.Namespace, r.Context(), r.Client(), r.logger)
-	if !sentinelHost {
-		err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	} else {
-		message := "SentinelHost with authentication found in the system, which is blocking redis async mode, horizontal pod autoscaling for backend cannot be enabled without async mode"
-		r.logger.Info(message)
+	err = r.ReconcileHpa(component.DefaultHpa(component.ApicastProductionName, r.apiManager.Namespace), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	res, err := r.reconcileAPImanagerCR(context.TODO())

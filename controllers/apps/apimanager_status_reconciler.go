@@ -297,6 +297,26 @@ func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *com
 	if !cr.Spec.Backend.ListenerSpec.Hpa && !cr.Spec.Backend.WorkerSpec.Hpa && !cr.Spec.Apicast.ProductionSpec.Hpa && foundCondition != nil {
 		conditions.RemoveConditionByMessage(cond.Message)
 	}
+
+	cond = common.Condition{
+		Type:    appsv1alpha1.APIManagerWarningConditionType,
+		Status:  v1.ConditionStatus(metav1.ConditionTrue),
+		Reason:  "HPA",
+		Message: "HorizontalPodAutoscaling (Hpa). Discovered async disabled annotation and Hpa enabled for backend. Hpa for backends will now be disabled.",
+	}
+
+	// check if condition is already present
+	foundCondition = conditions.GetConditionByMessage(cond.Message)
+
+	// If hpa is enabled but the condition is not found, add it
+	if cr.IsBackendHpaEnabled() && cr.IsAsyncDisableAnnotationPresent() && foundCondition == nil {
+		*conditions = append(*conditions, cond)
+	}
+
+	// if hpa is disabled and async disable is true and condition is found, remove it
+	if foundCondition != nil && (!cr.IsBackendHpaEnabled() || !cr.IsAsyncDisableAnnotationPresent()) {
+		conditions.RemoveConditionByMessage(cond.Message)
+	}
 }
 
 func (s *APIManagerStatusReconciler) reconcileOpenTracingDeprecationMessage(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {
