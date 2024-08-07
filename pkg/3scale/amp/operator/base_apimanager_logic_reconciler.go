@@ -161,15 +161,20 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileServiceMonitor(desired *monitor
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcileHpa(desired *hpa.HorizontalPodAutoscaler, mutateFn reconcilers.MutateFn) error {
+	// Only allow to create Apicast HPA regardless of running async mode or not.
 	if desired.Spec.ScaleTargetRef.Name == component.ApicastProductionName && r.apiManager.Spec.Apicast.ProductionSpec.Hpa {
 		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
 	}
-	if desired.Spec.ScaleTargetRef.Name == component.BackendListenerName && r.apiManager.Spec.Backend.ListenerSpec.Hpa {
-		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
+	// Only create the HPA objects if async is not disabled
+	if !r.apiManager.IsAsyncDisableAnnotationPresent() {
+		if desired.Spec.ScaleTargetRef.Name == component.BackendListenerName && r.apiManager.Spec.Backend.ListenerSpec.Hpa {
+			return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
+		}
+		if desired.Spec.ScaleTargetRef.Name == component.BackendWorkerName && r.apiManager.Spec.Backend.WorkerSpec.Hpa {
+			return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
+		}
 	}
-	if desired.Spec.ScaleTargetRef.Name == component.BackendWorkerName && r.apiManager.Spec.Backend.WorkerSpec.Hpa {
-		return r.ReconcileResource(&hpa.HorizontalPodAutoscaler{}, desired, mutateFn)
-	}
+	// Delete HPA in all other cases
 	err := r.DeleteResource(desired)
 	if err != nil && !errors.IsNotFound(err) {
 		return err
