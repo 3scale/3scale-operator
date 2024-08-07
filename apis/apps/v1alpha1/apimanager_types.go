@@ -41,6 +41,7 @@ const (
 	OperatorVersionAnnotation       = "apps.3scale.net/threescale-operator-version"
 	Default3scaleAppLabel           = "3scale-api-management"
 	ThreescaleRequirementsConfirmed = "apps.3scale.net/apimanager-confirmed-requirements-version"
+	DisableAsyncAnnotation          = "apps.3scale.net/disable-async"
 )
 
 const (
@@ -1319,6 +1320,30 @@ func (apimanager *APIManager) IsS3STSEnabled() bool {
 
 func (apimanager *APIManager) IsS3IAMEnabled() bool {
 	return apimanager.IsS3Enabled() && !apimanager.IsS3STSEnabled()
+}
+
+func (apimanager *APIManager) IsApicastHpaEnabled() bool {
+	return apimanager.Spec.Apicast != nil &&
+		apimanager.Spec.Apicast.ProductionSpec != nil &&
+		apimanager.Spec.Apicast.ProductionSpec.Hpa
+}
+
+func (apimanager *APIManager) IsBackendHpaEnabled() bool {
+	return apimanager.Spec.Backend != nil &&
+		apimanager.Spec.Backend.WorkerSpec != nil &&
+		apimanager.Spec.Backend.WorkerSpec.Hpa ||
+		apimanager.Spec.Backend != nil &&
+			apimanager.Spec.Backend.ListenerSpec != nil &&
+			apimanager.Spec.Backend.ListenerSpec.Hpa
+}
+
+func (apimanager *APIManager) IsAsyncDisableAnnotationPresent() bool {
+	asyncDisabledFound := false
+	if val, ok := apimanager.Annotations[DisableAsyncAnnotation]; ok && val == "true" {
+		asyncDisabledFound = true
+	}
+
+	return asyncDisabledFound
 }
 
 func (apimanager *APIManager) Validate() field.ErrorList {
