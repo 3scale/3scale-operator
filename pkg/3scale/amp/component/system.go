@@ -20,8 +20,6 @@ const (
 	SystemSecretSystemDatabaseSecretName            = "system-database"
 	SystemSecretSystemDatabaseURLFieldName          = "URL"
 	SystemSecretSystemDatabaseDatabaseNameFieldName = "DB_NAME"
-	SystemSecretSystemDatabaseUserFieldName         = "DB_USER"
-	SystemSecretSystemDatabasePasswordFieldName     = "DB_PASSWORD"
 	SystemSecretSystemDatabaseRootPasswordFieldName = "DB_ROOT_PASSWORD"
 )
 
