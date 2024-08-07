@@ -2,20 +2,22 @@ package controllers
 
 import (
 	"context"
-	"github.com/3scale/3scale-operator/pkg/helper"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"reflect"
 	"testing"
+	"time"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
@@ -23,6 +25,130 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+func Test_getPollURLInterval(t *testing.T) {
+	twoMinuteDuration, _ := time.ParseDuration("2m")
+	defaultDuration, _ := time.ParseDuration(defaultPollOasURLInterval)
+
+	type args struct {
+		annotations map[string]string
+	}
+	tests := []struct {
+		name string
+		args args
+		want time.Duration
+	}{
+		{
+			name: "valid custom annotation",
+			args: args{
+				annotations: map[string]string{
+					pollOasURLIntervalAnnotation: "2m",
+				},
+			},
+			want: twoMinuteDuration,
+		},
+		{
+			name: "invalid custom annotation",
+			args: args{
+				annotations: map[string]string{
+					pollOasURLIntervalAnnotation: "invalid",
+				},
+			},
+			want: defaultDuration,
+		},
+		{
+			name: "missing annotation",
+			args: args{},
+			want: defaultDuration,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getPollURLInterval(tt.args.annotations); got != tt.want {
+				t.Errorf("getPollURLInterval() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOpenAPIReconciler_annotateOpenAPICR(t *testing.T) {
+	validOpenAPICR := getOpenAPICR()
+	validOpenAPICR.Annotations = map[string]string{
+		pollOasURLIntervalAnnotation: "2m",
+	}
+
+	invalidOpenAPICR := getOpenAPICR()
+	invalidOpenAPICR.Annotations = map[string]string{
+		pollOasURLIntervalAnnotation: "invalid-duration",
+	}
+
+	type fields struct {
+		BaseReconciler *reconcilers.BaseReconciler
+	}
+	type args struct {
+		openAPICR *capabilitiesv1beta1.OpenAPI
+	}
+	tests := []struct {
+		name               string
+		fields             fields
+		args               args
+		wantErr            bool
+		desiredAnnotations map[string]string
+	}{
+		{
+			name: "valid custom annotation",
+			fields: fields{
+				BaseReconciler: getOpenAPIBaseReconciler(validOpenAPICR, getValidOpenAPISecret()),
+			},
+			args: args{
+				openAPICR: validOpenAPICR,
+			},
+			wantErr: false,
+			desiredAnnotations: map[string]string{
+				pollOasURLIntervalAnnotation: "2m",
+			},
+		},
+		{
+			name: "invalid custom annotation",
+			fields: fields{
+				BaseReconciler: getOpenAPIBaseReconciler(invalidOpenAPICR, getValidOpenAPISecret()),
+			},
+			args: args{
+				openAPICR: invalidOpenAPICR,
+			},
+			wantErr: false,
+			desiredAnnotations: map[string]string{
+				pollOasURLIntervalAnnotation: "5m",
+			},
+		},
+		{
+			name: "no existing annotation",
+			fields: fields{
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
+			},
+			args: args{
+				openAPICR: getOpenAPICR(),
+			},
+			wantErr: false,
+			desiredAnnotations: map[string]string{
+				pollOasURLIntervalAnnotation: "5m",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &OpenAPIReconciler{
+				BaseReconciler: tt.fields.BaseReconciler,
+			}
+			if err := r.annotateOpenAPICR(tt.args.openAPICR); (err != nil) != tt.wantErr {
+				t.Errorf("annotateOpenAPICR() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(tt.args.openAPICR.Annotations, tt.desiredAnnotations) {
+				t.Errorf("annotateOpenAPICR() incorrect annotations; got = %v, want %v", tt.args.openAPICR.Annotations, tt.desiredAnnotations)
+			}
+		})
+	}
+}
 
 func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 	productExtensionPath := field.NewPath("x-3scale-product")
@@ -44,7 +170,7 @@ func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 		{
 			name: "valid OAS",
 			fields: fields{
-				BaseReconciler: getBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
 			},
 			args: args{
 				openapiObj: getOpenAPIObj(getValidOpenAPISecret()),
@@ -54,7 +180,7 @@ func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 		{
 			name: "unextended OAS",
 			fields: fields{
-				BaseReconciler: getBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
 			},
 			args: args{
 				openapiObj: getOpenAPIObj(getUnextendedOpenAPISecret()),
@@ -64,7 +190,7 @@ func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 		{
 			name: "bad OAS",
 			fields: fields{
-				BaseReconciler: getBaseReconciler(getOpenAPICR(), getBadExtendedOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getBadExtendedOpenAPISecret()),
 			},
 			args: args{
 				openapiObj: getOpenAPIObj(getBadExtendedOpenAPISecret()),
@@ -112,7 +238,8 @@ func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 		})
 	}
 }
-func getTestBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.BaseReconciler) {
+
+func getOpenAPIBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.BaseReconciler) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	err := capabilitiesv1beta1.AddToScheme(s)
@@ -152,7 +279,6 @@ func getOpenAPITestLogger() logr.Logger {
 
 func getOpenAPICR() *capabilitiesv1beta1.OpenAPI {
 	return &capabilitiesv1beta1.OpenAPI{
-		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "testCR",
 			Namespace: "testNamespace",
@@ -170,7 +296,7 @@ func getOpenAPICR() *capabilitiesv1beta1.OpenAPI {
 
 func getOpenAPIObj(openAPISecret *corev1.Secret) *openapi3.T {
 	openAPIReconciler := OpenAPIReconciler{
-		BaseReconciler: getTestBaseReconciler(openAPISecret),
+		BaseReconciler: getOpenAPIBaseReconciler(openAPISecret, getOpenAPICR()),
 	}
 
 	openapiObj, err := openAPIReconciler.readOpenAPI(getOpenAPICR())
