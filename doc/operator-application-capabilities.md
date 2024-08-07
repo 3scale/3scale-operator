@@ -46,7 +46,7 @@ The following diagram shows available custom resource definitions and their rela
       * [Product custom resource status field](#product-custom-resource-status-field)
       * [Link your 3scale product to your 3scale tenant or provider account](#link-your-3scale-product-to-your-3scale-tenant-or-provider-account)
    * [ProxyConfigPromote custom resource](#proxyconfigpromote-custom-resource)
-      * [ProxyConfigPromote custom resource status field](#proxyconfigpromote-custom-resource-status-field)  
+      * [ProxyConfigPromote custom resource status field](#proxyconfigpromote-custom-resource-status-field)
    * [OpenAPI custom resource](#openapi-custom-resource)
    * [ActiveDoc custom resource](#activedoc-custom-resource)
       * [Features](#features)
@@ -565,7 +565,7 @@ spec:
 * **NOTE 1**: `httpMethod`, `pattern`, `increment` and `metricMethodRef` fields are required.
 * **NOTE 2**: `metricMethodRef` holds a reference to the existing metric or method map key name `system_name`. In the example, `hits`.
 * **NOTE 3**: If you update Product CR and delete both Method and Mapping Rule using this method - please expect following behavior:
-  - the Mapping Rule will be deleted immediately in 3scale Portal - Product/Integration/Mapping Rules 
+  - the Mapping Rule will be deleted immediately in 3scale Portal - Product/Integration/Mapping Rules
   - If the configuration was promoted to stage or/and production a warning appears in Product CR informing that the Method is used by the latest gateway configuration, it will be removed from 3scale only once the promotion without the mapping rule that uses the deleted method is done.
 
 ### Product application plans
@@ -711,17 +711,54 @@ spec:
 
 * **NOTE 1**: `apicast` policy item will be added by the operator if not included.
 
-Alternatively, the configuration for the policy can be referenced in a secret, for example:
+Alternatively, the configuration for a given policy can be referenced in a secret.
+This is particularly interesting when the configuration contains sensitive data.
+
+For example, let's create a secret called `my-caching-config` with the configuration for the `Content caching` policy:
+
 ```yaml
+oc apply -f - <<END
+---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: config-policy
+  name: my-caching-config
 type: Opaque
 stringData:
-  configuration: "{\"http_proxy\":\"http://secret.com\"}"
+  configuration: |
+    {
+      "rules": [
+        {
+          "header": "X-Cache-Status",
+          "condition": {
+            "operations": [
+              {
+                "left_type": "plain",
+                "right_type": "plain",
+                "op": "==",
+                "right": "GET",
+                "left": "ein"
+              },
+              {
+                "left_type": "plain",
+                "right_type": "plain",
+                "op": "!=",
+                "right": "RIGHTein",
+                "left": "elftein"
+              }
+            ],
+            "combine_op": "and"
+          },
+          "cache": true
+        }
+      ]
+    }
+END
 ```
-* **NOTE 1**: `configuration` field must be used to contain the policy configuration.
+
+> **NOTE 1**: `configuration` field must be used to contain the policy configuration.
+
+> **NOTE 2**: The configuration value **must** be `json` encoded value.
 
 This secret can then be referenced using the `configurationRef` field in the policy.
 
@@ -734,8 +771,8 @@ spec:
   name: "OperatedProduct 1"
   policies:
   - configurationRef:
-       name: config-policy
-    name: camel
+        name: my-caching-config
+    name: content_caching
     version: builtin
     enabled: true
 ```
@@ -970,8 +1007,8 @@ status:
 e.g. of a product with nothing to promote
 
 ```yaml
-status: 
-  conditions: 
+status:
+  conditions:
     - lastTransitionTime: '2023-09-05T07:48:08Z'
       message: >-
         can't promote to production as no product changes detected, delete the
@@ -1837,8 +1874,8 @@ kind: ApplicationAuth
 metadata:
   name: applicationAuth-cr2
 spec:
-  applicationCRName: example 
-  authSecretRef: 
+  applicationCRName: example
+  authSecretRef:
      name: auth-secret2
 ```
 The values in the auth-secret2 will remain the same and note that the ApplicationID is populated e.g.
@@ -1880,10 +1917,10 @@ status:
       type: Failed
       message: 'ApplicationKey or UserKey of this value already exists for this application update your authSecretRef with a new value'
 ```
-Reasons for a failed state are usually an API limitation 
-Some reasons for failure are 
+Reasons for a failed state are usually an API limitation
+Some reasons for failure are
 - Key already exist for the application
-- Key length needs to be longer than five characters 
+- Key length needs to be longer than five characters
 - There is a 5 key limit on the ApplicationKeys
 
 [ApplicationAuth CRD reference](applicationauth-reference.md) for more info about fields.
