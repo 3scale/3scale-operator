@@ -205,12 +205,20 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(apicast.ApicastMainAppGrafanaDashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboards(apicast.ApicastMainAppGrafanaV5Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileGrafanaDashboards(apicast.ApicastServicesGrafanaV5Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(apicast.ApicastServicesGrafanaDashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboards(apicast.ApicastMainAppGrafanaV4Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileGrafanaDashboards(apicast.ApicastServicesGrafanaV4Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

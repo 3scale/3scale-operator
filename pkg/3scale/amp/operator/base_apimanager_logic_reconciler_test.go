@@ -198,6 +198,19 @@ func TestBaseAPIManagerLogicReconcilerHasPrometheusRules(t *testing.T) {
 }
 
 func TestBaseAPIManagerLogicReconcilerHasGrafanaDashboards(t *testing.T) {
+	// Register operator types with the runtime scheme.
+	s := scheme.Scheme
+	if err := appsv1alpha1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := monitoringv1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+	if err := grafanav1alpha1.AddToScheme(s); err != nil {
+		t.Fatal(err)
+	}
+
 	var (
 		apimanagerName = "example-apimanager"
 		namespace      = "operator-unittest"
@@ -211,15 +224,6 @@ func TestBaseAPIManagerLogicReconcilerHasGrafanaDashboards(t *testing.T) {
 			Namespace: namespace,
 		},
 		Spec: appsv1alpha1.APIManagerSpec{},
-	}
-
-	// Register operator types with the runtime scheme.
-	s := scheme.Scheme
-	if err := monitoringv1.AddToScheme(s); err != nil {
-		t.Fatal(err)
-	}
-	if err := grafanav1alpha1.AddToScheme(s); err != nil {
-		t.Fatal(err)
 	}
 
 	// Objects to track in the fake client.
@@ -290,7 +294,7 @@ func TestBaseAPIManagerLogicReconcilerHasGrafanaDashboards(t *testing.T) {
 	// with the resource now removed. We now should receive that it does not
 	// exist
 	apimanagerLogicReconciler = NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
-	exists, err = apimanagerLogicReconciler.HasGrafanaDashboards()
+	exists, err = apimanagerLogicReconciler.HasGrafanaV4Dashboards()
 	if err != nil {
 		t.Fatalf("Unexpected error received: %s", err)
 	}

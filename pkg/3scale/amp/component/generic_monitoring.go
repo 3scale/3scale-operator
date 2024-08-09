@@ -6,6 +6,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
+	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -34,7 +35,32 @@ const (
 	ThreescaleSystemApp5XXRequestsHighURL              = "https://github.com/3scale/3scale-Operations/blob/master/sops/alerts/system_app_5xx_requests_high.adoc"
 )
 
-func KubernetesResourcesByNamespaceGrafanaDashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
+func KubernetesResourcesByNamespaceGrafanaV5Dashboard(sumRate, ns, appLabel string) *grafanav1beta1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
+	}{
+		ns, sumRate,
+	}
+	return &grafanav1beta1.GrafanaDashboard{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "kubernetes-resources-by-namespace",
+			Labels: map[string]string{
+				"monitoring-key": common.MonitoringKey,
+				"app":            appLabel,
+			},
+		},
+		Spec: grafanav1beta1.GrafanaDashboardSpec{
+			InstanceSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"apim-management": "grafana",
+				},
+			},
+			Json: assets.TemplateAsset("monitoring/kubernetes-resources-by-namespace-grafana-dashboard-1.json.tpl", data),
+		},
+	}
+}
+
+func KubernetesResourcesByNamespaceGrafanaV4Dashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace, SumRate string
 	}{
@@ -54,7 +80,7 @@ func KubernetesResourcesByNamespaceGrafanaDashboard(sumRate, ns, appLabel string
 	}
 }
 
-func KubernetesResourcesByPodGrafanaDashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
+func KubernetesResourcesByPodGrafanaV4Dashboard(sumRate, ns, appLabel string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace, SumRate string
 	}{
@@ -69,6 +95,31 @@ func KubernetesResourcesByPodGrafanaDashboard(sumRate, ns, appLabel string) *gra
 			},
 		},
 		Spec: grafanav1alpha1.GrafanaDashboardSpec{
+			Json: assets.TemplateAsset("monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl", data),
+		},
+	}
+}
+
+func KubernetesResourcesByPodGrafanaV5Dashboard(sumRate, ns, appLabel string) *grafanav1beta1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
+	}{
+		ns, sumRate,
+	}
+	return &grafanav1beta1.GrafanaDashboard{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "kubernetes-resources-by-pod",
+			Labels: map[string]string{
+				"monitoring-key": common.MonitoringKey,
+				"app":            appLabel,
+			},
+		},
+		Spec: grafanav1beta1.GrafanaDashboardSpec{
+			InstanceSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"apim-management": "grafana",
+				},
+			},
 			Json: assets.TemplateAsset("monitoring/kubernetes-resources-by-pod-grafana-dashboard-1.json.tpl", data),
 		},
 	}

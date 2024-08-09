@@ -170,7 +170,12 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(backend.BackendGrafanaDashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboards(backend.BackendGrafanaV5Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = r.ReconcileGrafanaDashboards(backend.BackendGrafanaV4Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

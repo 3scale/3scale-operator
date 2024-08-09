@@ -184,7 +184,11 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(zync.ZyncGrafanaDashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboards(zync.ZyncGrafanaV5Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileGrafanaDashboards(zync.ZyncGrafanaV4Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

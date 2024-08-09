@@ -6,6 +6,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/assets"
 	"github.com/3scale/3scale-operator/pkg/common"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
+	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,7 +51,29 @@ func (backend *Backend) BackendWorkerPodMonitor() *monitoringv1.PodMonitor {
 	}
 }
 
-func (backend *Backend) BackendGrafanaDashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
+func (backend *Backend) BackendGrafanaV5Dashboard(sumRate string) *grafanav1beta1.GrafanaDashboard {
+	data := &struct {
+		Namespace, SumRate string
+	}{
+		backend.Options.Namespace, sumRate,
+	}
+	return &grafanav1beta1.GrafanaDashboard{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "backend",
+			Labels: backend.monitoringLabels(),
+		},
+		Spec: grafanav1beta1.GrafanaDashboardSpec{
+			InstanceSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"apim-management": "grafana",
+				},
+			},
+			Json: assets.TemplateAsset("monitoring/backend-grafana-dashboard-1.json.tpl", data),
+		},
+	}
+}
+
+func (backend *Backend) BackendGrafanaV4Dashboard(sumRate string) *grafanav1alpha1.GrafanaDashboard {
 	data := &struct {
 		Namespace, SumRate string
 	}{
