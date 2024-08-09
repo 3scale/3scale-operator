@@ -1,0 +1,23 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: example-grafana
+  labels:
+    apim-management: grafana
+spec:
+  config:
+    log:
+      mode: "console"
+      level: "debug"
+    security:
+      admin_password: "1234"
+      admin_user: "admin"
+    auth:
+      disable_login_form: "false"
+      disable_signout_menu: "true"
+    auth.basic:
+      enabled: "true"
+    auth.anonymous:
+      enabled: "true"
+  ingress:
+    enabled: true

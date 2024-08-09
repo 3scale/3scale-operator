@@ -24,14 +24,26 @@ func (r *GenericMonitoringReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	grafanaDashboard := component.KubernetesResourcesByNamespaceGrafanaDashboard(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
-	err = r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
+	grafanaDashboard := component.KubernetesResourcesByNamespaceGrafanaV5Dashboard(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	err = r.ReconcileGrafanaDashboards(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	grafanaDashboard = component.KubernetesResourcesByPodGrafanaDashboard(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
-	err = r.ReconcileGrafanaDashboard(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
+	grafanaDashboard = component.KubernetesResourcesByPodGrafanaV5Dashboard(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	err = r.ReconcileGrafanaDashboards(grafanaDashboard, reconcilers.GenericGrafanaDashboardsMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	grafanaV4Dashboard := component.KubernetesResourcesByNamespaceGrafanaV4Dashboard(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	err = r.ReconcileGrafanaDashboards(grafanaV4Dashboard, reconcilers.GenericGrafanaDashboardsMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	grafanaV4Dashboard = component.KubernetesResourcesByPodGrafanaV4Dashboard(sumRate, r.apiManager.Namespace, *r.apiManager.Spec.AppLabel)
+	err = r.ReconcileGrafanaDashboards(grafanaV4Dashboard, reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
