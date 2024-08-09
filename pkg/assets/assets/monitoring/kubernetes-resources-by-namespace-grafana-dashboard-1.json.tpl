@@ -1642,6 +1642,11 @@
     "templating": {
       "list": [
         {
+          "current": {
+            "tags": [],
+            "text": "{{ .Namespace }}",
+            "value": "{{ .Namespace }}"
+          },
           "hide": 0,
           "includeAll": false,
           "label": null,
@@ -1655,6 +1660,11 @@
           "type": "datasource"
         },
         {
+          "current": {
+            "tags": [],
+            "text": "{{ .Namespace }}",
+            "value": "{{ .Namespace }}"
+          },
           "allValue": null,
           "datasource": "$datasource",
           "definition": "",
@@ -1676,12 +1686,12 @@
           "useTags": false
         },
         {
-          "allValue": null,
           "current": {
             "tags": [],
             "text": "{{ .Namespace }}",
             "value": "{{ .Namespace }}"
           },
+          "allValue": null,
           "hide": 0,
           "includeAll": false,
           "label": "namespace",
@@ -1699,6 +1709,11 @@
           "type": "custom"
         },
         {
+          "current": {
+            "tags": [],
+            "text": "{{ .Namespace }}",
+            "value": "{{ .Namespace }}"
+          },
           "allValue": null,
           "auto": false,
           "auto_count": 30,

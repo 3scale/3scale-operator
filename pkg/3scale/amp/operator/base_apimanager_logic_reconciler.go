@@ -10,6 +10,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
+	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -31,10 +32,11 @@ type BaseAPIManagerLogicReconciler struct {
 }
 
 type baseAPIManagerLogicReconcilerCRDAvailabilityCache struct {
-	grafanaDashboardCRDAvailable *bool
-	prometheusRuleCRDAvailable   *bool
-	podMonitorCRDAvailable       *bool
-	serviceMonitorCRDAvailable   *bool
+	grafanaDashboardCRDV5Available *bool
+	grafanaDashboardCRDV4Available *bool
+	prometheusRuleCRDAvailable     *bool
+	podMonitorCRDAvailable         *bool
+	serviceMonitorCRDAvailable     *bool
 }
 
 func NewBaseAPIManagerLogicReconciler(b *reconcilers.BaseReconciler, apiManager *appsv1alpha1.APIManager) *BaseAPIManagerLogicReconciler {
@@ -97,25 +99,57 @@ func (r *BaseAPIManagerLogicReconciler) ReconcileJob(desired *batchv1.Job, mutat
 	return r.ReconcileResource(&batchv1.Job{}, desired, mutateFn)
 }
 
-func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboard(desired *grafanav1alpha1.GrafanaDashboard, mutateFn reconcilers.MutateFn) error {
-	kindExists, err := r.HasGrafanaDashboards()
+func (r *BaseAPIManagerLogicReconciler) ReconcileGrafanaDashboards(
+	desired interface{},
+	mutateFn reconcilers.MutateFn,
+) error {
+	// Check for CRD availability
+	dashboardsAvailable, err := r.HasGrafanaDashboards()
 	if err != nil {
 		return err
 	}
 
-	if !kindExists {
-		if r.apiManager.IsMonitoringEnabled() {
-			errToLog := fmt.Errorf("Error creating grafana dashboard object '%s'. Install grafana-operator in your cluster to create grafana dashboard objects", desired.Name)
-			r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
-			r.logger.Error(errToLog, "ReconcileError")
+	// Reconcile based on the type of the desired object
+	switch d := desired.(type) {
+	case *grafanav1beta1.GrafanaDashboard:
+		if dashboardsAvailable && *r.crdAvailabilityCache.grafanaDashboardCRDV5Available {
+			if !r.apiManager.IsMonitoringEnabled() {
+				common.TagObjectToDelete(d)
+			}
+			return r.ReconcileResource(d, d, mutateFn)
 		}
-		return nil
+
+	case *grafanav1alpha1.GrafanaDashboard:
+		if dashboardsAvailable && *r.crdAvailabilityCache.grafanaDashboardCRDV4Available {
+			if !r.apiManager.IsMonitoringEnabled() {
+				common.TagObjectToDelete(d)
+			}
+			return r.ReconcileResource(d, d, mutateFn)
+		}
+
+	default:
+		return fmt.Errorf("unsupported GrafanaDashboard type: %T", d)
 	}
 
-	if !r.apiManager.IsMonitoringEnabled() {
-		common.TagObjectToDelete(desired)
+	// Log error only if neither v4 nor v5 CRDs are available
+	if !dashboardsAvailable && r.apiManager.IsMonitoringEnabled() {
+		errToLog := fmt.Errorf("Error creating grafana dashboard object '%s'. Install grafana-operator in your cluster to create grafana dashboard objects", getName(desired))
+		r.EventRecorder().Eventf(r.apiManager, v1.EventTypeWarning, "ReconcileError", errToLog.Error())
+		r.logger.Error(errToLog, "ReconcileError")
 	}
-	return r.ReconcileResource(&grafanav1alpha1.GrafanaDashboard{}, desired, mutateFn)
+
+	return nil
+}
+
+func getName(desired interface{}) string {
+	switch d := desired.(type) {
+	case *grafanav1beta1.GrafanaDashboard:
+		return d.Name
+	case *grafanav1alpha1.GrafanaDashboard:
+		return d.Name
+	default:
+		return "unknown"
+	}
 }
 
 func (r *BaseAPIManagerLogicReconciler) ReconcilePrometheusRules(desired *monitoringv1.PrometheusRule, mutateFn reconcilers.MutateFn) error {
@@ -258,16 +292,27 @@ func (r *BaseAPIManagerLogicReconciler) Logger() logr.Logger {
 }
 
 func (b *BaseAPIManagerLogicReconciler) HasGrafanaDashboards() (bool, error) {
-	if b.crdAvailabilityCache.grafanaDashboardCRDAvailable == nil {
-		res, err := b.BaseReconciler.HasGrafanaDashboards()
+	// Check if we need to update the cache
+	if b.crdAvailabilityCache.grafanaDashboardCRDV4Available == nil || b.crdAvailabilityCache.grafanaDashboardCRDV5Available == nil {
+		var err error
+		// Check for Grafana V4 Dashboards
+		v4Available, err := b.BaseReconciler.HasGrafanaV4Dashboards()
 		if err != nil {
-			return res, err
+			return false, err
 		}
-		b.crdAvailabilityCache.grafanaDashboardCRDAvailable = &res
-		return res, err
+		b.crdAvailabilityCache.grafanaDashboardCRDV4Available = &v4Available
+
+		// Check for Grafana V5 Dashboards
+		v5Available, err := b.BaseReconciler.HasGrafanaV5Dashboards()
+		if err != nil {
+			return false, err
+		}
+		b.crdAvailabilityCache.grafanaDashboardCRDV5Available = &v5Available
 	}
 
-	return *b.crdAvailabilityCache.grafanaDashboardCRDAvailable, nil
+	// Combine the results for both versions
+	dashboardsAvailable := *b.crdAvailabilityCache.grafanaDashboardCRDV4Available || *b.crdAvailabilityCache.grafanaDashboardCRDV5Available
+	return dashboardsAvailable, nil
 }
 
 // HasPrometheusRules checks if the PrometheusRules CRD is supported in current cluster

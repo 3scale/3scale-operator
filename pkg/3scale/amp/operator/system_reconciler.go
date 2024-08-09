@@ -298,7 +298,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcileGrafanaDashboard(system.SystemGrafanaDashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	err = r.ReconcileGrafanaDashboards(system.SystemGrafanaV5Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileGrafanaDashboards(system.SystemGrafanaV4Dashboard(sumRate), reconcilers.GenericGrafanaDashboardsMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
