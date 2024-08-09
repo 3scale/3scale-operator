@@ -161,16 +161,14 @@ At this stage, Grafana Operator will be removed but the v4 dashboards CRDs will 
 
 At this stage, if 3scale operator reconciliation loop was triggered, operator will recongnize that v5 is present and will create v5 dashboards, but won't remove the v4 dashboards.
 
-3. Create Grafana v5 datasource (instructions above)
-4. Create Grafana v5 grafana (instructions above)
-5. Restart 3scale Operator
+3. Delete the Grafana v4 custom resource
+4. Create Grafana v5 datasource (instructions above)
+5. Create Grafana v5 grafana (instructions above)
+6. Restart 3scale Operator
 
-Restart might be required since by design, 3scale operator does not watch over the grafana dashboards, but reconciles them as part of regular reconciliation loops.
+7. [OPTIONAL] Expose Grafana v5 route
 
-6. Delete the Grafana v4 custom resource
-7. Expose Grafana v5 route
-
-You might be required to re-create a Grafana route
+You *might* be required to re-create a Grafana route
 
 8. At this point, you can remove the Grafana Dashboards of v4
 
