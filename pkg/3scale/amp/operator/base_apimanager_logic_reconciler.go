@@ -10,7 +10,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
+	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
 	routev1 "github.com/openshift/api/route/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"

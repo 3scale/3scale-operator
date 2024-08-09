@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/grafana-operator/grafana-operator/v4 v4.5.0
-	github.com/grafana/grafana-operator/v5 v5.12.0
+	github.com/grafana-operator/grafana-operator/v5 v5.5.2
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.34.1
@@ -69,7 +69,6 @@ require (
 	github.com/google/pprof v0.0.0-20240424215950-a892ee059fd6 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20191106031601-ce3c9ade29de // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/grafana/grafana-openapi-client-go v0.0.0-20240430202104-3ad0f7e4ee52 // indirect
 	github.com/h2non/filetype v1.1.1 // indirect
 	github.com/h2non/go-is-svg v0.0.0-20160927212452-35e8c4b0612c // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -102,6 +101,7 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	go.mongodb.org/mongo-driver v1.14.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.24.0 // indirect
+	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
@@ -142,3 +142,7 @@ replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.17.2
 replace k8s.io/apimachinery => k8s.io/apimachinery v0.29.0
 
 replace k8s.io/client-go => k8s.io/client-go v0.29.0
+
+replace k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.28.12
+
+replace k8s.io/component-base => k8s.io/component-base v0.29.0
