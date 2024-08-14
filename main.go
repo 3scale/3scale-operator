@@ -33,6 +33,7 @@ import (
 	"github.com/3scale/3scale-operator/version"
 	"github.com/getkin/kin-openapi/openapi3"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
+	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
 	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	consolev1 "github.com/openshift/api/console/v1"
@@ -86,6 +87,7 @@ func init() {
 	utilruntime.Must(appsv1.Install(scheme))
 	utilruntime.Must(monitoringv1.AddToScheme(scheme))
 	utilruntime.Must(grafanav1alpha1.AddToScheme(scheme))
+	utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
 	utilruntime.Must(configv1.Install(scheme))
 
 	// +kubebuilder:scaffold:scheme

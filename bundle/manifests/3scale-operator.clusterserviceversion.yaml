@@ -1026,6 +1026,17 @@ spec:
           verbs:
           - create
         - apiGroups:
+          - grafana.integreatly.org
+          resources:
+          - grafanadashboards
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
           - image.openshift.io
           resources:
           - imagestreams

@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-logr/logr"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
+	grafanav1beta1 "github.com/grafana-operator/grafana-operator/v5/api/v1beta1"
 	consolev1 "github.com/openshift/api/console/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -175,9 +176,16 @@ func (b *BaseReconciler) HasConsoleLink() (bool, error) {
 }
 
 // HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
-func (b *BaseReconciler) HasGrafanaDashboards() (bool, error) {
+func (b *BaseReconciler) HasGrafanaV4Dashboards() (bool, error) {
 	return resourceExists(b.DiscoveryClient(),
 		grafanav1alpha1.GroupVersion.String(),
+		"GrafanaDashboard")
+}
+
+// HasGrafanaDashboards checks if the GrafanaDashboard CRD is supported in current cluster
+func (b *BaseReconciler) HasGrafanaV5Dashboards() (bool, error) {
+	return resourceExists(b.DiscoveryClient(),
+		grafanav1beta1.GroupVersion.String(),
 		"GrafanaDashboard")
 }
 
