@@ -423,9 +423,7 @@ In order to make changes to the Product and Backend, you should instead update t
 When the OpenAPI CR is using a Secret for its OAS source, any changes made to the secret will be automatically passed on to the Product and Backend CR and then to the Product and Backend in the 3scale UI.
 
 ### Updating URL ref
-When the OpenAPI CR is using a URL for its OAS source, the operator will periodically scrape the URL to check for changes. If changes are detected they will be automatically passed on to the Product and Backend CR and then to the Product and Backend in the 3scale UI.
-
-The interval in which the operator will check the URL for changes is defined by an annotation on the OpenAPI CR. This [annotation](openapi-reference.md#openapiannotations) is set to `poll_url_interval: "5m"` (5 minutes) by default. You can change this interval to any value with the following units: `"ns"`, `"us"` (or `"µs"`), `"ms"`, `"s"`, `"m"`, `"h"`. If you set the interval to a invalid value that can't be parsed, the operator will revert the annotation to the default value of `"5m"`.
+When the OpenAPI CR is using a URL for its OAS source, the operator will scrape the URL to check for changes every 5 minutes. If changes are detected they will be automatically passed on to the Product and Backend CR and then to the Product and Backend in the 3scale UI.
 
 ## Link your OpenAPI spec to your 3scale tenant or provider account
 

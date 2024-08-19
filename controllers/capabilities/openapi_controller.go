@@ -43,11 +43,9 @@ import (
 )
 
 const (
-	oasSecretLabelSelectorKey    = "apimanager.apps.3scale.net/watched-by"
-	oasSecretLabelSelectorValue  = "openapi"
-	openAPISecretRefLabelKey     = "apimanager.apps.3scale.net/oas-source-secret-uid"
-	pollOasURLIntervalAnnotation = "poll_url_interval"
-	defaultPollOasURLInterval    = "5m"
+	oasSecretLabelSelectorKey   = "apimanager.apps.3scale.net/watched-by"
+	oasSecretLabelSelectorValue = "openapi"
+	openAPISecretRefLabelKey    = "apimanager.apps.3scale.net/oas-source-secret-uid"
 )
 
 // OpenAPIReconciler reconciles a OpenAPI object
@@ -251,12 +249,10 @@ func (r *OpenAPIReconciler) reconcileSpec(openapiCR *capabilitiesv1beta1.OpenAPI
 
 	statusReconciler := NewOpenAPIStatusReconciler(r.BaseReconciler, openapiCR, providerAccount.AdminURLStr, err, productSynced)
 
-	// If the product is successfully synced AND the OpenAPI CR is using URL ref, then requeue after set amount of time
-	// The duration is parsed from an annotation on the OpenAPI CR
+	// If the product is successfully synced AND the OpenAPI CR is using URL ref, then requeue after 5 minutes
 	// We have to requeue like this in case there were updates to the URL source because we can't watch the URL directly
 	if productSynced && openapiCR.Spec.OpenAPIRef.SecretRef == nil {
-		duration := getPollURLInterval(openapiCR.GetAnnotations())
-		return statusReconciler, ctrl.Result{Requeue: true, RequeueAfter: duration}, err
+		return statusReconciler, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Minute}, err
 	}
 
 	return statusReconciler, ctrl.Result{Requeue: !productSynced}, err
@@ -310,12 +306,6 @@ func (r *OpenAPIReconciler) readOpenAPI(resource *capabilitiesv1beta1.OpenAPI) (
 	}
 
 	// Must be URL
-	// Since the OpenAPI CR is URL ref, annotate it with a requeue interval so we can watch the OAS source for changes
-	err := r.annotateOpenAPICR(resource)
-	if err != nil {
-		return nil, err
-	}
-
 	return r.readOpenAPIFromURL(resource)
 }
 
@@ -363,40 +353,6 @@ func (r *OpenAPIReconciler) labelOpenAPISecretAndCR(openAPICR *capabilitiesv1bet
 	openAPICR.ObjectMeta.Labels[openAPISecretRefLabelKey] = string(oasSourceSecret.GetUID())
 	if err := r.Client().Update(r.Context(), openAPICR); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (r *OpenAPIReconciler) annotateOpenAPICR(openAPICR *capabilitiesv1beta1.OpenAPI) error {
-	// Re-fetch the OpenAPI CR in case it's been modified
-	objectKey := types.NamespacedName{Name: openAPICR.Name, Namespace: openAPICR.Namespace}
-	if err := r.Client().Get(r.Context(), objectKey, openAPICR); err != nil {
-		return err
-	}
-
-	if openAPICR.Annotations == nil {
-		openAPICR.Annotations = map[string]string{}
-	}
-
-	// Annotate the CR with a default requeue interval; this is so we can check the source OAS URL for changes
-	// A default interval is provided but we allow the user to override it
-	intervalStr, ok := openAPICR.Annotations[pollOasURLIntervalAnnotation]
-	if !ok {
-		openAPICR.Annotations[pollOasURLIntervalAnnotation] = defaultPollOasURLInterval
-		if err := r.Client().Update(r.Context(), openAPICR); err != nil {
-			return err
-		}
-	} else {
-		// If the user provided interval is invalid, reset it to the default value
-		// This is to ensure a valid interval exists and to let the user know that their interval couldn't be parsed
-		_, err := time.ParseDuration(intervalStr)
-		if err != nil {
-			openAPICR.Annotations[pollOasURLIntervalAnnotation] = defaultPollOasURLInterval
-			if err2 := r.Client().Update(r.Context(), openAPICR); err2 != nil {
-				return err2
-			}
-		}
 	}
 
 	return nil
@@ -633,22 +589,4 @@ func (r *OpenAPIReconciler) validateOIDCSettingsInCR(openapiCR *capabilitiesv1be
 	}
 
 	return nil
-}
-
-func getPollURLInterval(annotations map[string]string) time.Duration {
-	defaultInterval, _ := time.ParseDuration(defaultPollOasURLInterval)
-
-	pollURLIntervalStr, ok := annotations[pollOasURLIntervalAnnotation]
-	if ok {
-		interval, err := time.ParseDuration(pollURLIntervalStr)
-		if err != nil {
-			// Return default poll interval if the annotation couldn't be parsed
-			return defaultInterval
-		}
-
-		return interval
-	}
-
-	// Return default poll interval if the annotation wasn't found
-	return defaultInterval
 }

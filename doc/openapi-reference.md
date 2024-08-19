@@ -21,10 +21,9 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 
 ### OpenAPIAnnotations
 
-| **Field** | **json field**| **Type** | **Info**                                                                                                                                         | **Required** |
-| --- | --- |----------|--------------------------------------------------------------------------------------------------------------------------------------------------| --- |
-| insecure_skip_verify | `insecure_skip_verify` | boolean  | 3scale client skips certificate verification when reconciling a backend and product object created via OpenAPI - defaults to "false"             | No |
-| poll_url_interval | `poll_url_interval` | string   | Only applies when OpenAPI CR is using a URL ref. Specifies how frequently the operator will check the source URL for changes  - defaults to "5m" | No |
+| **Field** | **json field**| **Type** | **Info** | **Required** |
+| --- | --- | --- | --- | --- |
+| insecure_skip_verify | `insecure_skip_verify` | boolean | 3scale client skips certificate verification when reconciling a backend and product object created via OpenAPI - defaults to "false" | No |
 
 ### OpenAPISpec
 
