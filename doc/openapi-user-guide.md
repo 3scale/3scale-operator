@@ -26,6 +26,7 @@ one [3scale Backend custom resource](backend-reference.md).
       * [3scale Product Policy Chain](#3scale-product-policy-chain)
       * [3scale Deployment Mode](#3scale-deployment-mode)
    * [Minimum required OAS doc](#minimum-required-oas-doc)
+   * [Update behavior](#update-behavior)
    * [Link your OpenAPI spec to your 3scale tenant or provider account](#link-your-openapi-spec-to-your-3scale-tenant-or-provider-account)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
@@ -98,17 +99,18 @@ spec:
 
 ### OpenID Connect and OAuth2 example
 
-3scale requires some additional information that are not included 
-in the OpenAPI spec, therefore those data need to be provided in the OpenAPI CR. Specifically:
-- OpenID Connect Issuer Type, which will default to rest but can be overridden from the OpenAPI CR
-- OpenID Connect Issuer Endpoint Referense (Secret). 3scale requires that the issuer URL must include a client secret.
-- Flows object. When the sec scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those.
+3scale requires some additional information that is not included 
+in the OpenAPI spec - this data needs to be provided in the OpenAPI CR.
+Specifically:
+- OpenID Connect Issuer Type: defaults to rest but can be overridden using the OpenAPI CR.
+- OpenID Connect Issuer Endpoint Reference (Secret): 3scale requires that the issuer URL must include a client secret.
+- Flows object: When the security scheme is `oauth2`, the flows are specified via the OpenAPI spec (OAS). However, for the `openIdConnect` security scheme, the OAS does not provide the flows. In that case, they can be specified using the OpenAPI CR.
 
 #### OIDC Issuer Secret
 
-- We have previously setup of Issuer Client - RHSSO/keycloak realm and client and are using it in secret example. 
-- `issuerEndpoint` format is `https://<CLIENT_ID>:<CLIENT_SECRET>@<HOST>:<PORT>/auth/realms/<REALM_NAME>"` . Format is described in `3scale Portal/Products page - AUTHENTICATION SETTINGS - OpenID Connect Issuer`.
-- The <CLIENT_SECRET> value will be taken form Issuer Client - `Realm/Clients/ClientID/Credentials/Secret`.
+- The below secret example assumes a previously set up Issuer Client (RHSSO/Keycloak realm and client)
+- The `issuerEndpoint` format is `https://<CLIENT_ID>:<CLIENT_SECRET>@<HOST>:<PORT>/auth/realms/<REALM_NAME>"`. The format is described in `3scale Portal/Products page - AUTHENTICATION SETTINGS - OpenID Connect Issuer`.
+- The `<CLIENT_SECRET>` value will be taken from the Issuer Client - `Realm/Clients/ClientID/Credentials/Secret`.
 
 ```yaml
 kind: Secret
@@ -119,11 +121,6 @@ metadata:
 data:
   issuerEndpoint: https://3scale-zync:some-secret@keycloak-rhsso-test.example.com/auth/realms/petstore
 type: Opaque
-```
-
-To create secret:
-```shell
-oc apply -f my-secret.yaml 
 ```
 
 #### OpenAPI CR example for OIDC and oauth2
@@ -151,24 +148,24 @@ spec:
     gatewayResponse:
       errorStatusAuthFailed: 403
 ```
-- **oidc** is optional field in OpenAPI CR
-- Only for OIDC: 
+- `oidc` is an optional field in the OpenAPI CR
+- The table below describes the fields in the `oidc` block: 
 
-| **Field**                | **Required** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| --- | --- | --- |
-| issuerType               | no           | Valid values: [keycloak, rest]. Defaults to `rest`                                                                                                                                                                                                                                                                                                                                                                                                    |
-| issuerEndpoint           | no           | Issuer endpoint. It can be defined in `issuerEndpointRef` or as plain value (please see CR example and notes below). The format of this endpoint is determined on your OpenID Provider setup. For RHSSO:  https://<client_id>:<client_secret>@<host>:<port>/auth/realms/<realm_name>                                                                                                                                                                  |
-| issuerEndpointRef        | no           | The secret that contains  `issuerEndpoint`                                                                                                                                                                                                                                                                                                                                                                                                            |
-| jwtClaimWithClientID     | no           | JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.                                                                                                                                                                                                                                                                                                                                                               |
-| jwtClaimWithClientIDType | no           | JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template. Valid values: plain, liquid. Defaults to 'plain'                                                                                                                                                                                                                                                                                         |
-| authenticationFlow       | no           | flows object. When the sec scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those. There are 4 flows parameters (for OIDC only): `standardFlowEnabled`, `implicitFlowEnabled`, `serviceAccountsEnabled`, `directAccessGrantsEnabled`. See [3scale product reference](product-reference.md) for more info |
-| gatewayResponse          | no | Specifies custom gateway response on errors. See `GatewayResponseSpec` in [3scale product reference ](product-reference.md) for more info |
+| **Field**                | **Required** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --- | --- |---|
+| issuerType               | no           | Valid values: [keycloak, rest]. Defaults to `rest`.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| issuerEndpoint           | no           | Issuer endpoint. It can be defined in `issuerEndpointRef` or as plain value (please see CR example and notes below). The format of this endpoint is determined on your OpenID Provider setup. For RHSSO:  `https://<client_id>:<client_secret>@<host>:<port>/auth/realms/<realm_name>`.                                                                                                                                                                                    |
+| issuerEndpointRef        | no           | The secret that contains  `issuerEndpoint`.                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| jwtClaimWithClientID     | no           | JSON Web Token (JWT) Claim with ClientID that contains the clientID. Defaults to 'azp'.                                                                                                                                                                                                                                                                                                                                                                                    |
+| jwtClaimWithClientIDType | no           | JwtClaimWithClientIDType sets to process the ClientID Token Claim value as a string or as a liquid template. Valid values: plain, liquid. Defaults to 'plain'.                                                                                                                                                                                                                                                                                                             |
+| authenticationFlow       | no           | Flows object. When the sec scheme is `oauth2`, the flows are provided by the OpenAPI spec. However, for the `openIdConnect` security scheme, the OpenAPI spec does not provide the flows. In this case, the flows can be specified in the OpenAPI CR. There are 4 flows parameters (for OIDC only): `standardFlowEnabled`, `implicitFlowEnabled`, `serviceAccountsEnabled`, `directAccessGrantsEnabled`. See [3scale product reference](product-reference.md) for more info |
+| gatewayResponse          | no | Specifies custom gateway response on errors. See `GatewayResponseSpec` in [3scale product reference ](product-reference.md) for more info.                                                                                                                                                                                                                                                                                                                                 |
 
-- **One of IssuerEndpointRef or IssuerEndpoint must be defined in OIDC Spec** (both fields can be defined, see next note).
-- **If issuerEndpoint plain value is defined in CR - it will be used as precedence over issuerEndpointRef secret**.
+- One of IssuerEndpointRef or IssuerEndpoint must be defined in OIDC Spec (both fields can be defined, see next note).
+- If issuerEndpoint plain value is defined in CR - it will be used as precedence over issuerEndpointRef secret.
 - The format of issuerEndpoint is determined on your OpenID Provider setup;
   see in 3scale portal - `Product/Integration/Settings/AUTHENTICATION SETTINGS/OpenID Connect Issuer`.  
-- **HostHeader and SecretToken should only be set at OpenApi CR .spec level instead of at the spec.OIDC level since the OIDC value is ignored.  OIDC Security is populated in the Product CR from the OpenApi CR PrivateAPISecretToken and PrivateAPIHostHeader parameters if one or both of them are defined in the OpenAPI CR.**  See OpenAPISpec in [openapi reference](openapi-reference.md), OODC specification in [product-reference.md](product-reference.md).
+- HostHeader and SecretToken should only be set at OpenApi CR .spec level instead of at the .spec.oidc level since the OIDC value is ignored.  OIDC Security is populated in the Product CR from the OpenApi CR PrivateAPISecretToken and PrivateAPIHostHeader parameters if one or both of them are defined in the OpenAPI CR. See OpenAPISpec in [openapi reference](openapi-reference.md), OIDC specification in [product-reference.md](product-reference.md).
 
 OpenAPI CR example where issuerEndpoint defined both as plain value and in secret (plain value will be used):
 ```yaml
@@ -194,14 +191,13 @@ spec:
       directAccessGrantsEnabled: true
 ``` 
 
-- **If OpenAPI CR spec is OIDC but securitySchemes type in OAS is oauth2** then CR OIDC Authentication Flows parameters will be ignored,
-  and Product OIDC Authentication Flows will be set to match oauth2 flows that defined in OAS, as following
-    - StandardFlowEnabled = true  if oauth2 AuthorizationCode is defined
+- If OpenAPI CR spec is OIDC but securitySchemes type in OAS is `oauth2` then the CR OIDC Authentication Flows parameters will be ignored, and Product OIDC Authentication Flows will be set to match oauth2 flows as defined in OAS:
+    - StandardFlowEnabled = true if oauth2 AuthorizationCode is defined
     - ImplicitFlowEnabled = true if oauth2 Implicit is defined
     - DirectAccessGrantsEnabled = true if oauth2 Password is defined
     - ServiceAccountsEnabled = true if oauth2 ClientCredentials is defined
 
-An example of **OAS securitySchemes** definition that allows selection of all Product OIDC Authentication Flows (OIDC should be defined in OpenAPI CR)
+An example of OAS securitySchemes definition that allows selection of all Product OIDC Authentication Flows (OIDC should be defined in the OpenAPI CR)
 ```yaml
       securitySchemes:
         myOauth:
@@ -248,10 +244,9 @@ An example of **OAS securitySchemes** definition that allows selection of all Pr
 
 * As detailed in section [OpenID Connect and OAuth2 example](#openid-connect-and-oauth2-example)  - 
 3scale requires some additional pieces of information that are not included in the OpenAPI spec and need to be provided in the OpenAPI CR:
-  * OpenID Connect Issuer Type, which will default to rest but can be overridden from the OpenAPI CR 
-  * OpenID Connect Issuer Endpoint Reference (Secret). 3scale requires that the issuer URL includes a client secret. 
-  * Flows object. When the security scheme is oauth2, the flows are provided by the OpenAPI doc. However, for openIdConnect security scheme, the OpenAPI doc does not provide the flows. In that case, the OpenAPI CR can provide those.
-
+  * OpenID Connect Issuer Type: defaults to rest but can be overridden using the OpenAPI CR.
+  * OpenID Connect Issuer Endpoint Reference (Secret): 3scale requires that the issuer URL must include a client secret.
+  * Flows object: When the security scheme is `oauth2`, the flows are specified via the OpenAPI spec (OAS). However, for the `openIdConnect` security scheme, the OAS does not provide the flows. In that case, they can be specified using the OpenAPI CR.
 
 
 ## OpenAPI importing rules
@@ -418,6 +413,17 @@ paths:
 ```
 
 *Note*: 3scale still requires creating the application key, but this is out of scope.
+
+## Update behavior
+Once an OpenAPI CR has been created and reconciled, a corresponding Product CR and Backend CR are created. Any changes made to those Product and Backend CRs will be reverted by the operator. This is to ensure that the source of truth is the OpenAPI Spec (OAS) and OpenAPI CR. 
+
+In order to make changes to the Product and Backend, you should instead update the OAS source itself as described below.
+
+### Updating secret ref
+When the OpenAPI CR is using a Secret for its OAS source, any changes made to the secret will be automatically passed on to the Product and Backend CR and then to the Product and Backend in the 3scale UI.
+
+### Updating URL ref
+When the OpenAPI CR is using a URL for its OAS source, the operator will scrape the URL to check for changes every 5 minutes. If changes are detected they will be automatically passed on to the Product and Backend CR and then to the Product and Backend in the 3scale UI.
 
 ## Link your OpenAPI spec to your 3scale tenant or provider account
 

@@ -2,20 +2,21 @@ package controllers
 
 import (
 	"context"
-	"github.com/3scale/3scale-operator/pkg/helper"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"reflect"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
+	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-logr/logr"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
@@ -44,7 +45,7 @@ func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 		{
 			name: "valid OAS",
 			fields: fields{
-				BaseReconciler: getBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
 			},
 			args: args{
 				openapiObj: getOpenAPIObj(getValidOpenAPISecret()),
@@ -54,7 +55,7 @@ func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 		{
 			name: "unextended OAS",
 			fields: fields{
-				BaseReconciler: getBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
 			},
 			args: args{
 				openapiObj: getOpenAPIObj(getUnextendedOpenAPISecret()),
@@ -64,7 +65,7 @@ func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 		{
 			name: "bad OAS",
 			fields: fields{
-				BaseReconciler: getBaseReconciler(getOpenAPICR(), getBadExtendedOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getBadExtendedOpenAPISecret()),
 			},
 			args: args{
 				openapiObj: getOpenAPIObj(getBadExtendedOpenAPISecret()),
@@ -112,7 +113,8 @@ func TestOpenAPIReconciler_validateOASExtensions(t *testing.T) {
 		})
 	}
 }
-func getTestBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.BaseReconciler) {
+
+func getOpenAPIBaseReconciler(objects ...runtime.Object) (baseReconciler *reconcilers.BaseReconciler) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	err := capabilitiesv1beta1.AddToScheme(s)
@@ -152,7 +154,6 @@ func getOpenAPITestLogger() logr.Logger {
 
 func getOpenAPICR() *capabilitiesv1beta1.OpenAPI {
 	return &capabilitiesv1beta1.OpenAPI{
-		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "testCR",
 			Namespace: "testNamespace",
@@ -170,7 +171,7 @@ func getOpenAPICR() *capabilitiesv1beta1.OpenAPI {
 
 func getOpenAPIObj(openAPISecret *corev1.Secret) *openapi3.T {
 	openAPIReconciler := OpenAPIReconciler{
-		BaseReconciler: getTestBaseReconciler(openAPISecret),
+		BaseReconciler: getOpenAPIBaseReconciler(openAPISecret, getOpenAPICR()),
 	}
 
 	openapiObj, err := openAPIReconciler.readOpenAPI(getOpenAPICR())

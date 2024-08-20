@@ -33,7 +33,7 @@ func TestOpenAPIProductReconciler_desiredMappingRules(t *testing.T) {
 		{
 			name: "valid OAS",
 			fields: fields{
-				BaseReconciler: getTestBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
 				openapiCR:      getOpenAPICR(),
 				openapiObj:     getOpenAPIObj(getValidOpenAPISecret()),
 				logger:         getOpenAPITestLogger(),
@@ -52,7 +52,7 @@ func TestOpenAPIProductReconciler_desiredMappingRules(t *testing.T) {
 		{
 			name: "unextended OAS",
 			fields: fields{
-				BaseReconciler: getTestBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
 				openapiCR:      getOpenAPICR(),
 				openapiObj:     getOpenAPIObj(getUnextendedOpenAPISecret()),
 				logger:         getOpenAPITestLogger(),
@@ -106,7 +106,7 @@ func TestOpenAPIProductReconciler_desiredMetrics(t *testing.T) {
 		{
 			name: "valid OAS",
 			fields: fields{
-				BaseReconciler: getTestBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
 				openapiCR:      getOpenAPICR(),
 				openapiObj:     getOpenAPIObj(getValidOpenAPISecret()),
 				logger:         getOpenAPITestLogger(),
@@ -123,7 +123,7 @@ func TestOpenAPIProductReconciler_desiredMetrics(t *testing.T) {
 		{
 			name: "unextended OAS",
 			fields: fields{
-				BaseReconciler: getTestBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
 				openapiCR:      getOpenAPICR(),
 				openapiObj:     getOpenAPIObj(getUnextendedOpenAPISecret()),
 				logger:         getOpenAPITestLogger(),
@@ -170,7 +170,7 @@ func TestOpenAPIProductReconciler_desiredPolicies(t *testing.T) {
 		{
 			name: "valid OAS",
 			fields: fields{
-				BaseReconciler: getTestBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
 				openapiCR:      getOpenAPICR(),
 				openapiObj:     getOpenAPIObj(getValidOpenAPISecret()),
 				logger:         getOpenAPITestLogger(),
@@ -199,7 +199,7 @@ func TestOpenAPIProductReconciler_desiredPolicies(t *testing.T) {
 		{
 			name: "unextended OAS",
 			fields: fields{
-				BaseReconciler: getTestBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
 				openapiCR:      getOpenAPICR(),
 				openapiObj:     getOpenAPIObj(getUnextendedOpenAPISecret()),
 				logger:         getOpenAPITestLogger(),
@@ -252,7 +252,7 @@ func TestOpenAPIProductReconciler_desiredApplicationPlans(t *testing.T) {
 		{
 			name: "valid OAS",
 			fields: fields{
-				BaseReconciler: getTestBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getValidOpenAPISecret()),
 				openapiCR:      getOpenAPICR(),
 				openapiObj:     getOpenAPIObj(getValidOpenAPISecret()),
 				logger:         getOpenAPITestLogger(),
@@ -292,7 +292,7 @@ func TestOpenAPIProductReconciler_desiredApplicationPlans(t *testing.T) {
 		{
 			name: "unextended OAS",
 			fields: fields{
-				BaseReconciler: getTestBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
+				BaseReconciler: getOpenAPIBaseReconciler(getOpenAPICR(), getUnextendedOpenAPISecret()),
 				openapiCR:      getOpenAPICR(),
 				openapiObj:     getOpenAPIObj(getUnextendedOpenAPISecret()),
 				logger:         getOpenAPITestLogger(),
