@@ -122,7 +122,6 @@ func (zync *Zync) QueRole() *rbacv1.Role {
 				Resources: []string{
 					"pods",
 					"replicationcontrollers",
-					"replicasets",
 				},
 				Verbs: []string{
 					"get",
