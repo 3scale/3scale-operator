@@ -3,6 +3,8 @@ SHELL := /bin/bash
 VERSION ?= 0.0.1
 # Current Threescale version
 THREESCALE_VERSION ?= 2.16
+OPERATOR_SDK_VERSION=v1.22.0
+CONTROLLER_TOOLS_VERSION ?= v0.15.0
 # Default bundle image tag
 BUNDLE_IMG ?= controller-bundle:$(VERSION)
 # Options for 'bundle-build'
@@ -102,7 +104,7 @@ run: generate fmt vet manifests
 # download controller-gen if necessary
 CONTROLLER_GEN=$(PROJECT_PATH)/bin/controller-gen
 $(CONTROLLER_GEN):
-	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2)
+	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION))
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)
@@ -114,10 +116,10 @@ $(KUSTOMIZE):
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE)
 
-OPERATOR_SDK = $(PROJECT_PATH)/bin/operator-sdk
+OPERATOR_SDK = operator-sdk
 # Note: release file patterns changed after v1.2.0
 # More info https://sdk.operatorframework.io/docs/installation/
-OPERATOR_SDK_VERSION=v1.2.0
+
 $(OPERATOR_SDK):
 	curl -sSL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk-${OPERATOR_SDK_VERSION}-$(ARCH)-${OS} -o $(OPERATOR_SDK)
 	chmod +x $(OPERATOR_SDK)

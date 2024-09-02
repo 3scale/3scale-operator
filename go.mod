@@ -1,6 +1,6 @@
 module github.com/3scale/3scale-operator
 
-go 1.20
+go 1.22
 
 require (
 	github.com/3scale/3scale-porta-go-client v0.11.0
@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.52.1
 	github.com/prometheus/client_golang v1.19.1
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/mod v0.19.0
@@ -31,7 +31,7 @@ require (
 	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.3
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
-	sigs.k8s.io/controller-runtime v0.18.4
+	sigs.k8s.io/controller-runtime v0.19.2
 )
 
 require (
