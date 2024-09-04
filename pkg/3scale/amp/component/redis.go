@@ -23,7 +23,7 @@ const (
 	backendRedisObjectMetaName         = "backend-redis"
 	backendRedisDeploymentSelectorName = backendRedisObjectMetaName
 	backendRedisStorageVolumeName      = "backend-redis-storage"
-	backendRedisConfigMapKey           = "redis.conf"
+	backendRedisConfigMapKey           = "valkey.conf"
 	backendRedisContainerName          = "backend-redis"
 	backendRedisConfigPath             = "/etc/redis.d/"
 )
@@ -144,7 +144,10 @@ func (redis *Redis) buildPodContainers() []v1.Container {
 			Resources:       redis.buildPodContainerResourceLimits(),
 			ReadinessProbe:  redis.buildPodContainerReadinessProbe(),
 			LivenessProbe:   redis.buildPodContainerLivenessProbe(),
-			VolumeMounts:    redis.buildPodContainerVolumeMounts(),
+			Command: []string{
+				"valkey-server", "/etc/redis.d/valkey.conf",
+			},
+			VolumeMounts: redis.buildPodContainerVolumeMounts(),
 		},
 	}
 }
@@ -158,7 +161,6 @@ func (redis *Redis) buildPodContainerReadinessProbe() *v1.Probe {
 		ProbeHandler: v1.ProbeHandler{
 			Exec: &v1.ExecAction{
 				Command: []string{
-					"container-entrypoint",
 					"bash",
 					"-c",
 					"redis-cli set liveness-probe \"`date`\" | grep OK",
@@ -351,8 +353,8 @@ func (redis *Redis) SystemDeployment() *k8sappsv1.Deployment {
 									},
 									Items: []v1.KeyToPath{
 										{
-											Key:  "redis.conf",
-											Path: "redis.conf",
+											Key:  "valkey.conf",
+											Path: "valkey.conf",
 										},
 									},
 								},
@@ -395,7 +397,7 @@ func (redis *Redis) SystemDeployment() *k8sappsv1.Deployment {
 							ReadinessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									Exec: &v1.ExecAction{
-										Command: []string{"container-entrypoint", "bash", "-c", "redis-cli set liveness-probe \"`date`\" | grep OK"},
+										Command: []string{"bash", "-c", "redis-cli set liveness-probe \"`date`\" | grep OK"},
 									},
 								},
 								InitialDelaySeconds: 30,
@@ -406,6 +408,9 @@ func (redis *Redis) SystemDeployment() *k8sappsv1.Deployment {
 							},
 							TerminationMessagePath: "/dev/termination-log",
 							ImagePullPolicy:        v1.PullIfNotPresent,
+							Command: []string{
+								"valkey-server", "/etc/redis.d/valkey.conf",
+							},
 						},
 					},
 					PriorityClassName:         redis.Options.SystemRedisPriorityClassName,
@@ -518,7 +523,7 @@ func (r *RedisConfigMap) buildConfigMapObjectMeta() metav1.ObjectMeta {
 
 func (r *RedisConfigMap) buildConfigMapData() map[string]string {
 	return map[string]string{
-		"redis.conf": r.getRedisConfData(),
+		"valkey.conf": r.getRedisConfData(),
 	}
 }
 
