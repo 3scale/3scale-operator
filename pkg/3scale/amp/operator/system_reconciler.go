@@ -288,7 +288,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	err = r.ReconcilePodMonitor(system.SystemAppPodMonitor(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodMonitor(system.SystemAppPodMonitor(), reconcilers.GenericPodMonitorMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
