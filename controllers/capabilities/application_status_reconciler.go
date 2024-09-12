@@ -70,7 +70,10 @@ func (s *ApplicationStatusReconciler) Reconcile() (reconcile.Result, error) {
 
 func (s *ApplicationStatusReconciler) calculateStatus() *capabilitiesv1beta1.ApplicationStatus {
 	newStatus := &capabilitiesv1beta1.ApplicationStatus{}
-	if s.entity != nil {
+	// if status ID is populated leave unchanged by status update
+	if s.applicationResource.Status.ID != nil {
+		newStatus.ID = s.applicationResource.Status.ID
+	} else if s.entity != nil {
 		tmpID := s.entity.ID()
 		newStatus.ID = &tmpID
 	}
