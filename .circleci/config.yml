@@ -95,7 +95,7 @@ commands:
 jobs:
   install-operator:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     working_directory: ~/project/3scale-operator
     steps:
       - setup_remote_docker:
@@ -113,7 +113,7 @@ jobs:
 
   build-operator-image-only:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     working_directory: ~/project/3scale-operator
     steps:
       - setup_remote_docker:
@@ -170,7 +170,7 @@ jobs:
 
   run-unit-tests:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     resource_class: large
     steps:
       - unit-tests
@@ -180,7 +180,7 @@ jobs:
 
   test-crds:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     steps:
       - checkout
       - install-dependencies
@@ -188,14 +188,14 @@ jobs:
 
   test-manifests-version:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     steps:
       - checkout
       - install-dependencies
       - run: make test-manifests-version
   license-check:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     steps:
       - run:
           name: Installing ruby
@@ -223,7 +223,7 @@ jobs:
 
   unit-tests-coverage:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     resource_class: large
     steps:
       - unit-tests
@@ -235,7 +235,7 @@ jobs:
 
   bundle-validate:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     steps:
       - checkout
       - install-operator-sdk
@@ -244,7 +244,7 @@ jobs:
 
   assets-validate:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     steps:
       - checkout
       - install-operator-sdk
@@ -252,7 +252,7 @@ jobs:
 
   prometheusrules-validate:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.21
     steps:
       - checkout
       - run: make prometheusrules-update-test
