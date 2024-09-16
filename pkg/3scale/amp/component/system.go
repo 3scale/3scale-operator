@@ -572,7 +572,7 @@ func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment
 						{
 							Name:         SystemAppMasterContainerName,
 							Image:        containerImage,
-							Args:         []string{"env", "TENANT_MODE=master", "PORT=3002", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
+							Args:         []string{"env", "TENANT_MODE=master", "PORT=3002", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appMasterPorts(),
 							Env:          system.buildAppMasterContainerEnv(),
 							Resources:    *system.Options.AppMasterContainerResourceRequirements,
@@ -623,7 +623,7 @@ func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment
 						{
 							Name:         SystemAppProviderContainerName,
 							Image:        containerImage,
-							Args:         []string{"env", "TENANT_MODE=provider", "PORT=3000", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
+							Args:         []string{"env", "TENANT_MODE=provider", "PORT=3000", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appProviderPorts(),
 							Env:          system.buildAppProviderContainerEnv(),
 							Resources:    *system.Options.AppProviderContainerResourceRequirements,
@@ -674,7 +674,7 @@ func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment
 						{
 							Name:         SystemAppDeveloperContainerName,
 							Image:        containerImage,
-							Args:         []string{"env", "PORT=3001", "container-entrypoint", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
+							Args:         []string{"env", "PORT=3001", "bundle", "exec", "unicorn", "-c", "config/unicorn.rb"},
 							Ports:        system.appDeveloperPorts(),
 							Env:          system.buildAppDeveloperContainerEnv(),
 							Resources:    *system.Options.AppDeveloperContainerResourceRequirements,

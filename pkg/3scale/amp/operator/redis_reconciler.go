@@ -189,7 +189,7 @@ func (r *RedisReconciler) redisConfigMapMutator(existingObj, desiredObj common.K
 	}
 
 	update := false
-	fieldUpdated := reconcilers.RedisConfigMapReconcileField(desired, existing, "redis.conf")
+	fieldUpdated := reconcilers.RedisConfigMapReconcileField(desired, existing, "valkey.conf")
 	update = update || fieldUpdated
 
 	return update, nil

@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	redisDefaultImage      = "quay.io/fedora/redis-6"
+	redisDefaultImage      = "docker.io/valkey/valkey:8.0"
 	mySqlDefaultImage      = "quay.io/sclorg/mysql-80-c8s"
 	postgreSqlDefaultImage = "quay.io/sclorg/postgresql-10-c8s"
 )

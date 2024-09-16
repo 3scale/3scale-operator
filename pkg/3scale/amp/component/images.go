@@ -21,11 +21,11 @@ func ZyncImageURL() string {
 }
 
 func BackendRedisImageURL() string {
-	return "quay.io/fedora/redis-6"
+	return "docker.io/valkey/valkey:8.0"
 }
 
 func SystemRedisImageURL() string {
-	return "quay.io/fedora/redis-6"
+	return "docker.io/valkey/valkey:8.0"
 }
 
 func SystemMySQLImageURL() string {
