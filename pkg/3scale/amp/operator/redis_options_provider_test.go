@@ -1,6 +1,7 @@
 package operator
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 
@@ -135,6 +136,14 @@ func testSystemRedisSecret() *v1.Secret {
 	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
 }
 
+func testBackendRedisPodTemplateAnnotations() map[string]string {
+	return map[string]string{"redisConfigMapResourceVersion": "999"}
+}
+
+func testSystemRedisPodTemplateAnnotations() map[string]string {
+	return map[string]string{"redisConfigMapResourceVersion": "999"}
+}
+
 func defaultRedisOptions() *component.RedisOptions {
 	tmpInsecure := insecureImportPolicy
 	return &component.RedisOptions{
@@ -162,6 +171,8 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemRedisSentinelsHosts:                 component.DefaultSystemRedisSentinelHosts(),
 		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
 		SystemRedisNamespace:                      component.DefaultSystemRedisNamespace(),
+		SystemRedisPodTemplateAnnotations:         testSystemRedisPodTemplateAnnotations(),
+		BackendRedisPodTemplateAnnotations:        testBackendRedisPodTemplateAnnotations(),
 	}
 }
 
@@ -377,6 +388,13 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
+			configMap := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: namespace,
+					Name:      "redis-config",
+				},
+				Data: map[string]string{},
+			}
 			objs := []runtime.Object{}
 			if tc.backendRedisSecret != nil {
 				objs = append(objs, tc.backendRedisSecret)
@@ -384,6 +402,7 @@ func TestGetRedisOptionsProvider(t *testing.T) {
 			if tc.systemRedisSecret != nil {
 				objs = append(objs, tc.systemRedisSecret)
 			}
+			objs = append(objs, configMap)
 			cl := fake.NewFakeClient(objs...)
 			optsProvider := NewRedisOptionsProvider(tc.apimanagerFactory(), namespace, cl)
 			opts, err := optsProvider.GetRedisOptions()

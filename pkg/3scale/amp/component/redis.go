@@ -262,14 +262,6 @@ func (redis *Redis) buildServiceSelector() map[string]string {
 	}
 }
 
-func (redis *Redis) ConfigMap() *v1.ConfigMap {
-	return &v1.ConfigMap{
-		ObjectMeta: redis.buildConfigMapObjectMeta(),
-		TypeMeta:   redis.buildConfigMapTypeMeta(),
-		Data:       redis.buildConfigMapData(),
-	}
-}
-
 func (redis *Redis) buildConfigMapObjectMeta() metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:   redisConfigVolumeName,
@@ -282,61 +274,6 @@ func (redis *Redis) buildConfigMapTypeMeta() metav1.TypeMeta {
 		Kind:       "ConfigMap",
 		APIVersion: "v1",
 	}
-}
-
-func (redis *Redis) buildConfigMapData() map[string]string {
-	return map[string]string{
-		"redis.conf": redis.getRedisConfData(),
-	}
-}
-
-func (redis *Redis) getRedisConfData() string { // TODO read this from a real file
-	return `protected-mode no
-
-port 6379
-
-timeout 0
-tcp-keepalive 300
-
-daemonize no
-supervised no
-
-loglevel notice
-
-databases 16
-
-save 900 1
-save 300 10
-save 60 10000
-
-stop-writes-on-bgsave-error yes
-
-rdbcompression yes
-rdbchecksum yes
-
-dbfilename dump.rdb
-
-slave-serve-stale-data yes
-slave-read-only yes
-
-repl-diskless-sync no
-repl-disable-tcp-nodelay no
-
-appendonly yes
-appendfilename "appendonly.aof"
-appendfsync everysec
-no-appendfsync-on-rewrite no
-auto-aof-rewrite-percentage 100
-auto-aof-rewrite-min-size 64mb
-aof-load-truncated yes
-
-lua-time-limit 5000
-
-activerehashing no
-
-aof-rewrite-incremental-fsync yes
-dir /var/lib/redis/data
-`
 }
 
 func (redis *Redis) BackendPVC() *v1.PersistentVolumeClaim {
@@ -645,3 +582,111 @@ func (redis *Redis) buildEnv() []v1.EnvVar {
 }
 
 ////// End System Redis
+
+// //// Redis Config Map Begin
+type RedisConfigMap struct {
+	Options *RedisConfigMapOptions
+}
+
+func NewRedisConfigMap(options *RedisConfigMapOptions) *RedisConfigMap {
+	return &RedisConfigMap{Options: options}
+}
+
+func (r *RedisConfigMap) ConfigMap() *v1.ConfigMap {
+	return &v1.ConfigMap{
+		TypeMeta:   metav1.TypeMeta{Kind: "ConfigMap", APIVersion: "v1"},
+		ObjectMeta: r.buildConfigMapObjectMeta(),
+		Data:       r.buildConfigMapData(),
+	}
+}
+
+func (r *RedisConfigMap) buildConfigMapObjectMeta() metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:      redisConfigVolumeName,
+		Labels:    r.Options.Labels,
+		Namespace: r.Options.Namespace,
+	}
+}
+
+func (r *RedisConfigMap) buildConfigMapData() map[string]string {
+	return map[string]string{
+		"redis.conf": r.getRedisConfData(),
+	}
+}
+
+func (r *RedisConfigMap) getRedisConfData() string { // TODO read this from a real file
+	return `protected-mode no
+
+port 6379
+
+timeout 0
+tcp-keepalive 300
+
+daemonize no
+supervised no
+
+loglevel notice
+
+databases 16
+
+save 900 1
+save 300 10
+save 60 10000
+
+stop-writes-on-bgsave-error yes
+
+rdbcompression yes
+rdbchecksum yes
+
+dbfilename dump.rdb
+
+slave-serve-stale-data yes
+slave-read-only yes
+
+repl-diskless-sync no
+repl-disable-tcp-nodelay no
+
+appendonly yes
+appendfilename "appendonly.aof"
+appendfsync everysec
+no-appendfsync-on-rewrite no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+aof-load-truncated yes
+
+lua-time-limit 5000
+
+activerehashing no
+
+aof-rewrite-incremental-fsync yes
+dir /var/lib/redis/data
+
+rename-command REPLICAOF ""
+rename-command SLAVEOF ""
+`
+}
+
+////// Redis Config Map End
+
+func BackendCommonLabels(appLabel string) map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "backend",
+	}
+}
+func BackendRedisLabels(appLabel string) map[string]string {
+	labels := BackendCommonLabels(appLabel)
+	labels["threescale_component_element"] = "redis"
+	return labels
+}
+func SystemCommonLabels(appLabel string) map[string]string {
+	return map[string]string{
+		"app":                  appLabel,
+		"threescale_component": "system",
+	}
+}
+func SystemRedisLabels(appLabel string) map[string]string {
+	labels := SystemCommonLabels(appLabel)
+	labels["threescale_component_element"] = "redis"
+	return labels
+}
