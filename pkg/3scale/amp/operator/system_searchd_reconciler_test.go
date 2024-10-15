@@ -29,8 +29,9 @@ func TestSystemSearchdReconciler(t *testing.T) {
 	ctx := context.TODO()
 
 	apimanager := testSearchdBasicApimanager()
+	systemDatabaseSecret := testSearchdBasicSystemDatabaseSecret()
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager}
+	objs := []runtime.Object{apimanager, systemDatabaseSecret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := k8sappsv1.AddToScheme(s)

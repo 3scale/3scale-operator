@@ -19,6 +19,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func testSearchdBasicSystemDatabaseSecret() *v1.Secret {
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      component.SystemSecretSystemDatabaseSecretName,
+			Namespace: namespace,
+		},
+		Immutable:  nil,
+		Data:       nil,
+		StringData: nil,
+		Type:       "",
+	}
+}
 func testSearchdBasicApimanager() *appsv1alpha1.APIManager {
 	apimanager := &appsv1alpha1.APIManager{
 		ObjectMeta: metav1.ObjectMeta{

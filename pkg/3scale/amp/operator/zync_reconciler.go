@@ -74,7 +74,11 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
 		zyncMutators = append(zyncMutators, reconcilers.DeploymentReplicasMutator)
 	}
-	err = r.ReconcileDeployment(zync.Deployment(ampImages.Options.ZyncImage), reconcilers.DeploymentMutator(zyncMutators...))
+	zyncDep, err := zync.Deployment(r.Context(), r.Client(), ampImages.Options.ZyncImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(zyncDep, reconcilers.DeploymentMutator(zyncMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -102,7 +106,11 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
 		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentReplicasMutator)
 	}
-	err = r.ReconcileDeployment(zync.QueDeployment(ampImages.Options.ZyncImage), reconcilers.DeploymentMutator(zyncQueMutators...))
+	zyncQueDep, err := zync.QueDeployment(r.Context(), r.Client(), ampImages.Options.ZyncImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(zyncQueDep, reconcilers.DeploymentMutator(zyncQueMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -320,7 +328,10 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	}
 
 	// ZyncQue Deployment
-	zyncQueDeployment := zync.QueDeployment(ampImages.Options.ZyncImage)
+	zyncQueDeployment, err := zync.QueDeployment(r.Context(), r.Client(), ampImages.Options.ZyncImage)
+	if err != nil {
+		return err
+	}
 	common.TagObjectToDelete(zyncQueDeployment)
 	err = r.ReconcileDeployment(zyncQueDeployment, reconcilers.DeleteOnlyMutator)
 	if err != nil {
@@ -328,7 +339,10 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	}
 
 	// Zync Deployment
-	zyncDeployment := zync.Deployment(ampImages.Options.ZyncImage)
+	zyncDeployment, err := zync.Deployment(r.Context(), r.Client(), ampImages.Options.ZyncImage)
+	if err != nil {
+		return err
+	}
 	common.TagObjectToDelete(zyncDeployment)
 	err = r.ReconcileDeployment(zyncDeployment, reconcilers.DeleteOnlyMutator)
 	if err != nil {

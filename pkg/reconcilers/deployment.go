@@ -327,6 +327,13 @@ func DeploymentPodInitContainerImageMutator(desired, existing *k8sappsv1.Deploym
 	updated := false
 
 	for i, desiredContainer := range desired.Spec.Template.Spec.InitContainers {
+		if i >= len(existing.Spec.Template.Spec.InitContainers) {
+			// Add missing containers from desired to existing
+			existing.Spec.Template.Spec.InitContainers = append(existing.Spec.Template.Spec.InitContainers, desiredContainer)
+			fmt.Printf("Added missing container: %s\n", desiredContainer.Name)
+			updated = true
+			continue
+		}
 		existingContainer := &existing.Spec.Template.Spec.InitContainers[i]
 
 		if !reflect.DeepEqual(existingContainer.Image, desiredContainer.Image) {

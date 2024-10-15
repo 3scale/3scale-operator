@@ -292,6 +292,48 @@ Secret name must be `zync`.
 
 See [Zync secret](apimanager-reference.md#zync) for reference.
 
+#### TLS database configuration ####
+
+It is possible to connect to both the system-database and zync database via TLS provided these databases have TLS enabled. To enable TLS communication to these databases you will need to configure the ApiManager and the database secret.
+
+In ApiManager CR we set the boolean to enable TLS configuration for the respictive databases
+- `spec.zyncDatabaseTLSEnabled: true`
+- `spec.systemDatabaseTLSEnabled: true`
+
+We pass the cert files in via the respective secret i.e. system-database & zync
+
+You set the following values in the secret to connect to the database via TLS
+
+| Secret Key | Secret Value |
+| --- | --- |
+| DATABASE_SSL_MODE | string of the SSL mode for database connection |
+| DB_SSL_CA | actual ca cert |
+| DB_SSL_CERT | actual client cert |
+| DB_SSL_KEY | actual client key |
+
+e.g. for system-database
+```bash
+oc create secret generic system-database \
+  --from-literal=DATABASE_SSL_MODE=verify-ca \
+  --from-literal=DATABASE_URL=postgresql://postgres:postgres@postgres-zync.postgres.svc.cluster.local/zync_production \
+  --from-literal=ZYNC_DATABASE_PASSWORD=password \
+  --from-file=DB_SSL_CA=rootCA.crt \
+  --from-file=DB_SSL_CERT=client.crt \
+  --from-file=DB_SSL_KEY=client.key 
+```
+e.g. for zync
+```bash
+oc create secret generic zync \
+  --from-literal=DATABASE_SSL_MODE=verify-ca \
+  --from-literal=DATABASE_URL=postgresql://postgres:postgres@postgres-zync.postgres.svc.cluster.local/zync_production \
+  --from-literal=ZYNC_DATABASE_PASSWORD=password \
+  --from-file=DB_SSL_CA=rootCA.crt \
+  --from-file=DB_SSL_CERT=client.crt \
+  --from-file=DB_SSL_KEY=client.key 
+```
+
+Once these values have been set and are correct the operator will proceed to mount the certs into the related pods to enable client TLS communication.
+
 #### S3 Filestorage Installation
 3scale’s FileStorage being in a S3 service instead of in a PVC.
 

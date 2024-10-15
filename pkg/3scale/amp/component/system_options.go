@@ -88,6 +88,7 @@ type SystemOptions struct {
 	SMTPLabels               map[string]string `validate:"required"`
 	SideKiqMetrics           bool
 	AppMetrics               bool
+	SystemDbTLSEnabled       bool
 
 	IncludeOracleOptionalSettings bool
 

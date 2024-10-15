@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
@@ -35,7 +36,6 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	)
 
 	ctx := context.TODO()
-
 	apimanager := basicApimanagerSpecTestSystemOptions()
 	appPreHookJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{Name: component.SystemAppPreHookJobName, Namespace: apimanager.Namespace},
@@ -59,12 +59,25 @@ func TestSystemReconcilerCreate(t *testing.T) {
 			},
 		},
 	}
+	systemDatabaseSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "system-database",
+			Namespace: apimanager.Namespace,
+		},
+		Data: map[string][]byte{},
+	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager, appPreHookJob}
+	objs := []runtime.Object{appPreHookJob, apimanager, systemDatabaseSecret}
+	fmt.Printf("Tracked objects: %v\n", objs)
 	s := scheme.Scheme
-	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := k8sappsv1.AddToScheme(s)
+	s.AddKnownTypes(appsv1alpha1.GroupVersion, &appsv1alpha1.APIManager{})
+	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Secret{}, &v1.SecretList{})
+	err := v1.AddToScheme(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = k8sappsv1.AddToScheme(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,8 +106,16 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	}
 
 	// Create a fake client to mock API calls.
-	cl := fake.NewFakeClient(objs...)
-	clientAPIReader := fake.NewFakeClient(objs...)
+	//cl := fake.NewFakeClient(objs...)
+	cl := fake.NewClientBuilder().
+		WithScheme(s).
+		WithRuntimeObjects(objs...).
+		Build()
+	//clientAPIReader := fake.NewFakeClient(objs...)
+	clientAPIReader := fake.NewClientBuilder().
+		WithScheme(s).
+		WithRuntimeObjects(objs...).
+		Build()
 	clientset := fakeclientset.NewSimpleClientset()
 	recorder := record.NewFakeRecorder(10000)
 
@@ -112,6 +133,7 @@ func TestSystemReconcilerCreate(t *testing.T) {
 		objName  string
 		obj      k8sclient.Object
 	}{
+		{"systemDatabase", "system-database", &v1.Secret{}},
 		{"systemPVC", "system-storage", &v1.PersistentVolumeClaim{}},
 		{"systemProviderService", "system-provider", &v1.Service{}},
 		{"systemMasterService", "system-master", &v1.Service{}},
@@ -217,7 +239,14 @@ func TestReplicaSystemReconciler(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			objs := []runtime.Object{tc.apimanager, appPreHookJob}
+			systemDatabaseSecret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "system-database",
+					Namespace: tc.apimanager.Namespace,
+				},
+				Data: map[string][]byte{},
+			}
+			objs := []runtime.Object{tc.apimanager, appPreHookJob, systemDatabaseSecret}
 			// Create a fake client to mock API calls.
 			cl := fake.NewFakeClient(objs...)
 			clientAPIReader := fake.NewFakeClient(objs...)

@@ -84,6 +84,10 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+	// +optional
+	SystemDatabaseTLSEnabled *bool `json:"systemDatabaseTLSEnabled,omitempty"`
+	// +optional
+	ZyncDatabaseTLSEnabled *bool `json:"zyncDatabaseTLSEnabled,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -1438,6 +1442,24 @@ func (a *APIManager) GetApicastCustomPoliciesSecretRefs() []*v1.LocalObjectRefer
 	return secretRefs
 }
 
+func (a *APIManager) GetSystemDatabaseSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+	systemDatabaseSecretRef := v1.LocalObjectReference{
+		Name: "system-database",
+	}
+	secretRefs = append(secretRefs, &systemDatabaseSecretRef)
+	return secretRefs
+}
+
+func (a *APIManager) GetZyncSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+	zyncSecretRef := v1.LocalObjectReference{
+		Name: "zync",
+	}
+	secretRefs = append(secretRefs, &zyncSecretRef)
+	return secretRefs
+}
+
 func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
@@ -1461,6 +1483,16 @@ func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
 	apicastCustomPoliciesSecretRefs := apimanager.GetApicastCustomPoliciesSecretRefs()
 	if len(apicastCustomPoliciesSecretRefs) > 0 {
 		secretRefs = append(secretRefs, apicastCustomPoliciesSecretRefs...)
+	}
+
+	systemDatabaseSecretRefs := apimanager.GetSystemDatabaseSecretRefs()
+	if len(systemDatabaseSecretRefs) > 0 {
+		secretRefs = append(secretRefs, systemDatabaseSecretRefs...)
+	}
+
+	zyncSecretRefs := apimanager.GetZyncSecretRefs()
+	if len(zyncSecretRefs) > 0 {
+		secretRefs = append(secretRefs, zyncSecretRefs...)
 	}
 
 	secretRefs = removeDuplicateSecretRefs(secretRefs)
@@ -1671,4 +1703,12 @@ type APIManagerList struct {
 
 func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
+}
+
+func (apimanager *APIManager) IsSystemDatabaseTLSEnabled() bool {
+	return apimanager.Spec.SystemDatabaseTLSEnabled != nil && *apimanager.Spec.SystemDatabaseTLSEnabled
+}
+
+func (apimanager *APIManager) IsZyncDatabaseTLSEnabled() bool {
+	return apimanager.Spec.ZyncDatabaseTLSEnabled != nil && *apimanager.Spec.ZyncDatabaseTLSEnabled
 }

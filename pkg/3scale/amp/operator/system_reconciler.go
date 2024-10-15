@@ -207,7 +207,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
 		}
-		err = r.ReconcileDeployment(system.AppDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
+		appDeployment, err := system.AppDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		err = r.ReconcileDeployment(appDeployment, reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -263,7 +267,11 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
 	}
 
-	err = r.ReconcileDeployment(system.SidekiqDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
+	sidekiqDeployment, err := system.SidekiqDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(sidekiqDeployment, reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
