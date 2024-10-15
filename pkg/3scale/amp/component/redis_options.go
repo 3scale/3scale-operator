@@ -24,9 +24,11 @@ type RedisOptions struct {
 
 	SystemCommonLabels            map[string]string `validate:"required"`
 	SystemRedisLabels             map[string]string `validate:"required"`
+	SystemRedisSecretLabels       map[string]string `validate:"required"`
 	SystemRedisPodTemplateLabels  map[string]string `validate:"required"`
 	BackendCommonLabels           map[string]string `validate:"required"`
 	BackendRedisLabels            map[string]string `validate:"required"`
+	BackendRedisSecretLabels      map[string]string `validate:"required"`
 	BackendRedisPodTemplateLabels map[string]string `validate:"required"`
 
 	SystemRedisPriorityClassName          string                        `validate:"-"`
@@ -47,6 +49,32 @@ type RedisOptions struct {
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
 	SystemRedisNamespace             string
+	// TLS
+	SystemRedisCAFile                    string
+	SystemRedisClientCertificate         string
+	SystemRedisPrivateKey                string
+	SystemRedisSSL                       string
+	BackendConfigCAFile                  string
+	BackendConfigClientCertificate       string
+	BackendConfigPrivateKey              string
+	BackendConfigSSL                     string
+	BackendConfigQueuesCAFile            string
+	BackendConfigQueuesClientCertificate string
+	BackendConfigQueuesPrivateKey        string
+	BackendConfigQueuesSSL               string
+
+	RedisTLSEnabled bool
+
+	// SSL Fields populated in secrets by User
+	SystemRedisSslCa           string
+	SystemRedisSslCert         string
+	SystemRedisSslKey          string
+	BackendConfigSslCa         string
+	BackendConfigSslCert       string
+	BackendConfigSslKey        string
+	BackendConfigQueuesSslCa   string
+	BackendConfigQueuesSslCert string
+	BackendConfigQueuesSslKey  string
 }
 
 func NewRedisOptions() *RedisOptions {
@@ -118,4 +146,51 @@ func DefaultBackendQueuesSentinelHosts() string {
 
 func DefaultBackendQueuesSentinelRole() string {
 	return ""
+}
+
+// TLS
+func DefaultSystemRedisCAFile() string {
+	return ""
+}
+
+func DefaultSystemRedisClientCertificate() string {
+	return ""
+}
+
+func DefaultSystemRedisPrivateKey() string {
+	return ""
+}
+
+func DefaultSystemRedisSSL() string {
+	return "false"
+}
+
+// TLS, Backend
+func DefaultBackendConfigCAFile() string {
+	return ""
+}
+func DefaultBackendConfigClientCertificate() string {
+	return ""
+}
+func DefaultBackendConfigPrivateKey() string {
+	return ""
+}
+func DefaultBackendConfigSSL() string {
+	return "false"
+}
+func DefaultBackendConfigQueuesCAFile() string {
+	return ""
+}
+func DefaultBackendConfigQueuesClientCertificate() string {
+	return ""
+}
+func DefaultBackendConfigQueuesPrivateKey() string {
+	return ""
+}
+func DefaultBackendConfigQueuesSSL() string {
+	return "false"
+}
+
+func DefaultSystemAndBackendRedisSslUserValue() string {
+	return "replaceme"
 }

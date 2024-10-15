@@ -25,6 +25,7 @@
          * [Setting custom Annotations](#setting-custom-annotations)
          * [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
          * [Gateway instrumentation](#gateway-instrumentation)
+         * [Setting Redis TLS Environment variables](#setting-redis-tls-environment-variables)
       * [Preflight checks](#preflights)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
@@ -213,6 +214,28 @@ type: Opaque
 
 Secret name must be `backend-redis`.
 
+User can add TLS details to connect to Redis.
+Example of backend-redis secret with TLS details:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-redis
+stringData:
+...
+CONFIG_REDIS_CA_FILE: ""
+CONFIG_REDIS_CERT: ""
+CONFIG_REDIS_PRIVATE_KEY: ""
+CONFIG_REDIS_SSL: "false"
+CONFIG_QUEUES_CA_FILE: ""
+CONFIG_QUEUES_CERT: ""
+CONFIG_QUEUES_PRIVATE_KEY: ""
+CONFIG_QUEUES_SSL: "false"
+...
+type: Opaque
+```
+**Notes** CONFIG_REDIS_SSL and CONFIG_QUEUES_SSL fields set to "true" by operator if any of other fields are not empty.
+
 See [Backend redis secret](apimanager-reference.md#backend-redis) for reference.
 
 * **System redis secret**
@@ -235,6 +258,25 @@ type: Opaque
 ```
 
 Secret name must be `system-redis`.
+
+User can add TLS details to connect to Redis.
+Example of system-redis secret with TLS details:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: system-redis
+stringData:
+...
+REDIS_CA_FILE:  ""
+REDIS_CLIENT_CERT:  ""
+REDIS_PRIVATE_KEY:  ""
+REDIS_SSL:  "false"
+...
+type: Opaque
+```
+**Notes** REDIS_SSL field set to "true" by operator if any of other fields are not empty.
 
 See [System redis secret](apimanager-reference.md#system-redis) for reference.
 
@@ -904,6 +946,35 @@ Whenever a controller reconciles an object it creates a new porta client to make
 #### Gateway instrumentation
 
 Please refer to [Gateway instrumentation](gateway-instrumentation.md) document
+
+
+#### Setting Redis TLS Environment variables
+
+To enable Redis TLS - use `redisTLSEnabled` boolean flag in APIManager Spec.  
+If `redisTLSEnabled` is `true` backend and system pods will include Redis TLS environment variables.
+
+```yaml
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  redisTLSEnabled: true
+  system: 
+ ...
+```
+Following environment variables will be set:  
+* Backend:
+  - CONFIG_REDIS_CA_FILE and CONFIG_QUEUES_CA_FILE for the CA certificate
+  - CONFIG_REDIS_CERT and CONFIG_QUEUES_CERT for the client certificate
+  - CONFIG_REDIS_PRIVATE_KEY and CONFIG_QUEUES_PRIVATE_KEY for the client key
+  - CONFIG_REDIS_SSL and CONFIG_QUEUES_SSL must be set to true when any of the above is present
+* System:
+  - REDIS_CA_FILE and BACKEND_REDIS_CA_FILE for the CA certificate
+  - REDIS_CLIENT_CERT and BACKEND_REDIS_CLIENT_CERT for the client certificate
+  - REDIS_PRIVATE_KEY and BACKEND_REDIS_PRIVATE_KEY for the client key
+  - REDIS_SSL and BACKEND_REDIS_SSL must be set to true when any of the above is present
+
+See [APIManager CRD](apimanager-reference.md) - `backend-redis` and `system-redis` secrets environment variables.
 
 ### Preflights
 

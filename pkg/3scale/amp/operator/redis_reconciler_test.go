@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
@@ -71,49 +73,64 @@ func TestRedisBackendDeploymentReconcilerCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Objects to track in the fake client.
-	objs := []runtime.Object{}
-
-	// Create a fake client to mock API calls.
-	cl := fake.NewFakeClient(objs...)
-	clientAPIReader := fake.NewFakeClient(objs...)
-	clientset := fakeclientset.NewSimpleClientset()
-	recorder := record.NewFakeRecorder(10000)
-
-	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
-	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
-
 	cases := []struct {
 		testName              string
+		backendRedisSecret    *v1.Secret
+		systemRedisSecret     *v1.Secret
 		reconcilerConstructor DependencyReconcilerConstructor
 		expectedObjs          []struct {
 			objName string
 			obj     client.Object
 		}
 	}{
-		{"backendRedis", NewBackendRedisDependencyReconciler, []struct {
-			objName string
-			obj     client.Object
-		}{
-			{"backend-redis", &k8sappsv1.Deployment{}},
-			{"backend-redis", &v1.Service{}},
-			{"redis-config", &v1.ConfigMap{}},
-			{"backend-redis-storage", &v1.PersistentVolumeClaim{}},
-		}},
-		{"systemRedis", NewSystemRedisDependencyReconciler, []struct {
-			objName string
-			obj     client.Object
-		}{
-			{"system-redis", &k8sappsv1.Deployment{}},
-			{"system-redis-storage", &v1.PersistentVolumeClaim{}},
-			{"system-redis", &v1.Service{}},
-		}},
+		{
+			"backendRedis",
+			getBackendRedisSecretTTL(),
+			nil,
+			NewBackendRedisDependencyReconciler,
+			[]struct {
+				objName string
+				obj     client.Object
+			}{
+				{"backend-redis", &k8sappsv1.Deployment{}},
+				{"backend-redis", &v1.Service{}},
+				{"redis-config", &v1.ConfigMap{}},
+				{"backend-redis-storage", &v1.PersistentVolumeClaim{}},
+				{"backend-redis", &v1.Secret{}},
+			}},
+		{
+			"systemRedis",
+			nil,
+			getSystemRedisSecretTTL(),
+			NewSystemRedisDependencyReconciler,
+			[]struct {
+				objName string
+				obj     client.Object
+			}{
+				{"system-redis", &k8sappsv1.Deployment{}},
+				{"system-redis-storage", &v1.PersistentVolumeClaim{}},
+				{"system-redis", &v1.Service{}},
+				{"system-redis", &v1.Secret{}},
+			}},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
+			objs := []runtime.Object{}
+			if tc.backendRedisSecret != nil {
+				objs = append(objs, tc.backendRedisSecret)
+			}
+			if tc.systemRedisSecret != nil {
+				objs = append(objs, tc.systemRedisSecret)
+			}
+			cl := fake.NewFakeClient(objs...)
+			clientAPIReader := fake.NewFakeClient(objs...)
+			clientset := fakeclientset.NewSimpleClientset()
+			recorder := record.NewFakeRecorder(10000)
+			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
+			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 			reconciler := tc.reconcilerConstructor(baseAPIManagerLogicReconciler)
-			_, err := reconciler.Reconcile()
+			_, err = reconciler.Reconcile()
 			if err != nil {
 				subT.Fatal(err)
 			}
@@ -130,5 +147,41 @@ func TestRedisBackendDeploymentReconcilerCreate(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func getBackendRedisSecretTTL() *v1.Secret {
+	data := map[string][]byte{
+		component.BackendSecretBackendRedisConfigCAFile:                  []byte("ca-file-content"),
+		component.BackendSecretBackendRedisConfigClientCertificate:       []byte("client-cert-content"),
+		component.BackendSecretBackendRedisConfigPrivateKey:              []byte("private-key-content"),
+		component.BackendSecretBackendRedisConfigSSL:                     []byte("false"),
+		component.BackendSecretBackendRedisConfigQueuesCAFile:            []byte("queues-ca-file-content"),
+		component.BackendSecretBackendRedisConfigQueuesClientCertificate: []byte("queues-client-cert-content"),
+		component.BackendSecretBackendRedisConfigQueuesPrivateKey:        []byte("queues-private-key-content"),
+		component.BackendSecretBackendRedisConfigQueuesSSL:               []byte("false"),
+	}
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      component.BackendSecretBackendRedisSecretName,
+			Namespace: namespace,
+		},
+		Data: data,
+	}
+}
+
+func getSystemRedisSecretTTL() *v1.Secret {
+	data := map[string][]byte{
+		component.SystemSecretSystemRedisCAFile:            []byte("ca-file-content"),
+		component.SystemSecretSystemRedisClientCertificate: []byte("client-cert-content"),
+		component.SystemSecretSystemRedisPrivateKey:        []byte("private-key-content"),
+		component.SystemSecretSystemRedisSSL:               []byte("false"),
+	}
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      component.SystemSecretSystemRedisSecretName,
+			Namespace: namespace,
+		},
+		Data: data,
 	}
 }

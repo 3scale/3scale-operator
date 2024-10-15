@@ -84,6 +84,8 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+	// +optional
+	RedisTLSEnabled *bool `json:"redisTLSEnabled,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -1534,4 +1536,8 @@ type APIManagerList struct {
 
 func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
+}
+
+func (apimanager *APIManager) IsRedisTLSEnabled() bool {
+	return apimanager.Spec.RedisTLSEnabled != nil && *apimanager.Spec.RedisTLSEnabled
 }

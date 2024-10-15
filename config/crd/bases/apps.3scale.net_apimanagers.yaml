@@ -8658,6 +8658,8 @@ spec:
                   enabled:
                     type: boolean
                 type: object
+              redisTLSEnabled:
+                type: boolean
               resourceRequirementsEnabled:
                 type: boolean
               system:

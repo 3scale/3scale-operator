@@ -8,7 +8,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
-
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -48,9 +47,11 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 
 	r.options.SystemCommonLabels = r.systemCommonLabels()
 	r.options.SystemRedisLabels = r.systemRedisLabels()
+	r.options.SystemRedisSecretLabels = r.systemRedisSecretLabels()
 	r.options.SystemRedisPodTemplateLabels = r.systemRedisPodTemplateLabels()
 	r.options.BackendCommonLabels = r.backendCommonLabels()
 	r.options.BackendRedisLabels = r.backendRedisLabels()
+	r.options.BackendRedisSecretLabels = r.backendRedisSecretLabels()
 	r.options.BackendRedisPodTemplateLabels = r.backendRedisPodTemplateLabels()
 
 	var err error
@@ -69,12 +70,14 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.setPersistentVolumeClaimOptions()
 	r.setPriorityClassNames()
 	r.setTopologySpreadConstraints()
+	r.setTLSEnabled()
 
 	// Should the operator be reading redis secrets?
 	// When HA is disabled, do we support external redis?
 	// If answer is true, why does the operator deploy redis?
 	// If the answer is no, then it would be sufficient to set default URL's (internal redis url)
 	// to options and reconciliate secret for owner reference
+
 	err = r.setSecretBasedOptions()
 	if err != nil {
 		return nil, fmt.Errorf("GetRedisOptions reading secret options: %w", err)
@@ -147,6 +150,138 @@ func (r *RedisOptionsProvider) setSecretBasedOptions() error {
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisSentinelRole,
 			component.DefaultSystemRedisSentinelRole(),
+		},
+
+		//TLS
+		{
+			&r.options.SystemRedisCAFile,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisCAFile,
+			component.DefaultSystemRedisCAFile(),
+		},
+		{
+			&r.options.SystemRedisClientCertificate,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisClientCertificate,
+			component.DefaultSystemRedisClientCertificate(),
+		},
+		{
+			&r.options.SystemRedisPrivateKey,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisPrivateKey,
+			component.DefaultSystemRedisPrivateKey(),
+		},
+		{
+			&r.options.SystemRedisSSL,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisSSL,
+			component.DefaultSystemRedisSSL(),
+		},
+		// SSL options populated by User
+		{
+			&r.options.SystemRedisSslCa,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisSslCa,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
+		},
+		{
+			&r.options.SystemRedisSslCert,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisSslCert,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
+		},
+		{
+			&r.options.SystemRedisSslKey,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisSslKey,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
+		},
+
+		// TLS / Backend
+		{
+			&r.options.BackendConfigCAFile,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigCAFile,
+			component.DefaultBackendConfigCAFile(),
+		},
+		{
+			&r.options.BackendConfigClientCertificate,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigClientCertificate,
+			component.DefaultBackendConfigClientCertificate(),
+		},
+		{
+			&r.options.BackendConfigPrivateKey,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigPrivateKey,
+			component.DefaultBackendConfigPrivateKey(),
+		},
+		{
+			&r.options.BackendConfigSSL,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigSSL,
+			component.DefaultBackendConfigSSL(),
+		},
+		{
+			&r.options.BackendConfigQueuesCAFile,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigQueuesCAFile,
+			component.DefaultBackendConfigQueuesCAFile(),
+		},
+		{
+			&r.options.BackendConfigQueuesClientCertificate,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigQueuesClientCertificate,
+			component.DefaultBackendConfigQueuesClientCertificate(),
+		},
+		{
+			&r.options.BackendConfigQueuesPrivateKey,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigQueuesPrivateKey,
+			component.DefaultBackendConfigQueuesPrivateKey(),
+		},
+		{
+			&r.options.BackendConfigQueuesSSL,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigQueuesSSL,
+			component.DefaultBackendConfigQueuesSSL(),
+		},
+		// SSL options populated by User
+		{
+			&r.options.BackendConfigSslCa,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisSslCa,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
+		},
+		{
+			&r.options.BackendConfigSslCert,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisSslCert,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
+		},
+		{
+			&r.options.BackendConfigSslKey,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisSslKey,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
+		},
+		{
+			&r.options.BackendConfigQueuesSslCa,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretConfigQueuesSslCa,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
+		},
+		{
+			&r.options.BackendConfigQueuesSslCert,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretConfigQueuesSslCert,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
+		},
+		{
+			&r.options.BackendConfigQueuesSslKey,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretConfigQueuesSslKey,
+			component.DefaultSystemAndBackendRedisSslUserValue(),
 		},
 	}
 
@@ -305,4 +440,23 @@ func (r *RedisOptionsProvider) redisConfigMapResourceVersion() (string, error) {
 		return "", err
 	}
 	return cm.GetResourceVersion(), nil
+}
+
+func (r *RedisOptionsProvider) backendRedisSecretLabels() map[string]string {
+	labels := r.backendCommonLabels()
+	labels["apimanager.apps.3scale.net/watched-by"] = "backend"
+	return labels
+}
+
+func (r *RedisOptionsProvider) systemRedisSecretLabels() map[string]string {
+	labels := r.systemCommonLabels()
+	labels["apimanager.apps.3scale.net/watched-by"] = "system"
+	return labels
+}
+
+func (s *RedisOptionsProvider) setTLSEnabled() {
+	s.options.RedisTLSEnabled = false
+	if s.apimanager.Spec.RedisTLSEnabled != nil {
+		s.options.RedisTLSEnabled = *s.apimanager.Spec.RedisTLSEnabled
+	}
 }

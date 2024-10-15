@@ -21,6 +21,29 @@ const (
 	DeploymentLabelSelector = "deployment"
 )
 
+var backendRedisTLSEnvVars = []string{
+	"CONFIG_REDIS_CA_FILE",
+	"CONFIG_REDIS_CERT",
+	"CONFIG_REDIS_PRIVATE_KEY",
+	"CONFIG_REDIS_SSL",
+	"CONFIG_QUEUES_CA_FILE",
+	"CONFIG_QUEUES_CERT",
+	"CONFIG_QUEUES_PRIVATE_KEY",
+	"CONFIG_QUEUES_SSL",
+}
+var systemRedisTLSEnvVars = []string{
+	"REDIS_CA_FILE",
+	"REDIS_CLIENT_CERT",
+	"REDIS_PRIVATE_KEY",
+	"REDIS_SSL",
+}
+var systemBackendRedisTLSEnvVars = []string{
+	"BACKEND_REDIS_CA_FILE",
+	"BACKEND_REDIS_CLIENT_CERT",
+	"BACKEND_REDIS_PRIVATE_KEY",
+	"BACKEND_REDIS_SSL",
+}
+
 type ContainerImage struct {
 	Name string
 	Tag  string
@@ -498,4 +521,81 @@ func removeEnvVar(envVars []corev1.EnvVar, name string) []corev1.EnvVar {
 		}
 	}
 	return newEnvVars
+}
+
+func BackendDeploymentsAddRedisTLSEnvMutator(desired *k8sappsv1.Deployment, existing *k8sappsv1.Deployment) (bool, error) {
+	update := false
+	for _, envVar := range backendRedisTLSEnvVars {
+		if !envVarExists(existing.Spec.Template.Spec.Containers[0].Env, envVar) {
+			existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+				helper.EnvVarFromSecret(envVar, "backend-redis", envVar))
+			update = true
+		}
+	}
+	return update, nil
+}
+
+func BackendDeploymentsRemoveRedisTLSEnvMutator(desired *k8sappsv1.Deployment, existing *k8sappsv1.Deployment) (bool, error) {
+	update := false
+	for _, envVar := range backendRedisTLSEnvVars {
+		if envVarExists(existing.Spec.Template.Spec.Containers[0].Env, envVar) {
+			existing.Spec.Template.Spec.Containers[0].Env = deleteEnvVar(existing.Spec.Template.Spec.Containers[0].Env, envVar)
+			update = true
+		}
+	}
+	return update, nil
+}
+
+func SystemDeploymentsAddRedisTLSEnvMutator(desired *k8sappsv1.Deployment, existing *k8sappsv1.Deployment) (bool, error) {
+	update := false
+	for _, envVar := range systemRedisTLSEnvVars {
+		if !envVarExists(existing.Spec.Template.Spec.Containers[0].Env, envVar) {
+			existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+				helper.EnvVarFromSecret(envVar, "system-redis", envVar))
+			update = true
+		}
+	}
+	for _, envVar := range systemBackendRedisTLSEnvVars {
+		if !envVarExists(existing.Spec.Template.Spec.Containers[0].Env, envVar) {
+			existing.Spec.Template.Spec.Containers[0].Env = append(existing.Spec.Template.Spec.Containers[0].Env,
+				helper.EnvVarFromSecret(envVar, "backend-redis", envVar))
+			update = true
+		}
+	}
+	return update, nil
+}
+
+func SystemDeploymentsRemoveRedisTLSEnvMutator(desired *k8sappsv1.Deployment, existing *k8sappsv1.Deployment) (bool, error) {
+	update := false
+	for _, envVar := range systemRedisTLSEnvVars {
+		if envVarExists(existing.Spec.Template.Spec.Containers[0].Env, envVar) {
+			existing.Spec.Template.Spec.Containers[0].Env = deleteEnvVar(existing.Spec.Template.Spec.Containers[0].Env, envVar)
+			update = true
+		}
+	}
+	for _, envVar := range systemBackendRedisTLSEnvVars {
+		if envVarExists(existing.Spec.Template.Spec.Containers[0].Env, envVar) {
+			existing.Spec.Template.Spec.Containers[0].Env = deleteEnvVar(existing.Spec.Template.Spec.Containers[0].Env, envVar)
+			update = true
+		}
+	}
+	return update, nil
+}
+
+func envVarExists(envVars []corev1.EnvVar, name string) bool {
+	for _, envVar := range envVars {
+		if envVar.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func deleteEnvVar(envVars []corev1.EnvVar, name string) []corev1.EnvVar {
+	for i, envVar := range envVars {
+		if envVar.Name == name {
+			return append(envVars[:i], envVars[i+1:]...) // Remove the env var
+		}
+	}
+	return envVars // Return the original slice if not found
 }

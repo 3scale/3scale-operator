@@ -47,6 +47,16 @@ const (
 	SystemSecretSystemRedisURLFieldName  = "URL"
 	SystemSecretSystemRedisSentinelHosts = "SENTINEL_HOSTS"
 	SystemSecretSystemRedisSentinelRole  = "SENTINEL_ROLE"
+
+	// TLS env vars
+	SystemSecretSystemRedisCAFile            = "REDIS_CA_FILE"
+	SystemSecretSystemRedisClientCertificate = "REDIS_CLIENT_CERT"
+	SystemSecretSystemRedisPrivateKey        = "REDIS_PRIVATE_KEY"
+	SystemSecretSystemRedisSSL               = "REDIS_SSL"
+
+	SystemSecretSystemRedisSslCa   = "SSL_CA"
+	SystemSecretSystemRedisSslCert = "SSL_CERT"
+	SystemSecretSystemRedisSslKey  = "SSL_KEY"
 )
 
 const (
@@ -165,13 +175,24 @@ func (system *System) getSystemSMTPEnvsFromSMTPSecret() []v1.EnvVar {
 
 func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 	result := []v1.EnvVar{}
-
 	result = append(result,
 		helper.EnvVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
 	)
+	if system.Options.RedisTLSEnabled {
+		result = append(result, system.SystemRedisTLSEnvVars()...)
+	}
 
+	return result
+}
+func (system *System) sidekiqInitContainerRedisEnvVars() []v1.EnvVar {
+	result := []v1.EnvVar{}
+	result = append(result, system.SystemRedisEnvVars()...)
+
+	if system.Options.RedisTLSEnabled {
+		result = append(result, system.BackendRedisTLSEnvVars()...)
+	}
 	return result
 }
 
@@ -265,6 +286,10 @@ func (system *System) buildAppMasterContainerEnv() []v1.EnvVar {
 	}
 	result = append(result, system.buildAppEnv()...)
 
+	if system.Options.RedisTLSEnabled {
+		result = append(result, system.SystemRedisTLSEnvVars()...)
+	}
+
 	return result
 }
 
@@ -321,11 +346,16 @@ func (system *System) buildSystemAppPostHookEnv() []v1.EnvVar {
 }
 
 func (system *System) BackendRedisEnvVars() []v1.EnvVar {
-	return []v1.EnvVar{
+	result := []v1.EnvVar{}
+	result = append(result,
 		helper.EnvVarFromSecret("BACKEND_REDIS_URL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
 		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
 		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
+	)
+	if system.Options.RedisTLSEnabled {
+		result = append(result, system.BackendRedisTLSEnvVars()...)
 	}
+	return result
 }
 
 func (system *System) EnvironmentConfigMap() *v1.ConfigMap {
@@ -507,6 +537,56 @@ func (system *System) appPodVolumes() []v1.Volume {
 	}
 
 	res = append(res, systemConfigVolume)
+
+	if system.Options.RedisTLSEnabled {
+		systemRedisTlsVolume := v1.Volume{
+			Name: "system-redis-secret",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: SystemSecretSystemRedisSecretName, // Name of the secret containing the TLS certs
+					Items: []v1.KeyToPath{
+						{
+							Key:  "SSL_CA",
+							Path: "system-redis-ca.crt",
+						},
+						{
+							Key:  "SSL_CERT",
+							Path: "system-redis-client.crt",
+						},
+						{
+							Key:  "SSL_KEY",
+							Path: "system-redis-private.key",
+						},
+					},
+				},
+			},
+		}
+		res = append(res, systemRedisTlsVolume)
+
+		backendRedisTlsVolume := v1.Volume{
+			Name: "backend-redis-secret",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: BackendSecretBackendRedisSecretName, // Name of the secret containing the TLS certs
+					Items: []v1.KeyToPath{
+						{
+							Key:  "SSL_CA",
+							Path: "backend-redis-ca.crt",
+						},
+						{
+							Key:  "SSL_CERT",
+							Path: "backend-redis-client.crt",
+						},
+						{
+							Key:  "SSL_KEY",
+							Path: "backend-redis-private.key",
+						},
+					},
+				},
+			},
+		}
+		res = append(res, backendRedisTlsVolume)
+	}
 
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		s3CredsProjectedVolume := v1.Volume{
@@ -878,6 +958,55 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 		}
 		res = append(res, s3CredsProjectedVolume)
 	}
+	if system.Options.RedisTLSEnabled {
+		systemRedisTlsVolume := v1.Volume{
+			Name: "system-redis-secret",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: SystemSecretSystemRedisSecretName, // Name of the secret containing the TLS certs
+					Items: []v1.KeyToPath{
+						{
+							Key:  "SSL_CA",
+							Path: "system-redis-ca.crt",
+						},
+						{
+							Key:  "SSL_CERT",
+							Path: "system-redis-client.crt",
+						},
+						{
+							Key:  "SSL_KEY",
+							Path: "system-redis-private.key",
+						},
+					},
+				},
+			},
+		}
+		res = append(res, systemRedisTlsVolume)
+
+		backendRedisTlsVolume := v1.Volume{
+			Name: "backend-redis-secret",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: BackendSecretBackendRedisSecretName, // Name of the secret containing the TLS certs
+					Items: []v1.KeyToPath{
+						{
+							Key:  "SSL_CA",
+							Path: "backend-redis-ca.crt",
+						},
+						{
+							Key:  "SSL_CERT",
+							Path: "backend-redis-client.crt",
+						},
+						{
+							Key:  "SSL_KEY",
+							Path: "backend-redis-private.key",
+						},
+					},
+				},
+			},
+		}
+		res = append(res, backendRedisTlsVolume)
+	}
 	return res
 }
 
@@ -925,9 +1054,10 @@ func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deploy
 							Command: []string{
 								"bash",
 								"-c",
-								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+								"bundle exec sh -c \"until rake boot:redis && curl --insecure --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
 							},
-							Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+							VolumeMounts: system.sidekiqContainerVolumeMounts(),
+							Env:          append(system.sidekiqInitContainerRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 						},
 					},
 					Containers: []v1.Container{
@@ -998,6 +1128,10 @@ func (system *System) appCommonContainerVolumeMounts(systemStorageReadonly bool)
 	}
 
 	res = append(res, system.systemConfigVolumeMount())
+	if system.Options.RedisTLSEnabled {
+		res = append(res, system.systemRedisTlsVolumeMount())
+		res = append(res, system.backendRedisTlsVolumeMount())
+	}
 
 	return res
 }
@@ -1028,7 +1162,10 @@ func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
 	}
 	res = append(res, systemTmpVolumeMount)
 	res = append(res, system.systemConfigVolumeMount())
-
+	if system.Options.RedisTLSEnabled {
+		res = append(res, system.systemRedisTlsVolumeMount())
+		res = append(res, system.backendRedisTlsVolumeMount())
+	}
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		res = append(res, system.s3CredsProjectedVolumeMount())
 	}
@@ -1325,4 +1462,44 @@ func (system *System) appDeveloperPorts() []v1.ContainerPort {
 	}
 
 	return ports
+}
+
+func (system *System) SystemRedisTLSEnvVars() []v1.EnvVar {
+	return []v1.EnvVar{
+		helper.EnvVarFromSecretOptional("SSL_CA", SystemSecretSystemRedisSecretName, "SSL_CA"),
+		helper.EnvVarFromSecretOptional("SSL_CERT", SystemSecretSystemRedisSecretName, "SSL_CERT"),
+		helper.EnvVarFromSecretOptional("SSL_KEY", SystemSecretSystemRedisSecretName, "SSL_KEY"),
+
+		helper.EnvVarFromValue("REDIS_CA_FILE", helper.EnvVarPathFromRedisSecret(SystemSecretSystemRedisSecretName, "REDIS_CA_FILE")),
+		helper.EnvVarFromValue("REDIS_CLIENT_CERT", helper.EnvVarPathFromRedisSecret(SystemSecretSystemRedisSecretName, "REDIS_CLIENT_CERT")),
+		helper.EnvVarFromValue("REDIS_PRIVATE_KEY", helper.EnvVarPathFromRedisSecret(SystemSecretSystemRedisSecretName, "REDIS_PRIVATE_KEY")),
+		helper.EnvVarFromSecret("REDIS_SSL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSSL),
+	}
+}
+
+func (system *System) BackendRedisTLSEnvVars() []v1.EnvVar {
+	return []v1.EnvVar{
+		helper.EnvVarFromSecretOptional("SSL_CA", BackendSecretBackendRedisSecretName, "SSL_CA"),
+		helper.EnvVarFromSecretOptional("SSL_CERT", BackendSecretBackendRedisSecretName, "SSL_CERT"),
+		helper.EnvVarFromSecretOptional("SSL_KEY", BackendSecretBackendRedisSecretName, "SSL_KEY"),
+		helper.EnvVarFromValue("BACKEND_REDIS_CA_FILE", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_CA_FILE")),
+		helper.EnvVarFromValue("BACKEND_REDIS_CLIENT_CERT", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_CERT")),
+		helper.EnvVarFromValue("BACKEND_REDIS_PRIVATE_KEY", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_PRIVATE_KEY")),
+		helper.EnvVarFromSecret("BACKEND_REDIS_SSL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigSSL),
+	}
+}
+
+func (system *System) systemRedisTlsVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "system-redis-secret",
+		ReadOnly:  false,
+		MountPath: "/tls/system-redis",
+	}
+}
+func (system *System) backendRedisTlsVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "backend-redis-secret",
+		ReadOnly:  false,
+		MountPath: "/tls",
+	}
 }

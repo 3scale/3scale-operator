@@ -143,7 +143,14 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-
+	err = r.updateSystemRedisSecretSSL()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.updateBackendRedisSecretSSL()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 	return reconcile.Result{}, nil
 }
 
@@ -202,4 +209,69 @@ func RedisConfigMap(apimanager *appsv1alpha1.APIManager) (*component.RedisConfig
 		return nil, err
 	}
 	return component.NewRedisConfigMap(opts), nil
+}
+
+func (r *RedisReconciler) updateSystemRedisSecretSSL() error {
+	secret := &corev1.Secret{}
+	err := r.Client().Get(context.TODO(), client.ObjectKey{
+		Namespace: r.apiManager.Namespace, Name: "system-redis"}, secret)
+	if k8serr.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if secret.Data == nil { // tmp, added for test that need to be improved?. In runtime not happens
+		return nil
+	}
+
+	if len(secret.Data[component.SystemSecretSystemRedisCAFile]) > 0 ||
+		len(secret.Data[component.SystemSecretSystemRedisClientCertificate]) > 0 ||
+		len(secret.Data[component.SystemSecretSystemRedisPrivateKey]) > 0 {
+		secret.Data[component.SystemSecretSystemRedisSSL] = []byte("true")
+	} else {
+		secret.Data[component.SystemSecretSystemRedisSSL] = []byte("false")
+	}
+	err = r.UpdateResource(secret)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RedisReconciler) updateBackendRedisSecretSSL() error {
+	secret := &corev1.Secret{}
+	err := r.Client().Get(context.TODO(), client.ObjectKey{
+		Namespace: r.apiManager.Namespace, Name: "backend-redis"}, secret)
+	if k8serr.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if secret.Data == nil { // tmp, added for test that need to be improved?. In runtime not happens
+		return nil
+	}
+
+	if len(secret.Data[component.BackendSecretBackendRedisConfigCAFile]) > 0 ||
+		len(secret.Data[component.BackendSecretBackendRedisConfigClientCertificate]) > 0 ||
+		len(secret.Data[component.BackendSecretBackendRedisConfigPrivateKey]) > 0 {
+		secret.Data[component.BackendSecretBackendRedisConfigSSL] = []byte("true")
+	} else {
+		secret.Data[component.BackendSecretBackendRedisConfigSSL] = []byte("false")
+	}
+
+	if len(secret.Data[component.BackendSecretBackendRedisConfigQueuesCAFile]) > 0 ||
+		len(secret.Data[component.BackendSecretBackendRedisConfigQueuesClientCertificate]) > 0 ||
+		len(secret.Data[component.BackendSecretBackendRedisConfigQueuesPrivateKey]) > 0 {
+		secret.Data[component.BackendSecretBackendRedisConfigQueuesSSL] = []byte("true")
+	} else {
+		secret.Data[component.BackendSecretBackendRedisConfigQueuesSSL] = []byte("false")
+	}
+
+	err = r.UpdateResource(secret)
+	if err != nil {
+		return err
+	}
+	return nil
 }

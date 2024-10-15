@@ -288,7 +288,7 @@ func (redis *Redis) BackendRedisSecret() *v1.Secret {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   BackendSecretBackendRedisSecretName,
-			Labels: redis.Options.BackendCommonLabels,
+			Labels: redis.Options.BackendRedisSecretLabels,
 		},
 		StringData: map[string]string{
 			BackendSecretBackendRedisStorageURLFieldName:           redis.Options.BackendStorageURL,
@@ -297,6 +297,23 @@ func (redis *Redis) BackendRedisSecret() *v1.Secret {
 			BackendSecretBackendRedisStorageSentinelRoleFieldName:  redis.Options.BackendRedisStorageSentinelRole,
 			BackendSecretBackendRedisQueuesSentinelHostsFieldName:  redis.Options.BackendRedisQueuesSentinelHosts,
 			BackendSecretBackendRedisQueuesSentinelRoleFieldName:   redis.Options.BackendRedisQueuesSentinelRole,
+
+			// TLS
+			BackendSecretBackendRedisConfigCAFile:                  redis.Options.BackendConfigCAFile,
+			BackendSecretBackendRedisConfigClientCertificate:       redis.Options.BackendConfigClientCertificate,
+			BackendSecretBackendRedisConfigPrivateKey:              redis.Options.BackendConfigPrivateKey,
+			BackendSecretBackendRedisConfigSSL:                     redis.Options.BackendConfigSSL,
+			BackendSecretBackendRedisConfigQueuesCAFile:            redis.Options.BackendConfigQueuesCAFile,
+			BackendSecretBackendRedisConfigQueuesClientCertificate: redis.Options.BackendConfigQueuesClientCertificate,
+			BackendSecretBackendRedisConfigQueuesPrivateKey:        redis.Options.BackendConfigQueuesPrivateKey,
+			BackendSecretBackendRedisConfigQueuesSSL:               redis.Options.BackendConfigQueuesSSL,
+
+			BackendSecretBackendRedisSslCa:   redis.Options.BackendConfigSslCa,
+			BackendSecretBackendRedisSslCert: redis.Options.BackendConfigSslCert,
+			BackendSecretBackendRedisSslKey:  redis.Options.BackendConfigSslKey,
+			BackendSecretConfigQueuesSslCa:   redis.Options.BackendConfigQueuesSslCa,
+			BackendSecretConfigQueuesSslCert: redis.Options.BackendConfigQueuesSslCert,
+			BackendSecretConfigQueuesSslKey:  redis.Options.BackendConfigQueuesSslKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -470,12 +487,22 @@ func (redis *Redis) SystemRedisSecret() *v1.Secret {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   SystemSecretSystemRedisSecretName,
-			Labels: redis.Options.SystemCommonLabels,
+			Labels: redis.Options.SystemRedisSecretLabels,
 		},
 		StringData: map[string]string{
 			SystemSecretSystemRedisURLFieldName:  redis.Options.SystemRedisURL,
 			SystemSecretSystemRedisSentinelHosts: redis.Options.SystemRedisSentinelsHosts,
 			SystemSecretSystemRedisSentinelRole:  redis.Options.SystemRedisSentinelsRole,
+
+			// TLS
+			SystemSecretSystemRedisCAFile:            redis.Options.SystemRedisCAFile,
+			SystemSecretSystemRedisClientCertificate: redis.Options.SystemRedisClientCertificate,
+			SystemSecretSystemRedisPrivateKey:        redis.Options.SystemRedisPrivateKey,
+			SystemSecretSystemRedisSSL:               redis.Options.SystemRedisSSL,
+
+			SystemSecretSystemRedisSslCa:   redis.Options.SystemRedisSslCa,
+			SystemSecretSystemRedisSslCert: redis.Options.SystemRedisSslCert,
+			SystemSecretSystemRedisSslKey:  redis.Options.SystemRedisSslKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -484,9 +511,13 @@ func (redis *Redis) SystemRedisSecret() *v1.Secret {
 func (redis *Redis) buildEnv() []v1.EnvVar {
 	// https://github.com/sclorg/redis-container/ images have
 	// redis data directory hardcoded on /var/lib/redis/data
-	return []v1.EnvVar{
+	result := []v1.EnvVar{}
+
+	result = append(result,
 		helper.EnvVarFromValue("REDIS_CONF", path.Join(backendRedisConfigPath, backendRedisConfigMapKey)),
-	}
+	)
+
+	return result
 }
 
 ////// End System Redis

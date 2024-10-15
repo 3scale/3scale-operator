@@ -62,6 +62,11 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
+	//if r.apiManager.Spec.RedisTLSEnabled != nil && *r.apiManager.Spec.RedisTLSEnabled {
+	//	listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.BackendDeploymentsAddRedisTLSEnvMutator)
+	//} else {
+	//	listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.BackendDeploymentsRemoveRedisTLSEnvMutator)
+	//}
 
 	err = r.ReconcileDeployment(backend.ListenerDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(listenerDeploymentMutator...))
 	if err != nil {
@@ -104,6 +109,11 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if r.apiManager.Spec.Backend.WorkerSpec.Replicas != nil {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
+	//if r.apiManager.Spec.RedisTLSEnabled != nil && *r.apiManager.Spec.RedisTLSEnabled {
+	//	workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.BackendDeploymentsAddRedisTLSEnvMutator)
+	//} else {
+	//	workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.BackendDeploymentsRemoveRedisTLSEnvMutator)
+	//}
 
 	err = r.ReconcileDeployment(backend.WorkerDeployment(ampImages.Options.BackendImage), reconcilers.DeploymentMutator(workerDeploymentMutator...))
 	if err != nil {
