@@ -27,3 +27,14 @@ func MapKeys[M ~map[K]V, K comparable, V any](m M) []K {
 	}
 	return r
 }
+
+func MergeMapsStringString(map1, map2 map[string]string) map[string]string {
+	merged := make(map[string]string)
+	for key, value := range map1 {
+		merged[key] = value
+	}
+	for key, value := range map2 {
+		merged[key] = value
+	}
+	return merged
+}

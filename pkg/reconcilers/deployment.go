@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	k8sappsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -661,4 +662,367 @@ func DeploymentRemoveTLSVolumesAndMountsMutator(desired, existing *k8sappsv1.Dep
 		return false, nil
 	}
 	return true, nil
+}
+
+func DeploymentBackendRedisTLSRemoveEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	tlsEnvVars := []string{
+		"CONFIG_REDIS_CA_FILE",
+		"CONFIG_REDIS_CERT",
+		"CONFIG_REDIS_PRIVATE_KEY",
+		"CONFIG_REDIS_SSL",
+	}
+	for _, varName := range tlsEnvVars {
+		existing.Spec.Template.Spec.Containers[0].Env = removeEnvVar(existing.Spec.Template.Spec.Containers[0].Env, varName)
+	}
+	// Remove environment variables from InitContainer(s)
+	for i := range existing.Spec.Template.Spec.InitContainers {
+		for _, varName := range tlsEnvVars {
+			existing.Spec.Template.Spec.InitContainers[i].Env = removeEnvVar(existing.Spec.Template.Spec.InitContainers[i].Env, varName)
+		}
+	}
+	return true, nil
+}
+
+func DeploymentQueuesRedisTLSRemoveEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	tlsEnvVars := []string{
+		"CONFIG_QUEUES_CA_FILE",
+		"CONFIG_QUEUES_CERT",
+		"CONFIG_QUEUES_PRIVATE_KEY",
+		"CONFIG_QUEUES_SSL",
+	}
+	for _, varName := range tlsEnvVars {
+		existing.Spec.Template.Spec.Containers[0].Env = removeEnvVar(existing.Spec.Template.Spec.Containers[0].Env, varName)
+	}
+	// Remove environment variables from InitContainer(s)
+	for i := range existing.Spec.Template.Spec.InitContainers {
+		for _, varName := range tlsEnvVars {
+			existing.Spec.Template.Spec.InitContainers[i].Env = removeEnvVar(existing.Spec.Template.Spec.InitContainers[i].Env, varName)
+		}
+	}
+	return true, nil
+}
+
+func DeploymentSystemRedisTLSRemoveEnvMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	tlsEnvVars := []string{
+		"REDIS_CA_FILE",
+		"REDIS_CLIENT_CERT",
+		"REDIS_PRIVATE_KEY",
+		"REDIS_SSL",
+		"BACKEND_REDIS_CA_FILE",
+		"BACKEND_REDIS_CLIENT_CERT",
+		"BACKEND_REDIS_PRIVATE_KEY",
+		"BACKEND_REDIS_SSL",
+	}
+	for _, varName := range tlsEnvVars {
+		existing.Spec.Template.Spec.Containers[0].Env = removeEnvVar(existing.Spec.Template.Spec.Containers[0].Env, varName)
+	}
+	return true, nil
+}
+
+func DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNamesToRemove := []string{"system-redis-tls", "backend-redis-tls"}
+	return removeRedisTLSVolumesAndMounts(existing, volumeNamesToRemove)
+}
+
+func DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNamesToRemove := []string{"backend-redis-tls"}
+	return removeRedisTLSVolumesAndMounts(existing, volumeNamesToRemove)
+}
+
+func DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNamesToRemove := []string{"queues-redis-tls"}
+	return removeRedisTLSVolumesAndMounts(existing, volumeNamesToRemove)
+}
+
+func removeRedisTLSVolumesAndMounts(existing *k8sappsv1.Deployment, volumeNamesToRemove []string) (bool, error) {
+	if existing.Spec.Template.Spec.Volumes == nil {
+		return false, nil
+	}
+	volumeModified := false
+	for _, volumeName := range volumeNamesToRemove {
+		for idx, volume := range existing.Spec.Template.Spec.Volumes {
+			if volume.Name == volumeName {
+				existing.Spec.Template.Spec.Volumes = append(existing.Spec.Template.Spec.Volumes[:idx], existing.Spec.Template.Spec.Volumes[idx+1:]...)
+				volumeModified = true
+				break
+			}
+		}
+	}
+	if volumeModified {
+		for cIdx, container := range existing.Spec.Template.Spec.Containers {
+			for _, volumeName := range volumeNamesToRemove {
+				for vIdx, volumeMount := range container.VolumeMounts {
+					if volumeMount.Name == volumeName {
+						container.VolumeMounts = append(container.VolumeMounts[:vIdx], container.VolumeMounts[vIdx+1:]...)
+						break
+					}
+				}
+			}
+			existing.Spec.Template.Spec.Containers[cIdx] = container
+		}
+		for cIdx, initContainer := range existing.Spec.Template.Spec.InitContainers {
+			for _, volumeName := range volumeNamesToRemove {
+				for vIdx, volumeMount := range initContainer.VolumeMounts {
+					if volumeMount.Name == volumeName {
+						initContainer.VolumeMounts = append(initContainer.VolumeMounts[:vIdx], initContainer.VolumeMounts[vIdx+1:]...)
+						break
+					}
+				}
+			}
+			existing.Spec.Template.Spec.InitContainers[cIdx] = initContainer
+		}
+	}
+	if !volumeModified {
+		return false, nil
+	}
+	return true, nil
+}
+
+// Add volumes mutators for Redis TLS
+
+func addRedistTLSVolumesAndMounts(existing *k8sappsv1.Deployment, volumeNamesToAdd []string, volumeMountsToAdd []v1.VolumeMount, items map[string][]v1.KeyToPath, secretName string) (bool, error) {
+	volumeModified := false
+	if existing.Spec.Template.Spec.Volumes == nil {
+		existing.Spec.Template.Spec.Volumes = []v1.Volume{}
+	}
+	// Iterate through volume names to add
+	for _, volumeName := range volumeNamesToAdd {
+		// Check if the volume already exists, and find it to remove
+		var volumeToRemove *v1.Volume
+		for i, volume := range existing.Spec.Template.Spec.Volumes {
+			if volume.Name == volumeName {
+				volumeToRemove = &existing.Spec.Template.Spec.Volumes[i]
+				break
+			}
+		}
+		// If the volume exists, remove it from the list
+		if volumeToRemove != nil {
+			// Remove the volume by creating a new slice without the old volume
+			existing.Spec.Template.Spec.Volumes = append(
+				existing.Spec.Template.Spec.Volumes[:0],
+				existing.Spec.Template.Spec.Volumes[1:]...,
+			)
+			volumeModified = true
+		}
+		// Create the new volume and add it
+		var volumeToAdd v1.Volume
+		volumeItems, exists := items[volumeName]
+		if exists {
+			volumeToAdd = v1.Volume{
+				Name: volumeName,
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: secretName,
+						Items:      volumeItems,
+					},
+				},
+			}
+			volumeModified = true
+		}
+		if volumeToAdd.Name != "" {
+			existing.Spec.Template.Spec.Volumes = append(existing.Spec.Template.Spec.Volumes, volumeToAdd)
+		}
+	}
+	// Add volume mounts to containers and init containers
+	for cIdx, container := range existing.Spec.Template.Spec.Containers {
+		for _, volumeMount := range volumeMountsToAdd {
+			// Check if the volumeMount already exists, and remove it
+			var mountToRemove *v1.VolumeMount
+			for i, mount := range container.VolumeMounts {
+				if mount.Name == volumeMount.Name {
+					mountToRemove = &container.VolumeMounts[i]
+					break
+				}
+			}
+			// If the volumeMount exists, remove it
+			if mountToRemove != nil {
+				// Remove the volume mount
+				container.VolumeMounts = append(
+					container.VolumeMounts[:0],
+					container.VolumeMounts[1:]...,
+				)
+				volumeModified = true
+			}
+			// Add the new volume mount
+			container.VolumeMounts = append(container.VolumeMounts, volumeMount)
+			volumeModified = true
+		}
+		// Update the container in the deployment spec
+		existing.Spec.Template.Spec.Containers[cIdx] = container
+	}
+	// Add volume mounts to init containers
+	for cIdx, initContainer := range existing.Spec.Template.Spec.InitContainers {
+		for _, volumeMount := range volumeMountsToAdd {
+			// Check if the volumeMount already exists, and remove it
+			var mountToRemove *v1.VolumeMount
+			for i, mount := range initContainer.VolumeMounts {
+				if mount.Name == volumeMount.Name {
+					mountToRemove = &initContainer.VolumeMounts[i]
+					break
+				}
+			}
+			// If the volumeMount exists, remove it
+			if mountToRemove != nil {
+				// Remove the volume mount
+				initContainer.VolumeMounts = append(
+					initContainer.VolumeMounts[:0],
+					initContainer.VolumeMounts[1:]...,
+				)
+				volumeModified = true
+			}
+			// Add the new volume mount
+			initContainer.VolumeMounts = append(initContainer.VolumeMounts, volumeMount)
+			volumeModified = true
+		}
+		// Update the init container in the deployment spec
+		existing.Spec.Template.Spec.InitContainers[cIdx] = initContainer
+	}
+	if volumeModified {
+		return true, nil
+	}
+	return false, nil
+}
+
+func DeploymentSystemRedisTLSSyncVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNameToAdd := "system-redis-tls"
+	volumeMountNameToAdd := "system-redis-tls"
+
+	// Check if the volume already exists in the deployment
+	if volumeExists(existing.Spec.Template.Spec.Volumes, volumeNameToAdd) {
+		return false, nil // Volume already exists, no mutation needed
+	}
+
+	// Check if the volume mount already exists in the containers
+	for _, container := range existing.Spec.Template.Spec.Containers {
+		if volumeMountExists(container.VolumeMounts, volumeMountNameToAdd) {
+			return false, nil // Volume mount already exists, no mutation needed
+		}
+	}
+
+	// If volume and mount don't exist, we proceed to add them
+	volumeMountsToAdd := []v1.VolumeMount{
+		{
+			Name:      volumeMountNameToAdd,
+			MountPath: "/tls/system-redis",
+		},
+	}
+
+	// Define the secret items to mount
+	items := map[string][]v1.KeyToPath{
+		volumeNameToAdd: {
+			{
+				Key:  "REDIS_SSL_CA",
+				Path: "system-redis-ca.crt",
+			},
+			{
+				Key:  "REDIS_SSL_CERT",
+				Path: "system-redis-client.crt",
+			},
+			{
+				Key:  "REDIS_SSL_KEY",
+				Path: "system-redis-private.key",
+			},
+		},
+	}
+
+	secretName := "system-redis"
+
+	// Call the addRedistTLSVolumesAndMounts helper to add the volume and volume mount
+	return addRedistTLSVolumesAndMounts(existing, []string{volumeNameToAdd}, volumeMountsToAdd, items, secretName)
+}
+
+func DeploymentBackendRedisTLSSyncVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNameToAdd := "backend-redis-tls"
+	volumeMountNameToAdd := "backend-redis-tls"
+
+	// Check if the volume already exists in the deployment
+	if volumeExists(existing.Spec.Template.Spec.Volumes, volumeNameToAdd) {
+		return false, nil // Volume already exists, no mutation needed
+	}
+
+	// Check if the volume mount already exists in the containers
+	for _, container := range existing.Spec.Template.Spec.Containers {
+		if volumeMountExists(container.VolumeMounts, volumeMountNameToAdd) {
+			return false, nil // Volume mount already exists, no mutation needed
+		}
+	}
+
+	// If volume and mount don't exist, we proceed to add them
+	volumeMountsToAdd := []v1.VolumeMount{
+		{
+			Name:      volumeMountNameToAdd,
+			MountPath: "/tls/backend-redis",
+		},
+	}
+
+	// Define the secret items to mount
+	items := map[string][]v1.KeyToPath{
+		volumeNameToAdd: {
+			{
+				Key:  "REDIS_SSL_CA",
+				Path: "backend-redis-ca.crt",
+			},
+			{
+				Key:  "REDIS_SSL_CERT",
+				Path: "backend-redis-client.crt",
+			},
+			{
+				Key:  "REDIS_SSL_KEY",
+				Path: "backend-redis-private.key",
+			},
+		},
+	}
+
+	secretName := "backend-redis"
+
+	// Call the addRedistTLSVolumesAndMounts helper to add the volume and volume mount
+	return addRedistTLSVolumesAndMounts(existing, []string{volumeNameToAdd}, volumeMountsToAdd, items, secretName)
+}
+
+func DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	volumeNameToAdd := "queues-redis-tls"
+	volumeMountNameToAdd := "queues-redis-tls"
+
+	// Check if the volume already exists in the deployment
+	if volumeExists(existing.Spec.Template.Spec.Volumes, volumeNameToAdd) {
+		return false, nil // Volume already exists, no mutation needed
+	}
+
+	// Check if the volume mount already exists in the containers
+	for _, container := range existing.Spec.Template.Spec.Containers {
+		if volumeMountExists(container.VolumeMounts, volumeMountNameToAdd) {
+			return false, nil // Volume mount already exists, no mutation needed
+		}
+	}
+
+	// If volume and mount don't exist, we proceed to add them
+	volumeMountsToAdd := []v1.VolumeMount{
+		{
+			Name:      volumeMountNameToAdd,
+			MountPath: "/tls/queues",
+		},
+	}
+
+	// Define the secret items to mount
+	items := map[string][]v1.KeyToPath{
+		volumeNameToAdd: {
+			{
+				Key:  "REDIS_SSL_QUEUES_CA",
+				Path: "config-queues-ca.crt",
+			},
+			{
+				Key:  "REDIS_SSL_QUEUES_CERT",
+				Path: "config-queues-client.crt",
+			},
+			{
+				Key:  "REDIS_SSL_QUEUES_KEY",
+				Path: "config-queues-private.key",
+			},
+		},
+	}
+
+	secretName := "backend-redis"
+
+	// Call the addRedistTLSVolumesAndMounts helper to add the volume and volume mount
+	return addRedistTLSVolumesAndMounts(existing, []string{volumeNameToAdd}, volumeMountsToAdd, items, secretName)
 }

@@ -3,11 +3,11 @@ package helper
 import (
 	"context"
 	"fmt"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 func GetSecretDataValueOrDefault(secretData map[string][]byte, fieldName string, defaultValue string) string {
@@ -196,4 +196,45 @@ func IsSecretWatchedBy3scale(secret *v1.Secret) bool {
 	}
 
 	return false
+}
+
+func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, namespace string) bool {
+	secret := &v1.Secret{}
+	secretKey := k8sclient.ObjectKey{
+		Name:      secretName,
+		Namespace: namespace,
+	}
+	err := client.Get(context.TODO(), secretKey, secret)
+	if err != nil {
+		return false
+	}
+
+	existingLabels := secret.Labels
+	if existingLabels != nil {
+		if _, ok := existingLabels["apimanager.apps.3scale.net/watched-by"]; ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ValidateRedisURLPrefix(redisUrl string, isTLS bool) error {
+	if redisUrl == "" {
+		return fmt.Errorf("Redis URL cannot be empty in secret")
+	}
+	// If TLS is enabled, URL should start with "rediss://"
+	if isTLS {
+		if !strings.HasPrefix(redisUrl, "rediss://") {
+			return fmt.Errorf("invalid URL, when TLS is enabled, URL must start with 'rediss://'," +
+				" also confirm your port matches the TLS port set in your redis.conf")
+		}
+	} else {
+		// If TLS is not enabled, URL should start with "redis://"
+		if !strings.HasPrefix(redisUrl, "redis://") {
+			return fmt.Errorf("invalid URL, when TLS is not enabled, URL must start with 'redis://', " +
+				" also confirm your port matches the Non-TLS port set in your redis.conf.")
+		}
+	}
+	return nil
 }

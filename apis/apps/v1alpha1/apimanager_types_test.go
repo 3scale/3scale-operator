@@ -264,6 +264,8 @@ func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
 				},
 			},
 			want: []*v1.LocalObjectReference{
+				{Name: "system-redis"},
+				{Name: "backend-redis"},
 				{
 					Name: "system-database",
 				},
@@ -314,6 +316,12 @@ func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
 				},
 			},
 			want: []*v1.LocalObjectReference{
+				{
+					Name: "system-redis",
+				},
+				{
+					Name: "backend-redis",
+				},
 				{
 					Name: "https-cert-secret",
 				},

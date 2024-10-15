@@ -105,8 +105,8 @@ func testSystemRedisPodTemplateAnnotations() map[string]string {
 
 func testBackendRedisSecret() *v1.Secret {
 	data := map[string]string{
-		component.BackendSecretBackendRedisStorageURLFieldName:           "storageURLValue",
-		component.BackendSecretBackendRedisQueuesURLFieldName:            "queueURLValue",
+		component.BackendSecretBackendRedisStorageURLFieldName:           "redis://storageURLValue",
+		component.BackendSecretBackendRedisQueuesURLFieldName:            "redis://queueURLValue",
 		component.BackendSecretBackendRedisStorageSentinelHostsFieldName: "storageSentinelHostsValue",
 		component.BackendSecretBackendRedisStorageSentinelRoleFieldName:  "storageSentinelRoleValue",
 		component.BackendSecretBackendRedisQueuesSentinelHostsFieldName:  "queueSentinelHostsValue",

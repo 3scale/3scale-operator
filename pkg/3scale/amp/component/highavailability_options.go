@@ -23,6 +23,15 @@ type HighAvailabilityOptions struct {
 	ZyncDatabaseSslMode              string
 	ZyncDatabaseSslCert              string
 	ZyncDatabaseSslKey               string
+	SystemRedisSslCa                 string
+	SystemRedisSslCert               string
+	SystemRedisSslKey                string
+	BackendRedisSslCa                string
+	BackendRedisSslCert              string
+	BackendRedisSslKey               string
+	BackendRedisQueuesSslCa          string
+	BackendRedisQueuesSslCert        string
+	BackendRedisQueuesSslKey         string
 }
 
 func NewHighAvailabilityOptions() *HighAvailabilityOptions {
