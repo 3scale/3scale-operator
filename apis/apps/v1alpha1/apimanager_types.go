@@ -84,6 +84,8 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+	// +optional
+	RedisTLSEnabled *bool `json:"redisTLSEnabled,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -1442,6 +1444,14 @@ func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
 	// TODO: Add TLS Secrets and ACL Secrets once support for them is implemented
+	systemRedisSecretRefs := apimanager.GetSystemRedisSecretRefs()
+	if len(systemRedisSecretRefs) > 0 {
+		secretRefs = append(secretRefs, systemRedisSecretRefs...)
+	}
+	backendRedisSecretRefs := apimanager.GetBackendRedisSecretRefs()
+	if len(backendRedisSecretRefs) > 0 {
+		secretRefs = append(secretRefs, backendRedisSecretRefs...)
+	}
 
 	apicastHTTPSCertSecretRefs := apimanager.GetApicastHTTPSCertSecretRefs()
 	if len(apicastHTTPSCertSecretRefs) > 0 {
@@ -1671,4 +1681,39 @@ type APIManagerList struct {
 
 func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
+}
+
+func (apimanager *APIManager) IsSystemRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.RedisTLSEnabled != nil &&
+		*apimanager.Spec.RedisTLSEnabled &&
+		apimanager.Spec.ExternalComponents != nil &&
+		apimanager.Spec.ExternalComponents.System != nil &&
+		*apimanager.Spec.ExternalComponents.System.Redis {
+		tlsEnabled = true
+	}
+	return tlsEnabled
+}
+func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.RedisTLSEnabled != nil &&
+		*apimanager.Spec.RedisTLSEnabled &&
+		apimanager.Spec.ExternalComponents != nil &&
+		apimanager.Spec.ExternalComponents.System != nil &&
+		*apimanager.Spec.ExternalComponents.Backend.Redis {
+		tlsEnabled = true
+	}
+	return tlsEnabled
+}
+
+func (a *APIManager) GetSystemRedisSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+	secretRefs = append(secretRefs, &v1.LocalObjectReference{Name: "system-redis"})
+	return secretRefs
+}
+
+func (a *APIManager) GetBackendRedisSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+	secretRefs = append(secretRefs, &v1.LocalObjectReference{Name: "backend-redis"})
+	return secretRefs
 }

@@ -197,3 +197,24 @@ func IsSecretWatchedBy3scale(secret *v1.Secret) bool {
 
 	return false
 }
+
+func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, namespace string) bool {
+	secret := &v1.Secret{}
+	secretKey := k8sclient.ObjectKey{
+		Name:      secretName,
+		Namespace: namespace,
+	}
+	err := client.Get(context.TODO(), secretKey, secret)
+	if err != nil {
+		return false
+	}
+
+	existingLabels := secret.Labels
+	if existingLabels != nil {
+		if _, ok := existingLabels["apimanager.apps.3scale.net/watched-by"]; ok {
+			return true
+		}
+	}
+
+	return false
+}

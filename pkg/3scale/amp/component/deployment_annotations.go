@@ -192,6 +192,36 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 				}
 			}
 		}
+	case *Backend:
+		backend := c
+		backendRedisSecret := &corev1.Secret{}
+		backendRedisSecretKey := k8sclient.ObjectKey{
+			Name:      "backend-redis",
+			Namespace: backend.Options.Namespace,
+		}
+		err := client.Get(ctx, backendRedisSecretKey, backendRedisSecret)
+		if err != nil {
+			return nil, err
+		}
+		if helper.IsSecretWatchedBy3scale(backendRedisSecret) {
+			annotationKey := fmt.Sprintf("%s", BackendRedisSecretResverAnnotation)
+			annotations[annotationKey] = backendRedisSecret.ResourceVersion
+		}
+	case *System:
+		system := c
+		systemRedisSecret := &corev1.Secret{}
+		systemRedisSecretKey := k8sclient.ObjectKey{
+			Name:      "system-redis",
+			Namespace: system.Options.Namespace,
+		}
+		err := client.Get(ctx, systemRedisSecretKey, systemRedisSecret)
+		if err != nil {
+			return nil, err
+		}
+		if helper.IsSecretWatchedBy3scale(systemRedisSecret) {
+			annotationKey := fmt.Sprintf("%s", SystemRedisSecretResverAnnotation)
+			annotations[annotationKey] = systemRedisSecret.ResourceVersion
+		}
 
 	default:
 		return nil, fmt.Errorf("unrecognized component %s is not supported", deploymentName)
@@ -223,6 +253,17 @@ func HasSecretHashChanged(ctx context.Context, client k8sclient.Client, deployme
 		default:
 			return false
 		}
+	case *Backend:
+		switch {
+		case strings.HasPrefix(deploymentAnnotation, BackendRedisSecretResverAnnotation):
+			secretToCheckKey.Name = "backend-redis"
+		}
+	case *System:
+		switch {
+		case strings.HasPrefix(deploymentAnnotation, SystemRedisSecretResverAnnotation):
+			secretToCheckKey.Name = "system-redis"
+		}
+
 	default:
 		logger.Info(fmt.Sprintf("unrecognized component %s is not supported", c))
 		return false
