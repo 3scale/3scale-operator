@@ -70,6 +70,8 @@ func TestSystemReconcilerCreate(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{appPreHookJob, apimanager, systemDatabaseSecret}
 	fmt.Printf("Tracked objects: %v\n", objs)
+	//objs := []runtime.Object{apimanager, appPreHookJob}
+	objs = append(objs, createSystemRedisSecret(apimanager.Namespace))
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, &appsv1alpha1.APIManager{})
 	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Secret{}, &v1.SecretList{})
@@ -247,6 +249,8 @@ func TestReplicaSystemReconciler(t *testing.T) {
 				Data: map[string][]byte{},
 			}
 			objs := []runtime.Object{tc.apimanager, appPreHookJob, systemDatabaseSecret}
+			//objs := []runtime.Object{tc.apimanager, appPreHookJob}
+			objs = append(objs, createSystemRedisSecret(tc.apimanager.Namespace))
 			// Create a fake client to mock API calls.
 			cl := fake.NewFakeClient(objs...)
 			clientAPIReader := fake.NewFakeClient(objs...)
@@ -329,6 +333,20 @@ func testSystemAPIManagerCreator(appReplicas, sidekiqReplicas *int64) *appsv1alp
 				SearchdSpec:     &appsv1alpha1.SystemSearchdSpec{},
 			},
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
+		},
+	}
+}
+
+// create fake system-redis secret
+// will use it to add to list of objects tracked by the fake client
+func createSystemRedisSecret(namespace string) *v1.Secret {
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "system-redis",
+			Namespace: namespace, // Set the namespace
+		},
+		Data: map[string][]byte{
+			"redis-password": []byte("fake-password"),
 		},
 	}
 }

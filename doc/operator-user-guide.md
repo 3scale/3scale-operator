@@ -1,43 +1,46 @@
 # User Guide
 
 <!--ts-->
-* [User Guide](#user-guide)
-   * [Installing 3scale](#installing-3scale)
-      * [Prerequisites](#prerequisites)
-      * [Basic installation](#basic-installation)
-      * [Deployment Configuration Options](#deployment-configuration-options)
-         * [Evaluation Installation](#evaluation-installation)
-         * [External Databases Installation](#external-databases-installation)
-         * [S3 Filestorage Installation](#s3-filestorage-installation)
-            * [Long Term S3 IAM credentials](#long-term-s3-iam-credentials)
-            * [Manual mode with STS](#manual-mode-with-sts)
-            * [AWS S3 compatible provider](#aws-s3-compatible-provider)
-         * [Setting a custom Storage Class for System FileStorage RWX PVC-based installations](#setting-a-custom-storage-class-for-system-filestorage-rwx-pvc-based-installations)
-         * [PostgreSQL Installation](#postgresql-installation)
-         * [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
-         * [Setting custom affinity and tolerations](#setting-custom-affinity-and-tolerations)
-         * [Setting custom compute resource requirements at component level](#setting-custom-compute-resource-requirements-at-component-level)
-         * [Setting custom storage resource requirements](#setting-custom-storage-resource-requirements)
-         * [Setting custom PriorityClassName](#setting-custom-priorityclassname)
-         * [Setting Horizontal Pod Autoscaling](#setting-horizontal-pod-autoscaling)
-         * [Setting custom TopologySpreadConstraints](#setting-custom-topologyspreadconstraints)
-         * [Setting custom labels](#setting-custom-labels)
-         * [Setting custom Annotations](#setting-custom-annotations)
-         * [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
-         * [Disabling zync route generation or zync entirely](#disabling-zync-route-generation-or-zync-entirely)
-         * [Gateway instrumentation](#gateway-instrumentation)
-      * [Preflight checks](#preflights)
-      * [Reconciliation](#reconciliation)
-         * [Resources](#resources)
-         * [Backend replicas](#backend-replicas)
-         * [Apicast replicas](#apicast-replicas)
-         * [System replicas](#system-replicas)
-         * [Pod Disruption Budget](#pod-disruption-budget)
-      * [Upgrading 3scale](#upgrading-3scale)
-      * [3scale installation Backup and Restore](#3scale-installation-backup-and-restore)
-      * [Application Capabilities](#application-capabilities)
-      * [APIManager CRD reference](#apimanager-crd-reference)
-         * [CR Samples](#cr-samples)
+- [User Guide](#user-guide)
+  - [Installing 3scale](#installing-3scale)
+    - [Prerequisites](#prerequisites)
+    - [Basic installation](#basic-installation)
+    - [Deployment Configuration Options](#deployment-configuration-options)
+      - [Evaluation Installation](#evaluation-installation)
+      - [External Databases Installation](#external-databases-installation)
+      - [S3 Filestorage Installation](#s3-filestorage-installation)
+        - [Long Term S3 IAM credentials](#long-term-s3-iam-credentials)
+        - [Manual mode with STS](#manual-mode-with-sts)
+        - [AWS S3 compatible provider](#aws-s3-compatible-provider)
+      - [Setting a custom Storage Class for System FileStorage RWX PVC-based installations](#setting-a-custom-storage-class-for-system-filestorage-rwx-pvc-based-installations)
+      - [Deprecated - PostgreSQL Installation](#deprecated---postgresql-installation)
+      - [Enabling Pod Disruption Budgets](#enabling-pod-disruption-budgets)
+      - [Setting custom affinity and tolerations](#setting-custom-affinity-and-tolerations)
+      - [Setting custom compute resource requirements at component level](#setting-custom-compute-resource-requirements-at-component-level)
+      - [Setting custom storage resource requirements](#setting-custom-storage-resource-requirements)
+      - [Setting custom PriorityClassName](#setting-custom-priorityclassname)
+      - [Setting Horizontal Pod Autoscaling](#setting-horizontal-pod-autoscaling)
+      - [Setting custom TopologySpreadConstraints](#setting-custom-topologyspreadconstraints)
+      - [Setting custom labels](#setting-custom-labels)
+      - [Setting custom Annotations](#setting-custom-annotations)
+      - [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
+      - [Disabling zync route generation or zync entirely](#disabling-zync-route-generation-or-zync-entirely)
+      - [Gateway instrumentation](#gateway-instrumentation)
+      - [Redis TLS Communication](#redis-tls-communication)
+        - [Setting Redis TLS Environment variables](#setting-redis-tls-environment-variables)
+        - [Sentinel for Redis TLS](#sentinel-for-redis-tls)
+    - [Preflights](#preflights)
+    - [Reconciliation](#reconciliation)
+      - [Resources](#resources)
+      - [Backend replicas](#backend-replicas)
+      - [Apicast replicas](#apicast-replicas)
+      - [System replicas](#system-replicas)
+      - [Pod Disruption Budget](#pod-disruption-budget)
+    - [Upgrading 3scale](#upgrading-3scale)
+    - [3scale installation Backup and Restore](#3scale-installation-backup-and-restore)
+    - [Application Capabilities](#application-capabilities)
+    - [APIManager CRD reference](#apimanager-crd-reference)
+      - [CR Samples](#cr-samples)
 <!--te-->
 
 ## Installing 3scale
@@ -227,6 +230,32 @@ type: Opaque
 
 Secret name must be `backend-redis`.
 
+To allow secure TLS communication for the Redis connection for Backend, the following TLS certificate details 
+should be added to the `backend-redis` Secret:
+- REDIS_SSL_CA: The Redis Certificate Authority (CA) certificate.
+- REDIS_SSL_CERT: The Redis client certificate.
+- REDIS_SSL_KEY: The private key for the Redis client certificate.
+- REDIS_SSL_QUEUES_CA: The Redis Queues Certificate Authority (CA) certificate.
+- REDIS_SSL_QUEUES_CERT: The Redis Queues client certificate.
+- REDIS_SSL_QUEUES_KEY: The private key for the Redis Queues client certificate.
+
+Example of backend-redis secret with TLS details:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-redis
+stringData:
+  REDIS_SSL_CA: xxxxx......
+  REDIS_SSL_CERT: xxxxx......
+  REDIS_SSL_KEY: xxxxx......
+  REDIS_SSL_QUEUES_CA: xxxxx......
+  REDIS_SSL_QUEUES_CERT: xxxxx......
+  REDIS_SSL_QUEUES_KEY: xxxxx......
+type: Opaque
+```
+For more details on TLS configuration, refer to the [Setting Redis TLS Environment variables](#setting-redis-tls-environment-variables) section.
+
 See [Backend redis secret](apimanager-reference.md#backend-redis) for reference.
 
 * **System redis secret**
@@ -249,6 +278,27 @@ type: Opaque
 ```
 
 Secret name must be `system-redis`.
+
+To enable secure TLS communication for the Redis connection used by the system pods (such as system-app and system-sidekiq), the following TLS certificate details should be added to the `system-redis` secret:
+- REDIS_SSL_CA: The Redis Certificate Authority (CA) certificate.
+- REDIS_SSL_CERT: The Redis client certificate.
+- REDIS_SSL_KEY: The private key for the Redis client certificate.
+**Important**: REDIS_SSL_CA, REDIS_SSL_CERT and REDIS_SSL_KEY certificate fields must  be populated with valid certificates in `backend-redis` secret also; it's require for `system pods` to set TLS connection with Redis.
+For more details, please refer to the section on [Setting Redis TLS Environment variables](#setting-redis-tls-environment-variables).
+
+- Example of system-redis secret with TLS details:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: system-redis
+stringData:
+  REDIS_SSL_CA: xxxxx......
+  REDIS_SSL_CERT: xxxxx......
+  REDIS_SSL_KEY: xxxxx......
+type: Opaque
+```
 
 See [System redis secret](apimanager-reference.md#system-redis) for reference.
 
@@ -989,6 +1039,128 @@ Once the environment variable has been added, zync will no longer generate route
 #### Gateway instrumentation
 
 Please refer to [Gateway instrumentation](gateway-instrumentation.md) document
+
+
+#### Redis TLS Communication
+
+##### Setting Redis TLS Environment variables
+
+To enable TLS communication in Redis, certain configurations must be defined within the `ApiManager CR`, and redis secrets.   
+Below are the key settings and environment variables involved in the process:
+
+- Following definitions are required in the **ApiManager CR** to enable TLS communication:
+    - `spec.system.systemRedisTLSEnabled: true` - for system redis
+    - `spec.backend.backendRedisTLSEnabled: true` - for backend redis
+    - `spec.backend.queuesRedisTLSEnabled: true` - for queues redis
+- When Redis TLS is enabled, the TLS environment variables for Backend and System components will be set in Pods.
+  - for Backend - in backend-worker, backend-cron, and backend-listener pods.
+  - for System - in system-app and system-sidekiq pods.
+- TLS Environment variables in the pods will appear as PATH to Certificate files, that contains
+  - Certificate (CA cert), 
+  - Client Certificate,
+  - Client Private Key
+- TLS certificate files are populated from the **backend-redis** and **system-redis** secrets.
+
+
+The following environment variables are set to "1" (true) by the Operator to notify apisonator/backend and system 3scale components that Redis TLS communication can be established:
+
+- CONFIG_REDIS_SSL
+  The Operator sets this variable to true when:
+  1. The backendRedisTLSEnabled flag is set to true in the APIManager CR.
+  2. The following certificate fields are populated from the backend-redis secret:
+       - CONFIG_REDIS_CA_FILE
+       - CONFIG_REDIS_CERT
+       - CONFIG_REDIS_PRIVATE_KEY
+  1. The REDIS_STORAGE_URL is valid URL format and contains the `rediss://` secure prefix.
+
+- CONFIG_QUEUES_SSL
+The Operator sets this variable to true when:
+  1. The queuesRedisTLSEnabled flag is set to true in the APIManager CR.
+  2. The following certificate fields are populated from the backend-redis secret:
+      - CONFIG_QUEUES_CA_FILE
+      - CONFIG_QUEUES_CERT
+      - CONFIG_QUEUES_PRIVATE_KEY
+  3. The REDIS_QUEUES_URL is valid URL format and contains the `rediss://` secure prefix.
+
+- REDIS_SSL
+The Operator sets this variable to true when:
+  1. The systemRedisTLSEnabled flag is set to true in the APIManager CR.
+  2. The following certificate fields are populated from the system-redis secret:
+       - REDIS_CA_FILE
+       - REDIS_CLIENT_CERT
+       - REDIS_PRIVATE_KEY
+  3. The REDIS_URL is valid and contains the `rediss://` secure prefix.
+  4. The following fields are populated from the backend-redis secret:
+       - CONFIG_REDIS_CA_FILE
+       - CONFIG_REDIS_CERT
+       - CONFIG_REDIS_PRIVATE_KEY
+
+
+The tables below show the mapping between TLS certificate environment variables in the pods, their corresponding definitions in the related Redis backend and system secrets.
+
+Table. **Backend** - pods: `backend-listener`,`backend-cron`; `backend worker`, secret: `backedn-redis`
+
+| ENV Var Name and value (Path in pod) in Backend pods     | Data field Name in backedn-redis secret |
+|----------------------------------------------------------|----------------------------------------|
+| CONFIG_REDIS_CA_FILE=/tls/backend-redis-ca.crt           | REDIS_SSL_CA                                 |
+| CONFIG_REDIS_CERT=/tls/backend-redis-client.crt          | REDIS_SSL_CERT                               |
+| CONFIG_REDIS_PRIVATE_KEY=/tls/backend-redis-private.key  | REDIS_SSL_KEY                                |
+| CONFIG_REDIS_SSL=1                                       | NA                                     |
+| CONFIG_QUEUES_CA_FILE=/tls/queues/config-queues-ca.crt          | REDIS_SSL_QUEUES_CA                          |
+| CONFIG_QUEUES_CERT=/tls/queues/config-queues-client.crt         | REDIS_SSL_QUEUES_CERT                        |
+| CONFIG_QUEUES_PRIVATE_KEY=/tls/queues/config-queues-private.key | REDIS_SSL_QUEUES_KEY                         |
+| CONFIG_QUEUES_SSL=1                                      | NA                                     |
+
+
+
+Table. **System** - pods: `system-app`, `system-sidekiq`; secrets: `system-redis` and `backedn-redis`
+
+| ENV Var Name and value (Path in pod) in system pods           | Data field Name in system or backedn-redis secrets | secret name  |
+|---------------------------------------------------------------|------------------------|--------------|
+| REDIS_CA_FILE=/tls/system-redis/system-redis-ca.crt           | REDIS_SSL_CA                 | system-redis |
+| REDIS_CLIENT_CERT=/tls/system-redis/system-redis-client.crt   | REDIS_SSL_CERT               | system-redis |
+| REDIS_PRIVATE_KEY=/tls/system-redis/system-redis-private.key  | REDIS_SSL_KEY                | system-redis |
+| REDIS_SSL=1                                                   |                        | NA           |
+| BACKEND_REDIS_CA_FILE=/tls/backend-redis-ca.crt               | REDIS_SSL_CA                 | backedn-redis|
+| BACKEND_REDIS_CERT=/tls/backend-redis-client.crt              | REDIS_SSL_CERT               | backedn-redis|
+| BACKEND_REDIS_PRIVATE_KEY=/tls/backend-redis-private.key      | REDIS_SSL_KEY                | backedn-redis|
+| BACKEND_REDIS_SSL=1                                           |                        | NA           |
+
+**Note** Following environment variables are defined and set to "1" (true) in system pods,  when `redisTLSEnabled` is `true`.
+- REDIS_SSL=1
+- BACKEND_REDIS_SSL=1
+
+This is example for APIManager CR where Redis TLS communication is enabled for all three redis instances - system, backend and queues.
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  systemRedisTLSEnabled: true
+  backendRedisTLSEnabled: true
+  queuesRedisTLSEnabled: true
+  system:
+    fileStorage:
+      simpleStorageService:
+        configurationSecretRef:
+          name: s3-credentials
+  wildcardDomain: <wildcardDomain>
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      redis: true
+```
+
+See [APIManager CRD](apimanager-reference.md) - `backend-redis` and `system-redis` secrets, APImanager spec.
+
+##### Sentinel for Redis TLS
+- When Redis TLS is enabled, Sentinel (if defined) must also use TLS communication. The corresponding Sentinel Hosts fields in the system-redis and/or backend-redis secrets, if populated, must have a `rediss://` URL prefix. Note that TLS communication will work if just one of the Sentinel hosts is secure. However, this is not recommended for reliability, as it poses a risk if the secure host fails. It is advised to have all Sentinel hosts secured.
+
+- If the Sentinel Hosts fields are not defined or are empty in the system-redis and/or backend-redis secrets, this is a valid configuration. In this case, Redis clients will communicate directly with the Redis Master over TLS, bypassing Sentinel. This is a valid configuration when Sentinel is not needed.
+
 
 ### Preflights
 

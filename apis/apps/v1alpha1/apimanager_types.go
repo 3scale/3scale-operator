@@ -379,6 +379,10 @@ type BackendSpec struct {
 	WorkerSpec *BackendWorkerSpec `json:"workerSpec,omitempty"`
 	// +optional
 	CronSpec *BackendCronSpec `json:"cronSpec,omitempty"`
+	// +optional
+	BackendRedisTLSEnabled *bool `json:"backendRedisTLSEnabled,omitempty"`
+	// +optional
+	QueuesRedisTLSEnabled *bool `json:"queuesRedisTLSEnabled,omitempty"`
 }
 
 type BackendRedisPersistentVolumeClaimSpec struct {
@@ -519,6 +523,9 @@ type SystemSpec struct {
 
 	// +optional
 	SystemDatabaseTLSEnabled *bool `json:"systemDatabaseTLSEnabled,omitempty"`
+
+	// +optional
+	SystemRedisTLSEnabled *bool `json:"systemRedisTLSEnabled,omitempty"`
 }
 
 type SystemAppSpec struct {
@@ -1465,6 +1472,14 @@ func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
 	// TODO: Add TLS Secrets and ACL Secrets once support for them is implemented
+	systemRedisSecretRefs := apimanager.GetSystemRedisSecretRefs()
+	if len(systemRedisSecretRefs) > 0 {
+		secretRefs = append(secretRefs, systemRedisSecretRefs...)
+	}
+	backendRedisSecretRefs := apimanager.GetBackendRedisSecretRefs()
+	if len(backendRedisSecretRefs) > 0 {
+		secretRefs = append(secretRefs, backendRedisSecretRefs...)
+	}
 
 	apicastHTTPSCertSecretRefs := apimanager.GetApicastHTTPSCertSecretRefs()
 	if len(apicastHTTPSCertSecretRefs) > 0 {
@@ -1712,4 +1727,44 @@ func (apimanager *APIManager) IsSystemDatabaseTLSEnabled() bool {
 
 func (apimanager *APIManager) IsZyncDatabaseTLSEnabled() bool {
 	return apimanager.Spec.Zync != nil && apimanager.Spec.Zync.ZyncDatabaseTLSEnabled != nil && *apimanager.Spec.Zync.ZyncDatabaseTLSEnabled
+}
+
+func (apimanager *APIManager) IsSystemRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.System != nil &&
+		apimanager.Spec.System.SystemRedisTLSEnabled != nil &&
+		*apimanager.Spec.System.SystemRedisTLSEnabled {
+		tlsEnabled = true
+	}
+	return tlsEnabled
+}
+func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.Backend != nil &&
+		apimanager.Spec.Backend.BackendRedisTLSEnabled != nil &&
+		*apimanager.Spec.Backend.BackendRedisTLSEnabled {
+		tlsEnabled = true
+	}
+	return tlsEnabled
+}
+func (apimanager *APIManager) IsQueuesRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.Backend != nil &&
+		apimanager.Spec.Backend.QueuesRedisTLSEnabled != nil &&
+		*apimanager.Spec.Backend.QueuesRedisTLSEnabled {
+		tlsEnabled = true
+	}
+	return tlsEnabled
+}
+
+func (a *APIManager) GetSystemRedisSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+	secretRefs = append(secretRefs, &v1.LocalObjectReference{Name: "system-redis"})
+	return secretRefs
+}
+
+func (a *APIManager) GetBackendRedisSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+	secretRefs = append(secretRefs, &v1.LocalObjectReference{Name: "backend-redis"})
+	return secretRefs
 }
