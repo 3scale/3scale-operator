@@ -3,6 +3,7 @@ package upgrade
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -284,16 +285,37 @@ func transferDeploymentConfigVolumes(dc *appsv1.DeploymentConfig, deployment *k8
 	volumesAdded := false
 
 	// Map to store volume names present in deployment
-	dVolumes := make(map[string]bool)
+	dVolumes := make(map[string]corev1.Volume)
 	for _, dVolume := range deployment.Spec.Template.Spec.Volumes {
-		dVolumes[dVolume.Name] = true
+		dVolumes[dVolume.Name] = dVolume
 	}
 
 	// Determine which volumes exist in dc but not in deployment
 	missingVolumes := make([]corev1.Volume, 0)
+	missingItems := make(map[string][]corev1.KeyToPath)
 	for _, dcVolume := range dc.Spec.Template.Spec.Volumes {
-		if _, exists := dVolumes[dcVolume.Name]; !exists {
+		if existingVolume, exists := dVolumes[dcVolume.Name]; !exists {
 			missingVolumes = append(missingVolumes, dcVolume)
+		} else {
+			// If the volume is using a ConfigMap, check that the existing volume has all the same items as the dcVolume
+			if existingVolume.ConfigMap != nil && dcVolume.ConfigMap != nil {
+				if !reflect.DeepEqual(existingVolume.ConfigMap, dcVolume.ConfigMap) {
+					itemDifference := make([]corev1.KeyToPath, 0)
+					for _, dcItem := range dcVolume.ConfigMap.Items {
+						itemFound := false
+						for _, dItem := range existingVolume.ConfigMap.Items {
+							if dcItem.Key == dItem.Key {
+								itemFound = true
+								break
+							}
+						}
+						if !itemFound {
+							itemDifference = append(itemDifference, dcItem)
+						}
+					}
+					missingItems[existingVolume.Name] = itemDifference
+				}
+			}
 		}
 	}
 
@@ -303,6 +325,19 @@ func transferDeploymentConfigVolumes(dc *appsv1.DeploymentConfig, deployment *k8
 			deployment.Spec.Template.Spec.Volumes = make([]corev1.Volume, 0)
 		}
 		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, missingVolumes...)
+		volumesAdded = true
+	}
+
+	// Add missing items to existing volumes in the Deployment
+	if len(missingItems) > 0 {
+		for i, v := range deployment.Spec.Template.Spec.Volumes {
+			if items, exists := missingItems[v.Name]; exists {
+				if deployment.Spec.Template.Spec.Volumes[i].ConfigMap.Items == nil {
+					deployment.Spec.Template.Spec.Volumes[i].ConfigMap.Items = make([]corev1.KeyToPath, 0)
+				}
+				deployment.Spec.Template.Spec.Volumes[i].ConfigMap.Items = append(items, v.ConfigMap.Items...)
+			}
+		}
 		volumesAdded = true
 	}
 
