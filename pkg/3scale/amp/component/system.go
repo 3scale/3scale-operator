@@ -23,6 +23,10 @@ const (
 	SystemSecretSystemDatabaseUserFieldName         = "DB_USER"
 	SystemSecretSystemDatabasePasswordFieldName     = "DB_PASSWORD"
 	SystemSecretSystemDatabaseRootPasswordFieldName = "DB_ROOT_PASSWORD"
+	SystemSecretDatabaseSslCa                       = "DATABASE_SSL_CA"
+	SystemSecretDatabaseSslCert                     = "DATABASE_SSL_CERT"
+	SystemSecretDatabaseSslKey                      = "DATABASE_SSL_KEY"
+	SystemSecretDatabaseSslMode                     = "DATABASE_SSL_MODE"
 )
 
 const (
@@ -183,6 +187,10 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 
 	result = append(result,
 		helper.EnvVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
+		helper.EnvVarFromSecret("DATABASE_SSL_CA", SystemSecretSystemDatabaseSecretName, "ca.crt"),
+		helper.EnvVarFromSecret("DATABASE_SSL_CERT", SystemSecretSystemDatabaseSecretName, "tls.crt"),
+		helper.EnvVarFromSecret("DATABASE_SSL_KEY", SystemSecretSystemDatabaseSecretName, "tls.key"),
+		helper.EnvVarFromSecret("DATABASE_SSL_MODE", SystemSecretSystemDatabaseSecretName, "ssl_mode"),
 
 		helper.EnvVarFromSecret("MASTER_DOMAIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterDomainFieldName),
 		helper.EnvVarFromSecret("MASTER_USER", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterUserFieldName),

@@ -25,6 +25,10 @@ const (
 	ZyncSecretDatabaseURLFieldName         = "DATABASE_URL"
 	ZyncSecretDatabasePasswordFieldName    = "ZYNC_DATABASE_PASSWORD"
 	ZyncSecretAuthenticationTokenFieldName = "ZYNC_AUTHENTICATION_TOKEN"
+	ZyncSecretDatabaseSslCa                = "DATABASE_SSL_CA"
+	ZyncSecretDatabaseSslCert              = "DATABASE_SSL_CERT"
+	ZyncSecretDatabaseSslKey               = "DATABASE_SSL_KEY"
+	ZyncSecretDatabaseSslMode              = "DATABASE_SSL_MODE"
 )
 
 const (
@@ -267,6 +271,10 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
 		helper.EnvVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
 		helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
+		helper.EnvVarFromSecret("DATABASE_SSL_CA", ZyncSecretName, "ca.crt"),
+		helper.EnvVarFromSecret("DATABASE_SSL_CERT", ZyncSecretName, "tls.crt"),
+		helper.EnvVarFromSecret("DATABASE_SSL_KEY", ZyncSecretName, "tls.key"),
+		helper.EnvVarFromSecret("DATABASE_SSL_MODE", ZyncSecretName, "ssl_mode"),
 		{
 			Name: "POD_NAME",
 			ValueFrom: &v1.EnvVarSource{
