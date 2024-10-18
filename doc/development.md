@@ -28,7 +28,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 * [operator-sdk] version v1.2.0
 * [docker] version 17.03+
 * [git][git_tool]
-* [go] version 1.20+
+* [go] version 1.21+
 * [kubernetes] version v1.13.0+
 * [oc] version v4.1+
 * Access to a Openshift v4.8.0+ cluster.
