@@ -29,6 +29,16 @@ const (
 	BackendSecretBackendRedisStorageSentinelRoleFieldName  = "REDIS_STORAGE_SENTINEL_ROLE"
 	BackendSecretBackendRedisQueuesSentinelHostsFieldName  = "REDIS_QUEUES_SENTINEL_HOSTS"
 	BackendSecretBackendRedisQueuesSentinelRoleFieldName   = "REDIS_QUEUES_SENTINEL_ROLE"
+
+	// TLS
+	BackendSecretBackendRedisConfigCAFile                  = "CONFIG_REDIS_CA_FILE"
+	BackendSecretBackendRedisConfigClientCertificate       = "CONFIG_REDIS_CERT"
+	BackendSecretBackendRedisConfigPrivateKey              = "CONFIG_REDIS_PRIVATE_KEY"
+	BackendSecretBackendRedisConfigSSL                     = "CONFIG_REDIS_SSL"
+	BackendSecretBackendRedisConfigQueuesCAFile            = "CONFIG_QUEUES_CA_FILE"
+	BackendSecretBackendRedisConfigQueuesClientCertificate = "CONFIG_QUEUES_CERT"
+	BackendSecretBackendRedisConfigQueuesPrivateKey        = "CONFIG_QUEUES_PRIVATE_KEY"
+	BackendSecretBackendRedisConfigQueuesSSL               = "CONFIG_QUEUES_SSL"
 )
 
 const (
@@ -380,6 +390,15 @@ func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelHostsFieldName),
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelRoleFieldName),
 		helper.EnvVarFromConfigMap("RACK_ENV", "backend-environment", "RACK_ENV"),
+		// TLS
+		helper.EnvVarFromSecret("CONFIG_REDIS_CA_FILE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigCAFile),
+		helper.EnvVarFromSecret("CONFIG_REDIS_CERT", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigClientCertificate),
+		helper.EnvVarFromSecret("CONFIG_REDIS_PRIVATE_KEY", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigPrivateKey),
+		helper.EnvVarFromSecret("CONFIG_REDIS_SSL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigSSL),
+		helper.EnvVarFromSecret("CONFIG_QUEUES_CA_FILE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesCAFile),
+		helper.EnvVarFromSecret("CONFIG_QUEUES_CERT", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesClientCertificate),
+		helper.EnvVarFromSecret("CONFIG_QUEUES_PRIVATE_KEY", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesPrivateKey),
+		helper.EnvVarFromSecret("CONFIG_QUEUES_SSL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesSSL),
 	}
 }
 
