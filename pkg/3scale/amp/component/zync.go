@@ -25,6 +25,10 @@ const (
 	ZyncSecretDatabaseURLFieldName         = "DATABASE_URL"
 	ZyncSecretDatabasePasswordFieldName    = "ZYNC_DATABASE_PASSWORD"
 	ZyncSecretAuthenticationTokenFieldName = "ZYNC_AUTHENTICATION_TOKEN"
+	ZyncSecretDatabaseSslCa                = "DATABASE_SSL_CA"
+	ZyncSecretDatabaseSslCert              = "DATABASE_SSL_CERT"
+	ZyncSecretDatabaseSslKey               = "DATABASE_SSL_KEY"
+	ZyncSecretDatabaseSslMode              = "DATABASE_SSL_MODE"
 )
 
 const (
@@ -212,6 +216,50 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 										},
 									},
 								},
+								{
+									Name: "DATABASE_SSL_CA",
+									ValueFrom: &v1.EnvVarSource{
+										SecretKeyRef: &v1.SecretKeySelector{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: ZyncSecretName,
+											},
+											Key: ZyncSecretDatabaseSslCa,
+										},
+									},
+								},
+								{
+									Name: "DATABASE_SSL_MODE",
+									ValueFrom: &v1.EnvVarSource{
+										SecretKeyRef: &v1.SecretKeySelector{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: ZyncSecretName,
+											},
+											Key: ZyncSecretDatabaseSslMode,
+										},
+									},
+								},
+								{
+									Name: "DATABASE_SSL_CERT",
+									ValueFrom: &v1.EnvVarSource{
+										SecretKeyRef: &v1.SecretKeySelector{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: ZyncSecretName,
+											},
+											Key: ZyncSecretDatabaseSslCert,
+										},
+									},
+								},
+								{
+									Name: "DATABASE_SSL_KEY",
+									ValueFrom: &v1.EnvVarSource{
+										SecretKeyRef: &v1.SecretKeySelector{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: ZyncSecretName,
+											},
+											Key: ZyncSecretDatabaseSslKey,
+										},
+									},
+								},
 							},
 						},
 					},
@@ -267,6 +315,10 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
 		helper.EnvVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
 		helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
+		helper.EnvVarFromSecret("DATABASE_SSL_CA", ZyncSecretName, "DATABASE_SSL_CA"),
+		helper.EnvVarFromSecret("DATABASE_SSL_CERT", ZyncSecretName, "DATABASE_SSL_CERT"),
+		helper.EnvVarFromSecret("DATABASE_SSL_KEY", ZyncSecretName, "DATABASE_SSL_KEY"),
+		helper.EnvVarFromSecret("DATABASE_SSL_MODE", ZyncSecretName, "DATABASE_SSL_MODE"),
 		{
 			Name: "POD_NAME",
 			ValueFrom: &v1.EnvVarSource{
