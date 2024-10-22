@@ -213,6 +213,28 @@ type: Opaque
 
 Secret name must be `backend-redis`.
 
+User can add TLS details to connect to Redis.
+Example of backend-redis secret with TLS details:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-redis
+stringData:
+...
+CONFIG_REDIS_CA_FILE: ""
+CONFIG_REDIS_CERT: ""
+CONFIG_REDIS_PRIVATE_KEY: ""
+CONFIG_REDIS_SSL: "false"
+CONFIG_QUEUES_CA_FILE: ""
+CONFIG_QUEUES_CERT: ""
+CONFIG_QUEUES_PRIVATE_KEY: ""
+CONFIG_QUEUES_SSL: "false"
+...
+type: Opaque
+```
+**Notes** CONFIG_REDIS_SSL and CONFIG_QUEUES_SSL fields set to "true" by operator if any of other fields are not empty.
+
 See [Backend redis secret](apimanager-reference.md#backend-redis) for reference.
 
 * **System redis secret**
@@ -235,6 +257,25 @@ type: Opaque
 ```
 
 Secret name must be `system-redis`.
+
+User can add TLS details to connect to Redis.
+Example of system-redis secret with TLS details:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: system-redis
+stringData:
+...
+REDIS_CA_FILE:  ""
+REDIS_CLIENT_CERT:  ""
+REDIS_PRIVATE_KEY:  ""
+REDIS_SSL:  "false"
+...
+type: Opaque
+```
+**Notes** REDIS_SSL field set to "true" by operator if any of other fields are not empty.
 
 See [System redis secret](apimanager-reference.md#system-redis) for reference.
 

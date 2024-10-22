@@ -47,6 +47,19 @@ type RedisOptions struct {
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
 	SystemRedisNamespace             string
+	// TLS
+	SystemRedisCAFile                    string
+	SystemRedisClientCertificate         string
+	SystemRedisPrivateKey                string
+	SystemRedisSSL                       string
+	BackendConfigCAFile                  string
+	BackendConfigClientCertificate       string
+	BackendConfigPrivateKey              string
+	BackendConfigSSL                     string
+	BackendConfigQueuesCAFile            string
+	BackendConfigQueuesClientCertificate string
+	BackendConfigQueuesPrivateKey        string
+	BackendConfigQueuesSSL               string
 }
 
 func NewRedisOptions() *RedisOptions {
@@ -118,4 +131,47 @@ func DefaultBackendQueuesSentinelHosts() string {
 
 func DefaultBackendQueuesSentinelRole() string {
 	return ""
+}
+
+// TLS
+func DefaultSystemRedisCAFile() string {
+	return ""
+}
+
+func DefaultSystemRedisClientCertificate() string {
+	return ""
+}
+
+func DefaultSystemRedisPrivateKey() string {
+	return ""
+}
+
+func DefaultSystemRedisSSL() string {
+	return "false"
+}
+
+// TLS, Backend
+func DefaultBackendConfigCAFile() string {
+	return ""
+}
+func DefaultBackendConfigClientCertificate() string {
+	return ""
+}
+func DefaultBackendConfigPrivateKey() string {
+	return ""
+}
+func DefaultBackendConfigSSL() string {
+	return "false"
+}
+func DefaultBackendConfigQueuesCAFile() string {
+	return ""
+}
+func DefaultBackendConfigQueuesClientCertificate() string {
+	return ""
+}
+func DefaultBackendConfigQueuesPrivateKey() string {
+	return ""
+}
+func DefaultBackendConfigQueuesSSL() string {
+	return "false"
 }

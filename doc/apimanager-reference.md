@@ -721,6 +721,14 @@ The available configurable secrets are:
 | REDIS_QUEUES_URL | Backend's redis queues database URL  | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/1` |
 | REDIS_QUEUES_SENTINEL_ROLE | Backend's redis queues sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
 | REDIS_QUEUES_SENTINEL_HOSTS | Backend's redis queues sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""` |
+| CONFIG_REDIS_CA_FILE | Backend's redis file that contains the Certificate Authority (CA) certificate| `""`                                                                                                              |
+| CONFIG_REDIS_CERT | Backend's redis certificate | `""`                                                                                                              |
+| CONFIG_REDIS_PRIVATE_KEY | Backend's redis private key used for authentication in SSL/TLS communication| `""`                                                                                                              |
+| CONFIG_REDIS_SSL | This field is "true" if any of the other fields (CONFIG_REDIS_CA_FILE, CONFIG_REDIS_CERT, CONFIG_REDIS_PRIVATE_KEY) are not empty. Otherwise it is "false"| `false`                                                                                                           |
+| CONFIG_QUEUES_CA_FILE | Backend's redis file with configuration setting for the CA certificate that is used for secure communications in the context of a Redis queueing. | `""`                                                                                                              |
+| CONFIG_QUEUES_CERT | Backend's redis certificate used for establishing secure connections in a Redis queuing | `""`                                                                                                              |
+| CONFIG_QUEUES_PRIVATE_KEY | Backend's redis private key used for establishing secure connections in the context of Redis queuing. | `""`                                                                                                              |
+| CONFIG_QUEUES_SSL | This field is "true" if any of the other fields (CONFIG_QUEUES_CA_FILE, CONFIG_QUEUES_CERT, CONFIG_QUEUES_PRIVATE_KEY) are not empty. Otherwise it is "false"|`""`| `false`|
 
 ### system-app
 
@@ -790,6 +798,10 @@ For Oracle:
 | NAMESPACE | Define the namespace to be used by System's Redis Database. The empty value means not namespaced | `""` |
 | SENTINEL_HOSTS | System's Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
 | SENTINEL_ROLE | System's Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
+| REDIS_CA_FILE | System's redis file that contains the Certificate Authority (CA) certificate | `""` |
+| REDIS_CLIENT_CERT | System's Redis Client certificate | `""`|
+| REDIS_PRIVATE_KEY | System's redis private key used for authentication in SSL/TLS communication | `""`|
+| REDIS_SSL | This field is "true" if any of the other fields (REDIS_CA_FILE, REDIS_CLIENT_CERT, REDIS_PRIVATE_KEY) are not emp``ty. Otherwise it is "false"| `false`|
 
 ### system-seed
 

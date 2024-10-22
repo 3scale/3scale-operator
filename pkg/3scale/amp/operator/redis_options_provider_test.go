@@ -170,6 +170,9 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
 		SystemRedisPodTemplateAnnotations:         testSystemRedisPodTemplateAnnotations(),
 		BackendRedisPodTemplateAnnotations:        testBackendRedisPodTemplateAnnotations(),
+		SystemRedisSSL:                            component.DefaultSystemRedisSSL(),
+		BackendConfigSSL:                          component.DefaultBackendConfigSSL(),
+		BackendConfigQueuesSSL:                    component.DefaultBackendConfigQueuesSSL(),
 	}
 }
 

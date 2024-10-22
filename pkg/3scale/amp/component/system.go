@@ -47,6 +47,12 @@ const (
 	SystemSecretSystemRedisURLFieldName  = "URL"
 	SystemSecretSystemRedisSentinelHosts = "SENTINEL_HOSTS"
 	SystemSecretSystemRedisSentinelRole  = "SENTINEL_ROLE"
+
+	// TLS env vars
+	SystemSecretSystemRedisCAFile            = "REDIS_CA_FILE"
+	SystemSecretSystemRedisClientCertificate = "REDIS_CLIENT_CERT"
+	SystemSecretSystemRedisPrivateKey        = "REDIS_PRIVATE_KEY"
+	SystemSecretSystemRedisSSL               = "REDIS_SSL"
 )
 
 const (
@@ -170,6 +176,11 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
+		// TLS
+		helper.EnvVarFromSecret("REDIS_CA_FILE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisCAFile),
+		helper.EnvVarFromSecret("REDIS_CLIENT_CERT", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisClientCertificate),
+		helper.EnvVarFromSecret("REDIS_PRIVATE_KEY", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisPrivateKey),
+		helper.EnvVarFromSecret("REDIS_SSL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSSL),
 	)
 
 	return result
@@ -325,6 +336,12 @@ func (system *System) BackendRedisEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("BACKEND_REDIS_URL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
 		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
 		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
+
+		// TLS
+		helper.EnvVarFromSecret("BACKEND_REDIS_CA_FILE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigCAFile),
+		helper.EnvVarFromSecret("BACKEND_REDIS_CLIENT_CERT", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigClientCertificate),
+		helper.EnvVarFromSecret("BACKEND_REDIS_PRIVATE_KEY", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigPrivateKey),
+		helper.EnvVarFromSecret("BACKEND_REDIS_SSL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigSSL),
 	}
 }
 
