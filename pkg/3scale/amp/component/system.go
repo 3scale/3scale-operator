@@ -531,21 +531,6 @@ func (system *System) appPodVolumes() []v1.Volume {
 	return res
 }
 
-func (system *System) volumesForSystemAppLifecycleHookPods() []v1.VolumeMount {
-	res := []v1.VolumeMount{}
-	if system.Options.PvcFileStorageOptions != nil {
-		res = append(res, v1.VolumeMount{
-			Name: SystemFileStoragePVCName,
-		})
-	}
-	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
-		res = append(res, v1.VolumeMount{
-			Name: S3StsCredentialsSecretName,
-		})
-	}
-	return res
-}
-
 func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment {
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
@@ -771,7 +756,7 @@ func (system *System) AppPreHookJob(containerImage string, currentSystemAppGener
 							Args:            []string{"bash", "-c", "bundle exec rake boot openshift:deploy"},
 							Env:             system.buildSystemAppPreHookEnv(),
 							Resources:       *system.Options.AppMasterContainerResourceRequirements,
-							VolumeMounts:    system.volumesForSystemAppLifecycleHookPods(),
+							VolumeMounts:    system.appMasterContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
@@ -811,7 +796,7 @@ func (system *System) AppPostHookJob(containerImage string, currentSystemAppGene
 							Args:            []string{"bash", "-c", "bundle exec rake boot openshift:post_deploy"},
 							Env:             system.buildSystemAppPostHookEnv(),
 							Resources:       *system.Options.AppMasterContainerResourceRequirements,
-							VolumeMounts:    system.volumesForSystemAppLifecycleHookPods(),
+							VolumeMounts:    system.appMasterContainerVolumeMounts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
 						},
 					},
