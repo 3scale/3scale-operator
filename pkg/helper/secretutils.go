@@ -181,3 +181,19 @@ func ValidateTLSSecret(nn types.NamespacedName, client k8sclient.Client) error {
 
 	return nil
 }
+
+func IsSecretWatchedBy3scale(secret *v1.Secret) bool {
+	if secret == nil {
+		return false
+	}
+
+	existingLabels := secret.Labels
+
+	if existingLabels != nil {
+		if _, ok := existingLabels["apimanager.apps.3scale.net/watched-by"]; ok {
+			return true
+		}
+	}
+
+	return false
+}
