@@ -10,14 +10,13 @@ import (
 
 const (
 	APIManagerSecretLabelPrefix = "secret.apimanager.apps.3scale.net/"
-	APIManagerSecretLabelValue  = "true"
 )
 
 func apimanagerSecretLabelKey(uid string) string {
 	return fmt.Sprintf("%s%s", APIManagerSecretLabelPrefix, uid)
 }
 
-func replaceAPIManagerSecretLabels(apimanager *appsv1alpha1.APIManager, desiredSecretUIDs []string) bool {
+func replaceAPIManagerSecretLabels(apimanager *appsv1alpha1.APIManager, desiredSecretUIDs map[string]string) bool {
 
 	existingLabels := apimanager.GetLabels()
 
@@ -28,18 +27,18 @@ func replaceAPIManagerSecretLabels(apimanager *appsv1alpha1.APIManager, desiredS
 	existingSecretLabels := map[string]string{}
 
 	// existing Secret UIDs not included in desiredAPIUIDs are deleted
-	for k := range existingLabels {
-		if strings.HasPrefix(k, APIManagerSecretLabelPrefix) {
-			existingSecretLabels[k] = APIManagerSecretLabelValue
+	for key, value := range existingLabels {
+		if strings.HasPrefix(key, APIManagerSecretLabelPrefix) {
+			existingSecretLabels[key] = value
 			// it is safe to remove keys while looping in range
-			delete(existingLabels, k)
+			delete(existingLabels, key)
 		}
 	}
 
 	desiredSecretLabels := map[string]string{}
-	for _, uid := range desiredSecretUIDs {
-		desiredSecretLabels[apimanagerSecretLabelKey(uid)] = APIManagerSecretLabelValue
-		existingLabels[apimanagerSecretLabelKey(uid)] = APIManagerSecretLabelValue
+	for uid, watchedByStatus := range desiredSecretUIDs {
+		desiredSecretLabels[apimanagerSecretLabelKey(uid)] = watchedByStatus
+		existingLabels[apimanagerSecretLabelKey(uid)] = watchedByStatus
 	}
 
 	apimanager.SetLabels(existingLabels)

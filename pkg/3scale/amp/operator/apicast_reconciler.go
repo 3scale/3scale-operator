@@ -684,27 +684,26 @@ func (r *ApicastReconciler) reconcileApimanagerSecretLabels(ctx context.Context)
 	return replaceAPIManagerSecretLabels(r.apiManager, secretUIDs), nil
 }
 
-func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) ([]string, error) {
-	// production custom policy
-	// staging custom policy
+func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) (map[string]string, error) {
+	// HTTPs Certificate Secret
+	// OpenTelemetry Config Secret
+	// Custom Policy Secret(s)
+	// Custom Env Secret(s)
 
 	secretKeys := []client.ObjectKey{}
-	if r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
-		for _, customPolicy := range r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies {
-			secretKeys = append(secretKeys, client.ObjectKey{
-				Name:      customPolicy.SecretRef.Name,
-				Namespace: r.apiManager.Namespace,
-			})
-		}
+
+	if r.apiManager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil && r.apiManager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef.Name != "" {
+		secretKeys = append(secretKeys, client.ObjectKey{
+			Name:      r.apiManager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef.Name,
+			Namespace: r.apiManager.Namespace,
+		})
 	}
 
-	if r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies != nil {
-		for _, customPolicy := range r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies {
-			secretKeys = append(secretKeys, client.ObjectKey{
-				Name:      customPolicy.SecretRef.Name,
-				Namespace: r.apiManager.Namespace,
-			})
-		}
+	if r.apiManager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil && r.apiManager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef.Name != "" {
+		secretKeys = append(secretKeys, client.ObjectKey{
+			Name:      r.apiManager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef.Name,
+			Namespace: r.apiManager.Namespace,
+		})
 	}
 
 	if r.apiManager.OpenTelemetryEnabledForStaging() {
@@ -725,19 +724,57 @@ func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) ([]string, error)
 		}
 	}
 
-	uids := []string{}
+	if r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies != nil {
+		for _, customPolicy := range r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customPolicy.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
+		for _, customPolicy := range r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customPolicy.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.Spec.Apicast.StagingSpec.CustomEnvironments != nil {
+		for _, customEnv := range r.apiManager.Spec.Apicast.StagingSpec.CustomEnvironments {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customEnv.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.Spec.Apicast.ProductionSpec.CustomEnvironments != nil {
+		for _, customEnv := range r.apiManager.Spec.Apicast.ProductionSpec.CustomEnvironments {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customEnv.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	uidMap := map[string]string{}
 	for idx := range secretKeys {
 		secret := &v1.Secret{}
 		secretKey := secretKeys[idx]
 		err := r.Client().Get(ctx, secretKey, secret)
-		r.Logger().V(1).Info("read secret", "objectKey", secretKey, "error", err)
+		r.Logger().V(1).Info("reading secret", "objectKey", secretKey, "error", err)
 		if err != nil {
 			return nil, err
 		}
-		uids = append(uids, string(secret.GetUID()))
+
+		watchedByVal := fmt.Sprintf("%t", helper.IsSecretWatchedBy3scale(secret))
+		uidMap[string(secret.GetUID())] = watchedByVal
 	}
 
-	return uids, nil
+	return uidMap, nil
 }
 
 func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.Apicast, error) {
