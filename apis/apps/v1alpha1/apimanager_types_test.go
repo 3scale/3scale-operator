@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/3scale/3scale-operator/version"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -162,5 +163,83 @@ func minimumAPIManagerTest() *APIManager {
 				WildcardDomain: "test.3scale.com",
 			},
 		},
+	}
+}
+
+func TestRemoveDuplicateSecretRefs(t *testing.T) {
+	type args struct {
+		refs []*v1.LocalObjectReference
+	}
+	tests := []struct {
+		name string
+		args args
+		want []*v1.LocalObjectReference
+	}{
+		{
+			name: "SecretRefs is nil",
+			args: args{
+				refs: nil,
+			},
+			want: []*v1.LocalObjectReference{},
+		},
+		{
+			name: "SecretRefs is empty",
+			args: args{
+				refs: []*v1.LocalObjectReference{},
+			},
+			want: []*v1.LocalObjectReference{},
+		},
+		{
+			name: "SecretRefs has duplicates",
+			args: args{
+				refs: []*v1.LocalObjectReference{
+					{
+						Name: "ref1",
+					},
+					{
+						Name: "ref1",
+					},
+					{
+						Name: "ref2",
+					},
+				},
+			},
+			want: []*v1.LocalObjectReference{
+				{
+					Name: "ref1",
+				},
+				{
+					Name: "ref2",
+				},
+			},
+		},
+		{
+			name: "SecretRefs does not have duplicates",
+			args: args{
+				refs: []*v1.LocalObjectReference{
+					{
+						Name: "ref1",
+					},
+					{
+						Name: "ref2",
+					},
+				},
+			},
+			want: []*v1.LocalObjectReference{
+				{
+					Name: "ref1",
+				},
+				{
+					Name: "ref2",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := removeDuplicateSecretRefs(tt.args.refs); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("RemoveDuplicateSecretRefs() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

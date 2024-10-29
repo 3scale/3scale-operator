@@ -1366,6 +1366,123 @@ func (apimanager *APIManager) IsZyncEnabled() bool {
 	return zyncEnabled
 }
 
+func (a *APIManager) GetApicastHTTPSCertSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+
+	if a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil {
+		secretRefs = append(secretRefs, a.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef)
+	}
+
+	if a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil {
+		secretRefs = append(secretRefs, a.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef)
+	}
+
+	return secretRefs
+}
+
+func (a *APIManager) GetApicastOpenTelemetrySecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+
+	if a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.OpenTelemetry != nil && a.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef != nil {
+		secretRefs = append(secretRefs, a.Spec.Apicast.ProductionSpec.OpenTelemetry.TracingConfigSecretRef)
+	}
+
+	if a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.OpenTelemetry != nil && a.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef != nil {
+		secretRefs = append(secretRefs, a.Spec.Apicast.StagingSpec.OpenTelemetry.TracingConfigSecretRef)
+	}
+
+	return secretRefs
+}
+
+func (a *APIManager) GetApicastCustomEnvironmentsSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+
+	if a.Spec.Apicast.ProductionSpec.CustomEnvironments != nil {
+		for _, env := range a.Spec.Apicast.ProductionSpec.CustomEnvironments {
+			if env.SecretRef != nil {
+				secretRefs = append(secretRefs, env.SecretRef)
+			}
+		}
+	}
+
+	if a.Spec.Apicast.StagingSpec.CustomEnvironments != nil {
+		for _, env := range a.Spec.Apicast.StagingSpec.CustomEnvironments {
+			if env.SecretRef != nil {
+				secretRefs = append(secretRefs, env.SecretRef)
+			}
+		}
+	}
+
+	return secretRefs
+}
+
+func (a *APIManager) GetApicastCustomPoliciesSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+
+	if a.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
+		for _, policy := range a.Spec.Apicast.ProductionSpec.CustomPolicies {
+			if policy.SecretRef != nil {
+				secretRefs = append(secretRefs, policy.SecretRef)
+			}
+		}
+	}
+
+	if a.Spec.Apicast.StagingSpec.CustomPolicies != nil {
+		for _, policy := range a.Spec.Apicast.StagingSpec.CustomPolicies {
+			if policy.SecretRef != nil {
+				secretRefs = append(secretRefs, policy.SecretRef)
+			}
+		}
+	}
+
+	return secretRefs
+}
+
+func (apimanager *APIManager) Get3scaleSecretRefs() []*v1.LocalObjectReference {
+	secretRefs := []*v1.LocalObjectReference{}
+
+	// TODO: Add TLS Secrets and ACL Secrets once support for them is implemented
+
+	apicastHTTPSCertSecretRefs := apimanager.GetApicastHTTPSCertSecretRefs()
+	if len(apicastHTTPSCertSecretRefs) > 0 {
+		secretRefs = append(secretRefs, apicastHTTPSCertSecretRefs...)
+	}
+
+	apicastOpenTelemetrySecretRefs := apimanager.GetApicastOpenTelemetrySecretRefs()
+	if len(apicastOpenTelemetrySecretRefs) > 0 {
+		secretRefs = append(secretRefs, apicastOpenTelemetrySecretRefs...)
+	}
+
+	apicastCustomEnvironmentSecretRefs := apimanager.GetApicastCustomEnvironmentsSecretRefs()
+	if len(apicastCustomEnvironmentSecretRefs) > 0 {
+		secretRefs = append(secretRefs, apicastCustomEnvironmentSecretRefs...)
+	}
+
+	apicastCustomPoliciesSecretRefs := apimanager.GetApicastCustomPoliciesSecretRefs()
+	if len(apicastCustomPoliciesSecretRefs) > 0 {
+		secretRefs = append(secretRefs, apicastCustomPoliciesSecretRefs...)
+	}
+
+	secretRefs = removeDuplicateSecretRefs(secretRefs)
+
+	return secretRefs
+}
+
+func removeDuplicateSecretRefs(refs []*v1.LocalObjectReference) []*v1.LocalObjectReference {
+	nameMap := make(map[string]bool)
+	uniqueRefs := make([]*v1.LocalObjectReference, 0)
+
+	for _, ref := range refs {
+		if ref != nil {
+			if _, exists := nameMap[ref.Name]; !exists {
+				nameMap[ref.Name] = true
+				uniqueRefs = append(uniqueRefs, ref)
+			}
+		}
+	}
+	return uniqueRefs
+}
+
 func (apimanager *APIManager) Validate() field.ErrorList {
 	fieldErrors := field.ErrorList{}
 
