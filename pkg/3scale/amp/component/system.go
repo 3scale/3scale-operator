@@ -187,10 +187,13 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 
 	result = append(result,
 		helper.EnvVarFromSecret("DATABASE_URL", SystemSecretSystemDatabaseSecretName, SystemSecretSystemDatabaseURLFieldName),
-		helper.EnvVarFromSecret("DATABASE_SSL_CA", SystemSecretSystemDatabaseSecretName, "DATABASE_SSL_CA"),
-		helper.EnvVarFromSecret("DATABASE_SSL_CERT", SystemSecretSystemDatabaseSecretName, "DATABASE_SSL_CERT"),
-		helper.EnvVarFromSecret("DATABASE_SSL_KEY", SystemSecretSystemDatabaseSecretName, "DATABASE_SSL_KEY"),
-		helper.EnvVarFromSecret("DATABASE_SSL_MODE", SystemSecretSystemDatabaseSecretName, "DATABASE_SSL_MODE"),
+		helper.EnvVarFromSecretOptional("SSL_CA", SystemSecretSystemDatabaseSecretName, "SSL_CA"),
+		helper.EnvVarFromSecretOptional("SSL_CERT", SystemSecretSystemDatabaseSecretName, "SSL_CERT"),
+		helper.EnvVarFromSecretOptional("SSL_KEY", SystemSecretSystemDatabaseSecretName, "SSL_KEY"),
+		helper.EnvVarFromSecretOptional("DATABASE_SSL_MODE", SystemSecretSystemDatabaseSecretName, "DATABASE_SSL_MODE"),
+		helper.EnvVarFromValue("DATABASE_SSL_CA", helper.TlsCertPresent("DATABASE_SSL_CA", SystemSecretSystemDatabaseSecretName)),
+		helper.EnvVarFromValue("DATABASE_SSL_CERT", helper.TlsCertPresent("DATABASE_SSL_CERT", SystemSecretSystemDatabaseSecretName)),
+		helper.EnvVarFromValue("DATABASE_SSL_KEY", helper.TlsCertPresent("DATABASE_SSL_KEY", SystemSecretSystemDatabaseSecretName)),
 
 		helper.EnvVarFromSecret("MASTER_DOMAIN", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterDomainFieldName),
 		helper.EnvVarFromSecret("MASTER_USER", SystemSecretSystemSeedSecretName, SystemSecretSystemSeedMasterUserFieldName),
@@ -515,6 +518,29 @@ func (system *System) appPodVolumes() []v1.Volume {
 	}
 
 	res = append(res, systemConfigVolume)
+	systemTlsVolume := v1.Volume{
+		Name: "tls-secret",
+		VolumeSource: v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{
+				SecretName: SystemSecretSystemDatabaseSecretName, // Name of the secret containing the TLS certs
+				Items: []v1.KeyToPath{
+					{
+						Key:  "SSL_CA",
+						Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+					},
+					{
+						Key:  "SSL_CERT",
+						Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+					},
+					{
+						Key:  "SSL_KEY",
+						Path: "tls.key", // Map the secret key to the tls.key file in the container
+					},
+				},
+			},
+		},
+	}
+	res = append(res, systemTlsVolume)
 
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		s3CredsProjectedVolume := v1.Volume{
@@ -867,6 +893,30 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 
 	res = append(res, systemConfigVolume)
 
+	systemTlsVolume := v1.Volume{
+		Name: "tls-secret",
+		VolumeSource: v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{
+				SecretName: ZyncSecretName, // Name of the secret containing the TLS certs
+				Items: []v1.KeyToPath{
+					{
+						Key:  "SSL_CA",
+						Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+					},
+					{
+						Key:  "SSL_CERT",
+						Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+					},
+					{
+						Key:  "SSL_KEY",
+						Path: "tls.key", // Map the secret key to the tls.key file in the container
+					},
+				},
+			},
+		},
+	}
+	res = append(res, systemTlsVolume)
+
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		s3CredsProjectedVolume := v1.Volume{
 			Name: S3StsCredentialsSecretName,
@@ -986,6 +1036,13 @@ func (system *System) systemConfigVolumeMount() v1.VolumeMount {
 		MountPath: "/opt/system-extra-configs",
 	}
 }
+func (system *System) systemTlsVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "tls-secret",
+		ReadOnly:  false,
+		MountPath: "/tls",
+	}
+}
 
 func (system *System) s3CredsProjectedVolumeMount() v1.VolumeMount {
 	return v1.VolumeMount{
@@ -1006,6 +1063,7 @@ func (system *System) appCommonContainerVolumeMounts(systemStorageReadonly bool)
 	}
 
 	res = append(res, system.systemConfigVolumeMount())
+	res = append(res, system.systemTlsVolumeMount())
 
 	return res
 }
@@ -1036,6 +1094,7 @@ func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
 	}
 	res = append(res, systemTmpVolumeMount)
 	res = append(res, system.systemConfigVolumeMount())
+	res = append(res, system.systemTlsVolumeMount())
 
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		res = append(res, system.s3CredsProjectedVolumeMount())

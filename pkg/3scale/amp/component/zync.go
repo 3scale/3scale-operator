@@ -3,7 +3,6 @@ package component
 import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -25,10 +24,10 @@ const (
 	ZyncSecretDatabaseURLFieldName         = "DATABASE_URL"
 	ZyncSecretDatabasePasswordFieldName    = "ZYNC_DATABASE_PASSWORD"
 	ZyncSecretAuthenticationTokenFieldName = "ZYNC_AUTHENTICATION_TOKEN"
-	ZyncSecretDatabaseSslCa                = "DATABASE_SSL_CA"
-	ZyncSecretDatabaseSslCert              = "DATABASE_SSL_CERT"
-	ZyncSecretDatabaseSslKey               = "DATABASE_SSL_KEY"
 	ZyncSecretDatabaseSslMode              = "DATABASE_SSL_MODE"
+	ZyncSecretSslCa                        = "SSL_CA"
+	ZyncSecretSslCert                      = "SSL_CERT"
+	ZyncSecretSslKey                       = "SSL_KEY"
 )
 
 const (
@@ -59,6 +58,10 @@ func (zync *Zync) Secret() *v1.Secret {
 			ZyncSecretDatabaseURLFieldName:         zync.Options.DatabaseURL,
 			ZyncSecretDatabasePasswordFieldName:    zync.Options.DatabasePassword,
 			ZyncSecretAuthenticationTokenFieldName: zync.Options.AuthenticationToken,
+			ZyncSecretDatabaseSslMode:              zync.Options.DatabaseSslMode,
+			ZyncSecretSslCa:                        zync.Options.DatabaseSslCa,
+			ZyncSecretSslCert:                      zync.Options.DatabaseSslCert,
+			ZyncSecretSslKey:                       zync.Options.DatabaseSslKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -216,49 +219,16 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 										},
 									},
 								},
+								helper.EnvVarFromSecretOptional("DATABASE_SSL_MODE", ZyncSecretName, "DATABASE_SSL_MODE"),
+								helper.EnvVarFromValue("DATABASE_SSL_CA", helper.TlsCertPresent("DATABASE_SSL_CA", ZyncSecretName)),
+								helper.EnvVarFromValue("DATABASE_SSL_CERT", helper.TlsCertPresent("DATABASE_SSL_CERT", ZyncSecretName)),
+								helper.EnvVarFromValue("DATABASE_SSL_KEY", helper.TlsCertPresent("DATABASE_SSL_KEY", ZyncSecretName)),
+							},
+							VolumeMounts: []v1.VolumeMount{
 								{
-									Name: "DATABASE_SSL_CA",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: ZyncSecretName,
-											},
-											Key: ZyncSecretDatabaseSslCa,
-										},
-									},
-								},
-								{
-									Name: "DATABASE_SSL_MODE",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: ZyncSecretName,
-											},
-											Key: ZyncSecretDatabaseSslMode,
-										},
-									},
-								},
-								{
-									Name: "DATABASE_SSL_CERT",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: ZyncSecretName,
-											},
-											Key: ZyncSecretDatabaseSslCert,
-										},
-									},
-								},
-								{
-									Name: "DATABASE_SSL_KEY",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: ZyncSecretName,
-											},
-											Key: ZyncSecretDatabaseSslKey,
-										},
-									},
+									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									MountPath: "/tls",
+									ReadOnly:  true,
 								},
 							},
 						},
@@ -298,6 +268,37 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 								FailureThreshold:    3,
 							},
 							Resources: zync.Options.ContainerResourceRequirements,
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "tls-secret",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: ZyncSecretName, // Name of the secret containing the TLS certs
+									Items: []v1.KeyToPath{
+										{
+											Key:  "SSL_CA",
+											Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+										},
+										{
+											Key:  "SSL_CERT",
+											Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+										},
+										{
+											Key:  "SSL_KEY",
+											Path: "tls.key", // Map the secret key to the tls.key file in the container
+										},
+									},
+								},
+							},
 						},
 					},
 					PriorityClassName:         zync.Options.ZyncPriorityClassName,
@@ -315,10 +316,13 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
 		helper.EnvVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
 		helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
-		helper.EnvVarFromSecret("DATABASE_SSL_CA", ZyncSecretName, "DATABASE_SSL_CA"),
-		helper.EnvVarFromSecret("DATABASE_SSL_CERT", ZyncSecretName, "DATABASE_SSL_CERT"),
-		helper.EnvVarFromSecret("DATABASE_SSL_KEY", ZyncSecretName, "DATABASE_SSL_KEY"),
-		helper.EnvVarFromSecret("DATABASE_SSL_MODE", ZyncSecretName, "DATABASE_SSL_MODE"),
+		helper.EnvVarFromSecretOptional("SSL_CA", ZyncSecretName, "SSL_CA"),
+		helper.EnvVarFromSecretOptional("SSL_CERT", ZyncSecretName, "SSL_CERT"),
+		helper.EnvVarFromSecretOptional("SSL_KEY", ZyncSecretName, "SSL_KEY"),
+		helper.EnvVarFromSecretOptional("DATABASE_SSL_MODE", ZyncSecretName, "DATABASE_SSL_MODE"),
+		helper.EnvVarFromValue("DATABASE_SSL_CA", helper.TlsCertPresent("DATABASE_SSL_CA", ZyncSecretName)),
+		helper.EnvVarFromValue("DATABASE_SSL_CERT", helper.TlsCertPresent("DATABASE_SSL_CERT", ZyncSecretName)),
+		helper.EnvVarFromValue("DATABASE_SSL_KEY", helper.TlsCertPresent("DATABASE_SSL_KEY", ZyncSecretName)),
 		{
 			Name: "POD_NAME",
 			ValueFrom: &v1.EnvVarSource{
@@ -407,6 +411,37 @@ func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
 							},
 							Resources: zync.Options.QueContainerResourceRequirements,
 							Env:       zync.commonZyncEnvVars(),
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "tls-secret",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: ZyncSecretName, // Name of the secret containing the TLS certs
+									Items: []v1.KeyToPath{
+										{
+											Key:  "SSL_CA",
+											Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+										},
+										{
+											Key:  "SSL_CERT",
+											Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+										},
+										{
+											Key:  "SSL_KEY",
+											Path: "tls.key", // Map the secret key to the tls.key file in the container
+										},
+									},
+								},
+							},
 						},
 					},
 					PriorityClassName:         zync.Options.ZyncQuePriorityClassName,

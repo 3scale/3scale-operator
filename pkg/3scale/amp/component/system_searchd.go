@@ -90,17 +90,45 @@ func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment 
 								},
 							},
 						},
+						{
+							Name: "tls-secret",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: SystemSecretSystemDatabaseSecretName, // Name of the secret containing the TLS certs
+									Items: []v1.KeyToPath{
+										{
+											Key:  "SSL_CA",
+											Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+										},
+										{
+											Key:  "SSL_CERT",
+											Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+										},
+										{
+											Key:  "SSL_KEY",
+											Path: "tls.key", // Map the secret key to the tls.key file in the container
+										},
+									},
+								},
+							},
+						},
 					},
 					Containers: []v1.Container{
 						{
 							Name:            SystemSearchdDeploymentName,
 							Image:           containerImage,
 							ImagePullPolicy: v1.PullIfNotPresent,
+							//Env:             s.commonSearchdEnvVars(),
 							VolumeMounts: []v1.VolumeMount{
 								{
 									ReadOnly:  false,
 									Name:      SystemSearchdDBVolumeName,
 									MountPath: "/var/lib/searchd",
+								},
+								{
+									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									MountPath: "/tls",
+									ReadOnly:  true,
 								},
 							},
 							LivenessProbe: &v1.Probe{
@@ -178,6 +206,7 @@ func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *ba
 			Completions: &completions,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
+
 					Containers: []v1.Container{
 						{
 							Name:            SystemSearchdReindexJobName,
@@ -186,6 +215,37 @@ func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *ba
 							Env:             system.buildSystemBaseEnv(),
 							Resources:       s.Options.ContainerResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "tls-secret",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: SystemSecretSystemDatabaseSecretName, // Name of the secret containing the TLS certs
+									Items: []v1.KeyToPath{
+										{
+											Key:  "SSL_CA",
+											Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+										},
+										{
+											Key:  "SSL_CERT",
+											Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+										},
+										{
+											Key:  "SSL_KEY",
+											Path: "tls.key", // Map the secret key to the tls.key file in the container
+										},
+									},
+								},
+							},
 						},
 					},
 					RestartPolicy:      v1.RestartPolicyNever,

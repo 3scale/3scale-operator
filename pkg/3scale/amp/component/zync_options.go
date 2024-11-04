@@ -22,6 +22,10 @@ type ZyncOptions struct {
 	SecretKeyBase                         string                  `validate:"required"`
 	ZyncReplicas                          int32
 	ZyncQueReplicas                       int32
+	DatabaseSslMode                       string
+	DatabaseSslCa                         string
+	DatabaseSslCert                       string
+	DatabaseSslKey                        string
 
 	ZyncAffinity            *v1.Affinity    `validate:"-"`
 	ZyncTolerations         []v1.Toleration `validate:"-"`
