@@ -102,7 +102,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging Deployment
-	err = r.ReconcileDeployment(apicast.StagingDeployment(ampImages.Options.ApicastImage), reconcilers.DeploymentMutator(stagingMutators...))
+	stagingDeployment, err := apicast.StagingDeployment(r.Context(), r.Client(), ampImages.Options.ApicastImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(stagingDeployment, reconcilers.DeploymentMutator(stagingMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -151,7 +155,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Production Deployment
-	err = r.ReconcileDeployment(apicast.ProductionDeployment(ampImages.Options.ApicastImage), reconcilers.DeploymentMutator(productionMutators...))
+	productionDeployment, err := apicast.ProductionDeployment(r.Context(), r.Client(), ampImages.Options.ApicastImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(productionDeployment, reconcilers.DeploymentMutator(productionMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -639,18 +647,18 @@ func apicastCustomEnvAnnotationsMutator(desired, existing *k8sappsv1.Deployment)
 
 func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Only reconcile the pod annotation regarding apicast-environment hash
-	desiredVal, ok := desired.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation]
+	desiredVal, ok := desired.Spec.Template.Annotations[component.APIcastEnvironmentCMAnnotation]
 	if !ok {
 		return false, nil
 	}
 
 	updated := false
-	existingVal, ok := existing.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation]
+	existingVal, ok := existing.Spec.Template.Annotations[component.APIcastEnvironmentCMAnnotation]
 	if !ok || existingVal != desiredVal {
 		if existing.Spec.Template.Annotations == nil {
 			existing.Spec.Template.Annotations = map[string]string{}
 		}
-		existing.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation] = desiredVal
+		existing.Spec.Template.Annotations[component.APIcastEnvironmentCMAnnotation] = desiredVal
 		updated = true
 	}
 

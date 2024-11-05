@@ -1,8 +1,10 @@
 package component
 
 import (
+	"context"
 	"crypto/md5"
 	"fmt"
+	"hash/fnv"
 	"path"
 	"sort"
 	"strconv"
@@ -16,6 +18,7 @@ import (
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -46,6 +49,14 @@ const (
 	APIcastTracingConfigAnnotationNameSegmentPrefix = "apicast-tracing-config-volume"
 	APIcastTracingConfigAnnotationPartialKey        = "apps.3scale.net/" + APIcastTracingConfigAnnotationNameSegmentPrefix
 	APIcastOpentelemetryConfigAnnotationPartialKey  = "apps.3scale.net/" + OpentelemetryConfigurationVolumeName
+)
+
+const (
+	APIcastEnvironmentCMAnnotation             = "apimanager.apps.3scale.net/env-configmap-hash"
+	HttpsCertSecretResverAnnotationPrefix      = "apimanager.apps.3scale.net/https-cert-secret-resource-version-"
+	OpenTelemetrySecretResverAnnotationPrefix  = "apimanager.apps.3scale.net/opentelemetry-secret-resource-version-"
+	CustomEnvSecretResverAnnotationPrefix      = "apimanager.apps.3scale.net/customenv-secret-resource-version-"
+	CustomPoliciesSecretResverAnnotationPrefix = "apimanager.apps.3scale.net/custompolicy-secret-resource-version-"
 )
 
 type Apicast struct {
@@ -90,7 +101,12 @@ func (apicast *Apicast) ProductionService() *v1.Service {
 	}
 }
 
-func (apicast *Apicast) StagingDeployment(containerImage string) *k8sappsv1.Deployment {
+func (apicast *Apicast) StagingDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
+	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, ApicastStagingName, apicast.Options.Namespace, apicast)
+	if err != nil {
+		return nil, err
+	}
+
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
@@ -121,7 +137,7 @@ func (apicast *Apicast) StagingDeployment(containerImage string) *k8sappsv1.Depl
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      apicast.Options.StagingPodTemplateLabels,
-					Annotations: apicast.stagingPodAnnotations(),
+					Annotations: apicast.stagingPodAnnotations(watchedSecretAnnotations),
 				},
 				Spec: v1.PodSpec{
 					Affinity:           apicast.Options.StagingAffinity,
@@ -162,10 +178,15 @@ func (apicast *Apicast) StagingDeployment(containerImage string) *k8sappsv1.Depl
 				},
 			},
 		},
-	}
+	}, nil
 }
 
-func (apicast *Apicast) ProductionDeployment(containerImage string) *k8sappsv1.Deployment {
+func (apicast *Apicast) ProductionDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
+	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, ApicastStagingName, apicast.Options.Namespace, apicast)
+	if err != nil {
+		return nil, err
+	}
+
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
@@ -196,7 +217,7 @@ func (apicast *Apicast) ProductionDeployment(containerImage string) *k8sappsv1.D
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      apicast.Options.ProductionPodTemplateLabels,
-					Annotations: apicast.productionPodAnnotations(),
+					Annotations: apicast.productionPodAnnotations(watchedSecretAnnotations),
 				},
 				Spec: v1.PodSpec{
 					Affinity:           apicast.Options.ProductionAffinity,
@@ -250,7 +271,7 @@ func (apicast *Apicast) ProductionDeployment(containerImage string) *k8sappsv1.D
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func (apicast *Apicast) buildApicastCommonEnv() []v1.EnvVar {
@@ -826,13 +847,14 @@ func (apicast *Apicast) stagingServicePorts() []v1.ServicePort {
 	return ports
 }
 
-func (apicast *Apicast) stagingPodAnnotations() map[string]string {
+func (apicast *Apicast) stagingPodAnnotations(watchedSecretAnnotations map[string]string) map[string]string {
 	annotations := map[string]string{
-		"prometheus.io/scrape": "true",
-		"prometheus.io/port":   "9421",
+		"prometheus.io/scrape":         "true",
+		"prometheus.io/port":           "9421",
+		APIcastEnvironmentCMAnnotation: apicast.envConfigMapHash(),
 	}
 
-	for key, val := range apicast.Options.StagingAdditionalPodAnnotations {
+	for key, val := range watchedSecretAnnotations {
 		annotations[key] = val
 	}
 
@@ -843,13 +865,14 @@ func (apicast *Apicast) stagingPodAnnotations() map[string]string {
 	return annotations
 }
 
-func (apicast *Apicast) productionPodAnnotations() map[string]string {
+func (apicast *Apicast) productionPodAnnotations(watchedSecretAnnotations map[string]string) map[string]string {
 	annotations := map[string]string{
-		"prometheus.io/scrape": "true",
-		"prometheus.io/port":   "9421",
+		"prometheus.io/scrape":         "true",
+		"prometheus.io/port":           "9421",
+		APIcastEnvironmentCMAnnotation: apicast.envConfigMapHash(),
 	}
 
-	for key, val := range apicast.Options.ProductionAdditionalPodAnnotations {
+	for key, val := range watchedSecretAnnotations {
 		annotations[key] = val
 	}
 
@@ -887,4 +910,16 @@ func ApicastOpentelemetryConfigVolumeNamesFromAnnotations(annotations map[string
 
 func ApicastEnvVolumeNamesFromAnnotations(annotations map[string]string) []string {
 	return AnnotationsValuesWithAnnotationKeyPrefix(annotations, CustomEnvironmentsAnnotationPartialKey)
+}
+
+// APIcast environment hash
+// When any of the fields used to compute the hash change, the hash will change and the apicast deployment will rollout
+func (apicast *Apicast) envConfigMapHash() string {
+
+	h := fnv.New32a()
+	h.Write([]byte(apicast.Options.ManagementAPI))
+	h.Write([]byte(apicast.Options.OpenSSLVerify))
+	h.Write([]byte(apicast.Options.ResponseCodes))
+	val := h.Sum32()
+	return fmt.Sprint(val)
 }
