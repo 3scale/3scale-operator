@@ -231,7 +231,10 @@ func TestApicastReconcilerCustomPolicyParts(t *testing.T) {
 		ProductionTracingConfig:  &component.APIcastTracingConfig{},
 	}
 	apicast := component.NewApicast(apicastOptions)
-	existingProdDeployment := apicast.ProductionDeployment(ampImages.Options.ApicastImage)
+	existingProdDeployment, err := apicast.ProductionDeployment(context.TODO(), fake.NewFakeClient(), ampImages.Options.ApicastImage)
+	if err != nil {
+		t.Fatal(err)
+	}
 	existingProdDeployment.Namespace = namespace
 
 	// - Policy annotation for P1 added
@@ -441,7 +444,10 @@ func TestApicastReconcilerTracingConfigParts(t *testing.T) {
 		ProductionTracingConfig: &existingTracingConfig1,
 	}
 	apicast := component.NewApicast(apicastOptions)
-	existingProdDeployment := apicast.ProductionDeployment(ampImages.Options.ApicastImage)
+	existingProdDeployment, err := apicast.ProductionDeployment(context.TODO(), fake.NewFakeClient(), ampImages.Options.ApicastImage)
+	if err != nil {
+		t.Fatal(err)
+	}
 	existingProdDeployment.Namespace = namespace
 
 	// - Tracing Configuration 1 added into the Production Deployment with the expected key
