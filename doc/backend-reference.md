@@ -25,7 +25,7 @@ Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdow
 | **Field** | **json field**| **Type** | **Info** | **Required** |
 | --- | --- | --- | --- | --- |
 | Name | `name` | string | Name | Yes |
-| Private Base URL | `privateBaseURL` | string | The private endpoint | Yes |
+| Private Base URL | `privateBaseURL` | string | The private endpoint. Supports the http(s) and ws(s) protocols, for example `http://api.example.com` or `wss://api.example.com`. | Yes |
 | System Name | `systemName` | string | Name | No |
 | Description | `description` | string | Backend description message | No |
 | Mapping Rules | `mappingRules` | array | See [MappingRules Spec](#MappingRuleSpec). Order in the array matters. Rules are processed as defined in the array from more prioritary to less prioritary | No |

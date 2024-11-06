@@ -100,7 +100,7 @@ spec:
                 type: string
               privateBaseURL:
                 description: PrivateBaseURL Private Base URL of the API
-                pattern: ^https?:\/\/.*$
+                pattern: ^(https?|wss?):\/\/.*$
                 type: string
               providerAccountRef:
                 description: ProviderAccountRef references account provider credentials
