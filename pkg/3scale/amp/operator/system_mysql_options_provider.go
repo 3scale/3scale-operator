@@ -83,6 +83,24 @@ func (s *SystemMysqlOptionsProvider) setSecretBasedOptions() error {
 			component.SystemSecretSystemDatabaseURLFieldName,
 			component.DefaultSystemMysqlDatabaseURL(component.DefaultSystemMysqlRootPassword(), component.DefaultSystemMysqlDatabaseName()),
 		},
+		{
+			&s.mysqlOptions.DatabaseSslCa,
+			component.SystemSecretSystemDatabaseSecretName,
+			component.SystemSecretDatabaseSslCa,
+			component.DefaultSystemSslEmpty(),
+		},
+		{
+			&s.mysqlOptions.DatabaseSslCert,
+			component.SystemSecretSystemDatabaseSecretName,
+			component.SystemSecretDatabaseSslCert,
+			component.DefaultSystemSslEmpty(),
+		},
+		{
+			&s.mysqlOptions.DatabaseSslKey,
+			component.SystemSecretSystemDatabaseSecretName,
+			component.SystemSecretDatabaseSslKey,
+			component.DefaultSystemSslEmpty(),
+		},
 	}
 
 	for _, option := range cases {

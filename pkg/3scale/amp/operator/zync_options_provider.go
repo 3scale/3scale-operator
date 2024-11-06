@@ -121,6 +121,27 @@ func (z *ZyncOptionsProvider) setSecretBasedOptions() error {
 			component.DefaultZyncDatabaseURL(zyncDatabasePassword),
 			z.apimanager.IsExternal(appsv1alpha1.ZyncDatabase),
 		},
+		{
+			&z.zyncOptions.DatabaseSslCa,
+			component.ZyncSecretName,
+			component.ZyncSecretSslCa,
+			component.DefaultZyncSslEmpty(),
+			true,
+		},
+		{
+			&z.zyncOptions.DatabaseSslCert,
+			component.ZyncSecretName,
+			component.ZyncSecretSslCert,
+			component.DefaultZyncSslEmpty(),
+			true,
+		},
+		{
+			&z.zyncOptions.DatabaseSslKey,
+			component.ZyncSecretName,
+			component.ZyncSecretSslKey,
+			component.DefaultZyncSslEmpty(),
+			true,
+		},
 	}
 
 	for _, option := range cases {

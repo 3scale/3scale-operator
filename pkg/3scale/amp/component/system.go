@@ -27,6 +27,9 @@ const (
 	SystemSecretDatabaseSslCert                     = "DATABASE_SSL_CERT"
 	SystemSecretDatabaseSslKey                      = "DATABASE_SSL_KEY"
 	SystemSecretDatabaseSslMode                     = "DATABASE_SSL_MODE"
+	SystemSecretSslCa                               = "SSL_CA"
+	SystemSecretSslCert                             = "SSL_CERT"
+	SystemSecretSslKey                              = "SSL_KEY"
 )
 
 const (

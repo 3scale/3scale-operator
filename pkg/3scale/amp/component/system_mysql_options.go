@@ -10,12 +10,15 @@ import (
 )
 
 type SystemMysqlOptions struct {
-	ImageTag                      string                  `validate:"required"`
-	DatabaseName                  string                  `validate:"required"`
-	User                          string                  `validate:"required"`
-	Password                      string                  `validate:"required"`
-	RootPassword                  string                  `validate:"required"`
-	DatabaseURL                   string                  `validate:"required"`
+	ImageTag                      string `validate:"required"`
+	DatabaseName                  string `validate:"required"`
+	User                          string `validate:"required"`
+	Password                      string `validate:"required"`
+	RootPassword                  string `validate:"required"`
+	DatabaseURL                   string `validate:"required"`
+	DatabaseSslCa                 string
+	DatabaseSslCert               string
+	DatabaseSslKey                string
 	ContainerResourceRequirements v1.ResourceRequirements `validate:"-"`
 	PVCStorageClass               *string
 	PVCVolumeName                 *string
@@ -69,6 +72,10 @@ func DefaultSystemMysqlDatabaseName() string {
 
 func DefaultSystemMysqlDatabaseURL(password, name string) string {
 	return fmt.Sprintf("mysql2://root:%s@system-mysql/%s", password, name)
+}
+
+func DefaultSystemSslEmpty() string {
+	return fmt.Sprintf("")
 }
 
 func DefaultSystemMysqlStorageResources() resource.Quantity {

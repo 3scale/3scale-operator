@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/types"
 	"log"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -186,7 +187,16 @@ func TlsCertPresent(pathSslEnvVar string, secretName string) string {
 		return ""
 	}
 
-	secret, _ := GetSecret(secretName, namespace, client)
+	// check the secret exists
+	secret := v1.Secret{}
+	nn := types.NamespacedName{
+		Name:      secretName,
+		Namespace: namespace,
+	}
+	err := client.Get(context.TODO(), nn, &secret)
+	if err != nil {
+		return ""
+	}
 
 	// Check if SSL_KEY, SSL_CERT, and SSL_CA are empty
 	isSSLKeyEmpty := len(secret.Data["SSL_KEY"]) == 0
@@ -214,7 +224,7 @@ func TlsCertPresent(pathSslEnvVar string, secretName string) string {
 			secret.Data["DATABASE_SSL_MODE"] = []byte("disable")
 		}
 		//TODO handle oracle
-		err := client.Update(context.TODO(), secret)
+		err := client.Update(context.TODO(), &secret)
 		if err != nil {
 			log.Printf("failed to update secret %s: %v", secretName, err)
 		}
@@ -223,7 +233,7 @@ func TlsCertPresent(pathSslEnvVar string, secretName string) string {
 	// checks if the env vars are present in the secret if not create them, As they need to be to create the secret volume mount
 	if _, ok := secret.Data[sslEnvVar]; !ok {
 		secret.Data[sslEnvVar] = []byte("")
-		err := client.Update(context.TODO(), secret)
+		err := client.Update(context.TODO(), &secret)
 		if err != nil {
 			log.Printf("failed to update secret %s: %v", secretName, err)
 		}

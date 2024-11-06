@@ -89,6 +89,10 @@ func DefaultZyncDatabaseURL(password string) string {
 	return fmt.Sprintf("postgresql://zync:%s@zync-database:5432/zync_production", password)
 }
 
+func DefaultZyncSslEmpty() string {
+	return fmt.Sprintf("")
+}
+
 func DefaultZyncContainerResourceRequirements() v1.ResourceRequirements {
 	return v1.ResourceRequirements{
 		Limits: v1.ResourceList{
