@@ -243,3 +243,93 @@ func TestRemoveDuplicateSecretRefs(t *testing.T) {
 		})
 	}
 }
+
+func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
+	type fields struct {
+		Spec APIManagerSpec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []*v1.LocalObjectReference
+	}{
+		{
+			name: "No secret refs to gather",
+			fields: fields{
+				Spec: APIManagerSpec{
+					Apicast: &ApicastSpec{
+						ProductionSpec: &ApicastProductionSpec{},
+						StagingSpec:    &ApicastStagingSpec{},
+					},
+				},
+			},
+			want: []*v1.LocalObjectReference{},
+		},
+		{
+			name: "Apicast has secret refs",
+			fields: fields{
+				Spec: APIManagerSpec{
+					Apicast: &ApicastSpec{
+						ProductionSpec: &ApicastProductionSpec{
+							HTTPSCertificateSecretRef: &v1.LocalObjectReference{
+								Name: "https-cert-secret",
+							},
+							OpenTelemetry: &OpenTelemetrySpec{
+								TracingConfigSecretRef: &v1.LocalObjectReference{
+									Name: "otel-secret",
+								},
+							},
+							CustomEnvironments: []CustomEnvironmentSpec{
+								{
+									SecretRef: &v1.LocalObjectReference{
+										Name: "custom-env-1-secret",
+									},
+								},
+							},
+						},
+						StagingSpec: &ApicastStagingSpec{
+							CustomEnvironments: []CustomEnvironmentSpec{
+								{
+									SecretRef: &v1.LocalObjectReference{
+										Name: "custom-env-1-secret",
+									},
+								},
+							},
+							CustomPolicies: []CustomPolicySpec{
+								{
+									SecretRef: &v1.LocalObjectReference{
+										Name: "custom-policy-1-secret",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*v1.LocalObjectReference{
+				{
+					Name: "https-cert-secret",
+				},
+				{
+					Name: "otel-secret",
+				},
+				{
+					Name: "custom-env-1-secret",
+				},
+				{
+					Name: "custom-policy-1-secret",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apimanager := &APIManager{
+				Spec: tt.fields.Spec,
+			}
+			if got := apimanager.Get3scaleSecretRefs(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Get3scaleSecretRefs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
