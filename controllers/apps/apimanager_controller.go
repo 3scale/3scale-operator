@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/3scale/3scale-operator/pkg/upgrade"
-
 	"github.com/go-logr/logr"
 	routev1 "github.com/openshift/api/route/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -64,8 +62,6 @@ var _ reconcile.Reconciler = &APIManagerReconciler{}
 // +kubebuilder:rbac:groups=apps,namespace=placeholder,resources=deployments;daemonsets;replicasets;statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,namespace=placeholder,resources=deployments/finalizers,verbs=update
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,namespace=placeholder,resources=roles;rolebindings,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=image.openshift.io,namespace=placeholder,resources=imagestreams;imagestreams/layers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=image.openshift.io,namespace=placeholder,resources=imagestreamtags,verbs=get;list;create;update;patch;delete
 // +kubebuilder:rbac:groups=route.openshift.io,namespace=placeholder,resources=routes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=route.openshift.io,namespace=placeholder,resources=routes/custom-host,verbs=create
 // +kubebuilder:rbac:groups=route.openshift.io,namespace=placeholder,resources=routes/status,verbs=get
@@ -486,12 +482,6 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 	result, err = genericMonitoringReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	err = upgrade.DeleteImageStreams(cr.Namespace, r.Client())
-	if err != nil {
-		return ctrl.Result{Requeue: true}, err
 	}
 
 	return ctrl.Result{}, nil
