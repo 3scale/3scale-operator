@@ -7,7 +7,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -61,12 +60,6 @@ func TestRedisBackendDeploymentReconcilerCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = k8sappsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}

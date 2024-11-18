@@ -9,7 +9,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -87,12 +86,6 @@ func TestNewZyncReconciler(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := grafanav1alpha1.AddToScheme(s); err != nil {
-		t.Fatal(err)
-	}
-
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
-	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -213,12 +206,6 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
 	clientAPIReader := fake.NewFakeClient(objs...)
@@ -295,12 +282,6 @@ func TestReplicaZyncReconciler(t *testing.T) {
 	}
 
 	if err := configv1.Install(s); err != nil {
-		t.Fatal(err)
-	}
-
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
-	if err != nil {
 		t.Fatal(err)
 	}
 

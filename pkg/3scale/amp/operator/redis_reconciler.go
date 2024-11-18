@@ -3,15 +3,15 @@ package operator
 import (
 	"context"
 	"fmt"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
+
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -104,23 +104,6 @@ func (r *RedisReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// 3scale 2.14 -> 2.15
-	// Overriding the Deployment health check because the redis PVCs are ReadWriteOnce and so they can't be assigned across multiple nodes (pods)
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(redisDeployment.Name, r.apiManager.GetNamespace(), true, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	// 3scale 2.14 -> 2.15 Upgrade
-	// delete NAMESPACE key from secret system-redis
-	err = r.deleteSystemRedisSecretNamespaceKey()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
 	serviceMutators := []reconcilers.MutateFn{
 		reconcilers.CreateOnlyMutator,
 		reconcilers.ServiceSelectorMutator,
@@ -154,28 +137,6 @@ func Redis(apimanager *appsv1alpha1.APIManager, client client.Client) (*componen
 		return nil, err
 	}
 	return component.NewRedis(opts), nil
-}
-
-func (r *RedisReconciler) deleteSystemRedisSecretNamespaceKey() error {
-	secret := &corev1.Secret{}
-	err := r.Client().Get(context.TODO(), client.ObjectKey{Namespace: r.apiManager.Namespace, Name: "system-redis"}, secret)
-	if k8serr.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	namespaceKey := "NAMESPACE"
-	if _, ok := secret.Data[namespaceKey]; ok {
-		delete(secret.Data, namespaceKey)
-		err = r.UpdateResource(secret)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (r *RedisReconciler) redisConfigMapMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {

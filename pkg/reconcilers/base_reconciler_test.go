@@ -7,7 +7,6 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,10 +34,6 @@ func TestBaseReconcilerCreate(t *testing.T) {
 	ctx := context.TODO()
 
 	s := scheme.Scheme
-	err := appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{}
@@ -65,7 +60,7 @@ func TestBaseReconcilerCreate(t *testing.T) {
 		},
 	}
 
-	err = baseReconciler.ReconcileResource(&v1.ConfigMap{}, desiredConfigmap, CreateOnlyMutator)
+	err := baseReconciler.ReconcileResource(&v1.ConfigMap{}, desiredConfigmap, CreateOnlyMutator)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,10 +85,6 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 	ctx := context.TODO()
 
 	s := runtime.NewScheme()
-	err := appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	existingConfigmap := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -146,7 +137,7 @@ func TestBaseReconcilerUpdateNeeded(t *testing.T) {
 		return true, nil
 	}
 
-	err = baseReconciler.ReconcileResource(&v1.ConfigMap{}, desiredConfigmap, customMutator)
+	err := baseReconciler.ReconcileResource(&v1.ConfigMap{}, desiredConfigmap, customMutator)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,10 +169,6 @@ func TestBaseReconcilerDelete(t *testing.T) {
 	ctx := context.TODO()
 
 	s := runtime.NewScheme()
-	err := appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	existing := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -223,7 +210,7 @@ func TestBaseReconcilerDelete(t *testing.T) {
 	}
 	common.TagObjectToDelete(desired)
 
-	err = baseReconciler.ReconcileResource(&v1.ConfigMap{}, desired, CreateOnlyMutator)
+	err := baseReconciler.ReconcileResource(&v1.ConfigMap{}, desired, CreateOnlyMutator)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,7 +4,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -45,16 +44,6 @@ func (r *SystemPostgreSQLReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcileDeployment(systemPostgreSQL.Deployment(systemPostgreSQLImage.Options.Image), deploymentMutator)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	// Overriding the Deployment health check because the postgresql-data PVC is ReadWriteOnce and so it can't be assigned across multiple nodes (pods)
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemPostgreSQLDeploymentName, r.apiManager.GetNamespace(), true, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
 	}
 
 	serviceMutators := []reconcilers.MutateFn{

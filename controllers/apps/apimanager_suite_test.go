@@ -38,7 +38,6 @@ import (
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	consolev1 "github.com/openshift/api/console/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -99,9 +98,6 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = imagev1.Install(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = appsv1.Install(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = monitoringv1.AddToScheme(scheme.Scheme)

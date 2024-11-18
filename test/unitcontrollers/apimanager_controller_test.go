@@ -11,7 +11,6 @@ import (
 	"github.com/3scale/3scale-operator/version"
 
 	grafanav1alpha1 "github.com/grafana-operator/grafana-operator/v4/api/integreatly/v1alpha1"
-	appsv1 "github.com/openshift/api/apps/v1"
 	configv1 "github.com/openshift/api/config/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
@@ -54,11 +53,7 @@ func TestAPIManagerControllerCreate(t *testing.T) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.Install(s)
-	if err != nil {
-		t.Fatalf("Unable to add Apps scheme: (%v)", err)
-	}
-	err = imagev1.Install(s)
+	err := imagev1.Install(s)
 	if err != nil {
 		t.Fatalf("Unable to add Image scheme: (%v)", err)
 	}

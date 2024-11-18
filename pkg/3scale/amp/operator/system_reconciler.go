@@ -18,7 +18,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 )
 
 type SystemReconciler struct {
@@ -229,15 +228,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		}
 	}
 
-	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemAppDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		systemComponentsReady = false
-	}
-
 	// Sidekiq Deployment
 	sidekiqDeploymentMutators := []reconcilers.DMutateFn{
 		reconcilers.DeploymentContainerResourcesMutator,
@@ -260,15 +250,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcileDeployment(system.SidekiqDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.SystemSidekiqName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		systemComponentsReady = false
 	}
 
 	// SystemApp PDB

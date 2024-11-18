@@ -9,7 +9,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -38,10 +37,6 @@ func TestHighAvailabilityReconciler(t *testing.T) {
 	objs := []runtime.Object{apimanager, backendRedisSecret, systemRedisSecret, systemDBSecret}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
-	err := appsv1.AddToScheme(s)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -64,7 +59,7 @@ func TestHighAvailabilityReconciler(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			reconciler := tc.reconcilerConstructor(BaseAPIManagerLogicReconciler)
-			_, err = reconciler.Reconcile()
+			_, err := reconciler.Reconcile()
 			if err != nil {
 				subT.Fatal(err)
 			}

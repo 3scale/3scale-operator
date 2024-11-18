@@ -733,18 +733,6 @@ spec:
           - patch
           - update
         - apiGroups:
-          - apps.openshift.io
-          resources:
-          - deploymentconfigs
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - autoscaling
           resources:
           - horizontalpodautoscalers

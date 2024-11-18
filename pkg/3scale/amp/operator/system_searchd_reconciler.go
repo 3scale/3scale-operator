@@ -6,7 +6,6 @@ import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 )
 
 type SystemSearchdReconciler struct {
@@ -64,15 +63,6 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcileDeployment(searchd.Deployment(ampImages.Options.SystemSearchdImage), searchdDeploymentMutator)
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.SystemSearchdDeploymentName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
 	}
 
 	return reconcile.Result{}, nil

@@ -8,7 +8,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
-	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -61,12 +60,6 @@ func TestSystemMySQLReconcilerCreate(t *testing.T) {
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := imagev1.Install(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// 3scale 2.14 -> 2.15
-	err = appsv1.Install(s)
 	if err != nil {
 		t.Fatal(err)
 	}

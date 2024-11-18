@@ -19,7 +19,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-	"github.com/3scale/3scale-operator/pkg/upgrade"
 )
 
 func ApicastEnvCMMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
@@ -107,15 +106,6 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	// 3scale 2.14 -> 2.15
-	isMigrated, err := upgrade.MigrateDeploymentConfigToDeployment(component.ApicastStagingName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
 	// add apicast production env var mutator
 	productionMutators := []reconcilers.DMutateFn{
 		reconcilers.DeploymentAnnotationsMutator,
@@ -154,15 +144,6 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	err = r.ReconcileDeployment(apicast.ProductionDeployment(ampImages.Options.ApicastImage), reconcilers.DeploymentMutator(productionMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
-	}
-
-	// 3scale 2.14 -> 2.15
-	isMigrated, err = upgrade.MigrateDeploymentConfigToDeployment(component.ApicastProductionName, r.apiManager.GetNamespace(), false, r.Client(), nil)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	if !isMigrated {
-		return reconcile.Result{Requeue: true}, nil
 	}
 
 	serviceMutators := []reconcilers.MutateFn{
