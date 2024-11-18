@@ -4,7 +4,6 @@ import (
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -15,9 +14,6 @@ const (
 	SystemSearchdPVCName        = "system-searchd-manticore"
 	SystemSearchdServiceName    = "system-searchd"
 	SystemSearchdDBVolumeName   = "system-searchd-database"
-
-	// 3scale 2.14 -> 2.15 (manticore)
-	SystemSearchdReindexJobName = "system-searchd-manticore-reindex"
 )
 
 type SystemSearchd struct {
@@ -154,43 +150,6 @@ func (s *SystemSearchd) PVC() *v1.PersistentVolumeClaim {
 			Resources: v1.VolumeResourceRequirements{
 				Requests: v1.ResourceList{
 					v1.ResourceStorage: s.Options.PVCOptions.StorageRequests,
-				},
-			},
-		},
-	}
-}
-
-// ReindexingJob returns the job to run manticore reindexing command. This will be removed for 2.16.
-// 3scale 2.14 -> 2.15 (manticore)
-func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *batchv1.Job {
-	var completions int32 = 1
-
-	return &batchv1.Job{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "batch/v1",
-			Kind:       "Job",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSearchdReindexJobName,
-			Labels: s.Options.Labels,
-		},
-		Spec: batchv1.JobSpec{
-			Completions: &completions,
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Name:            SystemSearchdReindexJobName,
-							Image:           containerImage,
-							Args:            []string{"bash", "-c", "bundle exec rake searchd:optimal_index"},
-							Env:             system.buildSystemBaseEnv(),
-							Resources:       s.Options.ContainerResourceRequirements,
-							ImagePullPolicy: v1.PullIfNotPresent,
-						},
-					},
-					RestartPolicy:      v1.RestartPolicyNever,
-					ServiceAccountName: "amp",
-					PriorityClassName:  s.Options.PriorityClassName,
 				},
 			},
 		},
