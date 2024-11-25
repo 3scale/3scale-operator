@@ -53,7 +53,28 @@ func (s *DeveloperAccountThreescaleReconciler) Reconcile() (*threescaleapi.Devel
 		s.logger.V(1).Info("DeveloperAccount does not exist", "OrgName", s.resource.Spec.OrgName)
 		// ID not in status field
 		// developer account has to be created in 3scale
-		return s.createDevAccount()
+		createdDevAccount, createErr, devUserCR := s.createDevAccount()
+		if createErr != nil {
+			// Occasionally system will return a 409 error even though the DeveloperAccount was created successfully.
+			// When this happens, the returned createdDevAccount will have nil values for all its fields.
+			// If this happens the operator should be able to recover and not mark the DeveloperAccount CR as failed.
+			// Otherwise, the operator will try to create the same DA again which will produce a real error.
+			portaErr, ok := createErr.(threescaleapi.ApiErr)
+			if ok && portaErr.Code() == 409 {
+				// Try to find the DevAccount by the admin user's username
+				fetchedDevAccount, fetchErr := s.findDevAccountByAdminUsername(devUserCR.Spec.Username)
+				if fetchErr != nil || fetchedDevAccount == nil {
+					// Account couldn't be found so requeue and retry creating it
+					return devAccount, fetchErr
+				}
+
+				// Found the account in the DB so return it
+				return fetchedDevAccount, nil
+			}
+			return createdDevAccount, createErr
+		}
+
+		return createdDevAccount, nil
 	}
 
 	s.logger.V(1).Info("DeveloperAccount already exists", "ID", *devAccount.Element.ID)
@@ -76,23 +97,45 @@ func (s *DeveloperAccountThreescaleReconciler) findDevAccountByID() (*threescale
 	return devAccount, nil
 }
 
-func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleapi.DeveloperAccount, error) {
+func (s *DeveloperAccountThreescaleReconciler) findDevAccountByAdminUsername(adminUsername string) (*threescaleapi.DeveloperAccount, error) {
+	if adminUsername == "" {
+		return nil, nil
+	}
+
+	account, err := s.threescaleAPIClient.FindAccount(adminUsername)
+	if err != nil && threescaleapi.IsNotFound(err) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	devAccount, err := s.threescaleAPIClient.DeveloperAccount(account.ID)
+	if err != nil && threescaleapi.IsNotFound(err) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return devAccount, nil
+}
+
+func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleapi.DeveloperAccount, error, *capabilitiesv1beta1.DeveloperUser) {
 	// 3scale API requires one developer user to be created as admin in the process of creating a developer account
 	devAdminUserCR, err := s.findDeveloperAdminUserCR()
 	if err != nil {
-		return nil, err
+		return nil, err, nil
 	}
 
 	if devAdminUserCR == nil {
 		// There should be one, wait for it
 		return nil, &helper.WaitError{
 			Err: errors.New("Valid admin developer user CR not found"),
-		}
+		}, nil
 	}
 
 	password, err := s.getAdminUserPassword(devAdminUserCR)
 	if err != nil {
-		return nil, err
+		return nil, err, nil
 	}
 
 	params := threescaleapi.Params{
@@ -110,7 +153,9 @@ func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleap
 		params["monthly_charging_enabled"] = strconv.FormatBool(*s.resource.Spec.MonthlyChargingEnabled)
 	}
 
-	return s.threescaleAPIClient.Signup(params)
+	devAccountObj, signupErr := s.threescaleAPIClient.Signup(params)
+
+	return devAccountObj, signupErr, devAdminUserCR
 }
 
 func (s *DeveloperAccountThreescaleReconciler) findDeveloperAdminUserCR() (*capabilitiesv1beta1.DeveloperUser, error) {
