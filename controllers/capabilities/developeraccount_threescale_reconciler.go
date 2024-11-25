@@ -39,20 +39,23 @@ func NewDeveloperAccountThreescaleReconciler(b *reconcilers.BaseReconciler, reso
 func (s *DeveloperAccountThreescaleReconciler) Reconcile() (*threescaleapi.DeveloperAccount, error) {
 	s.logger.V(1).Info("START")
 
-	// Reconciliation is based on ID stored in Status field
-	// All fields of the spec are not unique
+	// Reconciliation is based on the ID stored in the CR's annotation or .status block
+	// This is required because none of the fields in the DeveloperAccount CR's .spec are unique
 	// For instance, there may exist several DevAccounts with the same Organization Name.
-	// The only way to know that the account is already created in 3scale is checking the ID in status.
-	// Nice to Have would be having that ID in status inmutable using admission webhooks
-	devAccount, err := s.findDevAccountByID()
+	// We can tell if the account is already created in 3scale by checking the ID in CR's annotation or .status block
+	accountId, err := s.retrieveAccountID()
+	if err != nil {
+		return nil, err
+	}
+
+	devAccount, err := s.findDevAccountByID(accountId)
 	if err != nil {
 		return nil, err
 	}
 
 	if devAccount == nil {
 		s.logger.V(1).Info("DeveloperAccount does not exist", "OrgName", s.resource.Spec.OrgName)
-		// ID not in status field
-		// developer account has to be created in 3scale
+		// The DeveloperAccount doesn't exist yet and must be created in 3scale
 		createdDevAccount, createErr, devUserCR := s.createDevAccount()
 		if createErr != nil {
 			// Occasionally system will return a 409 error even though the DeveloperAccount was created successfully.
@@ -68,12 +71,15 @@ func (s *DeveloperAccountThreescaleReconciler) Reconcile() (*threescaleapi.Devel
 					return devAccount, fetchErr
 				}
 
-				// Found the account in the DB so return it
+				// Found the account in the DB so update the CR status with the account's ID and return the account
+				s.resource.Status.ID = fetchedDevAccount.Element.ID
 				return fetchedDevAccount, nil
 			}
 			return createdDevAccount, createErr
 		}
 
+		// Update the CR status with the account's ID and return the account
+		s.resource.Status.ID = createdDevAccount.Element.ID
 		return createdDevAccount, nil
 	}
 
@@ -83,12 +89,34 @@ func (s *DeveloperAccountThreescaleReconciler) Reconcile() (*threescaleapi.Devel
 	return s.syncDeveloperAccount(devAccount)
 }
 
-func (s *DeveloperAccountThreescaleReconciler) findDevAccountByID() (*threescaleapi.DeveloperAccount, error) {
+// Returns account ID with developerAccount.Status.ID taking precedence over the annotation value
+func (s *DeveloperAccountThreescaleReconciler) retrieveAccountID() (int64, error) {
+	var accountId int64 = 0
+
+	// If the developerAccount.Status.AccountID is nil, check if account.annotations.accountID is present and use it instead
 	if s.resource.Status.ID == nil {
+		if value, found := s.resource.ObjectMeta.Annotations[accountIdAnnotation]; found {
+			// If the accountID annotation is found, convert it to int64
+			accountIdConvertedFromString, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return 0, errors.New(fmt.Sprintf("failed to convert accountID annotation value %s to int64", value))
+			}
+
+			accountId = accountIdConvertedFromString
+		}
+	} else {
+		accountId = *s.resource.Status.ID
+	}
+
+	return accountId, nil
+}
+
+func (s *DeveloperAccountThreescaleReconciler) findDevAccountByID(accountID int64) (*threescaleapi.DeveloperAccount, error) {
+	if accountID == 0 {
 		return nil, nil
 	}
 
-	devAccount, err := s.threescaleAPIClient.DeveloperAccount(*s.resource.Status.ID)
+	devAccount, err := s.threescaleAPIClient.DeveloperAccount(accountID)
 	if err != nil && threescaleapi.IsNotFound(err) {
 		return nil, nil
 	} else if err != nil {

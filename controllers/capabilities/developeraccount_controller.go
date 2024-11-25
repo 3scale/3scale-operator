@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,7 +41,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const developerAccountFinalizer = "developeraccount.capabilities.3scale.net/finalizer"
+const (
+	// accountIdAnnotation matches the developeraccount.status.ID
+	accountIdAnnotation = "accountID"
+
+	developerAccountFinalizer = "developeraccount.capabilities.3scale.net/finalizer"
+)
 
 // DeveloperAccountReconciler reconciles a DeveloperAccount object
 type DeveloperAccountReconciler struct {
@@ -104,12 +110,14 @@ func (r *DeveloperAccountReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
-	if !controllerutil.ContainsFinalizer(developerAccountCR, developerAccountFinalizer) {
-		controllerutil.AddFinalizer(developerAccountCR, developerAccountFinalizer)
-		err = r.UpdateResource(developerAccountCR)
+	metadataUpdated := r.reconcileMetadata(developerAccountCR)
+	if metadataUpdated {
+		err := r.UpdateResource(developerAccountCR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+
+		// No need requeue because the reconcile will trigger automatically since updating the DeveloperAccount CR
 		return ctrl.Result{}, nil
 	}
 
@@ -174,6 +182,31 @@ func (r *DeveloperAccountReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *DeveloperAccountReconciler) reconcileMetadata(devAccountCR *capabilitiesv1beta1.DeveloperAccount) bool {
+	changed := false
+
+	// If the devAccount.Status.AccountID is found and the annotation is not found - create
+	// If the devAccount.Status.AccountID is found and the annotation is found but, the value of annotation is different to the devAccount.Status.AccountID - update
+	var accountId int64 = 0
+	if devAccountCR.Status.ID != nil {
+		accountId = *devAccountCR.Status.ID
+	}
+	if value, found := devAccountCR.ObjectMeta.Annotations[accountIdAnnotation]; (accountId != 0 && !found) || (accountId != 0 && found && value != strconv.FormatInt(*devAccountCR.Status.ID, 10)) {
+		if devAccountCR.ObjectMeta.Annotations == nil {
+			devAccountCR.ObjectMeta.Annotations = make(map[string]string)
+		}
+		devAccountCR.ObjectMeta.Annotations[accountIdAnnotation] = strconv.FormatInt(*devAccountCR.Status.ID, 10)
+		changed = true
+	}
+
+	if !controllerutil.ContainsFinalizer(devAccountCR, developerAccountFinalizer) {
+		controllerutil.AddFinalizer(devAccountCR, developerAccountFinalizer)
+		changed = true
+	}
+
+	return changed
 }
 
 func (r *DeveloperAccountReconciler) reconcileSpec(accountCR *capabilitiesv1beta1.DeveloperAccount, logger logr.Logger) (*DeveloperAccountStatusReconciler, error) {
