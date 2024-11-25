@@ -65,6 +65,16 @@ const (
 	BackendListenerMetricsPort = 9394
 )
 
+const (
+	ConfigRedisCaFilePath     = "/tls/backend-redis-ca.crt"
+	ConfigRedisClientCertPath = "/tls/backend-redis-client.crt"
+	ConfigRedisPrivateKeyPath = "/tls/backend-redis-private.key"
+
+	ConfigQueuesCaFilePath     = "/tls/config-queues-ca.crt"
+	ConfigQueuesClientCertPath = "/tls/config-queues-client.crt"
+	ConfigQueuesPrivateKeyPath = "/tls/config-queues-private.key"
+)
+
 var (
 	BackendWorkerMetricsPortStr   = strconv.FormatInt(BackendWorkerMetricsPort, 10)
 	BackendListenerMetricsPortStr = strconv.FormatInt(BackendListenerMetricsPort, 10)
@@ -577,14 +587,14 @@ func (backend *Backend) workerPorts() []v1.ContainerPort {
 
 func (backend *Backend) BackendRedisTLSEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
-		helper.EnvVarFromValue("CONFIG_REDIS_CA_FILE", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_CA_FILE")),
-		helper.EnvVarFromValue("CONFIG_REDIS_CERT", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_CERT")),
-		helper.EnvVarFromValue("CONFIG_REDIS_PRIVATE_KEY", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_PRIVATE_KEY")),
-		helper.EnvVarFromSecret("CONFIG_REDIS_SSL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigSSL),
-		helper.EnvVarFromValue("CONFIG_QUEUES_CA_FILE", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_QUEUES_CA_FILE")),
-		helper.EnvVarFromValue("CONFIG_QUEUES_CERT", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_QUEUES_CERT")),
-		helper.EnvVarFromValue("CONFIG_QUEUES_PRIVATE_KEY", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_QUEUES_PRIVATE_KEY")),
-		helper.EnvVarFromSecret("CONFIG_QUEUES_SSL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesSSL),
+		helper.EnvVarFromValue("CONFIG_REDIS_CA_FILE", ConfigRedisCaFilePath),
+		helper.EnvVarFromValue("CONFIG_REDIS_CERT", ConfigRedisClientCertPath),
+		helper.EnvVarFromValue("CONFIG_REDIS_PRIVATE_KEY", ConfigRedisPrivateKeyPath),
+		helper.EnvVarFromValue("CONFIG_REDIS_SSL", "1"),
+		helper.EnvVarFromValue("CONFIG_QUEUES_CA_FILE", ConfigQueuesCaFilePath),
+		helper.EnvVarFromValue("CONFIG_QUEUES_CERT", ConfigQueuesClientCertPath),
+		helper.EnvVarFromValue("CONFIG_QUEUES_PRIVATE_KEY", ConfigQueuesPrivateKeyPath),
+		helper.EnvVarFromValue("CONFIG_QUEUES_SSL", "1"),
 	}
 }
 

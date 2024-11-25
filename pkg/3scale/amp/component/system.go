@@ -128,6 +128,16 @@ const (
 	S3StsCredentialsSecretName = "s3-credentials"
 )
 
+const (
+	redisCaFilePath     = "/tls/system-redis/system-redis-ca.crt"
+	redisClientCertPath = "/tls/system-redis/system-redis-client.crt"
+	redisPrivateKeyPath = "/tls/system-redis/system-redis-private.key"
+
+	//backendRedisCaFilePath     = "/tls/backend-redis-ca.crt"
+	//backendRedisClientCertPath = "/tls/backend-redis-client.crt"
+	//backendRedisPrivateKeyPath = "/tls/backend-redis-private.key"
+)
+
 type System struct {
 	Options *SystemOptions
 }
@@ -182,6 +192,8 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 	)
 	if system.Options.RedisTLSEnabled {
 		result = append(result, system.SystemRedisTLSEnvVars()...)
+	} else {
+		result = append(result, helper.EnvVarFromValue("REDIS_SSL", "0"))
 	}
 
 	return result
@@ -192,6 +204,8 @@ func (system *System) sidekiqInitContainerRedisEnvVars() []v1.EnvVar {
 
 	if system.Options.RedisTLSEnabled {
 		result = append(result, system.BackendRedisTLSEnvVars()...)
+	} else {
+		result = append(result, helper.EnvVarFromValue("BACKEND_REDIS_SSL", "0"))
 	}
 	return result
 }
@@ -288,6 +302,8 @@ func (system *System) buildAppMasterContainerEnv() []v1.EnvVar {
 
 	if system.Options.RedisTLSEnabled {
 		result = append(result, system.SystemRedisTLSEnvVars()...)
+	} else {
+		result = append(result, helper.EnvVarFromValue("REDIS_SSL", "0"))
 	}
 
 	return result
@@ -354,6 +370,8 @@ func (system *System) BackendRedisEnvVars() []v1.EnvVar {
 	)
 	if system.Options.RedisTLSEnabled {
 		result = append(result, system.BackendRedisTLSEnvVars()...)
+	} else {
+		result = append(result, helper.EnvVarFromValue("BACKEND_REDIS_SSL", "0"))
 	}
 	return result
 }
@@ -1470,10 +1488,10 @@ func (system *System) SystemRedisTLSEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecretOptional("SSL_CERT", SystemSecretSystemRedisSecretName, "SSL_CERT"),
 		helper.EnvVarFromSecretOptional("SSL_KEY", SystemSecretSystemRedisSecretName, "SSL_KEY"),
 
-		helper.EnvVarFromValue("REDIS_CA_FILE", helper.EnvVarPathFromRedisSecret(SystemSecretSystemRedisSecretName, "REDIS_CA_FILE")),
-		helper.EnvVarFromValue("REDIS_CLIENT_CERT", helper.EnvVarPathFromRedisSecret(SystemSecretSystemRedisSecretName, "REDIS_CLIENT_CERT")),
-		helper.EnvVarFromValue("REDIS_PRIVATE_KEY", helper.EnvVarPathFromRedisSecret(SystemSecretSystemRedisSecretName, "REDIS_PRIVATE_KEY")),
-		helper.EnvVarFromSecret("REDIS_SSL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSSL),
+		helper.EnvVarFromValue("REDIS_CA_FILE", redisCaFilePath),
+		helper.EnvVarFromValue("REDIS_CLIENT_CERT", redisClientCertPath),
+		helper.EnvVarFromValue("REDIS_PRIVATE_KEY", redisPrivateKeyPath),
+		helper.EnvVarFromValue("REDIS_SSL", "1"),
 	}
 }
 
@@ -1482,10 +1500,11 @@ func (system *System) BackendRedisTLSEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecretOptional("SSL_CA", BackendSecretBackendRedisSecretName, "SSL_CA"),
 		helper.EnvVarFromSecretOptional("SSL_CERT", BackendSecretBackendRedisSecretName, "SSL_CERT"),
 		helper.EnvVarFromSecretOptional("SSL_KEY", BackendSecretBackendRedisSecretName, "SSL_KEY"),
-		helper.EnvVarFromValue("BACKEND_REDIS_CA_FILE", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_CA_FILE")),
-		helper.EnvVarFromValue("BACKEND_REDIS_CLIENT_CERT", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_CERT")),
-		helper.EnvVarFromValue("BACKEND_REDIS_PRIVATE_KEY", helper.EnvVarPathFromRedisSecret(BackendSecretBackendRedisSecretName, "CONFIG_REDIS_PRIVATE_KEY")),
-		helper.EnvVarFromSecret("BACKEND_REDIS_SSL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigSSL),
+
+		helper.EnvVarFromValue("BACKEND_REDIS_CA_FILE", ConfigRedisCaFilePath),
+		helper.EnvVarFromValue("BACKEND_REDIS_CLIENT_CERT", ConfigRedisClientCertPath),
+		helper.EnvVarFromValue("BACKEND_REDIS_PRIVATE_KEY", ConfigRedisPrivateKeyPath),
+		helper.EnvVarFromValue("BACKEND_REDIS_SSL", "1"),
 	}
 }
 

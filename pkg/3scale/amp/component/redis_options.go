@@ -148,49 +148,6 @@ func DefaultBackendQueuesSentinelRole() string {
 	return ""
 }
 
-// TLS
-func DefaultSystemRedisCAFile() string {
-	return ""
-}
-
-func DefaultSystemRedisClientCertificate() string {
-	return ""
-}
-
-func DefaultSystemRedisPrivateKey() string {
-	return ""
-}
-
-func DefaultSystemRedisSSL() string {
-	return "false"
-}
-
-// TLS, Backend
-func DefaultBackendConfigCAFile() string {
-	return ""
-}
-func DefaultBackendConfigClientCertificate() string {
-	return ""
-}
-func DefaultBackendConfigPrivateKey() string {
-	return ""
-}
-func DefaultBackendConfigSSL() string {
-	return "false"
-}
-func DefaultBackendConfigQueuesCAFile() string {
-	return ""
-}
-func DefaultBackendConfigQueuesClientCertificate() string {
-	return ""
-}
-func DefaultBackendConfigQueuesPrivateKey() string {
-	return ""
-}
-func DefaultBackendConfigQueuesSSL() string {
-	return "false"
-}
-
-func DefaultSystemAndBackendRedisSslUserValue() string {
+func DefaultRedisSslSecretValue() string {
 	return "replaceme"
 }

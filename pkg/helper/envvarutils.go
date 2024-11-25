@@ -1,27 +1,10 @@
 package helper
 
 import (
-	"context"
-	v1 "k8s.io/api/core/v1"
 	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-)
 
-var redisSecretsEnvPathMap = map[string]struct {
-	path      string
-	sslEnvVar string
-}{
-	"REDIS_CA_FILE":             {"/tls/system-redis/system-redis-ca.crt", "SSL_CA"},
-	"REDIS_CLIENT_CERT":         {"/tls/system-redis/system-redis-client.crt", "SSL_CERT"},
-	"REDIS_PRIVATE_KEY":         {"/tls/system-redis/system-redis-private.key", "SSL_KEY"},
-	"CONFIG_REDIS_CA_FILE":      {"/tls/backend-redis-ca.crt", "SSL_CA"},
-	"CONFIG_REDIS_CERT":         {"/tls/backend-redis-client.crt", "SSL_CERT"},
-	"CONFIG_REDIS_PRIVATE_KEY":  {"/tls/backend-redis-private.key", "SSL_KEY"},
-	"CONFIG_QUEUES_CA_FILE":     {"/tls/config-queues-ca.crt", "SSL_QUEUES_CA"},
-	"CONFIG_QUEUES_CERT":        {"/tls/config-queues-client.crt", "SSL_QUEUES_CERT"},
-	"CONFIG_QUEUES_PRIVATE_KEY": {"/tls/config-queues-private.key", "SSL_QUEUES_KEY"},
-}
+	v1 "k8s.io/api/core/v1"
+)
 
 func EnvVarFromConfigMap(envVarName string, configMapName, configMapKey string) v1.EnvVar {
 	return v1.EnvVar{
@@ -173,27 +156,4 @@ func EnvVarReconciler(desired []v1.EnvVar, existing *[]v1.EnvVar, envVar string)
 		}
 	}
 	return update
-}
-
-func EnvVarPathFromRedisSecret(secretName string, envVar string) string {
-	cfg, _ := config.GetConfig()
-	client, _ := client.New(cfg, client.Options{})
-	namespace, _ := GetOperatorNamespace()
-	secret, err := GetSecret(secretName, namespace, client)
-	if err != nil {
-		return ""
-	}
-	envPathRecord, exists := redisSecretsEnvPathMap[envVar]
-	if !exists {
-		return ""
-	}
-	if sslData, exists := secret.Data[envPathRecord.sslEnvVar]; !exists || len(sslData) == 0 {
-		return ""
-	}
-	secret.Data[envVar] = []byte(envPathRecord.path)
-	err = client.Update(context.TODO(), secret)
-	if err != nil {
-		return ""
-	}
-	return envPathRecord.path
 }

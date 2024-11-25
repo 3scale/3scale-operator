@@ -972,7 +972,7 @@ Following environment variables will be set:
   - REDIS_CA_FILE and BACKEND_REDIS_CA_FILE for the CA certificate
   - REDIS_CLIENT_CERT and BACKEND_REDIS_CLIENT_CERT for the client certificate
   - REDIS_PRIVATE_KEY and BACKEND_REDIS_PRIVATE_KEY for the client key
-  - REDIS_SSL and BACKEND_REDIS_SSL must be set to true when any of the above is present
+  - REDIS_SSL and BACKEND_REDIS_SSL will be set to true when any of the above is present
 
 See [APIManager CRD](apimanager-reference.md) - `backend-redis` and `system-redis` secrets environment variables.
 

@@ -188,21 +188,17 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
 		SystemRedisPodTemplateAnnotations:         testSystemRedisPodTemplateAnnotations(),
 		BackendRedisPodTemplateAnnotations:        testBackendRedisPodTemplateAnnotations(),
-		SystemRedisPrivateKey:                     component.DefaultSystemRedisPrivateKey(),
-		SystemRedisSSL:                            component.DefaultSystemRedisSSL(),
-		SystemRedisSslCa:                          component.DefaultSystemAndBackendRedisSslUserValue(),
-		SystemRedisSslCert:                        component.DefaultSystemAndBackendRedisSslUserValue(),
-		SystemRedisSslKey:                         component.DefaultSystemAndBackendRedisSslUserValue(),
-		BackendConfigPrivateKey:                   component.DefaultBackendConfigPrivateKey(),
-		BackendConfigSSL:                          component.DefaultBackendConfigSSL(),
-		BackendConfigSslCa:                        component.DefaultSystemAndBackendRedisSslUserValue(),
-		BackendConfigSslCert:                      component.DefaultSystemAndBackendRedisSslUserValue(),
-		BackendConfigSslKey:                       component.DefaultSystemAndBackendRedisSslUserValue(),
-		BackendConfigQueuesPrivateKey:             component.DefaultBackendConfigQueuesPrivateKey(),
-		BackendConfigQueuesSSL:                    component.DefaultBackendConfigQueuesSSL(),
-		BackendConfigQueuesSslCa:                  component.DefaultSystemAndBackendRedisSslUserValue(),
-		BackendConfigQueuesSslCert:                component.DefaultSystemAndBackendRedisSslUserValue(),
-		BackendConfigQueuesSslKey:                 component.DefaultSystemAndBackendRedisSslUserValue(),
+
+		// TLS
+		SystemRedisSslCa:           component.DefaultRedisSslSecretValue(),
+		SystemRedisSslCert:         component.DefaultRedisSslSecretValue(),
+		SystemRedisSslKey:          component.DefaultRedisSslSecretValue(),
+		BackendConfigSslCa:         component.DefaultRedisSslSecretValue(),
+		BackendConfigSslCert:       component.DefaultRedisSslSecretValue(),
+		BackendConfigSslKey:        component.DefaultRedisSslSecretValue(),
+		BackendConfigQueuesSslCa:   component.DefaultRedisSslSecretValue(),
+		BackendConfigQueuesSslCert: component.DefaultRedisSslSecretValue(),
+		BackendConfigQueuesSslKey:  component.DefaultRedisSslSecretValue(),
 	}
 }
 

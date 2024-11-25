@@ -154,134 +154,60 @@ func (r *RedisOptionsProvider) setSecretBasedOptions() error {
 
 		//TLS
 		{
-			&r.options.SystemRedisCAFile,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisCAFile,
-			component.DefaultSystemRedisCAFile(),
-		},
-		{
-			&r.options.SystemRedisClientCertificate,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisClientCertificate,
-			component.DefaultSystemRedisClientCertificate(),
-		},
-		{
-			&r.options.SystemRedisPrivateKey,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisPrivateKey,
-			component.DefaultSystemRedisPrivateKey(),
-		},
-		{
-			&r.options.SystemRedisSSL,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretSystemRedisSSL,
-			component.DefaultSystemRedisSSL(),
-		},
-		// SSL options populated by User
-		{
 			&r.options.SystemRedisSslCa,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisSslCa,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 		{
 			&r.options.SystemRedisSslCert,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisSslCert,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 		{
 			&r.options.SystemRedisSslKey,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisSslKey,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 
 		// TLS / Backend
 		{
-			&r.options.BackendConfigCAFile,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisConfigCAFile,
-			component.DefaultBackendConfigCAFile(),
-		},
-		{
-			&r.options.BackendConfigClientCertificate,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisConfigClientCertificate,
-			component.DefaultBackendConfigClientCertificate(),
-		},
-		{
-			&r.options.BackendConfigPrivateKey,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisConfigPrivateKey,
-			component.DefaultBackendConfigPrivateKey(),
-		},
-		{
-			&r.options.BackendConfigSSL,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisConfigSSL,
-			component.DefaultBackendConfigSSL(),
-		},
-		{
-			&r.options.BackendConfigQueuesCAFile,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisConfigQueuesCAFile,
-			component.DefaultBackendConfigQueuesCAFile(),
-		},
-		{
-			&r.options.BackendConfigQueuesClientCertificate,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisConfigQueuesClientCertificate,
-			component.DefaultBackendConfigQueuesClientCertificate(),
-		},
-		{
-			&r.options.BackendConfigQueuesPrivateKey,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisConfigQueuesPrivateKey,
-			component.DefaultBackendConfigQueuesPrivateKey(),
-		},
-		{
-			&r.options.BackendConfigQueuesSSL,
-			component.BackendSecretBackendRedisSecretName,
-			component.BackendSecretBackendRedisConfigQueuesSSL,
-			component.DefaultBackendConfigQueuesSSL(),
-		},
-		// SSL options populated by User
-		{
 			&r.options.BackendConfigSslCa,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisSslCa,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 		{
 			&r.options.BackendConfigSslCert,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisSslCert,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 		{
 			&r.options.BackendConfigSslKey,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisSslKey,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 		{
 			&r.options.BackendConfigQueuesSslCa,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretConfigQueuesSslCa,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 		{
 			&r.options.BackendConfigQueuesSslCert,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretConfigQueuesSslCert,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 		{
 			&r.options.BackendConfigQueuesSslKey,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretConfigQueuesSslKey,
-			component.DefaultSystemAndBackendRedisSslUserValue(),
+			component.DefaultRedisSslSecretValue(),
 		},
 	}
 
