@@ -1,51 +1,104 @@
 domain: 3scale.net
-layout: go.kubebuilder.io/v2
+layout: go.kubebuilder.io/v3
 multigroup: true
 projectName: 3scale-operator
 repo: github.com/3scale/3scale-operator
 resources:
-- group: apps
+-
+  controller: true
+  group: apps
   kind: APIManager
+  path: github.com/3scale/3scale-operator/apis/apps/v1alpha1
   version: v1alpha1
-- group: apps
+-
+  controller: true
+  group: apps
   kind: APIManagerBackup
+  path: github.com/3scale/3scale-operator/apis/apps/v1alpha1
   version: v1alpha1
-- group: apps
+-
+  controller: true
+  group: apps
   kind: APIManagerRestore
+  path: github.com/3scale/3scale-operator/apis/apps/v1alpha1
   version: v1alpha1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: Tenant
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1alpha1
   version: v1alpha1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: Backend
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: Product
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: OpenAPI
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: ActiveDoc
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: CustomPolicyDefinition
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: DeveloperAccount
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: DeveloperUser
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: ProxyConfigPromote
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: Application
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-- group: capabilities
+-
+  controller: true
+  domain: 3scale.net
+  group: capabilities
   kind: ApplicationAuth
+  path: github.com/3scale/3scale-operator/apis/capabilities/v1beta1
   version: v1beta1
-version: 3-alpha
+version: "3"
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}

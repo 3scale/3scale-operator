@@ -240,12 +240,13 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: quay.io/3scale/3scale-operator:master
-    createdAt: "2019-05-30T22:40:00Z"
+    createdAt: "2024-11-27T13:51:25Z"
     description: 3scale Operator to provision 3scale and publish/manage API
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
-    operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale API Management"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.2.0
-    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+    operators.openshift.io/valid-subscription: '["Red Hat Integration", "Red Hat 3scale
+      API Management"]'
+    operators.operatorframework.io/builder: operator-sdk-v1.28.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/3scale/3scale-operator
     rht_backend_redis_requirements: 6.0.0
     rht_mysql_requirements: 8.0.0
@@ -326,7 +327,8 @@ spec:
       kind: Backend
       name: backends.capabilities.3scale.net
       version: v1beta1
-    - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions API
+    - description: CustomPolicyDefinition is the Schema for the custompolicydefinitions
+        API
       displayName: Custom Policy Definition
       kind: CustomPolicyDefinition
       name: custompolicydefinitions.capabilities.3scale.net
@@ -514,7 +516,10 @@ spec:
           - watch
         serviceAccountName: 3scale-operator
       deployments:
-      - name: threescale-operator-controller-manager-v2
+      - label:
+          app: 3scale-api-management
+          control-plane: controller-manager
+        name: threescale-operator-controller-manager-v2
         spec:
           replicas: 1
           selector:
@@ -1161,4 +1166,25 @@ spec:
   maturity: stable
   provider:
     name: Red Hat
+  relatedImages:
+  - image: quay.io/3scale/apisonator:latest
+    name: backend
+  - image: quay.io/3scale/apicast:latest
+    name: apicast
+  - image: quay.io/3scale/porta:latest
+    name: system
+  - image: quay.io/3scale/zync:latest
+    name: zync
+  - image: memcached:1.5
+    name: system-memcached
+  - image: quay.io/fedora/redis-6:latest
+    name: ""
+  - image: quay.io/sclorg/mysql-80-c8s
+    name: system-mysql
+  - image: quay.io/sclorg/postgresql-10-c8s
+    name: ""
+  - image: quay.io/openshift/origin-cli:4.7
+    name: oc-cli
+  - image: quay.io/3scale/searchd:latest
+    name: system-searchd
   version: 0.0.1
