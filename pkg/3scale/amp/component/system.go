@@ -132,10 +132,6 @@ const (
 	redisCaFilePath     = "/tls/system-redis/system-redis-ca.crt"
 	redisClientCertPath = "/tls/system-redis/system-redis-client.crt"
 	redisPrivateKeyPath = "/tls/system-redis/system-redis-private.key"
-
-	//backendRedisCaFilePath     = "/tls/backend-redis-ca.crt"
-	//backendRedisClientCertPath = "/tls/backend-redis-client.crt"
-	//backendRedisPrivateKeyPath = "/tls/backend-redis-private.key"
 )
 
 type System struct {
@@ -1072,7 +1068,7 @@ func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deploy
 							Command: []string{
 								"bash",
 								"-c",
-								"bundle exec sh -c \"until rake boot:redis && curl --insecure --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
 							},
 							VolumeMounts: system.sidekiqContainerVolumeMounts(),
 							Env:          append(system.sidekiqInitContainerRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),

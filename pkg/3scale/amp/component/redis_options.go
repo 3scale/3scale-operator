@@ -50,22 +50,7 @@ type RedisOptions struct {
 	SystemRedisSentinelsRole         string
 	SystemRedisNamespace             string
 	// TLS
-	SystemRedisCAFile                    string
-	SystemRedisClientCertificate         string
-	SystemRedisPrivateKey                string
-	SystemRedisSSL                       string
-	BackendConfigCAFile                  string
-	BackendConfigClientCertificate       string
-	BackendConfigPrivateKey              string
-	BackendConfigSSL                     string
-	BackendConfigQueuesCAFile            string
-	BackendConfigQueuesClientCertificate string
-	BackendConfigQueuesPrivateKey        string
-	BackendConfigQueuesSSL               string
-
-	RedisTLSEnabled bool
-
-	// SSL Fields populated in secrets by User
+	RedisTLSEnabled            bool
 	SystemRedisSslCa           string
 	SystemRedisSslCert         string
 	SystemRedisSslKey          string

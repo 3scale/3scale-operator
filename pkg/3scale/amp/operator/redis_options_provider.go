@@ -171,8 +171,6 @@ func (r *RedisOptionsProvider) setSecretBasedOptions() error {
 			component.SystemSecretSystemRedisSslKey,
 			component.DefaultRedisSslSecretValue(),
 		},
-
-		// TLS / Backend
 		{
 			&r.options.BackendConfigSslCa,
 			component.BackendSecretBackendRedisSecretName,

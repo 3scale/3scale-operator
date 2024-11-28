@@ -297,17 +297,7 @@ func (redis *Redis) BackendRedisSecret() *v1.Secret {
 			BackendSecretBackendRedisStorageSentinelRoleFieldName:  redis.Options.BackendRedisStorageSentinelRole,
 			BackendSecretBackendRedisQueuesSentinelHostsFieldName:  redis.Options.BackendRedisQueuesSentinelHosts,
 			BackendSecretBackendRedisQueuesSentinelRoleFieldName:   redis.Options.BackendRedisQueuesSentinelRole,
-
 			// TLS
-			BackendSecretBackendRedisConfigCAFile:                  redis.Options.BackendConfigCAFile,
-			BackendSecretBackendRedisConfigClientCertificate:       redis.Options.BackendConfigClientCertificate,
-			BackendSecretBackendRedisConfigPrivateKey:              redis.Options.BackendConfigPrivateKey,
-			BackendSecretBackendRedisConfigSSL:                     redis.Options.BackendConfigSSL,
-			BackendSecretBackendRedisConfigQueuesCAFile:            redis.Options.BackendConfigQueuesCAFile,
-			BackendSecretBackendRedisConfigQueuesClientCertificate: redis.Options.BackendConfigQueuesClientCertificate,
-			BackendSecretBackendRedisConfigQueuesPrivateKey:        redis.Options.BackendConfigQueuesPrivateKey,
-			BackendSecretBackendRedisConfigQueuesSSL:               redis.Options.BackendConfigQueuesSSL,
-
 			BackendSecretBackendRedisSslCa:   redis.Options.BackendConfigSslCa,
 			BackendSecretBackendRedisSslCert: redis.Options.BackendConfigSslCert,
 			BackendSecretBackendRedisSslKey:  redis.Options.BackendConfigSslKey,
@@ -493,13 +483,7 @@ func (redis *Redis) SystemRedisSecret() *v1.Secret {
 			SystemSecretSystemRedisURLFieldName:  redis.Options.SystemRedisURL,
 			SystemSecretSystemRedisSentinelHosts: redis.Options.SystemRedisSentinelsHosts,
 			SystemSecretSystemRedisSentinelRole:  redis.Options.SystemRedisSentinelsRole,
-
 			// TLS
-			SystemSecretSystemRedisCAFile:            redis.Options.SystemRedisCAFile,
-			SystemSecretSystemRedisClientCertificate: redis.Options.SystemRedisClientCertificate,
-			SystemSecretSystemRedisPrivateKey:        redis.Options.SystemRedisPrivateKey,
-			SystemSecretSystemRedisSSL:               redis.Options.SystemRedisSSL,
-
 			SystemSecretSystemRedisSslCa:   redis.Options.SystemRedisSslCa,
 			SystemSecretSystemRedisSslCert: redis.Options.SystemRedisSslCert,
 			SystemSecretSystemRedisSslKey:  redis.Options.SystemRedisSslKey,

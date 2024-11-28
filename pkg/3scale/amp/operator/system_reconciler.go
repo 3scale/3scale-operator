@@ -202,12 +202,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
 		}
-		if r.apiManager.Spec.RedisTLSEnabled != nil && *r.apiManager.Spec.RedisTLSEnabled {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.SystemDeploymentsAddRedisTLSEnvMutator)
-		} else {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.SystemDeploymentsRemoveRedisTLSEnvMutator)
-		}
-
 		err = r.ReconcileDeployment(system.AppDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
 		if err != nil {
 			return reconcile.Result{}, err
@@ -261,11 +255,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
-	}
-	if r.apiManager.Spec.RedisTLSEnabled != nil && *r.apiManager.Spec.RedisTLSEnabled {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.SystemDeploymentsAddRedisTLSEnvMutator)
-	} else {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.SystemDeploymentsRemoveRedisTLSEnvMutator)
 	}
 
 	err = r.ReconcileDeployment(system.SidekiqDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
