@@ -214,7 +214,15 @@ type: Opaque
 
 Secret name must be `backend-redis`.
 
-User can add TLS details to connect to Redis.
+To allow secure TLS communication for the Redis connection for Backend, the following TLS certificate details 
+should be added to the `backend-redis` Secret:
+- SSL_CA: The Redis Certificate Authority (CA) certificate.
+- SSL_CERT: The Redis client certificate.
+- SSL_KEY: The private key for the Redis client certificate.
+- SSL_QUEUES_CA: The Redis Queues Certificate Authority (CA) certificate.
+- SSL_QUEUES_CERT: The Redis Queues client certificate.
+- SSL_QUEUES_KEY: The private key for the Redis Queues client certificate.
+
 Example of backend-redis secret with TLS details:
 ```yaml
 apiVersion: v1
@@ -222,19 +230,15 @@ kind: Secret
 metadata:
   name: backend-redis
 stringData:
-...
-CONFIG_REDIS_CA_FILE: ""
-CONFIG_REDIS_CERT: ""
-CONFIG_REDIS_PRIVATE_KEY: ""
-CONFIG_REDIS_SSL: "false"
-CONFIG_QUEUES_CA_FILE: ""
-CONFIG_QUEUES_CERT: ""
-CONFIG_QUEUES_PRIVATE_KEY: ""
-CONFIG_QUEUES_SSL: "false"
-...
+  SSL_CA: xxxxx......
+  SSL_CERT: xxxxx......
+  SSL_KEY: xxxxx......
+  SSL_QUEUES_CA: xxxxx......
+  SSL_QUEUES_CERT: xxxxx......
+  SSL_QUEUES_KEY: xxxxx......
 type: Opaque
 ```
-**Notes** CONFIG_REDIS_SSL and CONFIG_QUEUES_SSL fields set to "true" by operator if any of other fields are not empty.
+For more details on TLS configuration, refer to the [Setting Redis TLS Environment variables](#setting-redis-tls-environment-variables) section.
 
 See [Backend redis secret](apimanager-reference.md#backend-redis) for reference.
 
@@ -259,8 +263,14 @@ type: Opaque
 
 Secret name must be `system-redis`.
 
-User can add TLS details to connect to Redis.
-Example of system-redis secret with TLS details:
+To enable secure TLS communication for the Redis connection used by the system pods (such as system-app and system-sidekiq), the following TLS certificate details should be added to the `system-redis` secret:
+- SSL_CA: The Redis Certificate Authority (CA) certificate.
+- SSL_CERT: The Redis client certificate.
+- SSL_KEY: The private key for the Redis client certificate.
+**Important**: SSL_CA,SSL_CERT and SSL_KEY certificate fields must also present in `backend-redis` secret; it's require for `system pods` to set TLS connection with Redis.
+For more details, please refer to the section on [Setting Redis TLS Environment variables](#setting-redis-tls-environment-variables).
+
+- Example of system-redis secret with TLS details:
 
 ```yaml
 apiVersion: v1
@@ -268,15 +278,11 @@ kind: Secret
 metadata:
   name: system-redis
 stringData:
-...
-REDIS_CA_FILE:  ""
-REDIS_CLIENT_CERT:  ""
-REDIS_PRIVATE_KEY:  ""
-REDIS_SSL:  "false"
-...
+  SSL_CA: xxxxx......
+  SSL_CERT: xxxxx......
+  SSL_KEY: xxxxx......
 type: Opaque
 ```
-**Notes** REDIS_SSL field set to "true" by operator if any of other fields are not empty.
 
 See [System redis secret](apimanager-reference.md#system-redis) for reference.
 
@@ -949,30 +955,78 @@ Please refer to [Gateway instrumentation](gateway-instrumentation.md) document
 
 
 #### Setting Redis TLS Environment variables
+To enable TLS communication in Redis, certain configurations must be defined within the `ApiManager CR`, and redis secrets.   
+Below are the key settings and environment variables involved in the process:
 
-To enable Redis TLS - use `redisTLSEnabled` boolean flag in APIManager Spec.  
-If `redisTLSEnabled` is `true` backend and system pods will include Redis TLS environment variables.
+- Following definitions are required in the **ApiManager CR** to enable TLS communication:
+    - `spec.redisTLSEnabled: true`
+    - `spec.externalComponents` should present and `system.redis` or `backend.redis` (or both) will be `true`
+- When Redis TLS is enabled, the TLS environment variables for Backend and System components will be set in Pods.
+  - for Backend - in backend-worker, backend-cron, and backend-listener pods.
+  - for System - in system-app and system-sidekiq pods.
+- TLS Environment variables in the pods will appear as PATH to Certificate files, that contains
+  - Certificate (CA cert), 
+  - Client Certificate,
+  - Client Private Key
+- TLS certificate files are populated from the **backend-redis** and **system-redis** secrets.
+
+- The tables below show the mapping between TLS certificate environment variables in the pods, their corresponding definitions in the related Redis backend and system secrets.
+
+Table. **Backend** - pods: `backend-listener`,`backend-cron`; `backend worker`, secret: `backedn-redis`
+
+| ENV Var Name and value (Path in pod) in Backend pods     | Data field Name in backedn-redis secret |
+|----------------------------------------------------------|----------------------------------------|
+| CONFIG_REDIS_CA_FILE=/tls/backend-redis-ca.crt           | SSL_CA                                 |
+| CONFIG_REDIS_CERT=/tls/backend-redis-client.crt          | SSL_CERT                               |
+| CONFIG_REDIS_PRIVATE_KEY=/tls/backend-redis-private.key  | SSL_KEY                                |
+| CONFIG_REDIS_SSL=1                                       | NA                                     |
+| CONFIG_QUEUES_CA_FILE=/tls/config-queues-ca.crt          | SSL_QUEUES_CA                          |
+| CONFIG_QUEUES_CERT=/tls/config-queues-client.crt         | SSL_QUEUES_CERT                        |
+| CONFIG_QUEUES_PRIVATE_KEY=/tls/config-queues-private.key | SSL_QUEUES_KEY                         |
+| CONFIG_QUEUES_SSL=1                                      | NA                                     |
+
+**Note** Following environment variables are defined and set to "1" (true) in backend pods,  when `redisTLSEnabled` is `true`.
+- CONFIG_REDIS_SSL=1
+- CONFIG_QUEUES_SSL=1
+
+Table. **System** - pods: `system-app`, `system-sidekiq`; secrets: `system-redis` and `backedn-redis`
+
+| ENV Var Name and value (Path in pod) in system pods | Data field Name in system or backedn-redis secrets | secret name  |
+|--------------------------------------------------------------------------|-------------------------------|--------------|
+| REDIS_CA_FILE=/tls/backend-redis-ca.crt                                  | SSL_CA                        | system-redis |
+| REDIS_CLIENT_CERT=/tls/backend-redis-client.crt                          | SSL_CERT                      | system-redis |
+| REDIS_PRIVATE_KEY=/tls/backend-redis-private.key                         | SSL_KEY                       | system-redis |
+| REDIS_SSL=1                                                              |                               | NA           |
+| BACKEND_REDIS_CLIENT_CERT=/tls/config-queues-ca.crt                      | SSL_QUEUES_CA                 | backedn-redis|
+| CONFIG_QUEUES_CERT=/tls/config-queues-client.crt                         | SSL_QUEUES_CERT               | backedn-redis|
+| BACKEND_REDIS_PRIVATE_KEY=/tls/config-queues-private.key                 | SSL_QUEUES_KEY                | backedn-redis|
+| BACKEND_REDIS_SSL=1                                                      |                               | NA           |
+
+**Note** Following environment variables are defined and set to "1" (true) in system pods,  when `redisTLSEnabled` is `true`.
+- REDIS_SSL=1
+- BACKEND_REDIS_SSL=1
+
+This is example for APIManager CR where Redis TLS communication is enabled both for System and Backend pods.
 
 ```yaml
+apiVersion: apps.3scale.net/v1alpha1
 kind: APIManager
 metadata:
   name: example-apimanager
 spec:
   redisTLSEnabled: true
-  system: 
- ...
+  system:
+    fileStorage:
+      simpleStorageService:
+        configurationSecretRef:
+          name: s3-credentials
+  wildcardDomain: <wildcardDomain>
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      redis: true
 ```
-Following environment variables will be set:  
-* Backend:
-  - CONFIG_REDIS_CA_FILE and CONFIG_QUEUES_CA_FILE for the CA certificate
-  - CONFIG_REDIS_CERT and CONFIG_QUEUES_CERT for the client certificate
-  - CONFIG_REDIS_PRIVATE_KEY and CONFIG_QUEUES_PRIVATE_KEY for the client key
-  - CONFIG_REDIS_SSL and CONFIG_QUEUES_SSL must be set to true when any of the above is present
-* System:
-  - REDIS_CA_FILE and BACKEND_REDIS_CA_FILE for the CA certificate
-  - REDIS_CLIENT_CERT and BACKEND_REDIS_CLIENT_CERT for the client certificate
-  - REDIS_PRIVATE_KEY and BACKEND_REDIS_PRIVATE_KEY for the client key
-  - REDIS_SSL and BACKEND_REDIS_SSL will be set to true when any of the above is present
 
 See [APIManager CRD](apimanager-reference.md) - `backend-redis` and `system-redis` secrets environment variables.
 
