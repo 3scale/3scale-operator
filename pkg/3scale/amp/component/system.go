@@ -545,6 +545,14 @@ func (system *System) appPodVolumes() []v1.Volume {
 	}
 	res = append(res, systemTlsVolume)
 
+	systemWritableTlsVolume := v1.Volume{
+		Name: "writable-tls",
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
+		},
+	}
+	res = append(res, systemWritableTlsVolume)
+
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		s3CredsProjectedVolume := v1.Volume{
 			Name: S3StsCredentialsSecretName,
@@ -605,6 +613,29 @@ func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment
 					Affinity:    system.Options.AppAffinity,
 					Tolerations: system.Options.AppTolerations,
 					Volumes:     system.appPodVolumes(),
+					InitContainers: []v1.Container{
+						{
+							Name:  "set-permissions",
+							Image: containerImage, // Minimal image for chmod
+							Command: []string{
+								"sh",
+								"-c",
+								"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret",
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "writable-tls",
+									MountPath: "/writable-tls",
+									ReadOnly:  false, // Writable emptyDir volume
+								},
+							},
+						},
+					},
 					Containers: []v1.Container{
 						{
 							Name:         SystemAppMasterContainerName,
@@ -786,6 +817,29 @@ func (system *System) AppPreHookJob(containerImage string, currentSystemAppGener
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
 					Volumes: system.appPodVolumes(),
+					InitContainers: []v1.Container{
+						{
+							Name:  "set-permissions",
+							Image: containerImage, // Minimal image for chmod
+							Command: []string{
+								"sh",
+								"-c",
+								"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret",
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "writable-tls",
+									MountPath: "/writable-tls",
+									ReadOnly:  false, // Writable emptyDir volume
+								},
+							},
+						},
+					},
 					Containers: []v1.Container{
 						{
 							Name:            SystemAppPreHookJobName,
@@ -826,6 +880,29 @@ func (system *System) AppPostHookJob(containerImage string, currentSystemAppGene
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
 					Volumes: system.appPodVolumes(),
+					InitContainers: []v1.Container{
+						{
+							Name:  "set-permissions",
+							Image: containerImage, // Minimal image for chmod
+							Command: []string{
+								"sh",
+								"-c",
+								"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret",
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "writable-tls",
+									MountPath: "/writable-tls",
+									ReadOnly:  false, // Writable emptyDir volume
+								},
+							},
+						},
+					},
 					Containers: []v1.Container{
 						{
 							Name:            SystemAppPostHookJobName,
@@ -900,7 +977,7 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 		Name: "tls-secret",
 		VolumeSource: v1.VolumeSource{
 			Secret: &v1.SecretVolumeSource{
-				SecretName: ZyncSecretName, // Name of the secret containing the TLS certs
+				SecretName: SystemSecretSystemDatabaseSecretName, // Name of the secret containing the TLS certs
 				Items: []v1.KeyToPath{
 					{
 						Key:  "SSL_CA",
@@ -919,6 +996,14 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 		},
 	}
 	res = append(res, systemTlsVolume)
+
+	systemWritableTlsVolume := v1.Volume{
+		Name: "writable-tls",
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
+		},
+	}
+	res = append(res, systemWritableTlsVolume)
 
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		s3CredsProjectedVolume := v1.Volume{
@@ -981,12 +1066,33 @@ func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deploy
 					Volumes:     system.SidekiqPodVolumes(),
 					InitContainers: []v1.Container{
 						{
+							Name:  "set-permissions",
+							Image: containerImage, // Minimal image for chmod
+							Command: []string{
+								"sh",
+								"-c",
+								"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret",
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "writable-tls",
+									MountPath: "/writable-tls",
+									ReadOnly:  false, // Writable emptyDir volume
+								},
+							},
+						},
+						{
 							Name:  SystemSideKiqInitContainerName,
 							Image: containerImage,
 							Command: []string{
 								"bash",
 								"-c",
-								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+								"bundle exec sh -c \"until rake boot:redis && curl --insecure --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
 							},
 							Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 						},
@@ -1041,7 +1147,7 @@ func (system *System) systemConfigVolumeMount() v1.VolumeMount {
 }
 func (system *System) systemTlsVolumeMount() v1.VolumeMount {
 	return v1.VolumeMount{
-		Name:      "tls-secret",
+		Name:      "writable-tls",
 		ReadOnly:  false,
 		MountPath: "/tls",
 	}

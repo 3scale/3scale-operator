@@ -77,6 +77,29 @@ func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment 
 					Annotations: s.Options.PodTemplateAnnotations,
 				},
 				Spec: v1.PodSpec{
+					InitContainers: []v1.Container{
+						{
+							Name:  "set-permissions",
+							Image: containerImage, // Minimal image for chmod
+							Command: []string{
+								"sh",
+								"-c",
+								"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret",
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "writable-tls",
+									MountPath: "/writable-tls",
+									ReadOnly:  false, // Writable emptyDir volume
+								},
+							},
+						},
+					},
 					Affinity:           s.Options.Affinity,
 					Tolerations:        s.Options.Tolerations,
 					ServiceAccountName: "amp",
@@ -112,6 +135,12 @@ func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment 
 								},
 							},
 						},
+						{
+							Name: "writable-tls",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
 					},
 					Containers: []v1.Container{
 						{
@@ -126,7 +155,7 @@ func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment 
 									MountPath: "/var/lib/searchd",
 								},
 								{
-									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									Name:      "writable-tls", // Reuse the same volume in the main container if needed
 									MountPath: "/tls",
 									ReadOnly:  true,
 								},
@@ -206,7 +235,29 @@ func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *ba
 			Completions: &completions,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
-
+					InitContainers: []v1.Container{
+						{
+							Name:  "set-permissions",
+							Image: containerImage,
+							Command: []string{
+								"sh",
+								"-c",
+								"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret",
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "writable-tls",
+									MountPath: "/writable-tls",
+									ReadOnly:  false, // Writable emptyDir volume
+								},
+							},
+						},
+					},
 					Containers: []v1.Container{
 						{
 							Name:            SystemSearchdReindexJobName,
@@ -217,7 +268,7 @@ func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *ba
 							ImagePullPolicy: v1.PullIfNotPresent,
 							VolumeMounts: []v1.VolumeMount{
 								{
-									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									Name:      "writable-tls", // Reuse the same volume in the main container if needed
 									MountPath: "/tls",
 									ReadOnly:  true,
 								},
@@ -245,6 +296,12 @@ func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *ba
 										},
 									},
 								},
+							},
+						},
+						{
+							Name: "writable-tls",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
 							},
 						},
 					},

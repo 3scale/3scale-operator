@@ -126,21 +126,21 @@ func (z *ZyncOptionsProvider) setSecretBasedOptions() error {
 			component.ZyncSecretName,
 			component.ZyncSecretSslCa,
 			component.DefaultZyncSslEmpty(),
-			true,
+			false,
 		},
 		{
 			&z.zyncOptions.DatabaseSslCert,
 			component.ZyncSecretName,
 			component.ZyncSecretSslCert,
 			component.DefaultZyncSslEmpty(),
-			true,
+			false,
 		},
 		{
 			&z.zyncOptions.DatabaseSslKey,
 			component.ZyncSecretName,
 			component.ZyncSecretSslKey,
 			component.DefaultZyncSslEmpty(),
-			true,
+			false,
 		},
 	}
 

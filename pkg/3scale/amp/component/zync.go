@@ -196,6 +196,27 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 					ServiceAccountName: "amp",
 					InitContainers: []v1.Container{
 						{
+							Name:  "set-permissions",
+							Image: containerImage,
+							Command: []string{
+								"sh",
+								"-c",
+								"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret",
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "writable-tls",
+									MountPath: "/writable-tls",
+									ReadOnly:  false, // Writable emptyDir volume
+								},
+							},
+						},
+						{
 							Name:  ZyncInitContainerName,
 							Image: containerImage,
 							Command: []string{
@@ -226,7 +247,7 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 							},
 							VolumeMounts: []v1.VolumeMount{
 								{
-									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									Name:      "writable-tls", // Reuse the same volume in the main container if needed
 									MountPath: "/tls",
 									ReadOnly:  true,
 								},
@@ -270,7 +291,7 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 							Resources: zync.Options.ContainerResourceRequirements,
 							VolumeMounts: []v1.VolumeMount{
 								{
-									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									Name:      "writable-tls", // Reuse the same volume in the main container if needed
 									MountPath: "/tls",
 									ReadOnly:  true,
 								},
@@ -298,6 +319,12 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 										},
 									},
 								},
+							},
+						},
+						{
+							Name: "writable-tls",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
 							},
 						},
 					},
@@ -381,6 +408,29 @@ func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
 					ServiceAccountName:            "zync-que-sa",
 					RestartPolicy:                 v1.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &[]int64{30}[0],
+					InitContainers: []v1.Container{
+						{
+							Name:  "set-permissions",
+							Image: "quay.io/openshift/origin-cli:4.7", // Minimal image for chmod
+							Command: []string{
+								"sh",
+								"-c",
+								"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tls-secret",
+									MountPath: "/tls",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "writable-tls",
+									MountPath: "/writable-tls",
+									ReadOnly:  false, // Writable emptyDir volume
+								},
+							},
+						},
+					},
 					Containers: []v1.Container{
 						{
 							Name:            "que",
@@ -413,7 +463,7 @@ func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
 							Env:       zync.commonZyncEnvVars(),
 							VolumeMounts: []v1.VolumeMount{
 								{
-									Name:      "tls-secret", // Reuse the same volume in the main container if needed
+									Name:      "writable-tls", // mount the certs with 0600 permissions from writable-tls to /tls
 									MountPath: "/tls",
 									ReadOnly:  true,
 								},
@@ -441,6 +491,12 @@ func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
 										},
 									},
 								},
+							},
+						},
+						{
+							Name: "writable-tls",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
 							},
 						},
 					},

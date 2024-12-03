@@ -223,7 +223,6 @@ func TlsCertPresent(pathSslEnvVar string, secretName string) string {
 		if strings.Contains(strDbUrl, "postgres") {
 			secret.Data["DATABASE_SSL_MODE"] = []byte("disable")
 		}
-		//TODO handle oracle
 		err := client.Update(context.TODO(), &secret)
 		if err != nil {
 			log.Printf("failed to update secret %s: %v", secretName, err)
