@@ -1538,6 +1538,25 @@ func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
 }
 
-func (apimanager *APIManager) IsRedisTLSEnabled() bool {
-	return apimanager.Spec.RedisTLSEnabled != nil && *apimanager.Spec.RedisTLSEnabled
+func (apimanager *APIManager) IsSystemRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.RedisTLSEnabled != nil &&
+		*apimanager.Spec.RedisTLSEnabled &&
+		apimanager.Spec.ExternalComponents != nil &&
+		apimanager.Spec.ExternalComponents.System != nil &&
+		*apimanager.Spec.ExternalComponents.System.Redis {
+		tlsEnabled = true
+	}
+	return tlsEnabled
+}
+func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.RedisTLSEnabled != nil &&
+		*apimanager.Spec.RedisTLSEnabled &&
+		apimanager.Spec.ExternalComponents != nil &&
+		apimanager.Spec.ExternalComponents.System != nil &&
+		*apimanager.Spec.ExternalComponents.Backend.Redis {
+		tlsEnabled = true
+	}
+	return tlsEnabled
 }

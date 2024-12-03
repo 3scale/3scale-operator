@@ -279,8 +279,5 @@ func (o *OperatorBackendOptionsProvider) setTopologySpreadConstraints() {
 }
 
 func (o *OperatorBackendOptionsProvider) setTLSEnabled() {
-	o.backendOptions.RedisTLSEnabled = false
-	if o.apimanager.Spec.RedisTLSEnabled != nil {
-		o.backendOptions.RedisTLSEnabled = *o.apimanager.Spec.RedisTLSEnabled
-	}
+	o.backendOptions.RedisTLSEnabled = o.apimanager.IsBackendRedisTLSEnabled()
 }

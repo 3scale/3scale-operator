@@ -70,7 +70,7 @@ func (r *RedisOptionsProvider) GetRedisOptions() (*component.RedisOptions, error
 	r.setPersistentVolumeClaimOptions()
 	r.setPriorityClassNames()
 	r.setTopologySpreadConstraints()
-	r.setTLSEnabled()
+	//r.setTLSEnabled()
 
 	// Should the operator be reading redis secrets?
 	// When HA is disabled, do we support external redis?
@@ -378,9 +378,9 @@ func (r *RedisOptionsProvider) systemRedisSecretLabels() map[string]string {
 	return labels
 }
 
-func (s *RedisOptionsProvider) setTLSEnabled() {
-	s.options.RedisTLSEnabled = false
-	if s.apimanager.Spec.RedisTLSEnabled != nil {
-		s.options.RedisTLSEnabled = *s.apimanager.Spec.RedisTLSEnabled
-	}
-}
+//func (s *RedisOptionsProvider) setTLSEnabled() {
+//	s.options.RedisTLSEnabled = false
+//	if s.apimanager.Spec.RedisTLSEnabled != nil {
+//		s.options.RedisTLSEnabled = *s.apimanager.Spec.RedisTLSEnabled
+//	}
+//}

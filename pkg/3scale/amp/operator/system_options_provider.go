@@ -629,8 +629,5 @@ func (s *SystemOptionsProvider) setPodTemplateAnnotations() {
 }
 
 func (s *SystemOptionsProvider) setTLSEnabled() {
-	s.options.RedisTLSEnabled = false
-	if s.apimanager.Spec.RedisTLSEnabled != nil {
-		s.options.RedisTLSEnabled = *s.apimanager.Spec.RedisTLSEnabled
-	}
+	s.options.RedisTLSEnabled = s.apimanager.IsSystemRedisTLSEnabled()
 }

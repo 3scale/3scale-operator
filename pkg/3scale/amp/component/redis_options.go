@@ -50,7 +50,7 @@ type RedisOptions struct {
 	SystemRedisSentinelsRole         string
 	SystemRedisNamespace             string
 	// TLS
-	RedisTLSEnabled            bool
+	//RedisTLSEnabled            bool
 	SystemRedisSslCa           string
 	SystemRedisSslCert         string
 	SystemRedisSslKey          string
