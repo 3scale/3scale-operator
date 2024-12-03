@@ -3,6 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
+
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	subController "github.com/3scale/3scale-operator/controllers/subscription"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -10,6 +13,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
+
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/go-logr/logr"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -19,7 +23,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sort"
 )
 
 type APIManagerStatusReconciler struct {
@@ -89,7 +92,10 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 
 	newStatus.Conditions = s.apimanagerResource.Status.Conditions.Copy()
 
-	availableCondition, err := s.apimanagerAvailableCondition(deployments)
+	// Check if any of the watched secrets are missing
+	watchedSecretsExist, watchedSecretsMessage := s.watchedSecretsExist(s.apimanagerResource)
+
+	availableCondition, err := s.apimanagerAvailableCondition(deployments, watchedSecretsExist, watchedSecretsMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +194,7 @@ func (s *APIManagerStatusReconciler) existingDeployments() ([]k8sappsv1.Deployme
 	return deployments, nil
 }
 
-func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeployments []k8sappsv1.Deployment) (common.Condition, error) {
+func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeployments []k8sappsv1.Deployment, watchedSecretsExist bool, missingSecretsMessage string) (common.Condition, error) {
 	deploymentsAvailable := s.deploymentsAvailable(existingDeployments)
 
 	defaultRoutesReady, err := helper.DefaultRoutesReady(s.apimanagerResource, s.Client(), s.logger)
@@ -201,9 +207,14 @@ func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeploy
 		Status: v1.ConditionFalse,
 	}
 
-	s.logger.V(1).Info("Status apimanagerAvailableCondition", "deploymentsAvailable", deploymentsAvailable, "defaultRoutesReady", defaultRoutesReady)
-	if deploymentsAvailable && defaultRoutesReady {
+	s.logger.V(1).Info("Status apimanagerAvailableCondition", "deploymentsAvailable", deploymentsAvailable, "defaultRoutesReady", defaultRoutesReady, "watchedSecretsExist", watchedSecretsExist)
+	if deploymentsAvailable && defaultRoutesReady && watchedSecretsExist {
 		newAvailableCondition.Status = v1.ConditionTrue
+	}
+
+	if !watchedSecretsExist {
+		newAvailableCondition.Message = missingSecretsMessage
+		newAvailableCondition.Reason = "MissingWatchedSecrets"
 	}
 
 	return newAvailableCondition, nil
@@ -368,4 +379,33 @@ func (s *APIManagerStatusReconciler) reconcilePreflightsStatus(conditions *commo
 	}
 
 	return nil
+}
+
+func (s *APIManagerStatusReconciler) watchedSecretsExist(cr *appsv1alpha1.APIManager) (bool, string) {
+	secretsToCheck := cr.Get3scaleSecretRefs()
+	if len(secretsToCheck) == 0 {
+		// Return because there are no watched secrets to check
+		return true, ""
+	}
+
+	allWatchedSecretsExist := true
+	watchedSecretsMessage := ""
+	var missingSecretNames []string
+
+	for _, secretRef := range secretsToCheck {
+		secret := &v1.Secret{}
+		secretKey := client.ObjectKey{Name: secretRef.Name, Namespace: cr.Namespace}
+		err := s.Client().Get(s.Context(), secretKey, secret)
+		if err != nil {
+			allWatchedSecretsExist = false
+			missingSecretNames = append(missingSecretNames, secretRef.Name)
+		}
+	}
+
+	// If there are watched secrets that can't be found, add the warning condition
+	if len(missingSecretNames) > 0 {
+		watchedSecretsMessage = fmt.Sprintf("The following secret(s) could not be found: %s", strings.Join(missingSecretNames, ", "))
+	}
+
+	return allWatchedSecretsExist, watchedSecretsMessage
 }
