@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -41,7 +42,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const developerUserFinalizer = "developeruser.capabilities.3scale.net/finalizer"
+const (
+	// userIdAnnotation matches the developeruser.status.ID
+	userIdAnnotation = "userID"
+
+	developerUserFinalizer = "developeruser.capabilities.3scale.net/finalizer"
+)
 
 // DeveloperUserReconciler reconciles a DeveloperUser object
 type DeveloperUserReconciler struct {
@@ -116,12 +122,14 @@ func (r *DeveloperUserReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, nil
 	}
 
-	if !controllerutil.ContainsFinalizer(developerUserCR, developerUserFinalizer) {
-		controllerutil.AddFinalizer(developerUserCR, developerUserFinalizer)
-		err = r.UpdateResource(developerUserCR)
+	metadataUpdated := r.reconcileMetadata(developerUserCR)
+	if metadataUpdated {
+		err := r.UpdateResource(developerUserCR)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+
+		// No need requeue because the reconcile will trigger automatically since updating the DeveloperAccount CR
 		return ctrl.Result{}, nil
 	}
 
@@ -181,6 +189,31 @@ func (r *DeveloperUserReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *DeveloperUserReconciler) reconcileMetadata(devUserCR *capabilitiesv1beta1.DeveloperUser) bool {
+	changed := false
+
+	// If the devUser.Status.ID is found and the annotation is not found - create
+	// If the devUser.Status.ID is found and the annotation is found but, the value of annotation is different to the devUser.Status.ID - update
+	var userId int64 = 0
+	if devUserCR.Status.ID != nil {
+		userId = *devUserCR.Status.ID
+	}
+	if value, found := devUserCR.ObjectMeta.Annotations[userIdAnnotation]; (userId != 0 && !found) || (userId != 0 && found && value != strconv.FormatInt(*devUserCR.Status.ID, 10)) {
+		if devUserCR.ObjectMeta.Annotations == nil {
+			devUserCR.ObjectMeta.Annotations = make(map[string]string)
+		}
+		devUserCR.ObjectMeta.Annotations[userIdAnnotation] = strconv.FormatInt(*devUserCR.Status.ID, 10)
+		changed = true
+	}
+
+	if !controllerutil.ContainsFinalizer(devUserCR, developerUserFinalizer) {
+		controllerutil.AddFinalizer(devUserCR, developerUserFinalizer)
+		changed = true
+	}
+
+	return changed
 }
 
 func (r *DeveloperUserReconciler) reconcileSpec(userCR *capabilitiesv1beta1.DeveloperUser, logger logr.Logger) (*DeveloperUserStatusReconciler, error) {
