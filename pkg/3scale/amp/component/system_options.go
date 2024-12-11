@@ -91,6 +91,8 @@ type SystemOptions struct {
 
 	IncludeOracleOptionalSettings bool
 
+	ZyncEnabled bool
+
 	AppPriorityClassName     string `validate:"-"`
 	SideKiqPriorityClassName string `validate:"-"`
 

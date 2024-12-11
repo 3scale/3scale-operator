@@ -22671,6 +22671,8 @@ spec:
                       - whenUnsatisfiable
                       type: object
                     type: array
+                  enabled:
+                    type: boolean
                   image:
                     type: string
                   postgreSQLImage:
