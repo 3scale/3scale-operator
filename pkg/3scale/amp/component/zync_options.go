@@ -26,6 +26,7 @@ type ZyncOptions struct {
 	DatabaseSslCa                         string
 	DatabaseSslCert                       string
 	DatabaseSslKey                        string
+	ZyncDbTLSEnabled                      bool
 
 	ZyncAffinity            *v1.Affinity    `validate:"-"`
 	ZyncTolerations         []v1.Toleration `validate:"-"`
@@ -61,7 +62,8 @@ type ZyncOptions struct {
 	// Those objects are namespaced. However, objects includes labels, rules and expressions
 	// that need namespace filtering because they are "global" once imported
 	// to the prometheus or grafana services.
-	Namespace string `validate:"required"`
+	Namespace              string `validate:"required"`
+	CommonZyncSecretLabels map[string]string
 }
 
 func NewZyncOptions() *ZyncOptions {

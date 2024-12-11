@@ -2,14 +2,11 @@ package helper
 
 import (
 	"context"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"log"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"strings"
-
-	v1 "k8s.io/api/core/v1"
 )
 
 func EnvVarFromConfigMap(envVarName string, configMapName, configMapKey string) v1.EnvVar {
@@ -165,10 +162,11 @@ func EnvVarReconciler(desired []v1.EnvVar, existing *[]v1.EnvVar, envVar string)
 }
 
 // check if the secret ssl certs are populated and sets the path if they are
-func TlsCertPresent(pathSslEnvVar string, secretName string) string {
+// system-app and zync use this function
+func TlsCertPresent(pathSslEnvVar string, secretName string, databaseTLSEnabled bool) string {
 	cfg, _ := config.GetConfig()
 	client, _ := client.New(cfg, client.Options{})
-	namespace, _ := GetOperatorNamespace() // will this work if the cr is in a different namespace ? need to test
+	namespace, _ := GetOperatorNamespace()
 	var path string
 	var sslEnvVar string
 
@@ -176,13 +174,13 @@ func TlsCertPresent(pathSslEnvVar string, secretName string) string {
 	switch pathSslEnvVar {
 	case "DATABASE_SSL_CA":
 		path = "/tls/ca.crt"
-		sslEnvVar = "SSL_CA"
+		sslEnvVar = "DB_SSL_CA"
 	case "DATABASE_SSL_CERT":
 		path = "/tls/tls.crt"
-		sslEnvVar = "SSL_CERT"
+		sslEnvVar = "DB_SSL_CERT"
 	case "DATABASE_SSL_KEY":
 		path = "/tls/tls.key"
-		sslEnvVar = "SSL_KEY"
+		sslEnvVar = "DB_SSL_KEY"
 	default:
 		return ""
 	}
@@ -199,47 +197,8 @@ func TlsCertPresent(pathSslEnvVar string, secretName string) string {
 	}
 
 	// Check if SSL_KEY, SSL_CERT, and SSL_CA are empty
-	isSSLKeyEmpty := len(secret.Data["SSL_KEY"]) == 0
-	isSSLCertEmpty := len(secret.Data["SSL_CERT"]) == 0
-	isSSLCaEmpty := len(secret.Data["SSL_CA"]) == 0
-
-	databaseUrl, _ := secret.Data["DATABASE_URL"]
-	strDatabaseUrl := string(databaseUrl)
-	dbUrl, _ := secret.Data["URL"]
-	strDbUrl := string(dbUrl)
-
-	// Set SSL_MODE to "disable" if all three keys are empty
-	if isSSLKeyEmpty && isSSLCertEmpty && isSSLCaEmpty {
-		// this block only checks postgres and mysql , may need a check for oracle SSL as well
-		if strings.Contains(strDatabaseUrl, "mysql") {
-			secret.Data["DATABASE_SSL_MODE"] = []byte("disabled")
-		}
-		if strings.Contains(strDatabaseUrl, "postgres") {
-			secret.Data["DATABASE_SSL_MODE"] = []byte("disable")
-		}
-		if strings.Contains(strDbUrl, "mysql") {
-			secret.Data["DATABASE_SSL_MODE"] = []byte("disabled")
-		}
-		if strings.Contains(strDbUrl, "postgres") {
-			secret.Data["DATABASE_SSL_MODE"] = []byte("disable")
-		}
-		err := client.Update(context.TODO(), &secret)
-		if err != nil {
-			log.Printf("failed to update secret %s: %v", secretName, err)
-		}
-	}
-
-	// checks if the env vars are present in the secret if not create them, As they need to be to create the secret volume mount
-	if _, ok := secret.Data[sslEnvVar]; !ok {
-		secret.Data[sslEnvVar] = []byte("")
-		err := client.Update(context.TODO(), &secret)
-		if err != nil {
-			log.Printf("failed to update secret %s: %v", secretName, err)
-		}
-	}
-
 	// checks the cert is populated in the secret, if so populates the path in the volume mount
-	if sslCert, ok := secret.Data[sslEnvVar]; ok && len(sslCert) > 0 {
+	if sslCert, ok := secret.Data[sslEnvVar]; ok && len(sslCert) > 0 && databaseTLSEnabled {
 		return path
 	}
 	return ""

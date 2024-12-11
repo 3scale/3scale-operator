@@ -3,6 +3,7 @@ package operator
 import (
 	"context"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -313,6 +314,17 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	err = r.ReconcilePrometheusRules(system.SystemSidekiqPrometheusRules(), reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// system database
+	systemDatabase := &v1.Secret{}
+	systemDatabase, err = system.SystemDatabase(r.Client())
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileSecret(systemDatabase, reconcilers.DefaultsOnlySecretMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
