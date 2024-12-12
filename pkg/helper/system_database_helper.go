@@ -29,11 +29,6 @@ func systemDatabaseURLIsValid(rawURL string) (*url.URL, bool, error) {
 	if resultURL.User.Username() == "" {
 		return nil, false, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain a username", urlKey, secretName)
 	}
-	if resultURL.Scheme == "mysql2" {
-		if resultURL.User.Username() != "root" {
-			return nil, false, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain 'root' as the username", urlKey, secretName)
-		}
-	}
 
 	if _, set := resultURL.User.Password(); !set {
 		return nil, false, fmt.Errorf("authentication information in '%s' field of '%s' secret must contain a password", urlKey, secretName)
