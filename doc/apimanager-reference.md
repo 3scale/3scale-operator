@@ -722,12 +722,12 @@ The available configurable secrets are:
 | REDIS_QUEUES_URL | Backend's redis queues database URL | Mandatory when the instance is managed externally. Otherwise the default value is: `redis://backend-redis:6379/1` |
 | REDIS_QUEUES_SENTINEL_ROLE | Backend's redis queues sentinel role name. Used only when Redis sentinel is configured in the Redis database being used | `""`                                                                                                              |
 | REDIS_QUEUES_SENTINEL_HOSTS | Backend's redis queues sentinel hosts name. Used only when Redis sentinel is configured in the Redis database being used | `""`                                                                                                              |
-| SSL_CA | Redis Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS                                                                |
-| SSL_CERT | Redis client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
-| SSL_KEY | The private key for the Redis client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
-| SSL_QUEUES_CA | Redis Queues Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS                                                                |
-| SSL_QUEUES_CERT | Redis Queues client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
-| SSL_QUEUES_KEY | The private key for the Redis Queues client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_CA | Redis Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_CERT | Redis client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_KEY | The private key for the Redis client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_QUEUES_CA | Redis Queues Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_QUEUES_CERT | Redis Queues client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_QUEUES_KEY | The private key for the Redis Queues client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
 
 
 
@@ -799,9 +799,9 @@ For Oracle:
 | NAMESPACE | Define the namespace to be used by System's Redis Database. The empty value means not namespaced | `""` |
 | SENTINEL_HOSTS | System's Redis sentinel hosts. Used only when Redis sentinel is configured | `""` |
 | SENTINEL_ROLE | System's Redis sentinel role name. Used only when Redis sentinel is configured | `""` |
-| SSL_CA | Redis Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS                                                                |
-| SSL_CERT | Redis client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
-| SSL_KEY | The private key for the Redis client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_CA | Redis Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_CERT | Redis client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
+| REDIS_SSL_KEY | The private key for the Redis client certificate | Required to set TLS Redis connection. Only for TLS                                                                |
 
 ### system-seed
 

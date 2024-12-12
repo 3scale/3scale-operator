@@ -40,12 +40,12 @@ const (
 	BackendSecretBackendRedisConfigQueuesPrivateKey        = "CONFIG_QUEUES_PRIVATE_KEY"
 	BackendSecretBackendRedisConfigQueuesSSL               = "CONFIG_QUEUES_SSL"
 
-	BackendSecretBackendRedisSslCa   = "SSL_CA"
-	BackendSecretBackendRedisSslCert = "SSL_CERT"
-	BackendSecretBackendRedisSslKey  = "SSL_KEY"
-	BackendSecretConfigQueuesSslCa   = "SSL_QUEUES_CA"
-	BackendSecretConfigQueuesSslCert = "SSL_QUEUES_CERT"
-	BackendSecretConfigQueuesSslKey  = "SSL_QUEUES_KEY"
+	BackendSecretBackendRedisSslCa   = "REDIS_SSL_CA"
+	BackendSecretBackendRedisSslCert = "REDIS_SSL_CERT"
+	BackendSecretBackendRedisSslKey  = "REDIS_SSL_KEY"
+	BackendSecretConfigQueuesSslCa   = "REDIS_SSL_QUEUES_CA"
+	BackendSecretConfigQueuesSslCert = "REDIS_SSL_QUEUES_CERT"
+	BackendSecretConfigQueuesSslKey  = "REDIS_SSL_QUEUES_KEY"
 )
 
 const (
@@ -609,27 +609,27 @@ func (backend *Backend) backendVolumes() []v1.Volume {
 					SecretName: BackendSecretBackendRedisSecretName, // Name of the secret containing the TLS certs
 					Items: []v1.KeyToPath{
 						{
-							Key:  "SSL_CA",
+							Key:  "REDIS_SSL_CA",
 							Path: "backend-redis-ca.crt",
 						},
 						{
-							Key:  "SSL_CERT",
+							Key:  "REDIS_SSL_CERT",
 							Path: "backend-redis-client.crt",
 						},
 						{
-							Key:  "SSL_KEY",
+							Key:  "REDIS_SSL_KEY",
 							Path: "backend-redis-private.key",
 						},
 						{
-							Key:  "SSL_QUEUES_CA",
+							Key:  "REDIS_SSL_QUEUES_CA",
 							Path: "config-queues-ca.crt",
 						},
 						{
-							Key:  "SSL_QUEUES_CERT",
+							Key:  "REDIS_SSL_QUEUES_CERT",
 							Path: "config-queues-client.crt",
 						},
 						{
-							Key:  "SSL_QUEUES_KEY",
+							Key:  "REDIS_SSL_QUEUES_KEY",
 							Path: "config-queues-private.key",
 						},
 					},

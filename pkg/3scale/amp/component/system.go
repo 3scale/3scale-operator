@@ -54,9 +54,9 @@ const (
 	SystemSecretSystemRedisPrivateKey        = "REDIS_PRIVATE_KEY"
 	SystemSecretSystemRedisSSL               = "REDIS_SSL"
 
-	SystemSecretSystemRedisSslCa   = "SSL_CA"
-	SystemSecretSystemRedisSslCert = "SSL_CERT"
-	SystemSecretSystemRedisSslKey  = "SSL_KEY"
+	SystemSecretSystemRedisSslCa   = "REDIS_SSL_CA"
+	SystemSecretSystemRedisSslCert = "REDIS_SSL_CERT"
+	SystemSecretSystemRedisSslKey  = "REDIS_SSL_KEY"
 )
 
 const (
@@ -560,15 +560,15 @@ func (system *System) appPodVolumes() []v1.Volume {
 					SecretName: SystemSecretSystemRedisSecretName, // Name of the secret containing the TLS certs
 					Items: []v1.KeyToPath{
 						{
-							Key:  "SSL_CA",
+							Key:  "REDIS_SSL_CA",
 							Path: "system-redis-ca.crt",
 						},
 						{
-							Key:  "SSL_CERT",
+							Key:  "REDIS_SSL_CERT",
 							Path: "system-redis-client.crt",
 						},
 						{
-							Key:  "SSL_KEY",
+							Key:  "REDIS_SSL_KEY",
 							Path: "system-redis-private.key",
 						},
 					},
@@ -584,15 +584,15 @@ func (system *System) appPodVolumes() []v1.Volume {
 					SecretName: BackendSecretBackendRedisSecretName, // Name of the secret containing the TLS certs
 					Items: []v1.KeyToPath{
 						{
-							Key:  "SSL_CA",
+							Key:  "REDIS_SSL_CA",
 							Path: "backend-redis-ca.crt",
 						},
 						{
-							Key:  "SSL_CERT",
+							Key:  "REDIS_SSL_CERT",
 							Path: "backend-redis-client.crt",
 						},
 						{
-							Key:  "SSL_KEY",
+							Key:  "REDIS_SSL_KEY",
 							Path: "backend-redis-private.key",
 						},
 					},
@@ -980,15 +980,15 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 					SecretName: SystemSecretSystemRedisSecretName, // Name of the secret containing the TLS certs
 					Items: []v1.KeyToPath{
 						{
-							Key:  "SSL_CA",
+							Key:  "REDIS_SSL_CA",
 							Path: "system-redis-ca.crt",
 						},
 						{
-							Key:  "SSL_CERT",
+							Key:  "REDIS_SSL_CERT",
 							Path: "system-redis-client.crt",
 						},
 						{
-							Key:  "SSL_KEY",
+							Key:  "REDIS_SSL_KEY",
 							Path: "system-redis-private.key",
 						},
 					},
@@ -1004,15 +1004,15 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 					SecretName: BackendSecretBackendRedisSecretName, // Name of the secret containing the TLS certs
 					Items: []v1.KeyToPath{
 						{
-							Key:  "SSL_CA",
+							Key:  "REDIS_SSL_CA",
 							Path: "backend-redis-ca.crt",
 						},
 						{
-							Key:  "SSL_CERT",
+							Key:  "REDIS_SSL_CERT",
 							Path: "backend-redis-client.crt",
 						},
 						{
-							Key:  "SSL_KEY",
+							Key:  "REDIS_SSL_KEY",
 							Path: "backend-redis-private.key",
 						},
 					},
@@ -1480,9 +1480,9 @@ func (system *System) appDeveloperPorts() []v1.ContainerPort {
 
 func (system *System) SystemRedisTLSEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
-		helper.EnvVarFromSecretOptional("SSL_CA", SystemSecretSystemRedisSecretName, "SSL_CA"),
-		helper.EnvVarFromSecretOptional("SSL_CERT", SystemSecretSystemRedisSecretName, "SSL_CERT"),
-		helper.EnvVarFromSecretOptional("SSL_KEY", SystemSecretSystemRedisSecretName, "SSL_KEY"),
+		helper.EnvVarFromSecretOptional("REDIS_SSL_CA", SystemSecretSystemRedisSecretName, "REDIS_SSL_CA"),
+		helper.EnvVarFromSecretOptional("REDIS_SSL_CERT", SystemSecretSystemRedisSecretName, "REDIS_SSL_CERT"),
+		helper.EnvVarFromSecretOptional("REDIS_SSL_KEY", SystemSecretSystemRedisSecretName, "REDIS_SSL_KEY"),
 
 		helper.EnvVarFromValue("REDIS_CA_FILE", redisCaFilePath),
 		helper.EnvVarFromValue("REDIS_CLIENT_CERT", redisClientCertPath),
@@ -1493,9 +1493,9 @@ func (system *System) SystemRedisTLSEnvVars() []v1.EnvVar {
 
 func (system *System) BackendRedisTLSEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
-		helper.EnvVarFromSecretOptional("SSL_CA", BackendSecretBackendRedisSecretName, "SSL_CA"),
-		helper.EnvVarFromSecretOptional("SSL_CERT", BackendSecretBackendRedisSecretName, "SSL_CERT"),
-		helper.EnvVarFromSecretOptional("SSL_KEY", BackendSecretBackendRedisSecretName, "SSL_KEY"),
+		helper.EnvVarFromSecretOptional("REDIS_SSL_CA", BackendSecretBackendRedisSecretName, "REDIS_SSL_CA"),
+		helper.EnvVarFromSecretOptional("REDIS_SSL_CERT", BackendSecretBackendRedisSecretName, "REDIS_SSL_CERT"),
+		helper.EnvVarFromSecretOptional("REDIS_SSL_KEY", BackendSecretBackendRedisSecretName, "REDIS_SSL_KEY"),
 
 		helper.EnvVarFromValue("BACKEND_REDIS_CA_FILE", ConfigRedisCaFilePath),
 		helper.EnvVarFromValue("BACKEND_REDIS_CLIENT_CERT", ConfigRedisClientCertPath),
