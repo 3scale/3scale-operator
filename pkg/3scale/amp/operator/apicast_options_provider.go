@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"hash/fnv"
 	"path"
 	"sort"
 	"strconv"
@@ -28,13 +27,6 @@ type ApicastOptionsProvider struct {
 	client         client.Client
 	secretSource   *helper.SecretSource
 }
-
-const (
-	APIcastEnvironmentCMAnnotation             = "apps.3scale.net/env-configmap-hash"
-	PodPrioritySystemNodeCritical              = "system-node-critical"
-	CustomPoliciesSecretResverAnnotationPrefix = "apimanager.apps.3scale.net/custompolicy-secret-resource-version-"
-	OpentelemetrySecretResverAnnotationPrefix  = "apimanager.apps.3scale.net/opentelemtry-secret-resource-version-"
-)
 
 func NewApicastOptionsProvider(apimanager *appsv1alpha1.APIManager, client client.Client) *ApicastOptionsProvider {
 	return &ApicastOptionsProvider{
@@ -126,10 +118,6 @@ func (a *ApicastOptionsProvider) GetApicastOptions() (*component.ApicastOptions,
 	a.apicastOptions.ProductionOpentelemetry = productionOtelConfig
 
 	a.setProxyConfigurations()
-
-	// Pod Annotations. Used to rollout apicast deployment if any secrets/configmap changes
-	a.apicastOptions.StagingAdditionalPodAnnotations = a.stagingAdditionalPodAnnotations()
-	a.apicastOptions.ProductionAdditionalPodAnnotations = a.productionAdditionalPodAnnotations()
 
 	err = a.apicastOptions.Validate()
 	if err != nil {
@@ -491,74 +479,6 @@ func (a *ApicastOptionsProvider) setProductionProxyConfigurations() {
 	a.apicastOptions.ProductionHTTPProxy = a.apimanager.Spec.Apicast.ProductionSpec.HTTPProxy
 	a.apicastOptions.ProductionHTTPSProxy = a.apimanager.Spec.Apicast.ProductionSpec.HTTPSProxy
 	a.apicastOptions.ProductionNoProxy = a.apimanager.Spec.Apicast.ProductionSpec.NoProxy
-}
-
-func (a *ApicastOptionsProvider) stagingAdditionalPodAnnotations() map[string]string {
-	annotations := map[string]string{
-		APIcastEnvironmentCMAnnotation: a.envConfigMapHash(),
-	}
-
-	for idx := range a.apicastOptions.StagingCustomPolicies {
-		// Secrets must exist
-		// Annotation key includes the name of the secret
-		annotationKey := fmt.Sprintf("%s%s", CustomPoliciesSecretResverAnnotationPrefix, a.apicastOptions.StagingCustomPolicies[idx].Secret.Name)
-		annotations[annotationKey] = a.apicastOptions.StagingCustomPolicies[idx].Secret.ResourceVersion
-	}
-
-	if a.apimanager.OpenTelemetryEnabledForStaging() && a.isOpentelemetryPodAnnotationRequired(&a.apicastOptions.StagingOpentelemetry.Secret) {
-		if a.apicastOptions.StagingOpentelemetry.Secret.Name != "" {
-			annotationKey := fmt.Sprintf("%s%s", OpentelemetrySecretResverAnnotationPrefix, a.apicastOptions.StagingOpentelemetry.Secret.Name)
-			annotations[annotationKey] = a.apicastOptions.StagingOpentelemetry.Secret.ResourceVersion
-		}
-	}
-
-	return annotations
-}
-
-func (a *ApicastOptionsProvider) productionAdditionalPodAnnotations() map[string]string {
-	annotations := map[string]string{
-		APIcastEnvironmentCMAnnotation: a.envConfigMapHash(),
-	}
-
-	for idx := range a.apicastOptions.ProductionCustomPolicies {
-		// Secrets must exist
-		// Annotation key includes the name of the secret
-		annotationKey := fmt.Sprintf("%s%s", CustomPoliciesSecretResverAnnotationPrefix, a.apicastOptions.ProductionCustomPolicies[idx].Secret.Name)
-		annotations[annotationKey] = a.apicastOptions.ProductionCustomPolicies[idx].Secret.ResourceVersion
-	}
-
-	if a.apimanager.OpenTelemetryEnabledForProduction() && a.isOpentelemetryPodAnnotationRequired(&a.apicastOptions.ProductionOpentelemetry.Secret) {
-		if a.apicastOptions.ProductionOpentelemetry.Secret.Name != "" {
-			annotationKey := fmt.Sprintf("%s%s", OpentelemetrySecretResverAnnotationPrefix, a.apicastOptions.ProductionOpentelemetry.Secret.Name)
-			annotations[annotationKey] = a.apicastOptions.ProductionOpentelemetry.Secret.ResourceVersion
-		}
-	}
-
-	return annotations
-}
-
-func (a *ApicastOptionsProvider) isOpentelemetryPodAnnotationRequired(secret *v1.Secret) bool {
-	existingLabels := secret.Labels
-
-	if existingLabels != nil {
-		if _, ok := existingLabels["apimanager.apps.3scale.net/watched-by"]; ok {
-			return true
-		}
-	}
-
-	return false
-}
-
-// APIcast environment hash
-// When any of the fields used to compute the hash change the value, the hash will change
-// and the apicast deployment will rollout
-func (a *ApicastOptionsProvider) envConfigMapHash() string {
-	h := fnv.New32a()
-	h.Write([]byte(a.apicastOptions.ManagementAPI))
-	h.Write([]byte(a.apicastOptions.OpenSSLVerify))
-	h.Write([]byte(a.apicastOptions.ResponseCodes))
-	val := h.Sum32()
-	return fmt.Sprint(val)
 }
 
 func (a *ApicastOptionsProvider) setPriorityClassNames() {

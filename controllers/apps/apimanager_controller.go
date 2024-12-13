@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"time"
 
 	"github.com/3scale/3scale-operator/pkg/upgrade"
@@ -488,6 +489,12 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 		return result, err
 	}
 
+	// Create the hashed secret to track watched secrets' changes
+	result, err = r.reconcileHashedSecret(cr)
+	if err != nil || result.Requeue {
+		return result, err
+	}
+
 	// 3scale 2.14 -> 2.15
 	err = upgrade.DeleteImageStreams(cr.Namespace, r.Client())
 	if err != nil {
@@ -649,4 +656,26 @@ func (r *APIManagerReconciler) setRequirementsAnnotation(apim *appsv1alpha1.APIM
 	}
 
 	return nil
+}
+
+func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager) (reconcile.Result, error) {
+	secretLabels := map[string]string{
+		"app": *cr.Spec.AppLabel,
+	}
+	secret, err := component.HashedSecret(r.Context(), r.Client(), cr.Get3scaleSecretRefs(), cr.Namespace, secretLabels)
+	if err != nil {
+		r.Logger().Error(err, "failed to generate hashed-secret-data secret")
+		return reconcile.Result{}, err
+	}
+
+	secretMutators := []reconcilers.SecretMutateFn{
+		reconcilers.SecretStringDataMutator,
+	}
+	err = r.ReconcileResource(&v1.Secret{}, secret, reconcilers.DeploymentSecretMutator(secretMutators...))
+	if err != nil {
+		r.Logger().Error(err, "failed to reconcile hashed-secret-data secret")
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
 }
