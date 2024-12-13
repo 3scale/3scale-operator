@@ -35,6 +35,7 @@ func (s *SystemSearchdOptionsProvider) GetOptions() (*component.SystemSearchdOpt
 	s.setPVCOptions()
 	s.setPriorityClassNames()
 	s.setTopologySpreadConstraints()
+	s.setSerchdDBTLSEnabled()
 
 	err := s.options.Validate()
 	if err != nil {
@@ -128,4 +129,8 @@ func (s *SystemSearchdOptionsProvider) setTopologySpreadConstraints() {
 		s.apimanager.Spec.System.SearchdSpec.TopologySpreadConstraints != nil {
 		s.options.TopologySpreadConstraints = s.apimanager.Spec.System.SearchdSpec.TopologySpreadConstraints
 	}
+}
+
+func (s *SystemSearchdOptionsProvider) setSerchdDBTLSEnabled() {
+	s.options.SearchdDbTLSEnabled = s.apimanager.IsSystemDatabaseTLSEnabled()
 }

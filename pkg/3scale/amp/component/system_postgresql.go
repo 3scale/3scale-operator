@@ -195,6 +195,9 @@ func (p *SystemPostgreSQL) SystemDatabaseSecret() *v1.Secret {
 			SystemSecretSystemDatabaseUserFieldName:     p.Options.User,
 			SystemSecretSystemDatabasePasswordFieldName: p.Options.Password,
 			SystemSecretSystemDatabaseURLFieldName:      p.Options.DatabaseURL,
+			SystemSecretSslCa:                           p.Options.DatabaseSslCa,
+			SystemSecretSslCert:                         p.Options.DatabaseSslCert,
+			SystemSecretSslKey:                          p.Options.DatabaseSslKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

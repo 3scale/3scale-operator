@@ -86,6 +86,30 @@ func (s *SystemPostgresqlOptionsProvider) setSecretBasedOptions() error {
 	}
 	s.options.DatabaseURL = val
 
+	_, err = s.secretSource.FieldValue(
+		component.SystemSecretSystemDatabaseSecretName,
+		component.SystemSecretDatabaseSslCa,
+		component.DefaultSystemSslEmpty())
+	if err != nil {
+		return err
+	}
+
+	_, err = s.secretSource.FieldValue(
+		component.SystemSecretSystemDatabaseSecretName,
+		component.SystemSecretDatabaseSslCert,
+		component.DefaultSystemSslEmpty())
+	if err != nil {
+		return err
+	}
+
+	_, err = s.secretSource.FieldValue(
+		component.SystemSecretSystemDatabaseSecretName,
+		component.SystemSecretDatabaseSslKey,
+		component.DefaultSystemSslEmpty())
+	if err != nil {
+		return err
+	}
+
 	// databaseURL processing
 	urlObj, err := s.databaseURLIsValid(s.options.DatabaseURL)
 	if err != nil {

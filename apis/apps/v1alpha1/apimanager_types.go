@@ -84,6 +84,10 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+	// +optional
+	SystemDatabaseTLSEnabled *bool `json:"systemDatabaseTLSEnabled,omitempty"`
+	// +optional
+	ZyncDatabaseTLSEnabled *bool `json:"zyncDatabaseTLSEnabled,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -1534,4 +1538,12 @@ type APIManagerList struct {
 
 func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
+}
+
+func (apimanager *APIManager) IsSystemDatabaseTLSEnabled() bool {
+	return apimanager.Spec.SystemDatabaseTLSEnabled != nil && *apimanager.Spec.SystemDatabaseTLSEnabled
+}
+
+func (apimanager *APIManager) IsZyncDatabaseTLSEnabled() bool {
+	return apimanager.Spec.ZyncDatabaseTLSEnabled != nil && *apimanager.Spec.ZyncDatabaseTLSEnabled
 }

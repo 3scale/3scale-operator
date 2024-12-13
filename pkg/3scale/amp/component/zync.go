@@ -3,7 +3,6 @@ package component
 import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
-
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -25,6 +24,10 @@ const (
 	ZyncSecretDatabaseURLFieldName         = "DATABASE_URL"
 	ZyncSecretDatabasePasswordFieldName    = "ZYNC_DATABASE_PASSWORD"
 	ZyncSecretAuthenticationTokenFieldName = "ZYNC_AUTHENTICATION_TOKEN"
+	ZyncSecretDatabaseSslMode              = "DATABASE_SSL_MODE"
+	ZyncSecretSslCa                        = "DB_SSL_CA"
+	ZyncSecretSslCert                      = "DB_SSL_CERT"
+	ZyncSecretSslKey                       = "DB_SSL_KEY"
 )
 
 const (
@@ -48,13 +51,17 @@ func (zync *Zync) Secret() *v1.Secret {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   ZyncSecretName,
-			Labels: zync.Options.CommonLabels,
+			Labels: zync.Options.CommonZyncSecretLabels,
 		},
 		StringData: map[string]string{
 			ZyncSecretKeyBaseFieldName:             zync.Options.SecretKeyBase,
 			ZyncSecretDatabaseURLFieldName:         zync.Options.DatabaseURL,
 			ZyncSecretDatabasePasswordFieldName:    zync.Options.DatabasePassword,
 			ZyncSecretAuthenticationTokenFieldName: zync.Options.AuthenticationToken,
+			ZyncSecretDatabaseSslMode:              zync.Options.DatabaseSslMode,
+			ZyncSecretSslCa:                        zync.Options.DatabaseSslCa,
+			ZyncSecretSslCert:                      zync.Options.DatabaseSslCert,
+			ZyncSecretSslKey:                       zync.Options.DatabaseSslKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -187,34 +194,7 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 					Affinity:           zync.Options.ZyncAffinity,
 					Tolerations:        zync.Options.ZyncTolerations,
 					ServiceAccountName: "amp",
-					InitContainers: []v1.Container{
-						{
-							Name:  ZyncInitContainerName,
-							Image: containerImage,
-							Command: []string{
-								"bash",
-								"-c",
-								"bundle exec sh -c \"until rake boot:db; do sleep $SLEEP_SECONDS; done\"",
-							},
-							Env: []v1.EnvVar{
-								{
-									Name:  "SLEEP_SECONDS",
-									Value: "1",
-								},
-								{
-									Name: "DATABASE_URL",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{
-												Name: ZyncSecretName,
-											},
-											Key: ZyncSecretDatabaseURLFieldName,
-										},
-									},
-								},
-							},
-						},
-					},
+					InitContainers:     zync.zyncInit(containerImage),
 					Containers: []v1.Container{
 						{
 							Name:  ZyncName,
@@ -249,9 +229,11 @@ func (zync *Zync) Deployment(containerImage string) *k8sappsv1.Deployment {
 								SuccessThreshold:    1,
 								FailureThreshold:    3,
 							},
-							Resources: zync.Options.ContainerResourceRequirements,
+							Resources:    zync.Options.ContainerResourceRequirements,
+							VolumeMounts: zync.zyncVolumeMount(),
 						},
 					},
+					Volumes:                   zync.zyncVolume(),
 					PriorityClassName:         zync.Options.ZyncPriorityClassName,
 					TopologySpreadConstraints: zync.Options.ZyncTopologySpreadConstraints,
 				},
@@ -267,6 +249,15 @@ func (zync *Zync) commonZyncEnvVars() []v1.EnvVar {
 		helper.EnvVarFromSecret("DATABASE_URL", "zync", "DATABASE_URL"),
 		helper.EnvVarFromSecret("SECRET_KEY_BASE", "zync", "SECRET_KEY_BASE"),
 		helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN"),
+		// SSL certs from secret
+		helper.EnvVarFromSecretOptional("DB_SSL_CA", ZyncSecretName, ZyncSecretSslCa),
+		helper.EnvVarFromSecretOptional("DB_SSL_CERT", ZyncSecretName, ZyncSecretSslCert),
+		helper.EnvVarFromSecretOptional("DB_SSL_KEY", ZyncSecretName, ZyncSecretSslKey),
+		helper.EnvVarFromSecretOptional("DATABASE_SSL_MODE", ZyncSecretName, ZyncSecretDatabaseSslMode),
+		// SSL mount pat env vars
+		helper.EnvVarFromValue("DATABASE_SSL_CA", helper.TlsCertPresent("DATABASE_SSL_CA", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
+		helper.EnvVarFromValue("DATABASE_SSL_CERT", helper.TlsCertPresent("DATABASE_SSL_CERT", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
+		helper.EnvVarFromValue("DATABASE_SSL_KEY", helper.TlsCertPresent("DATABASE_SSL_KEY", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
 		{
 			Name: "POD_NAME",
 			ValueFrom: &v1.EnvVarSource{
@@ -325,6 +316,7 @@ func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
 					ServiceAccountName:            "zync-que-sa",
 					RestartPolicy:                 v1.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &[]int64{30}[0],
+					InitContainers:                zync.zyncQueInit(containerImage),
 					Containers: []v1.Container{
 						{
 							Name:            "que",
@@ -353,10 +345,12 @@ func (zync *Zync) QueDeployment(containerImage string) *k8sappsv1.Deployment {
 									Protocol:      v1.ProtocolTCP,
 								},
 							},
-							Resources: zync.Options.QueContainerResourceRequirements,
-							Env:       zync.commonZyncEnvVars(),
+							Resources:    zync.Options.QueContainerResourceRequirements,
+							Env:          zync.commonZyncEnvVars(),
+							VolumeMounts: zync.zyncVolumeMount(),
 						},
 					},
+					Volumes:                   zync.zyncVolume(),
 					PriorityClassName:         zync.Options.ZyncQuePriorityClassName,
 					TopologySpreadConstraints: zync.Options.ZyncQueTopologySpreadConstraints,
 				},
@@ -567,4 +561,184 @@ func (zync *Zync) zyncPorts() []v1.ContainerPort {
 	}
 
 	return ports
+}
+
+func (zync *Zync) zyncInit(containerImage string) []v1.Container {
+
+	if zync.Options.ZyncDbTLSEnabled {
+		return []v1.Container{
+			{
+				Name:  "set-permissions",
+				Image: containerImage,
+				Command: []string{
+					"sh",
+					"-c",
+					"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+				},
+				VolumeMounts: []v1.VolumeMount{
+					{
+						Name:      "tls-secret",
+						MountPath: "/tls",
+						ReadOnly:  true,
+					},
+					{
+						Name:      "writable-tls",
+						MountPath: "/writable-tls",
+						ReadOnly:  false, // Writable emptyDir volume
+					},
+				},
+			},
+			{
+				Name:  ZyncInitContainerName,
+				Image: containerImage,
+				Command: []string{
+					"bash",
+					"-c",
+					"bundle exec sh -c \"until rake boot:db; do sleep $SLEEP_SECONDS; done\"",
+				},
+				Env: []v1.EnvVar{
+					{
+						Name:  "SLEEP_SECONDS",
+						Value: "1",
+					},
+					{
+						Name: "DATABASE_URL",
+						ValueFrom: &v1.EnvVarSource{
+							SecretKeyRef: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: ZyncSecretName,
+								},
+								Key: ZyncSecretDatabaseURLFieldName,
+							},
+						},
+					},
+					helper.EnvVarFromSecretOptional("DATABASE_SSL_MODE", ZyncSecretName, "DATABASE_SSL_MODE"),
+					helper.EnvVarFromValue("DATABASE_SSL_CA", helper.TlsCertPresent("DATABASE_SSL_CA", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
+					helper.EnvVarFromValue("DATABASE_SSL_CERT", helper.TlsCertPresent("DATABASE_SSL_CERT", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
+					helper.EnvVarFromValue("DATABASE_SSL_KEY", helper.TlsCertPresent("DATABASE_SSL_KEY", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
+				},
+				VolumeMounts: []v1.VolumeMount{
+					{
+						Name:      "writable-tls", // Reuse the same volume in the main container if needed
+						MountPath: "/tls",
+						ReadOnly:  true,
+					},
+				},
+			},
+		}
+	} else {
+		return []v1.Container{
+			{
+				Name:  ZyncInitContainerName,
+				Image: containerImage,
+				Command: []string{
+					"bash",
+					"-c",
+					"bundle exec sh -c \"until rake boot:db; do sleep $SLEEP_SECONDS; done\"",
+				},
+				Env: []v1.EnvVar{
+					{
+						Name:  "SLEEP_SECONDS",
+						Value: "1",
+					},
+					{
+						Name: "DATABASE_URL",
+						ValueFrom: &v1.EnvVarSource{
+							SecretKeyRef: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: ZyncSecretName,
+								},
+								Key: ZyncSecretDatabaseURLFieldName,
+							},
+						},
+					},
+					helper.EnvVarFromSecretOptional("DATABASE_SSL_MODE", ZyncSecretName, "DATABASE_SSL_MODE"),
+					helper.EnvVarFromValue("DATABASE_SSL_CA", helper.TlsCertPresent("DATABASE_SSL_CA", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
+					helper.EnvVarFromValue("DATABASE_SSL_CERT", helper.TlsCertPresent("DATABASE_SSL_CERT", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
+					helper.EnvVarFromValue("DATABASE_SSL_KEY", helper.TlsCertPresent("DATABASE_SSL_KEY", ZyncSecretName, zync.Options.ZyncDbTLSEnabled)),
+				},
+			},
+		}
+	}
+}
+
+func (zync *Zync) zyncVolumeMount() []v1.VolumeMount {
+	if zync.Options.ZyncDbTLSEnabled {
+		return []v1.VolumeMount{
+			{
+				Name:      "writable-tls", // Reuse the same volume in the main container if needed
+				MountPath: "/tls",
+				ReadOnly:  true,
+			},
+		}
+	} else {
+		return []v1.VolumeMount{}
+	}
+}
+
+func (zync *Zync) zyncVolume() []v1.Volume {
+	if zync.Options.ZyncDbTLSEnabled {
+		return []v1.Volume{
+			{
+				Name: "tls-secret",
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: ZyncSecretName, // Name of the secret containing the TLS certs
+						Items: []v1.KeyToPath{
+							{
+								Key:  ZyncSecretSslCa,
+								Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+							},
+							{
+								Key:  ZyncSecretSslCert,
+								Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+							},
+							{
+								Key:  ZyncSecretSslKey,
+								Path: "tls.key", // Map the secret key to the tls.key file in the container
+							},
+						},
+					},
+				},
+			},
+			{
+				Name: "writable-tls",
+				VolumeSource: v1.VolumeSource{
+					EmptyDir: &v1.EmptyDirVolumeSource{},
+				},
+			},
+		}
+	} else {
+		return []v1.Volume{}
+	}
+}
+
+func (zync *Zync) zyncQueInit(image string) []v1.Container {
+	if zync.Options.ZyncDbTLSEnabled {
+		return []v1.Container{
+			{
+				Name:  "set-permissions",
+				Image: "quay.io/openshift/origin-cli:4.7", // Minimal image for chmod
+				Command: []string{
+					"sh",
+					"-c",
+					"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+				},
+				VolumeMounts: []v1.VolumeMount{
+					{
+						Name:      "tls-secret",
+						MountPath: "/tls",
+						ReadOnly:  true,
+					},
+					{
+						Name:      "writable-tls",
+						MountPath: "/writable-tls",
+						ReadOnly:  false, // Writable emptyDir volume
+					},
+				},
+			},
+		}
+	} else {
+		return []v1.Container{}
+	}
 }

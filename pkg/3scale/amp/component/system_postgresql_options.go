@@ -16,6 +16,9 @@ type SystemPostgreSQLOptions struct {
 	Password                      string                  `validate:"required"`
 	DatabaseName                  string                  `validate:"required"`
 	DatabaseURL                   string                  `validate:"required"`
+	DatabaseSslCa                 string
+	DatabaseSslCert               string
+	DatabaseSslKey                string
 	PVCStorageClass               *string
 	PVCVolumeName                 *string
 	PVCStorageRequests            resource.Quantity             `validate:"required"`

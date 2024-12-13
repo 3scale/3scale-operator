@@ -22,6 +22,11 @@ type ZyncOptions struct {
 	SecretKeyBase                         string                  `validate:"required"`
 	ZyncReplicas                          int32
 	ZyncQueReplicas                       int32
+	DatabaseSslMode                       string
+	DatabaseSslCa                         string
+	DatabaseSslCert                       string
+	DatabaseSslKey                        string
+	ZyncDbTLSEnabled                      bool
 
 	ZyncAffinity            *v1.Affinity    `validate:"-"`
 	ZyncTolerations         []v1.Toleration `validate:"-"`
@@ -57,7 +62,8 @@ type ZyncOptions struct {
 	// Those objects are namespaced. However, objects includes labels, rules and expressions
 	// that need namespace filtering because they are "global" once imported
 	// to the prometheus or grafana services.
-	Namespace string `validate:"required"`
+	Namespace              string `validate:"required"`
+	CommonZyncSecretLabels map[string]string
 }
 
 func NewZyncOptions() *ZyncOptions {
@@ -83,6 +89,10 @@ func DefaultZyncAuthenticationToken() string {
 
 func DefaultZyncDatabaseURL(password string) string {
 	return fmt.Sprintf("postgresql://zync:%s@zync-database:5432/zync_production", password)
+}
+
+func DefaultZyncSslEmpty() string {
+	return fmt.Sprintf("")
 }
 
 func DefaultZyncContainerResourceRequirements() v1.ResourceRequirements {

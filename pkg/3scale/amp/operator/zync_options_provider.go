@@ -48,6 +48,9 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.setTopologySpreadConstraints()
 
 	z.zyncOptions.CommonLabels = z.commonLabels()
+	if z.apimanager.IsZyncDatabaseTLSEnabled() {
+		z.zyncOptions.CommonZyncSecretLabels = z.commonZyncSecretLabels()
+	}
 	z.zyncOptions.CommonZyncLabels = z.commonZyncLabels()
 	z.zyncOptions.CommonZyncQueLabels = z.commonZyncQueLabels()
 	z.zyncOptions.CommonZyncDatabaseLabels = z.commonZyncDatabaseLabels()
@@ -57,6 +60,7 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.zyncOptions.ZyncPodTemplateAnnotations = z.zyncPodTemplateAnnotations()
 	z.zyncOptions.ZyncQuePodTemplateAnnotations = z.zyncQuePodTemplateAnnotations()
 	z.zyncOptions.ZyncDatabasePodTemplateAnnotations = z.apimanager.Spec.Zync.DatabaseAnnotations
+	z.setZyncTLSEnabled()
 
 	z.zyncOptions.ZyncMetrics = true
 
@@ -120,6 +124,27 @@ func (z *ZyncOptionsProvider) setSecretBasedOptions() error {
 			component.ZyncSecretDatabaseURLFieldName,
 			component.DefaultZyncDatabaseURL(zyncDatabasePassword),
 			z.apimanager.IsExternal(appsv1alpha1.ZyncDatabase),
+		},
+		{
+			&z.zyncOptions.DatabaseSslCa,
+			component.ZyncSecretName,
+			component.ZyncSecretSslCa,
+			component.DefaultZyncSslEmpty(),
+			false,
+		},
+		{
+			&z.zyncOptions.DatabaseSslCert,
+			component.ZyncSecretName,
+			component.ZyncSecretSslCert,
+			component.DefaultZyncSslEmpty(),
+			false,
+		},
+		{
+			&z.zyncOptions.DatabaseSslKey,
+			component.ZyncSecretName,
+			component.ZyncSecretSslKey,
+			component.DefaultZyncSslEmpty(),
+			false,
 		},
 	}
 
@@ -219,6 +244,11 @@ func (z *ZyncOptionsProvider) commonLabels() map[string]string {
 		"app":                  *z.apimanager.Spec.AppLabel,
 		"threescale_component": "zync",
 	}
+}
+func (z *ZyncOptionsProvider) commonZyncSecretLabels() map[string]string {
+	labels := z.commonLabels()
+	labels["apimanager.apps.3scale.net/watched-by"] = "zync"
+	return labels
 }
 
 func (z *ZyncOptionsProvider) commonZyncLabels() map[string]string {
@@ -337,4 +367,8 @@ func (z *ZyncOptionsProvider) zyncQuePodTemplateAnnotations() map[string]string 
 		annotations[k] = v
 	}
 	return annotations
+}
+
+func (z *ZyncOptionsProvider) setZyncTLSEnabled() {
+	z.zyncOptions.ZyncDbTLSEnabled = z.apimanager.IsZyncDatabaseTLSEnabled()
 }

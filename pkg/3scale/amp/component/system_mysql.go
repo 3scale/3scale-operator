@@ -269,6 +269,9 @@ func (mysql *SystemMysql) SystemDatabaseSecret() *v1.Secret {
 			SystemSecretSystemDatabaseUserFieldName:     mysql.Options.User,
 			SystemSecretSystemDatabasePasswordFieldName: mysql.Options.Password,
 			SystemSecretSystemDatabaseURLFieldName:      mysql.Options.DatabaseURL,
+			SystemSecretSslCa:                           mysql.Options.DatabaseSslCa,
+			SystemSecretSslCert:                         mysql.Options.DatabaseSslCert,
+			SystemSecretSslKey:                          mysql.Options.DatabaseSslKey,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
