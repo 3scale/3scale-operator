@@ -71,6 +71,7 @@ type BackendSpec struct {
 	// SystemName identifies uniquely the backend within the account provider
 	// Default value will be sanitized Name
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="SystemName is immutable"
 	SystemName string `json:"systemName,omitempty"`
 
 	// PrivateBaseURL Private Base URL of the API
