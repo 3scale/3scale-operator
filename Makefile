@@ -102,7 +102,7 @@ run: generate fmt vet manifests
 # download controller-gen if necessary
 CONTROLLER_GEN=$(PROJECT_PATH)/bin/controller-gen
 $(CONTROLLER_GEN):
-	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2)
+	$(call go-bin-install,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0)
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)
