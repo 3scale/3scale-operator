@@ -470,7 +470,7 @@ func (r *APIManagerReconciler) reconcileAPIManagerLogic(cr *appsv1alpha1.APIMana
 		return result, err
 	}
 
-	zyncReconciler := operator.NewZyncReconciler(baseAPIManagerLogicReconciler)
+	zyncReconciler := operator.NewZyncReconciler(baseAPIManagerLogicReconciler, cr.IsZyncEnabled())
 	result, err = zyncReconciler.Reconcile()
 	if err != nil || result.Requeue {
 		return result, err

@@ -131,7 +131,7 @@ func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alp
 	if instance.IsExternal(appsv1alpha1.SystemRedis) {
 		externalRedisDatabases = true
 	}
-	if instance.IsExternal(appsv1alpha1.ZyncDatabase) {
+	if instance.IsExternal(appsv1alpha1.ZyncDatabase) && s.apimanagerResource.IsZyncEnabled() {
 		externalZyncDatabase = true
 	}
 
@@ -139,6 +139,7 @@ func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alp
 		SystemDatabaseType:     systemDatabaseType,
 		ExternalRedisDatabases: externalRedisDatabases,
 		ExternalZyncDatabase:   externalZyncDatabase,
+		IsZyncEnabled:          s.apimanagerResource.IsZyncEnabled(),
 	}
 
 	return deploymentLister.DeploymentNames()
@@ -214,12 +215,17 @@ func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
 	wildcardDomain := s.apimanagerResource.Spec.WildcardDomain
 	if s.apimanagerResource.Spec.TenantName != nil {
 		expectedRouteHosts = []string{
-			fmt.Sprintf("backend-%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                // Backend Listener route
-			fmt.Sprintf("api-%s-apicast-production.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain), // Apicast Production default tenant Route
-			fmt.Sprintf("api-%s-apicast-staging.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),    // Apicast Staging default tenant Route
-			fmt.Sprintf("master.%s", wildcardDomain),                                                           // System's Master Portal Route
-			fmt.Sprintf("%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                        // System's default tenant Developer Portal Route
-			fmt.Sprintf("%s-admin.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                  // System's default tenant Admin Portal Route
+			fmt.Sprintf("backend-%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain), // Backend Listener route
+		}
+		if s.apimanagerResource.IsZyncEnabled() {
+			zyncRoutes := []string{
+				fmt.Sprintf("api-%s-apicast-production.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain), // Apicast Production default tenant Route
+				fmt.Sprintf("api-%s-apicast-staging.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),    // Apicast Staging default tenant Route
+				fmt.Sprintf("master.%s", wildcardDomain),                                                           // System's Master Portal Route
+				fmt.Sprintf("%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                        // System's default tenant Developer Portal Route
+				fmt.Sprintf("%s-admin.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                  // System's default tenant Admin Portal Route
+			}
+			expectedRouteHosts = append(expectedRouteHosts, zyncRoutes...)
 		}
 	} else {
 		return false, nil

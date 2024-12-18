@@ -12,6 +12,7 @@ type DeploymentsLister struct {
 	SystemDatabaseType     SystemDatabaseType
 	ExternalRedisDatabases bool
 	ExternalZyncDatabase   bool
+	IsZyncEnabled          bool
 }
 
 func (d *DeploymentsLister) DeploymentNames() []string {
@@ -26,9 +27,12 @@ func (d *DeploymentsLister) DeploymentNames() []string {
 		SystemAppDeploymentName,
 		SystemSidekiqName,
 		SystemSearchdDeploymentName,
-		ZyncName,
-		ZyncQueDeploymentName,
 	)
+
+	if d.IsZyncEnabled {
+		deployments = append(deployments, ZyncName)
+		deployments = append(deployments, ZyncQueDeploymentName)
+	}
 
 	switch d.SystemDatabaseType {
 	case SystemDatabaseTypeInternalMySQL:
@@ -44,7 +48,7 @@ func (d *DeploymentsLister) DeploymentNames() []string {
 		)
 	}
 
-	if !d.ExternalZyncDatabase {
+	if !d.ExternalZyncDatabase && d.IsZyncEnabled {
 		deployments = append(deployments, ZyncDatabaseDeploymentName)
 	}
 

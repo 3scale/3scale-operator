@@ -18,6 +18,7 @@ func TestSetDefaults(t *testing.T) {
 	tmpDefaultApicastOpenSSLVerify := defaultApicastOpenSSLVerify
 	tmpDefaultApicastResponseCodes := defaultApicastResponseCodes
 	tmpDefaultApicastRegistryURL := defaultApicastRegistryURL
+	tmpDefaultZyncEnabled := true
 
 	inputAPIManager := minimumAPIManagerTest()
 
@@ -56,6 +57,7 @@ func TestSetDefaults(t *testing.T) {
 			Zync: &ZyncSpec{
 				AppSpec: &ZyncAppSpec{},
 				QueSpec: &ZyncQueSpec{},
+				Enabled: &tmpDefaultZyncEnabled,
 			},
 			PodDisruptionBudget: nil,
 		},

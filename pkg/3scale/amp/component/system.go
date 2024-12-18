@@ -219,8 +219,10 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	result = append(result, apicastAccessToken)
 
 	// Add zync secret to envvars sources
-	zyncAuthTokenVar := helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN")
-	result = append(result, zyncAuthTokenVar)
+	if system.Options.ZyncEnabled {
+		zyncAuthTokenVar := helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN")
+		result = append(result, zyncAuthTokenVar)
+	}
 
 	// Add backend internal api data to envvars sources
 	systemBackendInternalAPIUser := helper.EnvVarFromSecret("CONFIG_INTERNAL_API_USER", "backend-internal-api", "username")

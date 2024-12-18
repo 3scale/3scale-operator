@@ -517,6 +517,7 @@ Note: Deploying databases internally with this section is meant for evaluation p
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
+| Enabled | `enabled` | bool | No | `true` | Zync components are enabled by default. Set to false to disable all Zync components. All other zync related settings will be ignored. |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Zync |
 | PostgreSQLImage | `postgreSQLImage` | string | No | nil | Used to overwrite the desired PostgreSQL image for the PostgreSQL used by Zync. Does not take effect when the database is managed externally |
 | AppSpec | `appSpec` | \*ZyncAppSpec | No | See [ZyncAppSpec](#ZyncAppSpec) reference | Spec of Zync App part |

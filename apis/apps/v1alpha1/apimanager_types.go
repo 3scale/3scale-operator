@@ -701,6 +701,9 @@ type SystemPostgreSQLSpec struct {
 
 type ZyncSpec struct {
 	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// +optional
 	Image *string `json:"image,omitempty"`
 	// +optional
 	PostgreSQLImage *string `json:"postgreSQLImage,omitempty"`
@@ -1160,6 +1163,8 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 	changed := false
 	spec := &apimanager.Spec
 
+	defaultZyncEnabled := true
+
 	if spec.Zync == nil {
 		spec.Zync = &ZyncSpec{}
 		changed = true
@@ -1172,6 +1177,11 @@ func (apimanager *APIManager) setZyncDefaults() bool {
 
 	if spec.Zync.QueSpec == nil {
 		spec.Zync.QueSpec = &ZyncQueSpec{}
+		changed = true
+	}
+
+	if spec.Zync.Enabled == nil {
+		spec.Zync.Enabled = &defaultZyncEnabled
 		changed = true
 	}
 
@@ -1344,6 +1354,16 @@ func (apimanager *APIManager) IsAsyncDisableAnnotationPresent() bool {
 	}
 
 	return asyncDisabledFound
+}
+
+// IsZyncEnabled checks if zync is enabled.
+// Zync is only considered disabled if the enabled flag is explicitly set to false.
+func (apimanager *APIManager) IsZyncEnabled() bool {
+	zyncEnabled := true
+	if apimanager.Spec.Zync != nil && apimanager.Spec.Zync.Enabled != nil && !*apimanager.Spec.Zync.Enabled {
+		zyncEnabled = false
+	}
+	return zyncEnabled
 }
 
 func (apimanager *APIManager) Validate() field.ErrorList {

@@ -3,6 +3,7 @@ package operator
 import (
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	"github.com/3scale/3scale-operator/pkg/common"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
@@ -13,11 +14,14 @@ import (
 
 type ZyncReconciler struct {
 	*BaseAPIManagerLogicReconciler
+
+	ZyncEnabled bool
 }
 
-func NewZyncReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler) *ZyncReconciler {
+func NewZyncReconciler(baseAPIManagerLogicReconciler *BaseAPIManagerLogicReconciler, zyncEnabled bool) *ZyncReconciler {
 	return &ZyncReconciler{
 		BaseAPIManagerLogicReconciler: baseAPIManagerLogicReconciler,
+		ZyncEnabled:                   zyncEnabled,
 	}
 }
 
@@ -29,6 +33,11 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 
 	zync, err := Zync(r.apiManager, r.Client())
 	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if !r.ZyncEnabled {
+		err := r.deleteZyncComponents(zync, ampImages)
 		return reconcile.Result{}, err
 	}
 
@@ -204,6 +213,152 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	return reconcile.Result{}, nil
+}
+
+// deleteZyncComponents handles the removal of all zync components
+// This should only happen when the APIManager's .spec.zync.enabled was initially set to true but then changed to false
+func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *component.AmpImages) error {
+	// ZyncQue PrometheusRules
+	zyncQuePrometheusRules := zync.ZyncPrometheusRules()
+	common.TagObjectToDelete(zyncQuePrometheusRules)
+	err := r.ReconcilePrometheusRules(zyncQuePrometheusRules, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// Zync PrometheusRules
+	zyncPrometheusRules := zync.ZyncPrometheusRules()
+	common.TagObjectToDelete(zyncPrometheusRules)
+	err = r.ReconcilePrometheusRules(zyncPrometheusRules, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// Zync GrafanaDashboards
+	sumRate, err := helper.SumRateForOpenshiftVersion(r.Context(), r.Client())
+	if err != nil {
+		return err
+	}
+	zyncGrafanaV5Dashboard := zync.ZyncGrafanaV5Dashboard(sumRate)
+	common.TagObjectToDelete(zyncGrafanaV5Dashboard)
+	err = r.ReconcileGrafanaDashboards(zyncGrafanaV5Dashboard, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+	zyncGrafanaV4Dashboard := zync.ZyncGrafanaV4Dashboard(sumRate)
+	common.TagObjectToDelete(zyncGrafanaV4Dashboard)
+	err = r.ReconcileGrafanaDashboards(zyncGrafanaV4Dashboard, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// Zync PodDisruptionBudget
+	zyncPodDisruptionBudget := zync.ZyncPodDisruptionBudget()
+	common.TagObjectToDelete(zyncPodDisruptionBudget)
+	err = r.ReconcilePodDisruptionBudget(zyncPodDisruptionBudget, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// ZyncQue PodDisruptionBudget
+	zyncQuePodDisruptionBudget := zync.QuePodDisruptionBudget()
+	common.TagObjectToDelete(zyncQuePodDisruptionBudget)
+	err = r.ReconcilePodDisruptionBudget(zyncQuePodDisruptionBudget, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// Zync PodMonitor
+	zyncPodMonitor := zync.ZyncPodMonitor()
+	common.TagObjectToDelete(zyncPodMonitor)
+	err = r.ReconcilePodMonitor(zyncPodMonitor, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// ZyncQue PodMonitor
+	zyncQuePodMonitor := zync.ZyncQuePodMonitor()
+	common.TagObjectToDelete(zyncQuePodMonitor)
+	err = r.ReconcilePodMonitor(zyncQuePodMonitor, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// Zync Secret
+	zyncSecret := zync.Secret()
+	common.TagObjectToDelete(zyncSecret)
+	err = r.ReconcileSecret(zyncSecret, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	if !r.apiManager.IsExternal(appsv1alpha1.ZyncDatabase) {
+		// ZyncDB Service
+		zyncDBService := zync.DatabaseService()
+		common.TagObjectToDelete(zyncDBService)
+		err = r.ReconcileService(zyncDBService, reconcilers.CreateOnlyMutator)
+		if err != nil {
+			return err
+		}
+
+		// ZyncDB Deployment
+		zyncDBDeployment := zync.DatabaseDeployment(ampImages.Options.ZyncDatabasePostgreSQLImage)
+		common.TagObjectToDelete(zyncDBDeployment)
+		err = r.ReconcileDeployment(zyncDBDeployment, reconcilers.CreateOnlyMutator)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Zync Service
+	zyncService := zync.Service()
+	common.TagObjectToDelete(zyncService)
+	err = r.ReconcileService(zyncService, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// ZyncQue Deployment
+	zyncQueDeployment := zync.QueDeployment(ampImages.Options.ZyncImage)
+	common.TagObjectToDelete(zyncQueDeployment)
+	err = r.ReconcileDeployment(zyncQueDeployment, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// Zync Deployment
+	zyncDeployment := zync.Deployment(ampImages.Options.ZyncImage)
+	common.TagObjectToDelete(zyncDeployment)
+	err = r.ReconcileDeployment(zyncDeployment, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// ZyncQue RoleBinding
+	zyncQueRoleBinding := zync.QueRoleBinding()
+	common.TagObjectToDelete(zyncQueRoleBinding)
+	err = r.ReconcileRoleBinding(zyncQueRoleBinding, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// ZyncQue ServiceAccount
+	zyncQueServiceAccount := zync.QueServiceAccount()
+	common.TagObjectToDelete(zyncQueServiceAccount)
+	err = r.ReconcileServiceAccount(zyncQueServiceAccount, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	// ZyncQue Role
+	zyncQueRole := zync.QueRole()
+	common.TagObjectToDelete(zyncQueRole)
+	err = r.ReconcileRole(zyncQueRole, reconcilers.CreateOnlyMutator)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func Zync(apimanager *appsv1alpha1.APIManager, client client.Client) (*component.Zync, error) {

@@ -70,6 +70,8 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.options.AppMetrics = true
 	s.options.IncludeOracleOptionalSettings = true
 
+	s.options.ZyncEnabled = s.apimanager.IsZyncEnabled()
+
 	s.options.Namespace = s.namespace
 
 	err = s.options.Validate()
