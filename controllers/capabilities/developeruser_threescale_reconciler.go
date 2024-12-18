@@ -2,7 +2,10 @@ package controllers
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"reflect"
+	"strconv"
 
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -57,11 +60,15 @@ func (s *DeveloperUserThreescaleReconciler) Reconcile() (*threescaleapi.Develope
 
 	if devUser == nil {
 		s.logger.V(1).Info("DeveloperUser does not exist", "username", s.userCR.Spec.Username)
-		// developer user has to be created in 3scale
+		// The DeveloperAccount doesn't exist yet and must be created in 3scale
 		devUser, err = s.createDevUser()
 		if err != nil {
 			return nil, err
 		}
+
+		// Update the CR status with the account's ID and return the account
+		s.userCR.Status.ID = devUser.Element.ID
+		return devUser, nil
 	} else {
 		s.logger.V(1).Info("DeveloperUser already exists", "ID", *devUser.Element.ID)
 	}
@@ -86,9 +93,14 @@ func (s *DeveloperUserThreescaleReconciler) checkParentAccount() error {
 }
 
 func (s *DeveloperUserThreescaleReconciler) findDevUser() (*threescaleapi.DeveloperUser, error) {
-	// Reconciliation is based on ID stored in Status field
-	// Nice to Have would be having that ID in status inmutable using admission webhooks
-	devUser, err := s.findDevUserByID()
+	// Reconciliation is based on the ID stored in the CR's annotation or .status block
+	// We can tell if the user is already created in 3scale by checking the ID in CR's annotation or .status block
+	userId, err := s.retrieveUserID()
+	if err != nil {
+		return nil, err
+	}
+
+	devUser, err := s.findDevUserByID(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +111,6 @@ func (s *DeveloperUserThreescaleReconciler) findDevUser() (*threescaleapi.Develo
 
 	// If not found by ID, try {username, email} set.
 	// Both fields are unique in the provider account scope.
-
 	return s.findDevUserByUsernameAndEmail()
 }
 
@@ -119,12 +130,34 @@ func (s *DeveloperUserThreescaleReconciler) findDevUserByUsernameAndEmail() (*th
 	return nil, nil
 }
 
-func (s *DeveloperUserThreescaleReconciler) findDevUserByID() (*threescaleapi.DeveloperUser, error) {
+// Returns user ID with developerUser.Status.ID taking precedence over the annotation value
+func (s *DeveloperUserThreescaleReconciler) retrieveUserID() (int64, error) {
+	var userId int64 = 0
+
+	// If the developerUser.Status.ID is nil, check if user.annotations.userID is present and use it instead
 	if s.userCR.Status.ID == nil {
+		if value, found := s.userCR.ObjectMeta.Annotations[userIdAnnotation]; found {
+			// If the userID annotation is found, convert it to int64
+			userIdConvertedFromString, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return 0, errors.New(fmt.Sprintf("failed to convert userID annotation value %s to int64", value))
+			}
+
+			userId = userIdConvertedFromString
+		}
+	} else {
+		userId = *s.userCR.Status.ID
+	}
+
+	return userId, nil
+}
+
+func (s *DeveloperUserThreescaleReconciler) findDevUserByID(userID int64) (*threescaleapi.DeveloperUser, error) {
+	if userID == 0 {
 		return nil, nil
 	}
 
-	devUser, err := s.threescaleAPIClient.DeveloperUser(*s.parentAccountCR.Status.ID, *s.userCR.Status.ID)
+	devUser, err := s.threescaleAPIClient.DeveloperUser(*s.parentAccountCR.Status.ID, userID)
 	if err != nil && threescaleapi.IsNotFound(err) {
 		return nil, nil
 	} else if err != nil {
