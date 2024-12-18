@@ -96,5 +96,5 @@ func (a *APIManagerBackupOptionsProvider) autodiscoveredAPIManager() (*appsv1alp
 }
 
 func (a *APIManagerBackupOptionsProvider) ocCLIImageURL() string {
-	return helper.GetEnvVar("OSE_CLI_IMAGE", component.OCCLIImageURL())
+	return helper.GetEnvVar("RELATED_IMAGE_OC_CLI", component.OCCLIImageURL())
 }
