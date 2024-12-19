@@ -54,6 +54,8 @@ type BackendOptions struct {
 	// that need namespace filtering because they are "global" once imported
 	// to the prometheus or grafana services.
 	Namespace string `validate:"required"`
+
+	RedisTLSEnabled bool
 }
 
 func NewBackendOptions() *BackendOptions {

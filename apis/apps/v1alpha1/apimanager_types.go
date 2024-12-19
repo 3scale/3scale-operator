@@ -84,6 +84,8 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+	// +optional
+	RedisTLSEnabled *bool `json:"redisTLSEnabled,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -1534,4 +1536,27 @@ type APIManagerList struct {
 
 func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
+}
+
+func (apimanager *APIManager) IsSystemRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.RedisTLSEnabled != nil &&
+		*apimanager.Spec.RedisTLSEnabled &&
+		apimanager.Spec.ExternalComponents != nil &&
+		apimanager.Spec.ExternalComponents.System != nil &&
+		*apimanager.Spec.ExternalComponents.System.Redis {
+		tlsEnabled = true
+	}
+	return tlsEnabled
+}
+func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
+	tlsEnabled := false
+	if apimanager.Spec.RedisTLSEnabled != nil &&
+		*apimanager.Spec.RedisTLSEnabled &&
+		apimanager.Spec.ExternalComponents != nil &&
+		apimanager.Spec.ExternalComponents.System != nil &&
+		*apimanager.Spec.ExternalComponents.Backend.Redis {
+		tlsEnabled = true
+	}
+	return tlsEnabled
 }

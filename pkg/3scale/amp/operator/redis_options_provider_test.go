@@ -144,6 +144,22 @@ func testSystemRedisPodTemplateAnnotations() map[string]string {
 	return map[string]string{"redisConfigMapResourceVersion": "999"}
 }
 
+func testBackendRedisSecretLabels() map[string]string {
+	return map[string]string{
+		"app":                                   appLabel,
+		"threescale_component":                  "backend",
+		"apimanager.apps.3scale.net/watched-by": "backend",
+	}
+}
+
+func testSystemRedisSecretLabels() map[string]string {
+	return map[string]string{
+		"app":                                   appLabel,
+		"threescale_component":                  "system",
+		"apimanager.apps.3scale.net/watched-by": "system",
+	}
+}
+
 func defaultRedisOptions() *component.RedisOptions {
 	return &component.RedisOptions{
 		AmpRelease:      version.ThreescaleVersionMajorMinor(),
@@ -155,9 +171,11 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemRedisContainerResourceRequirements:  component.DefaultSystemRedisContainerResourceRequirements(),
 		SystemCommonLabels:                        testRedisSystemCommonLabels(),
 		SystemRedisLabels:                         testRedisSystemRedisLabels(),
+		SystemRedisSecretLabels:                   testSystemRedisSecretLabels(),
 		SystemRedisPodTemplateLabels:              testRedisSystemRedisPodTemplateLabels(),
 		BackendCommonLabels:                       testRedisBackendCommonLabels(),
 		BackendRedisLabels:                        testRedisBackendRedisLabels(),
+		BackendRedisSecretLabels:                  testBackendRedisSecretLabels(),
 		BackendRedisPodTemplateLabels:             testRedisBackendRedisPodTemplateLabels(),
 		BackendStorageURL:                         component.DefaultBackendRedisStorageURL(),
 		BackendQueuesURL:                          component.DefaultBackendRedisQueuesURL(),
@@ -170,6 +188,17 @@ func defaultRedisOptions() *component.RedisOptions {
 		SystemRedisSentinelsRole:                  component.DefaultSystemRedisSentinelRole(),
 		SystemRedisPodTemplateAnnotations:         testSystemRedisPodTemplateAnnotations(),
 		BackendRedisPodTemplateAnnotations:        testBackendRedisPodTemplateAnnotations(),
+
+		// TLS
+		SystemRedisSslCa:           component.DefaultRedisSslSecretValue(),
+		SystemRedisSslCert:         component.DefaultRedisSslSecretValue(),
+		SystemRedisSslKey:          component.DefaultRedisSslSecretValue(),
+		BackendConfigSslCa:         component.DefaultRedisSslSecretValue(),
+		BackendConfigSslCert:       component.DefaultRedisSslSecretValue(),
+		BackendConfigSslKey:        component.DefaultRedisSslSecretValue(),
+		BackendConfigQueuesSslCa:   component.DefaultRedisSslSecretValue(),
+		BackendConfigQueuesSslCert: component.DefaultRedisSslSecretValue(),
+		BackendConfigQueuesSslKey:  component.DefaultRedisSslSecretValue(),
 	}
 }
 

@@ -24,9 +24,11 @@ type RedisOptions struct {
 
 	SystemCommonLabels            map[string]string `validate:"required"`
 	SystemRedisLabels             map[string]string `validate:"required"`
+	SystemRedisSecretLabels       map[string]string `validate:"required"`
 	SystemRedisPodTemplateLabels  map[string]string `validate:"required"`
 	BackendCommonLabels           map[string]string `validate:"required"`
 	BackendRedisLabels            map[string]string `validate:"required"`
+	BackendRedisSecretLabels      map[string]string `validate:"required"`
 	BackendRedisPodTemplateLabels map[string]string `validate:"required"`
 
 	SystemRedisPriorityClassName          string                        `validate:"-"`
@@ -47,6 +49,17 @@ type RedisOptions struct {
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
 	SystemRedisNamespace             string
+	// TLS
+	//RedisTLSEnabled            bool
+	SystemRedisSslCa           string
+	SystemRedisSslCert         string
+	SystemRedisSslKey          string
+	BackendConfigSslCa         string
+	BackendConfigSslCert       string
+	BackendConfigSslKey        string
+	BackendConfigQueuesSslCa   string
+	BackendConfigQueuesSslCert string
+	BackendConfigQueuesSslKey  string
 }
 
 func NewRedisOptions() *RedisOptions {
@@ -118,4 +131,8 @@ func DefaultBackendQueuesSentinelHosts() string {
 
 func DefaultBackendQueuesSentinelRole() string {
 	return ""
+}
+
+func DefaultRedisSslSecretValue() string {
+	return "replaceme"
 }
