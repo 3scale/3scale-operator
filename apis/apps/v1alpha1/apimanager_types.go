@@ -84,6 +84,8 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+	// +optional
+	SentinelIsUsed *bool `json:"sentinelIsUsed,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -1534,4 +1536,28 @@ type APIManagerList struct {
 
 func init() {
 	SchemeBuilder.Register(&APIManager{}, &APIManagerList{})
+}
+
+func (apimanager *APIManager) IsSystemSentinelUsed() bool {
+	tlsEnabled := false
+	if apimanager.Spec.SentinelIsUsed != nil &&
+		*apimanager.Spec.SentinelIsUsed &&
+		apimanager.Spec.ExternalComponents != nil &&
+		apimanager.Spec.ExternalComponents.System != nil &&
+		apimanager.Spec.ExternalComponents.Backend != nil &&
+		*apimanager.Spec.ExternalComponents.System.Redis {
+		tlsEnabled = true
+	}
+	return tlsEnabled
+}
+func (apimanager *APIManager) IsBackendSentinelUsed() bool {
+	tlsEnabled := false
+	if apimanager.Spec.SentinelIsUsed != nil &&
+		*apimanager.Spec.SentinelIsUsed &&
+		apimanager.Spec.ExternalComponents != nil &&
+		apimanager.Spec.ExternalComponents.Backend != nil &&
+		*apimanager.Spec.ExternalComponents.Backend.Redis {
+		tlsEnabled = true
+	}
+	return tlsEnabled
 }

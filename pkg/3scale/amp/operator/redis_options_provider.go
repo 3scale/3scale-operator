@@ -148,6 +148,110 @@ func (r *RedisOptionsProvider) setSecretBasedOptions() error {
 			component.SystemSecretSystemRedisSentinelRole,
 			component.DefaultSystemRedisSentinelRole(),
 		},
+
+		// ACL
+		{
+			&r.options.SystemRedisUsername,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisUsernameFieldName,
+			"",
+		},
+		{
+			&r.options.SystemRedisPassword,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisPasswordFieldName,
+			"",
+		},
+		{
+			&r.options.SystemRedisSentinelUsername,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisSentinelUsernameFieldName,
+			"",
+		},
+		{
+			&r.options.SystemRedisSentinelPassword,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretSystemRedisSentinelPasswordFieldName,
+			"",
+		},
+		// ACL
+		{
+			&r.options.SystemBackendRedisUsername,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretBackendRedisUsernameFieldName,
+			"",
+		},
+		{
+			&r.options.SystemBackendRedisPassword,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretBackendRedisPasswordFieldName,
+			"",
+		},
+		{
+			&r.options.SystemBackendRedisSentinelUsername,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretBackendRedisSentinelUsernameFieldName,
+			"",
+		},
+		{
+			&r.options.SystemBackendRedisSentinelPassword,
+			component.SystemSecretSystemRedisSecretName,
+			component.SystemSecretBackendRedisSentinelPasswordFieldName,
+			"",
+		},
+		// -------
+		// ACL
+		{
+			&r.options.BackendRedisConfigRedisUsername,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigRedisUsernameFieldName,
+			"",
+		},
+		{
+			&r.options.BackendRedisConfigRedisPassword,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigRedisPasswordFieldName,
+			"",
+		},
+		{
+			&r.options.BackendRedisConfigRedisSentinelUsername,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigRedisSentinelUsernameFieldName,
+			"",
+		},
+		{
+			&r.options.BackendRedisConfigRedisSentinelPassword,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigRedisSentinelPasswordFieldName,
+			"",
+		},
+		// ACL
+		{
+			&r.options.BackendRedisConfigQueuesUsername,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigQueuesUsernameFieldName,
+			"",
+		},
+		{
+			&r.options.BackendRedisConfigQueuesPassword,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigQueuesPasswordFieldName,
+			"",
+		},
+		{
+			&r.options.BackendRedisConfigQueuesSentinelUsername,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigQueuesSentinelUsernameFieldName,
+			"",
+		},
+		{
+			&r.options.BackendRedisConfigQueuesSentinelPassword,
+			component.BackendSecretBackendRedisSecretName,
+			component.BackendSecretBackendRedisConfigQueuesSentinelPasswordFieldName,
+			"",
+		},
+		// -------
+
 	}
 
 	for _, option := range cases {

@@ -104,6 +104,8 @@ type SystemOptions struct {
 	// that need namespace filtering because they are "global" once imported
 	// to the prometheus or grafana services.
 	Namespace string `validate:"required"`
+
+	RedisSentinelIsUsed bool
 }
 
 func NewSystemOptions() *SystemOptions {

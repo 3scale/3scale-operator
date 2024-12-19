@@ -25,6 +25,7 @@
          * [Setting custom Annotations](#setting-custom-annotations)
          * [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
          * [Gateway instrumentation](#gateway-instrumentation)
+         * [Setting Redis ACL Environment variables](#setting-redis-acl-environment-variables)
       * [Preflight checks](#preflights)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
@@ -904,6 +905,73 @@ Whenever a controller reconciles an object it creates a new porta client to make
 #### Gateway instrumentation
 
 Please refer to [Gateway instrumentation](gateway-instrumentation.md) document
+
+
+#### Setting Redis ACL Environment variables
+To allow user to set the ACL credentials (username and password) to connect to Redis -  Environment variables will be set in Backend and System pods.
+Certain configurations must be defined within the `ApiManager CR` to activate it.
+
+Below are the key settings and environment variables involved in the process:
+
+- Following definitions are required in the **ApiManager CR** to set ACL credentials:
+    - `spec.externalComponents` should present and `system.redis` or `backend.redis` (or both) will be `true`
+- To allow `_SENTINEL_` variables - following definition is required in the **ApiManager CR**:
+    - `spec.sentinelIsUsed: true`
+- When these conditions are enabled, the ACL environment variables for Backend and System components will be set in Pods.
+- ACL credentials (username and password) are populated from the **backend-redis** and **system-redis** secrets.
+
+- The names of environment variables in the pods, are same as in Redis backend and system secrets.
+
+Table. **ACL Environment variables in Backend pods**:
+
+| ENV Var Name in Backend pods    | Secret         |  Comment |
+|---------------------------------|----------------| ----|
+| CONFIG_REDIS_USERNAME           | backedn-redis  | |
+| CONFIG_REDIS_PASSWORD           | backedn-redis  | |
+| CONFIG_REDIS_SENTINEL_USERNAME  | backedn-redis  | available when `spec.sentinelIsUsed: true` in `ApiManager CR` |
+| CONFIG_REDIS_SENTINEL_PASSWORD  | backedn-redis  | available when `spec.sentinelIsUsed: true` in `ApiManager CR` |
+| CONFIG_QUEUES_USERNAME          | backedn-redis  | |
+| CONFIG_QUEUES_PASSWORD          | backedn-redis  | |
+| CONFIG_QUEUES_SENTINEL_USERNAME | backedn-redis  | available when `spec.sentinelIsUsed: true` in `ApiManager CR` |
+| CONFIG_QUEUES_SENTINEL_PASSWORD | backedn-redis  | available when `spec.sentinelIsUsed: true` in `ApiManager CR` |
+
+Table. **ACL Environment variables in System pods**:
+
+| ENV Var Name in Backend pods    | Secret        |  Comment |
+|---------------------------------|---------------| ----|
+| REDIS_USERNAME                  | system-redis  | |
+| REDIS_PASSWORD                  | system-redis | |
+| REDIS_SENTINEL_USERNAME         | system-redis | available when `spec.sentinelIsUsed: true` in `ApiManager CR` |
+| REDIS_SENTINEL_PASSWORD         | system-redis | available when `spec.sentinelIsUsed: true` in `ApiManager CR` |
+| BACKEND_REDIS_USERNAME          | backedn-redis | |
+| BACKEND_REDIS_PASSWORD          | backedn-redis | |
+| BACKEND_REDIS_SENTINEL_USERNAME | backedn-redis | available when `spec.sentinelIsUsed: true` in `ApiManager CR` |
+| BACKEND_REDIS_SENTINEL_PASSWORD | backedn-redis | available when `spec.sentinelIsUsed: true` in `ApiManager CR` |
+
+
+This is example for APIManager CR that will allow ACL environment variables in System and Backend, including Sentinel env vars.
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  sentinelIsUsed: true
+  system:
+    fileStorage:
+      simpleStorageService:
+        configurationSecretRef:
+          name: s3-credentials
+  wildcardDomain: <wildcardDomain>
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      redis: true
+```
+
+See [APIManager CRD](apimanager-reference.md) - `backend-redis` and `system-redis` secrets environment variables.
 
 ### Preflights
 

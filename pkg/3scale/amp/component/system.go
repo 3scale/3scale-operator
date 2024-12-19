@@ -47,6 +47,16 @@ const (
 	SystemSecretSystemRedisURLFieldName  = "URL"
 	SystemSecretSystemRedisSentinelHosts = "SENTINEL_HOSTS"
 	SystemSecretSystemRedisSentinelRole  = "SENTINEL_ROLE"
+
+	// ACL env vars
+	SystemSecretSystemRedisUsernameFieldName          = "REDIS_USERNAME"
+	SystemSecretSystemRedisPasswordFieldName          = "REDIS_PASSWORD"
+	SystemSecretSystemRedisSentinelUsernameFieldName  = "REDIS_SENTINEL_USERNAME"
+	SystemSecretSystemRedisSentinelPasswordFieldName  = "REDIS_SENTINEL_PASSWORD"
+	SystemSecretBackendRedisUsernameFieldName         = "BACKEND_REDIS_USERNAME"
+	SystemSecretBackendRedisPasswordFieldName         = "BACKEND_REDIS_PASSWORD"
+	SystemSecretBackendRedisSentinelUsernameFieldName = "BACKEND_REDIS_SENTINEL_USERNAME"
+	SystemSecretBackendRedisSentinelPasswordFieldName = "BACKEND_REDIS_SENTINEL_PASSWORD"
 )
 
 const (
@@ -165,12 +175,20 @@ func (system *System) getSystemSMTPEnvsFromSMTPSecret() []v1.EnvVar {
 
 func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 	result := []v1.EnvVar{}
-
 	result = append(result,
 		helper.EnvVarFromSecret("REDIS_URL", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisURLFieldName),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_HOSTS", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelHosts),
 		helper.EnvVarFromSecret("REDIS_SENTINEL_ROLE", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelRole),
+		//ACL
+		helper.EnvVarFromSecretOptional("REDIS_USERNAME", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisUsernameFieldName),
+		helper.EnvVarFromSecretOptional("REDIS_PASSWORD", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisPasswordFieldName),
 	)
+	if system.Options.RedisSentinelIsUsed { //ACL
+		result = append(result,
+			helper.EnvVarFromSecretOptional("REDIS_SENTINEL_USERNAME", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelUsernameFieldName),
+			helper.EnvVarFromSecretOptional("REDIS_SENTINEL_PASSWORD", SystemSecretSystemRedisSecretName, SystemSecretSystemRedisSentinelPasswordFieldName),
+		)
+	}
 
 	return result
 }
@@ -321,11 +339,22 @@ func (system *System) buildSystemAppPostHookEnv() []v1.EnvVar {
 }
 
 func (system *System) BackendRedisEnvVars() []v1.EnvVar {
-	return []v1.EnvVar{
+	result := []v1.EnvVar{}
+	result = append(result,
 		helper.EnvVarFromSecret("BACKEND_REDIS_URL", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
 		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
 		helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
+		//ACL
+		helper.EnvVarFromSecret("BACKEND_REDIS_USERNAME", SystemSecretSystemRedisSecretName, SystemSecretBackendRedisUsernameFieldName),
+		helper.EnvVarFromSecret("BACKEND_REDIS_PASSWORD", SystemSecretSystemRedisSecretName, SystemSecretBackendRedisPasswordFieldName),
+	)
+	if system.Options.RedisSentinelIsUsed { //ACL
+		result = append(result,
+			helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_USERNAME", SystemSecretSystemRedisSecretName, SystemSecretBackendRedisSentinelUsernameFieldName),
+			helper.EnvVarFromSecret("BACKEND_REDIS_SENTINEL_PASSWORD", SystemSecretSystemRedisSecretName, SystemSecretBackendRedisSentinelPasswordFieldName),
+		)
 	}
+	return result
 }
 
 func (system *System) EnvironmentConfigMap() *v1.ConfigMap {

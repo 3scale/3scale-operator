@@ -297,6 +297,15 @@ func (redis *Redis) BackendRedisSecret() *v1.Secret {
 			BackendSecretBackendRedisStorageSentinelRoleFieldName:  redis.Options.BackendRedisStorageSentinelRole,
 			BackendSecretBackendRedisQueuesSentinelHostsFieldName:  redis.Options.BackendRedisQueuesSentinelHosts,
 			BackendSecretBackendRedisQueuesSentinelRoleFieldName:   redis.Options.BackendRedisQueuesSentinelRole,
+			// ACL
+			BackendSecretBackendRedisConfigRedisUsernameFieldName:          redis.Options.BackendRedisConfigRedisUsername,
+			BackendSecretBackendRedisConfigRedisPasswordFieldName:          redis.Options.BackendRedisConfigRedisPassword,
+			BackendSecretBackendRedisConfigRedisSentinelUsernameFieldName:  redis.Options.BackendRedisConfigRedisSentinelUsername,
+			BackendSecretBackendRedisConfigRedisSentinelPasswordFieldName:  redis.Options.BackendRedisConfigRedisSentinelPassword,
+			BackendSecretBackendRedisConfigQueuesUsernameFieldName:         redis.Options.BackendRedisConfigQueuesUsername,
+			BackendSecretBackendRedisConfigQueuesPasswordFieldName:         redis.Options.BackendRedisConfigQueuesPassword,
+			BackendSecretBackendRedisConfigQueuesSentinelUsernameFieldName: redis.Options.BackendRedisConfigQueuesSentinelUsername,
+			BackendSecretBackendRedisConfigQueuesSentinelPasswordFieldName: redis.Options.BackendRedisConfigQueuesSentinelPassword,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
@@ -476,6 +485,15 @@ func (redis *Redis) SystemRedisSecret() *v1.Secret {
 			SystemSecretSystemRedisURLFieldName:  redis.Options.SystemRedisURL,
 			SystemSecretSystemRedisSentinelHosts: redis.Options.SystemRedisSentinelsHosts,
 			SystemSecretSystemRedisSentinelRole:  redis.Options.SystemRedisSentinelsRole,
+			// ACL
+			SystemSecretSystemRedisUsernameFieldName:          redis.Options.SystemRedisUsername,
+			SystemSecretSystemRedisPasswordFieldName:          redis.Options.SystemRedisPassword,
+			SystemSecretSystemRedisSentinelUsernameFieldName:  redis.Options.SystemRedisSentinelUsername,
+			SystemSecretSystemRedisSentinelPasswordFieldName:  redis.Options.SystemRedisSentinelPassword,
+			SystemSecretBackendRedisUsernameFieldName:         redis.Options.SystemBackendRedisUsername,
+			SystemSecretBackendRedisPasswordFieldName:         redis.Options.SystemBackendRedisPassword,
+			SystemSecretBackendRedisSentinelUsernameFieldName: redis.Options.SystemBackendRedisSentinelUsername,
+			SystemSecretBackendRedisSentinelPasswordFieldName: redis.Options.SystemBackendRedisSentinelPassword,
 		},
 		Type: v1.SecretTypeOpaque,
 	}

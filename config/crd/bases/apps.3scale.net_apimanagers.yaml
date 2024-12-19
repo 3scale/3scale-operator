@@ -8660,6 +8660,8 @@ spec:
                 type: object
               resourceRequirementsEnabled:
                 type: boolean
+              sentinelIsUsed:
+                type: boolean
               system:
                 properties:
                   appSpec:
