@@ -20,11 +20,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+
+	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/version"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,8 +36,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 )
 
 // ApplicationReconciler reconciles a Application object
@@ -41,7 +43,12 @@ type ApplicationReconciler struct {
 	*reconcilers.BaseReconciler
 }
 
-const applicationFinalizer = "application.capabilities.3scale.net/finalizer"
+const (
+	// applicationIdAnnotation matches the application.statu.ID
+	applicationIdAnnotation = "applicationID"
+
+	applicationFinalizer = "application.capabilities.3scale.net/finalizer"
+)
 
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applications,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=capabilities.3scale.net,resources=applications/status,verbs=get;update;patch
@@ -131,12 +138,14 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, nil
 	}
 
-	if !controllerutil.ContainsFinalizer(application, applicationFinalizer) {
-		controllerutil.AddFinalizer(application, applicationFinalizer)
+	metadataUpdated := r.reconcileMetadata(application)
+	if metadataUpdated {
 		err = r.UpdateResource(application)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+
+		// No need requeue because the reconcile will trigger automatically since updating the Application CR
 		return ctrl.Result{}, nil
 	}
 
@@ -176,6 +185,31 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	reqLogger.Info("END", "error", reconcileErr)
 
 	return ctrl.Result{}, nil
+}
+
+func (r *ApplicationReconciler) reconcileMetadata(application *capabilitiesv1beta1.Application) bool {
+	changed := false
+
+	// If the application.Status.ID is found and the annotation is not found - create
+	// If the application.Status.ID is found and the annotation is found but, the value of annotation is different to the application.Status.ID - update
+	var applicationId int64 = 0
+	if application.Status.ID != nil {
+		applicationId = *application.Status.ID
+	}
+	if value, found := application.ObjectMeta.Annotations[applicationIdAnnotation]; (applicationId != 0 && !found) || (applicationId != 0 && found && value != strconv.FormatInt(*application.Status.ID, 10)) {
+		if application.ObjectMeta.Annotations == nil {
+			application.ObjectMeta.Annotations = make(map[string]string)
+		}
+		application.ObjectMeta.Annotations[applicationIdAnnotation] = strconv.FormatInt(*application.Status.ID, 10)
+		changed = true
+	}
+
+	if !controllerutil.ContainsFinalizer(application, applicationFinalizer) {
+		controllerutil.AddFinalizer(application, applicationFinalizer)
+		changed = true
+	}
+
+	return changed
 }
 
 func (r *ApplicationReconciler) applicationReconciler(applicationResource *capabilitiesv1beta1.Application, req ctrl.Request, threescaleAPIClient *threescaleapi.ThreeScaleClient, providerAccountAdminURLStr string, accountResource *capabilitiesv1beta1.DeveloperAccount) (*ApplicationStatusReconciler, error) {
