@@ -47,6 +47,7 @@ func (o *OperatorBackendOptionsProvider) GetBackendOptions() (*component.Backend
 	o.setPriorityClassNames()
 	o.setTopologySpreadConstraints()
 	o.setPodTemplateAnnotations()
+	o.setSntinelEnabled()
 
 	o.backendOptions.CommonLabels = o.commonLabels()
 	o.backendOptions.CommonListenerLabels = o.commonListenerLabels()
@@ -275,4 +276,10 @@ func (o *OperatorBackendOptionsProvider) setTopologySpreadConstraints() {
 	if o.apimanager.Spec.Backend.CronSpec.TopologySpreadConstraints != nil {
 		o.backendOptions.TopologySpreadConstraintsCron = o.apimanager.Spec.Backend.CronSpec.TopologySpreadConstraints
 	}
+}
+
+// ACL
+func (o *OperatorBackendOptionsProvider) setSntinelEnabled() {
+	o.backendOptions.RedisSentinelEnabled = true //o.apimanager.IsBackendRedisTLSEnabled()
+	// TODO  this is stab
 }

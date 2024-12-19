@@ -47,6 +47,25 @@ type RedisOptions struct {
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
 	SystemRedisNamespace             string
+
+	// ACL
+	SystemRedisUsername                string
+	SystemRedisPassword                string
+	SystemRedisSentinelUsername        string
+	SystemRedisSentinelPassword        string
+	SystemBackendRedisUsername         string
+	SystemBackendRedisPassword         string
+	SystemBackendRedisSentinelUsername string
+	SystemBackendRedisSentinelPassword string
+
+	BackendRedisConfigRedisUsername          string
+	BackendRedisConfigRedisPassword          string
+	BackendRedisConfigRedisSentinelUsername  string
+	BackendRedisConfigRedisSentinelPassword  string
+	BackendRedisConfigQueuesUsername         string
+	BackendRedisConfigQueuesPassword         string
+	BackendRedisConfigQueuesSentinelUsername string
+	BackendRedisConfigQueuesSentinelPassword string
 }
 
 func NewRedisOptions() *RedisOptions {
