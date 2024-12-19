@@ -2,13 +2,15 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
+
 	capabilitiesv1beta1 "github.com/3scale/3scale-operator/apis/capabilities/v1beta1"
 	controllerhelper "github.com/3scale/3scale-operator/pkg/controller/helper"
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	threescaleapi "github.com/3scale/3scale-porta-go-client/client"
+
 	"github.com/go-logr/logr"
-	"strconv"
 )
 
 type ApplicationThreescaleReconciler struct {
@@ -55,40 +57,57 @@ func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*control
 		return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
 	}
 
+	application, err := t.findApplication()
+	if err != nil {
+		return nil, err
+	}
+
+	if application == nil {
+		// Application doesn't exist yet - create it
+		a, err := t.threescaleAPIClient.CreateApp(strconv.FormatInt(*t.accountResource.Status.ID, 10), strconv.FormatInt(planObj.Element.ID, 10), t.applicationResource.Spec.Name, t.applicationResource.Spec.Description)
+		if err != nil {
+			return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
+		}
+		application = &a
+	}
+
+	return controllerhelper.NewApplicationEntity(application, t.threescaleAPIClient, t.logger), nil
+}
+
+func (t *ApplicationThreescaleReconciler) findApplication() (*threescaleapi.Application, error) {
 	applicationList, err := t.threescaleAPIClient.ListApplications(*t.accountResource.Status.ID)
 	if err != nil {
 		return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
 	}
 
-	var validID bool
-	if t.applicationResource.Status.ID != nil {
-		validID = true
-	} else {
-		validID = false
-	}
-
-	idx, exists := func(aList []threescaleapi.ApplicationElem) (int, bool) {
-		if validID {
-			for i, item := range aList {
-				if item.Application.ID == *t.applicationResource.Status.ID {
-					return i, true
-				}
+	var applicationID int64 = 0
+	// If the application.Status.ID is nil, check if application.annotations.applicationID is present and use it instead
+	if t.applicationResource.Status.ID == nil {
+		if value, found := t.applicationResource.ObjectMeta.Annotations[applicationIdAnnotation]; found {
+			// If the applicationID annotation is found, convert it to int64
+			applicationIdConvertedFromString, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert applicationID annotation value %s to int64: %w", value, err)
 			}
+
+			applicationID = applicationIdConvertedFromString
 		}
-		return -1, false
-	}(applicationList.Applications)
-	var applicationObj *threescaleapi.Application
-	if exists {
-		applicationObj = &applicationList.Applications[idx].Application
 	} else {
-		application, err := t.threescaleAPIClient.CreateApp(strconv.FormatInt(*t.accountResource.Status.ID, 10), strconv.FormatInt(planObj.Element.ID, 10), t.applicationResource.Spec.Name, t.applicationResource.Spec.Description)
-		if err != nil {
-			return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
-		}
-		applicationObj = &application
+		applicationID = *t.applicationResource.Status.ID
 	}
 
-	return controllerhelper.NewApplicationEntity(applicationObj, t.threescaleAPIClient, t.logger), nil
+	if applicationID == 0 {
+		return nil, nil
+	}
+
+	for _, application := range applicationList.Applications {
+		if application.Application.ID == applicationID {
+			return &application.Application, nil
+		}
+	}
+
+	// Unable to find application
+	return nil, nil
 }
 
 func (t *ApplicationThreescaleReconciler) findPlan() (*threescaleapi.ApplicationPlan, error) {
