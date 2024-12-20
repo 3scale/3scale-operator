@@ -69,6 +69,7 @@ func (t *ApplicationThreescaleReconciler) reconcile3scaleApplication() (*control
 			return nil, fmt.Errorf("reconcile3scaleApplication application [%s]: %w", t.applicationResource.Spec.Name, err)
 		}
 		application = &a
+		t.applicationResource.Status.ID = &application.ID
 	}
 
 	return controllerhelper.NewApplicationEntity(application, t.threescaleAPIClient, t.logger), nil
