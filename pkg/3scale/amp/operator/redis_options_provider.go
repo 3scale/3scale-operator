@@ -176,32 +176,6 @@ func (r *RedisOptionsProvider) setSecretBasedOptions() error {
 		},
 		// ACL
 		{
-			&r.options.SystemBackendRedisUsername,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretBackendRedisUsernameFieldName,
-			"",
-		},
-		{
-			&r.options.SystemBackendRedisPassword,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretBackendRedisPasswordFieldName,
-			"",
-		},
-		{
-			&r.options.SystemBackendRedisSentinelUsername,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretBackendRedisSentinelUsernameFieldName,
-			"",
-		},
-		{
-			&r.options.SystemBackendRedisSentinelPassword,
-			component.SystemSecretSystemRedisSecretName,
-			component.SystemSecretBackendRedisSentinelPasswordFieldName,
-			"",
-		},
-		// -------
-		// ACL
-		{
 			&r.options.BackendRedisConfigRedisUsername,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisConfigRedisUsernameFieldName,

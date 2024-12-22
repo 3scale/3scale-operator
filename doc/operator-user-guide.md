@@ -915,9 +915,11 @@ Below are the key settings and environment variables involved in the process:
 
 - Following definitions are required in the **ApiManager CR** to set ACL credentials:
     - `spec.externalComponents` should present and `system.redis` or `backend.redis` (or both) will be `true`
-- To allow `_SENTINEL_` variables - following definition is required in the **ApiManager CR**:
+- To allow `SENTINEL` variables - following definition is required in the **ApiManager CR**:
     - `spec.sentinelIsUsed: true`
 - When these conditions are enabled, the ACL environment variables for Backend and System components will be set in Pods.
+**Note** *SENTINEL environment variables are never set if Sentinel is not used, as for example 
+for configuration when`sentinelIsUsed: true` is set in APIManager CR, but `spec.externalComponents` is missing.*  
 - ACL credentials (username and password) are populated from the **backend-redis** and **system-redis** secrets.
 
 - The names of environment variables in the pods, are same as in Redis backend and system secrets.

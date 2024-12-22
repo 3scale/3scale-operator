@@ -486,14 +486,10 @@ func (redis *Redis) SystemRedisSecret() *v1.Secret {
 			SystemSecretSystemRedisSentinelHosts: redis.Options.SystemRedisSentinelsHosts,
 			SystemSecretSystemRedisSentinelRole:  redis.Options.SystemRedisSentinelsRole,
 			// ACL
-			SystemSecretSystemRedisUsernameFieldName:          redis.Options.SystemRedisUsername,
-			SystemSecretSystemRedisPasswordFieldName:          redis.Options.SystemRedisPassword,
-			SystemSecretSystemRedisSentinelUsernameFieldName:  redis.Options.SystemRedisSentinelUsername,
-			SystemSecretSystemRedisSentinelPasswordFieldName:  redis.Options.SystemRedisSentinelPassword,
-			SystemSecretBackendRedisUsernameFieldName:         redis.Options.SystemBackendRedisUsername,
-			SystemSecretBackendRedisPasswordFieldName:         redis.Options.SystemBackendRedisPassword,
-			SystemSecretBackendRedisSentinelUsernameFieldName: redis.Options.SystemBackendRedisSentinelUsername,
-			SystemSecretBackendRedisSentinelPasswordFieldName: redis.Options.SystemBackendRedisSentinelPassword,
+			SystemSecretSystemRedisUsernameFieldName:         redis.Options.SystemRedisUsername,
+			SystemSecretSystemRedisPasswordFieldName:         redis.Options.SystemRedisPassword,
+			SystemSecretSystemRedisSentinelUsernameFieldName: redis.Options.SystemRedisSentinelUsername,
+			SystemSecretSystemRedisSentinelPasswordFieldName: redis.Options.SystemRedisSentinelPassword,
 		},
 		Type: v1.SecretTypeOpaque,
 	}
