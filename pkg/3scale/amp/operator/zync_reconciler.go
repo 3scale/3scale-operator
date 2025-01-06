@@ -216,7 +216,8 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 }
 
 // deleteZyncComponents handles the removal of all zync components
-// This should only happen when the APIManager's .spec.zync.enabled was initially set to true but then changed to false
+// The operator only enters this function when the APIManager .spec.zync.enabled was initially set to true but then changed to false
+// When this happens, the operator will call this function on each reconcile loop to ensure the resources are cleaned up
 func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *component.AmpImages) error {
 	// ZyncQue PrometheusRules
 	zyncQuePrometheusRules := zync.ZyncPrometheusRules()
