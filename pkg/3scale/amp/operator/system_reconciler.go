@@ -198,6 +198,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			r.systemAppDeploymentResourceMutator,
 			reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
 			reconcilers.DeploymentPodContainerImageMutator,
+			r.systemZyncEnvVarMutator,
 		}
 		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
@@ -252,6 +253,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerImageMutator,
+		r.systemZyncEnvVarMutator,
 	}
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
@@ -368,6 +370,21 @@ func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing 
 			existing.Spec.Template.Spec.Containers[idx].Resources = desired.Spec.Template.Spec.Containers[idx].Resources
 			update = true
 		}
+	}
+
+	return update, nil
+}
+
+func (r *SystemReconciler) systemZyncEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	update := false
+
+	// Reconcile ZYNC_AUTHENTICATION_TOKEN env var
+	for idx := range existing.Spec.Template.Spec.Containers {
+		tmpChanged := helper.EnvVarReconciler(
+			desired.Spec.Template.Spec.Containers[idx].Env,
+			&existing.Spec.Template.Spec.Containers[idx].Env,
+			"ZYNC_AUTHENTICATION_TOKEN")
+		update = update || tmpChanged
 	}
 
 	return update, nil
