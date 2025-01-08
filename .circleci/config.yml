@@ -122,8 +122,7 @@ jobs:
 
   tag-operator-image-master:
     docker:
-      image: quay.io/3scale/operators-ci-images:v1.20
-      docker_layer_caching: true
+      - image: quay.io/3scale/operators-ci-images:v1.20
     steps:
       - attach-workspace
       - run:
@@ -150,8 +149,7 @@ jobs:
 
   tag-operator-image-release:
     docker:
-      image: quay.io/3scale/operators-ci-images:v1.20
-      docker_layer_caching: true
+      - image: quay.io/3scale/operators-ci-images:v1.20
     steps:
       - attach-workspace
       - run:
