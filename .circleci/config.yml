@@ -124,6 +124,7 @@ jobs:
     docker:
       - image: quay.io/3scale/operators-ci-images:v1.20
     steps:
+      - setup_remote_docker
       - attach-workspace
       - run:
           name: Unpack docker image
@@ -151,6 +152,7 @@ jobs:
     docker:
       - image: quay.io/3scale/operators-ci-images:v1.20
     steps:
+      - setup_remote_docker
       - attach-workspace
       - run:
           name: Unpack docker image
