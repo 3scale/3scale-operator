@@ -7,7 +7,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	routev1 "github.com/openshift/api/route/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -90,7 +92,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// System CM
-	err = r.ReconcileConfigMap(system.SystemConfigMap(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileConfigMap(system.SystemConfigMap(), systemConfigMapMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -324,6 +326,34 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
+	// Check if enough routes exist
+	routesExist, err := r.routesExist()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if zync deployments are ready
+	zyncReady, err := r.isZyncReady()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// If zync is enabled and zync is ready but the routes are missing then create the ResyncRoutes Job
+	if system.Options.ZyncEnabled && zyncReady && !routesExist {
+		resyncRoutesJob := system.ResyncRoutesJob(ampImages.Options.SystemImage)
+		err = r.ReconcileJob(resyncRoutesJob, reconcilers.CreateOnlyMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else {
+		// Zync is either disabled or not ready or the routes already exist
+		// In this scenario, delete the ResyncRoutes Job (if it exists) in case it needs to be created again later
+		err = helper.DeleteJob(component.ResyncRoutesJobName, r.apiManager.GetNamespace(), r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -386,6 +416,74 @@ func (r *SystemReconciler) systemZyncEnvVarMutator(desired, existing *k8sappsv1.
 			"ZYNC_AUTHENTICATION_TOKEN")
 		update = update || tmpChanged
 	}
+
+	return update, nil
+}
+
+func (r *SystemReconciler) routesExist() (bool, error) {
+	expectedRoutes := 6
+	opts := k8sclient.ListOptions{
+		Namespace: r.apiManager.GetNamespace(),
+	}
+
+	routes := routev1.RouteList{}
+	err := r.Client().List(r.Context(), &routes, &opts)
+	if err != nil {
+		return false, err
+	}
+
+	if len(routes.Items) < expectedRoutes {
+		r.Logger().Info(fmt.Sprintf("Missing routes - expected at least %d routes but only found %d", expectedRoutes, len(routes.Items)))
+		return false, nil
+	}
+	return true, nil
+}
+
+func (r *SystemReconciler) isZyncReady() (bool, error) {
+	zyncDeploymentNames := []string{"zync", "zync-database", "zync-que"}
+
+	for _, deploymentName := range zyncDeploymentNames {
+		deployment := &k8sappsv1.Deployment{}
+		err := r.Client().Get(r.Context(), k8sclient.ObjectKey{
+			Namespace: r.apiManager.GetNamespace(),
+			Name:      deploymentName,
+		}, deployment)
+
+		// Return error if can't get deployment
+		if err != nil && !k8serr.IsNotFound(err) {
+			return false, fmt.Errorf("error getting deployment %s: %w", deployment.Name, err)
+		}
+
+		// Return without error if deployment doesn't exist to prevent spamming log with errors
+		if k8serr.IsNotFound(err) {
+			return false, nil
+		}
+
+		// Return false because deployment is not yet available
+		if !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) {
+			return false, nil
+		}
+	}
+
+	// All zync deployments exist and are available
+	return true, nil
+}
+
+func systemConfigMapMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	existing, ok := existingObj.(*corev1.ConfigMap)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)
+	}
+	desired, ok := desiredObj.(*corev1.ConfigMap)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *v1.ConfigMap", desiredObj)
+	}
+
+	update := false
+
+	//	Check zync.yml
+	fieldUpdated := reconcilers.ConfigMapReconcileField(desired, existing, "zync.yml")
+	update = update || fieldUpdated
 
 	return update, nil
 }
