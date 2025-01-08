@@ -60,13 +60,13 @@ func (s *DeveloperUserThreescaleReconciler) Reconcile() (*threescaleapi.Develope
 
 	if devUser == nil {
 		s.logger.V(1).Info("DeveloperUser does not exist", "username", s.userCR.Spec.Username)
-		// The DeveloperAccount doesn't exist yet and must be created in 3scale
+		// The DeveloperUser doesn't exist yet and must be created in 3scale
 		devUser, err = s.createDevUser()
 		if err != nil {
 			return nil, err
 		}
 
-		// Update the CR status with the account's ID and return the account
+		// Update the CR status with the user's ID and return the user
 		s.userCR.Status.ID = devUser.Element.ID
 		return devUser, nil
 	} else {
