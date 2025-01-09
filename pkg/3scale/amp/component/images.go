@@ -37,7 +37,7 @@ func SystemPostgreSQLImageURL() string {
 }
 
 func SystemMemcachedImageURL() string {
-	return "memcached:1.5"
+	return "mirror.gcr.io/library/memcached:1.5"
 }
 
 func ZyncPostgreSQLImageURL() string {
