@@ -32,6 +32,10 @@ func CreateOnlyMutator(existing, desired common.KubernetesObject) (bool, error) 
 	return false, nil
 }
 
+func DeleteOnlyMutator(existing, desired common.KubernetesObject) (bool, error) {
+	return false, nil
+}
+
 type BaseReconciler struct {
 	client          client.Client
 	scheme          *runtime.Scheme

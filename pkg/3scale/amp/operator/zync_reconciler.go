@@ -222,7 +222,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// ZyncQue PrometheusRules
 	zyncQuePrometheusRules := zync.ZyncPrometheusRules()
 	common.TagObjectToDelete(zyncQuePrometheusRules)
-	err := r.ReconcilePrometheusRules(zyncQuePrometheusRules, reconcilers.CreateOnlyMutator)
+	err := r.ReconcilePrometheusRules(zyncQuePrometheusRules, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// Zync PrometheusRules
 	zyncPrometheusRules := zync.ZyncPrometheusRules()
 	common.TagObjectToDelete(zyncPrometheusRules)
-	err = r.ReconcilePrometheusRules(zyncPrometheusRules, reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePrometheusRules(zyncPrometheusRules, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -242,13 +242,13 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	}
 	zyncGrafanaV5Dashboard := zync.ZyncGrafanaV5Dashboard(sumRate)
 	common.TagObjectToDelete(zyncGrafanaV5Dashboard)
-	err = r.ReconcileGrafanaDashboards(zyncGrafanaV5Dashboard, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileGrafanaDashboards(zyncGrafanaV5Dashboard, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
 	zyncGrafanaV4Dashboard := zync.ZyncGrafanaV4Dashboard(sumRate)
 	common.TagObjectToDelete(zyncGrafanaV4Dashboard)
-	err = r.ReconcileGrafanaDashboards(zyncGrafanaV4Dashboard, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileGrafanaDashboards(zyncGrafanaV4Dashboard, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// Zync PodDisruptionBudget
 	zyncPodDisruptionBudget := zync.ZyncPodDisruptionBudget()
 	common.TagObjectToDelete(zyncPodDisruptionBudget)
-	err = r.ReconcilePodDisruptionBudget(zyncPodDisruptionBudget, reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodDisruptionBudget(zyncPodDisruptionBudget, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// ZyncQue PodDisruptionBudget
 	zyncQuePodDisruptionBudget := zync.QuePodDisruptionBudget()
 	common.TagObjectToDelete(zyncQuePodDisruptionBudget)
-	err = r.ReconcilePodDisruptionBudget(zyncQuePodDisruptionBudget, reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodDisruptionBudget(zyncQuePodDisruptionBudget, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -272,7 +272,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// Zync PodMonitor
 	zyncPodMonitor := zync.ZyncPodMonitor()
 	common.TagObjectToDelete(zyncPodMonitor)
-	err = r.ReconcilePodMonitor(zyncPodMonitor, reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodMonitor(zyncPodMonitor, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// ZyncQue PodMonitor
 	zyncQuePodMonitor := zync.ZyncQuePodMonitor()
 	common.TagObjectToDelete(zyncQuePodMonitor)
-	err = r.ReconcilePodMonitor(zyncQuePodMonitor, reconcilers.CreateOnlyMutator)
+	err = r.ReconcilePodMonitor(zyncQuePodMonitor, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -288,7 +288,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// Zync Secret
 	zyncSecret := zync.Secret()
 	common.TagObjectToDelete(zyncSecret)
-	err = r.ReconcileSecret(zyncSecret, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileSecret(zyncSecret, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -297,7 +297,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 		// ZyncDB Service
 		zyncDBService := zync.DatabaseService()
 		common.TagObjectToDelete(zyncDBService)
-		err = r.ReconcileService(zyncDBService, reconcilers.CreateOnlyMutator)
+		err = r.ReconcileService(zyncDBService, reconcilers.DeleteOnlyMutator)
 		if err != nil {
 			return err
 		}
@@ -305,7 +305,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 		// ZyncDB Deployment
 		zyncDBDeployment := zync.DatabaseDeployment(ampImages.Options.ZyncDatabasePostgreSQLImage)
 		common.TagObjectToDelete(zyncDBDeployment)
-		err = r.ReconcileDeployment(zyncDBDeployment, reconcilers.CreateOnlyMutator)
+		err = r.ReconcileDeployment(zyncDBDeployment, reconcilers.DeleteOnlyMutator)
 		if err != nil {
 			return err
 		}
@@ -314,7 +314,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// Zync Service
 	zyncService := zync.Service()
 	common.TagObjectToDelete(zyncService)
-	err = r.ReconcileService(zyncService, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileService(zyncService, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -322,7 +322,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// ZyncQue Deployment
 	zyncQueDeployment := zync.QueDeployment(ampImages.Options.ZyncImage)
 	common.TagObjectToDelete(zyncQueDeployment)
-	err = r.ReconcileDeployment(zyncQueDeployment, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileDeployment(zyncQueDeployment, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -330,7 +330,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// Zync Deployment
 	zyncDeployment := zync.Deployment(ampImages.Options.ZyncImage)
 	common.TagObjectToDelete(zyncDeployment)
-	err = r.ReconcileDeployment(zyncDeployment, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileDeployment(zyncDeployment, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -338,7 +338,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// ZyncQue RoleBinding
 	zyncQueRoleBinding := zync.QueRoleBinding()
 	common.TagObjectToDelete(zyncQueRoleBinding)
-	err = r.ReconcileRoleBinding(zyncQueRoleBinding, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileRoleBinding(zyncQueRoleBinding, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -346,7 +346,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// ZyncQue ServiceAccount
 	zyncQueServiceAccount := zync.QueServiceAccount()
 	common.TagObjectToDelete(zyncQueServiceAccount)
-	err = r.ReconcileServiceAccount(zyncQueServiceAccount, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileServiceAccount(zyncQueServiceAccount, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
@@ -354,7 +354,7 @@ func (r *ZyncReconciler) deleteZyncComponents(zync *component.Zync, ampImages *c
 	// ZyncQue Role
 	zyncQueRole := zync.QueRole()
 	common.TagObjectToDelete(zyncQueRole)
-	err = r.ReconcileRole(zyncQueRole, reconcilers.CreateOnlyMutator)
+	err = r.ReconcileRole(zyncQueRole, reconcilers.DeleteOnlyMutator)
 	if err != nil {
 		return err
 	}
