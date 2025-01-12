@@ -34,7 +34,7 @@ This document provides an overview of Redis Sentinel with TLS, detailing the ins
 
 ### Redis and Redis-Sentinel (Sentinel): Same Image, Different Configuration
 
-*We will use term **Sentinel** instead of full name **Sentinel** in most places in this doc.*
+*We will use term **Sentinel** instead of full name **Redis-Sentinel** in most places in this doc.*
 
 1. **Redis**:
    - Redis is an in-memory key-value store that you use for caching, session management, pub/sub messaging, etc.
@@ -63,7 +63,7 @@ It is not a separate Redis product but rather a set of services that provide mon
 If both the **Redis server** (redis) and **Sentinel** (redis-sentinel) are using **TLS** for communication, you'll need to configure both the Redis server and the Sentinel to use **SSL/TLS encryption** for secure connections. This involves setting up certificates and keys for both the Redis server and the Sentinel, and then ensuring the communication between them and the clients is secured via TLS.
 
 Here’s how to do this step-by-step in the OpenShift environment.
-The Guide includes not only Sentinel TLS configuration, but Redis server also, to be useful for Testing. 
+The guide includes both Sentinel TLS configuration and Redis server setup, which is necessary for testing Sentinel.
 It will also include failover scenarion verification.
 
 ##  Sentinel environment setup
@@ -71,9 +71,12 @@ It will also include failover scenarion verification.
 ### Prepare TLS Certificates
 Before you can configure Redis and Sentinel to use TLS, you'll need to create and configure certificates for the Redis server, Sentinel, and optionally for the client.
 
-**Note**: To correctly generate the Redis server and Sentinel certificates, you need to use their services IPs as the Common Names (CN) in the certificates. If you haven’t set up the services yet, please refer to **Section 4** to create the Redis server and Sentinel services, before continue to next item. Once the services are running, use their respective IPs as the CN when generating the certificates.
+**Note**: To correctly generate the Redis server and Sentinel certificates, you need to use their services IPs as the Common Names (CN) in the certificates.
+If you haven’t set up the services yet, please refer to following sections to create [Redis service](#create-redis-service) and [Sentinel service](#sentinel-service)
+before continuing to the next section to generate the TLS certificates.
+Once the services are running, use their respective IPs as the CN when generating the certificates.
 
-#### Create Redis Service 
+#### Create Redis Service
 - Service is created with ClusterIP type (default, not defined) - for Internal cluster usage and for HA.
 
 ```yaml
@@ -140,7 +143,7 @@ This will generate the following certificates and keys:
 Instead, Sentinel should access each individual Sentinel pod directly via DNS names like `redis-sentinel-0.redis-sentinel.svc.cluster.local` and `redis-sentinel-1.redis-sentinel.svc.cluster.local`.
 - Headless service provides DNS records for each pod, allowing Sentinel to interact with the individual Sentinel instances, 
 which is essential for its monitoring and failover mechanisms.
-
+- Other (intermediate) files, such as *.csr and ca.srl, are also generated. If needed, additional information can be found in the OpenSSL documentation.
 
 #### Create Redis and Sentinel secrets
 You can store the certificates and keys in OpenShift as secrets for easy access.
@@ -208,8 +211,7 @@ spec:
     spec:
       containers:
       - name: redis
-        #image: quay.io/fedora/redis-6
-        image: redis:7
+        image: mirror.gcr.io/library/redis:7
         ports:
           - containerPort: 6379
           - containerPort: 6380
@@ -311,7 +313,7 @@ spec:
     spec:
       initContainers:
         - name: copy-sentinel-config
-          image: quay.io/fedora/redis-6
+          image: mirror.gcr.io/library/redis:7
           command: ["/bin/sh", "-c", "cp /etc/redis/sentinel.conf /mnt/config/sentinel.conf"]
           volumeMounts:
             - name: redis-config-volume
@@ -321,8 +323,7 @@ spec:
               mountPath: /mnt/config  # Writable volume for copying the file
       containers:
         - name: redis-sentinel
-          #image: quay.io/fedora/redis-6
-          image: redis:7
+          image: mirror.gcr.io/library/redis:7
           ports:
             - containerPort: 26379
             - containerPort: 26380
@@ -460,7 +461,7 @@ Following was done:
 - EC2 Ubuntu instance was created
 - Redis sources were downloaded, compiled, installed, run.
 - Sentinel's failover handling of redis was observed.  
-- We are providing only logs here. For installation details of Redis+Sentinel on EC2 - please see AWS and Redis docs or ChatGPT.
+- We are providing only logs here. For installation details of Redis+Sentinel on EC2 - please see AWS and Redis docs.
 
 - **Redis and Sentinel processes are running**
 ```shell
@@ -686,3 +687,24 @@ If you're inside an OpenShift pod and want to use `redis-cli` from within a cont
 oc rsh <sentinel-pod-name>
 redis-cli -h redis-sentinel -p 26379 --tls --cert /etc/redis/tls/client.crt --key /etc/redis/tls/client.key --cacert /etc/redis/tls/ca.crt SENTINEL get-master-addr-by-name mymaster
 ```
+
+## Issues Found
+### Redis Sentinel Master Monitoring Issue
+We encountered the following error in the Redis Sentinel pod when using the Redis master DNS:
+
+``` bash
+oc logs redis-sentinel-0
+....
+*** FATAL CONFIG FILE ERROR (Redis 7.4.2) ***
+Reading the configuration file, at line 9
+>>> 'sentinel monitor mymaster redis.3scale-test.svc.cluster.local 6380 2'
+Can't resolve instance hostname.
+To avoid this error, we are using the Redis master IP instead of the DNS in the Sentinel configmap.
+```
+
+We verified that Cluster DNS is functioning correctly by running the following command to create a temporary pod and check DNS resolution:
+```bash
+$ oc run -i --tty --rm debug --image=busybox --restart=Never -- nslookup redis.3scale-test.svc.cluster.local
+```
+We believe the issue lies in how Redis Sentinel handles DNS resolution for the master, and this requires further investigation.
+In the meantime, we are using the Redis service IP in the sentinel.conf file, as defined in the [Sentinel ConfigMap](#sentinel-configmap).
