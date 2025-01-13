@@ -95,10 +95,12 @@ func (b *ApplicationStatus) Equals(annotationID string, other *ApplicationStatus
 	}
 
 	// Check to see if the new  .status.ID is different from the ID in the Application CR's annotation
-	if annotationID != "" && strconv.FormatInt(*b.ID, 10) != annotationID {
-		diff := cmp.Diff(strconv.FormatInt(*b.ID, 10), annotationID)
-		logger.V(1).Info("Annotation's ID not equal to new .status.ID", "diff", diff)
-		return false
+	if b.ID != nil && *b.ID != 0 {
+		if annotationID != "" && strconv.FormatInt(*b.ID, 10) != annotationID {
+			diff := cmp.Diff(strconv.FormatInt(*b.ID, 10), annotationID)
+			logger.V(1).Info("Annotation's ID not equal to new .status.ID", "diff", diff)
+			return false
+		}
 	}
 
 	if b.ProviderAccountHost != other.ProviderAccountHost {
