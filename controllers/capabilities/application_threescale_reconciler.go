@@ -101,9 +101,9 @@ func (t *ApplicationThreescaleReconciler) findApplication() (*threescaleapi.Appl
 		return nil, nil
 	}
 
-	for _, application := range applicationList.Applications {
-		if application.Application.ID == applicationID {
-			return &application.Application, nil
+	for _, applicationIn3scale := range applicationList.Applications {
+		if applicationIn3scale.Application.ID == applicationID {
+			return &applicationIn3scale.Application, nil
 		}
 	}
 
