@@ -34,14 +34,27 @@ func mockHttpClientApplication(listAapplicationPlanByProductJson *client.Applica
 		}
 		// create application
 		if req.Method == "POST" && req.URL.Path == "/admin/api/accounts/3/applications.json" {
+			mockResponse := struct {
+				Application *client.Application `json:"application"`
+			}{
+				Application: applicationJson,
+			}
 			return &http.Response{
 				StatusCode: http.StatusCreated,
 				Header:     make(http.Header),
-				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(mockResponse))),
 			}
 		}
 		//ApplicationResume
 		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/0/resume.json" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     make(http.Header),
+				Body:       ioutil.NopCloser(bytes.NewBuffer(responseBody(applicationJson))),
+			}
+		}
+		//ApplicationSuspend
+		if req.Method == "PUT" && req.URL.Path == "/admin/api/accounts/3/applications/3/suspend.json" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     make(http.Header),
@@ -81,12 +94,14 @@ func getApplicationPlanListByProductJson() *client.ApplicationPlanJSONList {
 		Plans: []client.ApplicationPlan{
 			{
 				Element: client.ApplicationPlanItem{
+					ID:         0,
 					Name:       "test",
 					SystemName: "test",
 				},
 			},
 			{
 				Element: client.ApplicationPlanItem{
+					ID:         0,
 					Name:       "test",
 					SystemName: "test",
 				},
@@ -96,12 +111,12 @@ func getApplicationPlanListByProductJson() *client.ApplicationPlanJSONList {
 	return applicationPlanListByProductJson
 }
 
-func getApplicationJson() *client.Application {
+func getApplicationJson(state string) *client.Application {
 	applicationJson := &client.Application{
-		ID:                      0,
+		ID:                      3,
 		CreatedAt:               "",
 		UpdatedAt:               "",
-		State:                   "live",
+		State:                   state,
 		UserAccountID:           "",
 		FirstTrafficAt:          "",
 		FirstDailyTrafficAt:     "",
@@ -152,7 +167,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 						Namespace: "test",
 					},
 				},
-				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson())),
+				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
 				providerAccountAdminURL: "https://3scale-admin.test.3scale.net",
 				accountResource:         getApplicationDeveloperAccount(),
 			},
@@ -177,7 +192,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 						Namespace: "test",
 					},
 				},
-				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson())),
+				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
 				providerAccountAdminURL: "https://3scale-admin.test.3scale.net",
 				accountResource:         getApplicationDeveloperAccount(),
 			},
@@ -196,7 +211,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 						Namespace: "test",
 					},
 				},
-				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson())),
+				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
 				providerAccountAdminURL: "https://3scale-admin.test.3scale.net",
 				accountResource:         getApplicationDeveloperAccount(),
 			},
@@ -215,7 +230,7 @@ func TestApplicationReconciler_applicationReconciler(t *testing.T) {
 						Namespace: "test",
 					},
 				},
-				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson())),
+				threescaleApiClient:     client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
 				providerAccountAdminURL: "https://3scale-admin.test.3scale.net",
 				accountResource:         getApplicationDeveloperAccount(),
 			},
@@ -274,7 +289,7 @@ func TestApplicationReconciler_removeApplicationFrom3scale(t *testing.T) {
 						Namespace: "test",
 					},
 				},
-				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson())),
+				threescaleAPIClient: client.NewThreeScale(ap, "test", mockHttpClientApplication(getApplicationPlanListByProductJson(), getApplicationJson("live"))),
 			},
 			wantErr: false,
 		},
