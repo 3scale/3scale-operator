@@ -2,6 +2,7 @@ package reconcilers
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/3scale/3scale-operator/pkg/common"
 
@@ -88,4 +89,22 @@ func SecretReconcileField(fieldName string) func(desired, existing *v1.Secret) b
 		}
 		return updated
 	}
+}
+
+func SecretStringDataMutator(desired, existing *v1.Secret) bool {
+	updated := false
+
+	// StringData is merged to Data on write, so we need to compare the existing Data to the desired StringData
+	// Before we can do this we need to convert the existing Data to StringData
+	existingStringData := make(map[string]string)
+	for key, bytes := range existing.Data {
+		existingStringData[key] = string(bytes)
+	}
+	if !reflect.DeepEqual(existingStringData, desired.StringData) {
+		updated = true
+		existing.Data = nil // Need to clear the existing.Data because of how StringData is converted to Data
+		existing.StringData = desired.StringData
+	}
+
+	return updated
 }

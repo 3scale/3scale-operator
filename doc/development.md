@@ -19,7 +19,7 @@
    * [Validate an operator bundle image](#validate-an-operator-bundle-image)
 * [Licenses management](#licenses-management)
    * [Adding manually a new license](#adding-manually-a-new-license)
-* [Building and pushing 3scale component images](#building-and-pushing-3scale-component-images)
+* [Adding new watched secrets](#adding-new-watched-secrets)
 
 Generated using [github-markdown-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -238,3 +238,22 @@ license_finder approval add github.com/golang/glog --decisions-file=doc/dependen
 [docker]:https://docs.docker.com/install/
 [kubernetes]:https://kubernetes.io/
 [oc]:https://github.com/openshift/origin/releases
+
+## Adding new watched secrets
+After adding a new secret to the APIManager CRD make sure to also update the following files if you want the 3scale-operator to watch the new secret:
+1. [apis/apps/v1alpha1/apimanager_types.go](../apis/apps/v1alpha1/apimanager_types.go)
+    - Add a new `GetXYZSecretRef()` function that returns the secret ref
+2. [apis/apps/v1alpha1/apimanager_types.go](../apis/apps/v1alpha1/apimanager_types.go)
+    - Update the `Get3scaleSecretRefs()` to call the new `GetXYZSecretRef()` function from step 1
+3. [pkg/3scale/amp/operator/apicast_reconciler.go](../pkg/3scale/amp/operator/apicast_reconciler.go)
+    - Add the new secret to the `getSecretUIDs()` function
+4. [pkg/3scale/amp/component/deployment_annotations.go](../pkg/3scale/amp/component/deployment_annotations.go)
+    - Add the new secret to the `getWatchedSecretAnnotations()` function
+5. [pkg/3scale/amp/component/deployment_annotations.go](../pkg/3scale/amp/component/deployment_annotations.go)
+    - Add the new secret to the switch in the `HasSecretHashChanged()` function
+6. pkg/3scale/amp/component/{component_name}.go
+    - Add a new const called `XYZSecretResverAnnotationPrefix` that can be referenced throughout the code
+      - The const should be in the `component` package but the exact file will depend on which deployment the new watched secret relates to. For example if the secret is relevant to the `apicast` deployments, the const belongs in [pkg/3scale/amp/component/apicast.go](../pkg/3scale/amp/component/apicast.go)
+7. pkg/3scale/amp/component/{component_name}.go
+   - Add an annotation for the new watched secret to the relevant deployment's `.spec.template.metadata.annotations`
+      - The exact file that needs changing will depend on which deployment the new watched secret relates to. See the `StagingDeployment()` function in [pkg/3scale/amp/component/apicast.go](../pkg/3scale/amp/component/apicast.go) for an example

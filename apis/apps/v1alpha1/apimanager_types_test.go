@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/3scale/3scale-operator/version"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -162,5 +163,173 @@ func minimumAPIManagerTest() *APIManager {
 				WildcardDomain: "test.3scale.com",
 			},
 		},
+	}
+}
+
+func TestRemoveDuplicateSecretRefs(t *testing.T) {
+	type args struct {
+		refs []*v1.LocalObjectReference
+	}
+	tests := []struct {
+		name string
+		args args
+		want []*v1.LocalObjectReference
+	}{
+		{
+			name: "SecretRefs is nil",
+			args: args{
+				refs: nil,
+			},
+			want: []*v1.LocalObjectReference{},
+		},
+		{
+			name: "SecretRefs is empty",
+			args: args{
+				refs: []*v1.LocalObjectReference{},
+			},
+			want: []*v1.LocalObjectReference{},
+		},
+		{
+			name: "SecretRefs has duplicates",
+			args: args{
+				refs: []*v1.LocalObjectReference{
+					{
+						Name: "ref1",
+					},
+					{
+						Name: "ref1",
+					},
+					{
+						Name: "ref2",
+					},
+				},
+			},
+			want: []*v1.LocalObjectReference{
+				{
+					Name: "ref1",
+				},
+				{
+					Name: "ref2",
+				},
+			},
+		},
+		{
+			name: "SecretRefs does not have duplicates",
+			args: args{
+				refs: []*v1.LocalObjectReference{
+					{
+						Name: "ref1",
+					},
+					{
+						Name: "ref2",
+					},
+				},
+			},
+			want: []*v1.LocalObjectReference{
+				{
+					Name: "ref1",
+				},
+				{
+					Name: "ref2",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := removeDuplicateSecretRefs(tt.args.refs); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("RemoveDuplicateSecretRefs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
+	type fields struct {
+		Spec APIManagerSpec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []*v1.LocalObjectReference
+	}{
+		{
+			name: "No secret refs to gather",
+			fields: fields{
+				Spec: APIManagerSpec{
+					Apicast: &ApicastSpec{
+						ProductionSpec: &ApicastProductionSpec{},
+						StagingSpec:    &ApicastStagingSpec{},
+					},
+				},
+			},
+			want: []*v1.LocalObjectReference{},
+		},
+		{
+			name: "Apicast has secret refs",
+			fields: fields{
+				Spec: APIManagerSpec{
+					Apicast: &ApicastSpec{
+						ProductionSpec: &ApicastProductionSpec{
+							HTTPSCertificateSecretRef: &v1.LocalObjectReference{
+								Name: "https-cert-secret",
+							},
+							OpenTelemetry: &OpenTelemetrySpec{
+								TracingConfigSecretRef: &v1.LocalObjectReference{
+									Name: "otel-secret",
+								},
+							},
+							CustomEnvironments: []CustomEnvironmentSpec{
+								{
+									SecretRef: &v1.LocalObjectReference{
+										Name: "custom-env-1-secret",
+									},
+								},
+							},
+						},
+						StagingSpec: &ApicastStagingSpec{
+							CustomEnvironments: []CustomEnvironmentSpec{
+								{
+									SecretRef: &v1.LocalObjectReference{
+										Name: "custom-env-1-secret",
+									},
+								},
+							},
+							CustomPolicies: []CustomPolicySpec{
+								{
+									SecretRef: &v1.LocalObjectReference{
+										Name: "custom-policy-1-secret",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*v1.LocalObjectReference{
+				{
+					Name: "https-cert-secret",
+				},
+				{
+					Name: "otel-secret",
+				},
+				{
+					Name: "custom-env-1-secret",
+				},
+				{
+					Name: "custom-policy-1-secret",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apimanager := &APIManager{
+				Spec: tt.fields.Spec,
+			}
+			if got := apimanager.Get3scaleSecretRefs(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Get3scaleSecretRefs() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

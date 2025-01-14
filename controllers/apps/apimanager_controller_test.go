@@ -3,8 +3,10 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"io"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/3scale/3scale-operator/apis/apps"
@@ -112,6 +114,17 @@ var _ = Describe("APIManager controller", func() {
 				return err == nil
 			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
 
+			// Create custom environment secret
+			customEnvSecret := testGetCustomEnvironmentSecret(testNamespace)
+
+			// Get the newly created custom environment secret for later
+			err = testK8sClient.Create(context.Background(), customEnvSecret)
+			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() bool {
+				err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: customEnvSecret.Name, Namespace: customEnvSecret.Namespace}, customEnvSecret)
+				return err == nil
+			}, 5*time.Minute, 5*time.Second).Should(BeTrue())
+
 			enableResourceRequirements := false
 			wildcardDomain := "test1.127.0.0.1.nip.io"
 			apimanager := &appsv1alpha1.APIManager{
@@ -125,6 +138,26 @@ var _ = Describe("APIManager controller", func() {
 							S3: &appsv1alpha1.SystemS3Spec{
 								ConfigurationSecretRef: v1.LocalObjectReference{
 									Name: dummyS3Secret.Name,
+								},
+							},
+						},
+					},
+					Apicast: &appsv1alpha1.ApicastSpec{
+						StagingSpec: &appsv1alpha1.ApicastStagingSpec{
+							CustomEnvironments: []appsv1alpha1.CustomEnvironmentSpec{
+								{
+									SecretRef: &v1.LocalObjectReference{
+										Name: customEnvSecret.Name,
+									},
+								},
+							},
+						},
+						ProductionSpec: &appsv1alpha1.ApicastProductionSpec{
+							CustomEnvironments: []appsv1alpha1.CustomEnvironmentSpec{
+								{
+									SecretRef: &v1.LocalObjectReference{
+										Name: customEnvSecret.Name,
+									},
 								},
 							},
 						},
@@ -153,6 +186,23 @@ var _ = Describe("APIManager controller", func() {
 			err = waitForAllAPIManagerStandardRoutes(testNamespace, 5*time.Second, 15*time.Minute, wildcardDomain, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
 			fmt.Fprintf(GinkgoWriter, "All APIManager managed Routes are available\n")
+
+			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager CR has the correct secret UIDs\n")
+			err = waitForAPIManagerLabels(testNamespace, 5*time.Second, 5*time.Minute, apimanager, customEnvSecret, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "APIManager CR has the correct secret UIDs\n")
+
+			fmt.Fprintf(GinkgoWriter, "Waiting until hashed secret has been created and is accurate\n")
+			err = waitForHashedSecret(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "Hashed secret has been created and is accurate\n")
+
+			fmt.Fprintf(GinkgoWriter, "Waiting until apicast pod annotations have been verified\n")
+			err = waitForApicastPodAnnotations(testNamespace, 5*time.Second, 5*time.Minute, customEnvSecret, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			fmt.Fprintf(GinkgoWriter, "Apicast pod annotations have been verified\n")
+
+			// TODO: Add code checking annotations on apicast pods
 
 			fmt.Fprintf(GinkgoWriter, "Waiting until APIManager's 'Available' condition is true\n")
 			err = waitForAPIManagerAvailableCondition(testNamespace, 5*time.Second, 15*time.Minute, apimanager, GinkgoWriter)
@@ -270,4 +320,119 @@ func waitForAPIManagerAvailableCondition(namespace string, retryInterval, timeou
 	}, timeout, retryInterval).Should(BeTrue())
 
 	return nil
+}
+
+func waitForAPIManagerLabels(namespace string, retryInterval time.Duration, timeout time.Duration, apimanager *appsv1alpha1.APIManager, customEnvSecret *v1.Secret, w io.Writer) error {
+	Eventually(func() bool {
+		reconciledApimanager := &appsv1alpha1.APIManager{}
+		reconciledApimanagerKey := types.NamespacedName{Name: apimanager.Name, Namespace: namespace}
+		err := testK8sClient.Get(context.Background(), reconciledApimanagerKey, reconciledApimanager)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting APIManager '%s': %v\n", apimanager.Name, err)
+			return false
+		}
+
+		expectedLabels := map[string]string{
+			fmt.Sprintf("%s%s", APImanagerSecretLabelPrefix, string(customEnvSecret.GetUID())): "true",
+		}
+
+		// Then verify that the hash matches the hashed config secret
+		return reflect.DeepEqual(reconciledApimanager.Labels, expectedLabels)
+	}, timeout, retryInterval).Should(BeTrue())
+
+	return nil
+}
+
+func waitForHashedSecret(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *v1.Secret, w io.Writer) error {
+	Eventually(func() bool {
+		// First get the master hashed secret
+		hashedSecret := &v1.Secret{}
+		hashedSecretLookupKey := types.NamespacedName{Name: component.HashedSecretName, Namespace: namespace}
+		err := testK8sClient.Get(context.Background(), hashedSecretLookupKey, hashedSecret)
+		if err != nil {
+			fmt.Fprintf(w, "Error getting hashed secret '%s': %v\n", hashedSecretLookupKey.Name, err)
+			return false
+		}
+
+		// Then verify that the hash matches the hashed custom environment secret
+		return helper.GetSecretStringDataFromData(hashedSecret.Data)[customEnvSecret.Name] == component.HashSecret(customEnvSecret.Data)
+	}, timeout, retryInterval).Should(BeTrue())
+
+	return nil
+}
+
+func waitForApicastPodAnnotations(namespace string, retryInterval time.Duration, timeout time.Duration, customEnvSecret *v1.Secret, w io.Writer) error {
+	apicastDeploymentNames := []string{
+		"apicast-production",
+		"apicast-staging",
+	}
+
+	for _, dName := range apicastDeploymentNames {
+		apicastDeploymentLookupKey := types.NamespacedName{Name: dName, Namespace: namespace}
+		apicastDeployment := &k8sappsv1.Deployment{}
+		Eventually(func() bool {
+			err := testK8sClient.Get(context.Background(), apicastDeploymentLookupKey, apicastDeployment)
+			if err != nil {
+				return false
+			}
+
+			for aKey, aValue := range apicastDeployment.Spec.Template.Annotations {
+				if aKey == fmt.Sprintf("%s%s", component.CustomEnvSecretResverAnnotationPrefix, customEnvSecret.Name) {
+					if aValue == customEnvSecret.ResourceVersion {
+						fmt.Fprintf(w, "Deployment '%s' has the custom env secret annotation and correct resourceVersion\n", dName)
+						return true
+					}
+					fmt.Fprintf(w, "Deployment '%s' has the custom env secret annotation but the resourceVersion '%s' doesn't match the expected value '%s'\n", dName, aValue, customEnvSecret.ResourceVersion)
+					return false
+				}
+			}
+			fmt.Fprintf(w, "Deployment '%s' doesn't have the custom env secret annotation\n", dName)
+			return false
+		}, timeout, retryInterval).Should(BeTrue())
+	}
+
+	return nil
+}
+
+func testCustomEnvironmentContent() string {
+	return `
+    local cjson = require('cjson')
+    local PolicyChain = require('apicast.policy_chain')
+    local policy_chain = context.policy_chain
+    
+    local logging_policy_config = cjson.decode([[
+    {
+      "enable_access_logs": false,
+      "custom_logging": "\"{{request}}\" to service {{service.name}} and {{service.id}}"
+    }
+    ]])
+    
+    policy_chain:insert( PolicyChain.load_policy('logging', 'builtin', logging_policy_config), 1)
+    
+    return {
+      policy_chain = policy_chain,
+      port = { metrics = 9421 },
+    }
+`
+}
+
+func testGetCustomEnvironmentSecret(namespace string) *v1.Secret {
+	customEnvironmentSecret := v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "custom-env-1",
+			Namespace: namespace,
+			Labels: map[string]string{
+				"apimanager.apps.3scale.net/watched-by": "apimanager",
+			},
+		},
+		StringData: map[string]string{
+			"custom_env.lua":  testCustomEnvironmentContent(),
+			"custom_env2.lua": testCustomEnvironmentContent(),
+		},
+	}
+	return &customEnvironmentSecret
 }

@@ -102,7 +102,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Staging Deployment
-	err = r.ReconcileDeployment(apicast.StagingDeployment(ampImages.Options.ApicastImage), reconcilers.DeploymentMutator(stagingMutators...))
+	stagingDeployment, err := apicast.StagingDeployment(r.Context(), r.Client(), ampImages.Options.ApicastImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(stagingDeployment, reconcilers.DeploymentMutator(stagingMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -151,7 +155,11 @@ func (r *ApicastReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// Production Deployment
-	err = r.ReconcileDeployment(apicast.ProductionDeployment(ampImages.Options.ApicastImage), reconcilers.DeploymentMutator(productionMutators...))
+	productionDeployment, err := apicast.ProductionDeployment(r.Context(), r.Client(), ampImages.Options.ApicastImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(productionDeployment, reconcilers.DeploymentMutator(productionMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -639,18 +647,18 @@ func apicastCustomEnvAnnotationsMutator(desired, existing *k8sappsv1.Deployment)
 
 func apicastPodTemplateEnvConfigMapAnnotationsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
 	// Only reconcile the pod annotation regarding apicast-environment hash
-	desiredVal, ok := desired.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation]
+	desiredVal, ok := desired.Spec.Template.Annotations[component.APIcastEnvironmentCMAnnotation]
 	if !ok {
 		return false, nil
 	}
 
 	updated := false
-	existingVal, ok := existing.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation]
+	existingVal, ok := existing.Spec.Template.Annotations[component.APIcastEnvironmentCMAnnotation]
 	if !ok || existingVal != desiredVal {
 		if existing.Spec.Template.Annotations == nil {
 			existing.Spec.Template.Annotations = map[string]string{}
 		}
-		existing.Spec.Template.Annotations[APIcastEnvironmentCMAnnotation] = desiredVal
+		existing.Spec.Template.Annotations[component.APIcastEnvironmentCMAnnotation] = desiredVal
 		updated = true
 	}
 
@@ -684,27 +692,26 @@ func (r *ApicastReconciler) reconcileApimanagerSecretLabels(ctx context.Context)
 	return replaceAPIManagerSecretLabels(r.apiManager, secretUIDs), nil
 }
 
-func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) ([]string, error) {
-	// production custom policy
-	// staging custom policy
+func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) (map[string]string, error) {
+	// HTTPs Certificate Secret
+	// OpenTelemetry Config Secret
+	// Custom Policy Secret(s)
+	// Custom Env Secret(s)
 
 	secretKeys := []client.ObjectKey{}
-	if r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
-		for _, customPolicy := range r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies {
-			secretKeys = append(secretKeys, client.ObjectKey{
-				Name:      customPolicy.SecretRef.Name,
-				Namespace: r.apiManager.Namespace,
-			})
-		}
+
+	if r.apiManager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef != nil && r.apiManager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef.Name != "" {
+		secretKeys = append(secretKeys, client.ObjectKey{
+			Name:      r.apiManager.Spec.Apicast.StagingSpec.HTTPSCertificateSecretRef.Name,
+			Namespace: r.apiManager.Namespace,
+		})
 	}
 
-	if r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies != nil {
-		for _, customPolicy := range r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies {
-			secretKeys = append(secretKeys, client.ObjectKey{
-				Name:      customPolicy.SecretRef.Name,
-				Namespace: r.apiManager.Namespace,
-			})
-		}
+	if r.apiManager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef != nil && r.apiManager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef.Name != "" {
+		secretKeys = append(secretKeys, client.ObjectKey{
+			Name:      r.apiManager.Spec.Apicast.ProductionSpec.HTTPSCertificateSecretRef.Name,
+			Namespace: r.apiManager.Namespace,
+		})
 	}
 
 	if r.apiManager.OpenTelemetryEnabledForStaging() {
@@ -725,19 +732,57 @@ func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) ([]string, error)
 		}
 	}
 
-	uids := []string{}
+	if r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies != nil {
+		for _, customPolicy := range r.apiManager.Spec.Apicast.StagingSpec.CustomPolicies {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customPolicy.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
+		for _, customPolicy := range r.apiManager.Spec.Apicast.ProductionSpec.CustomPolicies {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customPolicy.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.Spec.Apicast.StagingSpec.CustomEnvironments != nil {
+		for _, customEnv := range r.apiManager.Spec.Apicast.StagingSpec.CustomEnvironments {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customEnv.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	if r.apiManager.Spec.Apicast.ProductionSpec.CustomEnvironments != nil {
+		for _, customEnv := range r.apiManager.Spec.Apicast.ProductionSpec.CustomEnvironments {
+			secretKeys = append(secretKeys, client.ObjectKey{
+				Name:      customEnv.SecretRef.Name,
+				Namespace: r.apiManager.Namespace,
+			})
+		}
+	}
+
+	uidMap := map[string]string{}
 	for idx := range secretKeys {
 		secret := &v1.Secret{}
 		secretKey := secretKeys[idx]
 		err := r.Client().Get(ctx, secretKey, secret)
-		r.Logger().V(1).Info("read secret", "objectKey", secretKey, "error", err)
+		r.Logger().V(1).Info("reading secret", "objectKey", secretKey, "error", err)
 		if err != nil {
 			return nil, err
 		}
-		uids = append(uids, string(secret.GetUID()))
+
+		watchedByVal := fmt.Sprintf("%t", helper.IsSecretWatchedBy3scale(secret))
+		uidMap[string(secret.GetUID())] = watchedByVal
 	}
 
-	return uids, nil
+	return uidMap, nil
 }
 
 func Apicast(apimanager *appsv1alpha1.APIManager, cl client.Client) (*component.Apicast, error) {

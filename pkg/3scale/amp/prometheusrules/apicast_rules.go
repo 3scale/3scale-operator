@@ -53,9 +53,6 @@ func apicastOptions(ns string) (*component.ApicastOptions, error) {
 	o.StagingTracingConfig = &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary}
 	o.ProductionTracingConfig = &component.APIcastTracingConfig{TracingLibrary: apps.APIcastDefaultTracingLibrary}
 
-	o.StagingAdditionalPodAnnotations = map[string]string{}
-	o.ProductionAdditionalPodAnnotations = map[string]string{}
-
 	return o, o.Validate()
 }
 

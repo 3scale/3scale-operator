@@ -1,8 +1,8 @@
 ## Adding custom environments
 
-Add custom environment loaded in all 3scale products.
+Add custom environment(s) loaded in all 3scale products.
 
-Here is an example of a policy that is loaded in all services: `custom_env.lua`
+Here is an example of a environment that is loaded in all services: `custom_env.lua`
 
 ```lua
 local cjson = require('cjson')
@@ -26,14 +26,24 @@ return {
 
 ### Prerequisites
 
-* One or more custom environment in lua code.
+* One or more custom environment(s) in lua code.
 
 ### Adding custom environment
 
 #### Create secret with the custom environment content
 
 ```
-oc create secret generic custom-env-1 --from-file=./env11.lua
+oc create secret generic custom-env-1 --from-file=./custom_env.lua
+```
+
+By default, content changes in the secret will not be noticed by the 3scale operator.
+The 3scale operator allows the monitoring of secret changes, this can be achieved by adding the
+`apimanager.apps.3scale.net/watched-by=apimanager` label to the required secret.
+With the label in place, when the content of the secret changes, the operator will update the deployment of the apicast
+where that secret is used (staging or production).  
+The operator will not take *ownership* of the secret in any way.
+```
+oc label secret custom-env-1 apimanager.apps.3scale.net/watched-by=apimanager
 ```
 
 **NOTE**: a secret can host multiple custom environments. The operator will load each one of them.
@@ -52,13 +62,13 @@ spec:
     productionSpec:
       customEnvironments:
         - secretRef:
-            name: env1
+            name: custom-env-1
         - secretRef:
-            name: env2
+            name: custom-env-2
     stagingSpec:
       customEnvironments:
         - secretRef:
-            name: env3
+            name: custom-env-3
 ```
 
 **NOTE**: Multiple custom environment secrets can be added. The operator will load each one of them.
@@ -71,13 +81,4 @@ oc apply -f apimanager.yaml
 
 The APIManager custom resource allows adding multiple custom environments per secret.
 
-**NOTE**: If secret does not exist, the operator would mark the custom resource as failed. The Deployment object would fail if secret does not exist.
-
-*NOTE*: Once apicast has been deployed, the content of the secret should not be updated externally.
-If the content of the secret is updated externally, after apicast has been deployed, the container can automatically see the changes.
-However, apicast has the environment already loaded and it does not change the behavior.
-
-If the custom environment content needs to be changed, there are two options:
-
-* [**recommended way**] Create another secret with a different name and update the APIManager custom resource field `customEnvironments[].secretRef.name`. The operator will trigger a rolling update loading the new custom environment content.
-* Update the existing secret content and redeploy apicast turning `spec.apicast.productionSpec.replicas` or `spec.apicast.stagingSpec.replicas` to 0 and then back to the previous value.
+**NOTE**: If the referenced secret does not exist, the operator will mark the APIManager CustomResource as failed. The apicast Deployment object will also fail if the referenced secret does not exist.

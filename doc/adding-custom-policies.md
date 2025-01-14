@@ -6,7 +6,7 @@ for more info about creating custom policies.
 
 ### Prerequisites
 
-* Custom policy metadata included in `apicast-policy.json`
+* Custom policy metadata included in `apicast-policy.json`:
 
 ```json
 {
@@ -21,9 +21,9 @@ for more info about creating custom policies.
   }
 }
 ```
-* Custom policy lua code. `init.lua` file is required. Optionally, add more lua files. For this specific example, `init.lua` and `example.lua` files will be shown.
+* Custom policy lua code. The `init.lua` file is required. Optionally, add more lua files. For this specific example, `init.lua` and `example.lua` files are used.
 
-`init.lua`
+`init.lua`:
 ```lua
 return require('example')
 ```
@@ -101,7 +101,7 @@ With the label in place, when the content of the secret changes, the operator wi
 where that secret is used (staging or production).  
 The operator will not take *ownership* of the secret in any way.
 ```
-kubectl label secret custom-policy-example-1 apimanager.apps.3scale.net/watched-by=apimanager
+oc label secret custom-policy-example-1 apimanager.apps.3scale.net/watched-by=apimanager
 ```
 
 #### Configure and deploy APIManager CR with the custom policy
@@ -120,21 +120,21 @@ spec:
         - name: custom-policy1
           version: "0.1"
           secretRef:
-             name: custom-policy1-secret
+             name: custom-policy-example-1
         - name: custom-policy2
           version: "0.1"
           secretRef:
-              name: custom-policy2-secret
+              name: custom-policy-example-2
     productionSpec:
       customPolicies:
         - name: custom-policy1
           version: "0.1"
           secretRef:
-             name: custom-policy1-secret
+             name: custom-policy-example-1
         - name: custom-policy2
           version: "0.1"
           secretRef:
-              name: custom-policy2-secret
+              name: custom-policy-example-2
 ```
 
 ```
@@ -145,16 +145,7 @@ The APIManager custom resource allows adding multiple custom policies.
 
 **NOTE**: The tuple (`name`, `version`) has to be unique in the `customPolicies` array.
 
-**NOTE**: If secret does not exist, the operator would mark the custom resource as failed. 
-
-*NOTE*: Once the apicast has been deployed, the content of the secret should not be updated externally.
-If the content of the secret is updated externally, after apicast has been deployed, the container can automatically see the changes.
-However, apicast has the policy already loaded and it does not change the behavior.
-
-If the policy content needs to be changed, there are two options:
-
-* [recommended way] Create another secret with a different name and update the APIManager custom resource field `customPolicies[].secretRef.name`. The operator will trigger a rolling update loading the new policy content.
-* Update the existing secret content and redeploy apicast turning `spec.apicast.productionSpec.replicas` (or `spec.apicast.stagingSpec.replicas`) to 0 and then back to the previous value.
+**NOTE**: If secret does not exist, the operator will mark the APIManager CustomResource as failed. 
 
 #### Add the custom policy metadata to 3scale policy registry
 
@@ -219,7 +210,7 @@ spec:
 #### Adding the custom policy to a policy chain in 3scale
 
 Configure 3scale product to include the new custom policy in the gateway policy chain to be used by APIcast.
-The custom policy needs to be added to the policy registry before adding it to some 3scale product's policy chain..
+The custom policy needs to be added to the policy registry before adding it to some 3scale product's policy chain.
 
 * Using the 3scale admin portal UI
 
