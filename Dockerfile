@@ -1,5 +1,6 @@
 # Build the manager binary
-FROM registry.access.redhat.com/ubi9/go-toolset:1.20.12 as builder
+
+FROM mirror.gcr.io/library/golang:1.22.8 as builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
