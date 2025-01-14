@@ -37,7 +37,10 @@ func (s *ApplicationStatusReconciler) Reconcile() (reconcile.Result, error) {
 
 	newStatus := s.calculateStatus()
 
-	equalStatus := s.applicationResource.Status.Equals(newStatus, s.logger)
+	// Need to extract the application CR's applicationID annotation value to compare with the new .status
+	annotationId, _ := s.applicationResource.Annotations[applicationIdAnnotation]
+
+	equalStatus := s.applicationResource.Status.Equals(annotationId, newStatus, s.logger)
 	s.logger.V(1).Info("Status", "status is different", !equalStatus)
 	s.logger.V(1).Info("Status", "generation is different", s.applicationResource.Generation != s.applicationResource.Status.ObservedGeneration)
 	if equalStatus && s.applicationResource.Generation == s.applicationResource.Status.ObservedGeneration {
@@ -70,10 +73,8 @@ func (s *ApplicationStatusReconciler) Reconcile() (reconcile.Result, error) {
 
 func (s *ApplicationStatusReconciler) calculateStatus() *capabilitiesv1beta1.ApplicationStatus {
 	newStatus := &capabilitiesv1beta1.ApplicationStatus{}
-	// if status ID is populated leave unchanged by status update
-	if s.applicationResource.Status.ID != nil {
-		newStatus.ID = s.applicationResource.Status.ID
-	} else if s.entity != nil {
+
+	if s.entity != nil {
 		tmpID := s.entity.ID()
 		newStatus.ID = &tmpID
 	}

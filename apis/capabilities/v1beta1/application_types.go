@@ -17,12 +17,15 @@ limitations under the License.
 package v1beta1
 
 import (
+	"reflect"
+	"strconv"
+
 	"github.com/3scale/3scale-operator/pkg/apispkg/common"
+
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
 )
 
 const (
@@ -84,11 +87,20 @@ type ApplicationStatus struct {
 	Conditions common.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,2,rep,name=conditions"`
 }
 
-func (b *ApplicationStatus) Equals(other *ApplicationStatus, logger logr.Logger) bool {
+func (b *ApplicationStatus) Equals(annotationID string, other *ApplicationStatus, logger logr.Logger) bool {
 	if !reflect.DeepEqual(b.ID, other.ID) {
 		diff := cmp.Diff(b.ID, other.ID)
 		logger.V(1).Info("ID not equal", "difference", diff)
 		return false
+	}
+
+	// Check to see if the new  .status.ID is different from the ID in the Application CR's annotation
+	if b.ID != nil && *b.ID != 0 {
+		if annotationID != "" && strconv.FormatInt(*b.ID, 10) != annotationID {
+			diff := cmp.Diff(strconv.FormatInt(*b.ID, 10), annotationID)
+			logger.V(1).Info("Annotation's ID not equal to new .status.ID", "diff", diff)
+			return false
+		}
 	}
 
 	if b.ProviderAccountHost != other.ProviderAccountHost {
