@@ -118,6 +118,10 @@ const (
 	S3StsCredentialsSecretName = "s3-credentials"
 )
 
+const (
+	ResyncRoutesJobName = "resync-routes"
+)
+
 type System struct {
 	Options *SystemOptions
 }
@@ -219,8 +223,10 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	result = append(result, apicastAccessToken)
 
 	// Add zync secret to envvars sources
-	zyncAuthTokenVar := helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN")
-	result = append(result, zyncAuthTokenVar)
+	if system.Options.ZyncEnabled {
+		zyncAuthTokenVar := helper.EnvVarFromSecret("ZYNC_AUTHENTICATION_TOKEN", "zync", "ZYNC_AUTHENTICATION_TOKEN")
+		result = append(result, zyncAuthTokenVar)
+	}
 
 	// Add backend internal api data to envvars sources
 	systemBackendInternalAPIUser := helper.EnvVarFromSecret("CONFIG_INTERNAL_API_USER", "backend-internal-api", "username")
@@ -1209,6 +1215,19 @@ func (system *System) SystemConfigMap() *v1.ConfigMap {
 }
 
 func (system *System) getSystemZyncConfData() string {
+	// When zync is disabled, the endpoint need to be an empty string to prevent spamming sidekiq with ZyncWorker jobs
+	if !system.Options.ZyncEnabled {
+		return `production:
+  endpoint: ''
+  authentication:
+    token: "<%= ENV.fetch('ZYNC_AUTHENTICATION_TOKEN') %>"
+  connect_timeout: 5
+  send_timeout: 5
+  receive_timeout: 10
+  root_url:
+`
+	}
+
 	return `production:
   endpoint: 'http://zync:8080'
   authentication:
@@ -1325,4 +1344,53 @@ func (system *System) appDeveloperPorts() []v1.ContainerPort {
 	}
 
 	return ports
+}
+
+func (system *System) ResyncRoutesJob(containerImage string) *batchv1.Job {
+	var completions int32 = 1
+
+	return &batchv1.Job{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "batch/v1",
+			Kind:       "Job",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   ResyncRoutesJobName,
+			Labels: system.Options.CommonSidekiqLabels,
+		},
+		Spec: batchv1.JobSpec{
+			Completions: &completions,
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Volumes: system.SidekiqPodVolumes(),
+					InitContainers: []v1.Container{
+						{
+							Name:  SystemSideKiqInitContainerName,
+							Image: containerImage,
+							Command: []string{
+								"bash",
+								"-c",
+								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+							},
+							Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+						},
+					},
+					Containers: []v1.Container{
+						{
+							Name:            ResyncRoutesJobName,
+							Image:           containerImage,
+							Args:            []string{"bash", "-c", "bundle exec rake zync:resync:domains"},
+							Env:             system.buildSystemSidekiqContainerEnv(),
+							Resources:       *system.Options.SidekiqContainerResourceRequirements,
+							VolumeMounts:    system.sidekiqContainerVolumeMounts(),
+							ImagePullPolicy: v1.PullIfNotPresent,
+						},
+					},
+					RestartPolicy:      v1.RestartPolicyNever,
+					ServiceAccountName: "amp",
+					PriorityClassName:  system.Options.SideKiqPriorityClassName,
+				},
+			},
+		},
+	}
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/3scale/3scale-operator/version"
 	"github.com/RHsyseng/operator-utils/pkg/olm"
 	"github.com/go-logr/logr"
-	routev1 "github.com/openshift/api/route/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -131,7 +130,7 @@ func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alp
 	if instance.IsExternal(appsv1alpha1.SystemRedis) {
 		externalRedisDatabases = true
 	}
-	if instance.IsExternal(appsv1alpha1.ZyncDatabase) {
+	if instance.IsExternal(appsv1alpha1.ZyncDatabase) && s.apimanagerResource.IsZyncEnabled() {
 		externalZyncDatabase = true
 	}
 
@@ -139,6 +138,7 @@ func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alp
 		SystemDatabaseType:     systemDatabaseType,
 		ExternalRedisDatabases: externalRedisDatabases,
 		ExternalZyncDatabase:   externalZyncDatabase,
+		IsZyncEnabled:          s.apimanagerResource.IsZyncEnabled(),
 	}
 
 	return deploymentLister.DeploymentNames()
@@ -191,7 +191,7 @@ func (s *APIManagerStatusReconciler) existingDeployments() ([]k8sappsv1.Deployme
 func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeployments []k8sappsv1.Deployment) (common.Condition, error) {
 	deploymentsAvailable := s.deploymentsAvailable(existingDeployments)
 
-	defaultRoutesReady, err := s.defaultRoutesReady()
+	defaultRoutesReady, err := helper.DefaultRoutesReady(s.apimanagerResource, s.Client(), s.logger)
 	if err != nil {
 		return common.Condition{}, err
 	}
@@ -207,54 +207,6 @@ func (s *APIManagerStatusReconciler) apimanagerAvailableCondition(existingDeploy
 	}
 
 	return newAvailableCondition, nil
-}
-
-func (s *APIManagerStatusReconciler) defaultRoutesReady() (bool, error) {
-	var expectedRouteHosts []string
-	wildcardDomain := s.apimanagerResource.Spec.WildcardDomain
-	if s.apimanagerResource.Spec.TenantName != nil {
-		expectedRouteHosts = []string{
-			fmt.Sprintf("backend-%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                // Backend Listener route
-			fmt.Sprintf("api-%s-apicast-production.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain), // Apicast Production default tenant Route
-			fmt.Sprintf("api-%s-apicast-staging.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),    // Apicast Staging default tenant Route
-			fmt.Sprintf("master.%s", wildcardDomain),                                                           // System's Master Portal Route
-			fmt.Sprintf("%s.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                        // System's default tenant Developer Portal Route
-			fmt.Sprintf("%s-admin.%s", *s.apimanagerResource.Spec.TenantName, wildcardDomain),                  // System's default tenant Admin Portal Route
-		}
-	} else {
-		return false, nil
-	}
-
-	listOps := []client.ListOption{
-		client.InNamespace(s.apimanagerResource.Namespace),
-	}
-
-	routeList := &routev1.RouteList{}
-	err := s.Client().List(context.TODO(), routeList, listOps...)
-	if err != nil {
-		return false, fmt.Errorf("failed to list routes: %w", err)
-	}
-
-	routes := append([]routev1.Route(nil), routeList.Items...)
-	sort.Slice(routes, func(i, j int) bool { return routes[i].Name < routes[j].Name })
-
-	allDefaultRoutesReady := true
-	for _, expectedRouteHost := range expectedRouteHosts {
-		routeIdx := helper.RouteFindByHost(routes, expectedRouteHost)
-		if routeIdx == -1 {
-			s.logger.V(1).Info("Status defaultRoutesReady: route not found", "expectedRouteHost", expectedRouteHost)
-			allDefaultRoutesReady = false
-		} else {
-			matchedRoute := &routes[routeIdx]
-			routeReady := helper.IsRouteReady(matchedRoute)
-			if !routeReady {
-				s.logger.V(1).Info("Status defaultRoutesReady: route not ready", "expectedRouteHost", expectedRouteHost)
-				allDefaultRoutesReady = false
-			}
-		}
-	}
-
-	return allDefaultRoutesReady, nil
 }
 
 func (s *APIManagerStatusReconciler) reconcileHpaWarningMessages(conditions *common.Conditions, cr *appsv1alpha1.APIManager) {

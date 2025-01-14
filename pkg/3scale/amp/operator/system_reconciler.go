@@ -3,11 +3,15 @@ package operator
 import (
 	"context"
 	"fmt"
+	"gopkg.in/yaml.v2"
+	"log"
+	"regexp"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	k8sappsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -90,7 +94,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	}
 
 	// System CM
-	err = r.ReconcileConfigMap(system.SystemConfigMap(), reconcilers.CreateOnlyMutator)
+	err = r.ReconcileConfigMap(system.SystemConfigMap(), systemConfigMapMutator)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -198,6 +202,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			r.systemAppDeploymentResourceMutator,
 			reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
 			reconcilers.DeploymentPodContainerImageMutator,
+			r.systemZyncEnvVarMutator,
 		}
 		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
@@ -252,6 +257,7 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerImageMutator,
+		r.systemZyncEnvVarMutator,
 	}
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
@@ -322,6 +328,34 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
+	// Check if enough routes exist
+	routesExist, err := helper.DefaultRoutesReady(r.apiManager, r.Client(), r.logger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Check if zync deployments are ready
+	zyncReady, err := r.isZyncReady()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// If zync is enabled and zync is ready but the routes are missing then create the ResyncRoutes Job
+	if system.Options.ZyncEnabled && zyncReady && !routesExist {
+		resyncRoutesJob := system.ResyncRoutesJob(ampImages.Options.SystemImage)
+		err = r.ReconcileJob(resyncRoutesJob, reconcilers.CreateOnlyMutator)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	} else {
+		// Zync is either disabled or not ready or the routes already exist
+		// In this scenario, delete the ResyncRoutes Job (if it exists) in case it needs to be created again later
+		err = helper.DeleteJob(component.ResyncRoutesJobName, r.apiManager.GetNamespace(), r.Client())
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -371,6 +405,104 @@ func (r *SystemReconciler) systemAppDeploymentResourceMutator(desired, existing 
 	}
 
 	return update, nil
+}
+
+func (r *SystemReconciler) systemZyncEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	update := false
+
+	// Reconcile ZYNC_AUTHENTICATION_TOKEN env var
+	for idx := range existing.Spec.Template.Spec.Containers {
+		tmpChanged := helper.EnvVarReconciler(
+			desired.Spec.Template.Spec.Containers[idx].Env,
+			&existing.Spec.Template.Spec.Containers[idx].Env,
+			"ZYNC_AUTHENTICATION_TOKEN")
+		update = update || tmpChanged
+	}
+
+	return update, nil
+}
+
+func (r *SystemReconciler) isZyncReady() (bool, error) {
+	zyncDeploymentNames := []string{"zync", "zync-database", "zync-que"}
+
+	for _, deploymentName := range zyncDeploymentNames {
+		deployment := &k8sappsv1.Deployment{}
+		err := r.Client().Get(r.Context(), k8sclient.ObjectKey{
+			Namespace: r.apiManager.GetNamespace(),
+			Name:      deploymentName,
+		}, deployment)
+
+		// Return error if can't get deployment
+		if err != nil && !k8serr.IsNotFound(err) {
+			return false, fmt.Errorf("error getting deployment %s: %w", deployment.Name, err)
+		}
+
+		// Return without error if deployment doesn't exist to prevent spamming log with errors
+		if k8serr.IsNotFound(err) {
+			return false, nil
+		}
+
+		// Return false because deployment is not yet available
+		if !helper.IsDeploymentAvailable(deployment) || helper.IsDeploymentProgressing(deployment) {
+			return false, nil
+		}
+	}
+
+	// All zync deployments exist and are available
+	return true, nil
+}
+
+// systemConfigMapMutator creates facilitates the creation of the ConfigMap on the first reconcile loop
+// It also will update the endpoint in case zync is enabled|disabled while preserving all other values in the .data
+func systemConfigMapMutator(existingObj, desiredObj common.KubernetesObject) (bool, error) {
+	existing, ok := existingObj.(*corev1.ConfigMap)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *v1.ConfigMap", existingObj)
+	}
+	desired, ok := desiredObj.(*corev1.ConfigMap)
+	if !ok {
+		return false, fmt.Errorf("%T is not a *v1.ConfigMap", desiredObj)
+	}
+
+	zyncFieldKey := "zync.yml"
+	desiredZyncConfigString := desired.Data[zyncFieldKey]
+	existingZyncConfigString := existing.Data[zyncFieldKey]
+
+	// Define a struct to unmarshal the YAML into
+	type ZyncConfig struct {
+		Production struct {
+			Endpoint       string `yaml:"endpoint"`
+			Authentication struct {
+				Token string `yaml:"token"`
+			} `yaml:"authentication"`
+			ConnectTimeout int    `yaml:"connect_timeout"`
+			SendTimeout    int    `yaml:"send_timeout"`
+			ReceiveTimeout int    `yaml:"receive_timeout"`
+			RootURL        string `yaml:"root_url"`
+		} `yaml:"production"`
+	}
+
+	// Unmarshal the desiredZyncConfig
+	var desiredZyncConfig ZyncConfig
+	err := yaml.Unmarshal([]byte(desiredZyncConfigString), &desiredZyncConfig)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	// Extract the desiredEndpoint
+	desiredEndpoint := desiredZyncConfig.Production.Endpoint
+
+	// Update the endpoint in existingConfig with the one from desiredConfig
+	re := regexp.MustCompile(`(?m)^ *endpoint: '.*'`)
+	reconciledZyncConfigString := re.ReplaceAllString(existingZyncConfigString, fmt.Sprintf("  endpoint: '%s'", desiredEndpoint))
+
+	// Assign reconciledZyncConfigString to the ConfigMap's data
+	desired.Data[zyncFieldKey] = reconciledZyncConfigString
+
+	// Update the zync.yml field in the ConfigMap
+	updated := reconcilers.ConfigMapReconcileField(desired, existing, "zync.yml")
+
+	return updated, nil
 }
 
 func System(cr *appsv1alpha1.APIManager, client k8sclient.Client) (*component.System, error) {

@@ -340,6 +340,7 @@ func defaultSystemOptions(opts *component.SystemOptions) *component.SystemOption
 		SideKiqMetrics:                true,
 		AppMetrics:                    true,
 		IncludeOracleOptionalSettings: true,
+		ZyncEnabled:                   true,
 		Namespace:                     opts.Namespace,
 	}
 
@@ -621,6 +622,19 @@ func TestGetSystemOptionsProvider(t *testing.T) {
 				expectedOpts := defaultSystemOptions(opts)
 				emptyStr := ""
 				expectedOpts.SmtpSecretOptions.FromAddress = &emptyStr
+				return expectedOpts
+			},
+		},
+		{"WithZyncDisabled",
+			func() *appsv1alpha1.APIManager {
+				apimanager := basicApimanagerSpecTestSystemOptions()
+				apimanager.Spec.Zync.Enabled = &falseValue
+				return apimanager
+			},
+			nil, nil, nil, nil, nil, nil, nil, nil,
+			func(opts *component.SystemOptions) *component.SystemOptions {
+				expectedOpts := defaultSystemOptions(opts)
+				expectedOpts.ZyncEnabled = false
 				return expectedOpts
 			},
 		},

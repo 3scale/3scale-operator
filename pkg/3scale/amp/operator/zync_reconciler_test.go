@@ -105,7 +105,7 @@ func TestNewZyncReconciler(t *testing.T) {
 	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
-	zyncReconciler := NewZyncReconciler(baseAPIManagerLogicReconciler)
+	zyncReconciler := NewZyncReconciler(baseAPIManagerLogicReconciler, true)
 	_, err = zyncReconciler.Reconcile()
 	if err != nil {
 		t.Fatal(err)
@@ -228,7 +228,7 @@ func TestNewZyncReconcilerWithAllExternalDatabases(t *testing.T) {
 	baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 	baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, apimanager)
 
-	zyncReconciler := NewZyncReconciler(baseAPIManagerLogicReconciler)
+	zyncReconciler := NewZyncReconciler(baseAPIManagerLogicReconciler, true)
 	_, err = zyncReconciler.Reconcile()
 	if err != nil {
 		t.Fatal(err)
@@ -328,7 +328,7 @@ func TestReplicaZyncReconciler(t *testing.T) {
 			baseReconciler := reconcilers.NewBaseReconciler(ctx, cl, s, clientAPIReader, log, clientset.Discovery(), recorder)
 			baseAPIManagerLogicReconciler := NewBaseAPIManagerLogicReconciler(baseReconciler, tc.apimanager)
 
-			reconciler := NewZyncReconciler(baseAPIManagerLogicReconciler)
+			reconciler := NewZyncReconciler(baseAPIManagerLogicReconciler, true)
 			_, err = reconciler.Reconcile()
 			if err != nil {
 				t.Fatal(err)
