@@ -29,6 +29,16 @@ const (
 	BackendSecretBackendRedisStorageSentinelRoleFieldName  = "REDIS_STORAGE_SENTINEL_ROLE"
 	BackendSecretBackendRedisQueuesSentinelHostsFieldName  = "REDIS_QUEUES_SENTINEL_HOSTS"
 	BackendSecretBackendRedisQueuesSentinelRoleFieldName   = "REDIS_QUEUES_SENTINEL_ROLE"
+
+	// ACL
+	BackendSecretBackendRedisConfigRedisUsernameFieldName          = "CONFIG_REDIS_USERNAME"
+	BackendSecretBackendRedisConfigRedisPasswordFieldName          = "CONFIG_REDIS_PASSWORD"
+	BackendSecretBackendRedisConfigRedisSentinelUsernameFieldName  = "CONFIG_REDIS_SENTINEL_USERNAME"
+	BackendSecretBackendRedisConfigRedisSentinelPasswordFieldName  = "CONFIG_REDIS_SENTINEL_PASSWORD"
+	BackendSecretBackendRedisConfigQueuesUsernameFieldName         = "CONFIG_QUEUES_USERNAME"
+	BackendSecretBackendRedisConfigQueuesPasswordFieldName         = "CONFIG_QUEUES_PASSWORD"
+	BackendSecretBackendRedisConfigQueuesSentinelUsernameFieldName = "CONFIG_QUEUES_SENTINEL_USERNAME"
+	BackendSecretBackendRedisConfigQueuesSentinelPasswordFieldName = "CONFIG_QUEUES_SENTINEL_PASSWORD"
 )
 
 const (
@@ -372,7 +382,8 @@ func (backend *Backend) EnvironmentConfigMap() *v1.ConfigMap {
 }
 
 func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
-	return []v1.EnvVar{
+	result := []v1.EnvVar{}
+	result = append(result,
 		helper.EnvVarFromSecret("CONFIG_REDIS_PROXY", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageURLFieldName),
 		helper.EnvVarFromSecret("CONFIG_REDIS_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelHostsFieldName),
 		helper.EnvVarFromSecret("CONFIG_REDIS_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisStorageSentinelRoleFieldName),
@@ -380,7 +391,21 @@ func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_HOSTS", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelHostsFieldName),
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelRoleFieldName),
 		helper.EnvVarFromConfigMap("RACK_ENV", "backend-environment", "RACK_ENV"),
+		// ACL
+		helper.EnvVarFromSecret("CONFIG_REDIS_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigRedisUsernameFieldName),
+		helper.EnvVarFromSecret("CONFIG_REDIS_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigRedisPasswordFieldName),
+		helper.EnvVarFromSecret("CONFIG_QUEUES_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesUsernameFieldName),
+		helper.EnvVarFromSecret("CONFIG_QUEUES_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesPasswordFieldName),
+	)
+	if backend.Options.RedisSentinelIsUsed { //ACL
+		result = append(result,
+			helper.EnvVarFromSecret("CONFIG_REDIS_SENTINEL_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigRedisSentinelUsernameFieldName),
+			helper.EnvVarFromSecret("CONFIG_REDIS_SENTINEL_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigRedisSentinelPasswordFieldName),
+			helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_USERNAME", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesSentinelUsernameFieldName),
+			helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_PASSWORD", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisConfigQueuesSentinelPasswordFieldName),
+		)
 	}
+	return result
 }
 
 func (backend *Backend) buildBackendWorkerEnv() []v1.EnvVar {
