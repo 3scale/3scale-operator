@@ -147,20 +147,6 @@ else
 	$(MAKE) cluster/create/system-mysql
 endif
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .PHONY: cluster/prepare/project
 cluster/prepare/project:
 	@ - oc new-project $(NAMESPACE)

@@ -101,7 +101,7 @@ func (r *APIManagerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Establish whether or not the preflights checks should be run
-	result, preflightsRequired, err := r.instanceRequiresPreflights(instance)
+	result, preflightsRequired, err := r.instanceRequiresPreflights(instance, logger)
 	if err != nil {
 		if result.Requeue {
 			logger.Info("failed to establish whether the preflights should be run or not")
@@ -571,7 +571,7 @@ func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha
 	}
 }
 
-func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIManager) (ctrl.Result, bool, error) {
+func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIManager, logger logr.Logger) (ctrl.Result, bool, error) {
 	requirementsConfigMap := &v1.ConfigMap{}
 
 	if helper.IsPreflightBypassed() {
@@ -593,6 +593,14 @@ func (r *APIManagerReconciler) instanceRequiresPreflights(cr *appsv1alpha1.APIMa
 	if isMultiHopDetected {
 		// if it is multihop, do not requeue but process the error update on APIM Status
 		return ctrl.Result{}, false, fmt.Errorf("Attempted upgrade from %s to %s not allowed", cr.RetrieveRHTVersion(), requirementsConfigMap.Data[helper.RHTThreescaleVersion])
+	}
+
+	// Even if requirements are already confirmed, we need to run preflights again for all new preflights added in version N+1 (N=the version new preflights were introduced - 1):
+	// List of added preflights to 2.16:
+	// - external DB check
+	externalDatabasesCheckError := r.externalDatabasesPreflightsChecks(cr, *requirementsConfigMap, logger)
+	if externalDatabasesCheckError != nil {
+		return ctrl.Result{}, true, nil
 	}
 
 	// Check if current requirements are already confirmed

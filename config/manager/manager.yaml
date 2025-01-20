@@ -60,15 +60,11 @@ spec:
         - name: RELATED_IMAGE_SYSTEM_MEMCACHED
           value: "mirror.gcr.io/library/memcached:1.5"
         - name: RELATED_IMAGE_BACKEND_REDIS
-          value: "quay.io/fedora/redis-6:latest"
+          value: "quay.io/fedora/redis-7"
         - name: RELATED_IMAGE_SYSTEM_REDIS
-          value: "quay.io/fedora/redis-6:latest"
-        - name: RELATED_IMAGE_SYSTEM_MYSQL
-          value: "quay.io/sclorg/mysql-80-c8s"
-        - name: RELATED_IMAGE_SYSTEM_POSTGRESQL
-          value: "quay.io/sclorg/postgresql-10-c8s"
+          value: "quay.io/fedora/redis-7"
         - name: RELATED_IMAGE_ZYNC_POSTGRESQL
-          value: "quay.io/sclorg/postgresql-10-c8s"
+          value: "mirror.gcr.io/library/postgres:13"
         - name: RELATED_IMAGE_OC_CLI
           value: "quay.io/openshift/origin-cli:4.7"
         - name: RELATED_IMAGE_SYSTEM_SEARCHD
