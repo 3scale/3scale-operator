@@ -239,7 +239,7 @@ func CreateDatabaseThrowAwayPod(k8sclient client.Client, namespace, dbType strin
 }
 
 func throwAwayPostgres(namespace string) *v1.Pod {
-	systemPostgresImage := GetEnvVar("RELATED_IMAGE_SYSTEM_POSTGRESQL", postgreSqlDefaultImage)
+	systemPostgresImage := GetEnvVar("RELATED_IMAGE_ZYNC_POSTGRESQL", postgreSqlDefaultImage)
 	return &v1.Pod{
 		ObjectMeta: apimachinerymetav1.ObjectMeta{
 			Name:      "throwaway-postgres",
