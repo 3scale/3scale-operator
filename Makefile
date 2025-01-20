@@ -25,6 +25,9 @@ CRD_OPTIONS ?= "crd:crdVersions=v1"
 GO ?= go
 KUBECTL ?= kubectl
 DOCKER ?= docker
+NAMESPACE ?= 3scale-test
+# Defaults to false, if false, mysql will be used, if true, postgresql will be used
+DEV_SYSTEM_DB_POSTGRES ?= false
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell $(GO) env GOBIN))
@@ -106,6 +109,61 @@ $(CONTROLLER_GEN):
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)
+
+.PHONY: cluster/prepare/local
+cluster/prepare/local: kustomize cluster/prepare/project install cluster/create/system-redis cluster/create/backend-redis cluster/create/provision-database
+
+.PHONY: cluster/create/system-redis
+cluster/create/system-redis:
+	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-redis/secret.yaml > ./config/dev-databases/system-redis/secret-processed.yaml
+	kustomize build ./config/dev-databases/system-redis | kubectl apply -f -
+	rm ./config/dev-databases/system-redis/secret-processed.yaml
+
+.PHONY: cluster/create/backend-redis
+cluster/create/backend-redis:
+	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/backend-redis/secret.yaml > ./config/dev-databases/backend-redis/secret-processed.yaml
+	kustomize build ./config/dev-databases/backend-redis | kubectl apply -f -
+	rm ./config/dev-databases/backend-redis/secret-processed.yaml
+
+.PHONY: cluster/create/system-postgres
+cluster/create/system-postgres:
+	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-postgresql/secret.yaml > ./config/dev-databases/system-postgresql/secret-processed.yaml
+	kustomize build ./config/dev-databases/system-postgresql | kubectl apply -f -
+	rm ./config/dev-databases/system-postgresql/secret-processed.yaml
+
+.PHONY: cluster/create/system-mysql
+cluster/create/system-mysql:
+	sed "s/\$$(NAMESPACE)/$(NAMESPACE)/g" ./config/dev-databases/system-mysql/secret.yaml > ./config/dev-databases/system-mysql/secret-processed.yaml
+	kustomize build ./config/dev-databases/system-mysql | kubectl apply -f -
+	rm ./config/dev-databases/system-mysql/secret-processed.yaml
+
+.PHONY: cluster/create/provision-database
+cluster/create/provision-database:
+ifeq ($(DEV_SYSTEM_DB_POSTGRES),true)
+	@echo "Using PostgreSQL for system database..."
+	$(MAKE) cluster/create/system-postgres
+else
+	@echo "Using MySQL for system database..."
+	$(MAKE) cluster/create/system-mysql
+endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.PHONY: cluster/prepare/project
+cluster/prepare/project:
+	@ - oc new-project $(NAMESPACE)
 
 KUSTOMIZE=$(PROJECT_PATH)/bin/kustomize
 $(KUSTOMIZE):

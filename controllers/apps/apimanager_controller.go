@@ -198,7 +198,6 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 	systemRedisVerified := false
 	backendRedisVerified := false
 	systemDatabaseVerified := false
-	skipPreflightsFreshInstall := false
 	var apimVersion string
 
 	reqConfigMap, err := subController.RetrieveRequirementsConfigMap(r.Client())
@@ -206,15 +205,13 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 		return ctrl.Result{}, err, nil
 	}
 
-	// Skip preflights entirely if it's a fresh installation with internal databases
-	skipPreflightsFreshInstall, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, err = r.skipPreflights(apimInstance, *reqConfigMap, logger)
-	if err != nil {
-		return ctrl.Result{}, err, nil
-	}
-	if skipPreflightsFreshInstall {
-		return ctrl.Result{}, nil, nil
+	// Fail preflights early if system Redis, backend Redis or system database are not external. Since 2.16, there is no internal databases support.
+	externalDatabasesCheckError := r.externalDatabasesPreflightsChecks(apimInstance, *reqConfigMap, logger)
+	if externalDatabasesCheckError != nil {
+		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, externalDatabasesCheckError
 	}
 
+	// Just in case the requirements are ever disabled via CSV
 	incomingVersion, systemRedisRequirement, backendRedisRequirement, mysqlDatabaseRequirement, postgresDatabaseRequirements := retrieveRequiredVersion(*reqConfigMap)
 	if systemRedisRequirement == "" {
 		systemRedisVerified = true
@@ -258,11 +255,6 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("fresh installation detected but the requirements have not been met, %s", culprit)
 	}
 
-	// 2.14 -> 2.15
-	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion == "2.14") {
-		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", version.ThreescaleVersionMajorMinor(), culprit)
-	}
-
 	// upgrade + any manual (remove + re-install operator) operator installs scenarios
 	if (!systemDatabaseVerified || !backendRedisVerified || !systemRedisVerified) && (incomingVersion == version.ThreescaleVersionMajorMinor()) && (apimVersion != version.ThreescaleVersionMajorMinorPatch()) {
 		return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("upgrade to %s have been performed but the requirements are not met, %s", version.ThreescaleVersionMajorMinor(), culprit)
@@ -302,22 +294,20 @@ func retrieveRequiredVersion(reqConfigMap v1.ConfigMap) (string, string, string,
 		reqConfigMap.Data[helper.RHTThreescaleMysqlRequirements], reqConfigMap.Data[helper.RHTThreescalePostgresRequirements]
 }
 
-func (r *APIManagerReconciler) skipPreflights(apimInstance *appsv1alpha1.APIManager, reqConfigMap v1.ConfigMap, logger logr.Logger) (bool, bool, bool, bool, error) {
-	systemDatabaseVerified := false
-	systemRedisVerified := false
-	backendRedisVerified := false
-	if apimInstance.IsInFreshInstallationScenario() {
-		backendRedisVerified, systemRedisVerified, systemDatabaseVerified = helper.InternalDatabases(*apimInstance, logger)
-		// If all are already verified, exit earlier
-		if backendRedisVerified && systemRedisVerified && systemDatabaseVerified {
-			err := r.setRequirementsAnnotation(apimInstance, reqConfigMap.GetResourceVersion())
-			if err != nil {
-				return false, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, err
-			}
-			return true, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, nil
-		}
+func (r *APIManagerReconciler) externalDatabasesPreflightsChecks(apimInstance *appsv1alpha1.APIManager, reqConfigMap v1.ConfigMap, logger logr.Logger) error {
+
+	systemDatabaseIsInternal := false
+	systemRedisIsInternal := true
+	backendRedisIsInternal := true
+
+	backendRedisIsInternal, systemRedisIsInternal, systemDatabaseIsInternal = helper.InternalDatabases(*apimInstance, logger)
+	// If all are already verified, exit earlier
+
+	if backendRedisIsInternal || systemDatabaseIsInternal || systemRedisIsInternal {
+		return fmt.Errorf("cannot continue with the installation. External databases are required to be set in the APIManager for system Redis, backend Redis and system database")
 	}
-	return false, systemDatabaseVerified, systemRedisVerified, backendRedisVerified, nil
+
+	return nil
 }
 
 func (r *APIManagerReconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -554,54 +544,26 @@ func (r *APIManagerReconciler) validateApicastTLSCertificates(cr *appsv1alpha1.A
 
 func (r *APIManagerReconciler) dependencyReconcilerForComponents(cr *appsv1alpha1.APIManager, baseAPIManagerLogicReconciler *operator.BaseAPIManagerLogicReconciler) operator.DependencyReconciler {
 	// Helper type that contains the constructors for a dependency reconciler
-	// whether it's external or internal
 	type constructors struct {
 		External operator.DependencyReconcilerConstructor
-		Internal operator.DependencyReconcilerConstructor
 	}
 
-	// Helper function that instantiates a dependency reconciler depending
-	// on whether it's external or internal
-	selectReconciler := func(cs constructors, selectIsExternal func(*appsv1alpha1.ExternalComponentsSpec) bool) operator.DependencyReconciler {
-		constructor := cs.Internal
-		if selectIsExternal(cr.Spec.ExternalComponents) {
-			constructor = cs.External
-		}
-
-		return constructor(baseAPIManagerLogicReconciler)
-	}
-
-	// Select whether to use PostgreSQL or MySQL for the System database
-	var systemDatabaseReconcilerConstructor operator.DependencyReconcilerConstructor
-	if cr.Spec.System.DatabaseSpec != nil && cr.Spec.System.DatabaseSpec.PostgreSQL != nil {
-		systemDatabaseReconcilerConstructor = operator.CompositeDependencyReconcilerConstructor(
-			operator.NewSystemPostgreSQLReconciler,
-		)
-	} else {
-		systemDatabaseReconcilerConstructor = operator.CompositeDependencyReconcilerConstructor(
-			operator.NewSystemMySQLReconciler,
-		)
-	}
-
+	// Define constructors for each reconciler
 	systemDatabaseConstructors := constructors{
 		External: operator.NewSystemExternalDatabaseReconciler,
-		Internal: systemDatabaseReconcilerConstructor,
 	}
 	systemRedisConstructors := constructors{
 		External: operator.NewSystemExternalRedisReconciler,
-		Internal: operator.NewSystemRedisDependencyReconciler,
 	}
 	backendRedisConstructors := constructors{
 		External: operator.NewBackendExternalRedisReconciler,
-		Internal: operator.NewBackendRedisDependencyReconciler,
 	}
 
-	// Build the final reconciler composed by the chosen external/internal
-	// combination
+	// Build the final reconciler composed by the chosen external/internal combination
 	result := []operator.DependencyReconciler{
-		selectReconciler(systemDatabaseConstructors, appsv1alpha1.SystemDatabase),
-		selectReconciler(systemRedisConstructors, appsv1alpha1.SystemRedis),
-		selectReconciler(backendRedisConstructors, appsv1alpha1.BackendRedis),
+		systemDatabaseConstructors.External(baseAPIManagerLogicReconciler),
+		systemRedisConstructors.External(baseAPIManagerLogicReconciler),
+		backendRedisConstructors.External(baseAPIManagerLogicReconciler),
 	}
 
 	return &operator.CompositeDependencyReconciler{

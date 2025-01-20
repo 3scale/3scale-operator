@@ -20,22 +20,6 @@ func ZyncImageURL() string {
 	return "quay.io/3scale/zync:latest"
 }
 
-func BackendRedisImageURL() string {
-	return "quay.io/fedora/redis-6"
-}
-
-func SystemRedisImageURL() string {
-	return "quay.io/fedora/redis-6"
-}
-
-func SystemMySQLImageURL() string {
-	return "quay.io/sclorg/mysql-80-c8s"
-}
-
-func SystemPostgreSQLImageURL() string {
-	return "quay.io/sclorg/postgresql-10-c8s"
-}
-
 func SystemMemcachedImageURL() string {
 	return "mirror.gcr.io/library/memcached:1.5"
 }

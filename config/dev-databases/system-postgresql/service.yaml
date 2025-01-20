@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: system-postgresql
+  labels:
+    app: system-postgresql
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: system-postgresql
+  type: ClusterIP

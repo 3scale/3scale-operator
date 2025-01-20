@@ -20,10 +20,7 @@ func TestImageURLFromEnv(t *testing.T) {
 		{"SystemURL", "RELATED_IMAGE_SYSTEM", func() string { return SystemImageURL() }},
 		{"ZyncURL", "RELATED_IMAGE_ZYNC", func() string { return ZyncImageURL() }},
 		{"SystemMemcachedURL", "RELATED_IMAGE_SYSTEM_MEMCACHED", func() string { return SystemMemcachedImageURL() }},
-		{"SystemRedisImageURL", "RELATED_IMAGE_SYSTEM_REDIS", func() string { return SystemRedisImageURL() }},
 		{"SystemSearchdImageURL", "RELATED_IMAGE_SYSTEM_SEARCHD", func() string { return SystemSearchdImageURL() }},
-		{"SystemMySQLImageURL", "RELATED_IMAGE_SYSTEM_MYSQL", func() string { return SystemMySQLImageURL() }},
-		{"SystemPostgreSQLImageURL", "RELATED_IMAGE_SYSTEM_POSTGRESQL", func() string { return SystemPostgreSQLImageURL() }},
 		{"ZyncPostgreSQLImageURL", "RELATED_IMAGE_ZYNC_POSTGRESQL", func() string { return ZyncPostgreSQLImageURL() }},
 	}
 
@@ -52,10 +49,7 @@ func TestImageURLDefault(t *testing.T) {
 		{"SystemURL", func() string { return SystemImageURL() }, func() string { return component.SystemImageURL() }},
 		{"ZyncURL", func() string { return ZyncImageURL() }, func() string { return component.ZyncImageURL() }},
 		{"SystemMemcachedImageURL", func() string { return SystemMemcachedImageURL() }, func() string { return component.SystemMemcachedImageURL() }},
-		{"SystemRedisImageURL", func() string { return SystemRedisImageURL() }, func() string { return component.SystemRedisImageURL() }},
 		{"SystemSearchdImageURL", func() string { return SystemSearchdImageURL() }, func() string { return component.SystemSearchdImageURL() }},
-		{"SystemMySQLImageURL", func() string { return SystemMySQLImageURL() }, func() string { return component.SystemMySQLImageURL() }},
-		{"SystemPostgreSQLImageURL", func() string { return SystemPostgreSQLImageURL() }, func() string { return component.SystemPostgreSQLImageURL() }},
 		{"ZyncPostgreSQLImageURL", func() string { return ZyncPostgreSQLImageURL() }, func() string { return component.ZyncPostgreSQLImageURL() }},
 	}
 

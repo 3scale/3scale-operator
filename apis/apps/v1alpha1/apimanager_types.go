@@ -892,10 +892,10 @@ func (apimanager *APIManager) SetDefaults() (bool, error) {
 }
 
 func (apimanager *APIManager) IsInFreshInstallationScenario() bool {
-	threescaleAnnotationFound := true
+	threescaleAnnotationFound := false
 
 	if _, ok := apimanager.Annotations[ThreescaleVersionAnnotation]; ok {
-		threescaleAnnotationFound = false
+		threescaleAnnotationFound = true
 	}
 
 	return threescaleAnnotationFound
@@ -1397,7 +1397,7 @@ func (a *APIManager) GetApicastOpenTelemetrySecretRefs() []*v1.LocalObjectRefere
 func (a *APIManager) GetApicastCustomEnvironmentsSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
-	if a.Spec.Apicast.ProductionSpec.CustomEnvironments != nil {
+	if a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.CustomEnvironments != nil {
 		for _, env := range a.Spec.Apicast.ProductionSpec.CustomEnvironments {
 			if env.SecretRef != nil {
 				secretRefs = append(secretRefs, env.SecretRef)
@@ -1405,7 +1405,7 @@ func (a *APIManager) GetApicastCustomEnvironmentsSecretRefs() []*v1.LocalObjectR
 		}
 	}
 
-	if a.Spec.Apicast.StagingSpec.CustomEnvironments != nil {
+	if a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.CustomEnvironments != nil {
 		for _, env := range a.Spec.Apicast.StagingSpec.CustomEnvironments {
 			if env.SecretRef != nil {
 				secretRefs = append(secretRefs, env.SecretRef)
@@ -1419,7 +1419,7 @@ func (a *APIManager) GetApicastCustomEnvironmentsSecretRefs() []*v1.LocalObjectR
 func (a *APIManager) GetApicastCustomPoliciesSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 
-	if a.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
+	if a.Spec.Apicast != nil && a.Spec.Apicast.ProductionSpec != nil && a.Spec.Apicast.ProductionSpec.CustomPolicies != nil {
 		for _, policy := range a.Spec.Apicast.ProductionSpec.CustomPolicies {
 			if policy.SecretRef != nil {
 				secretRefs = append(secretRefs, policy.SecretRef)
@@ -1427,7 +1427,7 @@ func (a *APIManager) GetApicastCustomPoliciesSecretRefs() []*v1.LocalObjectRefer
 		}
 	}
 
-	if a.Spec.Apicast.StagingSpec.CustomPolicies != nil {
+	if a.Spec.Apicast != nil && a.Spec.Apicast.StagingSpec != nil && a.Spec.Apicast.StagingSpec.CustomPolicies != nil {
 		for _, policy := range a.Spec.Apicast.StagingSpec.CustomPolicies {
 			if policy.SecretRef != nil {
 				secretRefs = append(secretRefs, policy.SecretRef)

@@ -57,22 +57,24 @@ func fetchSecret(k8sclient client.Client, secretName, namespace string) (*v1.Sec
 	return secret, nil
 }
 
+// Check if backend Redis, system Redis or, system db are internal.
 func InternalDatabases(apimInstance appsv1alpha1.APIManager, logger logr.Logger) (bool, bool, bool) {
-	backendRedisVerified := false
-	systemRedisVerified := false
-	systemDatabaseVerified := false
+	backendRedisInternal := false
+	systemRedisInternal := false
+	systemDatabaseInternal := false
+
 	if !apimInstance.IsExternal(appsv1alpha1.BackendRedis) {
-		logger.Info("Backend Redis requirements confirmed")
-		backendRedisVerified = true
+		logger.Info("Backend Redis database must be set to external in APIManager custom resource")
+		backendRedisInternal = true
 	}
 	if !apimInstance.IsExternal(appsv1alpha1.SystemRedis) {
-		logger.Info("System Redis requirements confirmed")
-		systemRedisVerified = true
+		logger.Info("System Redis database must be set to external in APIManager custom resource")
+		systemRedisInternal = true
 	}
 	if !apimInstance.IsExternal(appsv1alpha1.SystemDatabase) {
-		logger.Info("System Database requirements confirmed")
-		systemDatabaseVerified = true
+		logger.Info("System Database must be set to external in APIManager custom resource")
+		systemDatabaseInternal = true
 	}
 
-	return backendRedisVerified, systemRedisVerified, systemDatabaseVerified
+	return backendRedisInternal, systemRedisInternal, systemDatabaseInternal
 }
