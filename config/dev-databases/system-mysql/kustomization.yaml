@@ -3,6 +3,8 @@ resources:
   - service.yaml
   - pvc.yaml
   - secret-processed.yaml
+  - mysql-main-conf-processed.yaml
+  - mysql-extra-conf-processed.yaml
 
 images:
   - name: mysql

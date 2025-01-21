@@ -40,6 +40,12 @@ spec:
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql/data
+            - name: mysql-main-conf-volume
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: mysql-extra-conf-volume
+              mountPath: /etc/mysql-extra.d
+              readOnly: true
           livenessProbe:
             tcpSocket:
               port: 3306
@@ -54,3 +60,9 @@ spec:
         - name: mysql-storage
           persistentVolumeClaim:
             claimName: system-mysql-pvc
+        - name: mysql-main-conf-volume
+          configMap:
+            name: mysql-main-conf
+        - name: mysql-extra-conf-volume
+          configMap:
+            name: mysql-extra-conf
