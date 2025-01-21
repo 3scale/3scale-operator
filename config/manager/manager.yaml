@@ -64,7 +64,7 @@ spec:
         - name: RELATED_IMAGE_SYSTEM_REDIS
           value: "quay.io/fedora/redis-7"
         - name: RELATED_IMAGE_ZYNC_POSTGRESQL
-          value: "mirror.gcr.io/library/postgres:13"
+          value: "quay.io/sclorg/postgresql-13-c8s"
         - name: RELATED_IMAGE_OC_CLI
           value: "quay.io/openshift/origin-cli:4.7"
         - name: RELATED_IMAGE_SYSTEM_SEARCHD
