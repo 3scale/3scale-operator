@@ -26,8 +26,7 @@ func (ha *HighAvailability) SystemDatabaseSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSecretSystemDatabaseSecretName,
-			Labels: ha.Options.SystemDatabaseLabels,
+			Name: SystemSecretSystemDatabaseSecretName,
 		},
 		StringData: map[string]string{
 			SystemSecretSystemDatabaseURLFieldName: ha.Options.SystemDatabaseURL,
@@ -43,8 +42,7 @@ func (ha *HighAvailability) BackendRedisSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   BackendSecretBackendRedisSecretName,
-			Labels: ha.Options.BackendRedisLabels,
+			Name: BackendSecretBackendRedisSecretName,
 		},
 		StringData: map[string]string{
 			BackendSecretBackendRedisStorageURLFieldName:           ha.Options.BackendRedisStorageEndpoint,
@@ -65,8 +63,7 @@ func (ha *HighAvailability) SystemRedisSecret() *v1.Secret {
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   SystemSecretSystemRedisSecretName,
-			Labels: ha.Options.SystemRedisLabels,
+			Name: SystemSecretSystemRedisSecretName,
 		},
 		StringData: map[string]string{
 			SystemSecretSystemRedisURLFieldName:  ha.Options.SystemRedisURL,

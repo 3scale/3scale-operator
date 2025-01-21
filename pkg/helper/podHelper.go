@@ -24,7 +24,7 @@ import (
 const (
 	redisDefaultImage      = "quay.io/fedora/redis-7"
 	mySqlDefaultImage      = "quay.io/sclorg/mysql-80-c8s"
-	postgreSqlDefaultImage = "mirror.gcr.io/library/postgres:13"
+	postgreSqlDefaultImage = "quay.io/sclorg/postgresql-13-c8s"
 )
 
 //go:generate moq -out pod_executor_moq.go . PodExecutorInterface

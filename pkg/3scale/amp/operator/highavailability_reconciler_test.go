@@ -20,35 +20,14 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func testBackendRedisSecret() *v1.Secret {
-	data := map[string]string{
-		component.BackendSecretBackendRedisStorageURLFieldName:           "storageURLValue",
-		component.BackendSecretBackendRedisQueuesURLFieldName:            "queueURLValue",
-		component.BackendSecretBackendRedisStorageSentinelHostsFieldName: "storageSentinelHostsValue",
-		component.BackendSecretBackendRedisStorageSentinelRoleFieldName:  "storageSentinelRoleValue",
-		component.BackendSecretBackendRedisQueuesSentinelHostsFieldName:  "queueSentinelHostsValue",
-		component.BackendSecretBackendRedisQueuesSentinelRoleFieldName:   "queueSentinelRoleValue",
-	}
-	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
-}
-
-func testSystemRedisSecret() *v1.Secret {
-	data := map[string]string{
-		component.SystemSecretSystemRedisURLFieldName:  "redis://system1:6379",
-		component.SystemSecretSystemRedisSentinelHosts: "someHosts1",
-		component.SystemSecretSystemRedisSentinelRole:  "someRole1",
-	}
-	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
-}
-
 func TestHighAvailabilityReconciler(t *testing.T) {
 	var (
+		systemMysqlUsername     = "user"
+		systemMysqlPassword     = "password1"
 		log                     = logf.Log.WithName("operator_test")
 		systemMysqlRootPassword = "rootPassw1"
 		systemMysqlDatabaseName = "myDatabaseName"
 		databaseURL             = fmt.Sprintf("mysql2://root:%s@system-mysql/%s", systemMysqlRootPassword, systemMysqlDatabaseName)
-		systemMysqlUsername     = "user"
-		systemMysqlPassword     = "password1"
 	)
 
 	ctx := context.TODO()
@@ -105,4 +84,33 @@ func TestHighAvailabilityReconciler(t *testing.T) {
 
 		})
 	}
+}
+
+func testSystemRedisSecret() *v1.Secret {
+	data := map[string]string{
+		component.SystemSecretSystemRedisURLFieldName:  "redis://system1:6379",
+		component.SystemSecretSystemRedisSentinelHosts: "someHosts1",
+		component.SystemSecretSystemRedisSentinelRole:  "someRole1",
+	}
+	return GetTestSecret(namespace, component.SystemSecretSystemRedisSecretName, data)
+}
+
+func testBackendRedisPodTemplateAnnotations() map[string]string {
+	return map[string]string{"redisConfigMapResourceVersion": "999"}
+}
+
+func testSystemRedisPodTemplateAnnotations() map[string]string {
+	return map[string]string{"redisConfigMapResourceVersion": "999"}
+}
+
+func testBackendRedisSecret() *v1.Secret {
+	data := map[string]string{
+		component.BackendSecretBackendRedisStorageURLFieldName:           "storageURLValue",
+		component.BackendSecretBackendRedisQueuesURLFieldName:            "queueURLValue",
+		component.BackendSecretBackendRedisStorageSentinelHostsFieldName: "storageSentinelHostsValue",
+		component.BackendSecretBackendRedisStorageSentinelRoleFieldName:  "storageSentinelRoleValue",
+		component.BackendSecretBackendRedisQueuesSentinelHostsFieldName:  "queueSentinelHostsValue",
+		component.BackendSecretBackendRedisQueuesSentinelRoleFieldName:   "queueSentinelRoleValue",
+	}
+	return GetTestSecret(namespace, component.BackendSecretBackendRedisSecretName, data)
 }

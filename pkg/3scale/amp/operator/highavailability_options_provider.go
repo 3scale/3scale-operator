@@ -45,10 +45,6 @@ func (h *HighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*compone
 		}
 	}
 
-	h.options.BackendRedisLabels = h.backendRedisLabels()
-	h.options.SystemRedisLabels = h.SystemDatabaseLabels()
-	h.options.SystemDatabaseLabels = h.SystemDatabaseLabels()
-
 	err := h.options.Validate()
 	return h.options, err
 }
@@ -90,25 +86,25 @@ func (h *HighAvailabilityOptionsProvider) setBackendRedisOptions() error {
 			&h.options.BackendRedisStorageSentinelHosts,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisStorageSentinelHostsFieldName,
-			component.DefaultBackendStorageSentinelHosts(),
+			defaultBackendStorageSentinelHosts(),
 		},
 		{
 			&h.options.BackendRedisStorageSentinelRole,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisStorageSentinelRoleFieldName,
-			component.DefaultBackendStorageSentinelRole(),
+			defaultBackendStorageSentinelRole(),
 		},
 		{
 			&h.options.BackendRedisQueuesSentinelHosts,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisQueuesSentinelHostsFieldName,
-			component.DefaultBackendQueuesSentinelHosts(),
+			defaultBackendQueuesSentinelHosts(),
 		},
 		{
 			&h.options.BackendRedisQueuesSentinelRole,
 			component.BackendSecretBackendRedisSecretName,
 			component.BackendSecretBackendRedisQueuesSentinelRoleFieldName,
-			component.DefaultBackendQueuesSentinelRole(),
+			defaultBackendQueuesSentinelRole(),
 		},
 	}
 
@@ -155,13 +151,13 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 			&h.options.SystemRedisSentinelsHosts,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisSentinelHosts,
-			component.DefaultSystemRedisSentinelHosts(),
+			defaultSystemRedisSentinelHosts(),
 		},
 		{
 			&h.options.SystemRedisSentinelsRole,
 			component.SystemSecretSystemRedisSecretName,
 			component.SystemSecretSystemRedisSentinelRole,
-			component.DefaultSystemRedisSentinelRole(),
+			defaultSystemRedisSentinelRole(),
 		},
 	}
 
@@ -199,4 +195,28 @@ func (h *HighAvailabilityOptionsProvider) SystemDatabaseLabels() map[string]stri
 		"app":                  *h.apimanager.Spec.AppLabel,
 		"threescale_component": "system",
 	}
+}
+
+func defaultSystemRedisSentinelHosts() string {
+	return ""
+}
+
+func defaultSystemRedisSentinelRole() string {
+	return ""
+}
+
+func defaultBackendStorageSentinelHosts() string {
+	return ""
+}
+
+func defaultBackendStorageSentinelRole() string {
+	return ""
+}
+
+func defaultBackendQueuesSentinelHosts() string {
+	return ""
+}
+
+func defaultBackendQueuesSentinelRole() string {
+	return ""
 }
