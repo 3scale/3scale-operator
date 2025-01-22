@@ -159,7 +159,7 @@ One APIManager custom resource per project is allowed.
 | Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | LogLevel | `logLevel` | string | No | N/A | Log level for the OpenResty logs  (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_log_level)) |
 | CustomPolicies | `customPolicies` | [][CustomPolicySpec](#CustomPolicySpec) | No | N/A | List of custom policies |
-| OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | **[DEPRECATED]** Use `openTelementry` instead. Contains the OpenTracing integration configuration |
+| OpenTracing | `openTracing` | [APIcastOpenTracingSpec](#APIcastOpenTracingSpec) | No | N/A | **[DEPRECATED]** Use `openTelementry` instead. |
 | OpenTelemetry | `openTelemetry` | [OpenTelemetrySpec](#OpenTelemetrySpec) | No | N/A | contains the OpenTelemetry integration configuration |
 | CustomEnvironments | `customEnvironments` | [][CustomEnvironmentSpec](#CustomEnvironmentSpec) | No | N/A | List of custom environments |
 | HTTPSPort | `httpsPort` | int | No | **8443** only when `httpsCertificateSecretRef` is provided | Controls on which port APIcast should start listening for HTTPS connections. Do not use `8080` as HTTPS port (see [docs](https://github.com/3scale/APIcast/blob/master/doc/parameters.md#apicast_https_port)) |
@@ -197,7 +197,7 @@ Some examples are available [here](/doc/adding-custom-policies.md)
 ### APIcastOpenTracingSpec
 | **Field** | **json/yaml field** | **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Enabled | `enabled` | bool | No | `false` | Controls whether OpenTracing integration with APIcast is enabled. By default it is not enabled |
+| Enabled | `enabled` | bool | No | `false` | **[DEPRECATED**] See [OpenTelemetrySpec](#OpenTelemetrySpec) reference | |
 | TracingLibrary | `tracingLibrary` | string | No | `jaeger` | Controls which OpenTracing library is loaded. At the moment the supported values are: `jaeger`. If not set, `jaeger` will be used |
 | TracingConfigSecretRef | `tracingConfigSecretRef` | LocalObjectReference | No | tracing library-specific default | Secret reference with the tracing library-specific configuration. Each supported tracing library provides a default configuration file which is used if `tracingConfigSecretRef` is not specified. See [APIcastTracingConfigSecret](#APIcastTracingConfigSecret) for more information. |
 
@@ -254,24 +254,24 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Backend |
-| RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by backend. Only takes effect when redis is not managed externally |
-| RedisAffinity | `redisAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when redis is not managed externally |
-| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when redis is not managed externally |
-| RedisResources | `redisResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | RedisResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
-| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[BackendRedisPersistentVolumeClaimSpec](#BackendRedisPersistentVolumeClaimSpec) | No | nil | Backend's Redis PersistentVolumeClaim configuration options. Only takes effect when redis is not managed externally |
+| RedisImage | `redisImage` | string | No | nil |  **[DEPRECATED]** Use external databases only |
+| RedisAffinity | `redisAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| RedisResources | `redisResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[BackendRedisPersistentVolumeClaimSpec](#BackendRedisPersistentVolumeClaimSpec) | No | nil |  **[DEPRECATED]** Use external databases only |
 | ListenerSpec | `listenerSpec` | \*BackendListenerSpec | No | See [BackendListenerSpec](#BackendListenerSpec) reference | Spec of Backend Listener part |
 | WorkerSpec | `workerSpec` | \*BackendWorkerSpec | No | See [BackendWorkerSpec](#BackendWorkerSpec) reference | Spec of Backend Worker part |
 | CronSpec | `cronSpec` | \*BackendCronSpec | No | See [BackendCronSpec](#BackendCronSpec) reference | Spec of Backend Cron part |
-| RedisPriorityClassName         | `redisPriorityClassName`         | string                                                                                                                                    | No           | N/A                                                                                                                                            | If specified, indicates the pod's priority. "system-node-critical" and "system-cluster-critical" are two special keywords which indicate the highest priorities with the former being the highest priority. Any other name must be defined by creating a PriorityClass object with that name. If not specified, the pod priority will be default or zero if there is no default. (see [docs](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/)) |
-| RedisTopologySpreadConstraints | `redisTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No           | `nil`                                                                                                                                          | Specifies how to spread matching pods among the given topology                                                                                                                                                                                                                                          |
-| RedisLabels                    | `redisLabels`                    | map[string]string                                                                                                                        | No           | `nil `                                                                                                                                         | Specifies labels that should be added to component                                                                                                                                                                                                                                                                                   |
-| RedisAnnotations                    | `redisAnnotations`                    | map[string]string                                                                                                                        | No           | `nil `                                                                                                                                         | Specifies Annotations that should be added to component   |
+| RedisPriorityClassName         | `redisPriorityClassName`         | string | No | N/A |  **[DEPRECATED]** Use external databases only |
+| RedisTopologySpreadConstraints | `redisTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil`| **[DEPRECATED]** Use external databases only |
+| RedisLabels                    | `redisLabels` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
+| RedisAnnotations | `redisAnnotations` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
 
 ### BackendRedisPersistentVolumeClaimSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
+| StorageClassName | `storageClassName` | string | No | nil |  **[DEPRECATED]** Use external databases only |
 
 ### BackendListenerSpec
 
@@ -320,17 +320,17 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for System |
-| RedisImage | `redisImage` | string | No | nil | Used to overwrite the desired Redis image for the Redis used by System. Only takes effect when redis is not managed externally |
-| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[SystemRedisPersistentVolumeClaimSpec](#SystemRedisPersistentVolumeClaimSpec) | No | nil | System's Redis PersistentVolumeClaim configuration options. Only takes effect when redis is not managed externally |
-| RedisAffinity | `redisAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules. Only takes effect when redis is not managed externally |
-| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints. Only takes effect when redis is not managed externally |
-| RedisResources | `redisResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | RedisResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
+| RedisImage | `redisImage` | string | No | nil |  **[DEPRECATED]** Use external databases only |
+| RedisPersistentVolumeClaimSpec | `redisPersistentVolumeClaim` | \*[SystemRedisPersistentVolumeClaimSpec](#SystemRedisPersistentVolumeClaimSpec) | No | nil |  **[DEPRECATED]** Use external databases only |
+| RedisAffinity | `redisAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| RedisTolerations | `redisTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| RedisResources | `redisResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
 | MemcachedImage | `memcachedImage` | string | No | nil | Used to overwrite the desired Memcached image for the Memcached used by System |
 | MemcachedAffinity | `memcachedAffinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
 | MemcachedTolerations | `memcachedTolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
 | MemcachedResources | `memcachedResources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | MemcachedResources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
 | FileStorageSpec | `fileStorage` | \*SystemFileStorageSpec | No | See [FileStorageSpec](#FileStorageSpec) specification | Spec of the System's File Storage part |
-| DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [DatabaseSpec](#DatabaseSpec) specification | Spec of the System's Database part |
+| DatabaseSpec | `database` | \*SystemDatabaseSpec | No | See [DatabaseSpec](#DatabaseSpec) specification |  **[DEPRECATED]** Use external databases only |
 | AppSpec | `appSpec` | \*SystemAppSpec | No | See [SystemAppSpec](#SystemAppSpec) reference | Spec of System App part |
 | SidekiqSpec | `sidekiqSpec` | \*SystemSidekiqSpec | No | See [SystemSidekiqSpec](#SystemSidekiqSpec) reference | Spec of System Sidekiq part |
 | SphinxSpec | `sphinxSpec` | \*SystemSphinxSpex | No | **DEPRECATED** Use `SearchdSpec` instead. See [SystemSphinxSpec](#SystemSphinxSpec) reference | Spec of System's Sphinx part |
@@ -338,16 +338,16 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | MemcachedPriorityClassName | `memcachedPriorityClassName`         | string                                                                                                                                    | No           | N/A                                                                                                                                            | If specified, indicates the pod's priority. "system-node-critical" and "system-cluster-critical" are two special keywords which indicate the highest priorities with the former being the highest priority. Any other name must be defined by creating a PriorityClass object with that name. If not specified, the pod priority will be default or zero if there is no default. (see [docs](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/)) |
 | MemcachedTopologySpreadConstraints | `memcachedTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No           | `nil`                                                                                                                                          | Specifies how to spread matching pods among the given topology                                                                                                                                                                                                                                          |
 | MemcachedLabels                    | `memcachedLabels`                    | map[string]string                                                                                                                        | No           | `nil `                                                                                                                                         | Specifies labels that should be added to component                                                                                                                                                                                                                                                                                   |
-| RedisPriorityClassName             | `redisPriorityClassName`             | string                                                                                                                                    | No           | N/A                                                                                                                                            | If specified, indicates the pod's priority. "system-node-critical" and "system-cluster-critical" are two special keywords which indicate the highest priorities with the former being the highest priority. Any other name must be defined by creating a PriorityClass object with that name. If not specified, the pod priority will be default or zero if there is no default. (see [docs](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/)) |
-| RedisTopologySpreadConstraints     | `redisTopologySpreadConstraints`     | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No           | `nil`                                                                                                                                          | Specifies how to spread matching pods among the given topology                                                                                                                                                                                                                                          |
-| RedisLabels                        | `redisLabels`                        | map[string]string                                                                                                                        | No           | `nil `                                                                                                                                         | Specifies labels that should be added to component                                                                                                                                                                                                                                                                                   |
-| RedisAnnotations          | `redisAnnotations`                    | map[string]string  | No           | `nil `  | Specifies Annotations that should be added to component   |
+| RedisPriorityClassName | `redisPriorityClassName` | string | No | N/A | **[DEPRECATED]** Use external databases only |
+| RedisTopologySpreadConstraints | `redisTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| RedisLabels | `redisLabels` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
+| RedisAnnotations | `redisAnnotations` | map[string]string | No | `nil `  |  **[DEPRECATED]** Use external databases only |
 
 ### SystemRedisPersistentVolumeClaimSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
+| StorageClassName | `storageClassName` | string | No | nil |  **[DEPRECATED]** Use external databases only |
 
 ### FileStorageSpec
 
@@ -404,54 +404,53 @@ Note: Deploying databases internally with this section is meant for evaluation p
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| MySQL | `mysql`| \*SystemMySQLSpec | No | nil | Enable MySQL database as System's database. Only takes effect when the instance is not managed externally. See [MySQLSpec](#MySQLSpec) specification |
-| PostgreSQL | `postgresql` | \*SystemPostgreSQLSpec | No | nil | Enable PostgreSQL database as System's database. Only takes effect when the instance is not managed externally. See [PostgreSQLSpec](#PostgreSQLSpec)
+| MySQL | `mysql`| \*SystemMySQLSpec | No | nil |  **[DEPRECATED]** Use external databases only |
+| PostgreSQL | `postgresql` | \*SystemPostgreSQLSpec | No | nil |  **[DEPRECATED]** Use external databases only |
 
 ### MySQLSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Image | `image` | string | No | nil | Used to overwrite the desired container image for System's MySQL database |
-| PersistentVolumeClaimSpec | `persistentVolumeClaim` | [PVCGenericSpec](#PVCGenericSpec) | No | nil | System's MySQL PersistentVolumeClaim configuration options |
-| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
-| PriorityClassName         | `priorityClassName`         | string                                                                                                                                    | No           | N/A                                                                                                                                            | If specified, indicates the pod's priority. "system-node-critical" and "system-cluster-critical" are two special keywords which indicate the highest priorities with the former being the highest priority. Any other name must be defined by creating a PriorityClass object with that name. If not specified, the pod priority will be default or zero if there is no default. (see [docs](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/))                                                                                                                                                                                                                                                                              |
-| TopologySpreadConstraints | `topologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No           | `nil`                                                                                                                                          | Specifies how to spread matching pods among the given topology                                                                                                                                                                                                                                          |
-| Labels                    | `labels`                    | map[string]string                                                                                                                        | No           | `nil `                                                                                                                                         | Specifies labels that should be added to component                                                                                                                                                                                                                                                                                   |
-| Annotations          | `annotations`                    | map[string]string  | No           | `nil `  | Specifies Annotations that should be added to component   |
+| Image | `image` | string | No | nil | **[DEPRECATED]** Use external databases only |
+| PersistentVolumeClaimSpec | `persistentVolumeClaim` | [PVCGenericSpec](#PVCGenericSpec) | No | nil | **[DEPRECATED]** Use external databases only |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | **[DEPRECATED]** Use external databases only |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | **[DEPRECATED]** Use external databases only |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| PriorityClassName         | `priorityClassName`         | string | No | N/A |  **[DEPRECATED]** Use external databases only |
+| TopologySpreadConstraints | `topologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| Labels | `labels` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
+| Annotations | `annotations` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
 
 ### SystemMySQLPVCSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
-| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. This parameter is not updateable when the underlying PV is not resizable. |
-| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
+| StorageClassName | `storageClassName` | string | No | nil |  **[DEPRECATED]** Use external databases only |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil |  **[DEPRECATED]** Use external databases only |
+| VolumeName | `volumeName` | string | No | nil |  **[DEPRECATED]** Use external databases only |
 
 ### PostgreSQLSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Image | `image` | string | No | nil | Used to overwrite the desired container image for System's PostgreSQL database |
-| PersistentVolumeClaimSpec | `persistentVolumeClaim` | [PVCGenericSpec](#PVCGenericSpec) | No | nil | System's PostgreSQL PersistentVolumeClaim configuration options |
-| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` | Affinity is a group of affinity scheduling rules |
-| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` | Tolerations allow pods to schedule onto nodes with matching taints |
-| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` | Resources describes the compute resource requirements. Takes precedence over `spec.resourceRequirementsEnabled` with replace behavior |
-| PriorityClassName         | `priorityClassName`         | string                                                                                                                                    | No           | N/A                                                                                                                                            | If specified, indicates the pod's priority. "system-node-critical" and "system-cluster-critical" are two special keywords which indicate the highest priorities with the former being the highest priority. Any other name must be defined by creating a PriorityClass object with that name. If not specified, the pod priority will be default or zero if there is no default. (see [docs](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/))                                                                                                                                                                                                                                                                              |
-| TopologySpreadConstraints | `topologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No           | `nil`                                                                                                                                          | Specifies how to spread matching pods among the given topology                                                                                                                                                                                                                                          |
-| Labels                    | `labels`                    | map[string]string                                                                                                                        | No           | `nil `                                                                                                                                         | Specifies labels that should be added to component                                                                                                                                                                                                                                                                                   |
-| Annotations          | `annotations`                    | map[string]string  | No           | `nil `  | Specifies Annotations that should be added to component   |
+| Image | `image` | string | No | nil |  **[DEPRECATED]** Use external databases only |
+| PersistentVolumeClaimSpec | `persistentVolumeClaim` | [PVCGenericSpec](#PVCGenericSpec) | No | nil |  **[DEPRECATED]** Use external databases only |
+| Affinity | `affinity` | [v1.Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#affinity-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| Tolerations | `tolerations` | \[\][v1.Tolerations](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| Resources | `resources` | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| PriorityClassName         | `priorityClassName`         | string | No | N/A |  **[DEPRECATED]** Use external databases only |
+| TopologySpreadConstraints | `topologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
+| Labels | `labels` | map[string]string | No | `nil `|  **[DEPRECATED]** Use external databases only |
+| Annotations| `annotations` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
 
 
 ### SystemPostgreSQLPVCSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| StorageClassName | `storageClassName` | string | No | nil | The Storage Class to be used by the PVC |
-| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil | The minimum resources the volume should have. Resources will not take any effect when VolumeName is provided. This parameter is not updateable when the underlying PV is not resizable. |
-| VolumeName | `volumeName` | string | No | nil | The binding reference to the existing PersistentVolume backing this claim |
-
+| StorageClassName | `storageClassName` | string | No | nil |  **[DEPRECATED]** Use external databases only |
+| Resources | `resources` | [PersistentVolumeClaimResourcesSpec](#PersistentVolumeClaimResourcesSpec) | No | nil |  **[DEPRECATED]** Use external databases only |
+| VolumeName | `volumeName` | string | No | nil |  **[DEPRECATED]** Use external databases only |
 ### SystemAppSpec
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
@@ -590,16 +589,16 @@ Use of slaves for Internal Redis is not supported.
 
 | **json/yaml field**| **Type** | **Required** | **Description** |
 | --- | --- | --- | --- |
-| `system` | \*[ExternalSystemComponents](#ExternalSystemComponents) | No | Use external system databases |
-| `backend` | \*[ExternalBackendComponents](#ExternalBackendComponents) | No | Use external backend databases |
+| `system` | \*[ExternalSystemComponents](#ExternalSystemComponents) | Yes | Use external system databases |
+| `backend` | \*[ExternalBackendComponents](#ExternalBackendComponents) | Yes | Use external backend databases |
 | `zync` | \*[ExternalZyncComponents](#ExternalZyncComponents) | No | Use external zync databases |
 
 ### ExternalSystemComponents
 
 | **json/yaml field**| **Type** | **Required** | **Description** |
 | --- | --- | --- | --- |
-| `redis` | `bool` | No | Use external redis databases. Defaults to `false` |
-| `database` | `bool` | No | Use external RDBMS database. Defaults to `false` |
+| `redis` | `bool` | Yes | Use external redis databases. Defaults to `false` |
+| `database` | `bool` | Yes | Use external RDBMS database. Defaults to `false` |
 
 When system `redis` is enabled the following secret has to be pre-created by the user:
 
@@ -615,7 +614,7 @@ When system `database` is enabled the following secret has to be pre-created by 
 
 | **json/yaml field**| **Type** | **Required** | **Description** |
 | --- | --- | --- | --- |
-| `redis` | `bool` | No | Use external redis databases. Defaults to `false` |
+| `redis` | `bool` | Yes | Use external redis databases. Defaults to `false` |
 
 When backend `redis` is enabled the following secret has to be pre-created by the user:
 

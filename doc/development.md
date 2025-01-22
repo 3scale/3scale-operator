@@ -87,6 +87,18 @@ make download
 make run
 ```
 
+* Alternatively run:
+
+```sh
+make cluster/prepare/local
+```
+This command will
+- create namespace called 3scale-test (namespace name can be adjusted with `NAMESPACE` envar)
+- install the CRDs
+- provision backend Redis instance and create required by 3scale secret
+- provision system Redis instance and create required by 3scale secret
+- provision MySQL database instance and create required by 3scale secret (alternatively, you can choose PostgreSQL by setting envar: `DEV_SYSTEM_DB_POSTGRES=true`)
+
 ### Deploy custom 3scale Operator using OLM
 
 * Build and upload custom operator image
@@ -145,8 +157,9 @@ make test-unit
 Access to a Openshift v4.8.0+ cluster required
 
 ```sh
-make test-e2e
+WATCH_NAMESPACE=3scale-test make test-e2e
 ```
+Note that the value of the WATCH_NAMESPACE is irrelevant but required. E2E test will create an new namespace regardless of the value of WATCH_NAMESPACE 
 
 ## Building 3scale prometheus rules
 

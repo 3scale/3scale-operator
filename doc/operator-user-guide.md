@@ -74,6 +74,8 @@ see the [OpenShift documentation](https://access.redhat.com/documentation/en-us/
 
 To deploy the minimal APIManager object with all default values, follow the following procedure:
 1. Click *Catalog > Installed Operators*. From the list of *Installed Operator*s, click _3scale Operator_.
+1. Create database deployments for: System Redis, Backend Redis and System Database
+1. Create required secrets for System Redis, Backend Redis and System Database 
 1. Click *API Manager > Create APIManager*
 1. Create *APIManager* object with the following content.
 
@@ -83,6 +85,12 @@ kind: APIManager
 metadata:
   name: example-apimanager
 spec:
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      database: true
+      redis: true
   wildcardDomain: <wildcardDomain>
 ```
 
@@ -109,13 +117,11 @@ All required access credentials are stored in `system-seed` secret.
 
 By default, the following deployment configuration options will be applied:
 * Containers will have [k8s resources limits and requests](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) specified. The advantage is twofold: ensure a minimum performance level and limit resources to allow external services and solutions to be allocated.
-* Internal databases will be deployed.
 * Filestorage will be based on *Persistent Volumes*, one of them requiring
   *RWX* access mode. Openshift must be configured to provide them when
   requested. For the  RWX persistent volume, a preexisting custom storage
   class to be used can be specified by the user if desired
   (see [Setting a custom Storage Class for System FileStorage RWX PVC-based installations](#setting-a-custom-storage-class-for-system-filestorage-rwx-pvc-based-installations))
-* Mysql will be the internal relational database deployed.
 
 Default configuration option is suitable for PoC or evaluation by a customer.
 
@@ -136,8 +142,40 @@ kind: APIManager
 metadata:
   name: example-apimanager
 spec:
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      database: true
+      redis: true
   wildcardDomain: lvh.me
   resourceRequirementsEnabled: false
+```
+Note that access to OpenShift cluster and creation of databases is required.
+For quick and easy creation of the databases, login to the desired namespace and run the following commands:
+
+Backend Redis:
+```
+make cluster/create/backend-redis
+```
+
+System Redis:
+
+```
+make cluster/create/system-redis
+```
+
+System MySQL Database:
+
+```
+cluster/create/system-mysql
+```
+OR
+
+System PostgreSQL Database:
+
+```
+make cluster/create/system-postgres
 ```
 
 Check [*APIManager*](apimanager-reference.md) custom resource for reference.
@@ -149,46 +187,21 @@ Suitable for production use where customers want self-managed databases.
 
 | Database | Version |
 | :--- | :--- |
-| MySQL | 8.0 |
-| Redis | 5 |
-| PostgreSQL | 10.6 |
+| MySQL | 8.X |
+| Redis | 7.X |
+| PostgreSQL | 13.X |
 
 
 3scale API Management requires the following database instances:
 
-* Backend Redis (two instances: storage and queue)
-* System Redis
-* System RDBMS
-* Zync RDBMS
+* Backend Redis (two instances: storage and queue) (Required)
+* System Redis (Required)
+* System RDBMS (Required)
+* Zync RDBMS (Optional - operator will provision one for you if it's missing and not declared in externalComponents as true)
 
 The [*APIManager External Component Spec*](apimanager-reference.md#ExternalComponentsSpec)
 allows to pick which databases will be externally managed and with databases will be managed by the
-3scale operator. The following example helps to illustrate:
-
-```yaml
-apiVersion: apps.3scale.net/v1alpha1
-kind: APIManager
-metadata:
-  name: example-apimanager
-spec:
-  wildcardDomain: lvh.me
-  externalComponents:
-    backend:
-      redis: true
-    system:
-      database: false
-      redis: true
-    zync:
-      database: false
-```
-
-In the example above, backend redis and system redis will be externally managed and the 3scale
-operator will deploy and configure system database and zync database components.
-
-The 3scale operator requires a secret with the connection string for every single external database
-component. If a externally managed database secret does not exist, the operator will not deploy 3scale.
-
-Use of slaves for Internal Redis is not supported.
+3scale operator.
 
 * **Backend redis secret**
 
@@ -487,7 +500,9 @@ For example, if a user has deployed and configured a storage class that
 provisions PVC volumes through NFS, and has named this storage class `nfs`,
 the value of `<existing-storage-class-name>` should be `nfs`
 
-#### PostgreSQL Installation
+#### Deprecated - PostgreSQL Installation
+
+**DEPRECATED** All 3scale databases apart from Zync database must be configured externally
 
 By default, Mysql will be the internal relational database deployed.
 This deployment configuration can be overrided to use PostgreSQL instead.
@@ -685,7 +700,7 @@ spec:
           requests: 2Gi
 ```
 
-* *MySQL (RWO) PVC*
+* *MySQL (RWO) PVC* - **DEPRECATED**
 ```
 apiVersion: apps.3scale.net/v1alpha1
 kind: APIManager
@@ -701,7 +716,7 @@ spec:
             requests: 2Gi
 ```
 
-* *PostgreSQL (RWO) PVC*
+* *PostgreSQL (RWO) PVC* - **DEPRECATED**
 ```
 apiVersion: apps.3scale.net/v1alpha1
 kind: APIManager
@@ -909,6 +924,7 @@ Please refer to [Gateway instrumentation](gateway-instrumentation.md) document
 
 Operator will perform a set of preflight checks to ensure that:
 - the database versions are of minimum required versions
+- the Backend Redis, System Redis and System Database are set to external components
 - in the event of upgrades, the upgrade on APIManager instance can be performed without breaking existing APIManager instance
 
 Operator will create a config map called "3scale-api-management-operator-requirements" which will list the required 

@@ -26,10 +26,23 @@ kind: APIManager
 metadata:
   name: example-apimanager
 spec:
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      database: true
+      redis: true
   wildcardDomain: <wildcardDomain>
 ```
 
 The wildcardDomain parameter can be any desired name you wish to give that resolves to an IP address, which is a valid DNS domain. Be sure to remove the placeholder marks for your parameters: < >.
+The externalComponents are required fields from 2.16 onwards. Following are required:
+- System database deployment
+- System database secret
+- Backend Redis deployment
+- Backend Redis secret
+- System Redis deployment
+- System Redis secret
 
 # Start using 3scale
 
