@@ -14,10 +14,10 @@ metadata:
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/3scale/3scale-operator
-    rht_backend_redis_requirements: 6.0.0
+    rht_backend_redis_requirements: 7.0.0
     rht_mysql_requirements: 8.0.0
-    rht_postgres_requirements: 10.0.0
-    rht_system_redis_requirements: 6.0.0
+    rht_postgres_requirements: 13.0.0
+    rht_system_redis_requirements: 7.0.0
     support: Red Hat
     tectonic-visibility: ocs
   labels:

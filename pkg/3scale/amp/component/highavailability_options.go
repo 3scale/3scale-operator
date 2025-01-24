@@ -13,10 +13,6 @@ type HighAvailabilityOptions struct {
 	SystemRedisURL                   string
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
-
-	BackendRedisLabels   map[string]string `validate:"required"`
-	SystemRedisLabels    map[string]string `validate:"required"`
-	SystemDatabaseLabels map[string]string `validate:"required"`
 }
 
 func NewHighAvailabilityOptions() *HighAvailabilityOptions {

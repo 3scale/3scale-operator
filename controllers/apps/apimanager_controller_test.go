@@ -16,13 +16,16 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	routev1 "github.com/openshift/api/route/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -108,6 +111,14 @@ var _ = Describe("APIManager controller", func() {
 			}
 
 			err := testK8sClient.Create(context.Background(), dummyS3Secret)
+			Expect(err).ToNot(HaveOccurred())
+
+			// create mysql database
+			err = createMysqlDatabase(testNamespace, testK8sClient)
+			Expect(err).ToNot(HaveOccurred())
+
+			// create system and backend redis
+			err = createRedisDatabases(testNamespace, testK8sClient)
 			Expect(err).ToNot(HaveOccurred())
 			Eventually(func() bool {
 				err := testK8sClient.Get(context.Background(), types.NamespacedName{Name: dummyS3Secret.Name, Namespace: dummyS3Secret.Namespace}, dummyS3Secret)
@@ -214,6 +225,655 @@ var _ = Describe("APIManager controller", func() {
 		})
 	})
 })
+
+func createRedisDatabases(namespace string, k8sclient client.Client) error {
+	// Create backend-redis secret
+	err := createBackendRedisSecret(namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create backend redis pvc
+	err = createPVC("backend-redis-pvc", namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create backend redis service
+	err = createService("backend-redis", "backend-redis", namespace, 6379, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create backend redis deployment
+	err = createRedisDeployment("backend-redis", "backend-redis-pvc", namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create system-redis secret
+	err = createSystemRedisSecret(namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create system-redis pvc
+	err = createPVC("system-redis-pvc", namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create system-redis service
+	err = createService("system-redis", "system-redis", namespace, 6379, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create system-redis deployment
+	err = createRedisDeployment("system-redis", "system-redis-pvc", namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createRedisDeployment(deploymentName, pvcName, namespace string, k8sclient client.Client) error {
+	// Define the Deployment
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app": deploymentName,
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: int32Ptr(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": deploymentName,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": deploymentName,
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "redis",
+							Image: "quay.io/fedora/redis-7",
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 6379,
+								},
+							},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("64Mi"),
+									corev1.ResourceCPU:    resource.MustParse("250m"),
+								},
+								Limits: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("128Mi"),
+									corev1.ResourceCPU:    resource.MustParse("500m"),
+								},
+							},
+							LivenessProbe: &v1.Probe{
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Int,
+											IntVal: 6379,
+										},
+									},
+								},
+								InitialDelaySeconds: 30,
+								TimeoutSeconds:      0,
+								PeriodSeconds:       10,
+								SuccessThreshold:    0,
+								FailureThreshold:    0,
+							},
+							ReadinessProbe: &v1.Probe{
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.FromInt(6379),
+									},
+								},
+								InitialDelaySeconds: 10,
+								TimeoutSeconds:      5,
+								PeriodSeconds:       30,
+								SuccessThreshold:    0,
+								FailureThreshold:    0,
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "redis-storage",
+									MountPath: "/data",
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "redis-storage",
+							VolumeSource: corev1.VolumeSource{
+								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+									ClaimName: pvcName,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Check if the Deployment already exists
+	existingDeployment := &appsv1.Deployment{}
+	err := k8sclient.Get(context.TODO(), client.ObjectKey{
+		Name:      deploymentName,
+		Namespace: namespace,
+	}, existingDeployment)
+
+	if err == nil {
+		// Deployment already exists
+		fmt.Println("Deployment already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the Deployment
+	if err := k8sclient.Create(context.TODO(), deployment); err != nil {
+		return fmt.Errorf("failed to create deployment: %w", err)
+	}
+
+	fmt.Println("Deployment created successfully.")
+	return nil
+}
+
+func createSystemRedisSecret(namespace string, k8sclient client.Client) error {
+	// Define the Secret
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "system-redis",
+			Namespace: namespace,
+		},
+		StringData: map[string]string{
+			"SENTINEL_HOSTS": "",
+			"SENTINEL_ROLE":  "",
+			"URL":            fmt.Sprintf("redis://system-redis.%s.svc.cluster.local:6379/1", namespace),
+		},
+		Type: corev1.SecretTypeOpaque,
+	}
+
+	// Check if the Secret already exists
+	existingSecret := &corev1.Secret{}
+	err := k8sclient.Get(context.TODO(), client.ObjectKey{
+		Name:      "system-redis",
+		Namespace: namespace,
+	}, existingSecret)
+
+	if err == nil {
+		// Secret already exists
+		fmt.Println("Secret already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the Secret
+	if err := k8sclient.Create(context.TODO(), secret); err != nil {
+		return fmt.Errorf("failed to create secret: %w", err)
+	}
+
+	fmt.Println("Secret created successfully.")
+	return nil
+}
+
+func createBackendRedisSecret(namespace string, k8sclient client.Client) error {
+	// Define the Secret
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "backend-redis",
+			Namespace: namespace,
+		},
+		StringData: map[string]string{
+			"REDIS_QUEUES_SENTINEL_HOSTS":  "",
+			"REDIS_QUEUES_SENTINEL_ROLE":   "",
+			"REDIS_QUEUES_URL":             fmt.Sprintf("redis://backend-redis.%s.svc.cluster.local:6379/1", namespace),
+			"REDIS_STORAGE_SENTINEL_HOSTS": "",
+			"REDIS_STORAGE_SENTINEL_ROLE":  "",
+			"REDIS_STORAGE_URL":            fmt.Sprintf("redis://backend-redis.%s.svc.cluster.local:6379/2", namespace),
+		},
+		Type: corev1.SecretTypeOpaque,
+	}
+
+	// Check if the Secret already exists
+	existingSecret := &corev1.Secret{}
+	err := k8sclient.Get(context.TODO(), client.ObjectKey{
+		Name:      "backend-redis",
+		Namespace: namespace,
+	}, existingSecret)
+
+	if err == nil {
+		// Secret already exists
+		fmt.Println("Secret already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the Secret
+	if err := k8sclient.Create(context.TODO(), secret); err != nil {
+		return fmt.Errorf("failed to create secret: %w", err)
+	}
+
+	fmt.Println("Secret created successfully.")
+	return nil
+}
+
+func createMysqlDatabase(namespace string, k8sclient client.Client) error {
+	// Create secret
+	err := createSystemDatabaseSecret(namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create PVC
+	err = createPVC("system-mysql-pvc", namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create service
+	err = createService("system-mysql", "mysql", namespace, 3306, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create main configuration config map
+	err = createMainConfigCM(namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create extra configuration config map
+	err = createConfigurationCM(namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	// Create deployment
+	err = createMySQLDeployment(namespace, k8sclient)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createMainConfigCM(namespace string, k8sclient client.Client) error {
+	// Define the ConfigMap
+	configMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "mysql-main-conf",
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app": "mysql",
+			},
+		},
+		Data: map[string]string{
+			"my.cnf": "!include /etc/my.cnf\n!includedir /etc/my-extra.d\n",
+		},
+	}
+
+	// Check if the configmap already exists
+	existingCM := &v1.ConfigMap{}
+	err := k8sclient.Get(context.TODO(), client.ObjectKey{
+		Name:      "mysql-main-conf",
+		Namespace: namespace,
+	}, existingCM)
+
+	if err == nil {
+		// CM already exists
+		fmt.Println("ConfigMap already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the configMap
+	if err := k8sclient.Create(context.TODO(), configMap); err != nil {
+		return fmt.Errorf("failed to create configMap: %w", err)
+	}
+
+	fmt.Println("configMap created successfully.")
+
+	return nil
+}
+
+func createConfigurationCM(namespace string, k8sclient client.Client) error {
+	configMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "mysql-extra-conf",
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app": "mysql",
+			},
+		},
+		Data: map[string]string{
+			"mysql-charset.cnf": `[client]
+default-character-set = utf8
+
+[mysql]
+default-character-set = utf8
+
+[mysqld]
+character-set-server = utf8
+collation-server = utf8_unicode_ci
+`,
+			"mysql-default-authentication-plugin.cnf": `[mysqld]
+default_authentication_plugin=mysql_native_password
+`,
+		},
+	}
+
+	// Check if the configmap already exists
+	existingCM := &v1.ConfigMap{}
+	err := k8sclient.Get(context.TODO(), client.ObjectKey{
+		Name:      "mysql-extra-conf",
+		Namespace: namespace,
+	}, existingCM)
+
+	if err == nil {
+		// CM already exists
+		fmt.Println("ConfigMap already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the configMap
+	if err := k8sclient.Create(context.TODO(), configMap); err != nil {
+		return fmt.Errorf("failed to create configMap: %w", err)
+	}
+
+	fmt.Println("configMap created successfully.")
+
+	return nil
+}
+
+func createMySQLDeployment(namespace string, k8sclient client.Client) error {
+	deployment := &k8sappsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "system-mysql",
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app": "mysql",
+			},
+		},
+		Spec: k8sappsv1.DeploymentSpec{
+			Strategy: k8sappsv1.DeploymentStrategy{
+				Type: k8sappsv1.RecreateDeploymentStrategyType,
+			},
+			Replicas: int32Ptr(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "mysql",
+				},
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": "mysql",
+					},
+				},
+				Spec: v1.PodSpec{
+					Volumes: []v1.Volume{
+						{
+							Name: "mysql-storage",
+							VolumeSource: v1.VolumeSource{
+								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+									ClaimName: "system-mysql-pvc",
+									ReadOnly:  false,
+								},
+							},
+						},
+						{
+							Name: "mysql-extra-conf",
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "mysql-extra-conf",
+									},
+								},
+							},
+						},
+						{
+							Name: "mysql-main-conf",
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "mysql-main-conf",
+									},
+								},
+							},
+						},
+					},
+					Containers: []v1.Container{
+						{
+							Name:  "system-mysql",
+							Image: "quay.io/sclorg/mysql-80-c8s",
+							Ports: []v1.ContainerPort{
+								{
+									HostPort:      0,
+									ContainerPort: 3306,
+									Protocol:      v1.ProtocolTCP,
+								},
+							},
+							Env: []v1.EnvVar{
+								helper.EnvVarFromSecret("MYSQL_USER", "system-database", "DB_USER"),
+								helper.EnvVarFromSecret("MYSQL_PASSWORD", "system-database", "DB_PASSWORD"),
+								helper.EnvVarFromValue("MYSQL_DATABASE", "dev"),
+								helper.EnvVarFromSecret("MYSQL_ROOT_PASSWORD", "system-database", "DB_ROOT_PASSWORD"),
+								helper.EnvVarFromValue("MYSQL_LOWER_CASE_TABLE_NAMES", "1"),
+								helper.EnvVarFromValue("MYSQL_DEFAULTS_FILE", "/etc/my-extra/my.cnf"),
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "mysql-storage",
+									ReadOnly:  false,
+									MountPath: "/var/lib/mysql/data",
+								},
+								{
+									Name:      "mysql-extra-conf",
+									ReadOnly:  false,
+									MountPath: "/etc/my-extra.d",
+								},
+								{
+									Name:      "mysql-main-conf",
+									ReadOnly:  false,
+									MountPath: "/etc/my-extra",
+								},
+							},
+							LivenessProbe: &v1.Probe{
+								ProbeHandler: v1.ProbeHandler{
+									TCPSocket: &v1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											Type:   intstr.Int,
+											IntVal: 3306,
+										},
+									},
+								},
+								InitialDelaySeconds: 30,
+								TimeoutSeconds:      0,
+								PeriodSeconds:       10,
+								SuccessThreshold:    0,
+								FailureThreshold:    0,
+							},
+							ReadinessProbe: &v1.Probe{
+								ProbeHandler: v1.ProbeHandler{
+									Exec: &v1.ExecAction{
+										Command: []string{"/bin/sh", "-i", "-c", "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"},
+									},
+								},
+								InitialDelaySeconds: 10,
+								TimeoutSeconds:      5,
+								PeriodSeconds:       30,
+								SuccessThreshold:    0,
+								FailureThreshold:    0,
+							},
+							ImagePullPolicy: v1.PullIfNotPresent,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Check if the Deployment already exists
+	existingDeployment := &appsv1.Deployment{}
+	err := k8sclient.Get(context.TODO(), client.ObjectKey{
+		Name:      "system-mysql",
+		Namespace: namespace,
+	}, existingDeployment)
+
+	if err == nil {
+		// Deployment already exists
+		fmt.Println("Deployment already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the Deployment
+	if err := k8sclient.Create(context.TODO(), deployment); err != nil {
+		return fmt.Errorf("failed to create deployment: %w", err)
+	}
+
+	fmt.Println("Deployment created successfully.")
+	return nil
+}
+
+func int32Ptr(i int32) *int32 { return &i }
+
+func createService(name, label, namespace string, port int32, k8sclient client.Client) error {
+	// Define the Service
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app": label,
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Port:       port,
+					TargetPort: intstr.FromInt(int(port)),
+				},
+			},
+			Selector: map[string]string{
+				"app": label,
+			},
+			Type: corev1.ServiceTypeClusterIP,
+		},
+	}
+
+	// Check if the Service already exists
+	existingService := &corev1.Service{}
+	err := k8sclient.Get(context.TODO(), types.NamespacedName{
+		Name:      name,
+		Namespace: namespace,
+	}, existingService)
+
+	if err == nil {
+		fmt.Println("Service already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the Service
+	if err := k8sclient.Create(context.TODO(), service); err != nil {
+		return fmt.Errorf("failed to create service: %w", err)
+	}
+
+	fmt.Println("Service created successfully.")
+	return nil
+}
+
+func createSystemDatabaseSecret(namespace string, k8sclient client.Client) error {
+	// Define the secret
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "system-database",
+			Namespace: namespace,
+		},
+		StringData: map[string]string{
+			"DB_USER":          "mysql",
+			"DB_PASSWORD":      "password",
+			"DB_ROOT_PASSWORD": "rootpassword",
+			"URL":              fmt.Sprintf("mysql2://root:rootpassword@system-mysql.%s.svc.cluster.local/dev", namespace),
+		},
+		Type: corev1.SecretTypeOpaque,
+	}
+
+	// Check if the secret already exists
+	existingSecret := &corev1.Secret{}
+	err := k8sclient.Get(context.TODO(), types.NamespacedName{
+		Name:      "system-database",
+		Namespace: namespace,
+	}, existingSecret)
+
+	if err == nil {
+		fmt.Println("Secret already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the secret
+	if err := k8sclient.Create(context.TODO(), secret); err != nil {
+		return fmt.Errorf("failed to create secret: %w", err)
+	}
+
+	fmt.Println("Secret created successfully.")
+	return nil
+}
+
+func createPVC(name, namespace string, k8sclient client.Client) error {
+	// Define the PVC
+	pvc := &v1.PersistentVolumeClaim{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PersistentVolumeClaim",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes: []v1.PersistentVolumeAccessMode{
+				v1.PersistentVolumeAccessMode("ReadWriteOnce"),
+			},
+			Resources: v1.VolumeResourceRequirements{
+				Requests: v1.ResourceList{
+					v1.ResourceStorage: resource.MustParse("1Gi"),
+				},
+			},
+		},
+	}
+
+	// Check if the PVC already exists
+	existingPVC := &corev1.PersistentVolumeClaim{}
+	err := k8sclient.Get(context.TODO(), types.NamespacedName{
+		Name:      name,
+		Namespace: namespace,
+	}, existingPVC)
+
+	if err == nil {
+		fmt.Println("PVC already exists. Skipping creation.")
+		return nil
+	}
+
+	// Create the PVC
+	if err := k8sclient.Create(context.TODO(), pvc); err != nil {
+		return fmt.Errorf("failed to create PVC: %w", err)
+	}
+
+	fmt.Println("PVC created successfully.")
+	return nil
+}
 
 func waitForAllAPIManagerStandardDeployments(namespace string, retryInterval, timeout time.Duration, w io.Writer) error {
 	deploymentNames := []string{ // TODO gather this from constants/somewhere centralized

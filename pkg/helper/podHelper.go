@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	redisDefaultImage      = "quay.io/fedora/redis-6"
+	redisDefaultImage      = "quay.io/fedora/redis-7"
 	mySqlDefaultImage      = "quay.io/sclorg/mysql-80-c8s"
-	postgreSqlDefaultImage = "quay.io/sclorg/postgresql-10-c8s"
+	postgreSqlDefaultImage = "quay.io/sclorg/postgresql-13-c8s"
 )
 
 //go:generate moq -out pod_executor_moq.go . PodExecutorInterface
@@ -239,7 +239,7 @@ func CreateDatabaseThrowAwayPod(k8sclient client.Client, namespace, dbType strin
 }
 
 func throwAwayPostgres(namespace string) *v1.Pod {
-	systemPostgresImage := GetEnvVar("RELATED_IMAGE_SYSTEM_POSTGRESQL", postgreSqlDefaultImage)
+	systemPostgresImage := GetEnvVar("RELATED_IMAGE_ZYNC_POSTGRESQL", postgreSqlDefaultImage)
 	return &v1.Pod{
 		ObjectMeta: apimachinerymetav1.ObjectMeta{
 			Name:      "throwaway-postgres",

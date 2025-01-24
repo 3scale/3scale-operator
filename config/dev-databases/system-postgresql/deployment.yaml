@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: system-postgresql
+  labels:
+    app: system-postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: system-postgresql
+  template:
+    metadata:
+      labels:
+        app: system-postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: postgres
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: system-database
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: system-database
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              value: "dev"
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata              
+          volumeMounts:
+            - name: postgresql-storage
+              mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: postgresql-storage
+          persistentVolumeClaim:
+            claimName: system-postgresql-pvc

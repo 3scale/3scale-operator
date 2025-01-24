@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-main-conf
+  labels:
+    app: mysql
+data:
+  my.cnf: |
+    !include /etc/my.cnf
+    !includedir /etc/my-extra.d

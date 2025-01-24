@@ -120,31 +120,15 @@ func (s *APIManagerStatusReconciler) calculateStatus() (*appsv1alpha1.APIManager
 }
 
 func (s *APIManagerStatusReconciler) expectedDeploymentNames(instance *appsv1alpha1.APIManager) []string {
-	var systemDatabaseType component.SystemDatabaseType
-	var externalRedisDatabases bool
 	var externalZyncDatabase bool
 
-	if instance.IsExternal(appsv1alpha1.SystemDatabase) {
-		systemDatabaseType = component.SystemDatabaseTypeExternal
-	} else {
-		if instance.IsSystemPostgreSQLEnabled() {
-			systemDatabaseType = component.SystemDatabaseTypeInternalPostgreSQL
-		} else {
-			systemDatabaseType = component.SystemDatabaseTypeInternalMySQL
-		}
-	}
-	if instance.IsExternal(appsv1alpha1.SystemRedis) {
-		externalRedisDatabases = true
-	}
 	if instance.IsExternal(appsv1alpha1.ZyncDatabase) && s.apimanagerResource.IsZyncEnabled() {
 		externalZyncDatabase = true
 	}
 
 	deploymentLister := component.DeploymentsLister{
-		SystemDatabaseType:     systemDatabaseType,
-		ExternalRedisDatabases: externalRedisDatabases,
-		ExternalZyncDatabase:   externalZyncDatabase,
-		IsZyncEnabled:          s.apimanagerResource.IsZyncEnabled(),
+		ExternalZyncDatabase: externalZyncDatabase,
+		IsZyncEnabled:        s.apimanagerResource.IsZyncEnabled(),
 	}
 
 	return deploymentLister.DeploymentNames()

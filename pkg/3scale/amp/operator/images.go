@@ -25,22 +25,6 @@ func SystemMemcachedImageURL() string {
 	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_MEMCACHED", component.SystemMemcachedImageURL())
 }
 
-func BackendRedisImageURL() string {
-	return helper.GetEnvVar("RELATED_IMAGE_BACKEND_REDIS", component.BackendRedisImageURL())
-}
-
-func SystemRedisImageURL() string {
-	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_REDIS", component.SystemRedisImageURL())
-}
-
-func SystemMySQLImageURL() string {
-	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_MYSQL", component.SystemMySQLImageURL())
-}
-
-func SystemPostgreSQLImageURL() string {
-	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_POSTGRESQL", component.SystemPostgreSQLImageURL())
-}
-
 func SystemSearchdImageURL() string {
 	return helper.GetEnvVar("RELATED_IMAGE_SYSTEM_SEARCHD", component.SystemSearchdImageURL())
 }
