@@ -118,10 +118,6 @@ const (
 	S3StsCredentialsSecretName = "s3-credentials"
 )
 
-const (
-	ResyncRoutesJobName = "resync-routes"
-)
-
 type System struct {
 	Options *SystemOptions
 }
@@ -1344,53 +1340,4 @@ func (system *System) appDeveloperPorts() []v1.ContainerPort {
 	}
 
 	return ports
-}
-
-func (system *System) ResyncRoutesJob(containerImage string) *batchv1.Job {
-	var completions int32 = 1
-
-	return &batchv1.Job{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "batch/v1",
-			Kind:       "Job",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   ResyncRoutesJobName,
-			Labels: system.Options.CommonSidekiqLabels,
-		},
-		Spec: batchv1.JobSpec{
-			Completions: &completions,
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Volumes: system.SidekiqPodVolumes(),
-					InitContainers: []v1.Container{
-						{
-							Name:  SystemSideKiqInitContainerName,
-							Image: containerImage,
-							Command: []string{
-								"bash",
-								"-c",
-								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
-							},
-							Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
-						},
-					},
-					Containers: []v1.Container{
-						{
-							Name:            ResyncRoutesJobName,
-							Image:           containerImage,
-							Args:            []string{"bash", "-c", "bundle exec rake zync:resync:domains"},
-							Env:             system.buildSystemSidekiqContainerEnv(),
-							Resources:       *system.Options.SidekiqContainerResourceRequirements,
-							VolumeMounts:    system.sidekiqContainerVolumeMounts(),
-							ImagePullPolicy: v1.PullIfNotPresent,
-						},
-					},
-					RestartPolicy:      v1.RestartPolicyNever,
-					ServiceAccountName: "amp",
-					PriorityClassName:  system.Options.SideKiqPriorityClassName,
-				},
-			},
-		},
-	}
 }

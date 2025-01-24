@@ -24,6 +24,7 @@
          * [Setting custom labels](#setting-custom-labels)
          * [Setting custom Annotations](#setting-custom-annotations)
          * [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
+         * [Disabling zync route generation or zync entirely](#disabling-zync-route-generation-or-zync-entirely)
          * [Gateway instrumentation](#gateway-instrumentation)
       * [Preflight checks](#preflights)
       * [Reconciliation](#reconciliation)
@@ -900,6 +901,33 @@ Whenever a controller reconciles an object it creates a new porta client to make
 * Product
 * ProxyConfigPromote
 * Tenant
+
+#### Disabling zync route generation or zync entirely
+If you need to disable zync entirely, this includes removing zync deployment and associated with deployment resources, you can do so by adding a new flag to APIManager:
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  wildcardDomain: example.com
+  zync:
+    enabled: false
+```
+The operator will remove zync deployment, routes it previously created and all other associated with the deployment resources.
+If you wish to have zync re-enabled, change the value of the flag to "true".
+Note, that APIManager requires at minimum 5 basic routes to be available to report it's status as "available=true".
+After re-enabling zync, it's up to you to re-sync routes to have them re-created. This can be achieved by running following command against sidekiq deployment:
+```
+oc rsh $(oc get pods -l 'deployment=system-sidekiq' -o json | jq '.items[0].metadata.name' -r) bash -c 'bundle exec rake zync:resync:domains'
+``` 
+
+If you just want to disable zync routes creation, add following environment to Zync-que deployment:
+```
+DISABLE_K8S_ROUTES_CREATION=1
+```
+Once the environment variable has been added, zync will no longer generate routes.
 
 #### Gateway instrumentation
 
