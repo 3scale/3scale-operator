@@ -76,6 +76,11 @@ func (t *BackendThreescaleReconciler) syncBackend(_ interface{}) error {
 			"name":             t.backendResource.Spec.Name,
 			"private_endpoint": t.backendResource.Spec.PrivateBaseURL,
 		}
+
+		for k, v := range helper.ManagedByOperatorAnnotation() {
+			params[k] = v
+		}
+
 		backendAPIEntity, err = t.backendRemoteIndex.CreateBackendAPI(params)
 		if err != nil {
 			return fmt.Errorf("Error sync backend [%s]: %w", t.backendResource.Spec.SystemName, err)
@@ -97,6 +102,12 @@ func (t *BackendThreescaleReconciler) syncBackend(_ interface{}) error {
 
 	if t.backendAPIEntity.PrivateEndpoint() != t.backendResource.Spec.PrivateBaseURL {
 		updatedParams["private_endpoint"] = t.backendResource.Spec.PrivateBaseURL
+	}
+
+	if !helper.ManagedByOperatorAnnotationExists(backendAPIEntity.Annotations()) {
+		for k, v := range helper.ManagedByOperatorAnnotation() {
+			updatedParams[k] = v
+		}
 	}
 
 	if len(updatedParams) > 0 {

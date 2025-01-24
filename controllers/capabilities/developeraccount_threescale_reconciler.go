@@ -173,6 +173,10 @@ func (s *DeveloperAccountThreescaleReconciler) createDevAccount() (*threescaleap
 		"password": password,
 	}
 
+	for k, v := range helper.ManagedByOperatorAnnotation() {
+		params[k] = v
+	}
+
 	if s.resource.Spec.MonthlyBillingEnabled != nil {
 		params["monthly_billing_enabled"] = strconv.FormatBool(*s.resource.Spec.MonthlyBillingEnabled)
 	}
@@ -264,6 +268,15 @@ func (s *DeveloperAccountThreescaleReconciler) syncDeveloperAccount(devAccount *
 	if devAccount.Element.MonthlyChargingEnabled != nil && *devAccount.Element.MonthlyChargingEnabled != desiredMonthlyChargingEnabled {
 		update = true
 		deltaAccount.Element.MonthlyChargingEnabled = &desiredMonthlyChargingEnabled
+	}
+
+	if !helper.ManagedByOperatorAnnotationExists(devAccount.Element.Annotations) {
+		for k, v := range helper.ManagedByOperatorAnnotation() {
+			update = true
+			deltaAccount.Element.Annotations = map[string]string{
+				k: v,
+			}
+		}
 	}
 
 	updatedDevAccount := devAccount
