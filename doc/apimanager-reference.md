@@ -517,7 +517,7 @@ Note: Deploying databases internally with this section is meant for evaluation p
 
 | **Field** | **json/yaml field**| **Type** | **Required** | **Default value** | **Description** |
 | --- | --- | --- | --- | --- | --- |
-| Enabled | `enabled` | bool | No | `true` | Zync components are enabled by default. Set to false to disable all Zync components. If disabled, all other zync related settings will be ignored. |
+| Enabled | `enabled` | bool | No | `true` | Zync components are enabled by default. Set to false to disable all Zync components. If disabled, all other zync related settings will be ignored. When enabling from disabled, you must manually re-generate the routes if you wish to have the routes re-created |
 | Image | `image` | string | No | nil | Used to overwrite the desired container image for Zync |
 | PostgreSQLImage | `postgreSQLImage` | string | No | nil | Used to overwrite the desired PostgreSQL image for the PostgreSQL used by Zync. Does not take effect when the database is managed externally |
 | AppSpec | `appSpec` | \*ZyncAppSpec | No | See [ZyncAppSpec](#ZyncAppSpec) reference | Spec of Zync App part |
@@ -672,6 +672,8 @@ Each element of the Condition array has the following fields:
       * Master route
       * Backend Listener route
       * Default tenant admin route, developer route, APIcast staging and production routes beloinging to the default tenant
+
+Note: If you had zync disabled and then re-enabled it, the routes must be manually re-created for the APIManager to report status completed.
 
 
 | **Field** | **json field**| **Type** | **Info** |

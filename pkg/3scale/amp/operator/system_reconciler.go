@@ -328,34 +328,6 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
-	// Check if enough routes exist
-	routesExist, err := helper.DefaultRoutesReady(r.apiManager, r.Client(), r.logger)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Check if zync deployments are ready
-	zyncReady, err := r.isZyncReady()
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// If zync is enabled and zync is ready but the routes are missing then create the ResyncRoutes Job
-	if system.Options.ZyncEnabled && zyncReady && !routesExist {
-		resyncRoutesJob := system.ResyncRoutesJob(ampImages.Options.SystemImage)
-		err = r.ReconcileJob(resyncRoutesJob, reconcilers.CreateOnlyMutator)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	} else {
-		// Zync is either disabled or not ready or the routes already exist
-		// In this scenario, delete the ResyncRoutes Job (if it exists) in case it needs to be created again later
-		err = helper.DeleteJob(component.ResyncRoutesJobName, r.apiManager.GetNamespace(), r.Client())
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
 	return reconcile.Result{}, nil
 }
 
