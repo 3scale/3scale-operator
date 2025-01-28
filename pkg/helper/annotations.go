@@ -12,3 +12,9 @@ func ManagedByOperatorAnnotationExists(annotations map[string]string) bool {
 	}
 	return false
 }
+
+func ManagedByOperatorDeveloperAccountAnnotation() map[string]string {
+	return map[string]string{
+		"managed_by": "operator",
+	}
+}

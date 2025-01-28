@@ -271,11 +271,12 @@ func (s *DeveloperAccountThreescaleReconciler) syncDeveloperAccount(devAccount *
 	}
 
 	if !helper.ManagedByOperatorAnnotationExists(devAccount.Element.Annotations) {
-		for k, v := range helper.ManagedByOperatorAnnotation() {
+		for k, v := range helper.ManagedByOperatorDeveloperAccountAnnotation() {
 			update = true
-			deltaAccount.Element.Annotations = map[string]string{
-				k: v,
+			if deltaAccount.Element.Annotations == nil {
+				deltaAccount.Element.Annotations = make(map[string]string)
 			}
+			deltaAccount.Element.Annotations[k] = v
 		}
 	}
 
