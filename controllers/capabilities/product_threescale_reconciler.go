@@ -86,6 +86,11 @@ func (t *ProductThreescaleReconciler) reconcile3scaleProduct() (*controllerhelpe
 		params := threescaleapi.Params{
 			"system_name": t.resource.Spec.SystemName,
 		}
+
+		for k, v := range helper.ManagedByOperatorAnnotation() {
+			params[k] = v
+		}
+
 		product, err := t.threescaleAPIClient.CreateProduct(t.resource.Spec.Name, params)
 		if err != nil {
 			return nil, fmt.Errorf("reconcile3scaleProduct product [%s]: %w", t.resource.Spec.SystemName, err)

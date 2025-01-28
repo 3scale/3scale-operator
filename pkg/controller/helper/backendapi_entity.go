@@ -48,6 +48,10 @@ func (b *BackendAPIEntity) PrivateEndpoint() string {
 	return b.backendAPIObj.Element.PrivateEndpoint
 }
 
+func (b *BackendAPIEntity) Annotations() map[string]string {
+	return b.backendAPIObj.Element.Annotations
+}
+
 func (b *BackendAPIEntity) Update(params threescaleapi.Params) error {
 	b.logger.V(1).Info("Update", "params", params)
 	updatedBackendAPI, err := b.client.UpdateBackendApi(b.backendAPIObj.Element.ID, params)

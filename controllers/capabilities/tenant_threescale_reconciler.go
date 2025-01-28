@@ -219,14 +219,27 @@ func (r *TenantThreescaleReconciler) createTenant() (*porta_client_pkg.Tenant, e
 		return nil, err
 	}
 
+	params := porta_client_pkg.Params{
+		"org_name": r.tenantR.Spec.OrganizationName,
+		"username": r.tenantR.Spec.Username,
+		"email":    r.tenantR.Spec.Email,
+		"password": password,
+	}
+
+	for k, v := range helper.ManagedByOperatorAnnotation() {
+		params[k] = v
+	}
+
 	r.logger.Info("Creating a new tenant", "OrganizationName", r.tenantR.Spec.OrganizationName,
 		"Username", r.tenantR.Spec.Username, "Email", r.tenantR.Spec.Email)
-	return r.portaClient.CreateTenant(
-		r.tenantR.Spec.OrganizationName,
-		r.tenantR.Spec.Username,
-		r.tenantR.Spec.Email,
-		password,
-	)
+
+	tenantEntity, err := r.portaClient.CreateTenant(params)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error creating tenant [%s]: %w", r.tenantR.Spec.Username, err)
+	}
+
+	return tenantEntity, nil
 }
 
 func (r *TenantThreescaleReconciler) getAdminPassword() (string, error) {
@@ -363,6 +376,12 @@ func (r *TenantThreescaleReconciler) SetUpdateTenantInfo(tenant *porta_client_pk
 	if r.tenantR.Spec.SiteAccessCode != nil {
 		if tenant.Signup.Account.SiteAccessCode != *r.tenantR.Spec.SiteAccessCode {
 			params["site_access_code"] = *r.tenantR.Spec.SiteAccessCode
+		}
+	}
+
+	if !helper.ManagedByOperatorAnnotationExists(tenant.Signup.Account.Annotations) {
+		for k, v := range helper.ManagedByOperatorAnnotation() {
+			params[k] = v
 		}
 	}
 

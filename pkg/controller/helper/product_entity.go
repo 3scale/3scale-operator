@@ -57,6 +57,10 @@ func (b *ProductEntity) BackendVersion() string {
 	return b.productObj.Element.BackendVersion
 }
 
+func (b *ProductEntity) Annotations() map[string]string {
+	return b.productObj.Element.Annotations
+}
+
 func (b *ProductEntity) Update(params threescaleapi.Params) error {
 	b.logger.V(1).Info("Update", "params", params)
 	updated, err := b.client.UpdateProduct(b.productObj.Element.ID, params)
