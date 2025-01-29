@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.10
 
 require (
-	github.com/3scale/3scale-porta-go-client v0.11.0
+	github.com/3scale/3scale-porta-go-client v0.11.1-0.20250124150520-23225e662421
 	github.com/RHsyseng/operator-utils v1.4.9
 	github.com/getkin/kin-openapi v0.94.0
 	github.com/ghodss/yaml v1.0.0
@@ -129,5 +129,3 @@ require (
 )
 
 replace github.com/openshift/api => github.com/openshift/api v0.0.0-20210831091943-07e756545ac1
-
-replace github.com/3scale/3scale-porta-go-client v0.11.0 => github.com/MStokluska/3scale-porta-go-client v0.0.0-20250124150520-23225e662421
