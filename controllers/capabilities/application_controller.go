@@ -268,6 +268,11 @@ func (r *ApplicationReconciler) removeApplicationFrom3scale(application *capabil
 		return nil
 	}
 
+	if account.Status.ID == nil {
+		logger.Info("could not remove application because ID is missing in the status of developer account")
+		return fmt.Errorf("could not remove application because ID is missing in the satus of developer account %s", account.Name)
+	}
+
 	err = threescaleAPIClient.DeleteApplication(*account.Status.ID, *application.Status.ID)
 	if err != nil && !threescaleapi.IsNotFound(err) {
 		return err
