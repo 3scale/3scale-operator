@@ -55,7 +55,8 @@ type BackendOptions struct {
 	// to the prometheus or grafana services.
 	Namespace string `validate:"required"`
 
-	RedisTLSEnabled bool
+	BackendRedisTLSEnabled bool
+	QueuesRedisTLSEnabled  bool
 }
 
 func NewBackendOptions() *BackendOptions {

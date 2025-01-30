@@ -436,8 +436,18 @@ func (in *APIManagerSpec) DeepCopyInto(out *APIManagerSpec) {
 		*out = new(MonitoringSpec)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.RedisTLSEnabled != nil {
-		in, out := &in.RedisTLSEnabled, &out.RedisTLSEnabled
+	if in.SystemRedisTLSEnabled != nil {
+		in, out := &in.SystemRedisTLSEnabled, &out.SystemRedisTLSEnabled
+		*out = new(bool)
+		**out = **in
+	}
+	if in.BackendRedisTLSEnabled != nil {
+		in, out := &in.BackendRedisTLSEnabled, &out.BackendRedisTLSEnabled
+		*out = new(bool)
+		**out = **in
+	}
+	if in.QueuesRedisTLSEnabled != nil {
+		in, out := &in.QueuesRedisTLSEnabled, &out.QueuesRedisTLSEnabled
 		*out = new(bool)
 		**out = **in
 	}

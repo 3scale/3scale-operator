@@ -55,9 +55,9 @@ const (
 	ConfigRedisClientCertPath = "/tls/backend-redis-client.crt"
 	ConfigRedisPrivateKeyPath = "/tls/backend-redis-private.key"
 
-	ConfigQueuesCaFilePath             = "/tls/config-queues-ca.crt"
-	ConfigQueuesClientCertPath         = "/tls/config-queues-client.crt"
-	ConfigQueuesPrivateKeyPath         = "/tls/config-queues-private.key"
+	ConfigQueuesCaFilePath             = "/tls/queues/config-queues-ca.crt"
+	ConfigQueuesClientCertPath         = "/tls/queues/config-queues-client.crt"
+	ConfigQueuesPrivateKeyPath         = "/tls/queues/config-queues-private.key"
 	BackendRedisSecretResverAnnotation = "apimanager.apps.3scale.net/backend-redis-secret-resource-version"
 )
 
@@ -421,8 +421,11 @@ func (backend *Backend) buildBackendCommonEnv() []v1.EnvVar {
 		helper.EnvVarFromSecret("CONFIG_QUEUES_SENTINEL_ROLE", BackendSecretBackendRedisSecretName, BackendSecretBackendRedisQueuesSentinelRoleFieldName),
 		helper.EnvVarFromConfigMap("RACK_ENV", "backend-environment", "RACK_ENV"),
 	)
-	if backend.Options.RedisTLSEnabled {
+	if backend.Options.BackendRedisTLSEnabled {
 		result = append(result, backend.BackendRedisTLSEnvVars()...)
+	}
+	if backend.Options.QueuesRedisTLSEnabled {
+		result = append(result, backend.QueuesRedisTLSEnvVars()...)
 	}
 	return result
 }
@@ -591,6 +594,10 @@ func (backend *Backend) BackendRedisTLSEnvVars() []v1.EnvVar {
 		helper.EnvVarFromValue("CONFIG_REDIS_CERT", ConfigRedisClientCertPath),
 		helper.EnvVarFromValue("CONFIG_REDIS_PRIVATE_KEY", ConfigRedisPrivateKeyPath),
 		helper.EnvVarFromValue("CONFIG_REDIS_SSL", "1"),
+	}
+}
+func (backend *Backend) QueuesRedisTLSEnvVars() []v1.EnvVar {
+	return []v1.EnvVar{
 		helper.EnvVarFromValue("CONFIG_QUEUES_CA_FILE", ConfigQueuesCaFilePath),
 		helper.EnvVarFromValue("CONFIG_QUEUES_CERT", ConfigQueuesClientCertPath),
 		helper.EnvVarFromValue("CONFIG_QUEUES_PRIVATE_KEY", ConfigQueuesPrivateKeyPath),
@@ -601,12 +608,12 @@ func (backend *Backend) BackendRedisTLSEnvVars() []v1.EnvVar {
 func (backend *Backend) backendVolumes() []v1.Volume {
 	res := []v1.Volume{}
 
-	if backend.Options.RedisTLSEnabled {
+	if backend.Options.BackendRedisTLSEnabled {
 		backendRedisTlsVolume := v1.Volume{
-			Name: "backend-redis-secret",
+			Name: "backend-redis-secret-backend",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: BackendSecretBackendRedisSecretName, // Name of the secret containing the TLS certs
+					SecretName: BackendSecretBackendRedisSecretName,
 					Items: []v1.KeyToPath{
 						{
 							Key:  "REDIS_SSL_CA",
@@ -620,6 +627,19 @@ func (backend *Backend) backendVolumes() []v1.Volume {
 							Key:  "REDIS_SSL_KEY",
 							Path: "backend-redis-private.key",
 						},
+					},
+				},
+			},
+		}
+		res = append(res, backendRedisTlsVolume)
+	}
+	if backend.Options.QueuesRedisTLSEnabled {
+		backendRedisTlsVolume := v1.Volume{
+			Name: "backend-redis-secret-queues",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: BackendSecretBackendRedisSecretName,
+					Items: []v1.KeyToPath{
 						{
 							Key:  "REDIS_SSL_QUEUES_CA",
 							Path: "config-queues-ca.crt",
@@ -642,14 +662,28 @@ func (backend *Backend) backendVolumes() []v1.Volume {
 }
 
 func (backend *Backend) backendContainerVolumeMounts() []v1.VolumeMount {
-	if backend.Options.RedisTLSEnabled {
-		return []v1.VolumeMount{
-			{
-				Name:      "backend-redis-secret",
-				ReadOnly:  false,
-				MountPath: "/tls",
-			},
-		}
+	res := []v1.VolumeMount{}
+	if backend.Options.BackendRedisTLSEnabled {
+		res = append(res, backend.backendRedisContainerVolumeMounts())
 	}
-	return nil
+	if backend.Options.QueuesRedisTLSEnabled {
+		res = append(res, backend.queuesRedisContainerVolumeMounts())
+	}
+	return res
+}
+
+func (backend *Backend) backendRedisContainerVolumeMounts() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "backend-redis-secret-backend",
+		ReadOnly:  false,
+		MountPath: "/tls",
+	}
+}
+
+func (backend *Backend) queuesRedisContainerVolumeMounts() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "backend-redis-secret-queues",
+		ReadOnly:  false,
+		MountPath: "/tls/queues",
+	}
 }

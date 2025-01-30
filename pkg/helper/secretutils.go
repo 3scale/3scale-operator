@@ -2,7 +2,14 @@ package helper
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
 	"fmt"
+	"net"
+	"regexp"
+	"strconv"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -217,4 +224,108 @@ func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, na
 	}
 
 	return false
+}
+
+// getCertificateFromSecret retrieves the certificate
+// or key data from a given Kubernetes Secret and field name
+func GetCertificateFromSecret(client k8sclient.Client, secretName, namespace, fieldName string) ([]byte, error) {
+	secret := &v1.Secret{}
+	err := client.Get(context.Background(), k8sclient.ObjectKey{Name: secretName, Namespace: namespace}, secret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get secret: %v", err)
+	}
+	data, exists := secret.Data[fieldName]
+	if !exists {
+		return nil, fmt.Errorf("%s not found in the secret", fieldName)
+	}
+	if len(data) == 0 {
+		return nil, fmt.Errorf("%s is empty in the secret", fieldName)
+	}
+	decodedData, err := base64.StdEncoding.DecodeString(string(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode %s: %v", fieldName, err)
+	}
+	return decodedData, nil
+}
+
+func ValidateCertificate(certData []byte) error {
+	block, _ := pem.Decode(certData)
+	if block == nil {
+		return errors.NewBadRequest("certificate is not valid PEM encoded")
+	}
+	_, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return fmt.Errorf("failed to parse certificate: %v", err)
+	}
+	return nil
+}
+
+// Validate private key:
+// Check if it's a valid PEM-encoded private key (RSA or EC)
+func ValidatePrivateKey(keyData []byte) error {
+	// Decode the PEM block
+	block, _ := pem.Decode(keyData)
+	if block == nil {
+		return errors.NewBadRequest("private key is not valid PEM encoded")
+	}
+	// First try parsing as RSA private key (PKCS#1 format)
+	_, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err == nil {
+		return nil
+	}
+	// If RSA parsing fails, try parsing as EC private key (PKCS#8 format)
+	_, err = x509.ParseECPrivateKey(block.Bytes)
+	if err == nil {
+		return nil
+	}
+	// If both RSA and EC parsing fail, return an error
+	return err
+}
+
+func ValidateRedisURL(url string) error {
+	// Check if the URL scheme is "rediss"
+	if !strings.HasPrefix(url, "rediss://") {
+		return fmt.Errorf("URL should start with 'rediss://'")
+	}
+	// Remove the "rediss://" prefix
+	url = strings.TrimPrefix(url, "rediss://")
+	// Split the URL into host:port and optional database number
+	hostPortDB := strings.Split(url, "/")
+	if len(hostPortDB) > 2 {
+		return fmt.Errorf("URL has an invalid structure")
+	}
+	// Check if there's a database number part (e.g., after the slash)
+	dbPart := ""
+	if len(hostPortDB) == 2 {
+		dbPart = hostPortDB[1]
+	}
+	// Split the host and port part
+	hostPort := hostPortDB[0]
+	hostPortParts := strings.Split(hostPort, ":")
+	if len(hostPortParts) != 2 {
+		return fmt.Errorf("URL must contain a host and port, e.g., 'host:port'")
+	}
+	// Validate the host part (IP or Domain)
+	host := hostPortParts[0]
+	if net.ParseIP(host) == nil {
+		regex := `^(?i)([a-z0-9](-?[a-z0-9])*\.)+[a-z0-9](-?[a-z0-9])*$`
+		re := regexp.MustCompile(regex)
+		if !re.MatchString(host) {
+			return fmt.Errorf("Invalid host (neither IP address nor valid domain): %s", host)
+		}
+	}
+	// Validate the port (port part)
+	portStr := hostPortParts[1]
+	port, err := strconv.Atoi(portStr)
+	if err != nil || port < 1024 || port > 65535 {
+		return fmt.Errorf("Invalid port number: %s. Valid range is 1024-65535", portStr)
+	}
+	// Optionally, validate the database number (if it exists)
+	if dbPart != "" {
+		dbNum, err := strconv.Atoi(dbPart)
+		if err != nil || dbNum < 0 {
+			return fmt.Errorf("Invalid database number: %s", dbPart)
+		}
+	}
+	return nil
 }

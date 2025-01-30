@@ -383,6 +383,8 @@ func (r *APIManagerReconciler) validateCR(cr *appsv1alpha1.APIManager) error {
 
 	fieldError = append(fieldError, r.validateApicastTLSCertificates(cr)...)
 
+	fieldError = append(fieldError, r.validateRedisTLS(cr)...)
+
 	if len(fieldError) > 0 {
 		return fieldError.ToAggregate()
 	}
@@ -648,4 +650,76 @@ func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *APIManagerReconciler) validateRedisTLS(cr *appsv1alpha1.APIManager) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+	if cr.Spec.SystemRedisTLSEnabled != nil {
+		fieldErrors = append(fieldErrors, r.validateRedisTLSSystemRedisSecret(cr)...)
+	}
+	if cr.Spec.BackendRedisTLSEnabled != nil {
+		fieldErrors = append(fieldErrors, r.validateRedisTLSBackendRedisSecret(cr)...)
+	}
+	if cr.Spec.QueuesRedisTLSEnabled != nil {
+		fieldErrors = append(fieldErrors, r.validateRedisTLSQueuesRedisSecret(cr)...)
+	}
+	return fieldErrors
+}
+
+func (r *APIManagerReconciler) validateRedisTLSSystemRedisSecret(cr *appsv1alpha1.APIManager) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+	fieldErrors = append(fieldErrors, r.validateRedisTLSRedisSecret(cr, "system-redis",
+		"REDIS_CA_FILE", "REDIS_CLIENT_CERT", "REDIS_PRIVATE_KEY")...)
+	return fieldErrors
+}
+
+func (r *APIManagerReconciler) validateRedisTLSBackendRedisSecret(cr *appsv1alpha1.APIManager) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+	fieldErrors = append(fieldErrors, r.validateRedisTLSRedisSecret(cr, "backend-redis",
+		"CONFIG_REDIS_CA_FILE", "CONFIG_REDIS_CERT", "CONFIG_REDIS_PRIVATE_KEY")...)
+	return fieldErrors
+}
+
+func (r *APIManagerReconciler) validateRedisTLSQueuesRedisSecret(cr *appsv1alpha1.APIManager) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+	fieldErrors = append(fieldErrors, r.validateRedisTLSRedisSecret(cr, "backend-redis",
+		"CONFIG_QUEUES_CA_FILE", "CONFIG_QUEUES_CERT", "CONFIG_QUEUES_PRIVATE_KEY")...)
+	return fieldErrors
+}
+
+func (r *APIManagerReconciler) validateRedisTLSRedisSecret(cr *appsv1alpha1.APIManager, secretName, caFieldName, certFieldName, pkFieldName string) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+	secretPath := field.NewPath(secretName)
+	namespace := cr.Namespace
+	// check CLIENT_CERT
+	certData, err := helper.GetCertificateFromSecret(r.Client(), secretName, namespace, certFieldName)
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "error get client certificate from secret "+secretName, err.Error()))
+	} else {
+		err := helper.ValidateCertificate(certData)
+		if err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "client certificate validation failed "+secretName, err.Error()))
+		}
+	}
+	// check CA
+	certData, err = helper.GetCertificateFromSecret(r.Client(), secretName, namespace, caFieldName)
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "error get CA certificate from secret "+secretName, err.Error()))
+	} else {
+		err := helper.ValidateCertificate(certData)
+		if err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "CA certificate validation failed "+secretName, err.Error()))
+		}
+	}
+	// check Private Key
+	certData, err = helper.GetCertificateFromSecret(r.Client(), secretName, namespace, pkFieldName)
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "error get private key from secret "+secretName, err.Error()))
+	} else {
+		err := helper.ValidatePrivateKey(certData)
+		if err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "private key validation failed "+secretName, err.Error()))
+		}
+	}
+	return fieldErrors
 }
