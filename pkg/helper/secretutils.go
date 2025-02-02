@@ -3,10 +3,10 @@ package helper
 import (
 	"context"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"net"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -226,28 +226,6 @@ func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, na
 	return false
 }
 
-// getCertificateFromSecret retrieves the certificate
-// or key data from a given Kubernetes Secret and field name
-func GetCertificateFromSecret(client k8sclient.Client, secretName, namespace, fieldName string) ([]byte, error) {
-	secret := &v1.Secret{}
-	err := client.Get(context.Background(), k8sclient.ObjectKey{Name: secretName, Namespace: namespace}, secret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get secret: %v", err)
-	}
-	data, exists := secret.Data[fieldName]
-	if !exists {
-		return nil, fmt.Errorf("%s not found in the secret", fieldName)
-	}
-	if len(data) == 0 {
-		return nil, fmt.Errorf("%s is empty in the secret", fieldName)
-	}
-	decodedData, err := base64.StdEncoding.DecodeString(string(data))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode %s: %v", fieldName, err)
-	}
-	return decodedData, nil
-}
-
 func ValidateCertificate(certData []byte) error {
 	block, _ := pem.Decode(certData)
 	if block == nil {
@@ -283,12 +261,13 @@ func ValidatePrivateKey(keyData []byte) error {
 }
 
 func ValidateRedisURL(url string) error {
+	redisPrefix := "rediss://"
 	// Check if the URL scheme is "rediss"
-	if !strings.HasPrefix(url, "rediss://") {
-		return fmt.Errorf("URL should start with 'rediss://'")
+	if !strings.HasPrefix(url, redisPrefix) {
+		return fmt.Errorf("URL should start with "+redisPrefix+". Found %s", url)
 	}
 	// Remove the "rediss://" prefix
-	url = strings.TrimPrefix(url, "rediss://")
+	url = strings.TrimPrefix(url, redisPrefix)
 	// Split the URL into host:port and optional database number
 	hostPortDB := strings.Split(url, "/")
 	if len(hostPortDB) > 2 {
@@ -328,4 +307,38 @@ func ValidateRedisURL(url string) error {
 		}
 	}
 	return nil
+}
+
+func ValidateRedisSentinelHostsForTLS(sentinelHosts string) error {
+	// 1. Validate Sentinel Hosts defined in system-redis or backend-redis secrets
+	// - if it's a valid to work with Redis Master in TLS mode:
+	// 1.1. Empty - Sentine is not defined. Redis Clients will work TLS Redis Master directly
+	// 1.2. One of Sentinel Hosts is TLS (rediss://...), - All can use TLS: Redis master, sentinel, clients
+	// 2. Not valid configurations:
+	// 2.1. One of sentinel hosts has wrong URL format
+	// 2.2. All Sentinel hosts are Non-TLS (redis://...). It's not valid as Master is TLS
+
+	if len(sentinelHosts) == 0 {
+		return nil
+	}
+	found := false
+	hostList := strings.Split(sentinelHosts, ",")
+	// Check if any of the Sentinel hosts uses 'rediss://' (TLS)
+	for _, host := range hostList {
+		host = strings.TrimSpace(host)
+		parsedURL, err := url.Parse(host)
+		if err != nil {
+			return fmt.Errorf("URL has an invalid structure: %s", host)
+		}
+		if parsedURL.Scheme == "rediss" {
+			// At least one secure Sentinel is found
+			found = true
+		}
+	}
+	// If no secure Sentinels found, return false
+	if !found {
+		return fmt.Errorf("no secure sentinel hosts found for secure redis master, hosts: %s", sentinelHosts)
+	}
+	return nil
+
 }

@@ -7219,6 +7219,8 @@ spec:
                         type: array
                     type: object
                 type: object
+              backendRedisTLSEnabled:
+                type: boolean
               externalComponents:
                 properties:
                   backend:
@@ -7273,7 +7275,7 @@ spec:
                   enabled:
                     type: boolean
                 type: object
-              redisTLSEnabled:
+              queuesRedisTLSEnabled:
                 type: boolean
               resourceRequirementsEnabled:
                 type: boolean
@@ -16605,6 +16607,8 @@ spec:
                         type: array
                     type: object
                 type: object
+              systemRedisTLSEnabled:
+                type: boolean
               tenantName:
                 type: string
               wildcardDomain:

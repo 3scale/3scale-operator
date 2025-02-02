@@ -18,8 +18,10 @@ package controllers
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 
 	"github.com/3scale/3scale-operator/pkg/upgrade"
@@ -654,13 +656,13 @@ func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager
 
 func (r *APIManagerReconciler) validateRedisTLS(cr *appsv1alpha1.APIManager) field.ErrorList {
 	fieldErrors := field.ErrorList{}
-	if cr.Spec.SystemRedisTLSEnabled != nil {
+	if cr.Spec.SystemRedisTLSEnabled != nil && *cr.Spec.SystemRedisTLSEnabled {
 		fieldErrors = append(fieldErrors, r.validateRedisTLSSystemRedisSecret(cr)...)
 	}
-	if cr.Spec.BackendRedisTLSEnabled != nil {
+	if cr.Spec.BackendRedisTLSEnabled != nil && *cr.Spec.BackendRedisTLSEnabled {
 		fieldErrors = append(fieldErrors, r.validateRedisTLSBackendRedisSecret(cr)...)
 	}
-	if cr.Spec.QueuesRedisTLSEnabled != nil {
+	if cr.Spec.QueuesRedisTLSEnabled != nil && *cr.Spec.QueuesRedisTLSEnabled {
 		fieldErrors = append(fieldErrors, r.validateRedisTLSQueuesRedisSecret(cr)...)
 	}
 	return fieldErrors
@@ -669,57 +671,100 @@ func (r *APIManagerReconciler) validateRedisTLS(cr *appsv1alpha1.APIManager) fie
 func (r *APIManagerReconciler) validateRedisTLSSystemRedisSecret(cr *appsv1alpha1.APIManager) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 	fieldErrors = append(fieldErrors, r.validateRedisTLSRedisSecret(cr, "system-redis",
-		"REDIS_CA_FILE", "REDIS_CLIENT_CERT", "REDIS_PRIVATE_KEY")...)
+		"REDIS_SSL_CA", "REDIS_SSL_CERT", "REDIS_SSL_KEY",
+		"URL", "SENTINEL_HOSTS")...)
 	return fieldErrors
 }
 
 func (r *APIManagerReconciler) validateRedisTLSBackendRedisSecret(cr *appsv1alpha1.APIManager) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 	fieldErrors = append(fieldErrors, r.validateRedisTLSRedisSecret(cr, "backend-redis",
-		"CONFIG_REDIS_CA_FILE", "CONFIG_REDIS_CERT", "CONFIG_REDIS_PRIVATE_KEY")...)
+		"REDIS_SSL_CA", "REDIS_SSL_CERT", "REDIS_SSL_KEY",
+		"REDIS_STORAGE_URL", "REDIS_STORAGE_SENTINEL_HOSTS")...)
 	return fieldErrors
 }
 
 func (r *APIManagerReconciler) validateRedisTLSQueuesRedisSecret(cr *appsv1alpha1.APIManager) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 	fieldErrors = append(fieldErrors, r.validateRedisTLSRedisSecret(cr, "backend-redis",
-		"CONFIG_QUEUES_CA_FILE", "CONFIG_QUEUES_CERT", "CONFIG_QUEUES_PRIVATE_KEY")...)
+		"REDIS_SSL_QUEUES_CA", "REDIS_SSL_QUEUES_CERT", "REDIS_SSL_QUEUES_KEY",
+		"REDIS_QUEUES_URL", "REDIS_QUEUES_SENTINEL_HOSTS")...)
 	return fieldErrors
 }
 
-func (r *APIManagerReconciler) validateRedisTLSRedisSecret(cr *appsv1alpha1.APIManager, secretName, caFieldName, certFieldName, pkFieldName string) field.ErrorList {
+func (r *APIManagerReconciler) validateRedisTLSRedisSecret(cr *appsv1alpha1.APIManager, secretName,
+	caFieldName, certFieldName, pkFieldName, urlFieldName, sentinelHostsFieldName string) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 	secretPath := field.NewPath(secretName)
-	namespace := cr.Namespace
-	// check CLIENT_CERT
-	certData, err := helper.GetCertificateFromSecret(r.Client(), secretName, namespace, certFieldName)
+	secret := &v1.Secret{}
+	err := r.Client().Get(context.Background(), k8sclient.ObjectKey{Name: secretName, Namespace: cr.Namespace}, secret)
 	if err != nil {
-		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "error get client certificate from secret "+secretName, err.Error()))
-	} else {
-		err := helper.ValidateCertificate(certData)
-		if err != nil {
-			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "client certificate validation failed "+secretName, err.Error()))
+		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "failed to get secret "+secretName, err.Error()))
+		return fieldErrors
+	}
+	fieldNames := []string{caFieldName, certFieldName, pkFieldName, urlFieldName}
+	for _, fieldName := range fieldNames {
+		data, exists := secret.Data[certFieldName]
+		if !exists {
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "field "+fieldName+" is missing in secret "+secretName, ""))
+		}
+		if len(data) == 0 {
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "field "+fieldName+" is empty in secret "+secretName, ""))
 		}
 	}
-	// check CA
-	certData, err = helper.GetCertificateFromSecret(r.Client(), secretName, namespace, caFieldName)
-	if err != nil {
-		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "error get CA certificate from secret "+secretName, err.Error()))
-	} else {
-		err := helper.ValidateCertificate(certData)
+	// Fail if any required field is missing or empty in the Secret
+	if len(fieldErrors) > 0 {
+		return fieldErrors
+	}
+
+	for _, certfield := range []string{"caFieldName", "certFieldName"} {
+		data, _ := secret.Data[certfield]
+		decodedData, err := base64.StdEncoding.DecodeString(string(data))
 		if err != nil {
-			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "CA certificate validation failed "+secretName, err.Error()))
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "failed to decode "+certfield+" in secret "+secretName, err.Error()))
+		} else {
+			err := helper.ValidateCertificate(decodedData)
+			if err != nil {
+				fieldErrors = append(fieldErrors, field.Invalid(secretPath, "client certificate validation failed, secret: "+secretName+", "+certfield, err.Error()))
+			}
 		}
 	}
+
 	// check Private Key
-	certData, err = helper.GetCertificateFromSecret(r.Client(), secretName, namespace, pkFieldName)
+	data, _ := secret.Data[pkFieldName]
+	decodedData, err := base64.StdEncoding.DecodeString(string(data))
 	if err != nil {
-		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "error get private key from secret "+secretName, err.Error()))
+		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "failed to decode "+pkFieldName+" in secret "+secretName, err.Error()))
 	} else {
-		err := helper.ValidatePrivateKey(certData)
+		err := helper.ValidatePrivateKey(decodedData)
 		if err != nil {
-			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "private key validation failed "+secretName, err.Error()))
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "private key validation failed, secret: "+secretName+", "+pkFieldName, err.Error()))
 		}
 	}
+
+	// check URL
+	data, _ = secret.Data[urlFieldName]
+	decodedData, err = base64.StdEncoding.DecodeString(string(data))
+	if err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(secretPath, "failed to decode "+urlFieldName+" in secret "+secretName, err.Error()))
+	} else {
+		// Check if the URL scheme is "rediss"
+		err := helper.ValidateRedisURL(string(decodedData))
+		if err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "redis url validation failed, secret: "+secretName+", field: "+urlFieldName+": "+string(decodedData), err.Error()))
+		}
+	}
+
+	// check sentinelHostsFieldName
+	data, exists := secret.Data[sentinelHostsFieldName]
+	// if field does not exist - it's valid, as if no sentinels - Client will work directly with master redis
+	if exists {
+		decodedData, err = base64.StdEncoding.DecodeString(string(data))
+		err := helper.ValidateRedisSentinelHostsForTLS(string(decodedData))
+		if err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(secretPath, "sentinel hosts validation failed, secret: "+secretName+", "+sentinelHostsFieldName, err.Error()))
+		}
+	}
+
 	return fieldErrors
 }

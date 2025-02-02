@@ -100,7 +100,19 @@ One APIManager custom resource per project is allowed.
 | ExternalComponentsSpec | `externalComponents` | \*ExternalComponentsSpec | No | See [ExternalComponentsSpec](#ExternalComponentsSpec) reference | Spec of the ExternalComponentsSpec part  |
 | PodDisruptionBudgetSpec | `podDisruptionBudget` | \*PodDisruptionBudgetSpec | No | See [PodDisruptionBudgetSpec](#PodDisruptionBudgetSpec) reference | Spec of the PodDisruptionBudgetSpec part  |
 | MonitoringSpec | `monitoring` | \*MonitoringSpec | No | Disabled | [MonitoringSpec](#MonitoringSpec) reference  |
-| RedisTLSEnabled | `redisTLSEnabled` | `bool` | No | `nil` | Enables Redis TLS communication. When set to `true` and `externalComponents` are configured, Redis TLS environment variables are set into system pods (`system-app`, `system-sidekiq`), backend pods (`backend-listener`, `backend-cron`, `backend-worker`), or both system and backend components. |
+| SystemRedisTLSEnabled | `systemRedisTLSEnabled` | `bool` | No | `nil` | This flag enables Redis System TLS communication. When set to true, and with the externalComponents properly configured and secret validation successfully passed, Redis TLS environment variables are injected into the system-app and system-sidekiq pods: REDIS_CA_FILE, REDIS_CLIENT_CERT, REDIS_PRIVATE_KEY, and REDIS_SSL is set to true. These environment variables are required to establish system Redis TLS communication.|
+| BackendRedisTLSEnabled | `backendRedisTLSEnabled` | `bool` | No | `nil` | This flag enables Redis Backend TLS communication. When set to true, and with the externalComponents properly configured and secret validation successfully passed, Redis Backend TLS environment variables are injected into the backend pods: CONFIG_REDIS_CA_FILE, CONFIG_REDIS_CERT, CONFIG_REDIS_PRIVATE_KEY, and CONFIG_REDIS_SSL is set to true. These environment variables are required to establish Redis TLS communication. |
+| QueuesRedisTLSEnabled | `queuesRedisTLSEnabled` | `bool` | No | `nil` | This flag enables Redis Queues TLS communication. When set to true, and with the externalComponents properly configured and secret validation successfully passed, Redis Queues TLS environment variables are injected into the backend pods: CONFIG_QUEUES_CA_FILE, CONFIG_QUEUES_CERT, CONFIG_QUEUES_PRIVATE_KEY, and CONFIG_QUEUES_SSL is set to true. These environment variables are required to establish Redis TLS communication.  |
+
+**Notes**:
+To enable Redis TLS communication for system and/or backend 3scale components, the corresponding Redis flags must be set to true in the APIManager Custom Resource (CR):
+  - SystemRedisTLSEnabled
+  - BackendRedisTLSEnabled
+  - QueuesRedisTLSEnabled
+These flags are prerequisites for enabling Redis TLS. However, additional configuration is required to establish Redis TLS communication. This includes:
+- Proper configuration of the externalComponents setting in the APIManager CR
+- Correct definition of Redis certificates and URLs in the backend-redis and/or system-redis secrets, which are required to set the necessary Redis TLS environment variables in the pods. These environment variables will be used by the system and backend to establish the TLS connection.
+
 
 ### APIManagerMetaData
 
@@ -731,7 +743,9 @@ The available configurable secrets are:
 | REDIS_SSL_QUEUES_CERT | Redis Queues client certificate | Required to set TLS Redis connection. Only for TLS |
 | REDIS_SSL_QUEUES_KEY | The private key for the Redis Queues client certificate | Required to set TLS Redis connection. Only for TLS |
 
-
+**Notes** 
+- If Redis TLS is enabled (backendRedisTLSEnabled or/and queuesRedisTLSEnabled fields are set to true in APIManafer CR) - Sentinel must also use TLS communication. REDIS_STORAGE_SENTINEL_HOSTS or/and REDIS_QUEUES_SENTINEL_HOSTS should contain redis secure urls prefixes: `rediss://`.  If only one of the Sentinel hosts is secure, it may work, but it is not reliable (in case that secure sentinel host fails). It is strongly recommended to secure all Sentinel hosts for optimal reliability.
+- If Sentinel is not set, Redis clients will communicate directly with the Redis Master over TLS, bypassing Sentinel. This is a valid configuration when Sentinel is not needed
 
 ### system-app
 
@@ -804,6 +818,10 @@ For Oracle:
 | REDIS_SSL_CA | Redis Certificate Authority (CA) certificate | Required to set TLS Redis connection. Only for TLS |
 | REDIS_SSL_CERT | Redis client certificate | Required to set TLS Redis connection. Only for TLS |
 | REDIS_SSL_KEY | The private key for the Redis client certificate | Required to set TLS Redis connection. Only for TLS |
+
+**Notes** 
+- If Redis TLS is enabled (systemRedisTLSEnabled is set to true in APIManafer CR) - Sentinel must also use TLS communication. In this case,SENTINEL_HOSTS if populated, must have the `rediss://` URL prefix. If only one of the Sentinel hosts is secure, it may work, but it is not reliable (in case that host fails). It is strongly recommended to secure all Sentinel hosts for optimal reliability.
+- If Sentinel is not set, Redis clients will communicate directly with the Redis Master over TLS, bypassing Sentinel. This is a valid configuration when Sentinel is not needed.
 
 ### system-seed
 
