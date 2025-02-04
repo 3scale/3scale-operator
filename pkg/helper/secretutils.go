@@ -246,17 +246,23 @@ func ValidatePrivateKey(keyData []byte) error {
 	if block == nil {
 		return errors.NewBadRequest("private key is not valid PEM encoded")
 	}
-	// First try parsing as RSA private key (PKCS#1 format)
-	_, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	// First try parsing the PKCS#8 private key
+	_, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err == nil {
 		return nil
 	}
-	// If RSA parsing fails, try parsing as EC private key (PKCS#8 format)
+
+	// If PKCS#8 parsing fauk - try parsing as RSA private key (PKCS#1 format)
+	_, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err == nil {
+		return nil
+	}
+	// If RSA parsings fails, try parsing as EC private key (PKCS#8 format)
 	_, err = x509.ParseECPrivateKey(block.Bytes)
 	if err == nil {
 		return nil
 	}
-	// If both RSA and EC parsing fail, return an error
+	// Return an error if all parsing attempts fail.
 	return err
 }
 
