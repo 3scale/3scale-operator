@@ -338,6 +338,7 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | MemcachedPriorityClassName | `memcachedPriorityClassName`         | string                                                                                                                                    | No           | N/A                                                                                                                                            | If specified, indicates the pod's priority. "system-node-critical" and "system-cluster-critical" are two special keywords which indicate the highest priorities with the former being the highest priority. Any other name must be defined by creating a PriorityClass object with that name. If not specified, the pod priority will be default or zero if there is no default. (see [docs](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/)) |
 | MemcachedTopologySpreadConstraints | `memcachedTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No           | `nil`                                                                                                                                          | Specifies how to spread matching pods among the given topology                                                                                                                                                                                                                                          |
 | MemcachedLabels                    | `memcachedLabels`                    | map[string]string                                                                                                                        | No           | `nil `                                                                                                                                         | Specifies labels that should be added to component                                                                                                                                                                                                                                                                                   |
+| SystemDatabaseTLSEnabled | `systemDatabaseTLSEnabled`| bool | No | false | Enable Client side TLS for system database, see [secret configuration](#system-database) |
 | RedisPriorityClassName | `redisPriorityClassName` | string | No | N/A | **[DEPRECATED]** Use external databases only |
 | RedisTopologySpreadConstraints | `redisTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
 | RedisLabels | `redisLabels` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
@@ -528,6 +529,7 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | DatabaseTopologySpreadConstraints | `databaseTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` | Specifies how to spread matching pods among the given topology |
 | DatabaseLabels | `databaseLabels` | map[string]string | No | `nil ` | Specifies labels that should be added to component |
 | DatabaseAnnotations | `databaseAnnotations` | map[string]string  | No | `nil ` | Specifies Annotations that should be added to component |
+| ZyncDatabaseTLSEnabled | `zyncDatabaseTLSEnabled`| bool | No | false | Use external databases only |
 
 ### ZyncAppSpec
 
@@ -743,7 +745,7 @@ For Mysql:
 | DATABASE_SSL_MODE | [Database SSL Mode](https://github.com/brianmario/mysql2?tab=readme-ov-file#ssltls-options) | Required to set TLS Database connection. Only for TLS |
 | DB_SSL_CA | SSL CA certificate | Required to set TLS Database connection. Only for TLS |
 | DB_SSL_CERT | SSL CERT certificate | Required to set TLS Database connection. Only for TLS |
-DB_SSL_KEY | SSL Key  | Required to set TLS Database connection. Only for TLS |
+| DB_SSL_KEY | SSL Key  | Required to set TLS Database connection. Only for TLS |
 
 
 For Postgresql:
@@ -756,7 +758,7 @@ For Postgresql:
 | DATABASE_SSL_MODE | [Database SSL Mode](https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-PROTECTION) | Required to set TLS Database connection. Only for TLS |
 | DB_SSL_CA | SSL CA certificate | Required to set TLS Database connection. Only for TLS |
 | DB_SSL_CERT | SSL CERT certificate | Required to set TLS Database connection. Only for TLS |
-DB_SSL_KEY | SSL Key  | Required to set TLS Database connection. Only for TLS |
+| DB_SSL_KEY | SSL Key  | Required to set TLS Database connection. Only for TLS |
 
 
 For Oracle:
@@ -827,7 +829,7 @@ For Oracle:
 | DATABASE_SSL_MODE | [Database SSL Mode](https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-PROTECTION) | Required to set TLS Database connection. Only for TLS |
 | DB_SSL_CA | SSL CA certificate | Required to set TLS Database connection. Only for TLS |
 | DB_SSL_CERT | SSL CERT certificate | Required to set TLS Database connection. Only for TLS |
-DB_SSL_KEY | SSL Key  | Required to set TLS Database connection. Only for TLS |
+| DB_SSL_KEY | SSL Key  | Required to set TLS Database connection. Only for TLS |
 
 
 ### fileStorage-S3-credentials-secret
