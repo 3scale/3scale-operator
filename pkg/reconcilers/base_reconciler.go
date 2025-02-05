@@ -275,3 +275,13 @@ func resourceExists(dc discovery.DiscoveryInterface, groupVersion, kind string) 
 
 	return false, nil
 }
+
+// HasOwnerReference checks if the given owner is already present in the object's OwnerReferences.
+func (b *BaseReconciler) HasOwnerReference(owner, obj common.KubernetesObject) bool {
+	for _, ref := range obj.GetOwnerReferences() {
+		if ref.UID == owner.GetUID() {
+			return true
+		}
+	}
+	return false
+}
