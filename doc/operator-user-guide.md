@@ -297,8 +297,8 @@ See [Zync secret](apimanager-reference.md#zync) for reference.
 It is possible to connect to both the system-database and zync database via TLS provided these databases have TLS enabled. To enable TLS communication to these databases you will need to configure the ApiManager and the database secret.
 
 In ApiManager CR we set the boolean to enable TLS configuration for the respictive databases
-- `spec.zyncDatabaseTLSEnabled: true`
-- `spec.systemDatabaseTLSEnabled: true`
+- `spec.zync.zyncDatabaseTLSEnabled: true`
+- `spec.system.systemDatabaseTLSEnabled: true`
 
 We pass the cert files in via the respective secret i.e. system-database & zync
 

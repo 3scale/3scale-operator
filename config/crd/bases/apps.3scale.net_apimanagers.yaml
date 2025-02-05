@@ -17392,9 +17392,9 @@ spec:
                           type: object
                         type: array
                     type: object
+                  systemDatabaseTLSEnabled:
+                    type: boolean
                 type: object
-              systemDatabaseTLSEnabled:
-                type: boolean
               tenantName:
                 type: string
               wildcardDomain:
@@ -20961,9 +20961,9 @@ spec:
                           type: object
                         type: array
                     type: object
+                  zyncDatabaseTLSEnabled:
+                    type: boolean
                 type: object
-              zyncDatabaseTLSEnabled:
-                type: boolean
             required:
             - wildcardDomain
             type: object

@@ -84,10 +84,6 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
-	// +optional
-	SystemDatabaseTLSEnabled *bool `json:"systemDatabaseTLSEnabled,omitempty"`
-	// +optional
-	ZyncDatabaseTLSEnabled *bool `json:"zyncDatabaseTLSEnabled,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -520,6 +516,9 @@ type SystemSpec struct {
 
 	// +optional
 	SearchdSpec *SystemSearchdSpec `json:"searchdSpec,omitempty"`
+
+	// +optional
+	SystemDatabaseTLSEnabled *bool `json:"systemDatabaseTLSEnabled,omitempty"`
 }
 
 type SystemAppSpec struct {
@@ -733,6 +732,8 @@ type ZyncSpec struct {
 	DatabaseLabels map[string]string `json:"databaseLabels,omitempty"`
 	// +optional
 	DatabaseAnnotations map[string]string `json:"databaseAnnotations,omitempty"`
+	// +optional
+	ZyncDatabaseTLSEnabled *bool `json:"zyncDatabaseTLSEnabled,omitempty"`
 }
 
 type ZyncAppSpec struct {
@@ -1706,9 +1707,9 @@ func init() {
 }
 
 func (apimanager *APIManager) IsSystemDatabaseTLSEnabled() bool {
-	return apimanager.Spec.SystemDatabaseTLSEnabled != nil && *apimanager.Spec.SystemDatabaseTLSEnabled
+	return apimanager.Spec.System != nil && apimanager.Spec.System.SystemDatabaseTLSEnabled != nil && *apimanager.Spec.System.SystemDatabaseTLSEnabled
 }
 
 func (apimanager *APIManager) IsZyncDatabaseTLSEnabled() bool {
-	return apimanager.Spec.ZyncDatabaseTLSEnabled != nil && *apimanager.Spec.ZyncDatabaseTLSEnabled
+	return apimanager.Spec.Zync != nil && apimanager.Spec.Zync.ZyncDatabaseTLSEnabled != nil && *apimanager.Spec.Zync.ZyncDatabaseTLSEnabled
 }

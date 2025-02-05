@@ -93,8 +93,7 @@ func (s *SystemSearchd) Deployment(ctx context.Context, k8sclient client.Client,
 							Name:            SystemSearchdDeploymentName,
 							Image:           containerImage,
 							ImagePullPolicy: v1.PullIfNotPresent,
-							//Env:             s.commonSearchdEnvVars(),
-							VolumeMounts: s.searchDVolumeMounts(),
+							VolumeMounts:    s.searchDVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
