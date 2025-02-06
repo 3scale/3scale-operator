@@ -2677,6 +2677,8 @@ spec:
                 type: string
               backend:
                 properties:
+                  backendRedisTLSEnabled:
+                    type: boolean
                   cronSpec:
                     properties:
                       affinity:
@@ -4948,6 +4950,8 @@ spec:
                           type: object
                         type: array
                     type: object
+                  queuesRedisTLSEnabled:
+                    type: boolean
                   redisAffinity:
                     description: Affinity is a group of affinity scheduling rules.
                     properties:
@@ -7219,8 +7223,6 @@ spec:
                         type: array
                     type: object
                 type: object
-              backendRedisTLSEnabled:
-                type: boolean
               externalComponents:
                 properties:
                   backend:
@@ -7275,8 +7277,6 @@ spec:
                   enabled:
                     type: boolean
                 type: object
-              queuesRedisTLSEnabled:
-                type: boolean
               resourceRequirementsEnabled:
                 type: boolean
               system:
@@ -16606,9 +16606,9 @@ spec:
                           type: object
                         type: array
                     type: object
+                  systemRedisTLSEnabled:
+                    type: boolean
                 type: object
-              systemRedisTLSEnabled:
-                type: boolean
               tenantName:
                 type: string
               wildcardDomain:

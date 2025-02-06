@@ -84,13 +84,6 @@ type APIManagerSpec struct {
 	PodDisruptionBudget *PodDisruptionBudgetSpec `json:"podDisruptionBudget,omitempty"`
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
-
-	// +optional
-	SystemRedisTLSEnabled *bool `json:"systemRedisTLSEnabled,omitempty"`
-	// +optional
-	BackendRedisTLSEnabled *bool `json:"backendRedisTLSEnabled,omitempty"`
-	// +optional
-	QueuesRedisTLSEnabled *bool `json:"queuesRedisTLSEnabled,omitempty"`
 }
 
 // APIManagerStatus defines the observed state of APIManager
@@ -386,6 +379,10 @@ type BackendSpec struct {
 	WorkerSpec *BackendWorkerSpec `json:"workerSpec,omitempty"`
 	// +optional
 	CronSpec *BackendCronSpec `json:"cronSpec,omitempty"`
+	// +optional
+	BackendRedisTLSEnabled *bool `json:"backendRedisTLSEnabled,omitempty"`
+	// +optional
+	QueuesRedisTLSEnabled *bool `json:"queuesRedisTLSEnabled,omitempty"`
 }
 
 type BackendRedisPersistentVolumeClaimSpec struct {
@@ -523,6 +520,9 @@ type SystemSpec struct {
 
 	// +optional
 	SearchdSpec *SystemSearchdSpec `json:"searchdSpec,omitempty"`
+
+	// +optional
+	SystemRedisTLSEnabled *bool `json:"systemRedisTLSEnabled,omitempty"`
 }
 
 type SystemAppSpec struct {
@@ -1690,35 +1690,27 @@ func init() {
 
 func (apimanager *APIManager) IsSystemRedisTLSEnabled() bool {
 	tlsEnabled := false
-	if apimanager.Spec.SystemRedisTLSEnabled != nil &&
-		*apimanager.Spec.SystemRedisTLSEnabled &&
-		apimanager.Spec.ExternalComponents != nil &&
-		apimanager.Spec.ExternalComponents.System != nil &&
-		*apimanager.Spec.ExternalComponents.System.Redis &&
-		apimanager.Spec.ExternalComponents.Backend != nil &&
-		*apimanager.Spec.ExternalComponents.Backend.Redis {
+	if apimanager.Spec.System != nil &&
+		apimanager.Spec.System.SystemRedisTLSEnabled != nil &&
+		*apimanager.Spec.System.SystemRedisTLSEnabled {
 		tlsEnabled = true
 	}
 	return tlsEnabled
 }
 func (apimanager *APIManager) IsBackendRedisTLSEnabled() bool {
 	tlsEnabled := false
-	if apimanager.Spec.BackendRedisTLSEnabled != nil &&
-		*apimanager.Spec.BackendRedisTLSEnabled &&
-		apimanager.Spec.ExternalComponents != nil &&
-		apimanager.Spec.ExternalComponents.Backend != nil &&
-		*apimanager.Spec.ExternalComponents.Backend.Redis {
+	if apimanager.Spec.Backend != nil &&
+		apimanager.Spec.Backend.BackendRedisTLSEnabled != nil &&
+		*apimanager.Spec.Backend.BackendRedisTLSEnabled {
 		tlsEnabled = true
 	}
 	return tlsEnabled
 }
 func (apimanager *APIManager) IsQueuesRedisTLSEnabled() bool {
 	tlsEnabled := false
-	if apimanager.Spec.QueuesRedisTLSEnabled != nil &&
-		*apimanager.Spec.QueuesRedisTLSEnabled &&
-		apimanager.Spec.ExternalComponents != nil &&
-		apimanager.Spec.ExternalComponents.Backend != nil &&
-		*apimanager.Spec.ExternalComponents.Backend.Redis {
+	if apimanager.Spec.Backend != nil &&
+		apimanager.Spec.Backend.QueuesRedisTLSEnabled != nil &&
+		*apimanager.Spec.Backend.QueuesRedisTLSEnabled {
 		tlsEnabled = true
 	}
 	return tlsEnabled
@@ -1734,8 +1726,4 @@ func (a *APIManager) GetBackendRedisSecretRefs() []*v1.LocalObjectReference {
 	secretRefs := []*v1.LocalObjectReference{}
 	secretRefs = append(secretRefs, &v1.LocalObjectReference{Name: "backend-redis"})
 	return secretRefs
-}
-
-func (a *APIManager) backendRedisTLSValidationBackendSecret() {
-
 }

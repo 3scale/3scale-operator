@@ -1007,10 +1007,9 @@ To enable TLS communication in Redis, certain configurations must be defined wit
 Below are the key settings and environment variables involved in the process:
 
 - Following definitions are required in the **ApiManager CR** to enable TLS communication:
-    - `spec.systemRedisTLSEnabled: true` - for system redis
-    - `spec.backendRedisTLSEnabled: true` - for backend redis
-    - `spec.queuesRedisTLSEnabled: true` - for queues redis
-    - `spec.externalComponents` should present and `system.redis` or `backend.redis` (or both) will be `true`
+    - `spec.system.systemRedisTLSEnabled: true` - for system redis
+    - `spec.backend.backendRedisTLSEnabled: true` - for backend redis
+    - `spec.backend.queuesRedisTLSEnabled: true` - for queues redis
 - When Redis TLS is enabled, the TLS environment variables for Backend and System components will be set in Pods.
   - for Backend - in backend-worker, backend-cron, and backend-listener pods.
   - for System - in system-app and system-sidekiq pods.

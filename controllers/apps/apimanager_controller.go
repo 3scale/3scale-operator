@@ -655,13 +655,13 @@ func (r *APIManagerReconciler) reconcileHashedSecret(cr *appsv1alpha1.APIManager
 
 func (r *APIManagerReconciler) validateRedisTLS(cr *appsv1alpha1.APIManager) field.ErrorList {
 	fieldErrors := field.ErrorList{}
-	if cr.Spec.SystemRedisTLSEnabled != nil && *cr.Spec.SystemRedisTLSEnabled {
+	if cr.Spec.System != nil && cr.Spec.System.SystemRedisTLSEnabled != nil && *cr.Spec.System.SystemRedisTLSEnabled {
 		fieldErrors = append(fieldErrors, r.validateRedisTLSSystemRedisSecret(cr)...)
 	}
-	if cr.Spec.BackendRedisTLSEnabled != nil && *cr.Spec.BackendRedisTLSEnabled {
+	if cr.Spec.Backend != nil && cr.Spec.Backend.BackendRedisTLSEnabled != nil && *cr.Spec.Backend.BackendRedisTLSEnabled {
 		fieldErrors = append(fieldErrors, r.validateRedisTLSBackendRedisSecret(cr)...)
 	}
-	if cr.Spec.QueuesRedisTLSEnabled != nil && *cr.Spec.QueuesRedisTLSEnabled {
+	if cr.Spec.Backend != nil && cr.Spec.Backend.QueuesRedisTLSEnabled != nil && *cr.Spec.Backend.QueuesRedisTLSEnabled {
 		fieldErrors = append(fieldErrors, r.validateRedisTLSQueuesRedisSecret(cr)...)
 	}
 	return fieldErrors
