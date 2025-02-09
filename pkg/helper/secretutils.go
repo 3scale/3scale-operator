@@ -2,8 +2,6 @@ package helper
 
 import (
 	"context"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"net"
 	"net/url"
@@ -224,46 +222,6 @@ func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, na
 	}
 
 	return false
-}
-
-func ValidateCertificate(certData []byte) error {
-	block, _ := pem.Decode(certData)
-	if block == nil {
-		return errors.NewBadRequest("certificate is not valid PEM encoded")
-	}
-	_, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return fmt.Errorf("failed to parse certificate: %v", err)
-	}
-	return nil
-}
-
-// Validate private key:
-// Check if it's a valid PEM-encoded private key (RSA or EC)
-func ValidatePrivateKey(keyData []byte) error {
-	// Decode the PEM block
-	block, _ := pem.Decode(keyData)
-	if block == nil {
-		return errors.NewBadRequest("private key is not valid PEM encoded")
-	}
-	// First try parsing the PKCS#8 private key
-	_, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err == nil {
-		return nil
-	}
-
-	// If PKCS#8 parsing fauk - try parsing as RSA private key (PKCS#1 format)
-	_, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err == nil {
-		return nil
-	}
-	// If RSA parsings fails, try parsing as EC private key (PKCS#8 format)
-	_, err = x509.ParseECPrivateKey(block.Bytes)
-	if err == nil {
-		return nil
-	}
-	// Return an error if all parsing attempts fail.
-	return err
 }
 
 func ValidateRedisURL(url string) error {
