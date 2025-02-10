@@ -19,8 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"time"
+
+	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 
 	"github.com/3scale/3scale-operator/pkg/upgrade"
 
@@ -227,13 +228,13 @@ func (r *APIManagerReconciler) PreflightChecks(apimInstance *appsv1alpha1.APIMan
 
 	logger.Info("Starting preflight checks...")
 	if !systemRedisVerified {
-		systemRedisVerified, err = helper.VerifySystemRedis(r.Client(), reqConfigMap, systemRedisRequirement, apimInstance, logger)
+		systemRedisVerified, err = helper.VerifySystemRedis(r.Client(), systemRedisRequirement, apimInstance, logger)
 		if err != nil {
 			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("Failed to verify system redis version. Ensure that the system-redis secret is correctly configured. Error: %s", err)
 		}
 	}
 	if !backendRedisVerified {
-		backendRedisVerified, err = helper.VerifyBackendRedis(r.Client(), reqConfigMap, backendRedisRequirement, apimInstance, logger)
+		backendRedisVerified, err = helper.VerifyBackendRedis(r.Client(), backendRedisRequirement, apimInstance, logger)
 		if err != nil {
 			return ctrl.Result{RequeueAfter: time.Minute * 10}, nil, fmt.Errorf("Failed to verify backend redis version. Ensure that the backend-redis secret is correctly configured. Error: %s", err)
 		}
