@@ -89,6 +89,16 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	err = r.Client().Get(r.Context(), projectMeta, accountResource)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
+			// If the application CR is marked for deletion and the dev account associated doesn't exist, remove the application CR since there is nothing else to do with application.
+			if application.GetDeletionTimestamp() != nil && controllerutil.ContainsFinalizer(application, applicationFinalizer) {
+				controllerutil.RemoveFinalizer(application, applicationFinalizer)
+				err = r.UpdateResource(application)
+				if err != nil {
+					return ctrl.Result{}, err
+				}
+
+				return ctrl.Result{}, nil
+			}
 			reqLogger.Error(err, "error developer account not found ")
 			statusReconciler := NewApplicationStatusReconciler(r.BaseReconciler, application, nil, "", err)
 			statusResult, statusUpdateErr := statusReconciler.Reconcile()
@@ -97,13 +107,14 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 					return ctrl.Result{}, fmt.Errorf("Failed to reconcile application: %v. Failed to update application status: %w", err, statusUpdateErr)
 				}
 
-				return ctrl.Result{}, fmt.Errorf("Failed to update applicatino status: %w", statusUpdateErr)
+				return ctrl.Result{}, fmt.Errorf("Failed to update application status: %w", statusUpdateErr)
 			}
 			if statusResult.Requeue {
 				return statusResult, nil
 			}
 		}
 	}
+
 	// get providerAccountRef from account
 	providerAccount, err := controllerhelper.LookupProviderAccount(r.Client(), accountResource.Namespace, accountResource.Spec.ProviderAccountRef, r.Logger())
 	if err != nil {
@@ -138,7 +149,11 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, nil
 	}
 
-	metadataUpdated := r.reconcileMetadata(application)
+	metadataUpdated, err := r.reconcileMetadata(application, accountResource)
+	if err != nil {
+		r.EventRecorder().Eventf(application, corev1.EventTypeWarning, "Failed to update ownerReferences in application", "%v", err)
+		return ctrl.Result{}, err
+	}
 	if metadataUpdated {
 		err = r.UpdateResource(application)
 		if err != nil {
@@ -187,7 +202,7 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
-func (r *ApplicationReconciler) reconcileMetadata(application *capabilitiesv1beta1.Application) bool {
+func (r *ApplicationReconciler) reconcileMetadata(application *capabilitiesv1beta1.Application, developerAccount *capabilitiesv1beta1.DeveloperAccount) (bool, error) {
 	changed := false
 
 	// If the application.Status.ID is found and the annotation is not found - create
@@ -209,7 +224,16 @@ func (r *ApplicationReconciler) reconcileMetadata(application *capabilitiesv1bet
 		changed = true
 	}
 
-	return changed
+	// Add ownerRef of associated account CR, this is done because application CR can't exist without associated dev account. Therefore, if dev account is removed, the application CR should also be removed
+	if !r.HasOwnerReference(developerAccount, application) {
+		updated, err := r.EnsureOwnerReference(developerAccount, application)
+		if err != nil {
+			return false, err
+		}
+		changed = changed || updated
+	}
+
+	return changed, nil
 }
 
 func (r *ApplicationReconciler) applicationReconciler(applicationResource *capabilitiesv1beta1.Application, req ctrl.Request, threescaleAPIClient *threescaleapi.ThreeScaleClient, providerAccountAdminURLStr string, accountResource *capabilitiesv1beta1.DeveloperAccount) (*ApplicationStatusReconciler, error) {
@@ -266,6 +290,11 @@ func (r *ApplicationReconciler) removeApplicationFrom3scale(application *capabil
 	if application.Status.ID == nil {
 		logger.Info("could not remove application because ID is missing in status")
 		return nil
+	}
+
+	if account.Status.ID == nil {
+		logger.Info("could not remove application because ID is missing in the status of developer account")
+		return fmt.Errorf("could not remove application because ID is missing in the satus of developer account %s", account.Name)
 	}
 
 	err = threescaleAPIClient.DeleteApplication(*account.Status.ID, *application.Status.ID)
