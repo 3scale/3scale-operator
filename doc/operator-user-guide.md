@@ -283,7 +283,7 @@ To enable secure TLS communication for the Redis connection used by the system p
 - REDIS_SSL_CA: The Redis Certificate Authority (CA) certificate.
 - REDIS_SSL_CERT: The Redis client certificate.
 - REDIS_SSL_KEY: The private key for the Redis client certificate.
-**Important**: REDIS_SSL_CA, REDIS_SSL_CERT and REDIS_SSL_KEY certificate fields must also present in `backend-redis` secret; it's require for `system pods` to set TLS connection with Redis.
+**Important**: REDIS_SSL_CA, REDIS_SSL_CERT and REDIS_SSL_KEY certificate fields must  be populated with valid certificates in `backend-redis` secret also; it's require for `system pods` to set TLS connection with Redis.
 For more details, please refer to the section on [Setting Redis TLS Environment variables](#setting-redis-tls-environment-variables).
 
 - Example of system-redis secret with TLS details:

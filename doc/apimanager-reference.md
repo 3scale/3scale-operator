@@ -354,7 +354,7 @@ Some examples are available [here](/doc/adding-apicast-custom-environments.md)
 | RedisTopologySpreadConstraints | `redisTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` |  **[DEPRECATED]** Use external databases only |
 | RedisLabels | `redisLabels` | map[string]string | No | `nil ` |  **[DEPRECATED]** Use external databases only |
 | RedisAnnotations | `redisAnnotations` | map[string]string | No | `nil `  |  **[DEPRECATED]** Use external databases only |
-| SystemRedisTLSEnabled | `systemRedisTLSEnabled` | `bool` | No | `nil` | This flag enables Redis System TLS communication. When set to true, and with the secret validation successfully passed, Redis TLS environment variables are injected into the system-app and system-sidekiq pods: REDIS_CA_FILE, REDIS_CLIENT_CERT, REDIS_PRIVATE_KEY, and REDIS_SSL is set to true. These environment variables are required to establish system Redis TLS communication.|
+| SystemRedisTLSEnabled | `systemRedisTLSEnabled` | `bool` | No | `nil` | This flag enables Redis System TLS communication. When set to true, and with the secret validation successfully passed, Redis TLS environment variables are injected into the system-app and system-sidekiq pods: REDIS_CA_FILE, REDIS_CLIENT_CERT, REDIS_PRIVATE_KEY, and REDIS_SSL is set to true. These environment variables are required to establish system Redis TLS communication. **Important**: To establish System Redis TLS communication, the REDIS_SSL_CA, REDIS_SSL_CERT, and REDIS_SSL_KEY fields must be populated with valid certificates, not only in the system-redis secret but also in the backend-redis secret|
 
 
 
