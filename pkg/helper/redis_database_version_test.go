@@ -1,15 +1,17 @@
 package helper
 
 import (
+	"testing"
+
+	goredis "github.com/redis/go-redis/v9"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 func TestReconcileRedisSecrets(t *testing.T) {
 	cases := []struct {
 		testName            string
-		redisSecretFunction func(v1.Secret) Redis
+		redisSecretFunction func(v1.Secret) (Redis, error)
 		secret              v1.Secret
 		redis               Redis
 	}{
@@ -26,12 +28,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -43,16 +48,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"SENTINEL_HOSTS": []byte(""),
-					"URL":            []byte("my-redis:5000"),
+					"URL":            []byte("redis://my-redis:5000"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -64,16 +72,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"SENTINEL_HOSTS": []byte(""),
-					"URL":            []byte("my-redis:5000/1"),
+					"URL":            []byte("redis://my-redis:5000/1"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -89,12 +100,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -106,16 +120,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"SENTINEL_HOSTS": []byte(""),
-					"URL":            []byte(":password@my-redis:5000/1"),
+					"URL":            []byte("redis://:password@my-redis:5000/1"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -127,16 +144,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"SENTINEL_HOSTS": []byte(""),
-					"URL":            []byte(":password@my-redis:5000"),
+					"URL":            []byte("redis://:password@my-redis:5000"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -148,16 +168,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"SENTINEL_HOSTS": []byte(""),
-					"URL":            []byte(":password@my-redis"),
+					"URL":            []byte("redis://:password@my-redis"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -173,13 +196,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -195,13 +220,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -217,13 +244,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "password1",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password1",
+				},
 			},
 		},
 		{
@@ -239,13 +268,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "password1",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password1",
+				},
 			},
 		},
 		{
@@ -257,17 +288,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"SENTINEL_HOSTS": []byte(":password@sentinel.cloud-resource-operator.svc.cluster.local"),
-					"URL":            []byte(":asdsada121252112sdag21123@redisgrp"),
+					"URL":            []byte("redis://:asdsada121252112sdag21123@redisgrp"),
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "6379",
-				sentinelGroup:    "redisgrp",
-				redisHost:        "redisgrp",
-				redisPassword:    "asdsada121252112sdag21123",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:6379",
+					Password: "password",
+				},
+				sentinelGroup: "redisgrp",
+				redisOptions: goredis.Options{
+					Addr:     "redisgrp:6379",
+					Password: "asdsada121252112sdag21123",
+				},
 			},
 		},
 		{
@@ -279,17 +312,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"SENTINEL_HOSTS": []byte("redis//:password@sentinel.cloud-resource-operator.svc.cluster.local, redis//:password@sentinel.cloud-resource-operator.svc.cluster.local,redis//:password@sentinel.cloud-resource-operator.svc.cluster.local"),
-					"URL":            []byte(":asdsada121252112sdag21123@redisgrp"),
+					"URL":            []byte("redis://:asdsada121252112sdag21123@redisgrp"),
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "6379",
-				sentinelGroup:    "redisgrp",
-				redisHost:        "redisgrp",
-				redisPassword:    "asdsada121252112sdag21123",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:6379",
+					Password: "password",
+				},
+				sentinelGroup: "redisgrp",
+				redisOptions: goredis.Options{
+					Addr:     "redisgrp:6379",
+					Password: "asdsada121252112sdag21123",
+				},
 			},
 		},
 		{
@@ -305,12 +340,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -322,16 +360,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_QUEUES_SENTINEL_HOSTS": []byte(""),
-					"REDIS_QUEUES_URL":            []byte("my-redis:5000"),
+					"REDIS_QUEUES_URL":            []byte("redis://my-redis:5000"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -343,16 +384,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_QUEUES_SENTINEL_HOSTS": []byte(""),
-					"REDIS_QUEUES_URL":            []byte("my-redis:5000/1"),
+					"REDIS_QUEUES_URL":            []byte("redis://my-redis:5000/1"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -368,12 +412,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -385,16 +432,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_QUEUES_SENTINEL_HOSTS": []byte(""),
-					"REDIS_QUEUES_URL":            []byte(":password@my-redis:5000/1"),
+					"REDIS_QUEUES_URL":            []byte("redis://:password@my-redis:5000/1"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -406,16 +456,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_QUEUES_SENTINEL_HOSTS": []byte(""),
-					"REDIS_QUEUES_URL":            []byte(":password@my-redis:5000"),
+					"REDIS_QUEUES_URL":            []byte("redis://:password@my-redis:5000"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -427,16 +480,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_QUEUES_SENTINEL_HOSTS": []byte(""),
-					"REDIS_QUEUES_URL":            []byte(":password@my-redis"),
+					"REDIS_QUEUES_URL":            []byte("redis://:password@my-redis"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -452,13 +508,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -474,13 +532,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -496,13 +556,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "password1",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password1",
+				},
 			},
 		},
 		{
@@ -518,13 +580,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "password1",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password1",
+				},
 			},
 		},
 		{
@@ -536,17 +600,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_QUEUES_SENTINEL_HOSTS": []byte(":password@sentinel.cloud-resource-operator.svc.cluster.local"),
-					"REDIS_QUEUES_URL":            []byte(":asdsada121252112sdag21123@redisgrp"),
+					"REDIS_QUEUES_URL":            []byte("redis://:asdsada121252112sdag21123@redisgrp"),
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "6379",
-				sentinelGroup:    "redisgrp",
-				redisHost:        "redisgrp",
-				redisPassword:    "asdsada121252112sdag21123",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:6379",
+					Password: "password",
+				},
+				sentinelGroup: "redisgrp",
+				redisOptions: goredis.Options{
+					Addr:     "redisgrp:6379",
+					Password: "asdsada121252112sdag21123",
+				},
 			},
 		},
 		{
@@ -558,17 +624,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_QUEUES_SENTINEL_HOSTS": []byte("redis//:password@sentinel.cloud-resource-operator.svc.cluster.local, redis//:password@sentinel.cloud-resource-operator.svc.cluster.local,redis//:password@sentinel.cloud-resource-operator.svc.cluster.local"),
-					"REDIS_QUEUES_URL":            []byte(":asdsada121252112sdag21123@redisgrp"),
+					"REDIS_QUEUES_URL":            []byte("redis://:asdsada121252112sdag21123@redisgrp"),
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "6379",
-				sentinelGroup:    "redisgrp",
-				redisHost:        "redisgrp",
-				redisPassword:    "asdsada121252112sdag21123",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:6379",
+					Password: "password",
+				},
+				sentinelGroup: "redisgrp",
+				redisOptions: goredis.Options{
+					Addr:     "redisgrp:6379",
+					Password: "asdsada121252112sdag21123",
+				},
 			},
 		},
 		{
@@ -584,12 +652,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -601,16 +672,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_STORAGE_SENTINEL_HOSTS": []byte(""),
-					"REDIS_STORAGE_URL":            []byte("my-redis:5000"),
+					"REDIS_STORAGE_URL":            []byte("redis://my-redis:5000"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -622,16 +696,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_STORAGE_SENTINEL_HOSTS": []byte(""),
-					"REDIS_STORAGE_URL":            []byte("my-redis:5000/1"),
+					"REDIS_STORAGE_URL":            []byte("redis://my-redis:5000/1"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -647,12 +724,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -664,16 +744,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_STORAGE_SENTINEL_HOSTS": []byte(""),
-					"REDIS_STORAGE_URL":            []byte(":password@my-redis:5000/1"),
+					"REDIS_STORAGE_URL":            []byte("redis://:password@my-redis:5000/1"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -685,16 +768,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_STORAGE_SENTINEL_HOSTS": []byte(""),
-					"REDIS_STORAGE_URL":            []byte(":password@my-redis:5000"),
+					"REDIS_STORAGE_URL":            []byte("redis://:password@my-redis:5000"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -706,16 +792,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_STORAGE_SENTINEL_HOSTS": []byte(""),
-					"REDIS_STORAGE_URL":            []byte(":password@my-redis"),
+					"REDIS_STORAGE_URL":            []byte("redis://:password@my-redis"),
 				},
 			},
 			Redis{
-				sentinelHost:     "",
-				sentinelPassword: "",
-				sentinelPort:     "",
-				redisHost:        "my-redis",
-				redisPassword:    "password",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "",
+					Password: "",
+				},
+				sentinelGroup: "",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "password",
+				},
 			},
 		},
 		{
@@ -731,13 +820,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -753,13 +844,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:6379",
+					Password: "",
+				},
 			},
 		},
 		{
@@ -775,13 +868,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "password1",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password1",
+				},
 			},
 		},
 		{
@@ -797,13 +892,15 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "5000",
-				sentinelGroup:    "my-redis",
-				redisHost:        "my-redis",
-				redisPassword:    "password1",
-				redisPort:        "5000",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:5000",
+					Password: "password",
+				},
+				sentinelGroup: "my-redis",
+				redisOptions: goredis.Options{
+					Addr:     "my-redis:5000",
+					Password: "password1",
+				},
 			},
 		},
 		{
@@ -815,17 +912,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_STORAGE_SENTINEL_HOSTS": []byte(":password@sentinel.cloud-resource-operator.svc.cluster.local"),
-					"REDIS_STORAGE_URL":            []byte(":asdsada121252112sdag21123@redisgrp"),
+					"REDIS_STORAGE_URL":            []byte("redis://:asdsada121252112sdag21123@redisgrp"),
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "6379",
-				sentinelGroup:    "redisgrp",
-				redisHost:        "redisgrp",
-				redisPassword:    "asdsada121252112sdag21123",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:6379",
+					Password: "password",
+				},
+				sentinelGroup: "redisgrp",
+				redisOptions: goredis.Options{
+					Addr:     "redisgrp:6379",
+					Password: "asdsada121252112sdag21123",
+				},
 			},
 		},
 		{
@@ -837,17 +936,19 @@ func TestReconcileRedisSecrets(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"REDIS_STORAGE_SENTINEL_HOSTS": []byte("redis//:password@sentinel.cloud-resource-operator.svc.cluster.local, redis//:password@sentinel.cloud-resource-operator.svc.cluster.local,redis//:password@sentinel.cloud-resource-operator.svc.cluster.local"),
-					"REDIS_STORAGE_URL":            []byte(":asdsada121252112sdag21123@redisgrp"),
+					"REDIS_STORAGE_URL":            []byte("redis://:asdsada121252112sdag21123@redisgrp"),
 				},
 			},
 			Redis{
-				sentinelHost:     "sentinel.cloud-resource-operator.svc.cluster.local",
-				sentinelPassword: "password",
-				sentinelPort:     "6379",
-				sentinelGroup:    "redisgrp",
-				redisHost:        "redisgrp",
-				redisPassword:    "asdsada121252112sdag21123",
-				redisPort:        "6379",
+				sentinelOptions: goredis.Options{
+					Addr:     "sentinel.cloud-resource-operator.svc.cluster.local:6379",
+					Password: "password",
+				},
+				sentinelGroup: "redisgrp",
+				redisOptions: goredis.Options{
+					Addr:     "redisgrp:6379",
+					Password: "asdsada121252112sdag21123",
+				},
 			},
 		},
 	}
@@ -855,25 +956,22 @@ func TestReconcileRedisSecrets(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
 			function := tc.redisSecretFunction
-			redisRetrieved := function(tc.secret)
+			redisRetrieved, err := function(tc.secret)
 
-			if redisRetrieved.redisHost != tc.redis.redisHost {
-				subT.Fatalf("test failed for test case %s, expected redis host %v but got %v", tc.testName, tc.redis.redisHost, redisRetrieved.redisHost)
+			if err != nil {
+				subT.Fatalf("test failed for test case %s, err: %v ", tc.testName, err)
 			}
-			if redisRetrieved.redisPort != tc.redis.redisPort {
-				subT.Fatalf("test failed for test case %s, expected redis port %v but got %v", tc.testName, tc.redis.redisPort, redisRetrieved.redisPort)
+			if redisRetrieved.redisOptions.Addr != tc.redis.redisOptions.Addr {
+				subT.Fatalf("test failed for test case %s, expected redis address %v but got %v", tc.testName, tc.redis.redisOptions.Addr, redisRetrieved.redisOptions.Addr)
 			}
-			if redisRetrieved.redisPassword != tc.redis.redisPassword {
-				subT.Fatalf("test failed for test case %s, expected redis password %v but got %v", tc.testName, tc.redis.redisPassword, redisRetrieved.redisPassword)
+			if redisRetrieved.redisOptions.Password != tc.redis.redisOptions.Password {
+				subT.Fatalf("test failed for test case %s, expected redis password %v but got %v", tc.testName, tc.redis.redisOptions.Password, redisRetrieved.redisOptions.Password)
 			}
-			if redisRetrieved.sentinelHost != tc.redis.sentinelHost {
-				subT.Fatalf("test failed for test case %s, expected redis sentinel host %v but got %v", tc.testName, tc.redis.sentinelHost, redisRetrieved.sentinelHost)
+			if redisRetrieved.sentinelOptions.Addr != tc.redis.sentinelOptions.Addr {
+				subT.Fatalf("test failed for test case %s, expected redis sentinel host %v but got %v", tc.testName, tc.redis.sentinelOptions.Addr, redisRetrieved.sentinelOptions.Addr)
 			}
-			if redisRetrieved.sentinelPort != tc.redis.sentinelPort {
-				subT.Fatalf("test failed for test case %s, expected redis sentinel port %v but got %v", tc.testName, tc.redis.sentinelPort, redisRetrieved.sentinelPort)
-			}
-			if redisRetrieved.sentinelPassword != tc.redis.sentinelPassword {
-				subT.Fatalf("test failed for test case %s, expected redis sentinel password %v but got %v", tc.testName, tc.redis.sentinelPassword, redisRetrieved.sentinelPassword)
+			if redisRetrieved.sentinelOptions.Password != tc.redis.sentinelOptions.Password {
+				subT.Fatalf("test failed for test case %s, expected redis sentinel password %v but got %v", tc.testName, tc.redis.sentinelOptions.Password, redisRetrieved.sentinelOptions.Password)
 			}
 			if redisRetrieved.sentinelGroup != tc.redis.sentinelGroup {
 				subT.Fatalf("test failed for test case %s, expected redis group %v but got %v", tc.testName, tc.redis.sentinelGroup, redisRetrieved.sentinelGroup)
@@ -881,3 +979,4 @@ func TestReconcileRedisSecrets(t *testing.T) {
 		})
 	}
 }
+
