@@ -263,7 +263,10 @@ func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
 					},
 				},
 			},
-			want: []*v1.LocalObjectReference{},
+			want: []*v1.LocalObjectReference{
+				{Name: "system-redis"},
+				{Name: "backend-redis"},
+			},
 		},
 		{
 			name: "Apicast has secret refs",
@@ -307,6 +310,12 @@ func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
 				},
 			},
 			want: []*v1.LocalObjectReference{
+				{
+					Name: "system-redis",
+				},
+				{
+					Name: "backend-redis",
+				},
 				{
 					Name: "https-cert-secret",
 				},

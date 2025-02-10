@@ -13,6 +13,17 @@ type HighAvailabilityOptions struct {
 	SystemRedisURL                   string
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
+
+	//Redis TLS
+	SystemRedisSslCa          string
+	SystemRedisSslCert        string
+	SystemRedisSslKey         string
+	BackendRedisSslCa         string
+	BackendRedisSslCert       string
+	BackendRedisSslKey        string
+	BackendRedisQueuesSslCa   string
+	BackendRedisQueuesSslCert string
+	BackendRedisQueuesSslKey  string
 }
 
 func NewHighAvailabilityOptions() *HighAvailabilityOptions {
