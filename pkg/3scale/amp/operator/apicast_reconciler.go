@@ -768,6 +768,22 @@ func (r *ApicastReconciler) getSecretUIDs(ctx context.Context) (map[string]strin
 		}
 	}
 
+	// system-database
+
+	if r.apiManager.IsSystemDatabaseTLSEnabled() {
+		secretKeys = append(secretKeys, client.ObjectKey{
+			Name:      component.SystemSecretSystemDatabaseSecretName,
+			Namespace: r.apiManager.Namespace,
+		})
+	}
+	// zync
+	if r.apiManager.IsZyncDatabaseTLSEnabled() {
+		secretKeys = append(secretKeys, client.ObjectKey{
+			Name:      component.ZyncSecretName,
+			Namespace: r.apiManager.Namespace,
+		})
+	}
+
 	uidMap := map[string]string{}
 	for idx := range secretKeys {
 		secret := &v1.Secret{}

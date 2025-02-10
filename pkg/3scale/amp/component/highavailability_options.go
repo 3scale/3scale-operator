@@ -10,9 +10,19 @@ type HighAvailabilityOptions struct {
 	BackendRedisStorageSentinelHosts string
 	BackendRedisStorageSentinelRole  string
 	SystemDatabaseURL                string
+	SystemDatabaseSslCa              string
+	SystemDatabaseSslMode            string
+	SystemDatabaseSslCert            string
+	SystemDatabaseSslKey             string
 	SystemRedisURL                   string
 	SystemRedisSentinelsHosts        string
 	SystemRedisSentinelsRole         string
+	ZyncDatabaseURL                  string
+	ZyncDatabasePassword             string
+	ZyncDatabaseSslCa                string
+	ZyncDatabaseSslMode              string
+	ZyncDatabaseSslCert              string
+	ZyncDatabaseSslKey               string
 }
 
 func NewHighAvailabilityOptions() *HighAvailabilityOptions {

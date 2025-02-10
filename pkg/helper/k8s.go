@@ -44,7 +44,7 @@ func GetOperatorNamespace() (string, error) {
 	if IsRunLocally() {
 		ns, err := GetWatchNamespace()
 		if err != nil {
-			return "", fmt.Errorf("running locally but WATCHNAMESPACE not found")
+			return "", fmt.Errorf("running locally but WATCH_NAMESPACE not found")
 		}
 		return ns, nil
 	}

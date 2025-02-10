@@ -263,7 +263,14 @@ func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
 					},
 				},
 			},
-			want: []*v1.LocalObjectReference{},
+			want: []*v1.LocalObjectReference{
+				{
+					Name: "system-database",
+				},
+				{
+					Name: "zync",
+				},
+			},
 		},
 		{
 			name: "Apicast has secret refs",
@@ -318,6 +325,12 @@ func TestAPIManager_Get3scaleSecretRefs(t *testing.T) {
 				},
 				{
 					Name: "custom-policy-1-secret",
+				},
+				{
+					Name: "system-database",
+				},
+				{
+					Name: "zync",
 				},
 			},
 		},

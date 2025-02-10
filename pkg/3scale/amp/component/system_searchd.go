@@ -1,7 +1,9 @@
 package component
 
 import (
+	"context"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -52,8 +54,12 @@ func (s *SystemSearchd) Service() *v1.Service {
 	}
 }
 
-func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment {
+func (s *SystemSearchd) Deployment(ctx context.Context, k8sclient client.Client, operatorNamespace string, containerImage string) (*k8sappsv1.Deployment, error) {
 	var searchdReplicas int32 = 1
+	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, SystemSearchdDeploymentName, operatorNamespace, s)
+	if err != nil {
+		return nil, err
+	}
 
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
@@ -74,35 +80,20 @@ func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment 
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      s.Options.PodTemplateLabels,
-					Annotations: s.Options.PodTemplateAnnotations,
+					Annotations: s.searchdPodAnnotations(watchedSecretAnnotations),
 				},
 				Spec: v1.PodSpec{
+					InitContainers:     s.searchdInit(containerImage),
 					Affinity:           s.Options.Affinity,
 					Tolerations:        s.Options.Tolerations,
 					ServiceAccountName: "amp",
-					Volumes: []v1.Volume{
-						{
-							Name: SystemSearchdDBVolumeName,
-							VolumeSource: v1.VolumeSource{
-								PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-									ClaimName: SystemSearchdPVCName,
-									ReadOnly:  false,
-								},
-							},
-						},
-					},
+					Volumes:            s.searchdVolume(),
 					Containers: []v1.Container{
 						{
 							Name:            SystemSearchdDeploymentName,
 							Image:           containerImage,
 							ImagePullPolicy: v1.PullIfNotPresent,
-							VolumeMounts: []v1.VolumeMount{
-								{
-									ReadOnly:  false,
-									Name:      SystemSearchdDBVolumeName,
-									MountPath: "/var/lib/searchd",
-								},
-							},
+							VolumeMounts:    s.searchDVolumeMounts(),
 							LivenessProbe: &v1.Probe{
 								ProbeHandler: v1.ProbeHandler{
 									TCPSocket: &v1.TCPSocketAction{
@@ -132,7 +123,7 @@ func (s *SystemSearchd) Deployment(containerImage string) *k8sappsv1.Deployment 
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func (s *SystemSearchd) PVC() *v1.PersistentVolumeClaim {
@@ -178,6 +169,7 @@ func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *ba
 			Completions: &completions,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
+					InitContainers: s.searchdInit(containerImage),
 					Containers: []v1.Container{
 						{
 							Name:            SystemSearchdReindexJobName,
@@ -186,8 +178,10 @@ func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *ba
 							Env:             system.buildSystemBaseEnv(),
 							Resources:       s.Options.ContainerResourceRequirements,
 							ImagePullPolicy: v1.PullIfNotPresent,
+							VolumeMounts:    s.searchdManticoreVolumeMounts(),
 						},
 					},
+					Volumes:            s.searchdJobVolume(),
 					RestartPolicy:      v1.RestartPolicyNever,
 					ServiceAccountName: "amp",
 					PriorityClassName:  s.Options.PriorityClassName,
@@ -195,4 +189,183 @@ func (s *SystemSearchd) ReindexingJob(containerImage string, system *System) *ba
 			},
 		},
 	}
+}
+
+func (s *SystemSearchd) searchdInit(containerImage string) []v1.Container {
+	if s.Options.SearchdDbTLSEnabled {
+		return []v1.Container{
+			{
+				Name:  "set-permissions",
+				Image: containerImage, // Minimal image for chmod
+				Command: []string{
+					"sh",
+					"-c",
+					"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+				},
+				VolumeMounts: []v1.VolumeMount{
+					{
+						Name:      "tls-secret",
+						MountPath: "/tls",
+						ReadOnly:  true,
+					},
+					{
+						Name:      "writable-tls",
+						MountPath: "/writable-tls",
+						ReadOnly:  false, // Writable emptyDir volume
+					},
+				},
+			},
+		}
+	} else {
+		return []v1.Container{}
+	}
+}
+
+func (s *SystemSearchd) searchDVolumeMounts() []v1.VolumeMount {
+	if s.Options.SearchdDbTLSEnabled {
+		return []v1.VolumeMount{
+			{
+				ReadOnly:  false,
+				Name:      SystemSearchdDBVolumeName,
+				MountPath: "/var/lib/searchd",
+			},
+			{
+				Name:      "writable-tls", // Reuse the same volume in the main container if needed
+				MountPath: "/tls",
+				ReadOnly:  true,
+			},
+		}
+	} else {
+		return []v1.VolumeMount{
+			{
+				ReadOnly:  false,
+				Name:      SystemSearchdDBVolumeName,
+				MountPath: "/var/lib/searchd",
+			},
+		}
+	}
+}
+
+func (s *SystemSearchd) searchdManticoreVolumeMounts() []v1.VolumeMount {
+	if s.Options.SearchdDbTLSEnabled {
+		return []v1.VolumeMount{
+			{
+				Name:      "writable-tls", // Reuse the same volume in the main container if needed
+				MountPath: "/tls",
+				ReadOnly:  true,
+			},
+		}
+	} else {
+		return []v1.VolumeMount{}
+	}
+}
+
+func (s *SystemSearchd) searchdJobVolume() []v1.Volume {
+	if s.Options.SearchdDbTLSEnabled {
+		return []v1.Volume{
+			{
+				Name: "tls-secret",
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: SystemSecretSystemDatabaseSecretName, // Name of the secret containing the TLS certs
+						Items: []v1.KeyToPath{
+							{
+								Key:  SystemSecretSslCa,
+								Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+							},
+							{
+								Key:  SystemSecretSslCert,
+								Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+							},
+							{
+								Key:  SystemSecretSslKey,
+								Path: "tls.key", // Map the secret key to the tls.key file in the container
+							},
+						},
+					},
+				},
+			},
+			{
+				Name: "writable-tls",
+				VolumeSource: v1.VolumeSource{
+					EmptyDir: &v1.EmptyDirVolumeSource{},
+				},
+			},
+		}
+	} else {
+		return []v1.Volume{}
+	}
+}
+
+func (s *SystemSearchd) searchdVolume() []v1.Volume {
+	if s.Options.SearchdDbTLSEnabled {
+		return []v1.Volume{
+			{
+				Name: SystemSearchdDBVolumeName,
+				VolumeSource: v1.VolumeSource{
+					PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+						ClaimName: SystemSearchdPVCName,
+						ReadOnly:  false,
+					},
+				},
+			},
+			{
+				Name: "tls-secret",
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: SystemSecretSystemDatabaseSecretName, // Name of the secret containing the TLS certs
+						Items: []v1.KeyToPath{
+							{
+								Key:  SystemSecretSslCa,
+								Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+							},
+							{
+								Key:  SystemSecretSslCert,
+								Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+							},
+							{
+								Key:  SystemSecretSslKey,
+								Path: "tls.key", // Map the secret key to the tls.key file in the container
+							},
+						},
+					},
+				},
+			},
+			{
+				Name: "writable-tls",
+				VolumeSource: v1.VolumeSource{
+					EmptyDir: &v1.EmptyDirVolumeSource{},
+				},
+			},
+		}
+	} else {
+		return []v1.Volume{
+			{
+				Name: SystemSearchdDBVolumeName,
+				VolumeSource: v1.VolumeSource{
+					PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+						ClaimName: SystemSearchdPVCName,
+						ReadOnly:  false,
+					},
+				},
+			},
+		}
+	}
+}
+
+func (s *SystemSearchd) searchdPodAnnotations(watchedSecretAnnotations map[string]string) map[string]string {
+	annotations := s.Options.PodTemplateAnnotations
+
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	for key, val := range watchedSecretAnnotations {
+		annotations[key] = val
+	}
+
+	for key, val := range s.Options.PodTemplateAnnotations {
+		annotations[key] = val
+	}
+
+	return annotations
 }

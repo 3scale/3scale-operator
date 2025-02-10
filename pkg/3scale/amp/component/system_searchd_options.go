@@ -26,6 +26,8 @@ type SystemSearchdOptions struct {
 	PriorityClassName         string                        `validate:"-"`
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `validate:"-"`
 	PodTemplateAnnotations    map[string]string             `validate:"-"`
+
+	SearchdDbTLSEnabled bool
 }
 
 func NewSystemSearchdOptions() *SystemSearchdOptions {
