@@ -57,6 +57,7 @@ func (z *ZyncOptionsProvider) GetZyncOptions() (*component.ZyncOptions, error) {
 	z.zyncOptions.ZyncPodTemplateAnnotations = z.zyncPodTemplateAnnotations()
 	z.zyncOptions.ZyncQuePodTemplateAnnotations = z.zyncQuePodTemplateAnnotations()
 	z.zyncOptions.ZyncDatabasePodTemplateAnnotations = z.apimanager.Spec.Zync.DatabaseAnnotations
+	z.setZyncTLSEnabled()
 
 	z.zyncOptions.ZyncMetrics = true
 
@@ -120,6 +121,27 @@ func (z *ZyncOptionsProvider) setSecretBasedOptions() error {
 			component.ZyncSecretDatabaseURLFieldName,
 			component.DefaultZyncDatabaseURL(zyncDatabasePassword),
 			z.apimanager.IsExternal(appsv1alpha1.ZyncDatabase),
+		},
+		{
+			&z.zyncOptions.DatabaseSslCa,
+			component.ZyncSecretName,
+			component.ZyncSecretSslCa,
+			component.DefaultZyncSslEmpty(),
+			false,
+		},
+		{
+			&z.zyncOptions.DatabaseSslCert,
+			component.ZyncSecretName,
+			component.ZyncSecretSslCert,
+			component.DefaultZyncSslEmpty(),
+			false,
+		},
+		{
+			&z.zyncOptions.DatabaseSslKey,
+			component.ZyncSecretName,
+			component.ZyncSecretSslKey,
+			component.DefaultZyncSslEmpty(),
+			false,
 		},
 	}
 
@@ -337,4 +359,8 @@ func (z *ZyncOptionsProvider) zyncQuePodTemplateAnnotations() map[string]string 
 		annotations[k] = v
 	}
 	return annotations
+}
+
+func (z *ZyncOptionsProvider) setZyncTLSEnabled() {
+	z.zyncOptions.ZyncDbTLSEnabled = z.apimanager.IsZyncDatabaseTLSEnabled()
 }

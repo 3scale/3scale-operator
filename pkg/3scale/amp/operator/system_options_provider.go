@@ -49,6 +49,7 @@ func (s *SystemOptionsProvider) GetSystemOptions() (*component.SystemOptions, er
 	s.options.DeveloperUILabels = s.developerUILabels()
 	s.options.MemcachedLabels = s.memcachedLabels()
 	s.options.SMTPLabels = s.smtpLabels()
+	s.setSystemDBTLSEabled()
 
 	err := s.setSecretBasedOptions()
 	if err != nil {
@@ -627,4 +628,8 @@ func (s *SystemOptionsProvider) setTopologySpreadConstraints() {
 func (s *SystemOptionsProvider) setPodTemplateAnnotations() {
 	s.options.AppPodTemplateAnnotations = s.apimanager.Spec.System.AppSpec.Annotations
 	s.options.SideKiqPodTemplateAnnotations = s.apimanager.Spec.System.SidekiqSpec.Annotations
+}
+
+func (s *SystemOptionsProvider) setSystemDBTLSEabled() {
+	s.options.SystemDbTLSEnabled = s.apimanager.IsSystemDatabaseTLSEnabled()
 }

@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"errors"
+	"fmt"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
@@ -37,6 +39,9 @@ func (h *HighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*compone
 	}
 	if h.apimanager.IsExternal(appsv1alpha1.SystemDatabase) {
 		setOptionsFns = append(setOptionsFns, h.setSystemDatabaseOptions)
+	}
+	if h.apimanager.IsExternal(appsv1alpha1.ZyncDatabase) {
+		setOptionsFns = append(setOptionsFns, h.setZyncDatabaseOptions)
 	}
 
 	for _, setOptions := range setOptionsFns {
@@ -172,6 +177,50 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 	return nil
 
 }
+func (h *HighAvailabilityOptionsProvider) setZyncDatabaseOptions() error {
+	val, err := h.secretSource.RequiredFieldValueFromRequiredSecret(
+		component.ZyncSecretName, component.ZyncSecretDatabaseURLFieldName)
+	if err != nil {
+		return err
+	}
+	h.options.ZyncDatabaseURL = val
+	val, err = h.secretSource.RequiredFieldValueFromRequiredSecret(
+		component.ZyncSecretName, component.ZyncSecretDatabasePasswordFieldName)
+	if err != nil {
+		return err
+	}
+	h.options.ZyncDatabasePassword = val
+	if h.apimanager.IsZyncDatabaseTLSEnabled() {
+		var errs []error
+
+		// Required fields
+		requiredFields := []struct {
+			field       *string
+			secretField string
+		}{
+			{&h.options.ZyncDatabaseSslCa, component.ZyncSecretSslCa},
+			{&h.options.ZyncDatabaseSslCert, component.ZyncSecretSslCert},
+			{&h.options.ZyncDatabaseSslKey, component.ZyncSecretSslKey},
+			{&h.options.ZyncDatabaseSslMode, component.ZyncSecretDatabaseSslMode},
+		}
+
+		for _, field := range requiredFields {
+			val, err := h.secretSource.RequiredFieldValueFromRequiredSecret(component.ZyncSecretName, field.secretField)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("%w", err))
+			}
+			*field.field = val
+		}
+
+		// Return all accumulated errors
+		if len(errs) > 0 {
+			return fmt.Errorf("zync database'zyncDatabaseTLSEnabled: true' is set in apimanager: %v", errors.Join(errs...))
+		}
+
+	}
+
+	return nil
+}
 
 func (h *HighAvailabilityOptionsProvider) setSystemDatabaseOptions() error {
 	val, err := h.secretSource.RequiredFieldValueFromRequiredSecret(
@@ -180,6 +229,33 @@ func (h *HighAvailabilityOptionsProvider) setSystemDatabaseOptions() error {
 		return err
 	}
 	h.options.SystemDatabaseURL = val
+	if h.apimanager.IsSystemDatabaseTLSEnabled() {
+		var errs []error
+
+		// Required fields
+		requiredFields := []struct {
+			field       *string
+			secretField string
+		}{
+			{&h.options.SystemDatabaseSslCa, component.SystemSecretSslCa},
+			{&h.options.SystemDatabaseSslCert, component.SystemSecretSslCert},
+			{&h.options.SystemDatabaseSslKey, component.SystemSecretSslKey},
+			{&h.options.SystemDatabaseSslMode, component.SystemSecretDatabaseSslMode},
+		}
+
+		for _, field := range requiredFields {
+			val, err := h.secretSource.RequiredFieldValueFromRequiredSecret(component.SystemSecretSystemDatabaseSecretName, field.secretField)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("%w", err))
+			}
+			*field.field = val
+		}
+
+		// Return all accumulated errors
+		if len(errs) > 0 {
+			return fmt.Errorf("system database'systemDatabaseTLSEnabled: true' is set in apimanager: %v", errors.Join(errs...))
+		}
+	}
 	return nil
 }
 

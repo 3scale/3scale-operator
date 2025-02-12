@@ -17,7 +17,7 @@ import (
 
 func ComputeWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, deploymentName, watchNS string, component interface{}) (map[string]string, error) {
 	// First get the initial annotations
-	uncheckedAnnotations, err := getWatchedSecretAnnotations(ctx, client, deploymentName, component)
+	uncheckedAnnotations, err := getWatchedSecretAnnotations(ctx, client, deploymentName, watchNS, component)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func ComputeWatchedSecretAnnotations(ctx context.Context, client k8sclient.Clien
 	return uncheckedAnnotations, nil // No difference with existing annotations so can return uncheckedAnnotations
 }
 
-func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, deploymentName string, component interface{}) (map[string]string, error) {
+func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, deploymentName string, namespace string, component interface{}) (map[string]string, error) {
 	annotations := map[string]string{}
 
 	switch c := component.(type) {
@@ -192,6 +192,53 @@ func getWatchedSecretAnnotations(ctx context.Context, client k8sclient.Client, d
 				}
 			}
 		}
+	case *System:
+		system := c
+		systemDatabase := &corev1.Secret{}
+		systemDatabaseSecretKey := k8sclient.ObjectKey{
+			Name:      SystemSecretSystemDatabaseSecretName,
+			Namespace: system.Options.Namespace,
+		}
+		err := client.Get(ctx, systemDatabaseSecretKey, systemDatabase)
+		if err != nil {
+			return nil, err
+		}
+		if helper.IsSecretWatchedBy3scale(systemDatabase) {
+			annotationKey := fmt.Sprintf("%s%s", SystemDatabaseSecretResverAnnotationPrefix, systemDatabase.Name)
+			annotations[annotationKey] = systemDatabase.ResourceVersion
+		}
+
+	case *SystemSearchd:
+		systemDatabase := &corev1.Secret{}
+		systemDatabaseSecretKey := k8sclient.ObjectKey{
+			Name:      SystemSecretSystemDatabaseSecretName,
+			Namespace: namespace,
+		}
+		err := client.Get(ctx, systemDatabaseSecretKey, systemDatabase)
+		if err != nil {
+			return nil, err
+		}
+		if helper.IsSecretWatchedBy3scale(systemDatabase) {
+			annotationKey := fmt.Sprintf("%s%s", SystemDatabaseSecretResverAnnotationPrefix, systemDatabase.Name)
+			annotations[annotationKey] = systemDatabase.ResourceVersion
+		}
+
+	case *Zync:
+		zync := c
+		zyncSecret := &corev1.Secret{}
+		zyncSecretKey := k8sclient.ObjectKey{
+			Name:      ZyncSecretName,
+			Namespace: zync.Options.Namespace,
+		}
+		err := client.Get(ctx, zyncSecretKey, zyncSecret)
+		if err != nil {
+			fmt.Printf("failed to find zync secret, yet to be create %s", err)
+			return nil, nil
+		}
+		if helper.IsSecretWatchedBy3scale(zyncSecret) {
+			annotationKey := fmt.Sprintf("%s%s", ZyncSecretResverAnnotationPrefix, zyncSecret.Name)
+			annotations[annotationKey] = zyncSecret.ResourceVersion
+		}
 
 	default:
 		return nil, fmt.Errorf("unrecognized component %s is not supported", deploymentName)
@@ -220,6 +267,27 @@ func HasSecretHashChanged(ctx context.Context, client k8sclient.Client, deployme
 			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, CustomEnvSecretResverAnnotationPrefix)
 		case strings.HasPrefix(deploymentAnnotation, CustomPoliciesSecretResverAnnotationPrefix):
 			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, CustomPoliciesSecretResverAnnotationPrefix)
+		default:
+			return false
+		}
+	case *System:
+		switch {
+		case strings.HasPrefix(deploymentAnnotation, SystemDatabaseSecretResverAnnotationPrefix):
+			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, SystemDatabaseSecretResverAnnotationPrefix)
+		default:
+			return false
+		}
+	case *SystemSearchd:
+		switch {
+		case strings.HasPrefix(deploymentAnnotation, SystemDatabaseSecretResverAnnotationPrefix):
+			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, SystemDatabaseSecretResverAnnotationPrefix)
+		default:
+			return false
+		}
+	case *Zync:
+		switch {
+		case strings.HasPrefix(deploymentAnnotation, ZyncSecretResverAnnotationPrefix):
+			secretToCheckKey.Name = strings.TrimPrefix(deploymentAnnotation, ZyncSecretResverAnnotationPrefix)
 		default:
 			return false
 		}

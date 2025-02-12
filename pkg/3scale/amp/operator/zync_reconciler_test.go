@@ -64,7 +64,7 @@ func TestNewZyncReconciler(t *testing.T) {
 		},
 	}
 	// Objects to track in the fake client.
-	objs := []runtime.Object{apimanager}
+	objs := []runtime.Object{apimanager, testZyncSecret()}
 	s := scheme.Scheme
 	s.AddKnownTypes(appsv1alpha1.GroupVersion, apimanager)
 	err := k8sappsv1.AddToScheme(s)
@@ -319,7 +319,8 @@ func TestReplicaZyncReconciler(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			objs := []runtime.Object{tc.apimanager}
+			zyncSecret := testZyncSecret()
+			objs := []runtime.Object{tc.apimanager, zyncSecret}
 			// Create a fake client to mock API calls.
 			cl := fake.NewFakeClient(objs...)
 			clientAPIReader := fake.NewFakeClient(objs...)
@@ -398,5 +399,20 @@ func testZyncAPIManagerCreator(zyncReplicas, zyncQueReplicas *int64) *appsv1alph
 			},
 			PodDisruptionBudget: &appsv1alpha1.PodDisruptionBudgetSpec{Enabled: true},
 		},
+	}
+}
+
+func testZyncSecret() *v1.Secret {
+	var namespace = "operator-unittest"
+	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      component.ZyncSecretName,
+			Namespace: namespace,
+		},
+		Immutable:  nil,
+		Data:       nil,
+		StringData: nil,
+		Type:       "",
 	}
 }
