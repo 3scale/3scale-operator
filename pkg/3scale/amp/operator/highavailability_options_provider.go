@@ -1,10 +1,11 @@
 package operator
 
 import (
+	"errors"
+	"fmt"
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
 	"github.com/3scale/3scale-operator/pkg/helper"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -14,6 +15,11 @@ type HighAvailabilityOptionsProvider struct {
 	client       client.Client
 	options      *component.HighAvailabilityOptions
 	secretSource *helper.SecretSource
+}
+
+type SecretField struct {
+	field           *string
+	secretFieldName string
 }
 
 func NewHighAvailabilityOptionsProvider(apimanager *appsv1alpha1.APIManager, namespace string, client client.Client) *HighAvailabilityOptionsProvider {
@@ -116,6 +122,33 @@ func (h *HighAvailabilityOptionsProvider) setBackendRedisOptions() error {
 		*option.field = val
 	}
 
+	// Redis TLS fields
+	var tlsFieldsErrs []error
+	if h.apimanager.IsBackendRedisTLSEnabled() {
+		requiredFields := []SecretField{
+			{&h.options.BackendRedisSslCa, "REDIS_SSL_CA"},
+			{&h.options.BackendRedisSslCert, "REDIS_SSL_CERT"},
+			{&h.options.BackendRedisSslKey, "REDIS_SSL_KEY"},
+		}
+		err := h.validateRedisTLSFields(component.BackendSecretBackendRedisSecretName, requiredFields)
+		if err != nil {
+			tlsFieldsErrs = append(tlsFieldsErrs, fmt.Errorf("'backendRedisTLSEnabled: true' is set in apimanager. Secret validation errors: %v", err))
+		}
+	}
+	if h.apimanager.IsQueuesRedisTLSEnabled() {
+		requiredFields := []SecretField{
+			{&h.options.BackendRedisQueuesSslCa, "REDIS_SSL_QUEUES_CA"},
+			{&h.options.BackendRedisQueuesSslCert, "REDIS_SSL_QUEUES_CERT"},
+			{&h.options.BackendRedisQueuesSslKey, "REDIS_SSL_QUEUES_KEY"},
+		}
+		err := h.validateRedisTLSFields(component.BackendSecretBackendRedisSecretName, requiredFields)
+		if err != nil {
+			tlsFieldsErrs = append(tlsFieldsErrs, fmt.Errorf("'queuesRedisTLSEnabled: true' is set in apimanager. Secret validation errors: %v", err))
+		}
+	}
+	if len(tlsFieldsErrs) > 0 {
+		return fmt.Errorf("validation errors for Redis TLS configuration in 'backend-redis' secret: %v", errors.Join(tlsFieldsErrs...))
+	}
 	return nil
 }
 
@@ -169,8 +202,19 @@ func (h *HighAvailabilityOptionsProvider) setSystemRedisOptions() error {
 		*option.field = val
 	}
 
+	// Redis TLS fields
+	if h.apimanager.IsSystemRedisTLSEnabled() {
+		requiredFields := []SecretField{
+			{&h.options.SystemRedisSslCa, "REDIS_SSL_CA"},
+			{&h.options.SystemRedisSslCert, "REDIS_SSL_CERT"},
+			{&h.options.SystemRedisSslKey, "REDIS_SSL_KEY"},
+		}
+		errs := h.validateRedisTLSFields(component.SystemSecretSystemRedisSecretName, requiredFields)
+		if len(errs) > 0 {
+			return fmt.Errorf("validation errors for Redis TLS configuration in 'system-redis' secret: %v", errors.Join(errs...))
+		}
+	}
 	return nil
-
 }
 
 func (h *HighAvailabilityOptionsProvider) setSystemDatabaseOptions() error {
@@ -219,4 +263,16 @@ func defaultBackendQueuesSentinelHosts() string {
 
 func defaultBackendQueuesSentinelRole() string {
 	return ""
+}
+
+func (h *HighAvailabilityOptionsProvider) validateRedisTLSFields(secretName string, fields []SecretField) []error {
+	var errs []error
+	for _, field := range fields {
+		val, err := h.secretSource.RequiredFieldValueFromRequiredSecret(secretName, field.secretFieldName)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%w", err))
+		}
+		*field.field = val
+	}
+	return errs
 }

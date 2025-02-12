@@ -3,6 +3,11 @@ package helper
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
+	"regexp"
+	"strconv"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -196,4 +201,108 @@ func IsSecretWatchedBy3scale(secret *v1.Secret) bool {
 	}
 
 	return false
+}
+
+func IsSecretWatchedBy3scaleBySecretName(client k8sclient.Client, secretName, namespace string) bool {
+	secret := &v1.Secret{}
+	secretKey := k8sclient.ObjectKey{
+		Name:      secretName,
+		Namespace: namespace,
+	}
+	err := client.Get(context.TODO(), secretKey, secret)
+	if err != nil {
+		return false
+	}
+
+	existingLabels := secret.Labels
+	if existingLabels != nil {
+		if _, ok := existingLabels["apimanager.apps.3scale.net/watched-by"]; ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ValidateRedisURL(url string) error {
+	redisPrefix := "rediss://"
+	// Check if the URL scheme is "rediss"
+	if !strings.HasPrefix(url, redisPrefix) {
+		return fmt.Errorf("URL should start with "+redisPrefix+". Found %s", url)
+	}
+	// Remove the "rediss://" prefix
+	url = strings.TrimPrefix(url, redisPrefix)
+	// Split the URL into host:port and optional database number
+	hostPortDB := strings.Split(url, "/")
+	if len(hostPortDB) > 2 {
+		return fmt.Errorf("URL has an invalid structure")
+	}
+	// Check if there's a database number part (e.g., after the slash)
+	dbPart := ""
+	if len(hostPortDB) == 2 {
+		dbPart = hostPortDB[1]
+	}
+	// Split the host and port part
+	hostPort := hostPortDB[0]
+	hostPortParts := strings.Split(hostPort, ":")
+	if len(hostPortParts) != 2 {
+		return fmt.Errorf("URL must contain a host and port, e.g., 'host:port'")
+	}
+	// Validate the host part (IP or Domain)
+	host := hostPortParts[0]
+	if net.ParseIP(host) == nil {
+		regex := `^(?i)([a-z0-9](-?[a-z0-9])*\.)+[a-z0-9](-?[a-z0-9])*$`
+		re := regexp.MustCompile(regex)
+		if !re.MatchString(host) {
+			return fmt.Errorf("Invalid host (neither IP address nor valid domain): %s", host)
+		}
+	}
+	// Validate the port (port part)
+	portStr := hostPortParts[1]
+	port, err := strconv.Atoi(portStr)
+	if err != nil || port < 1024 || port > 65535 {
+		return fmt.Errorf("Invalid port number: %s. Valid range is 1024-65535", portStr)
+	}
+	// Optionally, validate the database number (if it exists)
+	if dbPart != "" {
+		dbNum, err := strconv.Atoi(dbPart)
+		if err != nil || dbNum < 0 {
+			return fmt.Errorf("Invalid database number: %s", dbPart)
+		}
+	}
+	return nil
+}
+
+func ValidateRedisSentinelHostsForTLS(sentinelHosts string) error {
+	// 1. Validate Sentinel Hosts defined in system-redis or backend-redis secrets
+	// - if it's a valid to work with Redis Master in TLS mode:
+	// 1.1. Empty - Sentine is not defined. Redis Clients will work TLS Redis Master directly
+	// 1.2. One of Sentinel Hosts is TLS (rediss://...), - All can use TLS: Redis master, sentinel, clients
+	// 2. Not valid configurations:
+	// 2.1. One of sentinel hosts has wrong URL format
+	// 2.2. All Sentinel hosts are Non-TLS (redis://...). It's not valid as Master is TLS
+
+	if len(sentinelHosts) == 0 {
+		return nil
+	}
+	found := false
+	hostList := strings.Split(sentinelHosts, ",")
+	// Check if any of the Sentinel hosts uses 'rediss://' (TLS)
+	for _, host := range hostList {
+		host = strings.TrimSpace(host)
+		parsedURL, err := url.Parse(host)
+		if err != nil {
+			return fmt.Errorf("URL has an invalid structure: %s", host)
+		}
+		if parsedURL.Scheme == "rediss" {
+			// At least one secure Sentinel is found
+			found = true
+		}
+	}
+	// If no secure Sentinels found, return false
+	if !found {
+		return fmt.Errorf("no secure sentinel hosts found for secure redis master, hosts: %s", sentinelHosts)
+	}
+	return nil
+
 }
