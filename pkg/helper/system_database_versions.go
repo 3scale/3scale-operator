@@ -1,11 +1,14 @@
 package helper
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"net/url"
 	"strings"
 
 	"github.com/go-logr/logr"
+	"github.com/jackc/pgx/v5"
 
 	appsv1alpha1 "github.com/3scale/3scale-operator/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
@@ -53,7 +56,7 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 		if postgresDatabaseRequirement == "" {
 			databaseVersionVerified = true
 		} else {
-			databaseVersionVerified, err = verifySystemPostgresDatabaseVersion(k8sclient, apimInstance.Namespace, postgresDatabaseRequirement, systemDatabase, logger)
+			databaseVersionVerified, err = verifySystemPostgresDatabaseVersion(postgresDatabaseRequirement, systemDatabase, logger)
 			if err != nil {
 				logger.Info("Encountered error during version verification of system Postgres")
 				return false, err
@@ -66,7 +69,7 @@ func VerifySystemDatabase(k8sclient client.Client, reqConfigMap *v1.ConfigMap, a
 		if mysqlDatabaseRequirement == "" {
 			databaseVersionVerified = true
 		} else {
-			databaseVersionVerified, err = verifySystemMysqlDatabaseVersion(k8sclient, apimInstance.Namespace, mysqlDatabaseRequirement, systemDatabase, logger)
+			databaseVersionVerified, err = verifySystemMysqlDatabaseVersion(mysqlDatabaseRequirement, systemDatabase, logger)
 			if err != nil {
 				logger.Info("Encountered error during version verification of system MySQL")
 				return false, err
@@ -95,63 +98,52 @@ func databaseObject(url *url.URL) SystemDatabase {
 	}
 }
 
-func verifySystemPostgresDatabaseVersion(k8sclient client.Client, namespace, requiredVersion string, databaseObject SystemDatabase, logger logr.Logger) (bool, error) {
-	databasePod, err := CreateDatabaseThrowAwayPod(k8sclient, namespace, "postgres")
-	if err != nil {
-		logger.Info("Failed to create system database throwaway pod")
-		return false, err
-	}
+func verifySystemPostgresDatabaseVersion(requiredVersion string, databaseObject SystemDatabase, logger logr.Logger) (bool, error) {
+	var version string
 
 	if databaseObject.port == "" {
 		databaseObject.port = "5432"
 	}
 
-	postgresqlCommand := fmt.Sprintf("PGPASSWORD=\"%s\" psql -h \"%s\" -U \"%s\" -d \"%s\" -p\"%s\" -t -A -c \"SELECT version();\"", databaseObject.password, databaseObject.host, databaseObject.user, strings.TrimLeft(databaseObject.path, "/"), databaseObject.port)
-	command := []string{"/bin/bash", "-c", postgresqlCommand}
-	podExecutor := NewPodExecutor(logger)
-	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(databasePod.Namespace, databasePod.Name, command)
+	dsn := fmt.Sprintf("%s://%s:%s@%s:%p/%s", databaseObject.scheme, databaseObject.user, databaseObject.password, databaseObject.host, &databaseObject.port, strings.TrimLeft(databaseObject.path, "/"))
+	conn, err := pgx.Connect(context.Background(), dsn)
 	if err != nil {
-		return false, fmt.Errorf("Failed to execute command to retrieve database version. Error %s", err)
+		return false, fmt.Errorf("failed to connect to Postgres database. Error %s", err)
 	}
-	if stderr != "" {
-		return false, fmt.Errorf("Failed to execute command to retrieve database version. Error %s", err)
+	defer conn.Close(context.Background())
+
+	err = conn.QueryRow(context.Background(), "SELECT version()").Scan(&version)
+	if err != nil {
+		return false, fmt.Errorf("failed to retrieve Postgres database version. Error %s", err)
 	}
 
-	currentPostgresVersion, err := retrievePostgresVersion(stdout)
+	currentPostgresVersion, err := retrievePostgresVersion(version)
 	if err != nil {
-		logger.Info("Failed to retrieve postgres version from the cli command")
+		logger.Info("failed to retrieve postgres version from the cli command")
 		return false, err
 	}
 
 	requirementsMet := CompareVersions(requiredVersion, currentPostgresVersion)
-	if requirementsMet {
-		err := DeletePod(k8sclient, databasePod)
-		if err != nil {
-			return false, nil
-		}
-	}
 
 	return requirementsMet, nil
 }
 
-func verifySystemMysqlDatabaseVersion(k8sclient client.Client, namespace, requiredVersion string, databaseObject SystemDatabase, logger logr.Logger) (bool, error) {
-	databasePod, err := CreateDatabaseThrowAwayPod(k8sclient, namespace, "mysql")
+func verifySystemMysqlDatabaseVersion(requiredVersion string, databaseObject SystemDatabase, logger logr.Logger) (bool, error) {
+	var version string
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%p)", databaseObject.user, databaseObject.password, databaseObject.host, &databaseObject.port)
+
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to connect to MySQL database. Error %s", err)
 	}
 
-	mysqlCommand := fmt.Sprintf("mysql -sN -h \"%s\" -u \"%s\" -p\"%s\" -e \"SELECT VERSION();\"", databaseObject.host, databaseObject.user, databaseObject.password)
-	command := []string{"/bin/bash", "-c", mysqlCommand}
-	podExecutor := NewPodExecutor(logger)
-	stdout, stderr, err := podExecutor.ExecuteRemoteCommand(databasePod.Namespace, databasePod.Name, command)
+	err = db.QueryRowContext(context.Background(), "SELECT VERSION()").Scan(&version)
 	if err != nil {
-		return false, fmt.Errorf("Failed to execute command to retrieve database version. Error %s", err)
-	}
-	if stderr != "" {
-		return false, fmt.Errorf("Failed to execute command to retrieve database version. Error %s", err)
+		return false, fmt.Errorf("failed to retrieve MySQL database version. Error %s", err)
 	}
 
-	currentMysqlVersion, err := retrieveMysqlVersion(stdout)
+	currentMysqlVersion, err := retrieveMysqlVersion(version)
 	if err != nil {
 		logger.Info("Failed to retrieve postgres version from the cli command")
 		return false, err
@@ -159,12 +151,6 @@ func verifySystemMysqlDatabaseVersion(k8sclient client.Client, namespace, requir
 
 	requirementsMet := CompareVersions(requiredVersion, currentMysqlVersion)
 
-	if requirementsMet {
-		err := DeletePod(k8sclient, databasePod)
-		if err != nil {
-			return false, nil
-		}
-	}
-
 	return requirementsMet, nil
 }
+
