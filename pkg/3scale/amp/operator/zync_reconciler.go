@@ -7,6 +7,7 @@ import (
 	"github.com/3scale/3scale-operator/pkg/helper"
 	"github.com/3scale/3scale-operator/pkg/reconcilers"
 	"github.com/3scale/3scale-operator/pkg/upgrade"
+	k8sappsv1 "k8s.io/api/apps/v1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -70,9 +71,17 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerImageMutator,
+		reconcilers.DeploymentPodInitContainerMutator,
+		zyncDatabaseTLSEnvVarMutator,
 	}
 	if r.apiManager.Spec.Zync.AppSpec.Replicas != nil {
 		zyncMutators = append(zyncMutators, reconcilers.DeploymentReplicasMutator)
+	}
+	if !r.apiManager.IsZyncDatabaseTLSEnabled() {
+		zyncMutators = append(zyncMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
+	}
+	if r.apiManager.IsZyncDatabaseTLSEnabled() {
+		zyncMutators = append(zyncMutators, reconcilers.DeploymentSyncVolumesAndMountsMutator)
 	}
 	zyncDep, err := zync.Deployment(r.Context(), r.Client(), ampImages.Options.ZyncImage)
 	if err != nil {
@@ -102,9 +111,17 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentTopologySpreadConstraintsMutator,
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
+		reconcilers.DeploymentPodInitContainerMutator,
+		zyncDatabaseTLSEnvVarMutator,
 	}
 	if r.apiManager.Spec.Zync.QueSpec.Replicas != nil {
 		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentReplicasMutator)
+	}
+	if !r.apiManager.IsZyncDatabaseTLSEnabled() {
+		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
+	}
+	if r.apiManager.IsZyncDatabaseTLSEnabled() {
+		zyncQueMutators = append(zyncQueMutators, reconcilers.DeploymentSyncVolumesAndMountsMutator)
 	}
 	zyncQueDep, err := zync.QueDeployment(r.Context(), r.Client(), ampImages.Options.ZyncImage)
 	if err != nil {
@@ -146,6 +163,7 @@ func (r *ZyncReconciler) Reconcile() (reconcile.Result, error) {
 			reconcilers.DeploymentTopologySpreadConstraintsMutator,
 			reconcilers.DeploymentPodTemplateAnnotationsMutator,
 			reconcilers.DeploymentPodContainerImageMutator,
+			zyncDatabaseTLSEnvVarMutator,
 		)
 		err = r.ReconcileDeployment(zync.DatabaseDeployment(ampImages.Options.ZyncDatabasePostgreSQLImage), zyncDBDMutator)
 		if err != nil {
@@ -383,4 +401,24 @@ func Zync(apimanager *appsv1alpha1.APIManager, client client.Client) (*component
 		return nil, err
 	}
 	return component.NewZync(opts), nil
+}
+
+func zyncDatabaseTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	// Reconcile EnvVar only for TLS
+	var changed bool
+
+	for _, envVar := range []string{
+		"DATABASE_SSL_CA",
+		"DATABASE_SSL_CERT",
+		"DATABASE_SSL_KEY",
+		"DATABASE_SSL_MODE",
+		"DB_SSL_CA",
+		"DB_SSL_CERT",
+		"DB_SSL_KEY",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
 }

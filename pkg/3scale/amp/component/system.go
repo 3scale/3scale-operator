@@ -1507,7 +1507,7 @@ func (system *System) sidekiqInit(containerImage string) []v1.Container {
 				Command: []string{
 					"bash",
 					"-c",
-					"bundle exec sh -c \"until rake boot:redis && curl --insecure --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+					"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
 				},
 				Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 			},
@@ -1520,7 +1520,7 @@ func (system *System) sidekiqInit(containerImage string) []v1.Container {
 				Command: []string{
 					"bash",
 					"-c",
-					"bundle exec sh -c \"until rake boot:redis && curl --insecure --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+					"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
 				},
 				Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
 			},

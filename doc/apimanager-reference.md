@@ -529,7 +529,7 @@ Note: Deploying databases internally with this section is meant for evaluation p
 | DatabaseTopologySpreadConstraints | `databaseTopologySpreadConstraints` | \[\][v1.TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core) | No | `nil` | Specifies how to spread matching pods among the given topology |
 | DatabaseLabels | `databaseLabels` | map[string]string | No | `nil ` | Specifies labels that should be added to component |
 | DatabaseAnnotations | `databaseAnnotations` | map[string]string  | No | `nil ` | Specifies Annotations that should be added to component |
-| ZyncDatabaseTLSEnabled | `zyncDatabaseTLSEnabled`| bool | No | false | Use external databases only |
+| ZyncDatabaseTLSEnabled | `zyncDatabaseTLSEnabled`| bool | No | false | Required to set TLS Database connection. Only for TLS |
 
 ### ZyncAppSpec
 

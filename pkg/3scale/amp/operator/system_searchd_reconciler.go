@@ -61,21 +61,45 @@ func (r *SystemSearchdReconciler) Reconcile() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	searchdDeploymentMutator := reconcilers.DeploymentMutator()
 	// Deployment
-	searchdDeploymentMutator := reconcilers.DeploymentMutator(
-		reconcilers.DeploymentContainerResourcesMutator,
-		reconcilers.DeploymentAffinityMutator,
-		reconcilers.DeploymentTolerationsMutator,
-		reconcilers.DeploymentPodTemplateLabelsMutator,
-		reconcilers.DeploymentPriorityClassMutator,
-		reconcilers.DeploymentStrategyMutator,
-		reconcilers.DeploymentTopologySpreadConstraintsMutator,
-		reconcilers.DeploymentPodTemplateAnnotationsMutator,
-		reconcilers.DeploymentProbesMutator,
-		reconcilers.DeploymentArgsMutator,
-		reconcilers.DeploymentPodContainerImageMutator,
-	)
+	if !r.apiManager.IsSystemDatabaseTLSEnabled() {
+		searchdDeploymentMutator = reconcilers.DeploymentMutator(
+			reconcilers.DeploymentContainerResourcesMutator,
+			reconcilers.DeploymentAffinityMutator,
+			reconcilers.DeploymentTolerationsMutator,
+			reconcilers.DeploymentPodTemplateLabelsMutator,
+			reconcilers.DeploymentPriorityClassMutator,
+			reconcilers.DeploymentStrategyMutator,
+			reconcilers.DeploymentTopologySpreadConstraintsMutator,
+			reconcilers.DeploymentPodTemplateAnnotationsMutator,
+			reconcilers.DeploymentProbesMutator,
+			reconcilers.DeploymentArgsMutator,
+			reconcilers.DeploymentPodContainerImageMutator,
+			reconcilers.DeploymentPodInitContainerMutator,
+			systemDatabaseTLSEnvVarMutator,
+			reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator,
+		)
+	}
 
+	if r.apiManager.IsSystemDatabaseTLSEnabled() {
+		searchdDeploymentMutator = reconcilers.DeploymentMutator(
+			reconcilers.DeploymentContainerResourcesMutator,
+			reconcilers.DeploymentAffinityMutator,
+			reconcilers.DeploymentTolerationsMutator,
+			reconcilers.DeploymentPodTemplateLabelsMutator,
+			reconcilers.DeploymentPriorityClassMutator,
+			reconcilers.DeploymentStrategyMutator,
+			reconcilers.DeploymentTopologySpreadConstraintsMutator,
+			reconcilers.DeploymentPodTemplateAnnotationsMutator,
+			reconcilers.DeploymentProbesMutator,
+			reconcilers.DeploymentArgsMutator,
+			reconcilers.DeploymentPodContainerImageMutator,
+			reconcilers.DeploymentPodInitContainerMutator,
+			systemDatabaseTLSEnvVarMutator,
+			reconcilers.DeploymentSyncVolumesAndMountsMutator,
+		)
+	}
 	searchdDep, err := searchd.Deployment(r.Context(), r.Client(), r.apiManager.Namespace, ampImages.Options.SystemSearchdImage)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -143,4 +167,24 @@ func SystemSearchd(cr *appsv1alpha1.APIManager) (*component.SystemSearchd, error
 		return nil, err
 	}
 	return component.NewSystemSearchd(opts), nil
+}
+
+func systemDatabaseTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	// Reconcile EnvVar only for TLS
+	var changed bool
+
+	for _, envVar := range []string{
+		"DATABASE_SSL_CA",
+		"DATABASE_SSL_CERT",
+		"DATABASE_SSL_KEY",
+		"DATABASE_SSL_MODE",
+		"DB_SSL_CA",
+		"DB_SSL_CERT",
+		"DB_SSL_KEY",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
 }
