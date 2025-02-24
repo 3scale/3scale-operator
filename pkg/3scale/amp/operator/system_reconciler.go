@@ -200,14 +200,26 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 			reconcilers.DeploymentTopologySpreadConstraintsMutator,
 			reconcilers.DeploymentPodTemplateAnnotationsMutator,
 			r.systemAppDeploymentResourceMutator,
+			reconcilers.DeploymentPodInitContainerMutator,
 			reconcilers.DeploymentRemoveDuplicateEnvVarMutator,
 			reconcilers.DeploymentPodContainerImageMutator,
 			r.systemZyncEnvVarMutator,
+			r.systemDatabaseTLSEnvVarMutator,
 		}
 		if r.apiManager.Spec.System.AppSpec.Replicas != nil {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentReplicasMutator)
 		}
-		err = r.ReconcileDeployment(system.AppDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
+		if r.apiManager.IsSystemDatabaseTLSEnabled() {
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSyncVolumesAndMountsMutator)
+		}
+		if !r.apiManager.IsSystemDatabaseTLSEnabled() {
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
+		}
+		appDeployment, err := system.AppDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		err = r.ReconcileDeployment(appDeployment, reconcilers.DeploymentMutator(systemAppDeploymentMutators...))
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -257,13 +269,25 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		reconcilers.DeploymentPodTemplateAnnotationsMutator,
 		reconcilers.DeploymentPodContainerImageMutator,
 		reconcilers.DeploymentPodInitContainerImageMutator,
+		reconcilers.DeploymentPodInitContainerMutator,
 		r.systemZyncEnvVarMutator,
+		r.systemDatabaseTLSEnvVarMutator,
 	}
 	if r.apiManager.Spec.System.SidekiqSpec.Replicas != nil {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentReplicasMutator)
 	}
+	if r.apiManager.IsSystemDatabaseTLSEnabled() {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSyncVolumesAndMountsMutator)
+	}
+	if !r.apiManager.IsSystemDatabaseTLSEnabled() {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
+	}
 
-	err = r.ReconcileDeployment(system.SidekiqDeployment(ampImages.Options.SystemImage), reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
+	sidekiqDeployment, err := system.SidekiqDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.ReconcileDeployment(sidekiqDeployment, reconcilers.DeploymentMutator(sidekiqDeploymentMutators...))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -484,4 +508,24 @@ func System(cr *appsv1alpha1.APIManager, client k8sclient.Client) (*component.Sy
 		return nil, err
 	}
 	return component.NewSystem(opts), nil
+}
+
+func (r *SystemReconciler) systemDatabaseTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	// Reconcile EnvVar only for TLS
+	var changed bool
+
+	for _, envVar := range []string{
+		"DATABASE_SSL_CA",
+		"DATABASE_SSL_CERT",
+		"DATABASE_SSL_KEY",
+		"DATABASE_SSL_MODE",
+		"DB_SSL_CA",
+		"DB_SSL_CERT",
+		"DB_SSL_KEY",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
 }

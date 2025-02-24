@@ -1,6 +1,8 @@
 package component
 
 import (
+	"context"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sort"
 	"strconv"
 
@@ -23,6 +25,13 @@ const (
 	SystemSecretSystemDatabaseUserFieldName         = "DB_USER"
 	SystemSecretSystemDatabasePasswordFieldName     = "DB_PASSWORD"
 	SystemSecretSystemDatabaseRootPasswordFieldName = "DB_ROOT_PASSWORD"
+	SystemSecretDatabaseSslCa                       = "DATABASE_SSL_CA"
+	SystemSecretDatabaseSslCert                     = "DATABASE_SSL_CERT"
+	SystemSecretDatabaseSslKey                      = "DATABASE_SSL_KEY"
+	SystemSecretDatabaseSslMode                     = "DATABASE_SSL_MODE"
+	SystemSecretSslCa                               = "DB_SSL_CA"
+	SystemSecretSslCert                             = "DB_SSL_CERT"
+	SystemSecretSslKey                              = "DB_SSL_KEY"
 )
 
 const (
@@ -115,6 +124,10 @@ const (
 )
 
 const (
+	SystemDatabaseSecretResverAnnotationPrefix = "apimanager.apps.3scale.net/systemdatabase-secret-resource-version-"
+)
+
+const (
 	S3StsCredentialsSecretName = "s3-credentials"
 )
 
@@ -177,7 +190,6 @@ func (system *System) SystemRedisEnvVars() []v1.EnvVar {
 
 func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 	result := []v1.EnvVar{}
-
 	baseEnvConfigMapEnvs := system.getSystemBaseEnvsFromEnvConfigMap()
 	result = append(result, baseEnvConfigMapEnvs...)
 
@@ -205,6 +217,18 @@ func (system *System) buildSystemBaseEnv() []v1.EnvVar {
 
 		helper.EnvVarFromSecret("MEMCACHE_SERVERS", SystemSecretSystemMemcachedSecretName, SystemSecretSystemMemcachedServersFieldName),
 	)
+
+	if system.Options.SystemDbTLSEnabled {
+		result = append(result,
+			helper.EnvVarFromSecretOptional("DB_SSL_CA", SystemSecretSystemDatabaseSecretName, SystemSecretSslCa),
+			helper.EnvVarFromSecretOptional("DB_SSL_CERT", SystemSecretSystemDatabaseSecretName, SystemSecretSslCert),
+			helper.EnvVarFromSecretOptional("DB_SSL_KEY", SystemSecretSystemDatabaseSecretName, SystemSecretSslKey),
+			helper.EnvVarFromSecretOptional("DATABASE_SSL_MODE", SystemSecretSystemDatabaseSecretName, SystemSecretDatabaseSslMode),
+			helper.EnvVarFromValue("DATABASE_SSL_CA", helper.TlsCertPresent("DATABASE_SSL_CA", SystemSecretSystemDatabaseSecretName, system.Options.SystemDbTLSEnabled)),
+			helper.EnvVarFromValue("DATABASE_SSL_CERT", helper.TlsCertPresent("DATABASE_SSL_CERT", SystemSecretSystemDatabaseSecretName, system.Options.SystemDbTLSEnabled)),
+			helper.EnvVarFromValue("DATABASE_SSL_KEY", helper.TlsCertPresent("DATABASE_SSL_KEY", SystemSecretSystemDatabaseSecretName, system.Options.SystemDbTLSEnabled)),
+		)
+	}
 
 	result = append(result, system.SystemRedisEnvVars()...)
 	result = append(result, system.BackendRedisEnvVars()...)
@@ -509,6 +533,39 @@ func (system *System) appPodVolumes() []v1.Volume {
 	}
 
 	res = append(res, systemConfigVolume)
+	if system.Options.SystemDbTLSEnabled {
+		systemTlsVolume := v1.Volume{
+			Name: "tls-secret",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: SystemSecretSystemDatabaseSecretName, // Name of the secret containing the TLS certs
+					Items: []v1.KeyToPath{
+						{
+							Key:  SystemSecretSslCa,
+							Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+						},
+						{
+							Key:  SystemSecretSslCert,
+							Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+						},
+						{
+							Key:  SystemSecretSslKey,
+							Path: "tls.key", // Map the secret key to the tls.key file in the container
+						},
+					},
+				},
+			},
+		}
+		res = append(res, systemTlsVolume)
+
+		systemWritableTlsVolume := v1.Volume{
+			Name: "writable-tls",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		}
+		res = append(res, systemWritableTlsVolume)
+	}
 
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		s3CredsProjectedVolume := v1.Volume{
@@ -533,7 +590,12 @@ func (system *System) appPodVolumes() []v1.Volume {
 	return res
 }
 
-func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment {
+func (system *System) AppDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
+	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, SystemAppDeploymentName, system.Options.Namespace, system)
+	if err != nil {
+		return nil, err
+	}
+
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
@@ -564,12 +626,13 @@ func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      system.Options.AppPodTemplateLabels,
-					Annotations: system.Options.AppPodTemplateAnnotations,
+					Annotations: system.appPodAnnotations(watchedSecretAnnotations),
 				},
 				Spec: v1.PodSpec{
-					Affinity:    system.Options.AppAffinity,
-					Tolerations: system.Options.AppTolerations,
-					Volumes:     system.appPodVolumes(),
+					Affinity:       system.Options.AppAffinity,
+					Tolerations:    system.Options.AppTolerations,
+					Volumes:        system.appPodVolumes(),
+					InitContainers: system.systemInit(containerImage),
 					Containers: []v1.Container{
 						{
 							Name:         SystemAppMasterContainerName,
@@ -728,7 +791,7 @@ func (system *System) AppDeployment(containerImage string) *k8sappsv1.Deployment
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func (system *System) AppPreHookJob(containerImage string, currentSystemAppGeneration int64) *batchv1.Job {
@@ -750,7 +813,8 @@ func (system *System) AppPreHookJob(containerImage string, currentSystemAppGener
 			Completions: &completions,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
-					Volumes: system.appPodVolumes(),
+					Volumes:        system.appPodVolumes(),
+					InitContainers: system.systemInit(containerImage),
 					Containers: []v1.Container{
 						{
 							Name:            SystemAppPreHookJobName,
@@ -790,7 +854,8 @@ func (system *System) AppPostHookJob(containerImage string, currentSystemAppGene
 			Completions: &completions,
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
-					Volumes: system.appPodVolumes(),
+					Volumes:        system.appPodVolumes(),
+					InitContainers: system.systemInit(containerImage),
 					Containers: []v1.Container{
 						{
 							Name:            SystemAppPostHookJobName,
@@ -861,6 +926,39 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 
 	res = append(res, systemConfigVolume)
 
+	if system.Options.SystemDbTLSEnabled {
+		systemTlsVolume := v1.Volume{
+			Name: "tls-secret",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: SystemSecretSystemDatabaseSecretName, // Name of the secret containing the TLS certs
+					Items: []v1.KeyToPath{
+						{
+							Key:  SystemSecretSslCa,
+							Path: "ca.crt", // Map the secret key to the ca.crt file in the container
+						},
+						{
+							Key:  SystemSecretSslCert,
+							Path: "tls.crt", // Map the secret key to the tls.crt file in the container
+						},
+						{
+							Key:  SystemSecretSslKey,
+							Path: "tls.key", // Map the secret key to the tls.key file in the container
+						},
+					},
+				},
+			},
+		}
+		res = append(res, systemTlsVolume)
+
+		systemWritableTlsVolume := v1.Volume{
+			Name: "writable-tls",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		}
+		res = append(res, systemWritableTlsVolume)
+	}
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		s3CredsProjectedVolume := v1.Volume{
 			Name: S3StsCredentialsSecretName,
@@ -883,7 +981,12 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 	return res
 }
 
-func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deployment {
+func (system *System) SidekiqDeployment(ctx context.Context, k8sclient client.Client, containerImage string) (*k8sappsv1.Deployment, error) {
+	watchedSecretAnnotations, err := ComputeWatchedSecretAnnotations(ctx, k8sclient, SystemSidekiqName, system.Options.Namespace, system)
+	if err != nil {
+		return nil, err
+	}
+
 	return &k8sappsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{APIVersion: reconcilers.DeploymentAPIVersion, Kind: reconcilers.DeploymentKind},
 		ObjectMeta: metav1.ObjectMeta{
@@ -914,24 +1017,13 @@ func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deploy
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      system.Options.SidekiqPodTemplateLabels,
-					Annotations: system.Options.SideKiqPodTemplateAnnotations,
+					Annotations: system.sidekiqPodAnnotations(watchedSecretAnnotations),
 				},
 				Spec: v1.PodSpec{
-					Affinity:    system.Options.SidekiqAffinity,
-					Tolerations: system.Options.SidekiqTolerations,
-					Volumes:     system.SidekiqPodVolumes(),
-					InitContainers: []v1.Container{
-						{
-							Name:  SystemSideKiqInitContainerName,
-							Image: containerImage,
-							Command: []string{
-								"bash",
-								"-c",
-								"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
-							},
-							Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
-						},
-					},
+					Affinity:       system.Options.SidekiqAffinity,
+					Tolerations:    system.Options.SidekiqTolerations,
+					Volumes:        system.SidekiqPodVolumes(),
+					InitContainers: system.sidekiqInit(containerImage),
 					Containers: []v1.Container{
 						{
 							Name:            SystemSidekiqName,
@@ -962,7 +1054,7 @@ func (system *System) SidekiqDeployment(containerImage string) *k8sappsv1.Deploy
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func (system *System) systemStorageVolumeMount(readOnly bool) v1.VolumeMount {
@@ -978,6 +1070,13 @@ func (system *System) systemConfigVolumeMount() v1.VolumeMount {
 		Name:      "system-config",
 		ReadOnly:  false,
 		MountPath: "/opt/system-extra-configs",
+	}
+}
+func (system *System) systemTlsVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      "writable-tls",
+		ReadOnly:  false,
+		MountPath: "/tls",
 	}
 }
 
@@ -1000,6 +1099,10 @@ func (system *System) appCommonContainerVolumeMounts(systemStorageReadonly bool)
 	}
 
 	res = append(res, system.systemConfigVolumeMount())
+
+	if system.Options.SystemDbTLSEnabled {
+		res = append(res, system.systemTlsVolumeMount())
+	}
 
 	return res
 }
@@ -1030,7 +1133,9 @@ func (system *System) sidekiqContainerVolumeMounts() []v1.VolumeMount {
 	}
 	res = append(res, systemTmpVolumeMount)
 	res = append(res, system.systemConfigVolumeMount())
-
+	if system.Options.SystemDbTLSEnabled {
+		res = append(res, system.systemTlsVolumeMount())
+	}
 	if system.Options.S3FileStorageOptions != nil && system.Options.S3FileStorageOptions.STSEnabled {
 		res = append(res, system.s3CredsProjectedVolumeMount())
 	}
@@ -1340,4 +1445,118 @@ func (system *System) appDeveloperPorts() []v1.ContainerPort {
 	}
 
 	return ports
+}
+
+func (system *System) systemInit(containerImage string) []v1.Container {
+	if system.Options.SystemDbTLSEnabled {
+		return []v1.Container{
+			{
+				Name:  "set-permissions",
+				Image: containerImage, // Minimal image for chmod
+				Command: []string{
+					"sh",
+					"-c",
+					"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+				},
+				VolumeMounts: []v1.VolumeMount{
+					{
+						Name:      "tls-secret",
+						MountPath: "/tls",
+						ReadOnly:  true,
+					},
+					{
+						Name:      "writable-tls",
+						MountPath: "/writable-tls",
+						ReadOnly:  false, // Writable emptyDir volume
+					},
+				},
+			},
+		}
+	} else {
+		return []v1.Container{}
+	}
+}
+
+func (system *System) sidekiqInit(containerImage string) []v1.Container {
+	if system.Options.SystemDbTLSEnabled {
+		return []v1.Container{
+			{
+				Name:  "set-permissions",
+				Image: containerImage, // Minimal image for chmod
+				Command: []string{
+					"sh",
+					"-c",
+					"cp /tls/* /writable-tls/ && chmod 0600 /writable-tls/*",
+				},
+				VolumeMounts: []v1.VolumeMount{
+					{
+						Name:      "tls-secret",
+						MountPath: "/tls",
+						ReadOnly:  true,
+					},
+					{
+						Name:      "writable-tls",
+						MountPath: "/writable-tls",
+						ReadOnly:  false, // Writable emptyDir volume
+					},
+				},
+			},
+			{
+				Name:  SystemSideKiqInitContainerName,
+				Image: containerImage,
+				Command: []string{
+					"bash",
+					"-c",
+					"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+				},
+				Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+			},
+		}
+	} else {
+		return []v1.Container{
+			{
+				Name:  SystemSideKiqInitContainerName,
+				Image: containerImage,
+				Command: []string{
+					"bash",
+					"-c",
+					"bundle exec sh -c \"until rake boot:redis && curl --output /dev/null --silent --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS; done\"",
+				},
+				Env: append(system.SystemRedisEnvVars(), helper.EnvVarFromValue("SLEEP_SECONDS", "1")),
+			},
+		}
+	}
+}
+
+func (system *System) appPodAnnotations(watchedSecretAnnotations map[string]string) map[string]string {
+	annotations := system.Options.AppPodTemplateAnnotations
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	for key, val := range watchedSecretAnnotations {
+		annotations[key] = val
+	}
+
+	for key, val := range system.Options.AppPodTemplateAnnotations {
+		annotations[key] = val
+	}
+
+	return annotations
+}
+
+func (system *System) sidekiqPodAnnotations(watchedSecretAnnotations map[string]string) map[string]string {
+	annotations := system.Options.SideKiqPodTemplateAnnotations
+
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	for key, val := range watchedSecretAnnotations {
+		annotations[key] = val
+	}
+
+	for key, val := range system.Options.SideKiqPodTemplateAnnotations {
+		annotations[key] = val
+	}
+
+	return annotations
 }

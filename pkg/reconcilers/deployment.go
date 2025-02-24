@@ -327,6 +327,13 @@ func DeploymentPodInitContainerImageMutator(desired, existing *k8sappsv1.Deploym
 	updated := false
 
 	for i, desiredContainer := range desired.Spec.Template.Spec.InitContainers {
+		if i >= len(existing.Spec.Template.Spec.InitContainers) {
+			// Add missing containers from desired to existing
+			existing.Spec.Template.Spec.InitContainers = append(existing.Spec.Template.Spec.InitContainers, desiredContainer)
+			fmt.Printf("Added missing container: %s\n", desiredContainer.Name)
+			updated = true
+			continue
+		}
 		existingContainer := &existing.Spec.Template.Spec.InitContainers[i]
 
 		if !reflect.DeepEqual(existingContainer.Image, desiredContainer.Image) {
@@ -498,4 +505,160 @@ func removeEnvVar(envVars []corev1.EnvVar, name string) []corev1.EnvVar {
 		}
 	}
 	return newEnvVars
+}
+
+// DeploymentPodInitContainerMutator ensures that the deployment's pod's init containers are reconciled
+func DeploymentPodInitContainerMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	updated := false
+
+	// Trim excess containers if existing has more than desired
+	if len(existing.Spec.Template.Spec.InitContainers) > len(desired.Spec.Template.Spec.InitContainers) {
+		existing.Spec.Template.Spec.InitContainers = existing.Spec.Template.Spec.InitContainers[:len(desired.Spec.Template.Spec.InitContainers)]
+		updated = true
+	}
+
+	// Ensure init containers match
+	for i := range desired.Spec.Template.Spec.InitContainers {
+		if i >= len(existing.Spec.Template.Spec.InitContainers) {
+			// Append missing containers
+			existing.Spec.Template.Spec.InitContainers = append(existing.Spec.Template.Spec.InitContainers, desired.Spec.Template.Spec.InitContainers[i])
+			updated = true
+		} else if !reflect.DeepEqual(existing.Spec.Template.Spec.InitContainers[i], desired.Spec.Template.Spec.InitContainers[i]) {
+			// Update mismatched containers
+			existing.Spec.Template.Spec.InitContainers[i] = desired.Spec.Template.Spec.InitContainers[i]
+			updated = true
+		}
+	}
+
+	return updated, nil
+}
+
+func DeploymentSyncVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	changed := false
+
+	// Ensure Volumes slice is initialized
+	if existing.Spec.Template.Spec.Volumes == nil {
+		existing.Spec.Template.Spec.Volumes = []corev1.Volume{}
+	}
+
+	//Add missing Volumes
+	for _, desiredVolume := range desired.Spec.Template.Spec.Volumes {
+		if !volumeExists(existing.Spec.Template.Spec.Volumes, desiredVolume.Name) {
+			existing.Spec.Template.Spec.Volumes = append(existing.Spec.Template.Spec.Volumes, desiredVolume)
+			changed = true
+		}
+	}
+
+	// Sync VolumeMounts for Containers
+	for cIdx := range existing.Spec.Template.Spec.Containers {
+		updated, newVolumeMounts := syncVolumeMounts(existing.Spec.Template.Spec.Containers[cIdx].VolumeMounts, desired.Spec.Template.Spec.Containers[cIdx].VolumeMounts)
+		if updated {
+			existing.Spec.Template.Spec.Containers[cIdx].VolumeMounts = newVolumeMounts
+			changed = true
+		}
+	}
+
+	// Sync VolumeMounts for InitContainers
+	for cIdx := range existing.Spec.Template.Spec.InitContainers {
+		updated, newVolumeMounts := syncVolumeMounts(existing.Spec.Template.Spec.InitContainers[cIdx].VolumeMounts, desired.Spec.Template.Spec.InitContainers[cIdx].VolumeMounts)
+		if updated {
+			existing.Spec.Template.Spec.InitContainers[cIdx].VolumeMounts = newVolumeMounts
+			changed = true
+		}
+	}
+
+	return changed, nil
+}
+
+// Helper function: Check if a volume exists
+func volumeExists(volumes []corev1.Volume, name string) bool {
+	for _, v := range volumes {
+		if v.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+// Helper function: Sync Volume Mounts (Add missing)
+func syncVolumeMounts(existingMounts, desiredMounts []corev1.VolumeMount) (bool, []corev1.VolumeMount) {
+	changed := false
+	newVolumeMounts := existingMounts
+
+	// Add missing VolumeMounts from desired
+	for _, desiredMount := range desiredMounts {
+		if !volumeMountExists(existingMounts, desiredMount.Name) {
+			newVolumeMounts = append(newVolumeMounts, desiredMount)
+			changed = true
+		}
+	}
+
+	return changed, newVolumeMounts
+}
+
+// Helper function: Check if a volume mount exists
+func volumeMountExists(volumeMounts []corev1.VolumeMount, name string) bool {
+	for _, vm := range volumeMounts {
+		if vm.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func DeploymentRemoveTLSVolumesAndMountsMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	// system-database and zync database tls volume mount names in containers and init containers
+	volumeNamesToRemove := []string{"writable-tls", "tls-secret"}
+
+	if existing.Spec.Template.Spec.Volumes == nil {
+		return false, nil
+	}
+	volumeModified := false
+	// Remove volumes from the deployment spec
+	for _, volumeName := range volumeNamesToRemove {
+		for idx, volume := range existing.Spec.Template.Spec.Volumes {
+			if volume.Name == volumeName {
+				// Remove the specified volume
+				existing.Spec.Template.Spec.Volumes = append(existing.Spec.Template.Spec.Volumes[:idx], existing.Spec.Template.Spec.Volumes[idx+1:]...)
+				volumeModified = true
+				break
+			}
+		}
+	}
+	// If volumes were removed, ensure volume mounts are also removed from containers
+	if volumeModified {
+		// For regular containers
+		for cIdx, container := range existing.Spec.Template.Spec.Containers {
+			for _, volumeName := range volumeNamesToRemove {
+				for vIdx, volumeMount := range container.VolumeMounts {
+					if volumeMount.Name == volumeName {
+						// Remove the volume mount
+						container.VolumeMounts = append(container.VolumeMounts[:vIdx], container.VolumeMounts[vIdx+1:]...)
+						break
+					}
+				}
+			}
+			// Update the container spec with the modified volume mounts
+			existing.Spec.Template.Spec.Containers[cIdx] = container
+		}
+		// For initContainers (if any)
+		for cIdx, initContainer := range existing.Spec.Template.Spec.InitContainers {
+			for _, volumeName := range volumeNamesToRemove {
+				for vIdx, volumeMount := range initContainer.VolumeMounts {
+					if volumeMount.Name == volumeName {
+						// Remove the volume mount from initContainer
+						initContainer.VolumeMounts = append(initContainer.VolumeMounts[:vIdx], initContainer.VolumeMounts[vIdx+1:]...)
+						break
+					}
+				}
+			}
+			// Update the initContainer spec with the modified volume mounts
+			existing.Spec.Template.Spec.InitContainers[cIdx] = initContainer
+		}
+	}
+	// If no modifications were made, return false
+	if !volumeModified {
+		return false, nil
+	}
+	return true, nil
 }

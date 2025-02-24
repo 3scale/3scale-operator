@@ -1,9 +1,13 @@
 package helper
 
 import (
-	"reflect"
-
+	"context"
+	"fmt"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 func EnvVarFromConfigMap(envVarName string, configMapName, configMapKey string) v1.EnvVar {
@@ -156,4 +160,56 @@ func EnvVarReconciler(desired []v1.EnvVar, existing *[]v1.EnvVar, envVar string)
 		}
 	}
 	return update
+}
+
+// check if the secret ssl certs are populated and sets the path if they are
+// system-app and zync use this function
+func TlsCertPresent(pathSslEnvVar string, secretName string, databaseTLSEnabled bool) string {
+	cfg, err := config.GetConfig()
+	if err != nil {
+		fmt.Printf("clientTLS error, get config : %v", err)
+		return ""
+	}
+	clientTLS, err := client.New(cfg, client.Options{})
+	if err != nil {
+		fmt.Printf("clientTLS error, client create : %v", err)
+		return ""
+	}
+	namespace, _ := GetOperatorNamespace()
+	var path string
+	var sslEnvVar string
+
+	// Determine the paths and corresponding secret keys
+	switch pathSslEnvVar {
+	case "DATABASE_SSL_CA":
+		path = "/tls/ca.crt"
+		sslEnvVar = "DB_SSL_CA"
+	case "DATABASE_SSL_CERT":
+		path = "/tls/tls.crt"
+		sslEnvVar = "DB_SSL_CERT"
+	case "DATABASE_SSL_KEY":
+		path = "/tls/tls.key"
+		sslEnvVar = "DB_SSL_KEY"
+	default:
+		return ""
+	}
+
+	// check the secret exists
+	secret := v1.Secret{}
+	nn := types.NamespacedName{
+		Name:      secretName,
+		Namespace: namespace,
+	}
+	err = clientTLS.Get(context.TODO(), nn, &secret)
+	if err != nil {
+		fmt.Printf("clientTLS error, get secret : %v", err)
+		return ""
+	}
+
+	// Check if SSL_KEY, SSL_CERT, and SSL_CA are empty
+	// checks the cert is populated in the secret, if so populates the path in the volume mount
+	if sslCert, ok := secret.Data[sslEnvVar]; ok && len(sslCert) > 0 && databaseTLSEnabled {
+		return path
+	}
+	return ""
 }
