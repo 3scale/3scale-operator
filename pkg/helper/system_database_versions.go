@@ -123,7 +123,10 @@ func verifySystemPostgresDatabaseVersion(k8sclient client.Client, namespace, req
 		return false, err
 	}
 
-	requirementsMet := CompareVersions(requiredVersion, currentPostgresVersion)
+	requirementsMet, err := CompareVersions(requiredVersion, currentPostgresVersion)
+	if err != nil {
+		return false, err
+	}
 	if requirementsMet {
 		err := DeletePod(k8sclient, databasePod)
 		if err != nil {
@@ -157,7 +160,10 @@ func verifySystemMysqlDatabaseVersion(k8sclient client.Client, namespace, requir
 		return false, err
 	}
 
-	requirementsMet := CompareVersions(requiredVersion, currentMysqlVersion)
+	requirementsMet, err := CompareVersions(requiredVersion, currentMysqlVersion)
+	if err != nil {
+		return false, err
+	}
 
 	if requirementsMet {
 		err := DeletePod(k8sclient, databasePod)

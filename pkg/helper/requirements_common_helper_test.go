@@ -7,8 +7,8 @@ import (
 func TestVersionCompare(t *testing.T) {
 	cases := []struct {
 		testName        string
+		requiredVersion string
 		currentVersion  string
-		incomingVersion string
 		expectedResult  bool
 	}{
 		{"IncomingMajorRequiredIsHigher", "7.0.0", "6.2", false},
@@ -22,7 +22,10 @@ func TestVersionCompare(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.testName, func(subT *testing.T) {
-			value := CompareVersions(tc.currentVersion, tc.incomingVersion)
+			value, err := CompareVersions(tc.requiredVersion, tc.currentVersion)
+			if err != nil {
+				subT.Fatal(err)
+			}
 			if value != tc.expectedResult {
 				subT.Fatalf("test failed for test case %s, expected %v but got %v", tc.testName, tc.expectedResult, value)
 			}

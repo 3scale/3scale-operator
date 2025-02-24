@@ -48,8 +48,6 @@ github.com/Azure/go-autorest/tracing v0.5.0/go.mod h1:r/s2XiOKccPW3HrqB+W0TQzfbt
 github.com/Azure/go-autorest/tracing v0.6.0/go.mod h1:+vhtPC754Xsa23ID7GlGsrdKBpUA79WCAKPPZVC2DeU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/MStokluska/3scale-porta-go-client v0.0.0-20250124150520-23225e662421 h1:P/vWCWycdFARt5APkZ6yJs/1DWvkeESSRZZHMl1wkFo=
-github.com/MStokluska/3scale-porta-go-client v0.0.0-20250124150520-23225e662421/go.mod h1:nUbuVh0fU2rs/lJfowmS5YhEk2tQoybL4htDIdxxMaM=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/Microsoft/hcsshim v0.8.25 h1:fRMwXiwk3qDwc0P05eHnh+y2v07JdtsfQ1fuAc69m9g=

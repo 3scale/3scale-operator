@@ -107,7 +107,10 @@ func verifySystemRedisVersion(k8sclient client.Client, connSecret v1.Secret, nam
 		return false, err
 	}
 
-	redisSystemVersionConfirmed := CompareVersions(requiredVersion, currentRedisVersion)
+	redisSystemVersionConfirmed, err := CompareVersions(requiredVersion, currentRedisVersion)
+	if err != nil {
+		return false, err
+	}
 
 	return redisSystemVersionConfirmed, nil
 }
@@ -146,7 +149,10 @@ func verifyBackendRedisVersion(k8sclient client.Client, connSecret v1.Secret, na
 		return false, err
 	}
 
-	redisQueuesVersionConfirmed := CompareVersions(requiredVersion, currentRedisVersion)
+	redisQueuesVersionConfirmed, err := CompareVersions(requiredVersion, currentRedisVersion)
+	if err != nil {
+		return false, err
+	}
 
 	redis = reconcileStorageRedisSecret(connSecret)
 	if redis.sentinelHost != "" {
@@ -173,7 +179,10 @@ func verifyBackendRedisVersion(k8sclient client.Client, connSecret v1.Secret, na
 		return false, err
 	}
 
-	redisStorageVersionConfirmed := CompareVersions(requiredVersion, currentRedisVersion)
+	redisStorageVersionConfirmed, err := CompareVersions(requiredVersion, currentRedisVersion)
+	if err != nil {
+		return false, err
+	}
 
 	if redisQueuesVersionConfirmed && redisStorageVersionConfirmed {
 		err := DeletePod(k8sclient, redisPod)
