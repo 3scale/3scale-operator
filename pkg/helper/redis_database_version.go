@@ -17,16 +17,6 @@ const (
 	backendRedisStorageURL           = "REDIS_STORAGE_URL"
 )
 
-type Redis struct {
-	sentinelHost     string
-	sentinelPassword string
-	sentinelPort     string
-	sentinelGroup    string
-	redisHost        string
-	redisPassword    string
-	redisPort        string
-}
-
 func VerifySystemRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, systemRedisRequirement string, apimInstance *appsv1alpha1.APIManager, logger logr.Logger) (bool, error) {
 	logger.Info("Verifying system redis version")
 	systemRedisVerified := false
@@ -36,7 +26,7 @@ func VerifySystemRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, syst
 		return false, err
 	}
 
-	systemRedisVerified, err = verifySystemRedisVersion(k8sclient, *connSecret, apimInstance.Namespace, systemRedisRequirement, logger)
+	systemRedisVerified, err = verifySystemRedisVersion(*connSecret, apimInstance.Namespace, systemRedisRequirement, logger)
 	if err != nil {
 		logger.Info("Encountered error during version verification of system Redis")
 		return false, err
@@ -59,7 +49,7 @@ func VerifyBackendRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, bac
 		return false, err
 	}
 
-	backendRedisVerified, err = verifyBackendRedisVersion(k8sclient, *connSecret, apimInstance.Namespace, backendRedisRequirement, logger)
+	backendRedisVerified, err = verifyBackendRedisVersion(*connSecret, apimInstance.Namespace, backendRedisRequirement, logger)
 	if err != nil {
 		logger.Info("Encountered error during version verification of backend Redis")
 		return false, err
@@ -73,122 +63,44 @@ func VerifyBackendRedis(k8sclient client.Client, reqConfigMap *v1.ConfigMap, bac
 	return backendRedisVerified, nil
 }
 
-func verifySystemRedisVersion(k8sclient client.Client, connSecret v1.Secret, namespace string, requiredVersion string, logger logr.Logger) (bool, error) {
-	redisCliCommand := ""
+func verifySystemRedisVersion(connSecret v1.Secret, namespace string, requiredVersion string, logger logr.Logger) (bool, error) {
+	redisOpts := reconcileSystemRedisSecret(connSecret)
 
-	redisPod, err := CreateRedisThrowAwayPod(k8sclient, namespace)
+	rdb, err := Configure(redisOpts)
 	if err != nil {
-		logger.Info("Failed to create throwaway pod")
+		logger.Info("Failed to setup Redis connection")
 		return false, err
 	}
 
-	redis := reconcileSystemRedisSecret(connSecret)
-	if redis.sentinelHost != "" {
-		redisCliCommand = retrieveRedisSentinelCommand(redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword, redis.sentinelGroup)
-		stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
-		if err != nil {
-			logger.Info("Failed to execute command to retrieve the system redis version")
-			return false, err
-		}
-		redis.redisHost, redis.redisPort = parseRedisSentinelResponse(stdout)
-	}
-
-	redisCliCommand = retrieveRedisCliCommand(redis.redisHost, redis.redisPort, redis.redisPassword)
-
-	stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
-	if err != nil {
-		logger.Info("Failed to execute command to retrieve the system redis version")
-		return false, err
-	}
-
-	currentRedisVersion, err := retrieveCurrentVersionOfRedis(stdout)
-	if err != nil {
-		logger.Info("Failed to retrieve current version of system redis from the cli command")
-		return false, err
-	}
-
-	redisSystemVersionConfirmed, err := CompareVersions(requiredVersion, currentRedisVersion)
-	if err != nil {
-		return false, err
-	}
-
-	return redisSystemVersionConfirmed, nil
+	return verifyRedisVersion(rdb, requiredVersion)
 }
 
-func verifyBackendRedisVersion(k8sclient client.Client, connSecret v1.Secret, namespace string, requiredVersion string, logger logr.Logger) (bool, error) {
-	redisCliCommand := ""
+func verifyBackendRedisVersion(connSecret v1.Secret, namespace string, requiredVersion string, logger logr.Logger) (bool, error) {
+	redisQueueOpts := reconcileQueuesRedisSecret(connSecret)
 
-	redisPod, err := CreateRedisThrowAwayPod(k8sclient, namespace)
+	qrdb, err := Configure(redisQueueOpts)
 	if err != nil {
-		logger.Info("Failed to create throwaway pod")
+		logger.Info("Failed to setup Redis connection")
 		return false, err
 	}
 
-	redis := reconcileQueuesRedisSecret(connSecret)
-	if redis.sentinelHost != "" {
-		redisCliCommand = retrieveRedisSentinelCommand(redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword, redis.sentinelGroup)
-		stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
-		if err != nil {
-			logger.Info("Failed to execute command to retrieve the backend redis version")
-			return false, err
-		}
-		redis.redisHost, redis.redisPort = parseRedisSentinelResponse(stdout)
-	}
-
-	redisCliCommand = retrieveRedisCliCommand(redis.redisHost, redis.redisPort, redis.redisPassword)
-
-	stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
+	redisQueuesVersionConfirmed, err := verifyRedisVersion(qrdb, requiredVersion)
 	if err != nil {
-		logger.Info("Failed to execute command to retrieve the system redis version")
+		logger.Info("Failed to verify Redis version")
 		return false, err
 	}
 
-	currentRedisVersion, err := retrieveCurrentVersionOfRedis(stdout)
+	redisStorageOpts := reconcileStorageRedisSecret(connSecret)
+	srdb, err := Configure(redisStorageOpts)
 	if err != nil {
-		logger.Info("Failed to retrieve current version of Redis from the cli command")
+		logger.Info("Failed to setup Redis connection")
 		return false, err
 	}
 
-	redisQueuesVersionConfirmed, err := CompareVersions(requiredVersion, currentRedisVersion)
+	redisStorageVersionConfirmed, err := verifyRedisVersion(srdb, requiredVersion)
 	if err != nil {
+		logger.Info("Failed to verify Redis version")
 		return false, err
-	}
-
-	redis = reconcileStorageRedisSecret(connSecret)
-	if redis.sentinelHost != "" {
-		redisCliCommand = retrieveRedisSentinelCommand(redis.sentinelHost, redis.sentinelPort, redis.sentinelPassword, redis.sentinelGroup)
-		stdout, err := executeRedisCliCommand(*redisPod, redisCliCommand, logger)
-		if err != nil {
-			logger.Info("Failed to execute command to retrieve the version")
-			return false, err
-		}
-		redis.redisHost, redis.redisPort = parseRedisSentinelResponse(stdout)
-	}
-
-	redisCliCommand = retrieveRedisCliCommand(redis.redisHost, redis.redisPort, redis.redisPassword)
-
-	stdout, err = executeRedisCliCommand(*redisPod, redisCliCommand, logger)
-	if err != nil {
-		logger.Info("Failed to execute command to retrieve the version")
-		return false, err
-	}
-
-	currentRedisVersion, err = retrieveCurrentVersionOfRedis(stdout)
-	if err != nil {
-		logger.Info("Failed to retrieve current version of Redis from the cli command")
-		return false, err
-	}
-
-	redisStorageVersionConfirmed, err := CompareVersions(requiredVersion, currentRedisVersion)
-	if err != nil {
-		return false, err
-	}
-
-	if redisQueuesVersionConfirmed && redisStorageVersionConfirmed {
-		err := DeletePod(k8sclient, redisPod)
-		if err != nil {
-			return false, nil
-		}
 	}
 
 	return redisQueuesVersionConfirmed && redisStorageVersionConfirmed, nil
