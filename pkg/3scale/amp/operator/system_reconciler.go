@@ -216,13 +216,17 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 		if !r.apiManager.IsSystemDatabaseTLSEnabled() {
 			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
 		}
-		if r.apiManager.Spec.System.SystemRedisTLSEnabled == nil ||
-			(r.apiManager.Spec.System.SystemRedisTLSEnabled != nil && *r.apiManager.Spec.System.SystemRedisTLSEnabled == false) {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveCertsMountMutator)
+
+		if r.apiManager.IsSystemRedisTLSEnabled() {
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSSyncVolumesAndMountsMutator)
 		} else {
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSAddCertsMountMutator)
-			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSAddCertsMountMutator)
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
+		}
+		if r.apiManager.IsBackendRedisTLSEnabled() {
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+		} else {
+			systemAppDeploymentMutators = append(systemAppDeploymentMutators, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 		}
 
 		appDeployment, err := system.AppDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)
@@ -293,13 +297,16 @@ func (r *SystemReconciler) Reconcile() (reconcile.Result, error) {
 	if !r.apiManager.IsSystemDatabaseTLSEnabled() {
 		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentRemoveTLSVolumesAndMountsMutator)
 	}
-	if r.apiManager.Spec.System.SystemRedisTLSEnabled == nil ||
-		(r.apiManager.Spec.System.SystemRedisTLSEnabled != nil && *r.apiManager.Spec.System.SystemRedisTLSEnabled == false) {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveCertsMountMutator)
+
+	if r.apiManager.IsSystemRedisTLSEnabled() {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSSyncVolumesAndMountsMutator)
 	} else {
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSAddCertsMountMutator)
-		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSAddCertsMountMutator)
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveVolumesAndMountsMutator)
+	}
+	if r.apiManager.IsBackendRedisTLSEnabled() {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+	} else {
+		sidekiqDeploymentMutators = append(sidekiqDeploymentMutators, reconcilers.DeploymentSystemRedisTLSRemoveEnvMutator)
 	}
 
 	sidekiqDeployment, err := system.SidekiqDeployment(r.Context(), r.Client(), ampImages.Options.SystemImage)

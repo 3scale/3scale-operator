@@ -37,20 +37,20 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if r.apiManager.Spec.Backend.CronSpec.Replicas != nil {
 		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
-	cronDeploymentMutator = append(cronDeploymentMutator, r.backendRedisTLSEnvVarMutator)
-	if r.apiManager.Spec.Backend.BackendRedisTLSEnabled == nil ||
-		(r.apiManager.Spec.Backend.BackendRedisTLSEnabled != nil && *r.apiManager.Spec.Backend.BackendRedisTLSEnabled == false) {
+
+	if r.apiManager.IsBackendRedisTLSEnabled() {
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, r.backendRedisTLSEnvVarMutator)
+	} else {
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveCertsMountMutator)
-	} else {
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentBackendRedisTLSAddCertsMountMutator)
 	}
-	if r.apiManager.Spec.Backend.QueuesRedisTLSEnabled == nil ||
-		(r.apiManager.Spec.Backend.QueuesRedisTLSEnabled != nil && *r.apiManager.Spec.Backend.QueuesRedisTLSEnabled == false) {
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveCertsMountMutator)
+	if r.apiManager.IsQueuesRedisTLSEnabled() {
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
 	} else {
-		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSAddCertsMountMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
+		cronDeploymentMutator = append(cronDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
 	}
 
 	cronDeployment, err := backend.CronDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
@@ -82,20 +82,20 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 	if r.apiManager.Spec.Backend.ListenerSpec.Replicas != nil {
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
-	listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendRedisTLSEnvVarMutator)
-	if r.apiManager.Spec.Backend.BackendRedisTLSEnabled == nil ||
-		(r.apiManager.Spec.Backend.BackendRedisTLSEnabled != nil && *r.apiManager.Spec.Backend.BackendRedisTLSEnabled == false) {
+
+	if r.apiManager.IsBackendRedisTLSEnabled() {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendRedisTLSEnvVarMutator)
+	} else {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveCertsMountMutator)
-	} else {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSAddCertsMountMutator)
 	}
-	if r.apiManager.Spec.Backend.QueuesRedisTLSEnabled == nil ||
-		(r.apiManager.Spec.Backend.QueuesRedisTLSEnabled != nil && *r.apiManager.Spec.Backend.QueuesRedisTLSEnabled == false) {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveCertsMountMutator)
+	if r.apiManager.IsQueuesRedisTLSEnabled() {
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
 	} else {
-		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSAddCertsMountMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
+		listenerDeploymentMutator = append(listenerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
 	}
 
 	listenerDeployment, err := backend.ListenerDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
@@ -144,21 +144,19 @@ func (r *BackendReconciler) Reconcile() (reconcile.Result, error) {
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentReplicasMutator)
 	}
 
-	workerDeploymentMutator = append(workerDeploymentMutator, r.backendRedisTLSEnvVarMutator)
-	if r.apiManager.Spec.Backend.BackendRedisTLSEnabled == nil ||
-		(r.apiManager.Spec.Backend.BackendRedisTLSEnabled != nil && *r.apiManager.Spec.Backend.BackendRedisTLSEnabled == false) {
+	if r.apiManager.IsBackendRedisTLSEnabled() {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSSyncVolumesAndMountsMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, r.backendRedisTLSEnvVarMutator)
+	} else {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveVolumesAndMountsMutator)
 		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveEnvMutator)
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSRemoveCertsMountMutator)
-
-	} else {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentBackendRedisTLSAddCertsMountMutator)
 	}
-	if r.apiManager.Spec.Backend.QueuesRedisTLSEnabled == nil ||
-		(r.apiManager.Spec.Backend.QueuesRedisTLSEnabled != nil && *r.apiManager.Spec.Backend.QueuesRedisTLSEnabled == false) {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveCertsMountMutator)
+	if r.apiManager.IsQueuesRedisTLSEnabled() {
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSSyncVolumesAndMountsMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, r.backendQueuesRedisTLSEnvVarMutator)
 	} else {
-		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSAddCertsMountMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveVolumesAndMountsMutator)
+		workerDeploymentMutator = append(workerDeploymentMutator, reconcilers.DeploymentQueuesRedisTLSRemoveEnvMutator)
 	}
 
 	workerDeployment, err := backend.WorkerDeployment(r.Context(), r.Client(), ampImages.Options.BackendImage)
@@ -288,6 +286,19 @@ func (r *BackendReconciler) backendRedisTLSEnvVarMutator(desired, existing *k8sa
 		"CONFIG_REDIS_CERT",
 		"CONFIG_REDIS_PRIVATE_KEY",
 		"CONFIG_REDIS_SSL",
+	} {
+		tmpChanged := reconcilers.DeploymentEnvVarReconciler(desired, existing, envVar)
+		changed = changed || tmpChanged
+	}
+
+	return changed, nil
+}
+
+func (r *BackendReconciler) backendQueuesRedisTLSEnvVarMutator(desired, existing *k8sappsv1.Deployment) (bool, error) {
+	// Reconcile EnvVar only for Redis QUEUES TLS
+	var changed bool
+
+	for _, envVar := range []string{
 		"CONFIG_QUEUES_CA_FILE",
 		"CONFIG_QUEUES_CERT",
 		"CONFIG_QUEUES_PRIVATE_KEY",

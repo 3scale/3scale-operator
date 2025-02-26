@@ -132,9 +132,13 @@ const (
 )
 
 const (
-	redisCaFilePath                   = "/tls/system-redis/system-redis-ca.crt"
-	redisClientCertPath               = "/tls/system-redis/system-redis-client.crt"
-	redisPrivateKeyPath               = "/tls/system-redis/system-redis-private.key"
+	redisCaFilePath            = "/tls/system-redis/system-redis-ca.crt"
+	redisClientCertPath        = "/tls/system-redis/system-redis-client.crt"
+	redisPrivateKeyPath        = "/tls/system-redis/system-redis-private.key"
+	backendRedisCaFilePath     = "/tls/backend-redis/backend-redis-ca.crt"
+	backendRedisClientCertPath = "/tls/backend-redis/backend-redis-client.crt"
+	backendRedisPrivateKeyPath = "/tls/backend-redis/backend-redis-private.key"
+
 	SystemRedisSecretResverAnnotation = "apimanager.apps.3scale.net/system-redis-secret-resource-version"
 )
 
@@ -1053,7 +1057,7 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 			Name: "system-redis-tls",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: SystemSecretSystemRedisSecretName, // Name of the secret containing the TLS certs
+					SecretName: SystemSecretSystemRedisSecretName,
 					Items: []v1.KeyToPath{
 						{
 							Key:  "REDIS_SSL_CA",
@@ -1077,7 +1081,7 @@ func (system *System) SidekiqPodVolumes() []v1.Volume {
 			Name: "backend-redis-tls",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: BackendSecretBackendRedisSecretName, // Name of the secret containing the TLS certs
+					SecretName: BackendSecretBackendRedisSecretName,
 					Items: []v1.KeyToPath{
 						{
 							Key:  "REDIS_SSL_CA",
@@ -1698,9 +1702,9 @@ func (system *System) SystemRedisTLSEnvVars() []v1.EnvVar {
 
 func (system *System) BackendRedisTLSEnvVars() []v1.EnvVar {
 	return []v1.EnvVar{
-		helper.EnvVarFromValue("BACKEND_REDIS_CA_FILE", ConfigRedisCaFilePath),
-		helper.EnvVarFromValue("BACKEND_REDIS_CLIENT_CERT", ConfigRedisClientCertPath),
-		helper.EnvVarFromValue("BACKEND_REDIS_PRIVATE_KEY", ConfigRedisPrivateKeyPath),
+		helper.EnvVarFromValue("BACKEND_REDIS_CA_FILE", backendRedisCaFilePath),
+		helper.EnvVarFromValue("BACKEND_REDIS_CLIENT_CERT", backendRedisClientCertPath),
+		helper.EnvVarFromValue("BACKEND_REDIS_PRIVATE_KEY", backendRedisPrivateKeyPath),
 		helper.EnvVarFromValue("BACKEND_REDIS_SSL", "1"),
 	}
 }
@@ -1716,6 +1720,6 @@ func (system *System) backendRedisTlsVolumeMount() v1.VolumeMount {
 	return v1.VolumeMount{
 		Name:      "backend-redis-tls",
 		ReadOnly:  false,
-		MountPath: "/tls",
+		MountPath: "/tls/backend-redis",
 	}
 }
