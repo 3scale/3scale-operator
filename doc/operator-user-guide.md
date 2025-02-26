@@ -26,6 +26,7 @@
          * [Setting porta client to skip certificate verification](#setting-porta-client-to-skip-certificate-verification)
          * [Disabling zync route generation or zync entirely](#disabling-zync-route-generation-or-zync-entirely)
          * [Gateway instrumentation](#gateway-instrumentation)
+         * [Setting Redis ACL Environment variables](#setting-redis-acl-environment-variables)
       * [Preflight checks](#preflights)
       * [Reconciliation](#reconciliation)
          * [Resources](#resources)
@@ -989,6 +990,69 @@ Once the environment variable has been added, zync will no longer generate route
 #### Gateway instrumentation
 
 Please refer to [Gateway instrumentation](gateway-instrumentation.md) document
+
+#### Setting Redis ACL Environment variables
+To allow user to set the ACL credentials (username and password) to connect to Redis -  Environment variables will be set in Backend and System pods.
+Certain configurations must be defined within the `ApiManager CR` to activate it.
+
+Below are the key settings and environment variables involved in the process:
+
+- Following definitions are required in the **ApiManager CR** to set ACL credentials:
+    - `spec.externalComponents` should present
+    - and `system.redis` or `backend.redis` (or both) will be `true`
+    - ACL credentials (username and password) are set in the **backend-redis** and **system-redis** secrets.
+- When these conditions are enabled, the ACL environment variables for Backend and System components will be set in Pods.
+
+Table. **ACL Environment variables in Backend pods**:
+
+| ENV Var Name in Backend pods    | Secret         |
+|---------------------------------|----------------|
+| CONFIG_REDIS_USERNAME           | backend-redis  |
+| CONFIG_REDIS_PASSWORD           | backend-redis  |
+| CONFIG_REDIS_SENTINEL_USERNAME  | backend-redis  |
+| CONFIG_REDIS_SENTINEL_PASSWORD  | backend-redis  |
+| CONFIG_QUEUES_USERNAME          | backend-redis  |
+| CONFIG_QUEUES_PASSWORD          | backend-redis  |
+| CONFIG_QUEUES_SENTINEL_USERNAME | backend-redis  |
+| CONFIG_QUEUES_SENTINEL_PASSWORD | backend-redis  |
+
+Table. **ACL Environment variables in System pods**:
+
+| ENV Var Name in Backend pods    | Secret        |
+|---------------------------------|---------------|
+| REDIS_USERNAME                  | system-redis  |
+| REDIS_PASSWORD                  | system-redis |
+| REDIS_SENTINEL_USERNAME         | system-redis |
+| REDIS_SENTINEL_PASSWORD         | system-redis |
+| BACKEND_REDIS_USERNAME          | backend-redis |
+| BACKEND_REDIS_PASSWORD          | backend-redis |
+| BACKEND_REDIS_SENTINEL_USERNAME | backend-redis |
+| BACKEND_REDIS_SENTINEL_PASSWORD | backend-redis |
+
+
+This is example for APIManager CR that will allow ACL environment variables in System and Backend, including Sentinel env vars.
+
+```yaml
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: example-apimanager
+spec:
+  sentinelIsUsed: true
+  system:
+    fileStorage:
+      simpleStorageService:
+        configurationSecretRef:
+          name: s3-credentials
+  wildcardDomain: <wildcardDomain>
+  externalComponents:
+    backend:
+      redis: true
+    system:
+      redis: true
+```
+
+See [APIManager CRD](apimanager-reference.md) - `backend-redis` and `system-redis` secrets environment variables.
 
 ### Preflights
 
