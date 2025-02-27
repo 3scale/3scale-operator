@@ -97,6 +97,7 @@ manager: generate fmt vet
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: export WATCH_NAMESPACE=$(LOCAL_RUN_NAMESPACE)
 run: export THREESCALE_DEBUG=1
+run: export PREFLIGHT_CHECKS_BYPASS=true
 run: generate fmt vet manifests
 	@-oc process THREESCALE_VERSION=$(THREESCALE_VERSION) -f config/requirements/operator-requirements.yaml | oc apply -f - -n $(WATCH_NAMESPACE)
 	$(GO) run ./main.go --zap-devel 
